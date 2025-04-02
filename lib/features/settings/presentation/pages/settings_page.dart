@@ -1,13 +1,16 @@
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // For PlatformException
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:local_auth/local_auth.dart'; // Import local_auth
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Assuming SettingsBloc is provided globally via main.dart
     return const SettingsView();
   }
 }
@@ -21,16 +24,13 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  // State for dialogs
+  // State for dialogs and auth
+  // Instantiate LocalAuthentication
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  bool _isAuthenticating = false; // Prevent double-taps during auth check
+
   static const List<String> _currencySymbols = [
-    'USD',
-    'EUR',
-    'GBP',
-    'JPY',
-    'INR',
-    'CAD',
-    'AUD',
-    'CHF'
+    'USD', 'EUR', 'GBP', 'JPY', 'INR', 'CAD', 'AUD', 'CHF' // Add more as needed
   ];
 
   List<PopupMenuEntry<ThemeMode>> _buildThemeMenuItems(BuildContext context) {
@@ -174,6 +174,94 @@ class _SettingsViewState extends State<SettingsView> {
     }
   }
 
+  // --- Handle App Lock Toggle ---
+  Future<void> _handleAppLockToggle(BuildContext context, bool enable) async {
+    if (_isAuthenticating) return; // Prevent concurrent attempts
+
+    if (!mounted) return; // Check mount status before async gap
+    setState(() {
+      _isAuthenticating = true;
+    }); // Indicate processing
+
+    final settingsBloc = context.read<SettingsBloc>();
+    String? errorMessage;
+
+    try {
+      final bool canAuthenticateWithBiometrics =
+          await _localAuth.canCheckBiometrics;
+      final bool canAuthenticate =
+          canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
+
+      if (!canAuthenticate) {
+        errorMessage =
+            'Device does not support Biometric or Passcode authentication.';
+        if (enable) {
+          // Only revert if trying to enable
+          // Schedule post-frame callback to safely update BLoC state if needed
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) settingsBloc.add(const UpdateAppLock(false));
+          });
+        }
+      } else if (enable) {
+        // --- Enabling App Lock ---
+        final bool didAuthenticate = await _localAuth.authenticate(
+          localizedReason: 'Please authenticate to enable App Lock',
+          options: const AuthenticationOptions(
+            stickyAuth: true,
+            // biometricOnly: false // Allow device credential fallback
+          ),
+        );
+
+        if (didAuthenticate && mounted) {
+          // Check mount status again after await
+          settingsBloc.add(const UpdateAppLock(true));
+        } else if (!didAuthenticate) {
+          errorMessage = 'Authentication failed. App Lock remains disabled.';
+          // No need to dispatch event, switch state didn't change
+        }
+      } else {
+        // --- Disabling App Lock ---
+        if (mounted) {
+          // Check mount status
+          settingsBloc.add(const UpdateAppLock(false));
+        }
+      }
+    } on PlatformException catch (e) {
+      errorMessage =
+          'Platform Error: ${e.code} - ${e.message ?? 'Unknown error'}';
+      // Schedule post-frame callback if trying to enable failed
+      if (enable) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) settingsBloc.add(const UpdateAppLock(false));
+        });
+      }
+    } catch (e) {
+      errorMessage = 'An unexpected error occurred: $e';
+      if (enable) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) settingsBloc.add(const UpdateAppLock(false));
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAuthenticating = false;
+        });
+        // Show error message if any occurred
+        if (errorMessage != null) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(errorMessage!),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<SettingsBloc, SettingsState>(
@@ -237,14 +325,16 @@ class _SettingsViewState extends State<SettingsView> {
             // Determine if a data management operation is in progress
             final bool isDataManagementLoading =
                 state.dataManagementStatus == DataManagementStatus.loading;
+            final bool isOverallLoading = isDataManagementLoading ||
+                _isAuthenticating; // Combine loading states
 
             // Show full page loader only if initial load is happening
             if ((state.status == SettingsStatus.loading ||
                     state.status == SettingsStatus.initial) &&
                 (state.packageInfoStatus == PackageInfoStatus.loading ||
                     state.packageInfoStatus == PackageInfoStatus.initial) &&
-                !isDataManagementLoading) {
-              // Don't show full loader if only DM is loading
+                !isOverallLoading) {
+              // Don't show full loader if DM/Auth is loading
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -257,13 +347,13 @@ class _SettingsViewState extends State<SettingsView> {
                   children: [
                     // Theme
                     ListTile(
-                      enabled:
-                          !isDataManagementLoading, // Disable during DM ops
+                      enabled: !isOverallLoading, // Use combined loading state
                       leading: const Icon(Icons.color_lens_outlined),
                       title: const Text('Theme'),
                       subtitle: Text(state.themeMode.name.capitalize()),
                       trailing: PopupMenuButton<ThemeMode>(
-                        enabled: !isDataManagementLoading,
+                        enabled:
+                            !isOverallLoading, // Use combined loading state
                         icon: const Icon(Icons.arrow_drop_down),
                         tooltip: "Select Theme",
                         onSelected: (ThemeMode newMode) {
@@ -291,7 +381,7 @@ class _SettingsViewState extends State<SettingsView> {
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 16),
                           enabled:
-                              !isDataManagementLoading, // Disable during DM ops
+                              !isOverallLoading, // Use combined loading state
                         ),
                         hint: const Text('Select Currency'),
                         isExpanded: true,
@@ -299,10 +389,10 @@ class _SettingsViewState extends State<SettingsView> {
                           return DropdownMenuItem<String>(
                               value: symbol, child: Text(symbol));
                         }).toList(),
-                        onChanged: isDataManagementLoading
+                        onChanged: isOverallLoading
                             ? null
                             : (String? newValue) {
-                                // Disable during DM ops
+                                // Use combined loading state
                                 if (newValue != null) {
                                   context
                                       .read<SettingsBloc>()
@@ -317,69 +407,85 @@ class _SettingsViewState extends State<SettingsView> {
 
                     // Backup
                     ListTile(
-                      enabled: !isDataManagementLoading,
+                      enabled: !isOverallLoading, // Use combined loading state
                       leading: const Icon(Icons.storage_outlined),
                       title: const Text('Backup Data'),
                       subtitle: const Text('Save data to a local file'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _handleBackup(context),
+                      onTap: isOverallLoading
+                          ? null
+                          : () => _handleBackup(context), // Disable onTap
                     ),
                     // Restore
                     ListTile(
-                      enabled: !isDataManagementLoading,
+                      enabled: !isOverallLoading, // Use combined loading state
                       leading: const Icon(Icons.restore_outlined),
                       title: const Text('Restore Data'),
                       subtitle: const Text('Load data from a backup file'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _handleRestore(context),
+                      onTap: isOverallLoading
+                          ? null
+                          : () => _handleRestore(context), // Disable onTap
                     ),
                     // Clear Data
                     ListTile(
-                      enabled: !isDataManagementLoading,
+                      enabled: !isOverallLoading, // Use combined loading state
                       leading: Icon(Icons.delete_forever_outlined,
-                          color: isDataManagementLoading
+                          color: isOverallLoading
                               ? Colors.grey
                               : Theme.of(context).colorScheme.error),
                       title: Text('Clear All Data',
                           style: TextStyle(
-                              color: isDataManagementLoading
+                              color: isOverallLoading
                                   ? Colors.grey
                                   : Theme.of(context).colorScheme.error)),
                       subtitle: Text(
                           'Permanently delete all accounts & transactions',
                           style: TextStyle(
-                              color: isDataManagementLoading
-                                  ? Colors.grey
-                                  : null)),
+                              color: isOverallLoading ? Colors.grey : null)),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () => _handleClearData(context),
+                      onTap: isOverallLoading
+                          ? null
+                          : () => _handleClearData(context), // Disable onTap
                     ),
                     const Divider(),
 
                     // App Lock
                     SwitchListTile(
-                      secondary: const Icon(Icons.security_outlined),
-                      title: const Text('App Lock'),
+                      secondary: Icon(
+                        Icons.security_outlined,
+                        // Optionally change icon color when disabled
+                        color: isOverallLoading
+                            ? Theme.of(context).disabledColor
+                            : null,
+                      ),
+                      title: Text(
+                        'App Lock',
+                        // Optionally change text color when disabled
+                        style: TextStyle(
+                            color: isOverallLoading
+                                ? Theme.of(context).disabledColor
+                                : null),
+                      ),
+                      subtitle: Text(
+                        'Require authentication on launch/resume',
+                        style: TextStyle(
+                            color: isOverallLoading
+                                ? Theme.of(context).disabledColor
+                                : null),
+                      ),
                       value: state.isAppLockEnabled,
-                      onChanged: isDataManagementLoading
+                      // Set onChanged to null to disable interaction
+                      onChanged: isOverallLoading
                           ? null
-                          : (bool value) {
-                              // Disable during DM ops
-                              context
-                                  .read<SettingsBloc>()
-                                  .add(UpdateAppLock(value));
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(const SnackBar(
-                                    content: Text(
-                                        'App Lock requires restart (Not fully implemented yet)')));
-                            },
+                          : (bool value) =>
+                              _handleAppLockToggle(context, value),
                     ),
                     const Divider(),
 
                     // App Version
                     ListTile(
-                      enabled: !isDataManagementLoading,
+                      enabled: !isOverallLoading, // Use combined loading state
                       leading: const Icon(Icons.info_outline),
                       title: const Text('App Version'),
                       subtitle: Text(state.packageInfoStatus ==
@@ -392,48 +498,54 @@ class _SettingsViewState extends State<SettingsView> {
 
                     // Licenses
                     ListTile(
-                      enabled: !isDataManagementLoading,
+                      enabled: !isOverallLoading, // Use combined loading state
                       leading: const Icon(Icons.article_outlined),
                       title: const Text('Open Source Licenses'),
                       trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute<void>(
-                            builder: (BuildContext context) =>
-                                const LicensePage(),
-                          ),
-                        );
-                      },
+                      onTap: isOverallLoading
+                          ? null
+                          : () {
+                              // Disable onTap
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute<void>(
+                                  builder: (BuildContext context) =>
+                                      const LicensePage(),
+                                ),
+                              );
+                            },
                     ),
                     const Divider(),
                   ],
                 ),
 
-                // --- Loading Overlay for Data Management ---
-                if (isDataManagementLoading)
+                // Loading Overlay for Data Management OR Authentication
+                if (isOverallLoading)
                   Container(
                     color: Colors.black
                         .withOpacity(0.3), // Semi-transparent overlay
-                    child: const Center(
+                    child: Center(
                       child: Card(
                         // Show indicator inside a card
                         child: Padding(
-                          padding: EdgeInsets.all(20.0),
+                          padding: const EdgeInsets.all(20.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 15),
-                              Text("Processing data...",
-                                  style: TextStyle(fontSize: 16)),
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 15),
+                              Text(
+                                  // Show appropriate message
+                                  _isAuthenticating
+                                      ? "Authenticating..."
+                                      : "Processing data...",
+                                  style: const TextStyle(fontSize: 16)),
                             ],
                           ),
                         ),
                       ),
                     ),
                   ),
-                // -----------------------------------------
               ],
             );
           },
