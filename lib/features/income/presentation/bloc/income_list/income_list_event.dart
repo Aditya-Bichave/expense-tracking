@@ -34,7 +34,7 @@ class DeleteIncomeRequested extends IncomeListEvent {
   List<Object> get props => [incomeId];
 }
 
-// Internal event
+// Internal event for data changes
 class _DataChanged extends IncomeListEvent {
   const _DataChanged();
 }

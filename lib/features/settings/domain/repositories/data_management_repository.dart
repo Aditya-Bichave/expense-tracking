@@ -9,6 +9,7 @@ class AllData {
   final List<AssetAccountModel> accounts;
   final List<ExpenseModel> expenses;
   final List<IncomeModel> incomes;
+  // Can add settings here in the future if needed
 
   AllData({
     required this.accounts,
@@ -25,20 +26,21 @@ class AllData {
 
   // Create from JSON structure during restore
   factory AllData.fromJson(Map<String, dynamic> json) {
+    // Add null checks and type checks for robustness
+    final accountsList = json['accounts'] as List<dynamic>? ?? [];
+    final expensesList = json['expenses'] as List<dynamic>? ?? [];
+    final incomesList = json['incomes'] as List<dynamic>? ?? [];
+
     return AllData(
-      accounts: (json['accounts'] as List<dynamic>?)
-              ?.map(
-                  (a) => AssetAccountModel.fromJson(a as Map<String, dynamic>))
-              .toList() ??
-          [],
-      expenses: (json['expenses'] as List<dynamic>?)
-              ?.map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      incomes: (json['incomes'] as List<dynamic>?)
-              ?.map((i) => IncomeModel.fromJson(i as Map<String, dynamic>))
-              .toList() ??
-          [],
+      accounts: accountsList
+          .map((a) => AssetAccountModel.fromJson(a as Map<String, dynamic>))
+          .toList(),
+      expenses: expensesList
+          .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      incomes: incomesList
+          .map((i) => IncomeModel.fromJson(i as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

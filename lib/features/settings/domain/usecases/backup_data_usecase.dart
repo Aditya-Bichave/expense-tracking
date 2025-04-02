@@ -1,7 +1,5 @@
-// features/settings/domain/usecases/backup_data_usecase.dart
-
 import 'dart:convert';
-import 'dart:io'; // dart:io is needed for File on non-web
+import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
@@ -9,145 +7,149 @@ import 'package:expense_tracker/features/settings/domain/repositories/data_manag
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:flutter/foundation.dart'; // Import kIsWeb
+import 'package:flutter/foundation.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:flutter/services.dart'; // Import PlatformException
 
-// --- Conditional imports for web download ---
-import 'dart:typed_data'; // For Uint8List
+// Conditional imports for web download
+import 'dart:typed_data';
 // ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html; // Use prefix 'html'
-// -----------------------------------------
-
-class BackupFailure extends Failure {
-  const BackupFailure(String message) : super(message);
-}
+import 'dart:html' as html;
 
 class BackupDataUseCase implements UseCase<String?, NoParams> {
+  // Return type is path or message
   final DataManagementRepository dataManagementRepository;
 
   BackupDataUseCase(this.dataManagementRepository);
 
   @override
   Future<Either<Failure, String?>> call(NoParams params) async {
-    debugPrint(
+    log.info(
         "[BackupUseCase] Backup process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}");
     try {
       // 1. Get data
-      debugPrint("[BackupUseCase] Fetching all data...");
+      log.info("[BackupUseCase] Fetching all data...");
       final dataEither = await dataManagementRepository.getAllDataForBackup();
       if (dataEither.isLeft()) {
+        log.warning("[BackupUseCase] Failed to retrieve data for backup.");
         return dataEither.fold((failure) => Left(failure),
             (_) => const Left(BackupFailure("Failed to retrieve data.")));
       }
-      final allData =
-          dataEither.getOrElse(() => throw Exception("Data retrieval error"));
-      debugPrint("[BackupUseCase] Data fetched.");
+      final allData = dataEither.getOrElse(
+          () => throw Exception("Data retrieval error")); // Should not happen
+      log.info("[BackupUseCase] Data fetched.");
 
       // 2. Get App Version Info
-      debugPrint("[BackupUseCase] Fetching package info...");
+      log.info("[BackupUseCase] Fetching package info...");
       String appVersion = 'unknown';
       try {
         final packageInfo = await PackageInfo.fromPlatform();
         appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
       } catch (e) {
-        debugPrint("[BackupUseCase] Warning: Could not get package info: $e");
+        log.warning("[BackupUseCase] Could not get package info: $e");
       }
-      debugPrint("[BackupUseCase] App version: $appVersion");
+      log.info("[BackupUseCase] App version: $appVersion");
 
       // 3. Prepare backup structure
-      final backupTimestamp = DateTime.now().toIso8601String();
+      final backupTimestamp =
+          DateTime.now().toUtc().toIso8601String(); // Use UTC
       final backupData = {
         'metadata': {
           'appVersion': appVersion,
           'backupTimestamp': backupTimestamp,
-          'formatVersion': '1.0',
+          'formatVersion': '1.0', // Increment if format changes
         },
         'data': allData.toJson(),
       };
-      debugPrint("[BackupUseCase] Backup structure prepared.");
+      log.info("[BackupUseCase] Backup structure prepared.");
 
       // 4. Prepare file content (JSON String)
-      debugPrint("[BackupUseCase] Encoding data to JSON...");
+      log.info("[BackupUseCase] Encoding data to JSON...");
       final jsonString = jsonEncode(backupData);
       final backupFilename =
-          'expense_tracker_backup_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.json';
+          'spend_savvy_backup_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.json';
 
       // --- Platform Specific Logic ---
       if (kIsWeb) {
         // --- Web: Trigger Download ---
-        debugPrint("[BackupUseCase] Platform is Web. Triggering download...");
+        log.info("[BackupUseCase] Platform is Web. Triggering download...");
         try {
-          final bytes = utf8.encode(jsonString); // Convert String to bytes
-          final blob = html.Blob([bytes], 'application/json'); // Create blob
-          final url =
-              html.Url.createObjectUrlFromBlob(blob); // Create object URL
-          final anchor = html.document.createElement('a')
-              as html.AnchorElement // Create anchor tag
+          final bytes = utf8.encode(jsonString);
+          final blob = html.Blob([bytes], 'application/json');
+          final url = html.Url.createObjectUrlFromBlob(blob);
+          final anchor = html.document.createElement('a') as html.AnchorElement
             ..href = url
             ..style.display = 'none'
-            ..download = backupFilename; // Set filename for download
-          html.document.body!.children.add(anchor); // Add to body
-          anchor.click(); // Simulate click to trigger download
-          html.document.body!.children.remove(anchor); // Remove anchor
-          html.Url.revokeObjectUrl(url); // Release object URL
-          debugPrint(
+            ..download = backupFilename;
+          html.document.body!.children.add(anchor);
+          anchor.click();
+          html.document.body!.children.remove(anchor);
+          html.Url.revokeObjectUrl(url);
+          log.info(
               "[BackupUseCase] Web download initiated for '$backupFilename'.");
-          // For web, we can't easily return the actual path, so return success message
+          // For web, return success message
           return const Right('Download started');
         } catch (e, s) {
-          debugPrint("[BackupUseCase] Error during web download: $e\n$s");
+          log.severe("[BackupUseCase] Error during web download$e$s");
           return Left(
               BackupFailure("Failed to initiate download: ${e.toString()}"));
         }
         // --- End Web Logic ---
       } else {
         // --- Non-Web: Use saveFile ---
-        debugPrint(
+        log.info(
             "[BackupUseCase] Platform is Non-Web. Prompting user for save file location...");
+        // --- ADDED THE MISSING TRY-CATCH BLOCK FOR NON-WEB ---
         try {
           final String? outputFile = await FilePicker.platform.saveFile(
-            dialogTitle: 'Save Expense Backup',
+            dialogTitle: 'Save Backup File',
             fileName: backupFilename,
-            // type: FileType.custom, // Not strictly needed if filtering by extension
-            // allowedExtensions: ['json'], // Filter extensions
+            // type: FileType.custom, // Optional
+            allowedExtensions: ['json'], // Suggest extension
           );
 
           if (outputFile == null) {
-            debugPrint("[BackupUseCase] User cancelled file picker.");
+            log.info("[BackupUseCase] User cancelled file picker.");
             return const Left(BackupFailure("Backup cancelled by user."));
           }
-          debugPrint("[BackupUseCase] User selected path: $outputFile");
+          log.info("[BackupUseCase] User selected path: $outputFile");
 
-          // Ensure the path has the correct extension (saveFile might not enforce it on all platforms)
+          // Ensure the path has the correct extension
           String finalPath = outputFile;
           if (!finalPath.toLowerCase().endsWith('.json')) {
             finalPath += '.json';
+            log.info("[BackupUseCase] Appended .json extension: $finalPath");
           }
 
           // Write file using dart:io
-          debugPrint("[BackupUseCase] Writing JSON to file: $finalPath...");
+          log.info("[BackupUseCase] Writing JSON to file: $finalPath...");
           final file = File(finalPath);
-          await file.writeAsString(jsonString);
-          debugPrint("[BackupUseCase] File written successfully.");
+          await file.writeAsString(jsonString,
+              flush: true); // Ensure data is flushed
+          log.info("[BackupUseCase] File written successfully.");
           return Right(finalPath); // Return actual path
-        } on UnimplementedError {
-          // This should ideally not happen now due to kIsWeb check, but good failsafe
-          debugPrint(
-              "[BackupUseCase] Error: saveFile called on unsupported platform (should be web?).");
-          return const Left(BackupFailure(
-              "Save file dialog not supported on this platform."));
-        } on FileSystemException catch (e) {
-          debugPrint("[BackupUseCase] FileSystemException: $e");
-          return Left(BackupFailure("File system error: ${e.message}"));
+        } on PlatformException catch (e, s) {
+          log.severe("[BackupUseCase] PlatformException during saveFile$e$s");
+          return Left(
+              BackupFailure("Could not save file: ${e.message} (${e.code})"));
+        } on FileSystemException catch (e, s) {
+          log.severe("[BackupUseCase] FileSystemException writing file$e$s");
+          return Left(FileSystemFailure("File system error: ${e.message}"));
         } catch (e, s) {
-          debugPrint("[BackupUseCase] Error writing file: $e\n$s");
+          log.severe("[BackupUseCase] Unexpected error writing file$e$s");
           return Left(
               BackupFailure("Failed to write backup file: ${e.toString()}"));
         }
         // --- End Non-Web Logic ---
       }
       // --- End Platform Specific Logic ---
+
+      // This point should technically not be reachable because both if/else branches return.
+      // However, adding a fallback return satisfies the analyzer.
+      // log.severe("[BackupUseCase] Reached end of try block unexpectedly.");
+      // return const Left(BackupFailure("Unexpected end of backup process."));
     } catch (e, s) {
-      debugPrint("[BackupUseCase] Unexpected error: $e\n$s");
+      log.severe("[BackupUseCase] Unexpected error in backup process$e$s");
       return Left(BackupFailure(
           "An unexpected error occurred during backup: ${e.toString()}"));
     }

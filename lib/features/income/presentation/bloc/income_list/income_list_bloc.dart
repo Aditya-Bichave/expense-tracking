@@ -1,12 +1,12 @@
-import 'dart:async'; // Import async
+import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart'; // Import for debugPrint
+import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/delete_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/get_incomes.dart';
-import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl helper
+import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl helper & publish
 import 'package:expense_tracker/core/events/data_change_event.dart'; // Import event
 
 part 'income_list_event.dart';
@@ -15,67 +15,60 @@ part 'income_list_state.dart';
 class IncomeListBloc extends Bloc<IncomeListEvent, IncomeListState> {
   final GetIncomesUseCase _getIncomesUseCase;
   final DeleteIncomeUseCase _deleteIncomeUseCase;
-  late final StreamSubscription<DataChangedEvent>
-      _dataChangeSubscription; // Subscription
+  late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
-  // Store current filters to re-apply on refresh/filtering
+  // Store current filters
   DateTime? _currentStartDate;
   DateTime? _currentEndDate;
   String? _currentCategory;
-  String?
-      _currentAccountId; // Account filter applied in repo, store if needed for UI state
+  String? _currentAccountId;
 
   IncomeListBloc({
     required GetIncomesUseCase getIncomesUseCase,
     required DeleteIncomeUseCase deleteIncomeUseCase,
-    required Stream<DataChangedEvent> dataChangeStream, // Inject stream
+    required Stream<DataChangedEvent> dataChangeStream,
   })  : _getIncomesUseCase = getIncomesUseCase,
         _deleteIncomeUseCase = deleteIncomeUseCase,
         super(IncomeListInitial()) {
     on<LoadIncomes>(_onLoadIncomes);
     on<FilterIncomes>(_onFilterIncomes);
     on<DeleteIncomeRequested>(_onDeleteIncomeRequested);
-    on<_DataChanged>(_onDataChanged); // Handler for internal event
+    on<_DataChanged>(_onDataChanged);
 
-    // Subscribe to the data change stream
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Income list needs refresh if Income changes directly
-      if (event.type == DataChangeType.income) {
-        debugPrint(
-            "[IncomeListBloc] Received relevant DataChangedEvent: $event. Adding _DataChanged event.");
+      // Income list needs refresh if Income or Settings (currency) change
+      if (event.type == DataChangeType.income ||
+          event.type == DataChangeType.settings) {
+        log.info(
+            "[IncomeListBloc] Received relevant DataChangedEvent: $event. Triggering reload.");
         add(const _DataChanged());
       }
+    }, onError: (error, stackTrace) {
+      log.severe("[IncomeListBloc] Error in dataChangeStream listener");
     });
-
-    debugPrint("[IncomeListBloc] Initialized and subscribed to data changes.");
+    log.info("[IncomeListBloc] Initialized and subscribed to data changes.");
   }
 
   // Internal event handler to trigger reload
   Future<void> _onDataChanged(
       _DataChanged event, Emitter<IncomeListState> emit) async {
-    debugPrint(
-        "[IncomeListBloc] Handling _DataChanged event. Dispatching LoadIncomes.");
-    // Trigger reload, force update to reflect changes immediately
+    log.info(
+        "[IncomeListBloc] Handling _DataChanged event. Dispatching LoadIncomes(forceReload: true).");
     add(const LoadIncomes(forceReload: true));
   }
 
-  // Handler for loading incomes
   Future<void> _onLoadIncomes(
       LoadIncomes event, Emitter<IncomeListState> emit) async {
-    debugPrint(
-        "[IncomeListBloc] Received LoadIncomes event. ForceReload: ${event.forceReload}");
-    // Show loading only if not already loaded or if forced
+    log.info(
+        "[IncomeListBloc] Received LoadIncomes event (forceReload: ${event.forceReload}). Current state: ${state.runtimeType}");
+
     if (state is! IncomeListLoaded || event.forceReload) {
-      if (state is! IncomeListLoaded) {
-        debugPrint(
-            "[IncomeListBloc] Current state is not Loaded. Emitting IncomeListLoading.");
-        emit(IncomeListLoading());
-      } else {
-        debugPrint("[IncomeListBloc] Force reload requested. Refreshing data.");
-      }
+      emit(IncomeListLoading(isReloading: state is IncomeListLoaded));
+      log.info(
+          "[IncomeListBloc] Emitting IncomeListLoading (isReloading: ${state is IncomeListLoaded}).");
     } else {
-      debugPrint(
-          "[IncomeListBloc] Current state is Loaded and no force reload. Refreshing data without emitting Loading.");
+      log.info(
+          "[IncomeListBloc] State is Loaded and no force reload. Refreshing data silently.");
     }
 
     // Use stored filters for loading
@@ -83,27 +76,25 @@ class IncomeListBloc extends Bloc<IncomeListEvent, IncomeListState> {
       startDate: _currentStartDate,
       endDate: _currentEndDate,
       category: _currentCategory,
-      accountId: _currentAccountId, // Pass account ID if stored/needed
+      accountId: _currentAccountId,
     );
-    debugPrint(
+    log.info(
         "[IncomeListBloc] Calling GetIncomesUseCase with params: AccID=${params.accountId}, Start=${params.startDate}, End=${params.endDate}, Cat=${params.category}");
 
     try {
       final result = await _getIncomesUseCase(params);
-      debugPrint(
-          "[IncomeListBloc] GetIncomesUseCase returned. Result isLeft: ${result.isLeft()}");
+      log.info(
+          "[IncomeListBloc] GetIncomesUseCase returned. isLeft: ${result.isLeft()}");
 
       result.fold(
-        // On Failure
         (failure) {
-          debugPrint(
-              "[IncomeListBloc] Emitting IncomeListError: ${failure.message}");
+          log.warning(
+              "[IncomeListBloc] Load failed: ${failure.message}. Emitting IncomeListError.");
           emit(IncomeListError(_mapFailureToMessage(failure)));
         },
-        // On Success
         (incomes) {
-          debugPrint(
-              "[IncomeListBloc] Emitting IncomeListLoaded with ${incomes.length} incomes.");
+          log.info(
+              "[IncomeListBloc] Load successful. Emitting IncomeListLoaded with ${incomes.length} incomes.");
           emit(IncomeListLoaded(
             incomes: incomes,
             filterStartDate: _currentStartDate,
@@ -114,48 +105,41 @@ class IncomeListBloc extends Bloc<IncomeListEvent, IncomeListState> {
         },
       );
     } catch (e, s) {
-      debugPrint(
-          "[IncomeListBloc] *** CRITICAL ERROR in _onLoadIncomes: $e\n$s");
+      log.severe("[IncomeListBloc] Unexpected error in _onLoadIncomes$e$s");
       emit(IncomeListError(
-          "An unexpected error occurred in the Income BLoC: $e"));
-    } finally {
-      debugPrint(
-          "[IncomeListBloc] Finished processing LoadIncomes event handler.");
+          "An unexpected error occurred loading income: ${e.toString()}"));
     }
   }
 
-  // Handler for applying filters
   Future<void> _onFilterIncomes(
       FilterIncomes event, Emitter<IncomeListState> emit) async {
-    debugPrint("[IncomeListBloc] Received FilterIncomes event.");
-    emit(IncomeListLoading()); // Show loading when filters change
+    log.info("[IncomeListBloc] Received FilterIncomes event.");
 
     // Update stored filters
     _currentStartDate = event.startDate;
     _currentEndDate = event.endDate;
     _currentCategory = event.category;
     _currentAccountId = event.accountId;
-    debugPrint(
+    log.info(
         "[IncomeListBloc] Filters updated: AccID=$_currentAccountId, Start=$_currentStartDate, End=$_currentEndDate, Cat=$_currentCategory");
 
     // Trigger load with new filters
-    add(const LoadIncomes());
+    add(const LoadIncomes(forceReload: true)); // Force reload to apply filters
   }
 
-  // Handler for deleting income
   Future<void> _onDeleteIncomeRequested(
       DeleteIncomeRequested event, Emitter<IncomeListState> emit) async {
-    debugPrint(
+    log.info(
         "[IncomeListBloc] Received DeleteIncomeRequested for ID: ${event.incomeId}");
     final currentState = state;
     if (currentState is IncomeListLoaded) {
-      debugPrint(
-          "[IncomeListBloc] Current state is Loaded. Proceeding with optimistic delete.");
+      log.info(
+          "[IncomeListBloc] Current state is Loaded. Performing optimistic delete.");
       // Optimistic UI Update
       final optimisticList = currentState.incomes
           .where((inc) => inc.id != event.incomeId)
           .toList();
-      debugPrint(
+      log.info(
           "[IncomeListBloc] Optimistic list size: ${optimisticList.length}. Emitting updated IncomeListLoaded.");
       emit(IncomeListLoaded(
         incomes: optimisticList,
@@ -168,61 +152,67 @@ class IncomeListBloc extends Bloc<IncomeListEvent, IncomeListState> {
       try {
         final result =
             await _deleteIncomeUseCase(DeleteIncomeParams(event.incomeId));
-        debugPrint(
-            "[IncomeListBloc] DeleteIncomeUseCase returned. Result isLeft: ${result.isLeft()}");
+        log.info(
+            "[IncomeListBloc] DeleteIncomeUseCase returned. isLeft: ${result.isLeft()}");
 
         result.fold(
-          // On Failure
           (failure) {
-            debugPrint(
+            log.warning(
                 "[IncomeListBloc] Deletion failed: ${failure.message}. Reverting UI and emitting Error.");
             // Revert UI and show error
             emit(currentState);
-            emit(IncomeListError(// Separate error state
-                "Failed to delete income: ${_mapFailureToMessage(failure)}"));
-            // Optionally trigger reload: add(LoadIncomes(forceReload: true));
+            emit(IncomeListError(_mapFailureToMessage(failure,
+                context: "Failed to delete income")));
           },
-          // On Success
           (_) {
-            debugPrint(
-                "[IncomeListBloc] Deletion successful (Optimistic UI). Publishing DataChangedEvent.");
-            // Publish event so other Blocs (Dashboard, Accounts) can react
+            log.info(
+                "[IncomeListBloc] Deletion successful. Publishing DataChangedEvent.");
+            // Publish event so other Blocs can react
             publishDataChangedEvent(
                 type: DataChangeType.income, reason: DataChangeReason.deleted);
           },
         );
       } catch (e, s) {
-        debugPrint(
-            "[IncomeListBloc] *** CRITICAL ERROR in _onDeleteIncomeRequested: $e\n$s");
-        // Revert optimistic update on error
-        emit(currentState);
+        log.severe(
+            "[IncomeListBloc] Unexpected error in _onDeleteIncomeRequested for ID ${event.incomeId}$e$s");
+        emit(currentState); // Revert optimistic update
         emit(IncomeListError(
-            "An unexpected error occurred during income deletion: $e"));
+            "An unexpected error occurred during income deletion: ${e.toString()}"));
       }
     } else {
-      debugPrint(
+      log.warning(
           "[IncomeListBloc] Delete requested but state is not IncomeListLoaded. Ignoring.");
     }
-    debugPrint("[IncomeListBloc] Finished processing DeleteIncomeRequested.");
   }
 
-  // Helper to map Failures to messages
-  String _mapFailureToMessage(Failure failure) {
+  String _mapFailureToMessage(Failure failure,
+      {String context = "An error occurred"}) {
+    log.warning(
+        "[IncomeListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
+    String specificMessage;
     switch (failure.runtimeType) {
       case CacheFailure:
-        return 'Database Error: ${failure.message}';
+        specificMessage = 'Database Error: ${failure.message}';
+        break;
       case ValidationFailure:
-        return failure.message;
+        specificMessage = failure.message;
+        break;
+      case UnexpectedFailure:
+        specificMessage = 'An unexpected error occurred. Please try again.';
+        break;
       default:
-        return 'An unexpected error occurred: ${failure.message}';
+        specificMessage = failure.message.isNotEmpty
+            ? failure.message
+            : 'An unknown error occurred.';
+        break;
     }
+    return "$context: $specificMessage";
   }
 
-  // Cancel stream subscription when BLoC is closed
   @override
   Future<void> close() {
     _dataChangeSubscription.cancel();
-    debugPrint("[IncomeListBloc] Canceled data change subscription.");
+    log.info("[IncomeListBloc] Canceled data change subscription and closing.");
     return super.close();
   }
 }

@@ -1,18 +1,16 @@
-// features/settings/domain/usecases/restore_data_usecase.dart
+// lib/features/settings/domain/usecases/restore_data_usecase.dart
 
 import 'dart:convert';
-import 'dart:io'; // Needed for non-web File access
+import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart'; // For kIsWeb and debugPrint
-import 'dart:typed_data'; // For Uint8List on web
-
-class RestoreFailure extends Failure {
-  const RestoreFailure(String message) : super(message);
-}
+import 'package:flutter/foundation.dart';
+import 'package:expense_tracker/main.dart';
+import 'package:flutter/services.dart'; // Import Uint8List
+import 'dart:typed_data'; // Import Uint8List
 
 class RestoreDataUseCase implements UseCase<void, NoParams> {
   final DataManagementRepository dataManagementRepository;
@@ -21,123 +19,127 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
 
   @override
   Future<Either<Failure, void>> call(NoParams params) async {
-    debugPrint(
+    log.info(
         "[RestoreUseCase] Restore process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}");
     try {
       // 1. Prompt user to pick a file
-      debugPrint("[RestoreUseCase] Prompting user to pick backup file...");
+      log.info("[RestoreUseCase] Prompting user to pick backup file...");
       final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
-        withData: kIsWeb, // <<< IMPORTANT: Request file data (bytes) on web
+        withData: true, // ALWAYS request data bytes
       );
 
       if (result == null || result.files.isEmpty) {
-        debugPrint(
+        log.info(
             "[RestoreUseCase] User cancelled file picker or no file selected.");
         return const Left(RestoreFailure("Restore cancelled by user."));
       }
 
       final pickedFile = result.files.single;
-      debugPrint("[RestoreUseCase] User selected file: ${pickedFile.name}");
+      log.info("[RestoreUseCase] User selected file: ${pickedFile.name}");
 
-      // 2. Read file content (Platform Specific)
+      // 2. Read file content (Use bytes universally)
+      log.info("[RestoreUseCase] Reading file content...");
+      final Uint8List? fileBytes = pickedFile.bytes;
+
+      // --- CORRECTED: Declare jsonString *before* the if ---
       String jsonString;
-      debugPrint("[RestoreUseCase] Reading file content...");
-      if (kIsWeb) {
-        // --- Web: Read from bytes ---
-        final Uint8List? fileBytes = pickedFile.bytes;
-        if (fileBytes == null) {
-          debugPrint("[RestoreUseCase] Web file picker did not return bytes.");
-          return const Left(
-              RestoreFailure("Could not read file content from browser."));
+      // -----------------------------------------------------
+
+      if (fileBytes == null) {
+        log.severe("[RestoreUseCase] File picker did not return bytes.");
+        // Check path as fallback for non-web? Might be inconsistent.
+        if (!kIsWeb && pickedFile.path != null) {
+          log.info(
+              "[RestoreUseCase] Attempting to read from path as fallback: ${pickedFile.path}");
+          try {
+            final file = File(pickedFile.path!);
+            final fallbackBytes = await file.readAsBytes();
+            // Assign to the already declared jsonString
+            jsonString = utf8.decode(fallbackBytes);
+          } catch (e, s) {
+            log.severe(
+                "[RestoreUseCase] Failed to read from path fallback.$e$s");
+            return const Left(RestoreFailure("Could not read file content."));
+          }
+        } else {
+          return const Left(RestoreFailure("Could not read file content."));
         }
+      } else {
+        // If fileBytes is NOT null, decode them directly
         try {
-          // Decode bytes directly to String assuming UTF-8
+          // Decode bytes assuming UTF-8
+          // Assign to the already declared jsonString
           jsonString = utf8.decode(fileBytes);
-          debugPrint(
-              "[RestoreUseCase] Web file content read and decoded (${jsonString.length} chars).");
-        } catch (e) {
-          debugPrint("[RestoreUseCase] Error decoding web file bytes: $e");
+          log.info(
+              "[RestoreUseCase] File content read and decoded (${jsonString.length} chars).");
+        } catch (e, s) {
+          log.severe("[RestoreUseCase] Error decoding file bytes$e$s");
           return Left(
               RestoreFailure("Failed to decode file content: ${e.toString()}"));
         }
-        // --- End Web Logic ---
-      } else {
-        // --- Non-Web: Read from path ---
-        final String? filePath = pickedFile.path;
-        if (filePath == null) {
-          debugPrint(
-              "[RestoreUseCase] Non-web file picker did not return path.");
-          return const Left(RestoreFailure("Could not get file path."));
-        }
-        final file = File(filePath);
-        try {
-          jsonString = await file.readAsString();
-          debugPrint(
-              "[RestoreUseCase] Non-web file content read (${jsonString.length} chars).");
-        } on FileSystemException catch (e) {
-          debugPrint("[RestoreUseCase] FileSystemException reading file: $e");
-          return Left(
-              RestoreFailure("Could not read backup file: ${e.message}"));
-        } catch (e) {
-          debugPrint("[RestoreUseCase] Error reading file: $e");
-          return Left(
-              RestoreFailure("Failed to read backup file: ${e.toString()}"));
-        }
-        // --- End Non-Web Logic ---
       }
 
-      // 3. Decode and Validate JSON (Same for both platforms)
-      debugPrint("[RestoreUseCase] Decoding JSON...");
+      // 3. Decode and Validate JSON (Now jsonString is guaranteed to be assigned if successful)
+      log.info("[RestoreUseCase] Decoding JSON...");
       Map<String, dynamic> decodedJson;
       try {
         decodedJson = jsonDecode(jsonString) as Map<String, dynamic>;
       } catch (e) {
-        debugPrint("[RestoreUseCase] JSON decoding error: $e");
+        log.warning("[RestoreUseCase] JSON decoding error: $e");
         return const Left(
             RestoreFailure("Invalid backup file format (not valid JSON)."));
       }
-      debugPrint("[RestoreUseCase] JSON decoded.");
+      log.info("[RestoreUseCase] JSON decoded.");
 
-      if (!decodedJson.containsKey('data') || decodedJson['data'] is! Map) {
-        debugPrint(
-            "[RestoreUseCase] Invalid backup format: Missing 'data' key or not a map.");
-        return const Left(RestoreFailure(
-            "Invalid backup file structure (missing 'data' section)."));
+      // Basic structure validation
+      if (!decodedJson.containsKey('data') ||
+          decodedJson['data'] is! Map ||
+          !decodedJson.containsKey('metadata')) {
+        log.warning(
+            "[RestoreUseCase] Invalid backup format: Missing 'data' or 'metadata'.");
+        return const Left(RestoreFailure("Invalid backup file structure."));
       }
-      final dataMap = decodedJson['data'] as Map<String, dynamic>;
-      // TODO: Add more validation if needed (e.g., check metadata version)
 
-      // 4. Deserialize data (Same for both platforms)
-      debugPrint("[RestoreUseCase] Deserializing data from JSON...");
+      final dataMap = decodedJson['data'] as Map<String, dynamic>;
+
+      // 4. Deserialize data
+      log.info("[RestoreUseCase] Deserializing data from JSON...");
       AllData allData;
       try {
         allData = AllData.fromJson(dataMap);
-        debugPrint("[RestoreUseCase] Deserialization successful.");
+        log.info("[RestoreUseCase] Deserialization successful.");
       } catch (e, s) {
-        debugPrint("[RestoreUseCase] Error during deserialization: $e\n$s");
+        log.severe("[RestoreUseCase] Error during deserialization");
         return Left(RestoreFailure(
             "Failed to parse backup data content: ${e.toString()}"));
       }
 
       // 5. Restore data via repository (includes clearing)
-      debugPrint("[RestoreUseCase] Calling repository.restoreData...");
+      log.info("[RestoreUseCase] Calling repository.restoreData...");
       final restoreResult = await dataManagementRepository.restoreData(allData);
 
       return restoreResult.fold(
         (failure) {
-          debugPrint(
+          log.severe(// Use severe for repository failure
               "[RestoreUseCase] Repository restore failed: ${failure.message}");
           return Left(failure);
         },
         (_) {
-          debugPrint("[RestoreUseCase] Repository restore successful.");
+          log.info("[RestoreUseCase] Repository restore successful.");
           return const Right(null); // Success
         },
       );
+    } on PlatformException catch (e, s) {
+      log.severe(
+          // Use severe for platform exceptions
+          "[RestoreUseCase] PlatformException during file picking$e$s");
+      return Left(
+          RestoreFailure("Could not pick file: ${e.message} (${e.code})"));
     } catch (e, s) {
-      debugPrint("[RestoreUseCase] Unexpected error: $e\n$s");
+      log.severe(
+          "[RestoreUseCase] Unexpected error in restore process$e$s"); // Use severe
       return Left(RestoreFailure(
           "An unexpected error occurred during restore: ${e.toString()}"));
     }

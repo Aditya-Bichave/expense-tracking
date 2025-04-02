@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class DeleteAssetAccountUseCase
     implements UseCase<void, DeleteAssetAccountParams> {
@@ -12,8 +13,8 @@ class DeleteAssetAccountUseCase
 
   @override
   Future<Either<Failure, void>> call(DeleteAssetAccountParams params) async {
-    // Consider adding checks here or in the repo impl if the account can be deleted
-    // (e.g., check if it's the only account or has transactions)
+    log.info("Executing DeleteAssetAccountUseCase for ID: ${params.id}.");
+    // Repository implementation now handles the check for linked transactions
     return await repository.deleteAssetAccount(params.id);
   }
 }

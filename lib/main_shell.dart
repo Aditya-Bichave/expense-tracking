@@ -30,9 +30,10 @@ class MainShell extends StatelessWidget {
         currentIndex: navigationShell.currentIndex, // Highlight the active tab
         onTap: (index) => _onTap(context, index), // Handle tab selection
         type: BottomNavigationBarType.fixed, // Ensures all labels are visible
-        // Optional: Customize colors based on your AppTheme
-        // selectedItemColor: Theme.of(context).colorScheme.primary,
-        // unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        // Use theme colors for better consistency
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor:
+            Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard_outlined),
@@ -56,13 +57,12 @@ class MainShell extends StatelessWidget {
             activeIcon: Icon(Icons.account_balance_wallet),
             label: 'Accounts',
           ),
-          // --- New Settings Item ---
+          // --- Settings Item ---
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
             activeIcon: Icon(Icons.settings),
             label: 'Settings',
           ),
-          // --- End Settings Item ---
         ],
       ),
     );

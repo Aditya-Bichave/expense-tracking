@@ -8,7 +8,15 @@ abstract class AccountListState extends Equatable {
 
 class AccountListInitial extends AccountListState {}
 
-class AccountListLoading extends AccountListState {}
+// Combined Loading state, can differentiate based on flag
+class AccountListLoading extends AccountListState {
+  final bool
+      isReloading; // True if loading triggered while data was already loaded
+  const AccountListLoading({this.isReloading = false});
+
+  @override
+  List<Object> get props => [isReloading];
+}
 
 class AccountListLoaded extends AccountListState {
   final List<AssetAccount> accounts;

@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
 abstract class AssetAccountLocalDataSource {
   Future<List<AssetAccountModel>> getAssetAccounts();
@@ -19,9 +20,12 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
   Future<AssetAccountModel> addAssetAccount(AssetAccountModel account) async {
     try {
       await accountBox.put(account.id, account);
+      log.info(
+          "Added asset account '${account.name}' (ID: ${account.id}) to Hive.");
       return account;
-    } catch (e) {
-      throw CacheFailure('Failed to add account to cache: ${e.toString()}');
+    } catch (e, s) {
+      log.severe("Failed to add asset account '${account.name}' to cache$e$s");
+      throw CacheFailure('Failed to add account: ${e.toString()}');
     }
   }
 
@@ -29,18 +33,22 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
   Future<void> deleteAssetAccount(String id) async {
     try {
       await accountBox.delete(id);
-    } catch (e) {
-      throw CacheFailure(
-          'Failed to delete account from cache: ${e.toString()}');
+      log.info("Deleted asset account (ID: $id) from Hive.");
+    } catch (e, s) {
+      log.severe("Failed to delete asset account (ID: $id) from cache$e$s");
+      throw CacheFailure('Failed to delete account: ${e.toString()}');
     }
   }
 
   @override
   Future<List<AssetAccountModel>> getAssetAccounts() async {
     try {
-      return accountBox.values.toList();
-    } catch (e) {
-      throw CacheFailure('Failed to get accounts from cache: ${e.toString()}');
+      final accounts = accountBox.values.toList();
+      log.info("Retrieved ${accounts.length} asset accounts from Hive.");
+      return accounts;
+    } catch (e, s) {
+      log.severe("Failed to get asset accounts from cache$e$s");
+      throw CacheFailure('Failed to get accounts: ${e.toString()}');
     }
   }
 
@@ -49,18 +57,24 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
       AssetAccountModel account) async {
     try {
       await accountBox.put(account.id, account);
+      log.info(
+          "Updated asset account '${account.name}' (ID: ${account.id}) in Hive.");
       return account;
-    } catch (e) {
-      throw CacheFailure('Failed to update account in cache: ${e.toString()}');
+    } catch (e, s) {
+      log.severe(
+          "Failed to update asset account '${account.name}' in cache$e$s");
+      throw CacheFailure('Failed to update account: ${e.toString()}');
     }
   }
 
   @override
   Future<void> clearAll() async {
     try {
-      await accountBox.clear();
-    } catch (e) {
-      throw CacheFailure('Failed to clear account cache: ${e.toString()}');
+      final count = await accountBox.clear();
+      log.info("Cleared asset accounts box in Hive ($count items removed).");
+    } catch (e, s) {
+      log.severe("Failed to clear asset accounts cache$e$s");
+      throw CacheFailure('Failed to clear accounts cache: ${e.toString()}');
     }
   }
 }

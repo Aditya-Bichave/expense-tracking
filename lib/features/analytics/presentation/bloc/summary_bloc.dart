@@ -1,20 +1,18 @@
-import 'dart:async'; // Import async
+import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart'; // For debugPrint
-import 'package:expense_tracker/core/error/failure.dart'; // Import Failure type
+import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
-import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart'; // Import the use case
-import 'package:expense_tracker/core/events/data_change_event.dart'; // Import event
+import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
+import 'package:expense_tracker/core/events/data_change_event.dart';
 
-// Link the state and event files
 part 'summary_event.dart';
 part 'summary_state.dart';
 
 class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
-  final GetExpenseSummaryUseCase _getExpenseSummaryUseCase; // Dependency
-  late final StreamSubscription<DataChangedEvent>
-      _dataChangeSubscription; // Subscription
+  final GetExpenseSummaryUseCase _getExpenseSummaryUseCase;
+  late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
   // Keep track of current filters to re-apply on auto-refresh
   DateTime? _currentStartDate;
@@ -22,108 +20,112 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
 
   SummaryBloc({
     required GetExpenseSummaryUseCase getExpenseSummaryUseCase,
-    required Stream<DataChangedEvent> dataChangeStream, // Inject stream
+    required Stream<DataChangedEvent> dataChangeStream,
   })  : _getExpenseSummaryUseCase = getExpenseSummaryUseCase,
         super(SummaryInitial()) {
     on<LoadSummary>(_onLoadSummary);
-    on<_DataChanged>(_onDataChanged); // Handler for internal event
+    on<_DataChanged>(_onDataChanged);
 
-    // *** Subscribe to the stream ***
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Summary only needs refresh if Expenses change
-      if (event.type == DataChangeType.expense) {
-        debugPrint(
-            "[SummaryBloc] Received relevant DataChangedEvent: $event. Adding _DataChanged event.");
+      // Summary needs refresh if Expenses or Settings (currency) change
+      if (event.type == DataChangeType.expense ||
+          event.type == DataChangeType.settings) {
+        log.info(
+            "[SummaryBloc] Received relevant DataChangedEvent: $event. Triggering reload.");
         add(const _DataChanged());
       }
+    }, onError: (error, stackTrace) {
+      log.severe("[SummaryBloc] Error in dataChangeStream listener");
     });
-    debugPrint("[SummaryBloc] Initialized and subscribed to data changes.");
+    log.info("[SummaryBloc] Initialized and subscribed to data changes.");
   }
 
   // Internal event handler to trigger reload
   Future<void> _onDataChanged(
       _DataChanged event, Emitter<SummaryState> emit) async {
-    debugPrint(
-        "[SummaryBloc] Handling _DataChanged event. Dispatching LoadSummary.");
-    // Reload summary using the last known filters
+    log.info(
+        "[SummaryBloc] Handling _DataChanged event. Dispatching LoadSummary with current filters.");
+    // Reload summary using the last known filters, force reload
     add(LoadSummary(
-        startDate: _currentStartDate,
-        endDate: _currentEndDate,
-        forceReload: true));
+      startDate: _currentStartDate,
+      endDate: _currentEndDate,
+      forceReload: true,
+    ));
   }
 
-  // Handler function for the LoadSummary event
   Future<void> _onLoadSummary(
       LoadSummary event, Emitter<SummaryState> emit) async {
-    debugPrint("[SummaryBloc] Received LoadSummary event.");
+    log.info(
+        "[SummaryBloc] Received LoadSummary event (forceReload: ${event.forceReload}). Current state: ${state.runtimeType}");
 
-    // Update current filters
-    _currentStartDate = event.startDate;
-    _currentEndDate = event.endDate;
-
-    // Emit loading state (consider if flicker is an issue on auto-refresh)
-    if (state is! SummaryLoaded || event.forceReload) {
-      if (state is! SummaryLoaded) {
-        debugPrint(
-            "[SummaryBloc] Current state is not Loaded. Emitting SummaryLoading.");
-        emit(SummaryLoading());
-      } else {
-        debugPrint("[SummaryBloc] Force reload requested. Refreshing data.");
-      }
-    } else {
-      debugPrint(
-          "[SummaryBloc] State is Loaded, refreshing without Loading state.");
+    // Update current filters only if they are explicitly passed in this event
+    // (avoids resetting filters during auto-refresh)
+    if (event.updateFilters) {
+      _currentStartDate = event.startDate;
+      _currentEndDate = event.endDate;
+      log.info(
+          "[SummaryBloc] Filters updated from event: Start=$_currentStartDate, End=$_currentEndDate");
     }
 
-    // Create parameters for the use case from the event data
+    // Emit loading state only if not already loaded or forced
+    if (state is! SummaryLoaded || event.forceReload) {
+      emit(SummaryLoading(isReloading: state is SummaryLoaded));
+      log.info(
+          "[SummaryBloc] Emitting SummaryLoading (isReloading: ${state is SummaryLoaded}).");
+    } else {
+      log.info("[SummaryBloc] State is Loaded, refreshing data silently.");
+    }
+
+    // Use the stored (or newly updated) filters
     final params = GetSummaryParams(
-      startDate: event.startDate,
-      endDate: event.endDate,
+      startDate: _currentStartDate,
+      endDate: _currentEndDate,
     );
-    debugPrint(
+    log.info(
         "[SummaryBloc] Calling GetExpenseSummaryUseCase with params: Start=${params.startDate}, End=${params.endDate}");
 
     try {
       final result = await _getExpenseSummaryUseCase(params);
-      debugPrint(
-          "[SummaryBloc] GetExpenseSummaryUseCase returned. Result isLeft: ${result.isLeft()}");
+      log.info(
+          "[SummaryBloc] GetExpenseSummaryUseCase returned. isLeft: ${result.isLeft()}");
 
       result.fold(
-        // If Left (Failure)
         (failure) {
-          debugPrint("[SummaryBloc] Emitting SummaryError: ${failure.message}");
+          log.warning(
+              "[SummaryBloc] Load failed: ${failure.message}. Emitting SummaryError.");
           emit(SummaryError(_mapFailureToMessage(failure)));
         },
-        // If Right (Success)
         (summary) {
-          debugPrint("[SummaryBloc] Emitting SummaryLoaded.");
+          log.info("[SummaryBloc] Load successful. Emitting SummaryLoaded.");
           emit(SummaryLoaded(summary));
         },
       );
     } catch (e, s) {
-      debugPrint("[SummaryBloc] *** CRITICAL ERROR in _onLoadSummary: $e\n$s");
-      emit(SummaryError("An unexpected error occurred loading summary: $e"));
-    } finally {
-      debugPrint("[SummaryBloc] Finished processing LoadSummary.");
+      log.severe("[SummaryBloc] Unexpected error in _onLoadSummary$e$s");
+      emit(SummaryError(
+          "An unexpected error occurred loading summary: ${e.toString()}"));
     }
   }
 
-  // Helper function to convert Failure objects to user-friendly strings
   String _mapFailureToMessage(Failure failure) {
+    log.warning(
+        "[SummaryBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
     switch (failure.runtimeType) {
       case CacheFailure:
         return 'Could not load summary from local data. ${failure.message}';
-      // Add other failure types if needed (e.g., ServerFailure for cloud sync)
+      case UnexpectedFailure:
+        return 'An unexpected error occurred loading the summary.';
       default:
-        return 'An unexpected error occurred: ${failure.message}';
+        return failure.message.isNotEmpty
+            ? failure.message
+            : 'An unknown error occurred.';
     }
   }
 
-  // *** Cancel subscription when BLoC is closed ***
   @override
   Future<void> close() {
     _dataChangeSubscription.cancel();
-    debugPrint("[SummaryBloc] Canceled data change subscription.");
+    log.info("[SummaryBloc] Canceled data change subscription and closing.");
     return super.close();
   }
 }

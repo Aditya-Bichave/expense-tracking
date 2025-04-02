@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart'; // Import for debugPrint
+import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
@@ -13,8 +13,8 @@ class GetIncomesUseCase implements UseCase<List<Income>, GetIncomesParams> {
 
   @override
   Future<Either<Failure, List<Income>>> call(GetIncomesParams params) async {
-    debugPrint(
-        "[GetIncomesUseCase] Call method executing with params: AccID=${params.accountId}, Start=${params.startDate}, End=${params.endDate}, Cat=${params.category}");
+    log.info(
+        "Executing GetIncomesUseCase. Filters: AccID=${params.accountId}, Start=${params.startDate}, End=${params.endDate}, Cat=${params.category}");
     try {
       final result = await repository.getIncomes(
         startDate: params.startDate,
@@ -22,13 +22,16 @@ class GetIncomesUseCase implements UseCase<List<Income>, GetIncomesParams> {
         category: params.category,
         accountId: params.accountId,
       );
-      debugPrint(
-          "[GetIncomesUseCase] Repository returned. Result isLeft: ${result.isLeft()}");
+      result.fold(
+        (failure) =>
+            log.warning("[GetIncomesUseCase] Failed: ${failure.message}"),
+        (incomes) => log.info(
+            "[GetIncomesUseCase] Succeeded with ${incomes.length} incomes."),
+      );
       return result;
     } catch (e, s) {
-      debugPrint("[GetIncomesUseCase] *** CRITICAL ERROR: $e\n$s");
-      return Left(CacheFailure(
-          "Unexpected error in GetIncomesUseCase: $e")); // Use base Failure or a specific one
+      log.severe("[GetIncomesUseCase] Unexpected error$e$s");
+      return Left(UnexpectedFailure("Unexpected error getting incomes: $e"));
     }
   }
 }

@@ -3,20 +3,21 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For PlatformException
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:local_auth/local_auth.dart'; // Import local_auth
+import 'package:local_auth/local_auth.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/theme/app_theme.dart'; // For theme names/IDs
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Assuming SettingsBloc is provided globally via main.dart
+    // Assuming SettingsBloc is provided globally
     return const SettingsView();
   }
 }
 
 class SettingsView extends StatefulWidget {
-  // Convert to StatefulWidget
   const SettingsView({super.key});
 
   @override
@@ -24,50 +25,39 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  // State for dialogs and auth
-  // Instantiate LocalAuthentication
   final LocalAuthentication _localAuth = LocalAuthentication();
-  bool _isAuthenticating = false; // Prevent double-taps during auth check
-
-  static const List<String> _currencySymbols = [
-    'USD', 'EUR', 'GBP', 'JPY', 'INR', 'CAD', 'AUD', 'CHF' // Add more as needed
-  ];
-
-  List<PopupMenuEntry<ThemeMode>> _buildThemeMenuItems(BuildContext context) {
-    return ThemeMode.values
-        .map((mode) => PopupMenuItem<ThemeMode>(
-              value: mode,
-              child: Text(mode.name.capitalize(),
-                  style: Theme.of(context).textTheme.bodyMedium),
-            ))
-        .toList();
-  }
+  bool _isAuthenticating = false; // For App Lock toggle UI feedback
 
   // --- Dialog Functions ---
   Future<bool?> _showConfirmationDialog({
     required BuildContext context,
     required String title,
-    required Widget content,
+    required String content,
     required String confirmText,
-    bool isDestructive = false,
-  }) {
+    Color? confirmColor,
+  }) async {
     return showDialog<bool>(
       context: context,
-      barrierDismissible: false, // User must tap button
+      barrierDismissible: false, // User must tap button!
       builder: (BuildContext ctx) {
         return AlertDialog(
           title: Text(title),
-          content: content,
+          content: Text(content, style: Theme.of(ctx).textTheme.bodyMedium),
           actions: <Widget>[
             TextButton(
               child: const Text('Cancel'),
-              onPressed: () => Navigator.of(ctx).pop(false),
+              onPressed: () {
+                Navigator.of(ctx).pop(false);
+              },
             ),
             TextButton(
               style: TextButton.styleFrom(
-                  foregroundColor: isDestructive ? Colors.red : null),
+                  foregroundColor:
+                      confirmColor ?? Theme.of(ctx).colorScheme.primary),
               child: Text(confirmText),
-              onPressed: () => Navigator.of(ctx).pop(true),
+              onPressed: () {
+                Navigator.of(ctx).pop(true);
+              },
             ),
           ],
         );
@@ -78,8 +68,10 @@ class _SettingsViewState extends State<SettingsView> {
   Future<bool?> _showStrongConfirmationDialog({
     required BuildContext context,
     required String title,
-    required String confirmationText, // e.g., "DELETE"
-  }) {
+    required String content,
+    required String confirmText,
+    required String confirmationPhrase,
+  }) async {
     final controller = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
@@ -89,33 +81,41 @@ class _SettingsViewState extends State<SettingsView> {
       builder: (BuildContext ctx) {
         return AlertDialog(
           title: Text(title),
-          content: Form(
-            // Use a Form for validation
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'This action is irreversible. Please type "$confirmationText" below to confirm.',
-                  style: const TextStyle(color: Colors.red),
+          content: StatefulBuilder(
+            // Use StatefulBuilder for text field validation within dialog
+            builder: (context, setDialogState) {
+              return Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(content,
+                        style: Theme.of(context).textTheme.bodyMedium),
+                    const SizedBox(height: 15),
+                    Text('Please type "$confirmationPhrase" to confirm:',
+                        style: Theme.of(context).textTheme.bodySmall),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: controller,
+                      decoration: InputDecoration(
+                        hintText: confirmationPhrase,
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                      validator: (value) {
+                        if (value != confirmationPhrase) {
+                          return 'Incorrect phrase';
+                        }
+                        return null;
+                      },
+                      // Auto-validate or validate on action press
+                      // autovalidateMode: AutovalidateMode.onUserInteraction,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 15),
-                TextFormField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    labelText: 'Type "$confirmationText" to confirm',
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim() != confirmationText) {
-                      return 'Incorrect confirmation text';
-                    }
-                    return null;
-                  },
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                ),
-              ],
-            ),
+              );
+            },
           ),
           actions: <Widget>[
             TextButton(
@@ -123,12 +123,13 @@ class _SettingsViewState extends State<SettingsView> {
               onPressed: () => Navigator.of(ctx).pop(false),
             ),
             TextButton(
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('Confirm'),
+              style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(ctx).colorScheme.error),
+              child: Text(confirmText),
               onPressed: () {
-                // Validate the input before popping
+                // Validate before closing
                 if (formKey.currentState?.validate() ?? false) {
-                  Navigator.of(ctx).pop(true);
+                  Navigator.of(ctx).pop(true); // Confirmed
                 }
               },
             ),
@@ -139,182 +140,157 @@ class _SettingsViewState extends State<SettingsView> {
   }
 
   // --- Event Handlers ---
-  void _handleBackup(BuildContext context) async {
-    final confirmed = await _showConfirmationDialog(
-      context: context,
-      title: 'Confirm Backup',
-      content: const Text('Create a local backup file of your data?'),
-      confirmText: 'Backup',
-    );
-    if (confirmed == true && context.mounted) {
-      // Check if mounted after await
-      context.read<SettingsBloc>().add(const BackupRequested());
-    }
+  void _handleBackup(BuildContext context) {
+    log.info("[SettingsPage] Backup requested.");
+    context.read<SettingsBloc>().add(const BackupRequested());
   }
 
   void _handleRestore(BuildContext context) async {
-    final confirmed = await _showStrongConfirmationDialog(
+    log.info("[SettingsPage] Restore requested.");
+    final confirmed = await _showConfirmationDialog(
       context: context,
-      title: 'Confirm Restore',
-      confirmationText: 'RESTORE', // Require typing RESTORE
+      title: "Confirm Restore",
+      content:
+          "Restoring from backup will overwrite all current data. Are you sure you want to proceed?",
+      confirmText: "Restore",
+      confirmColor: Colors.orange[700],
     );
-    if (confirmed == true && context.mounted) {
+    if (confirmed == true) {
+      log.info("[SettingsPage] Restore confirmed by user.");
       context.read<SettingsBloc>().add(const RestoreRequested());
+    } else {
+      log.info("[SettingsPage] Restore cancelled by user.");
     }
   }
 
   void _handleClearData(BuildContext context) async {
+    log.info("[SettingsPage] Clear All Data requested.");
+    // Use strong confirmation
     final confirmed = await _showStrongConfirmationDialog(
       context: context,
-      title: 'Confirm Clear All Data',
-      confirmationText: 'DELETE', // Require typing DELETE
+      title: "Confirm Clear All Data",
+      content:
+          "This action will permanently delete ALL accounts, expenses, and income data. This cannot be undone.",
+      confirmText: "Clear Data",
+      confirmationPhrase: "DELETE", // Phrase user must type
     );
-    if (confirmed == true && context.mounted) {
+
+    if (confirmed == true) {
+      log.info("[SettingsPage] Clear All Data confirmed by user.");
       context.read<SettingsBloc>().add(const ClearDataRequested());
+    } else {
+      log.info("[SettingsPage] Clear All Data cancelled by user.");
     }
   }
 
-  // --- Handle App Lock Toggle ---
   Future<void> _handleAppLockToggle(BuildContext context, bool enable) async {
-    if (_isAuthenticating) return; // Prevent concurrent attempts
+    log.info("[SettingsPage] App Lock toggle requested. Enable: $enable");
+    if (_isAuthenticating) return; // Prevent double taps
 
-    if (!mounted) return; // Check mount status before async gap
-    setState(() {
-      _isAuthenticating = true;
-    }); // Indicate processing
-
-    final settingsBloc = context.read<SettingsBloc>();
-    String? errorMessage;
+    setState(() => _isAuthenticating = true); // Show loading indicator
 
     try {
-      final bool canAuthenticateWithBiometrics =
-          await _localAuth.canCheckBiometrics;
-      final bool canAuthenticate =
-          canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
-
-      if (!canAuthenticate) {
-        errorMessage =
-            'Device does not support Biometric or Passcode authentication.';
-        if (enable) {
-          // Only revert if trying to enable
-          // Schedule post-frame callback to safely update BLoC state if needed
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) settingsBloc.add(const UpdateAppLock(false));
-          });
-        }
-      } else if (enable) {
-        // --- Enabling App Lock ---
-        final bool didAuthenticate = await _localAuth.authenticate(
-          localizedReason: 'Please authenticate to enable App Lock',
-          options: const AuthenticationOptions(
-            stickyAuth: true,
-            // biometricOnly: false // Allow device credential fallback
-          ),
-        );
-
-        if (didAuthenticate && mounted) {
-          // Check mount status again after await
-          settingsBloc.add(const UpdateAppLock(true));
-        } else if (!didAuthenticate) {
-          errorMessage = 'Authentication failed. App Lock remains disabled.';
-          // No need to dispatch event, switch state didn't change
-        }
-      } else {
-        // --- Disabling App Lock ---
-        if (mounted) {
-          // Check mount status
-          settingsBloc.add(const UpdateAppLock(false));
-        }
-      }
-    } on PlatformException catch (e) {
-      errorMessage =
-          'Platform Error: ${e.code} - ${e.message ?? 'Unknown error'}';
-      // Schedule post-frame callback if trying to enable failed
+      bool canAuth = false;
       if (enable) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) settingsBloc.add(const UpdateAppLock(false));
-        });
-      }
-    } catch (e) {
-      errorMessage = 'An unexpected error occurred: $e';
-      if (enable) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) settingsBloc.add(const UpdateAppLock(false));
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isAuthenticating = false;
-        });
-        // Show error message if any occurred
-        if (errorMessage != null) {
+        // Only check if enabling
+        canAuth = await _localAuth.canCheckBiometrics ||
+            await _localAuth.isDeviceSupported();
+        if (!canAuth) {
+          log.warning(
+              "[SettingsPage] Cannot enable App Lock: Biometrics/Device lock not available/setup.");
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(errorMessage!),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
+            ..showSnackBar(SnackBar(
+              content: const Text(
+                  "Cannot enable App Lock. Please set up device screen lock or biometrics first."),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ));
+          // Revert the state in BLoC if needed (though UI switch will likely revert automatically)
+          // context.read<SettingsBloc>().add(UpdateAppLock(false));
+          return; // Exit early
         }
+        // Optional: Prompt for authentication *before* saving the setting
+        // final didAuthenticate = await _localAuth.authenticate(...);
+        // if (!didAuthenticate) return;
+      }
+      log.info(
+          "[SettingsPage] Dispatching UpdateAppLock event. IsEnabled: $enable");
+      // If checks pass (or disabling), dispatch the event
+      context.read<SettingsBloc>().add(UpdateAppLock(enable));
+    } on PlatformException catch (e, s) {
+      log.severe(
+          "[SettingsPage] PlatformException checking/setting App Lock$e$s");
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: Text("Error setting App Lock: ${e.message}"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+    } catch (e, s) {
+      log.severe(
+          "[SettingsPage] Unexpected error checking/setting App Lock$e$s");
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
+          content: const Text("An unexpected error occurred setting App Lock."),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+    } finally {
+      if (mounted) {
+        setState(() => _isAuthenticating = false);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return BlocListener<SettingsBloc, SettingsState>(
       listener: (context, state) {
-        // Show Snackbars for Data Management Success/Failure
+        // Show feedback messages for data operations
         if (state.dataManagementStatus == DataManagementStatus.success &&
             state.dataManagementMessage != null) {
+          log.info(
+              "[SettingsPage] Data management success: ${state.dataManagementMessage}");
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(state.dataManagementMessage!),
-                backgroundColor: Colors.green, // Success color
-              ),
-            );
+            ..showSnackBar(SnackBar(
+              content: Text(state.dataManagementMessage!),
+              backgroundColor: Colors.green,
+            ));
         } else if (state.dataManagementStatus == DataManagementStatus.error &&
             state.dataManagementMessage != null) {
+          log.warning(
+              "[SettingsPage] Data management error: ${state.dataManagementMessage}");
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(state.dataManagementMessage!),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
+            ..showSnackBar(SnackBar(
+              content: Text(state.dataManagementMessage!),
+              backgroundColor: theme.colorScheme.error,
+            ));
         }
-
-        // --- Keep existing listeners for other errors ---
+        // Show errors related to loading main settings or package info
         if (state.status == SettingsStatus.error &&
             state.errorMessage != null) {
-          // Avoid double-showing data management errors if they also set main status
-          if (state.dataManagementStatus != DataManagementStatus.error) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text('Settings Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-              );
-          }
-        } else if (state.packageInfoStatus == PackageInfoStatus.error &&
-            state.packageInfoError != null) {
+          log.warning(
+              "[SettingsPage] Main settings error: ${state.errorMessage}");
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text('Version Error: ${state.packageInfoError}'),
-                backgroundColor: Colors.orange,
-              ),
-            );
+            ..showSnackBar(SnackBar(
+              content: Text("Settings Error: ${state.errorMessage!}"),
+              backgroundColor: theme.colorScheme.error,
+            ));
+        } else if (state.packageInfoStatus == PackageInfoStatus.error &&
+            state.packageInfoError != null) {
+          log.warning(
+              "[SettingsPage] Package info error: ${state.packageInfoError}");
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+              content: Text("Version Info Error: ${state.packageInfoError!}"),
+              backgroundColor: theme.colorScheme.error,
+            ));
         }
-        // ----------------------------------------------------
       },
       child: Scaffold(
         appBar: AppBar(
@@ -322,160 +298,144 @@ class _SettingsViewState extends State<SettingsView> {
         ),
         body: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, state) {
-            // Determine if a data management operation is in progress
             final bool isDataManagementLoading =
                 state.dataManagementStatus == DataManagementStatus.loading;
+            final bool isSettingsLoading =
+                state.status == SettingsStatus.loading ||
+                    state.packageInfoStatus == PackageInfoStatus.loading;
             final bool isOverallLoading = isDataManagementLoading ||
-                _isAuthenticating; // Combine loading states
+                _isAuthenticating ||
+                isSettingsLoading;
 
-            // Show full page loader only if initial load is happening
-            if ((state.status == SettingsStatus.loading ||
-                    state.status == SettingsStatus.initial) &&
-                (state.packageInfoStatus == PackageInfoStatus.loading ||
-                    state.packageInfoStatus == PackageInfoStatus.initial) &&
-                !isOverallLoading) {
-              // Don't show full loader if DM/Auth is loading
+            // Initial loading indicator for the whole page
+            if (state.status == SettingsStatus.initial ||
+                state.packageInfoStatus == PackageInfoStatus.initial) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // Build the settings list, disable items if data management is loading
+            // Use Stack for overlay loading indicator during data operations
             return Stack(
-              // Use Stack to overlay loading indicator
               children: [
                 ListView(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   children: [
-                    // Theme
+                    // --- Appearance Section ---
+                    _buildSectionHeader(context, 'Appearance'),
                     ListTile(
-                      enabled: !isOverallLoading, // Use combined loading state
-                      leading: const Icon(Icons.color_lens_outlined),
-                      title: const Text('Theme'),
+                      // Theme Identifier Selection
+                      enabled: !isOverallLoading,
+                      leading: const Icon(Icons.palette_outlined),
+                      title: const Text('App Theme'),
+                      subtitle: Text(
+                          AppTheme.getThemeName(state.selectedThemeIdentifier)),
+                      trailing: PopupMenuButton<String>(
+                        enabled: !isOverallLoading,
+                        icon: const Icon(Icons.arrow_drop_down),
+                        tooltip: "Select App Theme",
+                        onSelected: (String newIdentifier) {
+                          context
+                              .read<SettingsBloc>()
+                              .add(UpdateThemeIdentifier(newIdentifier));
+                        },
+                        itemBuilder: (context) =>
+                            AppTheme.availableThemeIdentifiers
+                                .map((id) => PopupMenuItem<String>(
+                                      value: id,
+                                      child: Text(AppTheme.getThemeName(id),
+                                          style: theme.textTheme.bodyMedium),
+                                    ))
+                                .toList(),
+                      ),
+                    ),
+                    ListTile(
+                      // Theme Mode (Light/Dark/System)
+                      enabled: !isOverallLoading,
+                      leading: const Icon(Icons.brightness_6_outlined),
+                      title: const Text('Theme Mode'),
                       subtitle: Text(state.themeMode.name.capitalize()),
                       trailing: PopupMenuButton<ThemeMode>(
-                        enabled:
-                            !isOverallLoading, // Use combined loading state
+                        enabled: !isOverallLoading,
                         icon: const Icon(Icons.arrow_drop_down),
-                        tooltip: "Select Theme",
+                        tooltip: "Select Theme Mode",
                         onSelected: (ThemeMode newMode) {
                           context
                               .read<SettingsBloc>()
                               .add(UpdateTheme(newMode));
                         },
-                        itemBuilder: _buildThemeMenuItems,
+                        itemBuilder: (context) => ThemeMode.values
+                            .map((mode) => PopupMenuItem<ThemeMode>(
+                                  value: mode,
+                                  child: Text(mode.name.capitalize(),
+                                      style: theme.textTheme.bodyMedium),
+                                ))
+                            .toList(),
                       ),
                     ),
                     const Divider(),
 
-                    // Currency
+                    // --- Regional Settings Section ---
+                    _buildSectionHeader(context, 'Regional'),
                     Padding(
+                      // Country / Currency
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16.0, vertical: 8.0),
                       child: DropdownButtonFormField<String>(
-                        value: _currencySymbols.contains(state.currencySymbol)
-                            ? state.currencySymbol
-                            : null,
+                        value: SettingsState.availableCountries
+                                .any((c) => c.code == state.selectedCountryCode)
+                            ? state.selectedCountryCode
+                            : null, // Ensure value exists in items
                         decoration: InputDecoration(
-                          labelText: 'Currency Symbol',
-                          icon: const Icon(Icons.attach_money_outlined),
+                          labelText: 'Country / Currency',
+                          icon: const Icon(Icons.public_outlined),
                           border: const OutlineInputBorder(),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 16),
-                          enabled:
-                              !isOverallLoading, // Use combined loading state
+                          enabled: !isOverallLoading,
                         ),
-                        hint: const Text('Select Currency'),
+                        hint: const Text('Select Country'),
                         isExpanded: true,
-                        items: _currencySymbols.map((String symbol) {
+                        items: SettingsState.availableCountries
+                            .map((CountryInfo country) {
                           return DropdownMenuItem<String>(
-                              value: symbol, child: Text(symbol));
+                            value: country.code,
+                            child: Text(
+                                '${country.name} (${country.currencySymbol})'),
+                          );
                         }).toList(),
                         onChanged: isOverallLoading
                             ? null
                             : (String? newValue) {
-                                // Use combined loading state
                                 if (newValue != null) {
                                   context
                                       .read<SettingsBloc>()
-                                      .add(UpdateCurrency(newValue));
+                                      .add(UpdateCountry(newValue));
                                 }
                               },
-                        validator: (value) =>
-                            value == null ? 'Please select a currency' : null,
+                        // validator: (value) => value == null ? 'Please select a country' : null, // Optional validation
                       ),
                     ),
                     const Divider(),
 
-                    // Backup
-                    ListTile(
-                      enabled: !isOverallLoading, // Use combined loading state
-                      leading: const Icon(Icons.storage_outlined),
-                      title: const Text('Backup Data'),
-                      subtitle: const Text('Save data to a local file'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: isOverallLoading
-                          ? null
-                          : () => _handleBackup(context), // Disable onTap
-                    ),
-                    // Restore
-                    ListTile(
-                      enabled: !isOverallLoading, // Use combined loading state
-                      leading: const Icon(Icons.restore_outlined),
-                      title: const Text('Restore Data'),
-                      subtitle: const Text('Load data from a backup file'),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: isOverallLoading
-                          ? null
-                          : () => _handleRestore(context), // Disable onTap
-                    ),
-                    // Clear Data
-                    ListTile(
-                      enabled: !isOverallLoading, // Use combined loading state
-                      leading: Icon(Icons.delete_forever_outlined,
-                          color: isOverallLoading
-                              ? Colors.grey
-                              : Theme.of(context).colorScheme.error),
-                      title: Text('Clear All Data',
-                          style: TextStyle(
-                              color: isOverallLoading
-                                  ? Colors.grey
-                                  : Theme.of(context).colorScheme.error)),
-                      subtitle: Text(
-                          'Permanently delete all accounts & transactions',
-                          style: TextStyle(
-                              color: isOverallLoading ? Colors.grey : null)),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: isOverallLoading
-                          ? null
-                          : () => _handleClearData(context), // Disable onTap
-                    ),
-                    const Divider(),
-
-                    // App Lock
+                    // --- Security Section ---
+                    _buildSectionHeader(context, 'Security'),
                     SwitchListTile(
                       secondary: Icon(
                         Icons.security_outlined,
-                        // Optionally change icon color when disabled
-                        color: isOverallLoading
-                            ? Theme.of(context).disabledColor
-                            : null,
+                        color: isOverallLoading ? theme.disabledColor : null,
                       ),
                       title: Text(
                         'App Lock',
-                        // Optionally change text color when disabled
                         style: TextStyle(
-                            color: isOverallLoading
-                                ? Theme.of(context).disabledColor
-                                : null),
+                            color:
+                                isOverallLoading ? theme.disabledColor : null),
                       ),
                       subtitle: Text(
                         'Require authentication on launch/resume',
                         style: TextStyle(
-                            color: isOverallLoading
-                                ? Theme.of(context).disabledColor
-                                : null),
+                            color:
+                                isOverallLoading ? theme.disabledColor : null),
                       ),
                       value: state.isAppLockEnabled,
-                      // Set onChanged to null to disable interaction
                       onChanged: isOverallLoading
                           ? null
                           : (bool value) =>
@@ -483,35 +443,83 @@ class _SettingsViewState extends State<SettingsView> {
                     ),
                     const Divider(),
 
-                    // App Version
+                    // --- Data Management Section ---
+                    _buildSectionHeader(context, 'Data Management'),
                     ListTile(
-                      enabled: !isOverallLoading, // Use combined loading state
+                      // Backup
+                      enabled: !isOverallLoading,
+                      leading:
+                          const Icon(Icons.backup_outlined), // Changed icon
+                      title: const Text('Backup Data'),
+                      subtitle: const Text('Save all data to a file'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: isOverallLoading
+                          ? null
+                          : () => _handleBackup(context),
+                    ),
+                    ListTile(
+                      // Restore
+                      enabled: !isOverallLoading,
+                      leading: const Icon(
+                          Icons.restore_page_outlined), // Changed icon
+                      title: const Text('Restore Data'),
+                      subtitle: const Text('Load data from a backup file'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: isOverallLoading
+                          ? null
+                          : () => _handleRestore(context),
+                    ),
+                    ListTile(
+                      // Clear Data
+                      enabled: !isOverallLoading,
+                      leading: Icon(Icons.delete_sweep_outlined,
+                          color: isOverallLoading
+                              ? Colors.grey
+                              : theme.colorScheme.error), // Changed icon
+                      title: Text('Clear All Data',
+                          style: TextStyle(
+                              color: isOverallLoading
+                                  ? Colors.grey
+                                  : theme.colorScheme.error)),
+                      subtitle: Text(
+                          'Permanently delete all accounts & transactions',
+                          style: TextStyle(
+                              color: isOverallLoading ? Colors.grey : null)),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: isOverallLoading
+                          ? null
+                          : () => _handleClearData(context),
+                    ),
+                    const Divider(),
+
+                    // --- About Section ---
+                    _buildSectionHeader(context, 'About'),
+                    ListTile(
+                      // App Version
+                      enabled: !isOverallLoading,
                       leading: const Icon(Icons.info_outline),
                       title: const Text('App Version'),
                       subtitle: Text(state.packageInfoStatus ==
                               PackageInfoStatus.loading
                           ? 'Loading...'
                           : state.packageInfoStatus == PackageInfoStatus.error
-                              ? 'Error loading version'
+                              ? state.packageInfoError ?? 'Error'
                               : state.appVersion ?? 'N/A'),
                     ),
-
-                    // Licenses
                     ListTile(
-                      enabled: !isOverallLoading, // Use combined loading state
+                      // Licenses
+                      enabled: !isOverallLoading,
                       leading: const Icon(Icons.article_outlined),
                       title: const Text('Open Source Licenses'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: isOverallLoading
                           ? null
                           : () {
-                              // Disable onTap
                               Navigator.push(
                                 context,
                                 MaterialPageRoute<void>(
-                                  builder: (BuildContext context) =>
-                                      const LicensePage(),
-                                ),
+                                    builder: (BuildContext context) =>
+                                        const LicensePage()),
                               );
                             },
                     ),
@@ -519,27 +527,27 @@ class _SettingsViewState extends State<SettingsView> {
                   ],
                 ),
 
-                // Loading Overlay for Data Management OR Authentication
+                // Loading Overlay for Data Ops / Auth Check
                 if (isOverallLoading)
                   Container(
-                    color: Colors.black
-                        .withOpacity(0.3), // Semi-transparent overlay
+                    color: Colors.black.withOpacity(0.3),
                     child: Center(
                       child: Card(
-                        // Show indicator inside a card
+                        elevation: 8,
                         child: Padding(
-                          padding: const EdgeInsets.all(20.0),
+                          padding: const EdgeInsets.all(24.0),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const CircularProgressIndicator(),
-                              const SizedBox(height: 15),
+                              const SizedBox(height: 16),
                               Text(
-                                  // Show appropriate message
                                   _isAuthenticating
                                       ? "Authenticating..."
-                                      : "Processing data...",
-                                  style: const TextStyle(fontSize: 16)),
+                                      : isDataManagementLoading
+                                          ? "Processing data..."
+                                          : "Loading settings...", // Generic loading
+                                  style: theme.textTheme.titleMedium),
                             ],
                           ),
                         ),
@@ -553,9 +561,23 @@ class _SettingsViewState extends State<SettingsView> {
       ),
     );
   }
+
+  // Helper to build section headers
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+    );
+  }
 }
 
-// Capitalize extension (keep this)
+// Capitalize extension (can be moved to utils)
 extension StringExtension on String {
   String capitalize() {
     if (isEmpty) return this;

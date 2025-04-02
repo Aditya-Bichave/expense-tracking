@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart'; // Import for debugPrint
+import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
@@ -12,16 +12,21 @@ class GetAssetAccountsUseCase implements UseCase<List<AssetAccount>, NoParams> {
 
   @override
   Future<Either<Failure, List<AssetAccount>>> call(NoParams params) async {
-    debugPrint("[GetAssetAccountsUseCase] Call method executing.");
+    log.info("Executing GetAssetAccountsUseCase.");
     try {
       final result = await repository.getAssetAccounts();
-      debugPrint(
+      log.info(
           "[GetAssetAccountsUseCase] Repository returned. Result isLeft: ${result.isLeft()}");
+      result.fold(
+        (failure) =>
+            log.warning("[GetAssetAccountsUseCase] Failed: ${failure.message}"),
+        (accounts) => log.info(
+            "[GetAssetAccountsUseCase] Succeeded with ${accounts.length} accounts."),
+      );
       return result;
     } catch (e, s) {
-      debugPrint("[GetAssetAccountsUseCase] *** CRITICAL ERROR: $e\n$s");
-      return Left(CacheFailure(
-          "Unexpected error in GetAssetAccountsUseCase: $e")); // Use base Failure or a specific one
+      log.severe("[GetAssetAccountsUseCase] Unexpected error$e$s");
+      return Left(UnexpectedFailure("Unexpected error getting accounts: $e"));
     }
   }
 }

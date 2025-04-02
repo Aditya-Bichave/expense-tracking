@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
-import 'package:json_annotation/json_annotation.dart'; // Import
+import 'package:json_annotation/json_annotation.dart';
 
-part 'asset_account_model.g.dart'; // Ensure this is updated
+part 'asset_account_model.g.dart';
 
-@JsonSerializable() // Add Annotation
-@HiveType(typeId: 1)
+@JsonSerializable()
+@HiveType(typeId: 1) // Keep existing typeId
 class AssetAccountModel extends HiveObject {
   @HiveField(0)
   final String id;
@@ -19,6 +19,9 @@ class AssetAccountModel extends HiveObject {
 
   @HiveField(3)
   final double initialBalance;
+
+  // No longer storing icon data index
+  // @HiveField(4) -> Removed
 
   AssetAccountModel({
     required this.id,
@@ -37,23 +40,19 @@ class AssetAccountModel extends HiveObject {
   }
 
   AssetAccount toEntity(double currentBalance) {
-    IconData? icon;
-    // switch (AssetType.values[typeIndex]) { ... set icon ... }
-
+    // Icon is now determined in the entity or widget
     return AssetAccount(
       id: id,
       name: name,
-      type: AssetType.values[typeIndex],
+      type: AssetType.values[typeIndex], // Get enum from index
       initialBalance: initialBalance,
       currentBalance: currentBalance,
-      iconData: icon,
+      // iconData is handled by the entity/widget now
     );
   }
 
-  // --- Add JsonSerializable methods ---
   factory AssetAccountModel.fromJson(Map<String, dynamic> json) =>
       _$AssetAccountModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$AssetAccountModelToJson(this);
-  // ------------------------------------
 }

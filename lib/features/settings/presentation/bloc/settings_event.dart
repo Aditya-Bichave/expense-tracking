@@ -7,36 +7,43 @@ abstract class SettingsEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// --- Main Settings ---
+
 class LoadSettings extends SettingsEvent {
   const LoadSettings();
 }
 
 class UpdateTheme extends SettingsEvent {
   final ThemeMode newMode;
-
   const UpdateTheme(this.newMode);
-
   @override
   List<Object?> get props => [newMode];
 }
 
-class UpdateCurrency extends SettingsEvent {
-  final String newSymbol;
-
-  const UpdateCurrency(this.newSymbol);
-
+// Event for changing the entire theme (e.g., Pastel Peach)
+class UpdateThemeIdentifier extends SettingsEvent {
+  final String newIdentifier;
+  const UpdateThemeIdentifier(this.newIdentifier);
   @override
-  List<Object?> get props => [newSymbol];
+  List<Object?> get props => [newIdentifier];
+}
+
+// Event for changing the selected country
+class UpdateCountry extends SettingsEvent {
+  final String newCountryCode;
+  const UpdateCountry(this.newCountryCode);
+  @override
+  List<Object?> get props => [newCountryCode];
 }
 
 class UpdateAppLock extends SettingsEvent {
   final bool isEnabled;
-
   const UpdateAppLock(this.isEnabled);
-
   @override
   List<Object?> get props => [isEnabled];
 }
+
+// --- Data Management ---
 
 class BackupRequested extends SettingsEvent {
   const BackupRequested();

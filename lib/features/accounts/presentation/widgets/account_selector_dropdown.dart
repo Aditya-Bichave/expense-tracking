@@ -2,17 +2,22 @@ import 'package:expense_tracker/features/accounts/domain/entities/asset_account.
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class AccountSelectorDropdown extends StatefulWidget {
   final String? selectedAccountId;
   final ValueChanged<String?> onChanged;
   final String? Function(String?)? validator; // Optional validator
+  final String labelText; // Make label customizable
+  final String hintText; // Make hint customizable
 
   const AccountSelectorDropdown({
     super.key,
     required this.onChanged,
     this.selectedAccountId,
     this.validator,
+    this.labelText = 'Account', // Default label
+    this.hintText = 'Select Account', // Default hint
   });
 
   @override
@@ -21,26 +26,17 @@ class AccountSelectorDropdown extends StatefulWidget {
 }
 
 class _AccountSelectorDropdownState extends State<AccountSelectorDropdown> {
-  // Use BlocProvider.of or context.read in build method if AccountListBloc is provided higher up.
-  // Or get from sl if it's truly managed globally and needs to be accessed here.
-  // Let's assume it's provided higher up or fetched via sl if necessary.
-
-  // Keep track of the selection internally if needed, but often
-  // relying on the widget's selectedAccountId is simpler if the parent manages state.
-  // For simplicity here, we'll manage it internally based on the initial value.
   String? _internalSelectedId;
 
   @override
   void initState() {
     super.initState();
     _internalSelectedId = widget.selectedAccountId;
+    log.info(
+        "[AccountSelector] Initialized. Selected ID: $_internalSelectedId");
 
-    // Optionally trigger load if needed and not provided/loaded higher up
-    // Consider if this component should be responsible for loading.
-    // final accountListBloc = sl<AccountListBloc>();
-    // if (accountListBloc.state is AccountListInitial) {
-    //   accountListBloc.add(LoadAccounts());
-    // }
+    // AccountListBloc is assumed to be loaded higher up.
+    // If not, it might need a LoadAccounts dispatch here, but that's less ideal.
   }
 
   // Update internal state if the parent widget rebuilds with a different ID
@@ -48,6 +44,8 @@ class _AccountSelectorDropdownState extends State<AccountSelectorDropdown> {
   void didUpdateWidget(covariant AccountSelectorDropdown oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedAccountId != oldWidget.selectedAccountId) {
+      log.info(
+          "[AccountSelector] didUpdateWidget: ID changed from ${oldWidget.selectedAccountId} to ${widget.selectedAccountId}");
       setState(() {
         _internalSelectedId = widget.selectedAccountId;
       });
@@ -56,104 +54,116 @@ class _AccountSelectorDropdownState extends State<AccountSelectorDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    // Read the bloc instance here. Make sure it's provided above this widget!
-    // If using sl, you might fetch it directly: final state = sl<AccountListBloc>().state;
-    // But using BlocBuilder/BlocProvider.of is generally preferred.
+    final theme = Theme.of(context);
     return BlocBuilder<AccountListBloc, AccountListState>(
-      // If Bloc is fetched via sl and not provided, specify 'bloc' instance:
-      // bloc: sl<AccountListBloc>(),
       builder: (context, state) {
+        log.info(
+            "[AccountSelector] BlocBuilder running for state: ${state.runtimeType}");
         List<AssetAccount> accounts = [];
         bool isLoading = false;
         String? errorMessage;
 
         if (state is AccountListLoading) {
           isLoading = true;
+          // Keep existing accounts if available during reload
+          final previousState = context.read<AccountListBloc>().state;
+          if (previousState is AccountListLoaded) {
+            accounts = previousState.accounts;
+          }
         } else if (state is AccountListLoaded) {
           accounts = state.accounts;
           // Ensure the *currently selected internal ID* is still valid within the new list.
-          // If not, DropdownButtonFormField will handle it by showing no selection.
           if (_internalSelectedId != null &&
               !accounts.any((acc) => acc.id == _internalSelectedId)) {
-            // The value is invalid, but we don't call setState here.
-            // We might want to inform the parent via onChanged *after* the build.
-            // Or reset the internal state in didUpdateWidget if the list changes drastically.
-            // Simplest: Let DropdownButtonFormField handle display.
-            // If we reset here, need addPostFrameCallback
+            log.warning(
+                "[AccountSelector] Selected ID '$_internalSelectedId' is no longer valid in the updated list. Resetting selection.");
+            // Reset the selection if the previously selected account is gone
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && _internalSelectedId != null) {
-                // Check if still mounted
+              if (mounted) {
                 setState(() {
                   _internalSelectedId = null;
                 });
-                widget.onChanged(null);
+                widget.onChanged(null); // Notify parent
               }
             });
           }
         } else if (state is AccountListError) {
-          errorMessage = state.message;
+          log.severe(
+              "[AccountSelector] Error state detected: ${state.message}");
+          errorMessage = "Error loading accounts: ${state.message}";
+        } else if (state is AccountListInitial) {
+          isLoading = true; // Treat initial as loading
         }
 
-        // Handle error state display
-        if (errorMessage != null) {
-          return TextFormField(
-            // Display error within a form field lookalike
-            readOnly: true,
-            decoration: InputDecoration(
-              labelText: 'Account',
-              border: const OutlineInputBorder(),
-              errorText: 'Error: $errorMessage',
-            ),
-          );
-        }
-
-        // Handle loading state display
-        if (isLoading && accounts.isEmpty) {
-          // Show loading only if no accounts loaded yet
-          return const InputDecorator(
-            // Wrap loading in form field decoration
-            decoration: InputDecoration(
-              labelText: 'Account',
-              border: OutlineInputBorder(),
-            ),
-            child: Center(
-                child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ))),
-          );
-        }
-
-        // Build the dropdown
+        // Build the dropdown or loading/error state
         return DropdownButtonFormField<String>(
-          value: _internalSelectedId, // Use internal state
-          decoration: const InputDecoration(
-            labelText: 'Account',
-            border: OutlineInputBorder(),
-            hintText: 'Select Account', // Hint text when value is null
-          ),
+          value: _internalSelectedId,
           isExpanded: true,
-          items: accounts.map((AssetAccount account) {
-            return DropdownMenuItem<String>(
-              value: account.id,
-              child: Text(account.name),
-            );
-          }).toList(),
-          onChanged: (String? newValue) {
-            setState(() {
-              _internalSelectedId = newValue; // Update internal state
-            });
-            widget.onChanged(newValue); // Notify parent
-          },
-          validator: widget.validator ?? // Use provided or default validator
+          decoration: InputDecoration(
+            labelText: widget.labelText,
+            hintText:
+                isLoading && accounts.isEmpty ? 'Loading...' : widget.hintText,
+            border: const OutlineInputBorder(),
+            errorText: errorMessage, // Display error message here
+            prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+            // Show progress indicator inside if loading and list is empty
+            suffixIcon: isLoading && accounts.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0), // Adjust padding
+                    child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2)),
+                  )
+                : null,
+          ),
+          // Disable dropdown if loading or error
+          onChanged: (isLoading || errorMessage != null)
+              ? null
+              : (String? newValue) {
+                  log.info(
+                      "[AccountSelector] Dropdown changed. New value: $newValue");
+                  setState(() {
+                    _internalSelectedId = newValue; // Update internal state
+                  });
+                  widget.onChanged(newValue); // Notify parent
+                },
+          // Create items, disable if loading/error
+          items: (isLoading || errorMessage != null)
+              ? [] // Return empty list if loading or error to prevent interaction
+              : accounts.map((AssetAccount account) {
+                  return DropdownMenuItem<String>(
+                    value: account.id,
+                    child: Row(
+                      children: [
+                        Icon(account.iconData,
+                            size: 20, color: theme.colorScheme.secondary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: Text(account.name,
+                                overflow: TextOverflow.ellipsis)),
+                        const SizedBox(width: 8),
+                        // Optionally show balance in dropdown
+                        // Text(
+                        //    CurrencyFormatter.format(account.currentBalance, context.watch<SettingsBloc>().state.currencySymbol),
+                        //    style: theme.textTheme.bodySmall,
+                        // ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+          // Use provided or default validator
+          validator: widget.validator ??
               (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select an account';
                 }
                 return null;
               },
+          // Add a hint for empty list scenario
+          hint: accounts.isEmpty && !isLoading && errorMessage == null
+              ? const Text('No accounts available')
+              : Text(widget.hintText),
         );
       },
     );

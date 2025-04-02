@@ -813,6 +813,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
+  simple_logger:
+    dependency: "direct main"
+    description:
+      name: simple_logger
+      sha256: "1de79f22bf31e5c33b91e9e302394dac02d8269d474848d33153c3a15c08e970"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.10.0"
   sky_engine:
     dependency: transitive
     description: flutter

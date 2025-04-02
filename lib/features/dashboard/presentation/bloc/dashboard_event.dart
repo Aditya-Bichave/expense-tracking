@@ -16,7 +16,7 @@ class LoadDashboard extends DashboardEvent {
   List<Object?> get props => [startDate, endDate, forceReload];
 }
 
-// Internal event
+// Internal event triggered by stream listener
 class _DataChanged extends DashboardEvent {
   const _DataChanged();
 }

@@ -8,5 +8,5 @@ abstract class AssetAccountRepository {
   Future<Either<Failure, AssetAccount>> updateAssetAccount(
       AssetAccount account);
   Future<Either<Failure, void>> deleteAssetAccount(String id);
-  // Note: Balance calculation might involve other repositories, handled in Impl
+  // Balance calculation is implicitly handled within the implementation (e.g., getAssetAccounts)
 }
