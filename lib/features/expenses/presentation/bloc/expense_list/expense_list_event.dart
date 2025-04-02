@@ -9,7 +9,11 @@ abstract class ExpenseListEvent extends Equatable {
 
 // Event to load initial or all expenses
 class LoadExpenses extends ExpenseListEvent {
-  // Optional: carry initial filters if needed
+  final bool forceReload;
+  const LoadExpenses({this.forceReload = false});
+
+  @override
+  List<Object?> get props => [forceReload];
 }
 
 // Event to apply filters
@@ -31,4 +35,9 @@ class DeleteExpenseRequested extends ExpenseListEvent {
 
   @override
   List<Object> get props => [expenseId];
+}
+
+// Internal event
+class _DataChanged extends ExpenseListEvent {
+  const _DataChanged();
 }

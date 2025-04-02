@@ -1,33 +1,43 @@
-import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
-import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
-import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker/core/di/service_locator.dart' as di;
+import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
+// Import Core dependencies
 import 'package:expense_tracker/core/theme/app_theme.dart';
-import 'package:expense_tracker/router.dart';
+import 'package:expense_tracker/core/di/service_locator.dart'; // Import initLocator
+import 'package:expense_tracker/router.dart'; // Import AppRouter
+
+// Import Models for Hive registration
+import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
+import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
+import 'package:expense_tracker/features/income/data/models/income_model.dart';
+
+// Import Blocs needed globally or for initial load
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
-import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
+import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Initialize Hive
+  // Initialize Hive
   await Hive.initFlutter();
+  Hive.registerAdapter(ExpenseModelAdapter()); // typeId: 0
+  Hive.registerAdapter(AssetAccountModelAdapter()); // typeId: 1
+  Hive.registerAdapter(IncomeModelAdapter()); // typeId: 2
 
-  // 2. Register ALL Hive Adapters BEFORE opening boxes or initializing DI
-  // Ensure these typeIds are unique and match your model annotations
-  Hive.registerAdapter(ExpenseModelAdapter()); // typeId: 0 (from model)
-  Hive.registerAdapter(AssetAccountModelAdapter()); // typeId: 1 (from model)
-  Hive.registerAdapter(IncomeModelAdapter()); // typeId: 2 (from model)
-  // Add adapters for any other HiveObject models here
+  // Open Hive boxes
+  await Hive.openBox<ExpenseModel>('expenses');
+  await Hive.openBox<AssetAccountModel>('asset_accounts');
+  await Hive.openBox<IncomeModel>('incomes');
 
-  // 3. Initialize dependency injection (which likely opens boxes)
-  await di.initDI(); // Call your service locator setup function
+  // Initialize Service Locator (Dependency Injection)
+  // *** FIX: Use the correct function name 'initLocator' ***
+  await initLocator();
+  // ******************************************************
 
   runApp(const MyApp());
 }
@@ -37,44 +47,42 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use MultiBlocProvider to make Blocs available globally
-    // These Blocs will manage the data lists used across different tabs/pages.
+    // Get the GoRouter instance
+    final GoRouter router = AppRouter.router;
+
     return MultiBlocProvider(
       providers: [
+        // Provide Blocs that need to be globally accessible or loaded initially
         BlocProvider<AccountListBloc>(
-          // Create and trigger initial load
-          create: (context) => di.sl<AccountListBloc>()..add(LoadAccounts()),
-          lazy: false, // Load immediately
-        ),
-        BlocProvider<ExpenseListBloc>(
-          create: (context) => di.sl<ExpenseListBloc>()..add(LoadExpenses()),
-          lazy: false,
-        ),
-        BlocProvider<IncomeListBloc>(
-          create: (context) => di.sl<IncomeListBloc>()..add(LoadIncomes()),
-          lazy: false,
+          create: (context) =>
+              sl<AccountListBloc>()..add(const LoadAccounts()), // Initial load
         ),
         BlocProvider<DashboardBloc>(
-          // DashboardBloc depends on the others, ensure they load first or handle dependencies
           create: (context) =>
-              di.sl<DashboardBloc>()..add(const LoadDashboard()),
-          lazy: false,
+              sl<DashboardBloc>()..add(const LoadDashboard()), // Initial load
         ),
         BlocProvider<SummaryBloc>(
-          // SummaryBloc depends on ExpenseListBloc
-          create: (context) => di.sl<SummaryBloc>()..add(const LoadSummary()),
-          lazy: false,
+          create: (context) =>
+              sl<SummaryBloc>()..add(const LoadSummary()), // Initial load
         ),
-        // AddEdit Blocs should typically be provided locally on their respective pages,
-        // unless you need to maintain their state across navigation (less common).
+        BlocProvider<ExpenseListBloc>(
+          create: (context) =>
+              sl<ExpenseListBloc>()..add(const LoadExpenses()), // Initial load
+        ),
+        BlocProvider<IncomeListBloc>(
+          create: (context) =>
+              sl<IncomeListBloc>()..add(const LoadIncomes()), // Initial load
+        ),
+        // Add other global Blocs if needed
       ],
       child: MaterialApp.router(
         title: 'Expense Tracker',
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
+        theme: AppTheme.lightTheme, // Use your theme
+        darkTheme: AppTheme.darkTheme, // Optional dark theme
         themeMode: ThemeMode.system, // Or ThemeMode.light / ThemeMode.dark
         debugShowCheckedModeBanner: false,
-        routerConfig: AppRouter.router, // Use the router configuration
+        // Configure router
+        routerConfig: router,
       ),
     );
   }

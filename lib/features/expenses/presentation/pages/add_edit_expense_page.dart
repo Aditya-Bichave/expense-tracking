@@ -6,7 +6,7 @@ import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/add_edit_expense/add_edit_expense_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_form.dart';
-import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
+// Removed explicit Bloc imports for refresh
 
 class AddEditExpensePage extends StatelessWidget {
   final String? expenseId; // Passed from router for editing
@@ -18,14 +18,14 @@ class AddEditExpensePage extends StatelessWidget {
     this.expense,
   });
 
-  // Helper to find Category object from ID (assuming ID is the name)
   Category _findCategoryById(String categoryId) {
     final predefined = PredefinedCategory.values.firstWhere(
-      (e) => e.name.toLowerCase() == categoryId.toLowerCase(),
+      (e) =>
+          Category.fromPredefined(e).name.toLowerCase() ==
+          categoryId.toLowerCase(),
       orElse: () => PredefinedCategory.other,
     );
     return Category.fromPredefined(predefined);
-    // Note: This still doesn't handle subcategories if they were encoded differently.
   }
 
   @override
@@ -33,24 +33,19 @@ class AddEditExpensePage extends StatelessWidget {
     final isEditing = expense != null;
 
     return BlocProvider(
-      // Pass initial expense to BLoC if editing
       create: (context) => sl<AddEditExpenseBloc>(param1: expense),
       child: BlocListener<AddEditExpenseBloc, AddEditExpenseState>(
         listener: (context, state) {
           if (state.status == FormStatus.success) {
-            try {
-              // Refresh list upon successful save/update
-              sl<ExpenseListBloc>().add(LoadExpenses());
-            } catch (e) {
-              // Log if ExpenseListBloc isn't ready, but don't crash
-              debugPrint("Could not find ExpenseListBloc to refresh: $e");
-            }
+            // No explicit refreshes needed here
+            debugPrint(
+                "Expense save successful, relying on stream for refresh.");
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                   content: Text(
                       'Expense ${isEditing ? 'updated' : 'added'} successfully!')),
             );
-            // Navigate back if possible
             if (context.canPop()) {
               context.pop();
             }
@@ -70,21 +65,14 @@ class AddEditExpensePage extends StatelessWidget {
           ),
           body: BlocBuilder<AddEditExpenseBloc, AddEditExpenseState>(
             builder: (context, state) {
-              // Show loading indicator while submitting
               if (state.status == FormStatus.submitting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              // Display the form
               return ExpenseForm(
-                initialExpense:
-                    state.initialExpense, // Use state's initial expense
-                // onSubmit receives data from the form, including accountId
+                initialExpense: state.initialExpense,
                 onSubmit: (title, amount, categoryId, accountId, date) {
-                  // Convert categoryId string back to Category object
                   final Category categoryObject = _findCategoryById(categoryId);
-
-                  // Dispatch the event to the BLoC
                   context.read<AddEditExpenseBloc>().add(
                         SaveExpenseRequested(
                           existingExpenseId: isEditing ? expense?.id : null,
@@ -92,9 +80,7 @@ class AddEditExpensePage extends StatelessWidget {
                           amount: amount,
                           category: categoryObject,
                           date: date,
-                          // --- FIX: Pass the accountId from the form ---
                           accountId: accountId,
-                          // ---------------------------------------------
                         ),
                       );
                 },

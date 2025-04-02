@@ -6,7 +6,13 @@ abstract class IncomeListEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadIncomes extends IncomeListEvent {}
+class LoadIncomes extends IncomeListEvent {
+  final bool forceReload;
+  const LoadIncomes({this.forceReload = false});
+
+  @override
+  List<Object?> get props => [forceReload];
+}
 
 class FilterIncomes extends IncomeListEvent {
   final DateTime? startDate;
@@ -26,4 +32,9 @@ class DeleteIncomeRequested extends IncomeListEvent {
   const DeleteIncomeRequested(this.incomeId);
   @override
   List<Object> get props => [incomeId];
+}
+
+// Internal event
+class _DataChanged extends IncomeListEvent {
+  const _DataChanged();
 }

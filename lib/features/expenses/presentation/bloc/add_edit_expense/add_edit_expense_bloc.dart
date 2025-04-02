@@ -1,12 +1,16 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart'
+    hide Category; // Hide foundation's Category
 import 'package:uuid/uuid.dart'; // To generate IDs for new expenses
 import 'package:expense_tracker/core/error/failure.dart';
 // import 'package:expense_tracker/core/utils/enums.dart'; // FormStatus is now defined in state file
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/category.dart'; // Import Category
+import 'package:expense_tracker/features/expenses/domain/entities/category.dart'; // Import *our* Category
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
+import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl helper
+import 'package:expense_tracker/core/events/data_change_event.dart'; // Import event
 
 // Link the corresponding event and state files
 part 'add_edit_expense_event.dart';
@@ -38,36 +42,41 @@ class AddEditExpenseBloc
     emit(state.copyWith(status: FormStatus.submitting, clearError: true));
 
     // Construct the Expense entity from the event data
+    final bool isEditing = event.existingExpenseId != null;
     final expenseToSave = Expense(
       // Use existing ID if editing, otherwise generate a new one
       id: event.existingExpenseId ?? _uuid.v4(),
       title: event.title,
       amount: event.amount,
       date: event.date,
-      category: event.category,
-      // --- FIX: Use the accountId from the event ---
+      category: event.category, // Use our Category entity
       accountId: event.accountId,
-      // ------------------------------------------
     );
 
     // Determine whether to call the update or add use case
-    final result = event.existingExpenseId != null
+    final result = isEditing
         ? await _updateExpenseUseCase(UpdateExpenseParams(expenseToSave))
         : await _addExpenseUseCase(AddExpenseParams(expenseToSave));
 
     // Process the result from the use case
     result.fold(
-      // On Failure
-      (failure) {
-        // Emit error state with a mapped message
-        emit(state.copyWith(
-            status: FormStatus.error,
-            errorMessage: _mapFailureToMessage(failure)));
-      },
-      // On Success
-      (_) => emit(
-          state.copyWith(status: FormStatus.success)), // Emit success state
-    );
+        // On Failure
+        (failure) {
+      // Emit error state with a mapped message
+      emit(state.copyWith(
+          status: FormStatus.error,
+          errorMessage: _mapFailureToMessage(failure)));
+    },
+        // On Success
+        (_) {
+      emit(state.copyWith(status: FormStatus.success)); // Emit success state
+      // *** Publish Event on Success ***
+      publishDataChangedEvent(
+          type: DataChangeType.expense,
+          reason:
+              isEditing ? DataChangeReason.updated : DataChangeReason.added);
+      // *********************************
+    });
   }
 
   // Helper function to convert Failure objects into user-friendly error messages

@@ -102,6 +102,11 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
     debugPrint("[AssetAccountRepo] deleteAssetAccount called for ID: $id.");
     try {
       // TODO: Decide how to handle existing income/expenses linked to this account!
+      // Consider:
+      // 1. Prevent deletion if linked transactions exist.
+      // 2. Mark account as inactive instead of deleting.
+      // 3. Reassign transactions to a default/uncategorized account.
+      // 4. Delete linked transactions (potentially dangerous).
       debugPrint(
           "[AssetAccountRepo] Calling localDataSource.deleteAssetAccount...");
       await localDataSource.deleteAssetAccount(id);
@@ -117,38 +122,35 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
     }
   }
 
-  // --- !!! USING SIMPLIFIED VERSION FOR DEBUGGING !!! ---
+  /* // --- !!! SIMPLIFIED VERSION FOR DEBUGGING (Commented out) !!! ---
   @override
   Future<Either<Failure, List<AssetAccount>>> getAssetAccounts() async {
-    debugPrint(
-        "[AssetAccountRepo] getAssetAccounts called (Simplified Version).");
+    debugPrint("[AssetAccountRepo] getAssetAccounts called (Simplified Version).");
     try {
       debugPrint("[AssetAccountRepo] Fetching account models (Simplified)...");
       final accountModels = await localDataSource.getAssetAccounts();
-      debugPrint(
-          "[AssetAccountRepo] Fetched ${accountModels.length} models (Simplified).");
+      debugPrint("[AssetAccountRepo] Fetched ${accountModels.length} models (Simplified).");
       final List<AssetAccount> accounts = accountModels.map((model) {
         // Use initialBalance directly, skipping complex calculation for now
         return model.toEntity(model.initialBalance);
       }).toList();
-      debugPrint(
-          "[AssetAccountRepo] Mapped models to entities (Simplified). Returning Right.");
+      debugPrint("[AssetAccountRepo] Mapped models to entities (Simplified). Returning Right.");
       return Right(accounts);
     } on CacheFailure catch (e) {
       debugPrint("[AssetAccountRepo] CacheFailure (Simplified): $e");
       return Left(e);
     } catch (e, s) {
       debugPrint("[AssetAccountRepo] Unexpected Error (Simplified): $e\n$s");
-      return Left(
-          CacheFailure('Failed to get accounts (simplified): ${e.toString()}'));
+      return Left(CacheFailure('Failed to get accounts (simplified): ${e.toString()}'));
     }
   }
-  // --- !!! END OF SIMPLIFIED VERSION !!! ---
+  */ // --- !!! END OF SIMPLIFIED VERSION !!! ---
 
-  /* // --- !!! ORIGINAL VERSION WITH LOGGING (Commented out for now) !!! ---
+  // --- !!! ORIGINAL VERSION WITH LOGGING (Now Active) !!! ---
   @override
   Future<Either<Failure, List<AssetAccount>>> getAssetAccounts() async {
-    debugPrint("[AssetAccountRepo] getAssetAccounts called (Original Version with Logging).");
+    debugPrint(
+        "[AssetAccountRepo] getAssetAccounts called (Original Version with Logging).");
     try {
       debugPrint("[AssetAccountRepo] Fetching account models...");
       final accountModels = await localDataSource.getAssetAccounts();
@@ -157,39 +159,51 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
 
       for (int i = 0; i < accountModels.length; i++) {
         final model = accountModels[i];
-        debugPrint("[AssetAccountRepo] Processing account ${i + 1}/${accountModels.length}: ${model.name} (ID: ${model.id})");
-        debugPrint("[AssetAccountRepo] Calling _calculateBalance for ${model.name}...");
-        final balanceResult = await _calculateBalance(model.id, model.initialBalance);
-        debugPrint("[AssetAccountRepo] Balance result for ${model.name}: isLeft=${balanceResult.isLeft()}");
+        debugPrint(
+            "[AssetAccountRepo] Processing account ${i + 1}/${accountModels.length}: ${model.name} (ID: ${model.id})");
+        debugPrint(
+            "[AssetAccountRepo] Calling _calculateBalance for ${model.name}...");
+        final balanceResult =
+            await _calculateBalance(model.id, model.initialBalance);
+        debugPrint(
+            "[AssetAccountRepo] Balance result for ${model.name}: isLeft=${balanceResult.isLeft()}");
 
         if (balanceResult.isLeft()) {
-          debugPrint("[AssetAccountRepo] Balance calculation failed for ${model.name}. Returning Left.");
+          debugPrint(
+              "[AssetAccountRepo] Balance calculation failed for ${model.name}. Propagating failure.");
+          // Propagate the specific failure from _calculateBalance
           return balanceResult.fold(
-            (failure) => Left(failure), // Propagate the specific failure
-            (_) => Left(CacheFailure('Unexpected state: _calculateBalance returned Left but fold failed.')),
+            (failure) => Left(failure),
+            // This fallback should not be reached if isLeft() is true
+            (_) => Left(CacheFailure(
+                'Unexpected state: _calculateBalance returned Left but fold failed for ${model.name}.')),
           );
         }
 
         // Balance calculation succeeded, get the value and add the entity
         final calculatedBalance = balanceResult.getOrElse(() {
-           // This should ideally not happen if isLeft() check passes, but good fallback
-           debugPrint("[AssetAccountRepo] *** WARNING: balanceResult was Right but getOrElse fallback triggered for ${model.name}. Using initialBalance.");
-           return model.initialBalance;
+          // This should ideally not happen if isLeft() check passes, but good fallback
+          debugPrint(
+              "[AssetAccountRepo] *** WARNING: balanceResult was Right but getOrElse fallback triggered for ${model.name}. Using initialBalance.");
+          return model.initialBalance;
         });
         accounts.add(model.toEntity(calculatedBalance));
-        debugPrint("[AssetAccountRepo] Added account ${model.name} with balance $calculatedBalance to list.");
+        debugPrint(
+            "[AssetAccountRepo] Added account ${model.name} with balance $calculatedBalance to list.");
       }
-      debugPrint("[AssetAccountRepo] Finished calculating all balances. Returning Right with ${accounts.length} accounts.");
+      debugPrint(
+          "[AssetAccountRepo] Finished calculating all balances. Returning Right with ${accounts.length} accounts.");
       return Right(accounts);
     } on CacheFailure catch (e) {
-       debugPrint("[AssetAccountRepo] CacheFailure getting asset accounts: $e");
+      debugPrint("[AssetAccountRepo] CacheFailure getting asset accounts: $e");
       return Left(e);
     } catch (e, s) {
-       debugPrint("[AssetAccountRepo] *** CRITICAL ERROR getting asset accounts: $e\n$s");
+      debugPrint(
+          "[AssetAccountRepo] *** CRITICAL ERROR getting asset accounts: $e\n$s");
       return Left(CacheFailure('Failed to get accounts: ${e.toString()}'));
     }
   }
-  */ // --- !!! END OF ORIGINAL VERSION !!! ---
+  // --- !!! END OF ORIGINAL VERSION !!! ---
 
   // Helper method for balance calculation - Returns Either<Failure, double>
   Future<Either<Failure, double>> _calculateBalance(
@@ -199,8 +213,9 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
     try {
       debugPrint(
           "[$runtimeType] Fetching total income for account $accountId...");
-      final totalIncomeEither =
-          await incomeRepository.getTotalIncomeForAccount(accountId);
+      // Pass empty string to get *all* income if accountId is empty, otherwise pass the ID
+      final totalIncomeEither = await incomeRepository
+          .getTotalIncomeForAccount(accountId.isEmpty ? '' : accountId);
       // Log failure details if Left
       totalIncomeEither.fold(
           (f) => debugPrint(
@@ -211,18 +226,21 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       if (totalIncomeEither.isLeft()) {
         debugPrint(
             "[$runtimeType] Returning Left due to income fetch failure for $accountId.");
+        // FIXED: Extract the Failure and return Left<Failure, double>
         return totalIncomeEither.fold(
-            (failure) => Left(failure),
-            (_) =>
-                Left(CacheFailure("Income fetch error during balance calc")));
+          (failure) => Left<Failure, double>(failure),
+          // This path is impossible due to the isLeft() check
+          (_) => throw StateError("Impossible state: isLeft check failed"),
+        );
       }
-      final totalIncome =
-          totalIncomeEither.getOrElse(() => 0.0); // Should have value now
+      // Use getOrElse as a safe way to extract the value, though isLeft check passed
+      final totalIncome = totalIncomeEither.getOrElse(() => 0.0);
 
       debugPrint(
           "[$runtimeType] Fetching total expenses for account $accountId...");
-      final totalExpensesEither =
-          await expenseRepository.getTotalExpensesForAccount(accountId);
+      // Pass empty string to get *all* expenses if accountId is empty, otherwise pass the ID
+      final totalExpensesEither = await expenseRepository
+          .getTotalExpensesForAccount(accountId.isEmpty ? '' : accountId);
       // Log failure details if Left
       totalExpensesEither.fold(
           (f) => debugPrint(
@@ -233,13 +251,15 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       if (totalExpensesEither.isLeft()) {
         debugPrint(
             "[$runtimeType] Returning Left due to expense fetch failure for $accountId.");
+        // FIXED: Extract the Failure and return Left<Failure, double>
         return totalExpensesEither.fold(
-            (failure) => Left(failure),
-            (_) =>
-                Left(CacheFailure("Expense fetch error during balance calc")));
+          (failure) => Left<Failure, double>(failure),
+          // This path is impossible due to the isLeft() check
+          (_) => throw StateError("Impossible state: isLeft check failed"),
+        );
       }
-      final totalExpenses =
-          totalExpensesEither.getOrElse(() => 0.0); // Should have value now
+      // Use getOrElse as a safe way to extract the value
+      final totalExpenses = totalExpensesEither.getOrElse(() => 0.0);
 
       final finalBalance = initialBalance + totalIncome - totalExpenses;
       debugPrint(
