@@ -24,22 +24,19 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // The body will display the widget based on the current active branch
-      // defined in the StatefulShellRoute.
+      // The body displays the widget based on the current active branch
       body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex, // Highlight the active tab
         onTap: (index) => _onTap(context, index), // Handle tab selection
-        // Use 'fixed' to ensure all labels are visible, good for 4-5 items.
-        // Use 'shifting' for animation effect if desired (usually better for <= 3 items).
-        type: BottomNavigationBarType.fixed,
-        // Optional: Customize colors
+        type: BottomNavigationBarType.fixed, // Ensures all labels are visible
+        // Optional: Customize colors based on your AppTheme
         // selectedItemColor: Theme.of(context).colorScheme.primary,
-        // unselectedItemColor: Colors.grey[600],
+        // unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined), // Icon when inactive
-            activeIcon: Icon(Icons.dashboard), // Icon when active
+            icon: Icon(Icons.dashboard_outlined),
+            activeIcon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
           BottomNavigationBarItem(
@@ -48,19 +45,24 @@ class MainShell extends StatelessWidget {
             label: 'Expenses',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons
-                .account_balance_wallet_outlined), // Changed to match Income
-            activeIcon:
-                Icon(Icons.account_balance_wallet), // Changed to match Income
-            label: 'Income', // Label is Income
+            // Using a suitable icon for Income
+            icon: Icon(Icons.trending_up_outlined),
+            activeIcon: Icon(Icons.trending_up),
+            label: 'Income',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-                Icons.account_balance_outlined), // Changed to match Accounts
-            activeIcon:
-                Icon(Icons.account_balance), // Changed to match Accounts
+            // Using a suitable icon for Accounts
+            icon: Icon(Icons.account_balance_wallet_outlined),
+            activeIcon: Icon(Icons.account_balance_wallet),
             label: 'Accounts',
           ),
+          // --- New Settings Item ---
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings_outlined),
+            activeIcon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+          // --- End Settings Item ---
         ],
       ),
     );

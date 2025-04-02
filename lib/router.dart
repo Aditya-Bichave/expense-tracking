@@ -5,10 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:expense_tracker/features/expenses/presentation/pages/expense_list_page.dart';
 import 'package:expense_tracker/features/expenses/presentation/pages/add_edit_expense_page.dart';
-import 'package:expense_tracker/features/income/presentation/widgets/income_list_page.dart'; // Corrected path if needed
-import 'package:expense_tracker/features/income/presentation/widgets/add_edit_income_page.dart'; // Corrected path if needed
+import 'package:expense_tracker/features/income/presentation/widgets/income_list_page.dart'; // Check path
+import 'package:expense_tracker/features/income/presentation/widgets/add_edit_income_page.dart'; // Check path
 import 'package:expense_tracker/features/accounts/presentation/pages/account_list_page.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_account_page.dart';
+// --- Settings Page Import ---
+import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
+// --- End Settings Page Import ---
 
 // Import Entities for 'extra' parameter type safety
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
@@ -16,10 +19,9 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 
 // Import Shell Widget
-import 'main_shell.dart';
+import 'main_shell.dart'; // Assuming main_shell.dart is in lib/
 
 // Define Navigator Keys for Shell and Root
-// Root navigator key manages navigation outside the shell (e.g., modals, full-screen dialogs)
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 // Keys for each branch's navigator state within the shell
 final GlobalKey<NavigatorState> _shellNavigatorKeyDashboard =
@@ -30,6 +32,10 @@ final GlobalKey<NavigatorState> _shellNavigatorKeyIncome =
     GlobalKey<NavigatorState>(debugLabel: 'shellIncome');
 final GlobalKey<NavigatorState> _shellNavigatorKeyAccounts =
     GlobalKey<NavigatorState>(debugLabel: 'shellAccounts');
+// --- Settings Navigator Key ---
+final GlobalKey<NavigatorState> _shellNavigatorKeySettings =
+    GlobalKey<NavigatorState>(debugLabel: 'shellSettings');
+// --- End Settings Navigator Key ---
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -39,25 +45,20 @@ class AppRouter {
     routes: [
       // Define the main layout using StatefulShellRoute
       StatefulShellRoute.indexedStack(
-        // Builder provides the shell widget (MainShell)
         builder: (context, state, navigationShell) {
-          // The navigationShell is passed to the MainShell to manage
-          // navigation between the different branches (tabs).
+          // Pass the navigationShell to MainShell
           return MainShell(navigationShell: navigationShell);
         },
-        // Define the branches (tabs) for the bottom navigation
         branches: [
           // --- Branch 1: Dashboard ---
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeyDashboard, // Assign key
+            navigatorKey: _shellNavigatorKeyDashboard,
             routes: [
               GoRoute(
                 path: '/dashboard',
-                // Use pageBuilder for custom transitions (NoTransitionPage keeps it simple)
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: DashboardPage(), // Root page for this branch
+                  child: DashboardPage(),
                 ),
-                // No sub-routes needed for dashboard currently
               ),
             ],
           ),
@@ -68,18 +69,16 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/expenses',
-                name: 'expenses_list', // Optional name for reference
+                name: 'expenses_list',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: ExpenseListPage(), // Root page for expenses
+                  child: ExpenseListPage(),
                 ),
-                // Define sub-routes accessible FROM the expenses list
                 routes: [
                   GoRoute(
                     path: 'add', // Relative path: /expenses/add
                     name: 'add_expense',
                     parentNavigatorKey:
-                        _rootNavigatorKey, // Navigate outside the shell? (e.g., as modal) - Change if full screen needed
-                    // Use builder for standard page navigation
+                        _rootNavigatorKey, // Navigate using root (e.g., for modal or full screen)
                     builder: (context, state) => const AddEditExpensePage(),
                   ),
                   GoRoute(
@@ -87,12 +86,13 @@ class AppRouter {
                         'edit/:id', // Relative path: /expenses/edit/expense_id
                     name: 'edit_expense',
                     parentNavigatorKey:
-                        _rootNavigatorKey, // Navigate outside shell?
+                        _rootNavigatorKey, // Navigate using root
                     builder: (context, state) {
+                      // Extract parameters
                       final expenseId = state.pathParameters['id'];
-                      // Safely cast 'extra' which contains the Expense object
-                      final expense = state.extra as Expense?;
-                      // Pass parameters to the page
+                      final expense = state.extra
+                          as Expense?; // Passed via context.push extra
+                      // Return the page with parameters
                       return AddEditExpensePage(
                           expenseId: expenseId, expense: expense);
                     },
@@ -110,7 +110,7 @@ class AppRouter {
                 path: '/income',
                 name: 'income_list',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: IncomeListPage(), // Root page for income
+                  child: IncomeListPage(),
                 ),
                 routes: [
                   GoRoute(
@@ -143,7 +143,7 @@ class AppRouter {
                 path: '/accounts',
                 name: 'accounts_list',
                 pageBuilder: (context, state) => const NoTransitionPage(
-                  child: AccountListPage(), // Root page for accounts
+                  child: AccountListPage(),
                 ),
                 routes: [
                   GoRoute(
@@ -168,8 +168,26 @@ class AppRouter {
               ),
             ],
           ),
+
+          // --- Branch 5: Settings (New) ---
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeySettings, // Assign the new key
+            routes: [
+              GoRoute(
+                path: '/settings',
+                name: 'settings', // Optional name
+                pageBuilder: (context, state) => const NoTransitionPage(
+                  child: SettingsPage(), // The root page for the settings tab
+                ),
+                // Add sub-routes here if needed later (e.g., /settings/profile)
+              ),
+            ],
+          ),
+          // --- End Branch 5: Settings ---
         ],
       ),
+      // Optional: Routes outside the shell (e.g., Login) can be defined here
+      // GoRoute(path: '/login', builder: (context, state) => LoginPage()),
     ],
     // Define a simple error page for unmatched routes
     errorBuilder: (context, state) => Scaffold(

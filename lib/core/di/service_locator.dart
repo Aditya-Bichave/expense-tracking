@@ -1,7 +1,8 @@
 // lib/core/di/service_locator.dart
-import 'dart:async'; // Import async
+import 'dart:async';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import SharedPreferences
 import 'package:uuid/uuid.dart';
 
 // Import Event
@@ -11,8 +12,11 @@ import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
 import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
+// --- Settings Data Source Import ---
+import 'package:expense_tracking/features/settings/data/datasources/settings_local_data_source.dart';
+// --- End Settings Data Source Import ---
 
-// Import Models (needed for Hive Box registration)
+// Import Models (needed for Hive Box types)
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
@@ -24,40 +28,40 @@ import 'package:expense_tracker/features/accounts/data/repositories/asset_accoun
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
 import 'package:expense_tracker/features/income/data/repositories/income_repository_impl.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+// --- Settings Repository Import ---
+import 'package:expense_tracker/features/settings/data/repositories/settings_repository_impl.dart';
+import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
+// --- End Settings Repository Import ---
 
-// Import Use Cases
-// Expenses
+// Import Use Cases (Keep existing)
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/delete_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/get_expenses.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
-// Accounts
 import 'package:expense_tracker/features/accounts/domain/usecases/add_asset_account.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/delete_asset_account.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/get_asset_accounts.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/update_asset_account.dart';
-// Income
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/delete_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/get_incomes.dart';
 import 'package:expense_tracker/features/income/domain/usecases/update_income.dart';
-// Analytics & Dashboard
 import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
 import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';
+// --- Settings Use Cases (will be added later) ---
 
-// Import Blocs
-// Expenses
+// Import Blocs (Keep existing)
 import 'package:expense_tracker/features/expenses/presentation/bloc/add_edit_expense/add_edit_expense_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
-// Accounts
 import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_account/add_edit_account_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-// Income
 import 'package:expense_tracker/features/income/presentation/bloc/add_edit_income/add_edit_income_bloc.dart';
 import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
-// Analytics & Dashboard
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+// --- Settings Bloc Import ---
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+// --- End Settings Bloc Import ---
 
 // Import Entities (needed for factory params)
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
@@ -66,139 +70,187 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 
 final sl = GetIt.instance;
 
-Future<void> initLocator() async {
+// Modify initLocator to accept dependencies needed during setup
+Future<void> initLocator({
+  required SharedPreferences prefs,
+  required Box<ExpenseModel> expenseBox,
+  required Box<AssetAccountModel> accountBox,
+  required Box<IncomeModel> incomeBox,
+}) async {
   // *** START: Data Change Event Stream ***
-  // Use a broadcast stream so multiple Blocs can listen
-  final dataChangeController = StreamController<DataChangedEvent>.broadcast();
-  // Register the StreamController (to add events) and the Stream (to listen)
-  sl.registerSingleton<StreamController<DataChangedEvent>>(
-      dataChangeController);
-  sl.registerSingleton<Stream<DataChangedEvent>>(dataChangeController.stream);
+  // Register only if not already registered (optional check)
+  if (!sl.isRegistered<StreamController<DataChangedEvent>>()) {
+    final dataChangeController = StreamController<DataChangedEvent>.broadcast();
+    sl.registerSingleton<StreamController<DataChangedEvent>>(
+        dataChangeController);
+    sl.registerSingleton<Stream<DataChangedEvent>>(dataChangeController.stream);
+  }
   // *** END: Data Change Event Stream ***
 
-  // External
-  sl.registerLazySingleton(() => Uuid());
-  // Hive Boxes (assuming they are opened in main.dart before calling initLocator)
-  sl.registerLazySingleton<Box<ExpenseModel>>(
-      () => Hive.box<ExpenseModel>('expenses'));
-  sl.registerLazySingleton<Box<AssetAccountModel>>(
-      () => Hive.box<AssetAccountModel>('asset_accounts'));
-  sl.registerLazySingleton<Box<IncomeModel>>(
-      () => Hive.box<IncomeModel>('incomes'));
+  // Register Pre-initialized External Dependencies
+  sl.registerLazySingleton<SharedPreferences>(() => prefs);
+  sl.registerLazySingleton<Box<ExpenseModel>>(() => expenseBox);
+  sl.registerLazySingleton<Box<AssetAccountModel>>(() => accountBox);
+  sl.registerLazySingleton<Box<IncomeModel>>(() => incomeBox);
 
+  // Other External Dependencies
+  sl.registerLazySingleton(() => Uuid());
+
+  // --- Feature Registrations ---
+
+  _registerSettingsFeature(); // Register New Settings Feature
+  _registerExpensesFeature();
+  _registerAccountsFeature();
+  _registerIncomeFeature();
+  _registerAnalyticsAndDashboardFeatures();
+}
+
+// --- Registration Functions per Feature ---
+
+void _registerSettingsFeature() {
+  // Data sources
+  sl.registerLazySingleton<SettingsLocalDataSource>(
+      // Inject SharedPreferences instance registered above
+      () => SettingsLocalDataSourceImpl(prefs: sl()));
+
+  // Repositories
+  sl.registerLazySingleton<SettingsRepository>(
+      () => SettingsRepositoryImpl(localDataSource: sl()));
+
+  // Blocs
+  // Register as LazySingleton because it holds state needed globally (theme)
+  sl.registerLazySingleton(() => SettingsBloc(settingsRepository: sl()));
+
+  // Settings Use Cases for Data Management (Register here later when created in Phase 4)
+  // Example:
+  // sl.registerLazySingleton(() => BackupDataUseCase(sl(), sl(), sl(), sl()));
+  // sl.registerLazySingleton(() => RestoreDataUseCase(sl(), sl(), sl(), sl()));
+  // sl.registerLazySingleton(() => ClearAllDataUseCase(sl(), sl(), sl()));
+}
+
+void _registerExpensesFeature() {
   // Data sources
   sl.registerLazySingleton<ExpenseLocalDataSource>(
-    () => HiveExpenseLocalDataSource(sl()),
+    () => HiveExpenseLocalDataSource(
+        sl<Box<ExpenseModel>>()), // Pass specific box
   );
-  sl.registerLazySingleton<AssetAccountLocalDataSource>(
-    () => HiveAssetAccountLocalDataSource(sl()),
-  );
-  sl.registerLazySingleton<IncomeLocalDataSource>(
-    () => HiveIncomeLocalDataSource(sl()),
-  );
-
   // Repositories
   sl.registerLazySingleton<ExpenseRepository>(
     () => ExpenseRepositoryImpl(localDataSource: sl()),
   );
-  sl.registerLazySingleton<IncomeRepository>(
-    () => IncomeRepositoryImpl(localDataSource: sl()),
-  );
-  sl.registerLazySingleton<AssetAccountRepository>(
-    () => AssetAccountRepositoryImpl(
-      localDataSource: sl(),
-      incomeRepository: sl(), // Depends on other repos
-      expenseRepository: sl(),
-    ),
-  );
-
   // Use cases
-  // Expenses
   sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
   sl.registerLazySingleton(() => GetExpensesUseCase(sl()));
   sl.registerLazySingleton(() => UpdateExpenseUseCase(sl()));
   sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
-  // Accounts
+  // Blocs
+  sl.registerFactoryParam<AddEditExpenseBloc, Expense?, void>(
+    (initialExpense, _) => AddEditExpenseBloc(
+      addExpenseUseCase: sl(),
+      updateExpenseUseCase: sl(),
+      initialExpense: initialExpense,
+      dataChangeController: sl(), // Pass controller for event publishing
+    ),
+  );
+  sl.registerLazySingleton(() => ExpenseListBloc(
+        getExpensesUseCase: sl(),
+        deleteExpenseUseCase: sl(),
+        dataChangeStream:
+            sl<Stream<DataChangedEvent>>(), // Pass stream for listening
+      ));
+}
+
+void _registerAccountsFeature() {
+  // Data sources
+  sl.registerLazySingleton<AssetAccountLocalDataSource>(
+    () => HiveAssetAccountLocalDataSource(
+        sl<Box<AssetAccountModel>>()), // Pass specific box
+  );
+  // Repositories
+  sl.registerLazySingleton<AssetAccountRepository>(
+    () => AssetAccountRepositoryImpl(
+      localDataSource: sl(),
+      incomeRepository: sl(),
+      expenseRepository: sl(),
+    ),
+  );
+  // Use cases
   sl.registerLazySingleton(() => AddAssetAccountUseCase(sl()));
   sl.registerLazySingleton(() => GetAssetAccountsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateAssetAccountUseCase(sl()));
-  sl.registerLazySingleton(() => DeleteAssetAccountUseCase(sl()));
-  // Income
+  sl.registerLazySingleton(
+      () => DeleteAssetAccountUseCase(sl())); // Add dependencies if needed
+  // Blocs
+  sl.registerFactoryParam<AddEditAccountBloc, AssetAccount?, void>(
+    (initialAccount, _) => AddEditAccountBloc(
+      addAssetAccountUseCase: sl(),
+      updateAssetAccountUseCase: sl(),
+      initialAccount: initialAccount,
+      dataChangeController: sl(), // Pass controller for event publishing
+    ),
+  );
+  sl.registerLazySingleton(() => AccountListBloc(
+        getAssetAccountsUseCase: sl(),
+        deleteAssetAccountUseCase: sl(),
+        dataChangeStream:
+            sl<Stream<DataChangedEvent>>(), // Pass stream for listening
+      ));
+}
+
+void _registerIncomeFeature() {
+  // Data sources
+  sl.registerLazySingleton<IncomeLocalDataSource>(
+    () =>
+        HiveIncomeLocalDataSource(sl<Box<IncomeModel>>()), // Pass specific box
+  );
+  // Repositories
+  sl.registerLazySingleton<IncomeRepository>(
+    () => IncomeRepositoryImpl(localDataSource: sl()),
+  );
+  // Use cases
   sl.registerLazySingleton(() => AddIncomeUseCase(sl()));
   sl.registerLazySingleton(() => GetIncomesUseCase(sl()));
   sl.registerLazySingleton(() => UpdateIncomeUseCase(sl()));
   sl.registerLazySingleton(() => DeleteIncomeUseCase(sl()));
-  // Analytics & Dashboard
+  // Blocs
+  sl.registerFactoryParam<AddEditIncomeBloc, Income?, void>(
+    (initialIncome, _) => AddEditIncomeBloc(
+      addIncomeUseCase: sl(),
+      updateIncomeUseCase: sl(),
+      initialIncome: initialIncome,
+      dataChangeController: sl(), // Pass controller for event publishing
+    ),
+  );
+  sl.registerLazySingleton(() => IncomeListBloc(
+        getIncomesUseCase: sl(),
+        deleteIncomeUseCase: sl(),
+        dataChangeStream:
+            sl<Stream<DataChangedEvent>>(), // Pass stream for listening
+      ));
+}
+
+void _registerAnalyticsAndDashboardFeatures() {
+  // Use cases
   sl.registerLazySingleton(() => GetExpenseSummaryUseCase(sl()));
   sl.registerLazySingleton(() => GetFinancialOverviewUseCase(
         accountRepository: sl(),
         incomeRepository: sl(),
         expenseRepository: sl(),
       ));
-
   // Blocs
-  // Registering as Factory means a new instance is created each time requested
-  // Use registerSingleton if you want the same instance everywhere (often preferred for list blocs)
-
-  // Expenses
-  sl.registerFactoryParam<AddEditExpenseBloc, Expense?, void>(
-    (initialExpense, _) => AddEditExpenseBloc(
-      addExpenseUseCase: sl(),
-      updateExpenseUseCase: sl(),
-      initialExpense: initialExpense,
-    ),
-  );
-  sl.registerLazySingleton(() => ExpenseListBloc(
-        getExpensesUseCase: sl(),
-        deleteExpenseUseCase: sl(),
-        // *** Subscribe to stream ***
-        dataChangeStream: sl<Stream<DataChangedEvent>>(),
-      ));
-
-  // Accounts
-  sl.registerFactoryParam<AddEditAccountBloc, AssetAccount?, void>(
-    (initialAccount, _) => AddEditAccountBloc(
-      addAssetAccountUseCase: sl(),
-      updateAssetAccountUseCase: sl(),
-      initialAccount: initialAccount,
-    ),
-  );
-  sl.registerLazySingleton(() => AccountListBloc(
-        getAssetAccountsUseCase: sl(),
-        deleteAssetAccountUseCase: sl(),
-        // *** Subscribe to stream ***
-        dataChangeStream: sl<Stream<DataChangedEvent>>(),
-      ));
-
-  // Income
-  sl.registerFactoryParam<AddEditIncomeBloc, Income?, void>(
-    (initialIncome, _) => AddEditIncomeBloc(
-      addIncomeUseCase: sl(),
-      updateIncomeUseCase: sl(),
-      initialIncome: initialIncome,
-    ),
-  );
-  sl.registerLazySingleton(() => IncomeListBloc(
-        getIncomesUseCase: sl(),
-        deleteIncomeUseCase: sl(),
-        // *** Subscribe to stream ***
-        dataChangeStream: sl<Stream<DataChangedEvent>>(),
-      ));
-
-  // Analytics & Dashboard
   sl.registerLazySingleton(() => SummaryBloc(
         getExpenseSummaryUseCase: sl(),
-        // *** Subscribe to stream ***
-        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+        dataChangeStream:
+            sl<Stream<DataChangedEvent>>(), // Pass stream for listening
       ));
   sl.registerLazySingleton(() => DashboardBloc(
         getFinancialOverviewUseCase: sl(),
-        // *** Subscribe to stream ***
-        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+        dataChangeStream:
+            sl<Stream<DataChangedEvent>>(), // Pass stream for listening
       ));
 }
 
-// Helper function to publish data change events
+// Helper function to publish data change events (Keep as is)
 void publishDataChangedEvent(
     {required DataChangeType type, required DataChangeReason reason}) {
   try {
