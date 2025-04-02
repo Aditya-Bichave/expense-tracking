@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart'; // Import dartz for Either
 import 'package:equatable/equatable.dart';
-import 'package:expense_tracking/features/settings/domain/repositories/settings_repository.dart';
+import 'package:expense_tracker/core/error/failure.dart'; // Ensure path is correct
+import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:flutter/material.dart'; // Required for ThemeMode
 
 part 'settings_event.dart';
@@ -22,81 +25,89 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       LoadSettings event, Emitter<SettingsState> emit) async {
     emit(state.copyWith(status: SettingsStatus.loading));
 
-    // Use Future.wait to load all settings concurrently
-    final results = await Future.wait([
-      _settingsRepository.getThemeMode(),
-      _settingsRepository.getCurrencySymbol(),
-      _settingsRepository.getAppLockEnabled(),
-    ]);
+    try {
+      // Use Future.wait to load all settings concurrently
+      final results = await Future.wait([
+        _settingsRepository.getThemeMode(),
+        _settingsRepository.getCurrencySymbol(),
+        _settingsRepository.getAppLockEnabled(),
+      ]);
 
-    // Process results - check for any failures
-    bool hasError = false;
-    String combinedErrorMessage = '';
+      // *** Cast results explicitly before using .fold ***
+      final themeResult = results[0] as Either<Failure, ThemeMode>;
+      final currencyResult = results[1] as Either<Failure, String?>;
+      final appLockResult = results[2] as Either<Failure, bool>;
+      // *** End Casts ***
 
-    ThemeMode loadedTheme = state.themeMode; // Default if load fails
-    String? loadedSymbol = state.currencySymbol; // Default if load fails
-    bool loadedLock = state.isAppLockEnabled; // Default if load fails
+      // Initialize with current state defaults or loaded values
+      ThemeMode loadedTheme = state.themeMode;
+      // Use default from SettingsState as the final fallback
+      String? loadedSymbol = SettingsState.defaultCurrencySymbol;
+      bool loadedLock = state.isAppLockEnabled;
+      String? combinedErrorMessage;
 
-    results[0].fold(
-      // Theme Result
-      (failure) {
-        hasError = true;
-        combinedErrorMessage += '${failure.message} ';
-      },
-      (themeMode) => loadedTheme = themeMode,
-    );
+      themeResult.fold(
+        (failure) => combinedErrorMessage =
+            '${combinedErrorMessage ?? ''}${failure.message} ',
+        (themeMode) => loadedTheme = themeMode, // Assign ThemeMode correctly
+      );
 
-    results[1].fold(
-      // Currency Result
-      (failure) {
-        hasError = true;
-        combinedErrorMessage += '${failure.message} ';
-      },
-      (symbol) =>
-          loadedSymbol = symbol ?? state.currencySymbol, // Keep default if null
-    );
+      currencyResult.fold(
+        (failure) => combinedErrorMessage =
+            '${combinedErrorMessage ?? ''}${failure.message} ',
+        (symbol) => loadedSymbol = symbol ??
+            SettingsState
+                .defaultCurrencySymbol, // Assign String? correctly, use default if null
+      );
 
-    results[2].fold(
-      // App Lock Result
-      (failure) {
-        hasError = true;
-        combinedErrorMessage += '${failure.message} ';
-      },
-      (isEnabled) => loadedLock = isEnabled,
-    );
+      appLockResult.fold(
+        (failure) => combinedErrorMessage =
+            '${combinedErrorMessage ?? ''}${failure.message} ',
+        (isEnabled) => loadedLock = isEnabled, // Assign bool correctly
+      );
 
-    if (hasError) {
+      if (combinedErrorMessage != null) {
+        emit(state.copyWith(
+          status: SettingsStatus.error,
+          errorMessage: combinedErrorMessage!.trim(),
+          // Keep potentially partially loaded values or revert to defaults?
+          // Here we keep loaded values where possible
+          themeMode: loadedTheme,
+          currencySymbol: loadedSymbol,
+          isAppLockEnabled: loadedLock,
+        ));
+      } else {
+        emit(state.copyWith(
+          status: SettingsStatus.loaded,
+          themeMode: loadedTheme,
+          currencySymbol: loadedSymbol,
+          isAppLockEnabled: loadedLock,
+          errorMessage: null, // Clear previous errors
+        ));
+      }
+    } catch (e, stackTrace) {
+      // Catch potential casting errors or other issues
+      print("Unexpected error loading settings: $e\n$stackTrace");
       emit(state.copyWith(
         status: SettingsStatus.error,
-        errorMessage: combinedErrorMessage.trim(),
-      ));
-    } else {
-      emit(state.copyWith(
-        status: SettingsStatus.loaded,
-        themeMode: loadedTheme,
-        currencySymbol: loadedSymbol,
-        isAppLockEnabled: loadedLock,
-        errorMessage: null, // Clear previous errors
+        errorMessage: 'An unexpected error occurred while loading settings.',
       ));
     }
   }
 
+  // --- _onUpdateTheme, _onUpdateCurrency, _onUpdateAppLock remain the same ---
   Future<void> _onUpdateTheme(
       UpdateTheme event, Emitter<SettingsState> emit) async {
-    // Optionally emit a loading state if saving takes time
-    // emit(state.copyWith(status: SettingsStatus.loading));
     final result = await _settingsRepository.saveThemeMode(event.newMode);
-
     result.fold(
       (failure) => emit(state.copyWith(
         status: SettingsStatus.error,
         errorMessage: failure.message,
       )),
       (_) => emit(state.copyWith(
-        // On success, update state
         themeMode: event.newMode,
-        status: SettingsStatus.loaded, // Reset status if loading was used
-        errorMessage: null, // Clear error on success
+        status: SettingsStatus.loaded,
+        errorMessage: null,
       )),
     );
   }
@@ -134,4 +145,5 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       )),
     );
   }
+  // --- End unchanged methods ---
 }

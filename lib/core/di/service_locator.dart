@@ -13,7 +13,7 @@ import 'package:expense_tracker/features/expenses/data/datasources/expense_local
 import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
 // --- Settings Data Source Import ---
-import 'package:expense_tracking/features/settings/data/datasources/settings_local_data_source.dart';
+import 'package:expense_tracker/features/settings/data/datasources/settings_local_data_source.dart'; // Corrected typo: expense_tracking
 // --- End Settings Data Source Import ---
 
 // Import Models (needed for Hive Box types)
@@ -29,8 +29,8 @@ import 'package:expense_tracker/features/accounts/domain/repositories/asset_acco
 import 'package:expense_tracker/features/income/data/repositories/income_repository_impl.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 // --- Settings Repository Import ---
-import 'package:expense_tracker/features/settings/data/repositories/settings_repository_impl.dart';
-import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
+import 'package:expense_tracker/features/settings/data/repositories/settings_repository_impl.dart'; // Corrected typo: expense_tracking
+import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart'; // Corrected typo: expense_tracking
 // --- End Settings Repository Import ---
 
 // Import Use Cases (Keep existing)
@@ -60,7 +60,7 @@ import 'package:expense_tracker/features/income/presentation/bloc/income_list/in
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 // --- Settings Bloc Import ---
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Corrected typo: expense_tracking
 // --- End Settings Bloc Import ---
 
 // Import Entities (needed for factory params)
@@ -149,7 +149,7 @@ void _registerExpensesFeature() {
       addExpenseUseCase: sl(),
       updateExpenseUseCase: sl(),
       initialExpense: initialExpense,
-      dataChangeController: sl(), // Pass controller for event publishing
+      // *** REMOVED dataChangeController parameter ***
     ),
   );
   sl.registerLazySingleton(() => ExpenseListBloc(
@@ -186,7 +186,7 @@ void _registerAccountsFeature() {
       addAssetAccountUseCase: sl(),
       updateAssetAccountUseCase: sl(),
       initialAccount: initialAccount,
-      dataChangeController: sl(), // Pass controller for event publishing
+      // *** REMOVED dataChangeController parameter ***
     ),
   );
   sl.registerLazySingleton(() => AccountListBloc(
@@ -218,7 +218,7 @@ void _registerIncomeFeature() {
       addIncomeUseCase: sl(),
       updateIncomeUseCase: sl(),
       initialIncome: initialIncome,
-      dataChangeController: sl(), // Pass controller for event publishing
+      // *** REMOVED dataChangeController parameter ***
     ),
   );
   sl.registerLazySingleton(() => IncomeListBloc(
@@ -254,11 +254,12 @@ void _registerAnalyticsAndDashboardFeatures() {
 void publishDataChangedEvent(
     {required DataChangeType type, required DataChangeReason reason}) {
   try {
+    // Retrieve the singleton StreamController and add the event
     sl<StreamController<DataChangedEvent>>()
         .add(DataChangedEvent(type: type, reason: reason));
     print("Published DataChangedEvent: Type=$type, Reason=$reason");
   } catch (e) {
+    // Log error if the controller isn't registered or another issue occurs
     print("Error publishing DataChangedEvent: $e");
-    // Handle cases where the stream controller might not be registered yet
   }
 }
