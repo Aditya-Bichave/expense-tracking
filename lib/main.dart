@@ -32,7 +32,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Configure Logger (Optional: Set level, etc.)
-  log.setLevel(Level.INFO, includeCallerInfo: true);
+  log.setLevel(Level.WARNING, includeCallerInfo: false);
   log.info("Application starting...");
 
   // Initialize Hive, SharedPreferences, DI
