@@ -2,3 +2,5 @@
 
 /// Represents the submission status of a form within Add/Edit Blocs.
 enum FormStatus { initial, submitting, success, error }
+
+// Add other shared enums here if needed

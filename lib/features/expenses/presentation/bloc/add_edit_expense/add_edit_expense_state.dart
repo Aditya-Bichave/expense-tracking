@@ -1,8 +1,11 @@
+// lib/features/expenses/presentation/bloc/add_edit_expense/add_edit_expense_state.dart
 part of 'add_edit_expense_bloc.dart';
 
-enum FormStatus { initial, submitting, success, error }
+// REMOVE this enum definition:
+// enum FormStatus { initial, submitting, success, error }
 
 class AddEditExpenseState extends Equatable {
+  // Use the imported FormStatus from core/utils/enums.dart
   final FormStatus status;
   final String? errorMessage;
   final Expense? initialExpense; // Store the expense being edited
@@ -17,8 +20,8 @@ class AddEditExpenseState extends Equatable {
   AddEditExpenseState copyWith({
     FormStatus? status,
     String? errorMessage,
-    Expense? initialExpense, // Allow updating initialExpense if needed
-    bool clearError = false, // Helper to clear error message
+    Expense? initialExpense,
+    bool clearError = false,
   }) {
     return AddEditExpenseState(
       status: status ?? this.status,

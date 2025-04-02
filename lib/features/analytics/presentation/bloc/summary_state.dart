@@ -1,4 +1,4 @@
-part of 'summary_bloc.dart'; // Link to the bloc file
+part of 'summary_bloc.dart';
 
 abstract class SummaryState extends Equatable {
   const SummaryState();
@@ -7,29 +7,31 @@ abstract class SummaryState extends Equatable {
   List<Object?> get props => [];
 }
 
-// Initial state before anything is loaded
 class SummaryInitial extends SummaryState {}
 
-// State indicating that the summary data is being fetched
-class SummaryLoading extends SummaryState {}
+class SummaryLoading extends SummaryState {
+  final bool
+      isReloading; // True if loading triggered while data was already loaded
+  const SummaryLoading({this.isReloading = false});
 
-// State indicating that the summary data has been successfully loaded
+  @override
+  List<Object> get props => [isReloading];
+}
+
 class SummaryLoaded extends SummaryState {
-  final ExpenseSummary summary; // Holds the calculated summary data
+  final ExpenseSummary summary;
 
   const SummaryLoaded(this.summary);
 
   @override
-  List<Object?> get props =>
-      [summary]; // Include summary in props for comparison
+  List<Object?> get props => [summary];
 }
 
-// State indicating an error occurred while fetching the summary
 class SummaryError extends SummaryState {
-  final String message; // Holds the error message
+  final String message;
 
   const SummaryError(this.message);
 
   @override
-  List<Object> get props => [message]; // Include message in props
+  List<Object> get props => [message];
 }

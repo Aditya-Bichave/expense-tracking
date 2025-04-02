@@ -1,27 +1,36 @@
 import 'package:dartz/dartz.dart';
-import 'package:equatable/equatable.dart'; // Make sure Equatable is imported
+import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
-import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart'; // Reuse expense repo
+import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class GetExpenseSummaryUseCase
     implements UseCase<ExpenseSummary, GetSummaryParams> {
-  final ExpenseRepository repository; // Use the existing ExpenseRepository
+  final ExpenseRepository repository;
 
   GetExpenseSummaryUseCase(this.repository);
 
   @override
   Future<Either<Failure, ExpenseSummary>> call(GetSummaryParams params) async {
-    // The summary logic is now inside ExpenseRepositoryImpl
-    return await repository.getExpenseSummary(
+    log.info(
+        "Executing GetExpenseSummaryUseCase. Start: ${params.startDate}, End: ${params.endDate}");
+    // The summary logic is inside ExpenseRepositoryImpl
+    final result = await repository.getExpenseSummary(
       startDate: params.startDate,
       endDate: params.endDate,
     );
+    result.fold(
+      (failure) =>
+          log.warning("[GetExpenseSummaryUseCase] Failed: ${failure.message}"),
+      (summary) => log.info(
+          "[GetExpenseSummaryUseCase] Succeeded. Total: ${summary.totalExpenses}, Categories: ${summary.categoryBreakdown.length}"),
+    );
+    return result;
   }
 }
 
-// CORRECTED: Use 'extends' for the Equatable class
 class GetSummaryParams extends Equatable {
   final DateTime? startDate;
   final DateTime? endDate;
@@ -29,6 +38,5 @@ class GetSummaryParams extends Equatable {
   const GetSummaryParams({this.startDate, this.endDate});
 
   @override
-  List<Object?> get props =>
-      [startDate, endDate]; // Define properties for equality check
+  List<Object?> get props => [startDate, endDate];
 }

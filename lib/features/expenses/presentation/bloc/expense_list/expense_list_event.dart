@@ -1,4 +1,4 @@
-part of 'expense_list_bloc.dart'; // Link to bloc file
+part of 'expense_list_bloc.dart';
 
 abstract class ExpenseListEvent extends Equatable {
   const ExpenseListEvent();
@@ -21,11 +21,13 @@ class FilterExpenses extends ExpenseListEvent {
   final DateTime? startDate;
   final DateTime? endDate;
   final String? category; // Using category name string
+  final String? accountId; // Add account filter
 
-  const FilterExpenses({this.startDate, this.endDate, this.category});
+  const FilterExpenses(
+      {this.startDate, this.endDate, this.category, this.accountId});
 
   @override
-  List<Object?> get props => [startDate, endDate, category];
+  List<Object?> get props => [startDate, endDate, category, accountId];
 }
 
 // Event to trigger deletion
@@ -37,7 +39,7 @@ class DeleteExpenseRequested extends ExpenseListEvent {
   List<Object> get props => [expenseId];
 }
 
-// Internal event
+// Internal event for data changes
 class _DataChanged extends ExpenseListEvent {
   const _DataChanged();
 }

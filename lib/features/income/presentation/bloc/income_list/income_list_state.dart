@@ -8,7 +8,14 @@ abstract class IncomeListState extends Equatable {
 
 class IncomeListInitial extends IncomeListState {}
 
-class IncomeListLoading extends IncomeListState {}
+class IncomeListLoading extends IncomeListState {
+  final bool
+      isReloading; // True if loading triggered while data was already loaded
+  const IncomeListLoading({this.isReloading = false});
+
+  @override
+  List<Object> get props => [isReloading];
+}
 
 class IncomeListLoaded extends IncomeListState {
   final List<Income> incomes;
@@ -31,7 +38,7 @@ class IncomeListLoaded extends IncomeListState {
         filterStartDate,
         filterEndDate,
         filterCategory,
-        filterAccountId
+        filterAccountId,
       ];
 }
 

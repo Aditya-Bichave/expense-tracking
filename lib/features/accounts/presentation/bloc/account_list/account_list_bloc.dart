@@ -1,7 +1,7 @@
-import 'dart:async'; // Import async
+import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart'; // Import for debugPrint
+import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart'; // For NoParams
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
@@ -16,169 +16,177 @@ part 'account_list_state.dart';
 class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
   final GetAssetAccountsUseCase _getAssetAccountsUseCase;
   final DeleteAssetAccountUseCase _deleteAssetAccountUseCase;
-  late final StreamSubscription<DataChangedEvent>
-      _dataChangeSubscription; // Subscription
+  late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
   AccountListBloc({
     required GetAssetAccountsUseCase getAssetAccountsUseCase,
     required DeleteAssetAccountUseCase deleteAssetAccountUseCase,
-    required Stream<DataChangedEvent> dataChangeStream, // Inject stream
+    required Stream<DataChangedEvent> dataChangeStream,
   })  : _getAssetAccountsUseCase = getAssetAccountsUseCase,
         _deleteAssetAccountUseCase = deleteAssetAccountUseCase,
         super(AccountListInitial()) {
     on<LoadAccounts>(_onLoadAccounts);
     on<DeleteAccountRequested>(_onDeleteAccountRequested);
-    on<_DataChanged>(_onDataChanged); // Handler for internal event
+    on<_DataChanged>(_onDataChanged);
 
-    // *** Subscribe to the stream ***
+    // Subscribe to the stream
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Trigger internal event if relevant change occurs
       // Accounts list needs refresh if Accounts, Income, or Expenses change (for balances)
       if (event.type == DataChangeType.account ||
           event.type == DataChangeType.income ||
-          event.type == DataChangeType.expense) {
-        debugPrint(
-            "[AccountListBloc] Received relevant DataChangedEvent: $event. Adding _DataChanged event.");
+          event.type == DataChangeType.expense ||
+          event.type == DataChangeType.settings) {
+        // Also refresh if settings (e.g., currency) change
+        log.info(
+            "[AccountListBloc] Received relevant DataChangedEvent: $event. Triggering reload.");
         add(const _DataChanged());
       }
+    }, onError: (error, stackTrace) {
+      log.severe("[AccountListBloc] Error in dataChangeStream listener");
     });
 
-    debugPrint("[AccountListBloc] Initialized and subscribed to data changes.");
+    log.info("[AccountListBloc] Initialized and subscribed to data changes.");
   }
 
   // Internal event handler to trigger reload
   Future<void> _onDataChanged(
       _DataChanged event, Emitter<AccountListState> emit) async {
-    debugPrint(
-        "[AccountListBloc] Handling _DataChanged event. Dispatching LoadAccounts.");
-    add(const LoadAccounts(
-        forceReload: true)); // Trigger the public load event, force reload
+    log.info(
+        "[AccountListBloc] Handling _DataChanged event. Dispatching LoadAccounts(forceReload: true).");
+    // Always force reload on data change to ensure consistency
+    add(const LoadAccounts(forceReload: true));
   }
 
   Future<void> _onLoadAccounts(
       LoadAccounts event, Emitter<AccountListState> emit) async {
-    debugPrint("[AccountListBloc] Received LoadAccounts event.");
-    // Prevent emitting Loading if already Loaded to avoid UI flicker on refresh
-    // Allow loading state if triggered by _DataChanged or initial load
+    log.info(
+        "[AccountListBloc] Received LoadAccounts event (forceReload: ${event.forceReload}). Current state: ${state.runtimeType}");
+
+    // Only show full loading state if it's the initial load or forced.
+    // For subsequent loads triggered by _DataChanged, we might just update the list
+    // without the full loading indicator to reduce flicker, unless forced.
     if (state is! AccountListLoaded || event.forceReload) {
-      if (state is! AccountListLoaded) {
-        debugPrint(
-            "[AccountListBloc] Current state is not Loaded. Emitting AccountListLoading.");
-        emit(AccountListLoading());
-      } else {
-        debugPrint(
-            "[AccountListBloc] Force reload requested. Refreshing data.");
-        // Optionally emit a specific "refreshing" state if needed
-      }
+      emit(AccountListLoading(
+          isReloading: state
+              is AccountListLoaded)); // Indicate if it's a reload vs initial load
+      log.info(
+          "[AccountListBloc] Emitting AccountListLoading (isReloading: ${state is AccountListLoaded}).");
     } else {
-      debugPrint(
-          "[AccountListBloc] Current state is Loaded and no force reload. Refreshing data without emitting Loading.");
+      log.info(
+          "[AccountListBloc] State is AccountListLoaded and no force reload. Refreshing data silently.");
     }
 
     try {
-      final result = await _getAssetAccountsUseCase(NoParams());
-      debugPrint(
-          "[AccountListBloc] GetAssetAccountsUseCase returned. Result isLeft: ${result.isLeft()}");
+      final result = await _getAssetAccountsUseCase(const NoParams());
+      log.info(
+          "[AccountListBloc] GetAssetAccountsUseCase returned. isLeft: ${result.isLeft()}");
 
       result.fold(
         (failure) {
-          debugPrint(
-              "[AccountListBloc] Emitting AccountListError: ${failure.message}");
+          log.warning(
+              "[AccountListBloc] Load failed: ${failure.message}. Emitting AccountListError.");
           emit(AccountListError(_mapFailureToMessage(failure)));
         },
         (accounts) {
-          debugPrint(
-              "[AccountListBloc] Emitting AccountListLoaded with ${accounts.length} accounts.");
+          log.info(
+              "[AccountListBloc] Load successful. Emitting AccountListLoaded with ${accounts.length} accounts.");
           emit(AccountListLoaded(accounts: accounts));
         },
       );
     } catch (e, s) {
-      debugPrint(
-          "[AccountListBloc] *** CRITICAL ERROR in _onLoadAccounts: $e\n$s");
+      log.severe("[AccountListBloc] Unexpected error in _onLoadAccounts$e$s");
       emit(AccountListError(
-          "An unexpected error occurred in the Account BLoC: $e"));
-    } finally {
-      debugPrint(
-          "[AccountListBloc] Finished processing LoadAccounts event handler.");
+          "An unexpected error occurred while loading accounts: ${e.toString()}"));
     }
   }
 
   Future<void> _onDeleteAccountRequested(
       DeleteAccountRequested event, Emitter<AccountListState> emit) async {
-    debugPrint(
+    log.info(
         "[AccountListBloc] Received DeleteAccountRequested for ID: ${event.accountId}");
     final currentState = state;
+
     if (currentState is AccountListLoaded) {
-      debugPrint(
-          "[AccountListBloc] Current state is Loaded. Proceeding with optimistic delete.");
+      log.info(
+          "[AccountListBloc] Current state is Loaded. Performing optimistic delete.");
       // Optimistic UI Update
       final optimisticList = currentState.accounts
           .where((acc) => acc.id != event.accountId)
           .toList();
-      debugPrint(
+      log.info(
           "[AccountListBloc] Optimistic list size: ${optimisticList.length}. Emitting updated AccountListLoaded.");
-      emit(AccountListLoaded(accounts: optimisticList));
+      emit(
+          AccountListLoaded(accounts: optimisticList)); // Update UI immediately
 
       try {
         final result = await _deleteAssetAccountUseCase(
             DeleteAssetAccountParams(event.accountId));
-        debugPrint(
-            "[AccountListBloc] DeleteAssetAccountUseCase returned. Result isLeft: ${result.isLeft()}");
+        log.info(
+            "[AccountListBloc] DeleteAssetAccountUseCase returned. isLeft: ${result.isLeft()}");
 
         result.fold(
           (failure) {
-            debugPrint(
+            log.warning(
                 "[AccountListBloc] Deletion failed: ${failure.message}. Reverting UI and emitting Error.");
             // Revert UI and show error
             emit(currentState); // Revert to previous list
-            emit(AccountListError(// Show separate error state
-                "Failed to delete account: ${_mapFailureToMessage(failure)}. Check linked transactions."));
-            // Optionally trigger a forced reload to ensure consistency after failure
-            // add(LoadAccounts(forceReload: true));
+            // Emit a specific error state *after* reverting, so UI can show list + error message
+            emit(AccountListError(_mapFailureToMessage(failure,
+                context: "Failed to delete account")));
           },
           (_) {
             // Optimistic update was successful
-            debugPrint(
-                "[AccountListBloc] Deletion successful (Optimistic UI). Publishing DataChangedEvent.");
-            // *** Publish Event on Success ***
+            log.info(
+                "[AccountListBloc] Deletion successful. Publishing DataChangedEvent.");
+            // Publish Event on Success - This is handled by the repository now? No, Bloc should publish.
             publishDataChangedEvent(
                 type: DataChangeType.account, reason: DataChangeReason.deleted);
-            // *********************************
             // No state change needed here as UI was updated optimistically
-            // If not using optimistic update, trigger: add(LoadAccounts(forceReload: true));
           },
         );
       } catch (e, s) {
-        debugPrint(
-            "[AccountListBloc] *** CRITICAL ERROR in _onDeleteAccountRequested: $e\n$s");
+        log.severe(
+            "[AccountListBloc] Unexpected error in _onDeleteAccountRequested for ID ${event.accountId}$e$s");
         emit(currentState); // Revert optimistic update on error
         emit(AccountListError(
-            "An unexpected error occurred during deletion: $e"));
+            "An unexpected error occurred during deletion: ${e.toString()}"));
       }
     } else {
-      debugPrint(
+      log.warning(
           "[AccountListBloc] Delete requested but state is not AccountListLoaded. Ignoring.");
     }
-    debugPrint("[AccountListBloc] Finished processing DeleteAccountRequested.");
   }
 
-  String _mapFailureToMessage(Failure failure) {
-    // Customize error messages for accounts
+  String _mapFailureToMessage(Failure failure,
+      {String context = "An error occurred"}) {
+    log.warning(
+        "Mapping failure to message: ${failure.runtimeType} - ${failure.message}");
+    String specificMessage;
     switch (failure.runtimeType) {
       case CacheFailure:
-        return 'Database Error: ${failure.message}';
+        specificMessage = 'Database Error: ${failure.message}';
+        break;
       case ValidationFailure:
-        return failure.message; // Use specific validation message
+        specificMessage = failure.message; // Use specific validation message
+        break;
+      case UnexpectedFailure:
+        specificMessage = 'An unexpected error occurred. Please try again.';
+        break;
       default:
-        return 'An unexpected error occurred: ${failure.message}';
+        specificMessage = failure.message.isNotEmpty
+            ? failure.message
+            : 'An unknown error occurred.';
+        break;
     }
+    // Combine context and specific message
+    return "$context: $specificMessage";
   }
 
-  // *** Cancel subscription when BLoC is closed ***
   @override
   Future<void> close() {
     _dataChangeSubscription.cancel();
-    debugPrint("[AccountListBloc] Canceled data change subscription.");
+    log.info(
+        "[AccountListBloc] Canceled data change subscription and closing.");
     return super.close();
   }
 }

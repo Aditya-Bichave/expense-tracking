@@ -5,9 +5,8 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_account/add_edit_account_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_form.dart';
-// Keep this import as it provides the intended FormStatus
-import 'package:expense_tracker/features/expenses/presentation/bloc/add_edit_expense/add_edit_expense_bloc.dart';
-// Removed explicit Bloc imports for refresh
+import 'package:expense_tracker/core/utils/enums.dart'; // Shared FormStatus
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class AddEditAccountPage extends StatelessWidget {
   final String? accountId;
@@ -22,32 +21,48 @@ class AddEditAccountPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isEditing = account != null;
+    log.info(
+        "[AddEditAccountPage] Build called. Editing: $isEditing, AccountId: $accountId");
 
     return BlocProvider(
       create: (context) => sl<AddEditAccountBloc>(param1: account),
       child: BlocListener<AddEditAccountBloc, AddEditAccountState>(
         listener: (context, state) {
+          log.info(
+              "[AddEditAccountPage] BlocListener received state: Status=${state.status}");
           if (state.status == FormStatus.success) {
-            // No explicit refreshes needed here anymore
-            debugPrint(
-                "Account save successful, relying on stream for refresh.");
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+            log.info(
+                "[AddEditAccountPage] Form submission successful. Popping route.");
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
                   content: Text(
-                      'Account ${isEditing ? 'updated' : 'added'} successfully!')),
-            );
+                      'Account ${isEditing ? 'updated' : 'added'} successfully!'),
+                  backgroundColor: Colors.green,
+                ),
+              );
             if (context.canPop()) {
               context.pop();
+            } else {
+              // Handle case where page can't be popped (e.g., deep linking)
+              // Maybe navigate back to the list explicitly
+              log.warning(
+                  "[AddEditAccountPage] Cannot pop context after successful save.");
+              context.goNamed('accounts_list'); // Example fallback
             }
           } else if (state.status == FormStatus.error &&
               state.errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Error: ${state.errorMessage}'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
+            log.warning(
+                "[AddEditAccountPage] Form submission error: ${state.errorMessage}");
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text('Error: ${state.errorMessage}'),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
           }
         },
         child: Scaffold(
@@ -56,22 +71,33 @@ class AddEditAccountPage extends StatelessWidget {
           ),
           body: BlocBuilder<AddEditAccountBloc, AddEditAccountState>(
             builder: (context, state) {
-              if (state.status == FormStatus.submitting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              return AccountForm(
-                initialAccount: state.initialAccount ?? account,
-                onSubmit: (name, type, initialBalance) {
-                  context.read<AddEditAccountBloc>().add(
-                        SaveAccountRequested(
-                          name: name,
-                          type: type,
-                          initialBalance: initialBalance,
-                          existingAccountId: isEditing ? account!.id : null,
-                        ),
-                      );
-                },
+              log.info(
+                  "[AddEditAccountPage] BlocBuilder building for status: ${state.status}");
+              // Use AnimatedSwitcher for smooth transition during submission
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: state.status == FormStatus.submitting
+                    ? const Center(
+                        key: ValueKey('loading'),
+                        child: CircularProgressIndicator())
+                    : AccountForm(
+                        key: const ValueKey('form'), // Key for AnimatedSwitcher
+                        initialAccount:
+                            state.initialAccount, // Use state's account
+                        onSubmit: (name, type, initialBalance) {
+                          log.info(
+                              "[AddEditAccountPage] Form submitted. Dispatching SaveAccountRequested.");
+                          context.read<AddEditAccountBloc>().add(
+                                SaveAccountRequested(
+                                  name: name,
+                                  type: type,
+                                  initialBalance: initialBalance,
+                                  existingAccountId:
+                                      accountId, // Use accountId from route param
+                                ),
+                              );
+                        },
+                      ),
               );
             },
           ),

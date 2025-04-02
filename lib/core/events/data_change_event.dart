@@ -1,12 +1,15 @@
 // lib/core/events/data_change_event.dart
+
+// Describes the type of data operation
 enum DataChangeReason { added, updated, deleted }
 
-enum DataChangeType { account, income, expense }
+// Describes the type of data affected
+enum DataChangeType { account, income, expense, settings } // Added settings
 
 class DataChangedEvent {
   final DataChangeType type;
   final DataChangeReason reason;
-  // Optionally add ID of changed item if needed by listeners
+  // Optionally add ID of changed item if needed by specific listeners
   // final String? id;
 
   const DataChangedEvent({required this.type, required this.reason});

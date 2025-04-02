@@ -3,8 +3,8 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
-// Returns void on success, so the Type is void
 class DeleteExpenseUseCase implements UseCase<void, DeleteExpenseParams> {
   final ExpenseRepository repository;
 
@@ -12,11 +12,11 @@ class DeleteExpenseUseCase implements UseCase<void, DeleteExpenseParams> {
 
   @override
   Future<Either<Failure, void>> call(DeleteExpenseParams params) async {
+    log.info("Executing DeleteExpenseUseCase for ID: ${params.id}.");
     return await repository.deleteExpense(params.id);
   }
 }
 
-// Params class defined previously in ExpenseListBloc, ensure it's accessible or defined here
 class DeleteExpenseParams extends Equatable {
   final String id;
 

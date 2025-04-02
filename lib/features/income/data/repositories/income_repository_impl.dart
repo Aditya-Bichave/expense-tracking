@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart'; // Import for debugPrint
+import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
@@ -13,40 +13,36 @@ class IncomeRepositoryImpl implements IncomeRepository {
 
   @override
   Future<Either<Failure, Income>> addIncome(Income income) async {
-    debugPrint("[IncomeRepo] addIncome called for '${income.title}'.");
+    log.info("[IncomeRepo] Adding income '${income.title}'.");
     try {
       final incomeModel = IncomeModel.fromEntity(income);
-      debugPrint(
-          "[IncomeRepo] Mapped to model. Calling localDataSource.addIncome...");
       final addedModel = await localDataSource.addIncome(incomeModel);
-      debugPrint("[IncomeRepo] Added to local source. Returning Right.");
+      log.info("[IncomeRepo] Add successful. Returning entity.");
       return Right(addedModel.toEntity());
     } on CacheFailure catch (e) {
-      debugPrint("[IncomeRepo] CacheFailure during add: $e");
+      log.warning("[IncomeRepo] CacheFailure during add: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      debugPrint("[IncomeRepo] *** CRITICAL ERROR during add: $e\n$s");
+      log.severe("[IncomeRepo] Unexpected error adding income$e$s");
       return Left(
-          CacheFailure('Unexpected error adding income: ${e.toString()}'));
+          UnexpectedFailure('Unexpected error adding income: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, void>> deleteIncome(String id) async {
-    debugPrint("[IncomeRepo] deleteIncome called for ID: $id.");
+    log.info("[IncomeRepo] Deleting income (ID: $id).");
     try {
-      debugPrint("[IncomeRepo] Calling localDataSource.deleteIncome...");
       await localDataSource.deleteIncome(id);
-      debugPrint(
-          "[IncomeRepo] Deleted from local source. Returning Right(null).");
+      log.info("[IncomeRepo] Delete successful.");
       return const Right(null);
     } on CacheFailure catch (e) {
-      debugPrint("[IncomeRepo] CacheFailure during delete: $e");
+      log.warning("[IncomeRepo] CacheFailure during delete: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      debugPrint("[IncomeRepo] *** CRITICAL ERROR during delete: $e\n$s");
-      return Left(
-          CacheFailure('Unexpected error deleting income: ${e.toString()}'));
+      log.severe("[IncomeRepo] Unexpected error deleting income$e$s");
+      return Left(UnexpectedFailure(
+          'Unexpected error deleting income: ${e.toString()}'));
     }
   }
 
@@ -57,148 +53,113 @@ class IncomeRepositoryImpl implements IncomeRepository {
     String? category,
     String? accountId,
   }) async {
-    debugPrint(
-        "[IncomeRepo] getIncomes called. Filters: AccID=$accountId, Start=$startDate, End=$endDate, Cat=$category");
+    log.info(
+        "[IncomeRepo] Getting incomes. Filters: AccID=$accountId, Start=$startDate, End=$endDate, Cat=$category");
     try {
-      debugPrint("[IncomeRepo] Fetching income models from local source...");
       final incomeModels = await localDataSource.getIncomes();
-      debugPrint("[IncomeRepo] Fetched ${incomeModels.length} income models.");
-
-      List<Income> incomes = [];
-      try {
-        incomes = incomeModels.map((model) => model.toEntity()).toList();
-        debugPrint("[IncomeRepo] Mapped ${incomes.length} models to entities.");
-      } catch (e, s) {
-        debugPrint(
-            "[IncomeRepo] *** CRITICAL ERROR mapping models to entities: $e\n$s");
-        return Left(
-            CacheFailure("Error mapping income models: ${e.toString()}"));
-      }
+      List<Income> incomes =
+          incomeModels.map((model) => model.toEntity()).toList();
+      log.info("[IncomeRepo] Fetched and mapped ${incomes.length} incomes.");
 
       // Apply filtering
-      try {
-        final originalCount = incomes.length;
-        incomes = incomes.where((inc) {
-          bool dateMatch = true;
-          bool categoryMatch = true;
-          bool accountMatch = true;
+      final originalCount = incomes.length;
+      incomes = incomes.where((inc) {
+        bool dateMatch = true;
+        bool categoryMatch = true;
+        bool accountMatch = true;
 
-          // Date filtering
-          if (startDate != null) {
-            final incDateOnly =
-                DateTime(inc.date.year, inc.date.month, inc.date.day);
-            final startDateOnly =
-                DateTime(startDate.year, startDate.month, startDate.day);
-            dateMatch = incDateOnly.isAfter(startDateOnly) ||
-                incDateOnly.isAtSameMomentAs(startDateOnly);
-          }
-          if (endDate != null && dateMatch) {
-            final incDateOnly =
-                DateTime(inc.date.year, inc.date.month, inc.date.day);
-            final endDateOnly =
-                DateTime(endDate.year, endDate.month, endDate.day);
-            dateMatch = incDateOnly.isBefore(endDateOnly) ||
-                incDateOnly.isAtSameMomentAs(endDateOnly);
-          }
-          // Category filtering
-          if (category != null && category.isNotEmpty) {
-            categoryMatch = inc.category.name == category;
-          }
-          // Account filtering
-          if (accountId != null && accountId.isNotEmpty) {
-            accountMatch = inc.accountId == accountId;
-          }
-          return dateMatch && categoryMatch && accountMatch;
-        }).toList();
-        debugPrint(
-            "[IncomeRepo] Filtered incomes: ${incomes.length} remaining from $originalCount.");
-      } catch (e, s) {
-        debugPrint(
-            "[IncomeRepo] *** CRITICAL ERROR during income filtering: $e\n$s");
-        return Left(
-            CacheFailure("Error applying income filters: ${e.toString()}"));
-      }
+        // Date filtering (inclusive)
+        if (startDate != null) {
+          final incDateOnly =
+              DateTime(inc.date.year, inc.date.month, inc.date.day);
+          final startDateOnly =
+              DateTime(startDate.year, startDate.month, startDate.day);
+          dateMatch = !incDateOnly.isBefore(startDateOnly);
+        }
+        if (endDate != null && dateMatch) {
+          final incDateOnly =
+              DateTime(inc.date.year, inc.date.month, inc.date.day);
+          final endDateOnly =
+              DateTime(endDate.year, endDate.month, endDate.day);
+          dateMatch = !incDateOnly.isAfter(endDateOnly);
+        }
+        // Category filtering
+        if (category != null && category.isNotEmpty) {
+          categoryMatch = inc.category.name == category;
+        }
+        // Account filtering
+        if (accountId != null && accountId.isNotEmpty) {
+          accountMatch = inc.accountId == accountId;
+        }
+        return dateMatch && categoryMatch && accountMatch;
+      }).toList();
+      log.info(
+          "[IncomeRepo] Filtered incomes: ${incomes.length} remaining from $originalCount.");
 
-      // Sort
-      try {
-        incomes.sort((a, b) => b.date.compareTo(a.date));
-        debugPrint("[IncomeRepo] Sorted incomes.");
-      } catch (e, s) {
-        debugPrint(
-            "[IncomeRepo] *** CRITICAL ERROR during income sorting: $e\n$s");
-        return Left(CacheFailure("Error sorting income: ${e.toString()}"));
-      }
+      // Sort by date descending
+      incomes.sort((a, b) => b.date.compareTo(a.date));
+      log.info("[IncomeRepo] Sorted incomes.");
 
-      debugPrint(
-          "[IncomeRepo] Returning Right with ${incomes.length} incomes.");
       return Right(incomes);
     } on CacheFailure catch (e) {
-      debugPrint("[IncomeRepo] CacheFailure getting incomes: $e");
+      log.warning("[IncomeRepo] CacheFailure getting incomes: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      debugPrint("[IncomeRepo] *** CRITICAL ERROR getting incomes: $e\n$s");
-      return Left(
-          CacheFailure('Unexpected error getting incomes: ${e.toString()}'));
+      log.severe("[IncomeRepo] Unexpected error getting incomes$e$s");
+      return Left(UnexpectedFailure(
+          'Unexpected error getting incomes: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, Income>> updateIncome(Income income) async {
-    debugPrint("[IncomeRepo] updateIncome called for '${income.title}'.");
+    log.info(
+        "[IncomeRepo] Updating income '${income.title}' (ID: ${income.id}).");
     try {
       final incomeModel = IncomeModel.fromEntity(income);
-      debugPrint(
-          "[IncomeRepo] Mapped to model. Calling localDataSource.updateIncome...");
       final updatedModel = await localDataSource.updateIncome(incomeModel);
-      debugPrint("[IncomeRepo] Updated local source. Returning Right.");
+      log.info("[IncomeRepo] Update successful. Returning entity.");
       return Right(updatedModel.toEntity());
     } on CacheFailure catch (e) {
-      debugPrint("[IncomeRepo] CacheFailure during update: $e");
+      log.warning("[IncomeRepo] CacheFailure during update: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      debugPrint("[IncomeRepo] *** CRITICAL ERROR during update: $e\n$s");
-      return Left(
-          CacheFailure('Unexpected error updating income: ${e.toString()}'));
+      log.severe("[IncomeRepo] Unexpected error updating income$e$s");
+      return Left(UnexpectedFailure(
+          'Unexpected error updating income: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, double>> getTotalIncomeForAccount(String accountId,
       {DateTime? startDate, DateTime? endDate}) async {
-    debugPrint(
-        "[IncomeRepo] getTotalIncomeForAccount called for AccID: $accountId, Start=$startDate, End=$endDate");
+    log.info(
+        "[IncomeRepo] Getting total income for account: $accountId, Start=$startDate, End=$endDate");
     try {
+      // Pass empty accountId as null to getExpenses
       final allIncomesResult = await getIncomes(
           accountId: accountId.isEmpty ? null : accountId,
           startDate: startDate,
           endDate: endDate);
-      debugPrint(
-          "[IncomeRepo] getTotalIncomeForAccount - getIncomes result isLeft: ${allIncomesResult.isLeft()}");
 
       return allIncomesResult.fold(
         (failure) {
-          debugPrint(
-              "[IncomeRepo] getTotalIncomeForAccount - getIncomes failed: ${failure.message}");
-          return Left(failure); // Propagate failure
+          log.warning(
+              "[IncomeRepo] Failed to get incomes while calculating total: ${failure.message}");
+          return Left(failure);
         },
         (incomes) {
-          try {
-            double total = incomes.fold(0.0, (sum, item) => sum + item.amount);
-            debugPrint(
-                "[IncomeRepo] getTotalIncomeForAccount - Summed ${incomes.length} incomes. Total: $total. Returning Right.");
-            return Right(total);
-          } catch (e, s) {
-            debugPrint(
-                "[IncomeRepo] *** CRITICAL ERROR calculating total income sum: $e\n$s");
-            return Left(CacheFailure("Error summing income: ${e.toString()}"));
-          }
+          double total = incomes.fold(0.0, (sum, item) => sum + item.amount);
+          log.info(
+              "[IncomeRepo] Calculated total income for account $accountId: $total");
+          return Right(total);
         },
       );
     } catch (e, s) {
-      debugPrint(
-          "[IncomeRepo] *** CRITICAL ERROR in getTotalIncomeForAccount: $e\n$s");
-      return Left(CacheFailure(
-          'Failed to calculate total income for account: ${e.toString()}'));
+      log.severe(
+          "[IncomeRepo] Unexpected error calculating total income for account $accountId$e$s");
+      return Left(UnexpectedFailure(
+          'Failed to calculate total income: ${e.toString()}'));
     }
   }
 }

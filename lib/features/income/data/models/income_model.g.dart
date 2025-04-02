@@ -57,3 +57,28 @@ class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+IncomeModel _$IncomeModelFromJson(Map<String, dynamic> json) => IncomeModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      date: DateTime.parse(json['date'] as String),
+      categoryName: json['categoryName'] as String,
+      accountId: json['accountId'] as String,
+      notes: json['notes'] as String?,
+    );
+
+Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'amount': instance.amount,
+      'date': instance.date.toIso8601String(),
+      'categoryName': instance.categoryName,
+      'accountId': instance.accountId,
+      'notes': instance.notes,
+    };

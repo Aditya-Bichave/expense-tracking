@@ -7,7 +7,6 @@ abstract class AccountListEvent extends Equatable {
 }
 
 class LoadAccounts extends AccountListEvent {
-  // Optional flag to bypass "don't show loading if already loaded" logic
   final bool forceReload;
   const LoadAccounts({this.forceReload = false});
 
@@ -22,7 +21,7 @@ class DeleteAccountRequested extends AccountListEvent {
   List<Object> get props => [accountId];
 }
 
-// Internal event triggered by stream listener
+// Internal event triggered by stream listener or other actions needing refresh
 class _DataChanged extends AccountListEvent {
   const _DataChanged();
 }

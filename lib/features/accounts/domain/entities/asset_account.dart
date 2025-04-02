@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart'; // For potential IconData
+import 'package:flutter/material.dart'; // For IconData
 
 enum AssetType { bank, cash, crypto, investment, other }
 
@@ -9,7 +9,6 @@ class AssetAccount extends Equatable {
   final AssetType type;
   final double initialBalance;
   final double currentBalance; // Calculated, not stored directly in DB model
-  final IconData? iconData; // Optional: For UI representation
 
   const AssetAccount({
     required this.id,
@@ -17,10 +16,9 @@ class AssetAccount extends Equatable {
     required this.type,
     this.initialBalance = 0.0,
     required this.currentBalance,
-    this.iconData,
   });
 
-  // Helper for display
+  // Helper for display name
   String get typeName {
     switch (type) {
       case AssetType.bank:
@@ -36,7 +34,23 @@ class AssetAccount extends Equatable {
     }
   }
 
+  // Helper for getting an appropriate icon
+  IconData get iconData {
+    switch (type) {
+      case AssetType.bank:
+        return Icons.account_balance;
+      case AssetType.cash:
+        return Icons.wallet;
+      case AssetType.crypto:
+        return Icons.currency_bitcoin;
+      case AssetType.investment:
+        return Icons.trending_up;
+      case AssetType.other:
+      default:
+        return Icons.credit_card; // Or Icons.help_outline
+    }
+  }
+
   @override
-  List<Object?> get props =>
-      [id, name, type, initialBalance, currentBalance, iconData];
+  List<Object?> get props => [id, name, type, initialBalance, currentBalance];
 }

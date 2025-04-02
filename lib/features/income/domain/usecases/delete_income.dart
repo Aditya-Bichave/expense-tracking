@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class DeleteIncomeUseCase implements UseCase<void, DeleteIncomeParams> {
   final IncomeRepository repository;
@@ -11,6 +12,7 @@ class DeleteIncomeUseCase implements UseCase<void, DeleteIncomeParams> {
 
   @override
   Future<Either<Failure, void>> call(DeleteIncomeParams params) async {
+    log.info("Executing DeleteIncomeUseCase for ID: ${params.id}.");
     return await repository.deleteIncome(params.id);
   }
 }

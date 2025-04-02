@@ -1,10 +1,12 @@
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
+import 'package:json_annotation/json_annotation.dart'; // Import
 
-part 'income_model.g.dart'; // Generate this
+part 'income_model.g.dart'; // Ensure this is updated
 
-@HiveType(typeId: 2) // Ensure unique typeId
+@JsonSerializable() // Add Annotation
+@HiveType(typeId: 2)
 class IncomeModel extends HiveObject {
   @HiveField(0)
   final String id;
@@ -19,7 +21,7 @@ class IncomeModel extends HiveObject {
   final DateTime date;
 
   @HiveField(4)
-  final String categoryName; // Store category name
+  final String categoryName;
 
   @HiveField(5)
   final String accountId;
@@ -43,7 +45,7 @@ class IncomeModel extends HiveObject {
       title: entity.title,
       amount: entity.amount,
       date: entity.date,
-      categoryName: entity.category.name, // Store name
+      categoryName: entity.category.name,
       accountId: entity.accountId,
       notes: entity.notes,
     );
@@ -55,10 +57,16 @@ class IncomeModel extends HiveObject {
       title: title,
       amount: amount,
       date: date,
-      category:
-          IncomeCategory(name: categoryName), // Recreate category from name
+      category: IncomeCategory(name: categoryName),
       accountId: accountId,
       notes: notes,
     );
   }
+
+  // --- Add JsonSerializable methods ---
+  factory IncomeModel.fromJson(Map<String, dynamic> json) =>
+      _$IncomeModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$IncomeModelToJson(this);
+  // ------------------------------------
 }

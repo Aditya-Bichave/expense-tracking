@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:json_annotation/json_annotation.dart';
 
-part 'asset_account_model.g.dart'; // Generate this
+part 'asset_account_model.g.dart';
 
-@HiveType(typeId: 1) // Ensure unique typeId (ExpenseModel was 0)
+@JsonSerializable()
+@HiveType(typeId: 1) // Keep existing typeId
 class AssetAccountModel extends HiveObject {
   @HiveField(0)
   final String id;
@@ -18,8 +20,8 @@ class AssetAccountModel extends HiveObject {
   @HiveField(3)
   final double initialBalance;
 
-  // Note: currentBalance is NOT stored, it's calculated.
-  // Note: iconData is NOT stored, it's mapped in the repository/entity if needed.
+  // No longer storing icon data index
+  // @HiveField(4) -> Removed
 
   AssetAccountModel({
     required this.id,
@@ -28,30 +30,29 @@ class AssetAccountModel extends HiveObject {
     required this.initialBalance,
   });
 
-  // Mapper from Entity to Model (excluding calculated/UI fields)
   factory AssetAccountModel.fromEntity(AssetAccount entity) {
     return AssetAccountModel(
       id: entity.id,
       name: entity.name,
-      typeIndex: entity.type.index, // Store enum index
+      typeIndex: entity.type.index,
       initialBalance: entity.initialBalance,
     );
   }
 
-  // Mapper from Model to Entity (requires calculated balance)
-  // This conversion will happen in the Repository where balance can be calculated.
   AssetAccount toEntity(double currentBalance) {
-    // Map icon based on type if desired
-    IconData? icon;
-    // switch (AssetType.values[typeIndex]) { ... set icon ... }
-
+    // Icon is now determined in the entity or widget
     return AssetAccount(
       id: id,
       name: name,
       type: AssetType.values[typeIndex], // Get enum from index
       initialBalance: initialBalance,
-      currentBalance: currentBalance, // Passed in after calculation
-      iconData: icon,
+      currentBalance: currentBalance,
+      // iconData is handled by the entity/widget now
     );
   }
+
+  factory AssetAccountModel.fromJson(Map<String, dynamic> json) =>
+      _$AssetAccountModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$AssetAccountModelToJson(this);
 }

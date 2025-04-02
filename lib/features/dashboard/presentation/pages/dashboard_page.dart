@@ -1,4 +1,4 @@
-import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart'; // Ensure this is imported
+import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_di
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
 import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -23,43 +24,49 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
+    log.info("[DashboardPage] initState called.");
     _dashboardBloc = sl<DashboardBloc>();
-    // Dispatch initial load event
-    _dashboardBloc.add(const LoadDashboard()); // Use const if no params
-
-    // Optional: Add listeners to other Blocs if dashboard needs live updates
-    // without manual refresh, though pull-to-refresh is often sufficient.
+    // Dispatch initial load event if needed
+    if (_dashboardBloc.state is DashboardInitial) {
+      log.info(
+          "[DashboardPage] Initial state detected, dispatching LoadDashboard.");
+      _dashboardBloc.add(const LoadDashboard());
+    }
   }
 
   // Function to handle manual refresh
   Future<void> _refreshDashboard() async {
-    // Dispatch load event for the dashboard
-    _dashboardBloc.add(const LoadDashboard()); // Use const if no params
+    log.info("[DashboardPage] Pull-to-refresh triggered.");
+    // Dispatch load event for the dashboard, forcing reload
+    _dashboardBloc.add(const LoadDashboard(forceReload: true));
 
-    // Optionally trigger refreshes for underlying data sources if dashboard relies on them
+    // Also trigger refreshes for underlying data Blocs might rely on
+    // (though DashboardBloc's stream listener should handle most cases)
     try {
-      sl<AccountListBloc>().add(LoadAccounts());
-      sl<ExpenseListBloc>()
-          .add(LoadExpenses()); // Or LoadExpensesWithFilter if needed
-      sl<IncomeListBloc>().add(LoadIncomes());
+      sl<AccountListBloc>().add(const LoadAccounts(forceReload: true));
+      sl<ExpenseListBloc>().add(const LoadExpenses(forceReload: true));
+      sl<IncomeListBloc>().add(const LoadIncomes(forceReload: true));
     } catch (e) {
-      // Handle cases where other Blocs might not be registered yet or fail
-      debugPrint("Error refreshing dependent Blocs: $e");
-      // Optionally show a less critical error message
+      log.warning("Error triggering dependent Blocs refresh: $e");
     }
-    // No need for artificial delay, RefreshIndicator handles UI feedback
-  }
 
-  @override
-  void dispose() {
-    // Avoid Bloc leaks if the Bloc was created here, but since we use sl,
-    // the service locator manages its lifecycle. Closing is usually handled there.
-    // If sl doesn't manage closing, you might need: _dashboardBloc.close();
-    super.dispose();
+    // Wait for the dashboard bloc to finish loading
+    try {
+      await _dashboardBloc.stream
+          .firstWhere(
+              (state) => state is DashboardLoaded || state is DashboardError)
+          .timeout(const Duration(seconds: 5));
+      log.info("[DashboardPage] Refresh stream finished or timed out.");
+    } catch (e) {
+      log.warning(
+          "[DashboardPage] Error or timeout waiting for refresh stream: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    log.info("[DashboardPage] build method called.");
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -71,100 +78,112 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      // Use BlocProvider.value as the BLoC is obtained from sl and reused
       body: BlocProvider.value(
         value: _dashboardBloc,
         child: BlocConsumer<DashboardBloc, DashboardState>(
           listener: (context, state) {
+            log.info(
+                "[DashboardPage] BlocListener received state: ${state.runtimeType}");
             if (state is DashboardError) {
-              // Avoid showing snackbar if error widget is already shown in builder
-              // You might want one or the other, or only for specific errors.
-              // ScaffoldMessenger.of(context).showSnackBar(
-              //   SnackBar(
-              //     content: Text('Error loading dashboard: ${state.message}'),
-              //     backgroundColor: Theme.of(context).colorScheme.error,
-              //   ),
-              // );
+              log.warning(
+                  "[DashboardPage] Error state detected: ${state.message}");
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text('Error loading dashboard: ${state.message}'),
+                    backgroundColor: theme.colorScheme.error,
+                  ),
+                );
             }
           },
           builder: (context, state) {
-            // Handle Loading State
-            if (state is DashboardLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            // Handle Loaded State
-            else if (state is DashboardLoaded) {
-              // Access data via state.overview (NOT state.financialOverview)
-              final FinancialOverview overview = state.overview;
+            log.info(
+                "[DashboardPage] BlocBuilder building for state: ${state.runtimeType}");
+            Widget child;
 
-              return RefreshIndicator(
-                onRefresh: _refreshDashboard,
-                child: ListView(
-                  // Ensure scroll physics allow refresh even when content fits screen
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    // Pass the 'overview' object to the relevant cards
-                    OverallBalanceCard(overview: overview),
-                    const SizedBox(height: 16),
-                    IncomeExpenseSummaryCard(overview: overview),
-                    const SizedBox(height: 16),
+            // Handle different states
+            if (state is DashboardLoading && !state.isReloading) {
+              log.info(
+                  "[DashboardPage UI] State is initial DashboardLoading. Showing CircularProgressIndicator.");
+              child = const Center(child: CircularProgressIndicator());
+            } else if (state is DashboardLoaded ||
+                (state is DashboardLoading && state.isReloading)) {
+              log.info(
+                  "[DashboardPage UI] State is DashboardLoaded or reloading. Building dashboard content.");
+              final overview = (state is DashboardLoaded)
+                  ? state.overview
+                  : (_dashboardBloc.state as DashboardLoaded?)
+                      ?.overview; // Use previous data if reloading
 
-                    // Use the accountBalances map for the pie chart
-                    if (overview.accountBalances.entries.any(
-                        (e) => e.value > 0)) // Check for any positive balance
+              if (overview == null) {
+                // Should only happen briefly during initial reload?
+                log.warning(
+                    "[DashboardPage UI] Overview data is null during Loaded/Reloading state.");
+                child = const Center(child: Text("Loading data..."));
+              } else {
+                child = RefreshIndicator(
+                  onRefresh: _refreshDashboard,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16.0),
+                    children: [
+                      OverallBalanceCard(overview: overview),
+                      const SizedBox(height: 16),
+                      IncomeExpenseSummaryCard(overview: overview),
+                      const SizedBox(height: 16),
+                      // Filter balances for the chart here if not done in UseCase
                       AssetDistributionPieChart(
-                          accountBalances: overview.accountBalances)
-                    else
-                      const Card(
-                          // Placeholder if no positive balances
-                          child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Center(
-                                  child: Text(
-                                      "No positive asset balances to chart.")))),
-
-                    // Placeholder for future widgets
-                    const SizedBox(height: 20),
-                    Center(
-                        child: Text("More insights coming soon!",
-                            style: Theme.of(context).textTheme.labelMedium)),
-                  ],
-                ),
-              );
-            }
-            // Handle Error State
-            else if (state is DashboardError) {
-              return Center(
+                        accountBalances: overview.accountBalances,
+                      ),
+                      const SizedBox(height: 24),
+                      Center(
+                          child: Text("More insights coming soon!",
+                              style: theme.textTheme.labelMedium)),
+                    ],
+                  ),
+                );
+              }
+            } else if (state is DashboardError) {
+              log.info(
+                  "[DashboardPage UI] State is DashboardError: ${state.message}. Showing error UI.");
+              child = Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.error_outline,
-                          color: Theme.of(context).colorScheme.error, size: 50),
+                          color: theme.colorScheme.error, size: 50),
                       const SizedBox(height: 16),
-                      Text('Failed to load dashboard:',
-                          style: Theme.of(context).textTheme.titleMedium),
+                      Text('Failed to load dashboard',
+                          style: theme.textTheme.titleLarge),
                       const SizedBox(height: 8),
                       Text(state.message,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Theme.of(context).colorScheme.error)),
+                          style: TextStyle(color: theme.colorScheme.error)),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.refresh),
                         label: const Text('Retry'),
-                        onPressed: _refreshDashboard,
+                        onPressed: _refreshDashboard, // Call the refresh method
                       )
                     ],
                   ),
                 ),
               );
+            } else {
+              // Initial State
+              log.info(
+                  "[DashboardPage UI] State is Initial or Unknown. Showing loading indicator.");
+              child = const Center(child: CircularProgressIndicator());
             }
-            // Handle Initial State (or any other unhandled state)
-            return const Center(
-                child: CircularProgressIndicator()); // Default/Initial view
+
+            // Animate between child states
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: child,
+            );
           },
         ),
       ),

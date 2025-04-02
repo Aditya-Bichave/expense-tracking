@@ -4,6 +4,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class UpdateExpenseUseCase implements UseCase<Expense, UpdateExpenseParams> {
   final ExpenseRepository repository;
@@ -12,15 +13,25 @@ class UpdateExpenseUseCase implements UseCase<Expense, UpdateExpenseParams> {
 
   @override
   Future<Either<Failure, Expense>> call(UpdateExpenseParams params) async {
-    // Optional: Add validation here if needed before hitting repository
-    if (params.expense.title.isEmpty || params.expense.amount <= 0) {
-      return Left(ValidationFailure("Title and positive amount are required."));
+    log.info(
+        "Executing UpdateExpenseUseCase for '${params.expense.title}' (ID: ${params.expense.id}).");
+    // Validation
+    if (params.expense.title.trim().isEmpty) {
+      log.warning("Validation failed: Expense title cannot be empty.");
+      return const Left(ValidationFailure("Title cannot be empty."));
+    }
+    if (params.expense.amount <= 0) {
+      log.warning("Validation failed: Expense amount must be positive.");
+      return const Left(ValidationFailure("Amount must be positive."));
+    }
+    if (params.expense.accountId.trim().isEmpty) {
+      log.warning("Validation failed: Account selection is required.");
+      return const Left(ValidationFailure("Please select an account."));
     }
     return await repository.updateExpense(params.expense);
   }
 }
 
-// Params class defined previously in ExpenseListBloc, ensure it's accessible or defined here
 class UpdateExpenseParams extends Equatable {
   final Expense expense;
 

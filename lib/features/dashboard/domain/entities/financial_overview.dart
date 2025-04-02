@@ -7,8 +7,8 @@ class FinancialOverview extends Equatable {
   final double netFlow; // income - expenses
   final double overallBalance; // Sum of all account current balances
   final List<AssetAccount> accounts; // List of full account objects
-  final Map<String, double>
-      accountBalances; // Map<AccountName, Balance> for Pie Chart
+  // Map<AccountName, Balance> - Ensure only positive balances are included for the pie chart here? Or filter later.
+  final Map<String, double> accountBalances;
 
   const FinancialOverview({
     required this.totalIncome,
@@ -16,7 +16,7 @@ class FinancialOverview extends Equatable {
     required this.netFlow,
     required this.overallBalance,
     required this.accounts,
-    required this.accountBalances, // Added map
+    required this.accountBalances,
   });
 
   @override
@@ -26,9 +26,6 @@ class FinancialOverview extends Equatable {
         netFlow,
         overallBalance,
         accounts,
-        accountBalances, // Added to props
+        accountBalances,
       ];
-
-  // --- REMOVED INCORRECT GETTER ---
-  // get totalBalance => null; // <-- THIS WAS A BUG, use 'overallBalance' field
 }

@@ -1,6 +1,6 @@
 part of 'add_edit_account_bloc.dart';
 
-// Reusing FormStatus enum
+// Reusing FormStatus enum from core/utils
 // enum FormStatus { initial, submitting, success, error }
 
 class AddEditAccountState extends Equatable {
