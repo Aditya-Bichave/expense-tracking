@@ -1,6 +1,3 @@
-// Required imports
-import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +5,9 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // Needed for names
 import 'package:flutter/foundation.dart'; // For debugPrint
+// Removed explicit Bloc imports for refresh
 
 class IncomeListPage extends StatefulWidget {
   const IncomeListPage({super.key});
@@ -19,20 +18,19 @@ class IncomeListPage extends StatefulWidget {
 
 class _IncomeListPageState extends State<IncomeListPage> {
   late IncomeListBloc _incomeListBloc;
+  // AccountListBloc is likely provided globally or via MultiBlocProvider higher up
 
   @override
   void initState() {
     super.initState();
     debugPrint("[IncomeListPage] initState called.");
     _incomeListBloc = sl<IncomeListBloc>();
-    if (_incomeListBloc == null) {
+    if (_incomeListBloc.state is IncomeListInitial) {
       debugPrint(
-          "[IncomeListPage] !!! CRITICAL: _incomeListBloc is NULL after sl retrieval !!!");
-    } else {
-      debugPrint(
-          "[IncomeListPage] _incomeListBloc retrieved successfully from sl.");
+          "[IncomeListPage] Initial state detected, dispatching LoadIncomes.");
+      _incomeListBloc.add(const LoadIncomes());
     }
-    // Initial load triggered by BlocProvider in main.dart
+    // Assuming AccountListBloc is already loaded or handled elsewhere
   }
 
   void _navigateToAddIncome() {
@@ -46,15 +44,28 @@ class _IncomeListPageState extends State<IncomeListPage> {
 
   Future<void> _refreshIncome() async {
     debugPrint("[IncomeListPage] _refreshIncome called.");
-    _incomeListBloc.add(LoadIncomes());
-    sl<AccountListBloc>()
-        .add(LoadAccounts()); // Also refresh accounts for names
+    // Refresh this list's BLoC and potentially account names
+    try {
+      context.read<IncomeListBloc>().add(const LoadIncomes(forceReload: true));
+      context
+          .read<AccountListBloc>()
+          .add(const LoadAccounts(forceReload: true)); // Refresh names
+    } catch (e) {
+      debugPrint("Error reading Blocs for refresh: $e");
+      return;
+    }
+
+    // Wait for states if needed
     try {
       await Future.wait([
-        _incomeListBloc.stream.firstWhere(
-            (state) => state is IncomeListLoaded || state is IncomeListError),
-        sl<AccountListBloc>().stream.firstWhere(
-            (state) => state is AccountListLoaded || state is AccountListError)
+        context.read<IncomeListBloc>().stream.firstWhere(
+            (state) => state is IncomeListLoaded || state is IncomeListError,
+            orElse: () => IncomeListInitial() // Fallback
+            ),
+        context.read<AccountListBloc>().stream.firstWhere(
+            (state) => state is AccountListLoaded || state is AccountListError,
+            orElse: () => AccountListInitial() // Fallback
+            )
       ]);
       debugPrint("[IncomeListPage] Refresh streams finished.");
     } catch (e) {
@@ -70,9 +81,11 @@ class _IncomeListPageState extends State<IncomeListPage> {
         title: const Text('Income'),
       ),
       body: MultiBlocProvider(
+        // Provide necessary Blocs if not already available above
         providers: [
           BlocProvider.value(value: _incomeListBloc),
-          // AccountListBloc provided globally
+          // Assuming AccountListBloc is provided above, otherwise:
+          // BlocProvider.value(value: sl<AccountListBloc>()),
         ],
         child: BlocConsumer<IncomeListBloc, IncomeListState>(
           listener: (context, incomeState) {
@@ -103,8 +116,6 @@ class _IncomeListPageState extends State<IncomeListPage> {
                 return const SizedBox.shrink(); // Return an empty widget
                 // -----------------------------------------
               } else if (incomeState is IncomeListLoaded) {
-                debugPrint(
-                    "[IncomeListPage UI] State is IncomeListLoaded with ${incomeState.incomes.length} incomes. Building list.");
                 final incomes = incomeState.incomes;
                 if (incomes.isEmpty) {
                   debugPrint(
@@ -130,8 +141,6 @@ class _IncomeListPageState extends State<IncomeListPage> {
                   );
                 }
 
-                debugPrint(
-                    "[IncomeListPage UI] Income list has items. Building nested BlocBuilder for accounts.");
                 // Use BlocBuilder for AccountListBloc to get names
                 return BlocBuilder<AccountListBloc, AccountListState>(
                   builder: (context, accountState) {
@@ -156,14 +165,9 @@ class _IncomeListPageState extends State<IncomeListPage> {
 
                     Map<String, String> accountNames = {};
                     if (accountState is AccountListLoaded) {
-                      debugPrint(
-                          "[IncomeListPage UI] Accounts loaded. Mapping names.");
-                      for (var acc in accountState.accounts) {
-                        accountNames[acc.id] = acc.name;
-                      }
-                    } else {
-                      debugPrint(
-                          "[IncomeListPage UI] Accounts not loaded yet (State: ${accountState.runtimeType}). Account names will be 'Unknown'.");
+                      accountNames = {
+                        for (var acc in accountState.accounts) acc.id: acc.name
+                      };
                     }
 
                     debugPrint("[IncomeListPage UI] Building income ListView.");
@@ -175,8 +179,8 @@ class _IncomeListPageState extends State<IncomeListPage> {
                         itemCount: incomes.length,
                         itemBuilder: (context, index) {
                           final income = incomes[index];
-                          final accountName = accountNames[income.accountId] ??
-                              'Unknown Account';
+                          final accountName =
+                              accountNames[income.accountId] ?? 'Unknown';
                           final categoryName = income.category.name;
                           return Dismissible(
                             key: Key(income.id),
@@ -223,27 +227,17 @@ class _IncomeListPageState extends State<IncomeListPage> {
                                   false;
                             },
                             onDismissed: (direction) {
+                              // Only dispatch the delete request here
                               context
                                   .read<IncomeListBloc>()
                                   .add(DeleteIncomeRequested(income.id));
+                              // No need to manually refresh other Blocs
                               ScaffoldMessenger.of(context)
                                   .showSnackBar(SnackBar(
                                 content:
                                     Text('Income "${income.title}" deleted.'),
                                 backgroundColor: Colors.orange,
                               ));
-                              // Refresh dependent Blocs
-                              try {
-                                sl<DashboardBloc>().add(const LoadDashboard());
-                              } catch (e) {
-                                debugPrint("Error accessing DashboardBloc: $e");
-                              }
-                              try {
-                                sl<AccountListBloc>().add(LoadAccounts());
-                              } catch (e) {
-                                debugPrint(
-                                    "Error accessing AccountListBloc: $e");
-                              }
                             },
                             child: IncomeCard(
                               income: income,

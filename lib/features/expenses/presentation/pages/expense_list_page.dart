@@ -1,5 +1,4 @@
-// ... other imports ...
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Remove 'hide Category'
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -9,30 +8,47 @@ import 'package:expense_tracker/features/expenses/presentation/widgets/expense_c
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/widgets/summary_card.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
+// *** FIX: Add prefix to our entity import ***
+import 'package:expense_tracker/features/expenses/domain/entities/category.dart'
+    as entity;
+import 'package:flutter/foundation.dart'; // For debugPrint
 
 class ExpenseListPage extends StatelessWidget {
   const ExpenseListPage({super.key});
 
-  // Method to handle refresh
+  // Method to handle manual pull-to-refresh
   Future<void> _refreshExpenses(BuildContext context) async {
-    context.read<ExpenseListBloc>().add(LoadExpenses());
-    context.read<SummaryBloc>().add(const LoadSummary()); // Refresh summary too
-    // Wait for states to settle if needed, similar to account list
-    await Future.wait([
-      context.read<ExpenseListBloc>().stream.firstWhere(
-          (state) => state is ExpenseListLoaded || state is ExpenseListError),
-      context.read<SummaryBloc>().stream.firstWhere(
-          (state) => state is SummaryLoaded || state is SummaryError),
-    ]);
+    debugPrint("[ExpenseListPage] _refreshExpenses called.");
+    // Refresh this page's BLoC (and SummaryBloc will refresh via stream listener)
+    try {
+      context
+          .read<ExpenseListBloc>()
+          .add(const LoadExpenses(forceReload: true));
+    } catch (e) {
+      debugPrint("Error reading ExpenseListBloc for refresh: $e");
+      return;
+    }
+
+    // Optionally wait for the state update if needed for UI feedback
+    try {
+      await context.read<ExpenseListBloc>().stream.firstWhere(
+          (state) => state is ExpenseListLoaded || state is ExpenseListError,
+          orElse: () => ExpenseListInitial() // Fallback
+          );
+      debugPrint("[ExpenseListPage] Refresh stream finished.");
+    } catch (e) {
+      debugPrint("Error waiting for refresh stream: $e");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Assuming SummaryBloc is provided globally or above this widget
     return Scaffold(
       appBar: AppBar(
         title: const Text('Expense Tracker'),
         actions: [
+          // Filter button
           BlocBuilder<ExpenseListBloc, ExpenseListState>(
             builder: (context, state) {
               DateTime? currentStart;
@@ -54,30 +70,32 @@ class ExpenseListPage extends StatelessWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _refreshExpenses(context), // Use the refresh method
+        onRefresh: () => _refreshExpenses(context),
         child: Column(
           children: [
-            const SummaryCard(), // Assumes SummaryBloc is provided globally
+            // Summary Card automatically updates via its own stream listener
+            const SummaryCard(),
             const Divider(height: 1),
             Expanded(
               child: BlocConsumer<ExpenseListBloc, ExpenseListState>(
                 listener: (context, state) {
+                  // Handle errors shown via SnackBar if needed
                   if (state is ExpenseListError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text("Error: ${state.message}"),
-                          backgroundColor: Theme.of(context).colorScheme.error),
-                    );
+                    // Potentially show a snackbar for specific errors,
+                    // but the builder already handles displaying an error UI.
                   }
                 },
                 builder: (context, state) {
+                  debugPrint(
+                      "[ExpenseListPage] Builder running for state: ${state.runtimeType}");
+                  // Show loading only on initial load
                   if (state is ExpenseListLoading &&
                       state is! ExpenseListLoaded) {
                     return const Center(child: CircularProgressIndicator());
                   } else if (state is ExpenseListLoaded) {
                     if (state.expenses.isEmpty) {
+                      // Display empty state
                       return Center(
-                        // Display when list is empty
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -105,12 +123,11 @@ class ExpenseListPage extends StatelessWidget {
                                   visualDensity: VisualDensity.compact,
                                 ),
                                 onPressed: () {
+                                  // Use context.read inside callbacks
                                   context
                                       .read<ExpenseListBloc>()
                                       .add(const FilterExpenses());
-                                  context
-                                      .read<SummaryBloc>()
-                                      .add(const LoadSummary());
+                                  // SummaryBloc will react via stream
                                 },
                               )
                             else
@@ -123,7 +140,9 @@ class ExpenseListPage extends StatelessWidget {
                         ),
                       );
                     }
+                    // Display the list
                     return ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       itemCount: state.expenses.length,
                       itemBuilder: (context, index) {
                         final expense = state.expenses[index];
@@ -148,6 +167,7 @@ class ExpenseListPage extends StatelessWidget {
                             ),
                           ),
                           confirmDismiss: (direction) async {
+                            // Confirmation Dialog
                             return await showDialog<bool>(
                                   context: context,
                                   builder: (BuildContext ctx) => AlertDialog(
@@ -171,14 +191,18 @@ class ExpenseListPage extends StatelessWidget {
                                 false;
                           },
                           onDismissed: (direction) {
+                            // Dispatch delete event - Stream handles refreshes
                             context
                                 .read<ExpenseListBloc>()
                                 .add(DeleteExpenseRequested(expense.id));
-                            context.read<SummaryBloc>().add(
-                                const LoadSummary()); // Refresh summary after delete
+
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content:
+                                  Text('Expense "${expense.title}" deleted.'),
+                              backgroundColor: Colors.orange,
+                            ));
                           },
                           child: ExpenseCard(
-                            // Assuming ExpenseCard takes the expense
                             expense: expense,
                             onTap: () {
                               // Navigate to edit page
@@ -191,8 +215,8 @@ class ExpenseListPage extends StatelessWidget {
                       },
                     );
                   } else if (state is ExpenseListError) {
+                    // Display error UI
                     return Center(
-                      // Error UI
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -214,17 +238,17 @@ class ExpenseListPage extends StatelessWidget {
                             ElevatedButton.icon(
                               icon: const Icon(Icons.refresh),
                               label: const Text('Retry'),
-                              onPressed: () => context
+                              onPressed: () => context // Use context.read
                                   .read<ExpenseListBloc>()
-                                  .add(LoadExpenses()),
+                                  .add(const LoadExpenses()),
                             )
                           ],
                         ),
                       ),
                     );
                   }
-                  return const Center(
-                      child: CircularProgressIndicator()); // Initial state
+                  // Fallback for Initial state, show loading
+                  return const Center(child: CircularProgressIndicator());
                 },
               ),
             ),
@@ -232,9 +256,7 @@ class ExpenseListPage extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        // --- FIX: Added unique heroTag ---
-        heroTag: 'fab_expenses',
-        // ---------------------------------
+        heroTag: 'fab_expenses', // Ensure unique heroTag
         onPressed: () {
           context.pushNamed('add_expense');
         },
@@ -244,10 +266,9 @@ class ExpenseListPage extends StatelessWidget {
     );
   }
 
-  // --- Filter Dialog Logic (Keep unchanged) ---
+  // Filter Dialog Logic
   void _showFilterDialog(BuildContext context, DateTime? currentStart,
       DateTime? currentEnd, String? currentCategoryName) {
-    // ... (FilterDialogContent widget and showDialog call remains the same) ...
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -258,31 +279,22 @@ class ExpenseListPage extends StatelessWidget {
             initialCategory:
                 currentCategoryName, // Pass the category NAME string
             onApplyFilter: (startDate, endDate, categoryName) {
-              // Receive category NAME string
-              // Dispatch FilterExpenses with the STRING category name
+              // Dispatch FilterExpenses event
+              // SummaryBloc will react via stream listener if needed
               context.read<ExpenseListBloc>().add(FilterExpenses(
                     startDate: startDate,
                     endDate: endDate,
-                    category: categoryName, // Pass the String name
-                  ));
-              // Refresh summary based on date filters
-              context.read<SummaryBloc>().add(LoadSummary(
-                    startDate: startDate,
-                    endDate: endDate,
+                    category: categoryName,
                   ));
               Navigator.of(dialogContext).pop(); // Close dialog
             },
             onClearFilter: () {
-              // Dispatch FilterExpenses with null values to clear filters
+              // Dispatch FilterExpenses with null values
+              // SummaryBloc will react via stream listener if needed
               context.read<ExpenseListBloc>().add(const FilterExpenses(
                     startDate: null,
                     endDate: null,
                     category: null,
-                  ));
-              // Refresh summary with no date filters
-              context.read<SummaryBloc>().add(const LoadSummary(
-                    startDate: null,
-                    endDate: null,
                   ));
               Navigator.of(dialogContext).pop(); // Close dialog
             });
@@ -291,9 +303,8 @@ class ExpenseListPage extends StatelessWidget {
   }
 } // END of ExpenseListPage class
 
-// --- FilterDialogContent Widget (Assume this is defined correctly below or imported) ---
+// --- FilterDialogContent Widget ---
 class FilterDialogContent extends StatefulWidget {
-  // ... same as before ...
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
   final String? initialCategory; // Expects String
@@ -314,13 +325,13 @@ class FilterDialogContent extends StatefulWidget {
 }
 
 class _FilterDialogContentState extends State<FilterDialogContent> {
-  // ... same implementation as before ...
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   String? _selectedCategory; // Stores String
-  final List<String> _categoryNames = PredefinedCategory.values
-      .map((e) =>
-          Category.fromPredefined(e).name) // Creates list of String names
+  // *** FIX: Use prefix for our entity and explicitly type map ***
+  final List<String> _categoryNames = entity.PredefinedCategory.values
+      .map<String>((e) => // Explicitly map to String
+          entity.Category.fromPredefined(e).name) // Use prefix
       .toList();
 
   @override
@@ -394,21 +405,17 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
               isExpanded: true,
               items: [
                 const DropdownMenuItem<String>(
-                  // Uses String
                   value: null, // Represents 'All Categories'
                   child: Text('All Categories'),
                 ),
                 ..._categoryNames.map((String categoryName) {
-                  // Iterates over String names
                   return DropdownMenuItem<String>(
-                    // Uses String
                     value: categoryName, // Value is String
                     child: Text(categoryName),
                   );
                 }).toList(),
               ],
               onChanged: (String? newValue) {
-                // Receives String?
                 setState(() {
                   _selectedCategory = newValue; // Updates String state
                 });

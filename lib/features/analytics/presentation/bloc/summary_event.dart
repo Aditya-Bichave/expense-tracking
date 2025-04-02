@@ -12,9 +12,16 @@ class LoadSummary extends SummaryEvent {
   // Optional filters to calculate summary for a specific period
   final DateTime? startDate;
   final DateTime? endDate;
+  final bool forceReload;
 
-  const LoadSummary({this.startDate, this.endDate});
+  const LoadSummary({this.startDate, this.endDate, this.forceReload = false});
 
   @override
-  List<Object?> get props => [startDate, endDate]; // Include filters in props
+  List<Object?> get props =>
+      [startDate, endDate, forceReload]; // Include filters in props
+}
+
+// Internal event
+class _DataChanged extends SummaryEvent {
+  const _DataChanged();
 }
