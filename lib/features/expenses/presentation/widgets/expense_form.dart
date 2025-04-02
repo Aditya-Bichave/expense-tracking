@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import Bloc
+// import 'package:intl/intl.dart'; // No longer needed here
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/category.dart'; // Your Expense Category definition
+import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class ExpenseForm extends StatefulWidget {
-  final Expense? initialExpense; // For editing
-  // Updated onSubmit signature
+  final Expense? initialExpense;
   final Function(String title, double amount, String categoryId,
       String accountId, DateTime date) onSubmit;
 
@@ -26,19 +27,16 @@ class _ExpenseFormState extends State<ExpenseForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _amountController;
+  late TextEditingController _notesController; // Added notes controller
 
   DateTime _selectedDate = DateTime.now();
-  Category? _selectedCategory; // Your expense Category entity/model
-  String? _selectedAccountId; // State for selected account
+  Category? _selectedCategory;
+  String? _selectedAccountId;
 
-  // Assuming PredefinedCategory enum exists and Category has id/name
-  // You would fetch custom categories or combine them here in a real app
   final List<Category> _expenseCategories = PredefinedCategory.values
-      .map(
-          (e) => Category(name: _formatCategoryName(e.name))) // Example mapping
+      .map((e) => Category(name: _formatCategoryName(e.name)))
       .toList();
 
-  // Helper to make enum names more readable (optional)
   static String _formatCategoryName(String enumName) {
     if (enumName.isEmpty) return '';
     return enumName[0].toUpperCase() +
@@ -52,19 +50,16 @@ class _ExpenseFormState extends State<ExpenseForm> {
     _titleController = TextEditingController(text: initial?.title ?? '');
     _amountController =
         TextEditingController(text: initial?.amount.toStringAsFixed(2) ?? '');
+    _notesController = TextEditingController(); // Initialize notes controller
     _selectedDate = initial?.date ?? DateTime.now();
-    _selectedAccountId = initial?.accountId; // Initialize selected account ID
+    _selectedAccountId = initial?.accountId;
 
-    // Find initial category if editing
     if (initial != null) {
       try {
         _selectedCategory = _expenseCategories
-            .firstWhere((cat) => cat.name == initial.category);
+            .firstWhere((cat) => cat.name == initial.category.name);
       } catch (e) {
-        // Category might no longer exist or is a custom one not in the default list
         _selectedCategory = null;
-        // Consider adding logic here to handle potentially missing categories
-        // e.g., display the old ID or a placeholder.
       }
     }
   }
@@ -73,6 +68,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    _notesController.dispose(); // Dispose notes controller
     super.dispose();
   }
 
@@ -89,53 +85,38 @@ class _ExpenseFormState extends State<ExpenseForm> {
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDate),
       );
-
-      if (pickedTime != null) {
-        setState(() {
-          _selectedDate = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime.hour,
-            pickedTime.minute,
-          );
-        });
-      } else {
-        // If only date is picked, keep the time but update the date
-        setState(() {
-          _selectedDate = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            _selectedDate.hour, // Keep original time
-            _selectedDate.minute,
-          );
-        });
-      }
+      setState(() {
+        _selectedDate = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime?.hour ??
+              _selectedDate.hour, // Use picked time or keep existing
+          pickedTime?.minute ?? _selectedDate.minute,
+        );
+      });
     }
   }
 
   void _submitForm() {
-    // Validate all form fields including dropdowns
     if (_formKey.currentState!.validate()) {
-      // Null checks are important here, validators should prevent them but good practice
       if (_selectedAccountId == null || _selectedCategory == null) {
-        // This case should ideally be caught by validators, but handle defensively
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text('Please ensure all fields are selected.')));
         return;
       }
-
       final title = _titleController.text.trim();
       final amount = double.tryParse(_amountController.text) ?? 0.0;
-      final category = _selectedCategory!.name;
+      final categoryId = _selectedCategory!.name;
       final accountId = _selectedAccountId!;
+      // Note: Notes are not part of the Expense entity in your current structure
+      // If you add 'notes' to the Expense entity, pass _notesController.text here.
 
       widget.onSubmit(
         title,
         amount,
-        category,
-        accountId, // Pass the account ID
+        categoryId,
+        accountId,
         _selectedDate,
       );
     }
@@ -143,13 +124,14 @@ class _ExpenseFormState extends State<ExpenseForm> {
 
   @override
   Widget build(BuildContext context) {
-    final currencySymbol = NumberFormat.simpleCurrency()
-        .currencySymbol; // Get device's currency symbol
+    // Get currency symbol from SettingsBloc
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol =
+        settingsState.currencySymbol ?? '\$'; // Default if null
 
     return Form(
       key: _formKey,
       child: ListView(
-        // Using ListView for better scrolling on small devices
         padding: const EdgeInsets.all(16.0),
         children: [
           TextFormField(
@@ -166,8 +148,9 @@ class _ExpenseFormState extends State<ExpenseForm> {
           TextFormField(
             controller: _amountController,
             decoration: InputDecoration(
+              // Use InputDecoration
               labelText: 'Amount',
-              prefixText: '$currencySymbol ', // Use device currency symbol
+              prefixText: '$currencySymbol ', // Use dynamic symbol
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
@@ -211,7 +194,6 @@ class _ExpenseFormState extends State<ExpenseForm> {
                 value == null ? 'Please select a category' : null,
           ),
           const SizedBox(height: 16),
-          // --- Account Selector ---
           AccountSelectorDropdown(
             selectedAccountId: _selectedAccountId,
             onChanged: (String? newValue) {
@@ -219,27 +201,25 @@ class _ExpenseFormState extends State<ExpenseForm> {
                 _selectedAccountId = newValue;
               });
             },
-            // Use internal validator of AccountSelectorDropdown
             validator: (value) =>
                 value == null ? 'Please select an account' : null,
           ),
-          // --- End Account Selector ---
           const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.calendar_today),
             title: const Text('Date & Time'),
-            subtitle: Text(DateFormatter.formatDateTime(
-                _selectedDate)), // Use your formatter
+            subtitle: Text(DateFormatter.formatDateTime(_selectedDate)),
             onTap: () => _selectDate(context),
             trailing: IconButton(
-              // Added button for clarity
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit_calendar_outlined), // Changed icon
               onPressed: () => _selectDate(context),
+              tooltip: 'Change Date/Time',
             ),
           ),
           const SizedBox(height: 16),
           TextFormField(
+            controller: _notesController, // Use notes controller
             decoration: const InputDecoration(
               labelText: 'Notes (Optional)',
               hintText: 'Add any extra details here',

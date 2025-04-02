@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import Bloc
+// import 'package:intl/intl.dart'; // No longer needed here
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-// If you need account name, you'll need to either pass it or fetch it
-// import 'package:expense_tracking/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/core/utils/currency_formatter.dart'; // Import formatter
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class IncomeCard extends StatelessWidget {
   final Income income;
-  final String categoryName; // Pass category name explicitly
-  final String accountName; // Pass account name explicitly
+  final String categoryName;
+  final String accountName;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -25,15 +26,18 @@ class IncomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat =
-        NumberFormat.currency(symbol: '\$', decimalDigits: 2); // Adjust symbol
+    // Get currency symbol from SettingsBloc
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol = settingsState.currencySymbol;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: ListTile(
-        leading: const CircleAvatar(
-          child: Icon(Icons.arrow_downward, color: Colors.green),
-          backgroundColor: Colors.greenAccent,
+        leading: CircleAvatar(
+          // Consistent styling with expense card
+          backgroundColor: Colors.green.shade100, // Lighter background
+          child: Icon(Icons.arrow_downward,
+              color: Colors.green.shade800), // Adjusted colors
         ),
         title:
             Text(income.title, style: Theme.of(context).textTheme.titleMedium),
@@ -44,21 +48,28 @@ class IncomeCard extends StatelessWidget {
             Text(DateFormatter.formatDateTime(
                 income.date)), // Use your formatter
             if (income.notes != null && income.notes!.isNotEmpty)
-              Text(
-                income.notes!,
-                style: Theme.of(context).textTheme.bodySmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              Padding(
+                // Add padding for notes
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  income.notes!,
+                  style: Theme.of(context).textTheme.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
           ],
         ),
         trailing: Text(
-          currencyFormat.format(income.amount),
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16),
+          // Use CurrencyFormatter
+          CurrencyFormatter.format(income.amount, currencySymbol),
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade700, // Adjusted color
+              fontSize: 16),
         ),
         onTap: onTap,
-        // Add edit/delete buttons if needed, similar to AccountCard
+        // Add edit/delete buttons if needed
       ),
     );
   }

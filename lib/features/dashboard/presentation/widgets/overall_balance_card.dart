@@ -1,6 +1,9 @@
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import Bloc
+// import 'package:intl/intl.dart'; // No longer needed here
+import 'package:expense_tracker/core/utils/currency_formatter.dart'; // Import formatter
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class OverallBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
@@ -9,9 +12,10 @@ class OverallBalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-        symbol: '\$', decimalDigits: 2); // TODO: Make currency configurable
-    // Use the correct field 'overallBalance'
+    // Get currency symbol from SettingsBloc
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol = settingsState.currencySymbol;
+
     final balanceColor = overview.overallBalance >= 0
         ? Colors.blueGrey[700] // Consider Theme colors
         : Theme.of(context).colorScheme.error;
@@ -32,8 +36,8 @@ class OverallBalanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              // Use the correct field 'overallBalance'
-              currencyFormat.format(overview.overallBalance),
+              // Use CurrencyFormatter
+              CurrencyFormatter.format(overview.overallBalance, currencySymbol),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: balanceColor,

@@ -1,9 +1,11 @@
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import Bloc
 
 class AccountForm extends StatefulWidget {
-  final AssetAccount? initialAccount; // For editing
+  final AssetAccount? initialAccount;
   final Function(String name, AssetType type, double initialBalance) onSubmit;
 
   const AccountForm({
@@ -20,7 +22,7 @@ class _AccountFormState extends State<AccountForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _initialBalanceController;
-  AssetType _selectedType = AssetType.bank; // Default type
+  AssetType _selectedType = AssetType.bank;
 
   @override
   void initState() {
@@ -45,17 +47,20 @@ class _AccountFormState extends State<AccountForm> {
       final name = _nameController.text.trim();
       final initialBalance =
           double.tryParse(_initialBalanceController.text) ?? 0.0;
-
       widget.onSubmit(name, _selectedType, initialBalance);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Get currency symbol from SettingsBloc
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol =
+        settingsState.currencySymbol ?? '\$'; // Default if null
+
     return Form(
       key: _formKey,
       child: ListView(
-        // Use ListView for scrollability on small screens
         padding: const EdgeInsets.all(16.0),
         children: [
           TextFormField(
@@ -78,8 +83,7 @@ class _AccountFormState extends State<AccountForm> {
             items: AssetType.values.map((AssetType type) {
               return DropdownMenuItem<AssetType>(
                 value: type,
-                child: Text(type
-                    .name), // Assumes enum has a nice name getter or use extension
+                child: Text(type.name.capitalize()), // Use capitalize extension
               );
             }).toList(),
             onChanged: (AssetType? newValue) {
@@ -99,14 +103,14 @@ class _AccountFormState extends State<AccountForm> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _initialBalanceController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
+              // Use InputDecoration to set prefix
               labelText: 'Initial Balance',
-              prefixText: '\$', // Or your currency symbol
+              prefixText: '$currencySymbol ', // Use dynamic symbol
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d+\.?\d{0,2}')), // Allow decimals up to 2 places
+              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
             ],
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -117,9 +121,6 @@ class _AccountFormState extends State<AccountForm> {
               }
               return null;
             },
-            // Disable initial balance editing if account already exists?
-            // Or clarify it only applies on creation. Let's assume it can be edited.
-            // enabled: widget.initialAccount == null,
           ),
           const SizedBox(height: 32),
           ElevatedButton(
@@ -131,5 +132,13 @@ class _AccountFormState extends State<AccountForm> {
         ],
       ),
     );
+  }
+}
+
+// Keep the capitalize extension here or move to a shared utils file
+extension StringExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

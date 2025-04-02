@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import Bloc
+// import 'package:intl/intl.dart'; // No longer needed here
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/income/domain/entities/income_category.dart'; // Use your IncomeCategory definition
+import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart'; // Use your DateFormatter
+import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class IncomeForm extends StatefulWidget {
-  final Income? initialIncome; // For editing
+  final Income? initialIncome;
   final Function(String title, double amount, String categoryId,
       String accountId, DateTime date, String? notes) onSubmit;
 
@@ -28,12 +30,9 @@ class _IncomeFormState extends State<IncomeForm> {
   late TextEditingController _notesController;
 
   DateTime _selectedDate = DateTime.now();
-  IncomeCategory?
-      _selectedCategory; // Assuming IncomeCategory holds id and name
+  IncomeCategory? _selectedCategory;
   String? _selectedAccountId;
 
-  // TODO: Replace with your actual IncomeCategory source (enum, fetched list, etc.)
-  // Example using the Predefined enum from your structure
   List<IncomeCategory> _incomeCategories = PredefinedIncomeCategory.values
       .map((e) => IncomeCategory.fromPredefined(e))
       .toList();
@@ -49,16 +48,13 @@ class _IncomeFormState extends State<IncomeForm> {
     _selectedDate = initial?.date ?? DateTime.now();
     _selectedAccountId = initial?.accountId;
 
-    // Find initial category if editing
     if (initial != null) {
       try {
         _selectedCategory = _incomeCategories
             .firstWhere((cat) => cat.name == initial.category.name);
       } catch (e) {
-        _selectedCategory = null; // Category might have been deleted
+        _selectedCategory = null;
       }
-    } else if (_incomeCategories.isNotEmpty) {
-      // _selectedCategory = _incomeCategories.first; // Optionally select first category by default
     }
   }
 
@@ -71,37 +67,42 @@ class _IncomeFormState extends State<IncomeForm> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && picked != _selectedDate) {
-      // Combine with time if needed, or default to midnight / current time
+
+    if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDate),
       );
-      if (pickedTime != null) {
-        setState(() {
-          _selectedDate = DateTime(picked.year, picked.month, picked.day,
-              pickedTime.hour, pickedTime.minute);
-        });
-      }
+      setState(() {
+        _selectedDate = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime?.hour ?? _selectedDate.hour,
+          pickedTime?.minute ?? _selectedDate.minute,
+        );
+      });
     }
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // Account and Category selections are validated by their respective widgets
+      if (_selectedAccountId == null || _selectedCategory == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Please ensure all fields are selected.')));
+        return;
+      }
       final title = _titleController.text.trim();
       final amount = double.tryParse(_amountController.text) ?? 0.0;
       final notes = _notesController.text.trim();
-      final categoryId =
-          _selectedCategory!.name; // Assumes validator ensures it's not null
-      final accountId =
-          _selectedAccountId!; // Assumes validator ensures it's not null
+      final categoryId = _selectedCategory!.name;
+      final accountId = _selectedAccountId!;
 
       widget.onSubmit(
         title,
@@ -116,6 +117,11 @@ class _IncomeFormState extends State<IncomeForm> {
 
   @override
   Widget build(BuildContext context) {
+    // Get currency symbol from SettingsBloc
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol =
+        settingsState.currencySymbol ?? '\$'; // Default if null
+
     return Form(
       key: _formKey,
       child: ListView(
@@ -134,9 +140,10 @@ class _IncomeFormState extends State<IncomeForm> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _amountController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
+              // Use InputDecoration
               labelText: 'Amount',
-              prefixText: '\$', // Or your currency symbol
+              prefixText: '$currencySymbol ', // Use dynamic symbol
             ),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
@@ -167,7 +174,7 @@ class _IncomeFormState extends State<IncomeForm> {
             items: _incomeCategories.map((IncomeCategory category) {
               return DropdownMenuItem<IncomeCategory>(
                 value: category,
-                child: Text(category.name), // Assumes IncomeCategory has a name
+                child: Text(category.name),
               );
             }).toList(),
             onChanged: (IncomeCategory? newValue) {
@@ -190,14 +197,14 @@ class _IncomeFormState extends State<IncomeForm> {
                 _selectedAccountId = newValue;
               });
             },
-            // Validator is implicitly handled within AccountSelectorDropdown
+            validator: (value) =>
+                value == null ? 'Please select an account' : null,
           ),
           const SizedBox(height: 16),
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('Date & Time'),
-            subtitle: Text(DateFormatter.formatDateTime(
-                _selectedDate)), // Use your formatter
+            subtitle: Text(DateFormatter.formatDateTime(_selectedDate)),
             trailing: const Icon(Icons.calendar_today),
             onTap: () => _selectDate(context),
           ),

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import Bloc
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/core/utils/currency_formatter.dart'; // Import formatter
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
-  final DismissDirectionCallback? onDismissed; // Callback for swipe-to-delete
-  final VoidCallback? onTap; // Callback for tapping the card (for editing)
+  final DismissDirectionCallback? onDismissed;
+  final VoidCallback? onTap;
 
   const ExpenseCard({
-    super.key, // Use super parameters
+    super.key,
     required this.expense,
     this.onDismissed,
     this.onTap,
@@ -17,11 +20,17 @@ class ExpenseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Get currency symbol from SettingsBloc
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol = settingsState.currencySymbol;
+
     Widget cardContent = ListTile(
       leading: CircleAvatar(
         // Or Icon based on category
         child: Text(
-          expense.category.name.substring(0, 1), // First letter of category
+          expense.category.name.isNotEmpty
+              ? expense.category.name.substring(0, 1)
+              : '?', // First letter or fallback
           style: TextStyle(color: theme.colorScheme.onPrimary),
         ),
         backgroundColor: theme.colorScheme.primary,
@@ -32,9 +41,11 @@ class ExpenseCard extends StatelessWidget {
         style: theme.textTheme.bodySmall,
       ),
       trailing: Text(
-        '\$${expense.amount.toStringAsFixed(2)}', // Format currency
+        // Use CurrencyFormatter
+        CurrencyFormatter.format(expense.amount, currencySymbol),
         style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.error, // Or primary color based on type
+          color: theme.colorScheme
+              .error, // Expenses are typically shown in red/error color
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -44,8 +55,8 @@ class ExpenseCard extends StatelessWidget {
     // Wrap with Dismissible if onDismissed is provided
     if (onDismissed != null) {
       return Dismissible(
-          key: Key(expense.id), // Unique key for dismissible
-          direction: DismissDirection.endToStart, // Swipe left to delete
+          key: Key(expense.id),
+          direction: DismissDirection.endToStart,
           onDismissed: onDismissed,
           background: Container(
             color: Colors.redAccent,
@@ -55,7 +66,7 @@ class ExpenseCard extends StatelessWidget {
           ),
           child: Card(
             margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            elevation: 1, // Subtle elevation
+            elevation: 1,
             child: cardContent,
           ));
     } else {

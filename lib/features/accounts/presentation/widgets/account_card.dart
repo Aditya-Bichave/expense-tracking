@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For currency formatting
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import Bloc
+// import 'package:intl/intl.dart'; // No longer needed here
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/core/utils/currency_formatter.dart'; // Import formatter
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class AccountCard extends StatelessWidget {
   final AssetAccount account;
@@ -18,8 +21,11 @@ class AccountCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-        symbol: '\$', decimalDigits: 2); // Adjust symbol as needed
+    // Get the current currency symbol from the SettingsBloc state
+    // Using context.watch ensures the widget rebuilds if the currency changes
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol = settingsState.currencySymbol;
+
     final balanceColor =
         account.currentBalance >= 0 ? Colors.green : Colors.red;
 
@@ -28,17 +34,17 @@ class AccountCard extends StatelessWidget {
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        leading: Icon(_getAccountIcon(account.type),
-            size: 30), // Helper function for icon
+        leading: Icon(_getAccountIcon(account.type), size: 30),
         title:
             Text(account.name, style: Theme.of(context).textTheme.titleMedium),
-        subtitle: Text(account.type.name), // Assumes enum has a nice name
+        subtitle: Text(account.type.name),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              currencyFormat.format(account.currentBalance),
+              // Use the formatter here
+              CurrencyFormatter.format(account.currentBalance, currencySymbol),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: balanceColor,
@@ -47,49 +53,28 @@ class AccountCard extends StatelessWidget {
             ),
             // Optionally show initial balance if needed
             // Text(
-            //   'Initial: ${currencyFormat.format(account.initialBalance)}',
+            //   'Initial: ${CurrencyFormatter.format(account.initialBalance, currencySymbol)}',
             //   style: Theme.of(context).textTheme.bodySmall,
             // ),
           ],
         ),
-        onTap: onTap, // Navigate to account details/transactions maybe?
-        // Add edit/delete functionality if needed (e.g., via PopupMenuButton or Swipe)
-        // Example using a PopupMenuButton in trailing, adjust layout if needed:
-        // trailing: Row(
-        //   mainAxisSize: MainAxisSize.min,
-        //   children: [
-        //     Text(...), // Balance Text
-        //     if (onEdit != null || onDelete != null)
-        //       PopupMenuButton<String>(
-        //         onSelected: (value) {
-        //           if (value == 'edit' && onEdit != null) onEdit!();
-        //           if (value == 'delete' && onDelete != null) onDelete!();
-        //         },
-        //         itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        //           if (onEdit != null) const PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
-        //           if (onDelete != null) const PopupMenuItem<String>(value: 'delete', child: Text('Delete')),
-        //         ],
-        //         icon: const Icon(Icons.more_vert),
-        //       ),
-        //   ],
-        // ),
+        onTap: onTap,
       ),
     );
   }
 
-  // Helper to get an icon based on account type
   IconData _getAccountIcon(AssetType type) {
     switch (type) {
       case AssetType.bank:
         return Icons.account_balance;
       case AssetType.cash:
-        return Icons.wallet; // Or Icons.money
+        return Icons.wallet;
       case AssetType.crypto:
-        return Icons.currency_bitcoin; // Or a generic crypto icon
+        return Icons.currency_bitcoin;
       case AssetType.investment:
         return Icons.trending_up;
       case AssetType.other:
-        return Icons.credit_card; // Generic fallback
+        return Icons.credit_card;
       default:
         return Icons.help_outline;
     }
