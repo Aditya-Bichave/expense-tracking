@@ -37,3 +37,15 @@ class UpdateAppLock extends SettingsEvent {
   @override
   List<Object?> get props => [isEnabled];
 }
+
+class BackupRequested extends SettingsEvent {
+  const BackupRequested();
+}
+
+class RestoreRequested extends SettingsEvent {
+  const RestoreRequested();
+}
+
+class ClearDataRequested extends SettingsEvent {
+  const ClearDataRequested();
+}

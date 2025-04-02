@@ -48,3 +48,23 @@ class AssetAccountModelAdapter extends TypeAdapter<AssetAccountModel> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+AssetAccountModel _$AssetAccountModelFromJson(Map<String, dynamic> json) =>
+    AssetAccountModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      typeIndex: (json['typeIndex'] as num).toInt(),
+      initialBalance: (json['initialBalance'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$AssetAccountModelToJson(AssetAccountModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'typeIndex': instance.typeIndex,
+      'initialBalance': instance.initialBalance,
+    };

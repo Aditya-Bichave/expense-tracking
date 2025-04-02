@@ -1,10 +1,11 @@
-// lib/features/expenses/data/models/expense_model.dart
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
+import 'package:json_annotation/json_annotation.dart'; // Import
 
-part 'expense_model.g.dart';
+part 'expense_model.g.dart'; // Ensure this is updated
 
+@JsonSerializable() // Add Annotation
 @HiveType(typeId: 0)
 class ExpenseModel extends HiveObject {
   @HiveField(0)
@@ -25,10 +26,8 @@ class ExpenseModel extends HiveObject {
   @HiveField(5)
   final String? subCategoryName;
 
-  // --- Ensure this field and annotation are correct ---
   @HiveField(6)
   final String accountId;
-  // ----------------------------------------------------
 
   ExpenseModel({
     required this.id,
@@ -37,12 +36,9 @@ class ExpenseModel extends HiveObject {
     required this.date,
     required this.categoryName,
     this.subCategoryName,
-    // --- Ensure this is required in the constructor ---
     required this.accountId,
-    // --------------------------------------------------
   });
 
-  // Mappers should also handle accountId
   factory ExpenseModel.fromEntity(Expense entity) {
     return ExpenseModel(
       id: entity.id,
@@ -51,7 +47,7 @@ class ExpenseModel extends HiveObject {
       date: entity.date,
       categoryName: entity.category.name,
       subCategoryName: entity.category.subCategory,
-      accountId: entity.accountId, // Map from entity
+      accountId: entity.accountId,
     );
   }
 
@@ -62,7 +58,14 @@ class ExpenseModel extends HiveObject {
       amount: amount,
       date: date,
       category: Category(name: categoryName, subCategory: subCategoryName),
-      accountId: accountId, // Map to entity
+      accountId: accountId,
     );
   }
+
+  // --- Add JsonSerializable methods ---
+  factory ExpenseModel.fromJson(Map<String, dynamic> json) =>
+      _$ExpenseModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ExpenseModelToJson(this);
+  // ------------------------------------
 }

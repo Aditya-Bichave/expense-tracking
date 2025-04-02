@@ -37,6 +37,7 @@ dependencies:
   path_provider: ^2.1.2
   local_auth: ^2.2.0
   package_info_plus: ^8.0.0
+  json_annotation: ^4.8.1
 
 dev_dependencies:
   flutter_test:

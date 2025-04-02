@@ -57,3 +57,28 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      amount: (json['amount'] as num).toDouble(),
+      date: DateTime.parse(json['date'] as String),
+      categoryName: json['categoryName'] as String,
+      subCategoryName: json['subCategoryName'] as String?,
+      accountId: json['accountId'] as String,
+    );
+
+Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'title': instance.title,
+      'amount': instance.amount,
+      'date': instance.date.toIso8601String(),
+      'categoryName': instance.categoryName,
+      'subCategoryName': instance.subCategoryName,
+      'accountId': instance.accountId,
+    };
