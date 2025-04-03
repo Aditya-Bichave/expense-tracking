@@ -34,6 +34,62 @@ class DeleteIncomeRequested extends IncomeListEvent {
   List<Object> get props => [incomeId];
 }
 
+// --- Batch Edit Events ---
+class ToggleBatchEditMode extends IncomeListEvent {
+  const ToggleBatchEditMode();
+}
+
+class SelectIncome extends IncomeListEvent {
+  final String incomeId;
+  const SelectIncome(this.incomeId);
+  @override
+  List<Object> get props => [incomeId];
+}
+
+class ApplyBatchCategory extends IncomeListEvent {
+  final String categoryId; // ID of the category to apply
+  const ApplyBatchCategory(this.categoryId);
+  @override
+  List<Object> get props => [categoryId];
+}
+// --- END Batch Edit Events ---
+
+// --- Single Update Event ---
+class UpdateSingleIncomeCategory extends IncomeListEvent {
+  final String incomeId;
+  final String? categoryId; // Can be null to uncategorize
+  final CategorizationStatus status;
+  final double? confidence;
+
+  const UpdateSingleIncomeCategory({
+    required this.incomeId,
+    required this.categoryId,
+    required this.status,
+    this.confidence,
+  });
+
+  @override
+  List<Object?> get props => [incomeId, categoryId, status, confidence];
+}
+// --- END Single Update Event ---
+
+// --- Event when user explicitly sets/confirms a category ---
+class UserCategorizedIncome extends IncomeListEvent {
+  final String incomeId;
+  final Category selectedCategory; // Use unified Category
+  final TransactionMatchData matchData; // Data used for learning rule
+
+  const UserCategorizedIncome({
+    required this.incomeId,
+    required this.selectedCategory,
+    required this.matchData,
+  });
+
+  @override
+  List<Object?> get props => [incomeId, selectedCategory, matchData];
+}
+// --- END ADDED ---
+
 // Internal event for data changes
 class _DataChanged extends IncomeListEvent {
   const _DataChanged();

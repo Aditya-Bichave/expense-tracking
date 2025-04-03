@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <rect width="512" height="512" fill="#F5F6FA"/>
+  <rect x="120" y="160" width="280" height="200" rx="16" fill="#FFFFFF" stroke="#3A7BD5" stroke-width="4"/>
+  <line x1="120" y1="220" x2="400" y2="220" stroke="#3A7BD5" stroke-width="2"/>
+  <text x="50%" y="400" text-anchor="middle" font-size="20" fill="#636e72" font-family="sans-serif">
+    No entries for today
+  </text>
+</svg>

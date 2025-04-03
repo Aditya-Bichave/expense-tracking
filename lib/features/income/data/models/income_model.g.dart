@@ -21,16 +21,18 @@ class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
       title: fields[1] as String,
       amount: fields[2] as double,
       date: fields[3] as DateTime,
-      categoryName: fields[4] as String,
+      categoryId: fields[4] as String?,
+      categorizationStatusValue: fields[7] as String,
       accountId: fields[5] as String,
       notes: fields[6] as String?,
+      confidenceScoreValue: fields[8] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, IncomeModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -40,11 +42,15 @@ class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
       ..writeByte(3)
       ..write(obj.date)
       ..writeByte(4)
-      ..write(obj.categoryName)
+      ..write(obj.categoryId)
       ..writeByte(5)
       ..write(obj.accountId)
       ..writeByte(6)
-      ..write(obj.notes);
+      ..write(obj.notes)
+      ..writeByte(7)
+      ..write(obj.categorizationStatusValue)
+      ..writeByte(8)
+      ..write(obj.confidenceScoreValue);
   }
 
   @override
@@ -67,9 +73,14 @@ IncomeModel _$IncomeModelFromJson(Map<String, dynamic> json) => IncomeModel(
       title: json['title'] as String,
       amount: (json['amount'] as num).toDouble(),
       date: DateTime.parse(json['date'] as String),
-      categoryName: json['categoryName'] as String,
+      categoryId: json['categoryId'] as String?,
+      categorizationStatusValue: json['categorizationStatusValue'] == null
+          ? 'uncategorized'
+          : IncomeModel._categorizationStatusFromJson(
+              json['categorizationStatusValue'] as String?),
       accountId: json['accountId'] as String,
       notes: json['notes'] as String?,
+      confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
@@ -78,7 +89,11 @@ Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
       'title': instance.title,
       'amount': instance.amount,
       'date': instance.date.toIso8601String(),
-      'categoryName': instance.categoryName,
+      if (instance.categoryId case final value?) 'categoryId': value,
       'accountId': instance.accountId,
       'notes': instance.notes,
+      'categorizationStatusValue': IncomeModel._categorizationStatusToJson(
+          instance.categorizationStatusValue),
+      if (instance.confidenceScoreValue case final value?)
+        'confidenceScoreValue': value,
     };

@@ -5,6 +5,7 @@ import 'package:expense_tracker/main.dart'; // Import logger
 
 abstract class ExpenseLocalDataSource {
   Future<List<ExpenseModel>> getExpenses();
+  Future<ExpenseModel?> getExpenseById(String id); // ADDED: Return nullable
   Future<ExpenseModel> addExpense(ExpenseModel expense);
   Future<ExpenseModel> updateExpense(ExpenseModel expense);
   Future<void> deleteExpense(String id);
@@ -51,8 +52,31 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
     }
   }
 
+  // --- ADDED IMPLEMENTATION ---
+  @override
+  Future<ExpenseModel?> getExpenseById(String id) async {
+    try {
+      final expense = expenseBox.get(id);
+      if (expense != null) {
+        log.fine("Retrieved expense by ID $id from Hive.");
+      } else {
+        log.warning("Expense with ID $id not found in Hive.");
+      }
+      return expense; // Returns null if not found
+    } catch (e, s) {
+      log.severe("Failed to get expense by ID $id from cache$e$s");
+      throw CacheFailure('Failed to get expense by ID: ${e.toString()}');
+    }
+  }
+  // --- END ADDED ---
+
   @override
   Future<ExpenseModel> updateExpense(ExpenseModel expense) async {
+    // Ensure the expense exists before updating
+    if (!expenseBox.containsKey(expense.id)) {
+      log.warning("Attempted to update non-existent expense ID: ${expense.id}");
+      throw CacheFailure("Expense with ID ${expense.id} not found for update.");
+    }
     try {
       await expenseBox.put(expense.id, expense);
       log.info(

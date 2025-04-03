@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240">
+  <circle cx="120" cy="120" r="100" fill="#1C2E45"/>
+  <circle cx="120" cy="120" r="80" stroke="#00DFA2" stroke-width="16" fill="none" stroke-dasharray="502" stroke-dashoffset="100"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="24" fill="#ECEFF1">₹12,340</text>
+</svg>

@@ -1,33 +1,80 @@
+// lib/features/accounts/presentation/bloc/account_list/account_list_state.dart
 part of 'account_list_bloc.dart';
 
+// Base state for this feature
 abstract class AccountListState extends Equatable {
   const AccountListState();
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-class AccountListInitial extends AccountListState {}
+// Extend base initial state
+class AccountListInitial extends AccountListState
+    implements BaseListInitialState {
+  const AccountListInitial();
+}
 
-// Combined Loading state, can differentiate based on flag
-class AccountListLoading extends AccountListState {
-  final bool
-      isReloading; // True if loading triggered while data was already loaded
+// Extend base loading state
+class AccountListLoading extends AccountListState
+    implements BaseListLoadingState {
+  @override
+  final bool isReloading;
   const AccountListLoading({this.isReloading = false});
 
   @override
   List<Object> get props => [isReloading];
 }
 
-class AccountListLoaded extends AccountListState {
-  final List<AssetAccount> accounts;
-  const AccountListLoaded({required this.accounts});
+// Extend BaseListState<AssetAccount>
+class AccountListLoaded extends AccountListState
+    implements BaseListState<AssetAccount> {
   @override
-  List<Object> get props => [accounts];
+  final List<AssetAccount> items; // The list of accounts
+  // Account list doesn't have filters yet, keep these null
+  @override
+  final DateTime? filterStartDate = null;
+  @override
+  final DateTime? filterEndDate = null;
+  @override
+  final String? filterCategory = null;
+  @override
+  final String? filterAccountId = null;
+
+  const AccountListLoaded({
+    required List<AssetAccount> accounts, // Keep param name
+  })  : items = accounts, // Assign to base 'items'
+        super();
+
+  // --- ADDED: Concrete implementation for filtersApplied ---
+  @override
+  bool get filtersApplied =>
+      filterStartDate != null ||
+      filterEndDate != null ||
+      filterCategory != null ||
+      filterAccountId != null;
+  // ---------------------------------------------------------
+
+  // Props are handled by the base class via its getter
+  @override
+  List<Object?> get props => [
+        // Need to explicitly list props here now
+        items,
+        filterStartDate,
+        filterEndDate,
+        filterCategory,
+        filterAccountId,
+      ];
+
+  // Convenience getter (optional)
+  List<AssetAccount> get accounts => items;
 }
 
-class AccountListError extends AccountListState {
+// Extend base error state
+class AccountListError extends AccountListState implements BaseListErrorState {
+  @override
   final String message;
   const AccountListError(this.message);
+
   @override
   List<Object> get props => [message];
 }

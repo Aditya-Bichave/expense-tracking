@@ -21,16 +21,17 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       title: fields[1] as String,
       amount: fields[2] as double,
       date: fields[3] as DateTime,
-      categoryName: fields[4] as String,
-      subCategoryName: fields[5] as String?,
+      categoryId: fields[4] as String?,
+      categorizationStatusValue: fields[5] as String,
       accountId: fields[6] as String,
+      confidenceScoreValue: fields[7] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -40,11 +41,13 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(3)
       ..write(obj.date)
       ..writeByte(4)
-      ..write(obj.categoryName)
+      ..write(obj.categoryId)
       ..writeByte(5)
-      ..write(obj.subCategoryName)
+      ..write(obj.categorizationStatusValue)
       ..writeByte(6)
-      ..write(obj.accountId);
+      ..write(obj.accountId)
+      ..writeByte(7)
+      ..write(obj.confidenceScoreValue);
   }
 
   @override
@@ -67,9 +70,13 @@ ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
       title: json['title'] as String,
       amount: (json['amount'] as num).toDouble(),
       date: DateTime.parse(json['date'] as String),
-      categoryName: json['categoryName'] as String,
-      subCategoryName: json['subCategoryName'] as String?,
+      categoryId: json['categoryId'] as String?,
+      categorizationStatusValue: json['categorizationStatusValue'] == null
+          ? 'uncategorized'
+          : ExpenseModel._categorizationStatusFromJson(
+              json['categorizationStatusValue'] as String?),
       accountId: json['accountId'] as String,
+      confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
@@ -78,7 +85,10 @@ Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
       'title': instance.title,
       'amount': instance.amount,
       'date': instance.date.toIso8601String(),
-      'categoryName': instance.categoryName,
-      'subCategoryName': instance.subCategoryName,
+      if (instance.categoryId case final value?) 'categoryId': value,
+      'categorizationStatusValue': ExpenseModel._categorizationStatusToJson(
+          instance.categorizationStatusValue),
       'accountId': instance.accountId,
+      if (instance.confidenceScoreValue case final value?)
+        'confidenceScoreValue': value,
     };

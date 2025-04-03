@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:json_annotation/json_annotation.dart';

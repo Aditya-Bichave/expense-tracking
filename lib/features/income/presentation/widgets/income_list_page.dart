@@ -1,413 +1,415 @@
+// lib/features/income/presentation/widgets/income_list_page.dart
+// MODIFIED FILE
+
+import 'package:expense_tracker/core/common/generic_list_page.dart';
+import 'package:expense_tracker/core/common/base_list_state.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/core/utils/currency_formatter.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/core/usecases/usecase.dart';
+import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
+// Assuming FilterDialogContent is in ExpenseListPage for now
+import 'package:expense_tracker/features/expenses/presentation/pages/expense_list_page.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
+import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
+import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:expense_tracker/core/assets/app_assets.dart';
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
-import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart'; // <-- Correct import added
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/income/domain/entities/income_category.dart'; // Import IncomeCategory for filter dialog
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/features/expenses/presentation/pages/expense_list_page.dart'; // Import shared FilterDialogContent
 
-class IncomeListPage extends StatefulWidget {
+class IncomeListPage extends StatelessWidget {
   const IncomeListPage({super.key});
 
-  @override
-  State<IncomeListPage> createState() => _IncomeListPageState();
-}
-
-class _IncomeListPageState extends State<IncomeListPage> {
-  late IncomeListBloc _incomeListBloc;
-  // AccountListBloc is assumed to be provided globally
-
-  @override
-  void initState() {
-    super.initState();
-    log.info("[IncomeListPage] initState called.");
-    _incomeListBloc = sl<IncomeListBloc>();
-    if (_incomeListBloc.state is IncomeListInitial) {
-      log.info(
-          "[IncomeListPage] Initial state detected, dispatching LoadIncomes.");
-      _incomeListBloc.add(const LoadIncomes());
-    }
-    // Ensure AccountListBloc is loaded if needed for names (usually loaded by Accounts tab)
-    final accountBloc = sl<AccountListBloc>();
-    if (accountBloc.state is AccountListInitial) {
-      log.info(
-          "[IncomeListPage] AccountListBloc is initial, dispatching LoadAccounts.");
-      accountBloc.add(const LoadAccounts());
-    }
+  // --- Navigation ---
+  void _navigateToEdit(BuildContext context, Income item) {
+    log.info("[IncomeListPage] Navigating to Edit item ID: ${item.id}");
+    context.pushNamed(RouteNames.editIncome,
+        pathParameters: {RouteNames.paramId: item.id}, extra: item);
   }
 
-  void _navigateToAddIncome() {
-    log.info("[IncomeListPage] Navigating to add income.");
-    context.pushNamed('add_income');
-  }
-
-  void _navigateToEditIncome(Income incomeToEdit) {
+  // --- Category Interaction Handlers ---
+  void _handleChangeCategoryRequest(BuildContext context, Income item) async {
     log.info(
-        "[IncomeListPage] Navigating to edit income '${incomeToEdit.title}' (ID: ${incomeToEdit.id}).");
-    context.pushNamed('edit_income',
-        pathParameters: {'id': incomeToEdit.id}, extra: incomeToEdit);
-  }
-
-  Future<void> _refreshIncome() async {
-    log.info("[IncomeListPage] Pull-to-refresh triggered.");
-    // Refresh this list's BLoC and account names
-    try {
-      context.read<IncomeListBloc>().add(const LoadIncomes(forceReload: true));
-      context
-          .read<AccountListBloc>()
-          .add(const LoadAccounts(forceReload: true));
-
-      // Wait for both Blocs to finish loading
-      await Future.wait([
-        context.read<IncomeListBloc>().stream.firstWhere(
-            (state) => state is IncomeListLoaded || state is IncomeListError),
-        context.read<AccountListBloc>().stream.firstWhere(
-            (state) => state is AccountListLoaded || state is AccountListError),
-      ]).timeout(const Duration(seconds: 5)); // Add timeout
-      log.info("[IncomeListPage] Refresh streams finished or timed out.");
-    } catch (e) {
-      log.warning("[IncomeListPage] Error during refresh: $e");
+        "[IncomeListPage] Change category requested for item ID: ${item.id}");
+    // FIX: Pass the required CategoryTypeFilter
+    final Category? selectedCategory =
+        await showCategoryPicker(context, CategoryTypeFilter.income);
+    if (selectedCategory != null && context.mounted) {
+      log.info(
+          "[IncomeListPage] Category '${selectedCategory.name}' selected from picker.");
+      final matchData =
+          TransactionMatchData(description: item.title, merchantId: null);
+      context.read<IncomeListBloc>().add(UserCategorizedIncome(
+          incomeId: item.id,
+          selectedCategory: selectedCategory,
+          matchData: matchData));
+    } else {
+      log.info("[IncomeListPage] Category picker dismissed without selection.");
     }
   }
 
-  // Show confirmation dialog for deletion
-  Future<bool> _confirmDeletion(BuildContext context, Income income) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (BuildContext ctx) => AlertDialog(
-            title: const Text("Confirm Deletion"),
-            content: Text(
-              'Are you sure you want to delete the income "${income.title}"?',
-              style: Theme.of(ctx).textTheme.bodyMedium,
+  void _handleUserCategorized(
+      BuildContext context, Income item, Category selectedCategory) {
+    log.info(
+        "[IncomeListPage] User categorized item ID: ${item.id} as ${selectedCategory.name}");
+    final matchData =
+        TransactionMatchData(description: item.title, merchantId: null);
+    context.read<IncomeListBloc>().add(UserCategorizedIncome(
+        incomeId: item.id,
+        selectedCategory: selectedCategory,
+        matchData: matchData));
+  }
+
+  // --- Build Methods ---
+
+  Widget _buildIncomeItem(
+    BuildContext context,
+    Income item,
+    bool isSelected,
+    // Callbacks provided by GenericListPage
+    VoidCallback onEditTap,
+    VoidCallback onSelectTap,
+    Function(Category selectedCategory) onCategoryConfirmed,
+    VoidCallback onChangeCategoryRequest,
+  ) {
+    final theme = Theme.of(context);
+    Widget card = IncomeCard(
+      income: item,
+      // --- CORRECTED Callback Wiring ---
+      onCardTap: (_) => onEditTap(),
+      onUserCategorized: (_, cat) => onCategoryConfirmed(cat),
+      onChangeCategoryRequest: (_) => onChangeCategoryRequest(),
+      // --- END CORRECTION ---
+    );
+
+    final bloc = context.read<IncomeListBloc>();
+    if (bloc.state is IncomeListLoaded &&
+        (bloc.state as IncomeListLoaded).isInBatchEditMode) {
+      card = Stack(
+        children: [
+          card,
+          Positioned.fill(
+            child: Material(
+              color: isSelected
+                  ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                  : Colors.transparent,
+              child: InkWell(
+                onTap: onSelectTap,
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: IgnorePointer(
+                        child: Checkbox(
+                      value: isSelected,
+                      onChanged: null,
+                      visualDensity: VisualDensity.compact,
+                    )),
+                  ),
+                ),
+              ),
             ),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: const Text("Cancel"),
-              ),
-              TextButton(
-                style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(ctx).colorScheme.error),
-                onPressed: () => Navigator.of(ctx).pop(true),
-                child: const Text("Delete"),
-              ),
-            ],
           ),
+        ],
+      );
+    }
+    return card;
+  }
+
+  Widget _buildIncomeTable(BuildContext context, List<Income> items) {
+    final theme = Theme.of(context);
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol = settingsState.currencySymbol;
+    final accountState = context.watch<AccountListBloc>().state;
+    final rows = items.map((inc) {
+      String accountName = '...';
+      if (accountState is AccountListLoaded) {
+        try {
+          accountName = accountState.items
+              .firstWhere((acc) => acc.id == inc.accountId)
+              .name;
+        } catch (_) {
+          accountName = 'N/A';
+        }
+      } else if (accountState is AccountListError) {
+        accountName = 'Error';
+      }
+      final categoryName = inc.category?.name ?? Category.uncategorized.name;
+      return DataRow(cells: [
+        DataCell(Text(DateFormatter.formatDate(inc.date),
+            style: theme.textTheme.bodySmall)),
+        DataCell(Text(inc.title, overflow: TextOverflow.ellipsis)),
+        DataCell(Text(categoryName, overflow: TextOverflow.ellipsis)),
+        DataCell(Text(accountName, overflow: TextOverflow.ellipsis)),
+        DataCell(Text(
+          CurrencyFormatter.format(inc.amount, currencySymbol),
+          style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.tertiary, fontWeight: FontWeight.w500),
+          textAlign: TextAlign.end,
+        )),
+      ]);
+    }).toList();
+    return Card(
+      margin: EdgeInsets.zero,
+      shape: theme.cardTheme.shape,
+      elevation: theme.cardTheme.elevation,
+      color: theme.cardTheme.color,
+      clipBehavior: theme.cardTheme.clipBehavior ?? Clip.none,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columnSpacing: theme.dataTableTheme.columnSpacing ?? 12,
+          headingRowHeight: theme.dataTableTheme.headingRowHeight ?? 36,
+          dataRowMinHeight: theme.dataTableTheme.dataRowMinHeight ?? 36,
+          dataRowMaxHeight: theme.dataTableTheme.dataRowMaxHeight ?? 40,
+          headingTextStyle: theme.dataTableTheme.headingTextStyle ??
+              theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+          dataTextStyle:
+              theme.dataTableTheme.dataTextStyle ?? theme.textTheme.bodySmall,
+          dividerThickness: theme.dataTableTheme.dividerThickness,
+          dataRowColor: theme.dataTableTheme.dataRowColor,
+          columns: const [
+            DataColumn(label: Text('Date')),
+            DataColumn(label: Text('Title')),
+            DataColumn(label: Text('Category')),
+            DataColumn(label: Text('Account')),
+            DataColumn(label: Text('Amount'), numeric: true),
+          ],
+          rows: rows,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, bool filtersApplied) {
+    final theme = Theme.of(context);
+    final modeTheme = context.modeTheme;
+    String emptyText = filtersApplied
+        ? 'No income matches filters.'
+        : 'No income recorded yet.';
+    String illustrationKey = filtersApplied
+        ? AssetKeys.illuEmptyFilter
+        : AssetKeys.illuEmptyTransactions;
+    String defaultIllustration = filtersApplied
+        ? AppAssets.elIlluEmptyCalendar
+        : AppAssets.elIlluEmptyAddTransaction;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+                modeTheme?.assets.getIllustration(illustrationKey,
+                        defaultPath: defaultIllustration) ??
+                    defaultIllustration,
+                height: 100,
+                colorFilter: ColorFilter.mode(
+                    theme.colorScheme.secondary, BlendMode.srcIn)),
+            const SizedBox(height: 16),
+            Text(emptyText,
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(color: theme.colorScheme.secondary),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            if (filtersApplied)
+              ElevatedButton.icon(
+                  icon: const Icon(Icons.clear_all, size: 18),
+                  label: const Text('Clear Filters'),
+                  style: ElevatedButton.styleFrom(
+                      visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    log.info(
+                        "[IncomeListPage] Clearing filters via empty state.");
+                    context.read<IncomeListBloc>().add(const FilterIncomes());
+                  })
+            else
+              Text('Tap "+" to add your first income!',
+                  style: theme.textTheme.bodyMedium),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showIncomeFilterDialog(
+      BuildContext context, BaseListState currentState) async {
+    log.info("[IncomeListPage] Showing filter dialog.");
+    final getCategoriesUseCase = sl<GetCategoriesUseCase>();
+    final categoriesResult = await getCategoriesUseCase(const NoParams());
+    List<String> categoryNames = [];
+    if (categoriesResult.isRight()) {
+      categoryNames =
+          categoriesResult.getOrElse(() => []).map((cat) => cat.name).toList();
+      categoryNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    } else {
+      log.warning(
+          "[IncomeListPage] Failed to load categories for filter dialog.");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Could not load categories for filtering.")));
+      }
+      return;
+    }
+    if (!context.mounted) return;
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return BlocProvider.value(
+          value: sl<AccountListBloc>(),
+          child: FilterDialogContent(
+            // Reuse the same dialog widget
+            categoryNames: categoryNames,
+            initialStartDate: currentState.filterStartDate,
+            initialEndDate: currentState.filterEndDate,
+            initialCategoryName: currentState.filterCategory,
+            initialAccountId: currentState.filterAccountId,
+            onApplyFilter: (startDate, endDate, categoryName, accountId) {
+              log.info(
+                  "[IncomeListPage] Filter dialog applied. Start=$startDate, End=$endDate, Cat=$categoryName, AccID=$accountId");
+              context.read<IncomeListBloc>().add(FilterIncomes(
+                  startDate: startDate,
+                  endDate: endDate,
+                  category: categoryName,
+                  accountId: accountId));
+              Navigator.of(dialogContext).pop();
+            },
+            onClearFilter: () {
+              log.info("[IncomeListPage] Filter dialog cleared.");
+              context.read<IncomeListBloc>().add(const FilterIncomes());
+              Navigator.of(dialogContext).pop();
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _confirmIncomeDeletion(BuildContext context, Income item) async {
+    return await AppDialogs.showConfirmation(
+          context,
+          title: "Confirm Deletion",
+          content:
+              'Are you sure you want to delete the income "${item.title}"?',
+          confirmText: "Delete",
+          confirmColor: Theme.of(context).colorScheme.error,
         ) ??
         false;
   }
 
   @override
   Widget build(BuildContext context) {
-    log.info("[IncomeListPage] Build method called.");
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Income'),
-        actions: [
-          // Filter button
-          BlocBuilder<IncomeListBloc, IncomeListState>(
-            builder: (context, state) {
-              bool filtersApplied = false;
-              if (state is IncomeListLoaded) {
-                filtersApplied = state.filterStartDate != null ||
-                    state.filterEndDate != null ||
-                    state.filterCategory != null ||
-                    state.filterAccountId != null;
-              }
-              return IconButton(
-                icon: Icon(filtersApplied
-                    ? Icons.filter_list
-                    : Icons.filter_list_off_outlined),
-                tooltip: 'Filter Income',
-                onPressed: () =>
-                    _showFilterDialog(context, state), // Pass current state
-              );
-            },
-          ),
-        ],
-      ),
-      body: MultiBlocProvider(
-        // Provide necessary Blocs if not already available above
-        providers: [
-          BlocProvider.value(value: _incomeListBloc),
-          BlocProvider.value(
-              value:
-                  sl<AccountListBloc>()), // Ensure AccountListBloc is provided
-        ],
-        child: BlocConsumer<IncomeListBloc, IncomeListState>(
-          listener: (context, incomeState) {
-            log.info(
-                "[IncomeListPage] BlocListener received state: ${incomeState.runtimeType}");
-            if (incomeState is IncomeListError) {
-              log.warning(
-                  "[IncomeListPage] Error state detected: ${incomeState.message}");
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(incomeState.message),
-                    backgroundColor: Theme.of(context).colorScheme.error,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<IncomeListBloc>(
+            create: (_) => sl<IncomeListBloc>()..add(const LoadIncomes())),
+        BlocProvider<AccountListBloc>.value(value: sl<AccountListBloc>()),
+      ],
+      child: BlocBuilder<IncomeListBloc, IncomeListState>(
+          builder: (context, state) {
+        final bool isInBatchEditMode =
+            state is IncomeListLoaded && state.isInBatchEditMode;
+        final int selectionCount =
+            state is IncomeListLoaded ? state.selectedTransactionIds.length : 0;
+        final theme = Theme.of(context);
+
+        return GenericListPage<Income, IncomeListBloc, IncomeListEvent,
+            IncomeListState>(
+          pageTitle: 'Income',
+          addRouteName: RouteNames.addIncome,
+          editRouteName: RouteNames.editIncome,
+          itemHeroTagPrefix: 'income',
+          fabHeroTag: 'fab_income',
+          showSummaryCard: false,
+          // Provide OUR item builder implementation
+          itemBuilder: (itemBuilderContext, item, isSelected) =>
+              _buildIncomeItem(
+                  itemBuilderContext,
+                  item,
+                  isSelected,
+                  // Implement the callbacks required by ItemWidgetBuilder
+                  () => _navigateToEdit(context, item), // Use page's context
+                  () => context
+                      .read<IncomeListBloc>()
+                      .add(SelectIncome(item.id)), // Handle select tap
+                  (selectedCategory) => _handleUserCategorized(
+                      context, item, selectedCategory), // Use page's context
+                  () => _handleChangeCategoryRequest(
+                      context, item) // Use page's context
                   ),
-                );
-            }
-          },
-          builder: (context, incomeState) {
-            log.info(
-                "[IncomeListPage] BlocBuilder building for income state: ${incomeState.runtimeType}");
-            Widget child;
-
-            if (incomeState is IncomeListLoading && !incomeState.isReloading) {
-              log.info(
-                  "[IncomeListPage UI] State is initial IncomeListLoading. Showing CircularProgressIndicator.");
-              child = const Center(child: CircularProgressIndicator());
-            } else if (incomeState is IncomeListLoaded ||
-                (incomeState is IncomeListLoading && incomeState.isReloading)) {
-              final incomes = (incomeState is IncomeListLoaded)
-                  ? incomeState.incomes
-                  : (context.read<IncomeListBloc>().state as IncomeListLoaded?)
-                          ?.incomes ??
-                      [];
-              final bool filtersActive = incomeState is IncomeListLoaded &&
-                  (incomeState.filterStartDate != null ||
-                      incomeState.filterEndDate != null ||
-                      incomeState.filterCategory != null ||
-                      incomeState.filterAccountId != null);
-
-              if (incomes.isEmpty) {
-                log.info("[IncomeListPage UI] Income list is empty.");
-                child = Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                            filtersActive
-                                ? Icons.filter_alt_off_outlined
-                                : Icons.attach_money_outlined,
-                            size: 60,
-                            color: theme.colorScheme.secondary),
-                        const SizedBox(height: 16),
-                        Text(
-                          filtersActive
-                              ? 'No income matches the current filters.'
-                              : 'No income recorded yet.',
-                          style: theme.textTheme.headlineSmall
-                              ?.copyWith(color: theme.colorScheme.secondary),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        if (filtersActive)
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.clear_all, size: 18),
-                            label: const Text('Clear Filters'),
-                            style: ElevatedButton.styleFrom(
-                                visualDensity: VisualDensity.compact),
-                            onPressed: () {
-                              log.info("[IncomeListPage] Clearing filters.");
-                              context
-                                  .read<IncomeListBloc>()
-                                  .add(const FilterIncomes()); // Clear filters
-                            },
-                          )
-                        else
-                          Text(
-                            'Tap "+" to add your first income!',
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              } else {
-                log.info(
-                    "[IncomeListPage UI] Income list has ${incomes.length} items. Building ListView.");
-                // Need AccountListBloc to provide names for the IncomeCard
-                child = BlocBuilder<AccountListBloc, AccountListState>(
-                  builder: (context, accountState) {
-                    log.info(
-                        "[IncomeListPage UI] Nested AccountListBloc state: ${accountState.runtimeType}");
-                    // Handle account loading/error specifically (though IncomeCard might handle 'Unknown')
-                    if (accountState is AccountListLoading &&
-                        incomes.isNotEmpty) {
-                      // Show list slightly dimmed while loading names? Or just text.
-                      return const Center(
-                          child: Text("Loading account names..."));
-                    }
-                    if (accountState is AccountListError &&
-                        incomes.isNotEmpty) {
-                      // Show list, but IncomeCard will show 'Unknown Account' or similar
-                      log.warning(
-                          "[IncomeListPage] Error loading accounts: ${accountState.message}. Income cards might show unknown account.");
-                    }
-
-                    // Build the main list
-                    return RefreshIndicator(
-                      onRefresh: _refreshIncome,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: incomes.length,
-                        itemBuilder: (context, index) {
-                          final income = incomes[index];
-                          return Dismissible(
-                            key: Key('income_${income.id}'), // Unique key
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              color: theme.colorScheme.errorContainer,
-                              alignment: Alignment.centerRight,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text("Delete",
-                                      style: TextStyle(
-                                          color: theme
-                                              .colorScheme.onErrorContainer,
-                                          fontWeight: FontWeight.bold)),
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.delete_sweep_outlined,
-                                      color:
-                                          theme.colorScheme.onErrorContainer),
-                                ],
-                              ),
-                            ),
-                            confirmDismiss: (direction) =>
-                                _confirmDeletion(context, income),
-                            onDismissed: (direction) {
-                              log.info(
-                                  "[IncomeListPage] Dismissed income '${income.title}'. Dispatching delete request.");
-                              context
-                                  .read<IncomeListBloc>()
-                                  .add(DeleteIncomeRequested(income.id));
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(SnackBar(
-                                  content:
-                                      Text('Income "${income.title}" deleted.'),
-                                  backgroundColor:
-                                      Colors.orange, // Or theme color
-                                ));
-                            },
-                            // Use IncomeCard constructor correctly
-                            child: IncomeCard(
-                              income: income,
-                              onTap: () => _navigateToEditIncome(income),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
-              }
-            } else if (incomeState is IncomeListError) {
-              log.info(
-                  "[IncomeListPage UI] State is IncomeListError: ${incomeState.message}. Showing error UI.");
-              child = Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline,
-                          color: theme.colorScheme.error, size: 50),
-                      const SizedBox(height: 16),
-                      Text('Failed to load income',
-                          style: theme.textTheme.titleLarge),
-                      const SizedBox(height: 8),
-                      Text(incomeState.message,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: theme.colorScheme.error)),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                        onPressed: () => context
-                            .read<IncomeListBloc>()
-                            .add(const LoadIncomes(forceReload: true)),
-                      )
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              log.info(
-                  "[IncomeListPage UI] State is Initial or Unknown. Showing loading indicator.");
-              child = const Center(child: CircularProgressIndicator());
-            }
-
-            // Animate state changes
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: child,
-            );
-          },
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'fab_income', // Unique HeroTag
-        onPressed: _navigateToAddIncome,
-        tooltip: 'Add Income',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-
-  // Filter Dialog Logic (Adapted for Income)
-  void _showFilterDialog(BuildContext context, IncomeListState currentState) {
-    log.info("[IncomeListPage] Showing filter dialog for income.");
-    DateTime? currentStart;
-    DateTime? currentEnd;
-    String? currentCategoryName;
-    String? currentAccountId;
-    if (currentState is IncomeListLoaded) {
-      currentStart = currentState.filterStartDate;
-      currentEnd = currentState.filterEndDate;
-      currentCategoryName = currentState.filterCategory;
-      currentAccountId = currentState.filterAccountId;
-    }
-
-    // Get Income Category Names
-    final List<String> incomeCategoryNames = PredefinedIncomeCategory.values
-        .map<String>((e) => IncomeCategory.fromPredefined(e).name)
-        .toList();
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        // Use the shared FilterDialogContent widget from expense_list_page
-        return FilterDialogContent(
-          isIncomeFilter: true, // Set flag
-          incomeCategoryNames: incomeCategoryNames, // Pass income categories
-          expenseCategoryNames: const [], // Pass empty list for expense categories
-          initialStartDate: currentStart,
-          initialEndDate: currentEnd,
-          initialCategoryName: currentCategoryName,
-          initialAccountId: currentAccountId,
-          onApplyFilter: (startDate, endDate, categoryName, accountId) {
-            log.info(
-                "[IncomeListPage] Filter dialog applied. Start=$startDate, End=$endDate, Cat=$categoryName, AccID=$accountId");
-            context.read<IncomeListBloc>().add(FilterIncomes(
-                  startDate: startDate,
-                  endDate: endDate,
-                  category: categoryName,
-                  accountId: accountId,
-                ));
-            Navigator.of(dialogContext).pop();
-          },
-          onClearFilter: () {
-            log.info("[IncomeListPage] Filter dialog cleared.");
-            context.read<IncomeListBloc>().add(const FilterIncomes());
-            Navigator.of(dialogContext).pop();
-          },
+          tableBuilder: _buildIncomeTable,
+          emptyStateBuilder: _buildEmptyState,
+          filterDialogBuilder: (dialogContext, currentState) =>
+              _showIncomeFilterDialog(dialogContext, currentState),
+          deleteConfirmationBuilder: (dialogContext, item) =>
+              _confirmIncomeDeletion(dialogContext, item),
+          deleteEventBuilder: (id) => DeleteIncomeRequested(id),
+          loadEventBuilder: ({bool forceReload = false}) =>
+              LoadIncomes(forceReload: forceReload),
+          // --- Provide specific AppBar Actions and FAB ---
+          appBarActions: [
+            IconButton(
+              icon: Icon(isInBatchEditMode
+                  ? Icons.cancel_outlined
+                  : Icons.edit_note_outlined),
+              tooltip:
+                  isInBatchEditMode ? "Cancel Selection" : "Select Multiple",
+              onPressed: () => context
+                  .read<IncomeListBloc>()
+                  .add(const ToggleBatchEditMode()),
+            )
+          ],
+          floatingActionButton: isInBatchEditMode
+              ? FloatingActionButton.extended(
+                  heroTag: "fab_income_batch",
+                  onPressed: selectionCount > 0
+                      ? () async {
+                          // FIX: Pass the required CategoryTypeFilter
+                          final Category? selectedCategory =
+                              await showCategoryPicker(
+                                  context, CategoryTypeFilter.income);
+                          if (selectedCategory != null &&
+                              selectedCategory.id !=
+                                  Category.uncategorized.id &&
+                              context.mounted) {
+                            context
+                                .read<IncomeListBloc>()
+                                .add(ApplyBatchCategory(selectedCategory.id));
+                          } else if (selectedCategory?.id ==
+                                  Category.uncategorized.id &&
+                              context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        "Please select a specific category for batch editing.")));
+                          }
+                        }
+                      : null,
+                  label: Text(selectionCount > 0
+                      ? 'Categorize ($selectionCount)'
+                      : 'Categorize'),
+                  icon: const Icon(Icons.category),
+                  backgroundColor: selectionCount > 0
+                      ? theme.colorScheme.primaryContainer
+                      : theme.disabledColor.withOpacity(0.1),
+                  foregroundColor: selectionCount > 0
+                      ? theme.colorScheme.onPrimaryContainer
+                      : theme.disabledColor,
+                )
+              : null, // No FAB if not in batch mode
         );
-      },
+      }),
     );
   }
 }

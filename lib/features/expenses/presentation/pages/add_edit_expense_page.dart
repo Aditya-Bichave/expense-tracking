@@ -3,14 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
+// Import Unified Category entity
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+// REMOVE Old Category import:
+// import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/add_edit_expense/add_edit_expense_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_form.dart';
-import 'package:expense_tracker/core/utils/enums.dart'; // Shared FormStatus
-import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/utils/enums.dart';
+import 'package:expense_tracker/main.dart';
 
 class AddEditExpensePage extends StatelessWidget {
-  final String? expenseId; // Passed from router for editing
+  final String? expenseId;
   final Expense? expense; // Passed via router extra for editing
 
   const AddEditExpensePage({
@@ -19,25 +22,8 @@ class AddEditExpensePage extends StatelessWidget {
     this.expense,
   });
 
-  // Helper to find predefined category object by name (case-insensitive)
-  Category _findCategoryByName(String categoryName) {
-    try {
-      // Find the enum value corresponding to the name
-      final predefined = PredefinedCategory.values.firstWhere(
-        (e) => e.name.toLowerCase() == categoryName.toLowerCase(),
-        // orElse: () => PredefinedCategory.other, // Handled by catch
-      );
-      // Create the Category object from the enum
-      return Category.fromPredefined(predefined);
-    } catch (e) {
-      log.warning(
-          "Could not find PredefinedCategory for name '$categoryName'. Defaulting to Other.");
-      // If name doesn't match any predefined enum, return a custom 'Other' or the name itself
-      return Category(
-          name:
-              categoryName); // Or Category.fromPredefined(PredefinedCategory.other)
-    }
-  }
+  // REMOVED: _findCategoryByName (no longer needed as form passes full Category object)
+  // Category _findCategoryByName(String categoryName) { ... }
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +31,22 @@ class AddEditExpensePage extends StatelessWidget {
     log.info(
         "[AddEditExpensePage] Build called. Editing: $isEditing, ExpenseId: $expenseId");
 
+    // Provide the necessary dependencies to the AddEditExpenseBloc
     return BlocProvider(
-      create: (context) => sl<AddEditExpenseBloc>(param1: expense),
+      create: (context) => sl<AddEditExpenseBloc>(
+        param1: expense, // Pass initial expense if editing
+        // We need to ensure that CategorizeTransactionUseCase and ExpenseRepository are registered in sl
+        // The create method in BlocProvider doesn't directly allow passing extra params like this easily.
+        // Instead, ensure AddEditExpenseBloc fetches dependencies from sl itself or modify sl registration.
+        // Assuming AddEditExpenseBloc constructor fetches from sl:
+        // create: (context) => sl<AddEditExpenseBloc>(param1: expense),
+        // OR If AddEditExpenseBloc doesn't use sl internally:
+        // create: (context) => AddEditExpenseBloc(
+        //    addExpenseUseCase: sl(), updateExpenseUseCase: sl(),
+        //    categorizeTransactionUseCase: sl(), expenseRepository: sl(), // Manually provide deps
+        //    initialExpense: expense,
+        // ),
+      ),
       child: BlocListener<AddEditExpenseBloc, AddEditExpenseState>(
         listener: (context, state) {
           log.info(
@@ -68,7 +68,8 @@ class AddEditExpensePage extends StatelessWidget {
             } else {
               log.warning(
                   "[AddEditExpensePage] Cannot pop context after successful save.");
-              context.goNamed('expenses_list'); // Fallback
+              context.goNamed(
+                  'expenses_list'); // Fallback using route name constant
             }
           } else if (state.status == FormStatus.error &&
               state.errorMessage != null) {
@@ -92,7 +93,6 @@ class AddEditExpensePage extends StatelessWidget {
             builder: (context, state) {
               log.info(
                   "[AddEditExpensePage] BlocBuilder building for status: ${state.status}");
-              // Animate between loading and form
               return AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: state.status == FormStatus.submitting
@@ -101,20 +101,16 @@ class AddEditExpensePage extends StatelessWidget {
                         child: CircularProgressIndicator())
                     : ExpenseForm(
                         key: const ValueKey('form'),
-                        initialExpense:
-                            state.initialExpense, // Use state's expense
+                        initialExpense: state.initialExpense,
+                        // UPDATED onSubmit signature to expect Category object
                         onSubmit:
-                            (title, amount, categoryName, accountId, date) {
-                          // Changed categoryId to categoryName
+                            (title, amount, categoryObject, accountId, date) {
                           log.info(
                               "[AddEditExpensePage] Form submitted. Dispatching SaveExpenseRequested.");
-                          // Find category object from name before dispatching
-                          final Category categoryObject =
-                              _findCategoryByName(categoryName);
+                          // Directly use the categoryObject passed from the form
                           context.read<AddEditExpenseBloc>().add(
                                 SaveExpenseRequested(
-                                  existingExpenseId:
-                                      expenseId, // Use expenseId from route param
+                                  existingExpenseId: expenseId,
                                   title: title,
                                   amount: amount,
                                   category:

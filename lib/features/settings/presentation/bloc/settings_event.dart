@@ -20,12 +20,21 @@ class UpdateTheme extends SettingsEvent {
   List<Object?> get props => [newMode];
 }
 
-// Event for changing the entire theme (e.g., Pastel Peach)
-class UpdateThemeIdentifier extends SettingsEvent {
+// Event for changing the palette / color variant
+class UpdatePaletteIdentifier extends SettingsEvent {
+  // RENAMED
   final String newIdentifier;
-  const UpdateThemeIdentifier(this.newIdentifier);
+  const UpdatePaletteIdentifier(this.newIdentifier); // RENAMED
   @override
   List<Object?> get props => [newIdentifier];
+}
+
+// Event for changing the UI Mode
+class UpdateUIMode extends SettingsEvent {
+  final UIMode newMode;
+  const UpdateUIMode(this.newMode);
+  @override
+  List<Object?> get props => [newMode];
 }
 
 // Event for changing the selected country

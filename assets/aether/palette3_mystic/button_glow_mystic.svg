@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="72">
+  <defs>
+    <radialGradient id="mysticButton" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#D0B3FF" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#1B0033" stop-opacity="0.3"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="72" rx="36" fill="url(#mysticButton)"/>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#300040" font-size="18" font-family="sans-serif">Cast & Save 🔮</text>
+</svg>

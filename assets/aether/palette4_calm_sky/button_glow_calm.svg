@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="72">
+  <defs>
+    <radialGradient id="calmButton" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#89CFF0" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#121F2E" stop-opacity="0.3"/>
+    </radialGradient>
+  </defs>
+  <rect width="256" height="72" rx="36" fill="url(#calmButton)"/>
+  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="#002B45" font-size="18" font-family="sans-serif">Add to Sky ☁️</text>
+</svg>

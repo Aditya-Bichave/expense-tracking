@@ -1,25 +1,27 @@
+// lib/features/settings/data/datasources/settings_local_data_source.dart
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:expense_tracker/core/theme/app_theme.dart'; // Import AppTheme for defaults
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import CountryInfo
-import 'package:expense_tracker/main.dart'; // Import logger
+// Removed: import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/main.dart';
 
-// Keys for SharedPreferences
-const String _themeModeKey =
-    'app_theme_mode_v2'; // Use v2 to avoid conflicts if migrating
-const String _themeIdentifierKey =
-    'app_theme_identifier_v1'; // Key for selected theme ID
-const String _selectedCountryCodeKey = 'app_selected_country_code_v1';
-const String _appLockEnabledKey = 'app_lock_enabled_v1';
-// Removed currency symbol key, derive from country
+// Import constants
+import 'package:expense_tracker/core/constants/pref_keys.dart';
+import 'package:expense_tracker/core/constants/app_constants.dart';
+import 'package:expense_tracker/core/data/countries.dart';
+
+// REMOVED Keys (moved to core/constants/pref_keys.dart)
 
 abstract class SettingsLocalDataSource {
   Future<void> saveThemeMode(ThemeMode mode);
   Future<ThemeMode> getThemeMode();
-  Future<void> saveThemeIdentifier(String identifier);
-  Future<String> getThemeIdentifier();
+  Future<void> savePaletteIdentifier(String identifier);
+  Future<String> getPaletteIdentifier();
+  Future<void> saveUIMode(UIMode mode);
+  Future<UIMode> getUIMode();
   Future<void> saveSelectedCountryCode(String countryCode);
-  Future<String?> getSelectedCountryCode(); // Can be null if never set
+  Future<String?> getSelectedCountryCode();
   Future<void> saveAppLockEnabled(bool enabled);
   Future<bool> getAppLockEnabled();
 }
@@ -31,8 +33,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
 
   @override
   Future<ThemeMode> getThemeMode() async {
-    final String? themeString = prefs.getString(_themeModeKey);
-    log.info("Getting Theme Mode: Stored value = '$themeString'");
+    // Use constant key
+    final String? themeString = prefs.getString(PrefKeys.themeMode);
     switch (themeString) {
       case 'light':
         return ThemeMode.light;
@@ -40,8 +42,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         return ThemeMode.dark;
       case 'system':
       default:
-        log.info("Defaulting to ThemeMode.system");
-        return ThemeMode.system; // Default to system
+        return SettingsState.defaultThemeMode;
     }
   }
 
@@ -59,56 +60,75 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         themeString = 'system';
         break;
     }
-    await prefs.setString(_themeModeKey, themeString);
-    log.info("Saved Theme Mode: '$themeString'");
+    // Use constant key
+    await prefs.setString(PrefKeys.themeMode, themeString);
+    log.info("[SettingsDS] Saved Theme Mode: '$themeString'");
   }
 
   @override
-  Future<String> getThemeIdentifier() async {
-    final identifier =
-        prefs.getString(_themeIdentifierKey) ?? AppTheme.defaultThemeId;
-    log.info("Getting Theme Identifier: Stored value = '$identifier'");
-    // Validate if the stored identifier is still valid
-    if (AppTheme.availableThemeIdentifiers.contains(identifier)) {
-      return identifier;
-    } else {
-      log.warning(
-          "Stored theme identifier '$identifier' is invalid. Defaulting to ${AppTheme.defaultThemeId}.");
-      return AppTheme.defaultThemeId; // Default if invalid
+  Future<String> getPaletteIdentifier() async {
+    // Use constant key and default from SettingsState
+    final identifier = prefs.getString(PrefKeys.paletteIdentifier) ??
+        SettingsState.defaultPaletteIdentifier;
+    return identifier;
+  }
+
+  @override
+  Future<void> savePaletteIdentifier(String identifier) async {
+    // Use constant key
+    await prefs.setString(PrefKeys.paletteIdentifier, identifier);
+    log.info("[SettingsDS] Saved Palette Identifier: '$identifier'");
+  }
+
+  @override
+  Future<UIMode> getUIMode() async {
+    // Use constant key
+    final String? modeString = prefs.getString(PrefKeys.uiMode);
+    switch (modeString) {
+      case 'elemental':
+        return UIMode.elemental;
+      case 'quantum':
+        return UIMode.quantum;
+      case 'aether':
+        return UIMode.aether;
+      default:
+        return SettingsState.defaultUIMode;
     }
   }
 
   @override
-  Future<void> saveThemeIdentifier(String identifier) async {
-    await prefs.setString(_themeIdentifierKey, identifier);
-    log.info("Saved Theme Identifier: '$identifier'");
+  Future<void> saveUIMode(UIMode mode) async {
+    // Use constant key
+    await prefs.setString(PrefKeys.uiMode, mode.name);
+    log.info("[SettingsDS] Saved UI Mode: '${mode.name}'");
   }
 
   @override
   Future<String?> getSelectedCountryCode() async {
-    final code = prefs.getString(_selectedCountryCodeKey);
-    log.info("Getting Selected Country Code: Stored value = '$code'");
-    // No default here, BLoC handles defaulting if null
+    // Use constant key
+    final code = prefs.getString(PrefKeys.selectedCountryCode);
     return code;
   }
 
   @override
   Future<void> saveSelectedCountryCode(String countryCode) async {
-    await prefs.setString(_selectedCountryCodeKey, countryCode);
-    log.info("Saved Selected Country Code: '$countryCode'");
+    // Use constant key
+    await prefs.setString(PrefKeys.selectedCountryCode, countryCode);
+    log.info("[SettingsDS] Saved Selected Country Code: '$countryCode'");
   }
 
   @override
   Future<bool> getAppLockEnabled() async {
-    final enabled =
-        prefs.getBool(_appLockEnabledKey) ?? false; // Default to false
-    log.info("Getting App Lock Enabled: Stored value = $enabled");
+    // Use constant key and default from AppConstants
+    final enabled = prefs.getBool(PrefKeys.appLockEnabled) ??
+        AppConstants.defaultAppLockEnabled;
     return enabled;
   }
 
   @override
   Future<void> saveAppLockEnabled(bool enabled) async {
-    await prefs.setBool(_appLockEnabledKey, enabled);
-    log.info("Saved App Lock Enabled: $enabled");
+    // Use constant key
+    await prefs.setBool(PrefKeys.appLockEnabled, enabled);
+    log.info("[SettingsDS] Saved App Lock Enabled: $enabled");
   }
 }

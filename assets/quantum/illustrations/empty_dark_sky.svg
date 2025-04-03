@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <defs>
+    <radialGradient id="starsky" cx="50%" cy="50%" r="80%">
+      <stop offset="0%" stop-color="#1E1E1E"/>
+      <stop offset="100%" stop-color="#121212"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#starsky)"/>
+  <circle cx="120" cy="100" r="2" fill="#FFFFFF" opacity="0.6"/>
+  <circle cx="360" cy="200" r="1.5" fill="#80DEEA"/>
+  <circle cx="260" cy="400" r="2" fill="#00BCD4" opacity="0.4"/>
+</svg>

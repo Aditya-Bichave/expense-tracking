@@ -9,8 +9,11 @@ import 'package:expense_tracker/features/settings/domain/repositories/data_manag
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:flutter/services.dart'; // Import Uint8List
-import 'dart:typed_data'; // Import Uint8List
+import 'package:flutter/services.dart';
+import 'dart:typed_data';
+
+// Import constants
+import 'package:expense_tracker/core/constants/app_constants.dart';
 
 class RestoreDataUseCase implements UseCase<void, NoParams> {
   final DataManagementRepository dataManagementRepository;
@@ -27,7 +30,7 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
       final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['json'],
-        withData: true, // ALWAYS request data bytes
+        withData: true, // Request data bytes
       );
 
       if (result == null || result.files.isEmpty) {
@@ -42,22 +45,16 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
       // 2. Read file content (Use bytes universally)
       log.info("[RestoreUseCase] Reading file content...");
       final Uint8List? fileBytes = pickedFile.bytes;
-
-      // --- CORRECTED: Declare jsonString *before* the if ---
       String jsonString;
-      // -----------------------------------------------------
 
       if (fileBytes == null) {
         log.severe("[RestoreUseCase] File picker did not return bytes.");
-        // Check path as fallback for non-web? Might be inconsistent.
         if (!kIsWeb && pickedFile.path != null) {
           log.info(
               "[RestoreUseCase] Attempting to read from path as fallback: ${pickedFile.path}");
           try {
             final file = File(pickedFile.path!);
-            final fallbackBytes = await file.readAsBytes();
-            // Assign to the already declared jsonString
-            jsonString = utf8.decode(fallbackBytes);
+            jsonString = await file.readAsString(); // Read as string directly
           } catch (e, s) {
             log.severe(
                 "[RestoreUseCase] Failed to read from path fallback.$e$s");
@@ -67,11 +64,8 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
           return const Left(RestoreFailure("Could not read file content."));
         }
       } else {
-        // If fileBytes is NOT null, decode them directly
         try {
-          // Decode bytes assuming UTF-8
-          // Assign to the already declared jsonString
-          jsonString = utf8.decode(fileBytes);
+          jsonString = utf8.decode(fileBytes); // Decode bytes assuming UTF-8
           log.info(
               "[RestoreUseCase] File content read and decoded (${jsonString.length} chars).");
         } catch (e, s) {
@@ -81,7 +75,7 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
         }
       }
 
-      // 3. Decode and Validate JSON (Now jsonString is guaranteed to be assigned if successful)
+      // 3. Decode and Validate JSON
       log.info("[RestoreUseCase] Decoding JSON...");
       Map<String, dynamic> decodedJson;
       try {
@@ -93,25 +87,34 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
       }
       log.info("[RestoreUseCase] JSON decoded.");
 
-      // Basic structure validation
-      if (!decodedJson.containsKey('data') ||
-          decodedJson['data'] is! Map ||
-          !decodedJson.containsKey('metadata')) {
+      // Basic structure validation using constants
+      if (!decodedJson.containsKey(AppConstants.backupDataKey) ||
+          decodedJson[AppConstants.backupDataKey] is! Map ||
+          !decodedJson.containsKey(AppConstants.backupMetaKey)) {
         log.warning(
-            "[RestoreUseCase] Invalid backup format: Missing 'data' or 'metadata'.");
+            "[RestoreUseCase] Invalid backup format: Missing '${AppConstants.backupDataKey}' or '${AppConstants.backupMetaKey}'.");
         return const Left(RestoreFailure("Invalid backup file structure."));
       }
 
-      final dataMap = decodedJson['data'] as Map<String, dynamic>;
+      // Further validation (optional but recommended)
+      // final metadata = decodedJson[AppConstants.backupMetaKey] as Map<String, dynamic>?;
+      // if (metadata?[AppConstants.backupFormatVersionKey] != AppConstants.backupFormatVersion) {
+      //    log.warning("[RestoreUseCase] Backup format version mismatch.");
+      //    // Decide whether to attempt restore or fail
+      //    // return Left(RestoreFailure("Backup file format version mismatch."));
+      // }
+
+      final dataMap =
+          decodedJson[AppConstants.backupDataKey] as Map<String, dynamic>;
 
       // 4. Deserialize data
       log.info("[RestoreUseCase] Deserializing data from JSON...");
       AllData allData;
       try {
-        allData = AllData.fromJson(dataMap);
+        allData = AllData.fromJson(dataMap); // fromJson uses constants now
         log.info("[RestoreUseCase] Deserialization successful.");
       } catch (e, s) {
-        log.severe("[RestoreUseCase] Error during deserialization");
+        log.severe("[RestoreUseCase] Error during deserialization$e$s");
         return Left(RestoreFailure(
             "Failed to parse backup data content: ${e.toString()}"));
       }
@@ -122,7 +125,7 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
 
       return restoreResult.fold(
         (failure) {
-          log.severe(// Use severe for repository failure
+          log.severe(
               "[RestoreUseCase] Repository restore failed: ${failure.message}");
           return Left(failure);
         },
@@ -132,14 +135,11 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
         },
       );
     } on PlatformException catch (e, s) {
-      log.severe(
-          // Use severe for platform exceptions
-          "[RestoreUseCase] PlatformException during file picking$e$s");
+      log.severe("[RestoreUseCase] PlatformException during file picking$e$s");
       return Left(
           RestoreFailure("Could not pick file: ${e.message} (${e.code})"));
     } catch (e, s) {
-      log.severe(
-          "[RestoreUseCase] Unexpected error in restore process$e$s"); // Use severe
+      log.severe("[RestoreUseCase] Unexpected error in restore process$e$s");
       return Left(RestoreFailure(
           "An unexpected error occurred during restore: ${e.toString()}"));
     }

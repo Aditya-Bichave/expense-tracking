@@ -4,7 +4,13 @@
 enum DataChangeReason { added, updated, deleted }
 
 // Describes the type of data affected
-enum DataChangeType { account, income, expense, settings } // Added settings
+enum DataChangeType {
+  account,
+  income,
+  expense,
+  settings,
+  category
+} // Added settings
 
 class DataChangedEvent {
   final DataChangeType type;
