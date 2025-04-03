@@ -8,22 +8,19 @@ abstract class SettingsRepository {
   Future<Either<Failure, void>> saveThemeMode(ThemeMode mode);
   Future<Either<Failure, ThemeMode>> getThemeMode();
 
-  // Theme Identifier
-  Future<Either<Failure, void>> saveThemeIdentifier(String identifier);
-  Future<Either<Failure, String>>
-      getThemeIdentifier(); // Returns default if not found
+  // Palette Identifier
+  Future<Either<Failure, void>> savePaletteIdentifier(
+      String identifier); // RENAMED
+  Future<Either<Failure, String>> getPaletteIdentifier(); // RENAMED
 
-  // --- ADDED: UI Mode ---
+  // UI Mode
   Future<Either<Failure, void>> saveUIMode(UIMode mode);
   Future<Either<Failure, UIMode>> getUIMode();
-  // --- END ADDED ---
 
   // Country & Currency
   Future<Either<Failure, void>> saveSelectedCountryCode(String countryCode);
-  Future<Either<Failure, String?>>
-      getSelectedCountryCode(); // Nullable if not set
-  Future<Either<Failure, String>>
-      getCurrencySymbol(); // Derived from country code
+  Future<Either<Failure, String?>> getSelectedCountryCode();
+  Future<Either<Failure, String>> getCurrencySymbol();
 
   // App Lock
   Future<Either<Failure, void>> saveAppLockEnabled(bool enabled);

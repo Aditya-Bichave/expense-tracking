@@ -14,10 +14,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, ThemeMode>> getThemeMode() async {
-    log.info("[SettingsRepo] Getting theme mode.");
+    // log.info("[SettingsRepo] Getting theme mode."); // Log less noise
     try {
       final themeMode = await localDataSource.getThemeMode();
-      log.info("[SettingsRepo] Theme mode retrieved: ${themeMode.name}");
+      // log.info("[SettingsRepo] Theme mode retrieved: ${themeMode.name}");
       return Right(themeMode);
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting theme mode$e$s');
@@ -41,41 +41,46 @@ class SettingsRepositoryImpl implements SettingsRepository {
   }
 
   @override
-  Future<Either<Failure, String>> getThemeIdentifier() async {
-    log.info("[SettingsRepo] Getting theme identifier.");
+  Future<Either<Failure, String>> getPaletteIdentifier() async {
+    // RENAMED
+    // log.info("[SettingsRepo] Getting palette identifier."); // Log less noise
     try {
-      final identifier = await localDataSource.getThemeIdentifier();
-      log.info("[SettingsRepo] Theme identifier retrieved: $identifier");
+      final identifier =
+          await localDataSource.getPaletteIdentifier(); // RENAMED
+      // log.info("[SettingsRepo] Palette identifier retrieved: $identifier");
       return Right(identifier);
     } catch (e, s) {
-      log.log(
-          Level.SEVERE, '[SettingsRepo] Error getting theme identifier$e$s');
-      return Left(
-          SettingsFailure('Failed to load theme identifier: ${e.toString()}'));
+      log.log(Level.SEVERE,
+          '[SettingsRepo] Error getting palette identifier$e$s'); // RENAMED
+      return Left(SettingsFailure(
+          'Failed to load palette identifier: ${e.toString()}')); // RENAMED
     }
   }
 
   @override
-  Future<Either<Failure, void>> saveThemeIdentifier(String identifier) async {
-    log.info("[SettingsRepo] Saving theme identifier: $identifier");
+  Future<Either<Failure, void>> savePaletteIdentifier(String identifier) async {
+    // RENAMED
+    log.info(
+        "[SettingsRepo] Saving palette identifier: $identifier"); // RENAMED
     try {
-      await localDataSource.saveThemeIdentifier(identifier);
-      log.info("[SettingsRepo] Theme identifier saved successfully.");
+      await localDataSource.savePaletteIdentifier(identifier); // RENAMED
+      log.info(
+          "[SettingsRepo] Palette identifier saved successfully."); // RENAMED
       return const Right(null);
     } catch (e, s) {
-      log.log(Level.SEVERE, '[SettingsRepo] Error saving theme identifier$e$s');
-      return Left(
-          SettingsFailure('Failed to save theme identifier: ${e.toString()}'));
+      log.log(Level.SEVERE,
+          '[SettingsRepo] Error saving palette identifier$e$s'); // RENAMED
+      return Left(SettingsFailure(
+          'Failed to save palette identifier: ${e.toString()}')); // RENAMED
     }
   }
 
-  // --- ADDED: UI Mode ---
   @override
   Future<Either<Failure, UIMode>> getUIMode() async {
-    log.info("[SettingsRepo] Getting UI mode.");
+    // log.info("[SettingsRepo] Getting UI mode."); // Log less noise
     try {
       final uiMode = await localDataSource.getUIMode();
-      log.info("[SettingsRepo] UI mode retrieved: ${uiMode.name}");
+      // log.info("[SettingsRepo] UI mode retrieved: ${uiMode.name}");
       return Right(uiMode);
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting UI mode$e$s');
@@ -97,14 +102,13 @@ class SettingsRepositoryImpl implements SettingsRepository {
           SettingsFailure('Failed to save UI mode setting: ${e.toString()}'));
     }
   }
-  // --- END ADDED ---
 
   @override
   Future<Either<Failure, String?>> getSelectedCountryCode() async {
-    log.info("[SettingsRepo] Getting selected country code.");
+    // log.info("[SettingsRepo] Getting selected country code."); // Log less noise
     try {
       final code = await localDataSource.getSelectedCountryCode();
-      log.info("[SettingsRepo] Selected country code retrieved: $code");
+      // log.info("[SettingsRepo] Selected country code retrieved: $code");
       return Right(code);
     } catch (e, s) {
       log.log(Level.SEVERE,
@@ -132,7 +136,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, String>> getCurrencySymbol() async {
-    log.info("[SettingsRepo] Deriving currency symbol.");
+    // log.info("[SettingsRepo] Deriving currency symbol."); // Log less noise
     try {
       final codeEither = await getSelectedCountryCode();
       return codeEither.fold(
@@ -144,8 +148,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
         },
         (code) {
           final symbol = SettingsState.getCurrencyForCountry(code);
-          log.info(
-              "[SettingsRepo] Derived currency symbol: $symbol for code: $code");
+          // log.info("[SettingsRepo] Derived currency symbol: $symbol for code: $code");
           return Right(symbol);
         },
       );
@@ -159,10 +162,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, bool>> getAppLockEnabled() async {
-    log.info("[SettingsRepo] Getting app lock status.");
+    // log.info("[SettingsRepo] Getting app lock status."); // Log less noise
     try {
       final isEnabled = await localDataSource.getAppLockEnabled();
-      log.info("[SettingsRepo] App lock status retrieved: $isEnabled");
+      // log.info("[SettingsRepo] App lock status retrieved: $isEnabled");
       return Right(isEnabled);
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting app lock status$e$s');

@@ -6,8 +6,8 @@ import 'package:expense_tracker/main.dart'; // Import logger
 
 // Keys for SharedPreferences
 const String _themeModeKey = 'app_theme_mode_v2';
-const String _themeIdentifierKey = 'app_theme_identifier_v1';
-const String _uiModeKey = 'app_ui_mode_v1'; // --- ADDED ---
+const String _paletteIdentifierKey = 'app_palette_identifier_v1'; // RENAMED
+const String _uiModeKey = 'app_ui_mode_v1';
 const String _selectedCountryCodeKey = 'app_selected_country_code_v1';
 const String _appLockEnabledKey = 'app_lock_enabled_v1';
 
@@ -16,18 +16,17 @@ abstract class SettingsLocalDataSource {
   Future<void> saveThemeMode(ThemeMode mode);
   Future<ThemeMode> getThemeMode();
 
-  // Theme Identifier (Color Variant)
-  Future<void> saveThemeIdentifier(String identifier);
-  Future<String> getThemeIdentifier();
+  // Palette Identifier
+  Future<void> savePaletteIdentifier(String identifier); // RENAMED
+  Future<String> getPaletteIdentifier(); // RENAMED
 
-  // --- ADDED: UI Mode ---
+  // UI Mode
   Future<void> saveUIMode(UIMode mode);
   Future<UIMode> getUIMode();
-  // --- END ADDED ---
 
   // Country
   Future<void> saveSelectedCountryCode(String countryCode);
-  Future<String?> getSelectedCountryCode(); // Can be null if never set
+  Future<String?> getSelectedCountryCode();
 
   // App Lock
   Future<void> saveAppLockEnabled(bool enabled);
@@ -42,7 +41,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<ThemeMode> getThemeMode() async {
     final String? themeString = prefs.getString(_themeModeKey);
-    log.info("[SettingsDS] Getting Theme Mode: Stored value = '$themeString'");
+    // log.info("[SettingsDS] Getting Theme Mode: Stored value = '$themeString'"); // Log less noise
     switch (themeString) {
       case 'light':
         return ThemeMode.light;
@@ -50,7 +49,6 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
         return ThemeMode.dark;
       case 'system':
       default:
-        // log.info("Defaulting to ThemeMode.system"); // Covered by SettingsState default
         return SettingsState.defaultThemeMode;
     }
   }
@@ -74,32 +72,26 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   }
 
   @override
-  Future<String> getThemeIdentifier() async {
-    final identifier = prefs.getString(_themeIdentifierKey) ??
-        SettingsState.defaultThemeIdentifier;
-    log.info(
-        "[SettingsDS] Getting Theme Identifier: Stored value = '$identifier'");
-    // Validate if the stored identifier is still valid
-    if (AppTheme.availableThemeIdentifiers.contains(identifier)) {
-      return identifier;
-    } else {
-      log.warning(
-          "[SettingsDS] Stored theme identifier '$identifier' is invalid. Defaulting to ${SettingsState.defaultThemeIdentifier}.");
-      return SettingsState.defaultThemeIdentifier; // Default if invalid
-    }
+  Future<String> getPaletteIdentifier() async {
+    // RENAMED
+    final identifier = prefs.getString(_paletteIdentifierKey) ??
+        SettingsState.defaultPaletteIdentifier;
+    // log.info("[SettingsDS] Getting Palette Identifier: Stored value = '$identifier'"); // Log less noise
+    // Basic validation could happen here, but AppTheme handles fallbacks better
+    return identifier;
   }
 
   @override
-  Future<void> saveThemeIdentifier(String identifier) async {
-    await prefs.setString(_themeIdentifierKey, identifier);
-    log.info("[SettingsDS] Saved Theme Identifier: '$identifier'");
+  Future<void> savePaletteIdentifier(String identifier) async {
+    // RENAMED
+    await prefs.setString(_paletteIdentifierKey, identifier);
+    log.info("[SettingsDS] Saved Palette Identifier: '$identifier'");
   }
 
-  // --- ADDED: UI Mode Methods ---
   @override
   Future<UIMode> getUIMode() async {
     final String? modeString = prefs.getString(_uiModeKey);
-    log.info("[SettingsDS] Getting UI Mode: Stored value = '$modeString'");
+    // log.info("[SettingsDS] Getting UI Mode: Stored value = '$modeString'"); // Log less noise
     switch (modeString) {
       case 'elemental':
         return UIMode.elemental;
@@ -108,24 +100,20 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
       case 'aether':
         return UIMode.aether;
       default:
-        // log.info("Defaulting to UIMode.elemental"); // Covered by SettingsState default
         return SettingsState.defaultUIMode;
     }
   }
 
   @override
   Future<void> saveUIMode(UIMode mode) async {
-    await prefs.setString(_uiModeKey, mode.name); // Store enum name
+    await prefs.setString(_uiModeKey, mode.name);
     log.info("[SettingsDS] Saved UI Mode: '${mode.name}'");
   }
-  // --- END ADDED ---
 
   @override
   Future<String?> getSelectedCountryCode() async {
     final code = prefs.getString(_selectedCountryCodeKey);
-    log.info(
-        "[SettingsDS] Getting Selected Country Code: Stored value = '$code'");
-    // No default here, BLoC handles defaulting if null
+    // log.info("[SettingsDS] Getting Selected Country Code: Stored value = '$code'"); // Log less noise
     return code;
   }
 
@@ -139,7 +127,7 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   Future<bool> getAppLockEnabled() async {
     final enabled = prefs.getBool(_appLockEnabledKey) ??
         SettingsState.defaultAppLockEnabled;
-    log.info("[SettingsDS] Getting App Lock Enabled: Stored value = $enabled");
+    // log.info("[SettingsDS] Getting App Lock Enabled: Stored value = $enabled"); // Log less noise
     return enabled;
   }
 

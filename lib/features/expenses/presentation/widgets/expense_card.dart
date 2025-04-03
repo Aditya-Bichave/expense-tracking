@@ -1,11 +1,12 @@
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // To get account name
-import 'package:expense_tracker/core/theme/app_theme.dart'; // For aether icons maybe
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
@@ -17,18 +18,37 @@ class ExpenseCard extends StatelessWidget {
     this.onTap,
   });
 
-  // --- Placeholder for Aether Icons ---
-  IconData _getAetherExpenseIcon(String categoryName, String themeId) {
-    // TODO: Implement logic to return specific Aether icons based on themeId and category
-    // Example:
-    // if (themeId == AppTheme.aetherGardenThemeId) {
-    //    if (categoryName.toLowerCase() == 'food') return Icons.spa; // Placeholder leaf
-    // }
-    return _getElementalCategoryIcon(
-        categoryName); // Fallback to default elemental icon
+  // Helper to select the correct icon based on UI mode
+  Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
+    final theme = Theme.of(context);
+    // Default Elemental Icon
+    IconData defaultIconData = _getElementalCategoryIcon(expense.category.name);
+    String? svgPath;
+    String categoryKey =
+        expense.category.name.toLowerCase(); // Use lowercase for map keys
+
+    if (modeTheme != null) {
+      svgPath =
+          modeTheme.assets.getCategoryIcon(categoryKey, // Use normalized key
+              defaultPath: '' // Fallback handled below
+              );
+      if (svgPath.isEmpty) svgPath = null;
+    }
+
+    if (svgPath != null) {
+      return SvgPicture.asset(
+        svgPath,
+        width: 22, height: 22, // Consistent size
+        colorFilter: ColorFilter.mode(
+            theme.colorScheme.onSecondaryContainer, BlendMode.srcIn),
+      );
+    } else {
+      return Icon(defaultIconData,
+          size: 22, color: theme.colorScheme.onSecondaryContainer);
+    }
   }
 
-  // Helper function to get an icon based on category name (Example implementation)
+  // Helper function to get an Elemental icon based on category name
   IconData _getElementalCategoryIcon(String categoryName) {
     switch (categoryName.toLowerCase()) {
       case 'food':
@@ -45,8 +65,14 @@ class ExpenseCard extends StatelessWidget {
         return Icons.local_hospital_outlined;
       case 'shopping':
         return Icons.shopping_bag_outlined;
+      case 'groceries':
+        return Icons.shopping_cart_outlined;
+      case 'subscription':
+        return Icons.subscriptions_outlined;
+      case 'medical':
+        return Icons.medical_services_outlined;
       default:
-        return Icons.label_outline; // Default icon
+        return Icons.label_outline;
     }
   }
 
@@ -55,90 +81,54 @@ class ExpenseCard extends StatelessWidget {
     final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
-    final uiMode = settingsState.uiMode;
+    final modeTheme = context.modeTheme; // Get custom theme extension
 
-    // Determine styles based on UI mode
-    final bool isQuantum = uiMode == UIMode.quantum;
-    final bool isAether = uiMode == UIMode.aether;
-    final EdgeInsets cardPadding = isQuantum
-        ? const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)
-        : const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
-    final double iconSize = isQuantum ? 18 : 22; // Smaller icon for Quantum
-    final double spacing = isQuantum ? 10.0 : 16.0;
-    final TextStyle? titleStyle = isQuantum
-        ? theme.textTheme.bodyMedium
-            ?.copyWith(fontWeight: FontWeight.w500) // Less emphasis on title
-        : theme.textTheme.titleMedium;
-    final TextStyle? amountStyle = isQuantum
-        ? theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500, color: theme.colorScheme.error)
-        : theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.error, fontWeight: FontWeight.bold);
-    final IconData displayIcon = isAether
-        ? _getAetherExpenseIcon(
-            expense.category.name, settingsState.selectedThemeIdentifier)
-        : _getElementalCategoryIcon(expense.category.name);
-
-    // Get account name - needs AccountListBloc to be available
     final accountState = context.watch<AccountListBloc>().state;
-    String accountName = '...'; // Placeholder while loading/error
+    String accountName = '...'; // Loading/Unknown state
     if (accountState is AccountListLoaded) {
       try {
         accountName = accountState.accounts
             .firstWhere((acc) => acc.id == expense.accountId)
             .name;
       } catch (_) {
-        accountName = 'Deleted'; // Handle deleted account
+        accountName = 'Deleted';
       }
     }
 
     return Card(
-      // Card theme handles margin, elevation, shape
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: cardPadding, // Apply conditional padding
+          padding: theme.listTileTheme.contentPadding ??
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Icon based on category
               CircleAvatar(
-                backgroundColor: isAether
-                    ? theme.colorScheme.tertiaryContainer
-                    : theme.colorScheme.secondaryContainer,
-                child: Icon(
-                  displayIcon,
-                  size: iconSize,
-                  color: isAether
-                      ? theme.colorScheme.onTertiaryContainer
-                      : theme.colorScheme.onSecondaryContainer,
-                ),
+                backgroundColor: theme.colorScheme.secondaryContainer,
+                child: _buildIcon(context, modeTheme), // Use helper
               ),
-              SizedBox(width: spacing),
-              // Title, Category, Account, Date
+              SizedBox(width: theme.listTileTheme.horizontalTitleGap ?? 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(expense.title,
-                        style: titleStyle,
+                        style: theme.textTheme.titleMedium,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
-                    SizedBox(height: isQuantum ? 0 : 2), // Less space Quantum
+                    const SizedBox(height: 2),
                     Text(
-                      '${expense.category.displayName} ${isQuantum ? "" : "• $accountName"}', // Hide account name in Quantum card
+                      '${expense.category.displayName} • $accountName',
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: isQuantum ? 0 : 2),
+                    const SizedBox(height: 2),
                     Text(
-                      // Show only date in Quantum for brevity
-                      isQuantum
-                          ? DateFormatter.formatDate(expense.date)
-                          : DateFormatter.formatDateTime(expense.date),
+                      DateFormatter.formatDateTime(expense.date),
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant
                               .withOpacity(0.8)),
@@ -146,11 +136,14 @@ class ExpenseCard extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: spacing),
-              // Amount
+              const SizedBox(width: 16),
               Text(
                 CurrencyFormatter.format(expense.amount, currencySymbol),
-                style: amountStyle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: modeTheme?.expenseGlowColor ??
+                      theme.colorScheme.error, // Use glow or default error
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

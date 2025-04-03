@@ -46,7 +46,6 @@ class AssetAccount extends Equatable {
       case AssetType.investment:
         return Icons.trending_up;
       case AssetType.other:
-      default:
         return Icons.credit_card; // Or Icons.help_outline
     }
   }

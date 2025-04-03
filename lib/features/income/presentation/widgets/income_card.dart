@@ -1,11 +1,12 @@
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // Import
-import 'package:expense_tracker/core/theme/app_theme.dart'; // For aether icons maybe
+import 'package:flutter_svg/flutter_svg.dart';
 
 class IncomeCard extends StatelessWidget {
   final Income income;
@@ -17,14 +18,52 @@ class IncomeCard extends StatelessWidget {
     this.onTap,
   });
 
-  // --- Placeholder for Aether Icons ---
-  IconData _getAetherIncomeIcon(String categoryName, String themeId) {
-    // TODO: Implement logic to return specific Aether icons based on themeId and category
-    // Example:
-    // if (themeId == AppTheme.aetherGardenThemeId) {
-    //    if (categoryName.toLowerCase() == 'salary') return Icons.water_drop; // Placeholder raindrop
-    // }
-    return Icons.arrow_upward; // Fallback to default elemental icon
+  // Helper to select the correct icon based on UI mode
+  Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
+    final theme = Theme.of(context);
+    // Default Elemental Icon
+    IconData defaultIconData =
+        _getElementalIncomeCategoryIcon(income.category.name);
+    String? svgPath;
+    String categoryKey = income.category.name.toLowerCase();
+
+    if (modeTheme != null) {
+      svgPath =
+          modeTheme.assets.getCategoryIcon(categoryKey, // Use normalized key
+              defaultPath: '' // Fallback handled below
+              );
+      if (svgPath.isEmpty) svgPath = null;
+    }
+
+    if (svgPath != null) {
+      return SvgPicture.asset(
+        svgPath,
+        width: 22, height: 22,
+        colorFilter: ColorFilter.mode(
+            Colors.green.shade800, BlendMode.srcIn), // Use income color
+      );
+    } else {
+      return Icon(defaultIconData,
+          size: 22, color: Colors.green.shade800); // Use income color
+    }
+  }
+
+  // Helper function to get an Elemental icon based on income category name
+  IconData _getElementalIncomeCategoryIcon(String categoryName) {
+    switch (categoryName.toLowerCase()) {
+      case 'salary':
+        return Icons.work_outline;
+      case 'bonus':
+        return Icons.card_giftcard_outlined;
+      case 'freelance':
+        return Icons.computer_outlined;
+      case 'gift':
+        return Icons.cake_outlined;
+      case 'interest':
+        return Icons.account_balance_outlined;
+      default:
+        return Icons.attach_money;
+    }
   }
 
   @override
@@ -32,30 +71,8 @@ class IncomeCard extends StatelessWidget {
     final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
-    final uiMode = settingsState.uiMode;
+    final modeTheme = context.modeTheme;
 
-    // Determine styles based on UI mode
-    final bool isQuantum = uiMode == UIMode.quantum;
-    final bool isAether = uiMode == UIMode.aether;
-    final EdgeInsets cardPadding = isQuantum
-        ? const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)
-        : const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
-    final double iconSize = isQuantum ? 18 : 22;
-    final double spacing = isQuantum ? 10.0 : 16.0;
-    final TextStyle? titleStyle = isQuantum
-        ? theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)
-        : theme.textTheme.titleMedium;
-    final TextStyle? amountStyle = isQuantum
-        ? theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500, color: Colors.green.shade700)
-        : theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold, color: Colors.green.shade700);
-    final IconData displayIcon = isAether
-        ? _getAetherIncomeIcon(
-            income.category.name, settingsState.selectedThemeIdentifier)
-        : Icons.arrow_upward;
-
-    // Account Name - Fetching handled in IncomeListPage's BlocBuilder now
     final accountState = context.watch<AccountListBloc>().state;
     String accountName = '...';
     if (accountState is AccountListLoaded) {
@@ -68,59 +85,47 @@ class IncomeCard extends StatelessWidget {
       }
     }
 
+    final Color incomeColor = Colors.green.shade700; // Define base income color
+    final Color incomeIconBgColor = Colors.green.shade100;
+
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: cardPadding,
+          padding: theme.listTileTheme.contentPadding ??
+              const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Icon for Income
               CircleAvatar(
-                backgroundColor: isAether
-                    ? theme.colorScheme.tertiaryContainer
-                    : Colors.green.shade100,
-                child: Icon(displayIcon,
-                    color: isAether
-                        ? theme.colorScheme.onTertiaryContainer
-                        : Colors.green.shade800,
-                    size: iconSize),
+                backgroundColor: incomeIconBgColor, // Specific income icon BG
+                child: _buildIcon(context, modeTheme),
               ),
-              SizedBox(width: spacing),
-              // Title, Category, Date, Notes
+              SizedBox(width: theme.listTileTheme.horizontalTitleGap ?? 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(income.title,
-                        style: titleStyle,
+                        style: theme.textTheme.titleMedium,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
-                    SizedBox(height: isQuantum ? 0 : 2),
+                    const SizedBox(height: 2),
                     Text(
-                      // Show category and account name (conditionally)
-                      '${income.category.name} ${isQuantum ? "" : "• $accountName"}',
+                      '${income.category.name} • $accountName',
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    SizedBox(height: isQuantum ? 0 : 2),
                     Text(
-                      // Show date
-                      isQuantum
-                          ? DateFormatter.formatDate(income.date)
-                          : DateFormatter.formatDateTime(income.date),
+                      DateFormatter.formatDateTime(income.date),
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant
                               .withOpacity(0.8)),
                     ),
-                    // Display notes if available (maybe hide in Quantum?)
-                    if (!isQuantum &&
-                        income.notes != null &&
-                        income.notes!.isNotEmpty)
+                    if (income.notes != null && income.notes!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Row(
@@ -145,11 +150,14 @@ class IncomeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(width: spacing),
-              // Amount
+              const SizedBox(width: 16),
               Text(
                 CurrencyFormatter.format(income.amount, currencySymbol),
-                style: amountStyle,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: modeTheme?.incomeGlowColor ??
+                      incomeColor, // Use glow or default income color
+                ),
               ),
             ],
           ),

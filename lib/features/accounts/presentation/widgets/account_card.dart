@@ -1,9 +1,10 @@
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/core/theme/app_theme.dart'; // For aether icons maybe
+import 'package:flutter_svg/flutter_svg.dart'; // Import for SVG
 
 class AccountCard extends StatelessWidget {
   final AssetAccount account;
@@ -15,96 +16,98 @@ class AccountCard extends StatelessWidget {
     this.onTap,
   });
 
-  // --- Placeholder for Aether Icons ---
-  IconData _getAetherAccountIcon(AssetType type, String themeId) {
-    // TODO: Implement logic to return specific Aether icons based on themeId
-    // Example:
-    // if (themeId == AppTheme.aetherGardenThemeId) {
-    //   switch(type) {
-    //      case AssetType.bank: return Icons.eco; // Placeholder
-    //      ...
-    //   }
-    // } else if (themeId == AppTheme.aetherConstellationThemeId) { ... }
-    return account.iconData; // Fallback to default elemental icon
+  // Helper to select the correct icon based on UI mode
+  Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
+    final theme = Theme.of(context);
+    IconData defaultIconData = account.iconData; // Fallback Material icon
+    String? svgPath;
+
+    if (modeTheme != null) {
+      // Try to get SVG path from theme extension based on account type name
+      svgPath = modeTheme.assets.getCategoryIcon(
+          account.type.name, // e.g., 'bank', 'cash'
+          defaultPath:
+              '' // No default SVG path needed here, will fallback to IconData
+          );
+      if (svgPath.isEmpty) svgPath = null; // Treat empty string as no SVG found
+    }
+
+    if (svgPath != null) {
+      // Use SVG if path is available
+      return SvgPicture.asset(
+        svgPath,
+        width: 24,
+        height: 24,
+        colorFilter: ColorFilter.mode(
+            theme.colorScheme.onSecondaryContainer, // Use themed color
+            BlendMode.srcIn),
+      );
+    } else {
+      // Fallback to Material Icon
+      return Icon(
+        defaultIconData,
+        size: 24,
+        color: theme.colorScheme.onSecondaryContainer,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
-    final uiMode = settingsState.uiMode;
     final theme = Theme.of(context);
+    // Get the custom theme extension
+    final modeTheme = context.modeTheme;
 
-    // Determine styles based on UI mode
-    final bool isQuantum = uiMode == UIMode.quantum;
-    final bool isAether = uiMode == UIMode.aether;
-    final EdgeInsets cardPadding = isQuantum
-        ? const EdgeInsets.symmetric(
-            horizontal: 10.0, vertical: 6.0) // Quantum: Tighter
-        : const EdgeInsets.symmetric(
-            horizontal: 16.0, vertical: 12.0); // Elemental/Aether: Default
-    final double iconSize = isQuantum ? 20 : 24;
-    final double spacing = isQuantum ? 12.0 : 16.0;
-    final TextStyle? titleStyle = isQuantum
-        ? theme.textTheme.titleSmall // Quantum: Smaller title
-        : theme.textTheme.titleMedium;
-    final TextStyle? balanceStyle = isQuantum
-        ? theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)
-        : theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold);
-    final IconData displayIcon = isAether
-        ? _getAetherAccountIcon(
-            account.type, settingsState.selectedThemeIdentifier)
-        : account.iconData; // Use standard icon for Elemental/Quantum
-
-    // Determine balance color based on theme
     final balanceColor = account.currentBalance >= 0
-        ? (isQuantum
-            ? theme.colorScheme.onSurface
-            : theme.colorScheme.primary) // Black/White in Quantum
+        ? theme.colorScheme
+            .primary // Or use specific income color from theme/palette
         : theme.colorScheme.error;
 
+    // Use CardTheme from the base theme
     return Card(
-      // Card Theme handles margin, elevation, shape based on mode
+      // Properties like elevation, margin, shape are now from theme.cardTheme
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: cardPadding, // Apply conditional padding
+          padding: theme.listTileTheme.contentPadding ??
+              const EdgeInsets.symmetric(
+                  horizontal: 16.0, vertical: 12.0), // Use theme padding
           child: Row(
             children: [
-              // Icon with themed background
               CircleAvatar(
-                // Aether might have custom background/shape later
-                backgroundColor: isAether
-                    ? theme.colorScheme.tertiaryContainer
-                    : theme.colorScheme.secondaryContainer,
-                child: Icon(displayIcon,
-                    size: iconSize,
-                    color: isAether
-                        ? theme.colorScheme.onTertiaryContainer
-                        : theme.colorScheme.onSecondaryContainer),
+                backgroundColor: theme.colorScheme.secondaryContainer,
+                child: _buildIcon(context, modeTheme), // Use helper for icon
               ),
-              SizedBox(width: spacing),
-              // Name and Type
+              SizedBox(
+                  width: theme.listTileTheme.horizontalTitleGap ??
+                      16.0), // Use theme spacing
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(account.name,
-                        style: titleStyle, overflow: TextOverflow.ellipsis),
-                    if (!isQuantum) // Only show type in non-quantum modes for density
-                      Text(account.typeName,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant)),
+                        style:
+                            theme.textTheme.titleMedium, // Use theme text style
+                        overflow: TextOverflow.ellipsis),
+                    Text(account.typeName,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme
+                                .onSurfaceVariant) // Use theme text style
+                        ),
                   ],
                 ),
               ),
-              SizedBox(width: spacing),
-              // Balance
+              const SizedBox(width: 16.0),
               Text(
                 CurrencyFormatter.format(
                     account.currentBalance, currencySymbol),
-                style: balanceStyle?.copyWith(color: balanceColor),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: balanceColor,
+                ),
               ),
             ],
           ),

@@ -7,7 +7,7 @@ enum PackageInfoStatus { initial, loading, loaded, error }
 
 enum DataManagementStatus { initial, loading, success, error }
 
-// --- UI Mode Enum --- ADDED
+// --- UI Mode Enum ---
 enum UIMode { elemental, quantum, aether }
 
 // --- Country Info Helper ---
@@ -15,12 +15,10 @@ class CountryInfo {
   final String code; // e.g., 'US', 'GB', 'IN'
   final String name; // e.g., 'United States', 'United Kingdom', 'India'
   final String currencySymbol; // e.g., '$', '£', '₹'
-  // Add flag asset path or emoji if desired
 
   const CountryInfo(
       {required this.code, required this.name, required this.currencySymbol});
 
-  // Make code the equality comparison point
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -36,13 +34,11 @@ class SettingsState extends Equatable {
   // --- Main settings ---
   final SettingsStatus status;
   final ThemeMode themeMode;
-  final String
-      selectedThemeIdentifier; // ID for the chosen theme (e.g., 'elemental')
-  final UIMode uiMode; // --- ADDED: UI Mode state ---
-  final String selectedCountryCode; // e.g., 'US', 'IN'
-  // currencySymbol is now a getter based on selectedCountryCode
+  final String paletteIdentifier; // RENAMED from selectedThemeIdentifier
+  final UIMode uiMode;
+  final String selectedCountryCode;
   final bool isAppLockEnabled;
-  final String? errorMessage; // Error for main settings loading/saving
+  final String? errorMessage;
 
   // --- Package info ---
   final PackageInfoStatus packageInfoStatus;
@@ -51,18 +47,16 @@ class SettingsState extends Equatable {
 
   // --- Data Management ---
   final DataManagementStatus dataManagementStatus;
-  final String? dataManagementMessage; // For success/error feedback
+  final String? dataManagementMessage;
 
   // --- Static Defaults & Data ---
   static const defaultThemeMode = ThemeMode.system;
-  // RENAMED from defaultThemeId
-  static const defaultThemeIdentifier = AppTheme.elementalThemeId;
-  static const defaultUIMode =
-      UIMode.elemental; // --- ADDED: Default UI Mode ---
-  static const defaultCountryCode = 'US'; // Default country
+  static const defaultPaletteIdentifier =
+      AppTheme.elementalPalette1; // Use specific palette ID
+  static const defaultUIMode = UIMode.elemental;
+  static const defaultCountryCode = 'US';
   static const defaultAppLockEnabled = false;
 
-  // Define country list and currency map
   static const List<CountryInfo> availableCountries = [
     CountryInfo(code: 'US', name: 'United States', currencySymbol: '\$'),
     CountryInfo(code: 'GB', name: 'United Kingdom', currencySymbol: '£'),
@@ -72,27 +66,24 @@ class SettingsState extends Equatable {
     CountryInfo(code: 'AU', name: 'Australia', currencySymbol: '\$'), // AUD
     CountryInfo(code: 'JP', name: 'Japan', currencySymbol: '¥'),
     CountryInfo(code: 'CH', name: 'Switzerland', currencySymbol: 'CHF'),
-    // Add more countries as needed
   ];
 
-  // Helper to get currency symbol based on country code
   static String getCurrencyForCountry(String? countryCode) {
-    final codeToUse = countryCode ?? defaultCountryCode; // Use default if null
+    final codeToUse = countryCode ?? defaultCountryCode;
     return availableCountries
         .firstWhere((c) => c.code == codeToUse,
-            orElse: () => availableCountries.first) // Fallback to first country
+            orElse: () => availableCountries.first)
         .currencySymbol;
   }
 
-  // Getter for the derived currency symbol
   String get currencySymbol => getCurrencyForCountry(selectedCountryCode);
 
   // --- Constructor ---
   const SettingsState({
     this.status = SettingsStatus.initial,
     this.themeMode = defaultThemeMode,
-    this.selectedThemeIdentifier = defaultThemeIdentifier,
-    this.uiMode = defaultUIMode, // --- ADDED: uiMode ---
+    this.paletteIdentifier = defaultPaletteIdentifier, // Use renamed default
+    this.uiMode = defaultUIMode,
     this.selectedCountryCode = defaultCountryCode,
     this.isAppLockEnabled = defaultAppLockEnabled,
     this.errorMessage,
@@ -106,8 +97,8 @@ class SettingsState extends Equatable {
   SettingsState copyWith({
     SettingsStatus? status,
     ThemeMode? themeMode,
-    String? selectedThemeIdentifier,
-    UIMode? uiMode, // --- ADDED ---
+    String? paletteIdentifier, // RENAMED
+    UIMode? uiMode,
     String? selectedCountryCode,
     bool? isAppLockEnabled,
     String? errorMessage,
@@ -116,18 +107,16 @@ class SettingsState extends Equatable {
     String? packageInfoError,
     DataManagementStatus? dataManagementStatus,
     String? dataManagementMessage,
-    // Helper flags to clear specific messages/errors on update
     bool clearMainError = false,
     bool clearPackageInfoError = false,
     bool clearDataManagementMessage = false,
-    bool clearAllMessages = false, // Convenience flag
+    bool clearAllMessages = false,
   }) {
     return SettingsState(
       status: status ?? this.status,
       themeMode: themeMode ?? this.themeMode,
-      selectedThemeIdentifier:
-          selectedThemeIdentifier ?? this.selectedThemeIdentifier,
-      uiMode: uiMode ?? this.uiMode, // --- ADDED ---
+      paletteIdentifier: paletteIdentifier ?? this.paletteIdentifier, // RENAMED
+      uiMode: uiMode ?? this.uiMode,
       selectedCountryCode: selectedCountryCode ?? this.selectedCountryCode,
       isAppLockEnabled: isAppLockEnabled ?? this.isAppLockEnabled,
       errorMessage: clearAllMessages || clearMainError
@@ -149,8 +138,8 @@ class SettingsState extends Equatable {
   List<Object?> get props => [
         status,
         themeMode,
-        selectedThemeIdentifier,
-        uiMode, // --- ADDED ---
+        paletteIdentifier, // RENAMED
+        uiMode,
         selectedCountryCode,
         currencySymbol,
         isAppLockEnabled,

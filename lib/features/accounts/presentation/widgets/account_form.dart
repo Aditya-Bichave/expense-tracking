@@ -61,8 +61,7 @@ class _AccountFormState extends State<AccountForm> {
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
-    final currencySymbol =
-        settingsState.currencySymbol ?? '\$'; // Use default if null
+    final currencySymbol = settingsState.currencySymbol; // Use default if null
     final theme = Theme.of(context);
 
     return Form(

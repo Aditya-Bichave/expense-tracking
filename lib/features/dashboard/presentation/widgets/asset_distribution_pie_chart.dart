@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:flutter_bloc/flutter_bloc.dart'; // To read settings
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/core/utils/currency_formatter.dart';
 
 class AssetDistributionPieChart extends StatefulWidget {
   final Map<String, double> accountBalances; // Map<AccountName, Balance>
@@ -17,13 +16,11 @@ class AssetDistributionPieChart extends StatefulWidget {
 
 class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
   int touchedIndex = -1;
-  late Random _random;
   late Map<String, Color> _colorCache;
 
   @override
   void initState() {
     super.initState();
-    _random = Random(widget.accountBalances.keys.hashCode);
     _colorCache = {};
     _generateColorCache(widget.accountBalances.keys);
     log.info(
@@ -36,7 +33,6 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     if (widget.accountBalances.keys.toSet() !=
         oldWidget.accountBalances.keys.toSet()) {
       log.info("[PieChart] Account keys changed, regenerating color cache.");
-      _random = Random(widget.accountBalances.keys.hashCode);
       _generateColorCache(widget.accountBalances.keys);
       touchedIndex = -1;
     }
@@ -62,7 +58,6 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
     final uiMode = settingsState.uiMode;
-    final currencySymbol = settingsState.currencySymbol;
 
     log.info(
         "[PieChart] Build method. TouchedIndex: $touchedIndex, Mode: $uiMode");

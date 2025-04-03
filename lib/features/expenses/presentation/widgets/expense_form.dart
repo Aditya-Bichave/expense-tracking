@@ -151,7 +151,7 @@ class _ExpenseFormState extends State<ExpenseForm> {
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
-    final currencySymbol = settingsState.currencySymbol ?? '\$';
+    final currencySymbol = settingsState.currencySymbol;
     final theme = Theme.of(context);
 
     return Form(

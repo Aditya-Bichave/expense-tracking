@@ -108,7 +108,7 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
           ));
         },
       );
-    } catch (e, s) {
+    } catch (e) {
       log.severe("[ExpenseListBloc] Unexpected error in _onLoadExpenses$e");
       emit(ExpenseListError(
           "An unexpected error occurred loading expenses: ${e.toString()}"));

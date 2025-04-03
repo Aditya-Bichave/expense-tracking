@@ -40,6 +40,10 @@ dependencies:
   json_annotation: ^4.8.1
   simple_logger: ^1.10.0
 
+  # UI
+  google_fonts: ^6.2.0
+  flutter_svg: ^2.0.10+1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -58,17 +62,36 @@ flutter:
   uses-material-design: true
 
   assets:
-      - assets/images/aether/garden/
-      - assets/images/aether/constellation/
+      - assets/elemental/
+      - assets/elemental/backgrounds/
+      - assets/elemental/charts/
+      - assets/elemental/decorative/
+      - assets/elemental/icons/categories/
+      - assets/elemental/icons/common/
+      - assets/elemental/illustrations/
+      - assets/elemental/theme_palette1/
+      - assets/elemental/theme_palette2/
+      - assets/elemental/theme_palette3/
+      - assets/elemental/theme_palette4/
 
-  fonts:
-     - family: YourGardenFont
-       fonts:
-         - asset: assets/fonts/YourGardenFont-Regular.ttf
-         - asset: assets/fonts/YourGardenFont-Bold.ttf
-           weight: 700
-     - family: RobotoMono # Example for Quantum
-       fonts:
-         - asset: assets/fonts/RobotoMono-Regular.ttf
-         - asset: assets/fonts/RobotoMono-Bold.ttf
-           weight: 700
+      - assets/quantum/
+      - assets/quantum/backgrounds/
+      - assets/quantum/charts/
+      - assets/quantum/icons/categories/
+      - assets/quantum/icons/common/
+      - assets/quantum/illustrations/
+      - assets/quantum/theme_palette1/
+      - assets/quantum/theme_palette2/
+      - assets/quantum/theme_palette3/
+      - assets/quantum/theme_palette4/
+
+      - assets/aether/
+      - assets/aether/backgrounds/
+      - assets/aether/charts/
+      - assets/aether/icons/common/
+      - assets/aether/illustrations/
+      - assets/aether/palette1_starfield/
+      - assets/aether/palette2_garden/
+      - assets/aether/palette3_mystic/
+      - assets/aether/palette4_calm_sky/
+

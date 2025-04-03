@@ -2,7 +2,6 @@ import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart'; // Assuming summary entity exists
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 
 abstract class ExpenseRepository {
   Future<Either<Failure, List<Expense>>> getExpenses({
