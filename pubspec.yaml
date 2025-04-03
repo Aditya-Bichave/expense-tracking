@@ -44,6 +44,7 @@ dependencies:
   google_fonts: ^6.2.0
   flutter_svg: ^2.0.10+1
   flutter_animate: ^4.5.0
+  flutter_colorpicker: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -95,4 +96,6 @@ flutter:
       - assets/aether/palette2_garden/
       - assets/aether/palette3_mystic/
       - assets/aether/palette4_calm_sky/
+
+      - assets/data/
 

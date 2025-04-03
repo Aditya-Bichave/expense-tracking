@@ -10,7 +10,7 @@ class SaveIncomeRequested extends AddEditIncomeEvent {
   final String title;
   final double amount;
   final DateTime date;
-  final IncomeCategory category;
+  final Category category; // CORRECTED: Use unified Category
   final String accountId;
   final String? notes;
   final String? existingIncomeId; // Null if adding
@@ -19,7 +19,7 @@ class SaveIncomeRequested extends AddEditIncomeEvent {
     required this.title,
     required this.amount,
     required this.date,
-    required this.category,
+    required this.category, // Use unified Category
     required this.accountId,
     this.notes,
     this.existingIncomeId,

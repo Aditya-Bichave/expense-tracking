@@ -1,20 +1,23 @@
+// lib/features/expenses/presentation/widgets/expense_form.dart
+// MODIFIED FILE
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
-// Import reusable form fields
+import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
-import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // For themed padding
+// --- ADDED Import ---
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
+// --- END ADDED ---
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 
 class ExpenseForm extends StatefulWidget {
   final Expense? initialExpense;
-  final Function(String title, double amount, String categoryName,
+  final Function(String title, double amount, Category category,
       String accountId, DateTime date) onSubmit;
 
   const ExpenseForm({
@@ -31,16 +34,13 @@ class _ExpenseFormState extends State<ExpenseForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _amountController;
-
   DateTime _selectedDate = DateTime.now();
   Category? _selectedCategory;
   String? _selectedAccountId;
 
-  final List<Category> _expenseCategories =
-      PredefinedCategory.values.map((e) => Category.fromPredefined(e)).toList();
-
   @override
   void initState() {
+    /* ... initState logic ... */
     super.initState();
     final initial = widget.initialExpense;
     log.info(
@@ -50,40 +50,29 @@ class _ExpenseFormState extends State<ExpenseForm> {
         TextEditingController(text: initial?.amount.toStringAsFixed(2) ?? '');
     _selectedDate = initial?.date ?? DateTime.now();
     _selectedAccountId = initial?.accountId;
-
-    if (initial != null) {
-      try {
-        _selectedCategory = _expenseCategories
-            .firstWhere((cat) => cat.name == initial.category.name);
-        log.info(
-            "[ExpenseForm] Initial category set to: ${_selectedCategory?.name}");
-      } catch (e) {
-        log.warning(
-            "[ExpenseForm] Could not find initial category '${initial.category.name}' in predefined list.");
-        _selectedCategory = null;
-      }
-    }
+    _selectedCategory = initial?.category;
+    log.info(
+        "[ExpenseForm] Initial Category from entity: ${_selectedCategory?.name} (ID: ${_selectedCategory?.id})");
   }
 
   @override
   void dispose() {
+    /* ... dispose logic ... */
     _titleController.dispose();
     _amountController.dispose();
     super.dispose();
   }
 
   Future<void> _selectDate(BuildContext context) async {
+    /* ... date selection logic ... */
     final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
+        context: context,
+        initialDate: _selectedDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101));
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDate),
-      );
+          context: context, initialTime: TimeOfDay.fromDateTime(_selectedDate));
       setState(() {
         _selectedDate = DateTime(
           pickedDate.year,
@@ -97,7 +86,18 @@ class _ExpenseFormState extends State<ExpenseForm> {
     }
   }
 
+  Future<void> _selectCategory(BuildContext context) async {
+    /* ... category selection logic ... */
+    final Category? result =
+        await showCategoryPicker(context, CategoryTypeFilter.expense);
+    if (result != null) {
+      setState(() => _selectedCategory = result);
+      log.info("[ExpenseForm] Category selected via picker: ${result.name}");
+    }
+  }
+
   void _submitForm() {
+    /* ... submit logic ... */
     log.info("[ExpenseForm] Submit button pressed.");
     if (_formKey.currentState!.validate()) {
       if (_selectedAccountId == null || _selectedCategory == null) {
@@ -108,15 +108,21 @@ class _ExpenseFormState extends State<ExpenseForm> {
             backgroundColor: Colors.red));
         return;
       }
-
+      if (_selectedCategory!.id == Category.uncategorized.id) {
+        log.warning(
+            "[ExpenseForm] Validation failed: Cannot submit 'Uncategorized'.");
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Please select a specific category.'),
+            backgroundColor: Colors.red));
+        return;
+      }
       final title = _titleController.text.trim();
       final amount =
           double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0.0;
-      final categoryName = _selectedCategory!.name;
+      final category = _selectedCategory!;
       final accountId = _selectedAccountId!;
-
       log.info("[ExpenseForm] Form validated. Calling onSubmit callback.");
-      widget.onSubmit(title, amount, categoryName, accountId, _selectedDate);
+      widget.onSubmit(title, amount, category, accountId, _selectedDate);
     } else {
       log.warning("[ExpenseForm] Form validation failed.");
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -127,18 +133,16 @@ class _ExpenseFormState extends State<ExpenseForm> {
 
   @override
   Widget build(BuildContext context) {
+    // ... (build method logic remains the same, using _selectCategory in onTap) ...
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
-
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding ??
-            const EdgeInsets.all(16.0), // Use themed page padding
+        padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
         children: [
-          // --- Use AppTextFormField ---
           AppTextFormField(
             controller: _titleController,
             labelText: 'Title / Description',
@@ -168,46 +172,62 @@ class _ExpenseFormState extends State<ExpenseForm> {
             },
           ),
           const SizedBox(height: 16),
-          // --- Use AppDropdownFormField ---
-          AppDropdownFormField<Category>(
-            value: _selectedCategory,
-            labelText: 'Category',
-            hintText: 'Select expense category',
-            prefixIconData: Icons.category_outlined,
-            items: _expenseCategories.map((Category category) {
-              return DropdownMenuItem<Category>(
-                  value: category, child: Text(category.name));
-            }).toList(),
-            onChanged: (Category? newValue) {
-              setState(() {
-                _selectedCategory = newValue;
-              });
-              log.info(
-                  "[ExpenseForm] Category selected: ${_selectedCategory?.name}");
+          FormField<Category>(
+            initialValue: _selectedCategory,
+            validator: (value) {
+              if (value == null) return 'Please select a category';
+              if (value.id == Category.uncategorized.id)
+                return 'Please select a specific category';
+              return null;
             },
-            validator: (value) =>
-                value == null ? 'Please select a category' : null,
+            builder: (formFieldState) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 12),
+                      shape: theme.inputDecorationTheme.enabledBorder ??
+                          const OutlineInputBorder(),
+                      leading: Icon(Icons.category_outlined,
+                          color: formFieldState.hasError
+                              ? theme.colorScheme.error
+                              : theme.inputDecorationTheme.prefixIconColor),
+                      title: Text(_selectedCategory?.name ?? 'Select Category',
+                          style: TextStyle(
+                              color: formFieldState.hasError
+                                  ? theme.colorScheme.error
+                                  : null)),
+                      subtitle: formFieldState.hasError
+                          ? Text(formFieldState.errorText!,
+                              style: TextStyle(
+                                  color: theme.colorScheme.error, fontSize: 12))
+                          : null,
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: () async {
+                        await _selectCategory(context);
+                        formFieldState.didChange(_selectedCategory);
+                      }),
+                ],
+              );
+            },
+            onSaved: (value) => _selectedCategory = value,
           ),
           const SizedBox(height: 16),
-          // AccountSelectorDropdown remains custom due to Bloc interaction
           AccountSelectorDropdown(
             selectedAccountId: _selectedAccountId,
             onChanged: (String? newValue) {
-              setState(() {
-                _selectedAccountId = newValue;
-              });
+              setState(() => _selectedAccountId = newValue);
               log.info("[ExpenseForm] Account selected: $_selectedAccountId");
             },
             validator: (value) =>
                 value == null ? 'Please select an account' : null,
           ),
           const SizedBox(height: 16),
-          // Date/Time Picker ListTile - Keep as is or create AppListTilePicker
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12), // Match dropdown padding
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             shape: theme.inputDecorationTheme.enabledBorder ??
-                const OutlineInputBorder(), // Match border
+                const OutlineInputBorder(),
             leading: const Icon(Icons.calendar_today),
             title: const Text('Date & Time'),
             subtitle: Text(DateFormatter.formatDateTime(_selectedDate)),
@@ -218,7 +238,6 @@ class _ExpenseFormState extends State<ExpenseForm> {
             ),
             onTap: () => _selectDate(context),
           ),
-          // Add AppTextFormField for Notes if needed
           const SizedBox(height: 32),
           ElevatedButton.icon(
             icon: Icon(widget.initialExpense == null ? Icons.add : Icons.save),

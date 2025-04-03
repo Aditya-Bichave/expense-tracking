@@ -12,17 +12,17 @@ class SaveExpenseRequested extends AddEditExpenseEvent {
   final String title;
   final double amount;
   final DateTime date;
-  final Category category;
+  final Category category; // Use unified Category
   final String? existingExpenseId; // Null if adding, non-null if editing
-  final String accountId; // --- ADDED: Account ID is required ---
+  final String accountId;
 
   const SaveExpenseRequested({
     required this.title,
     required this.amount,
     required this.date,
-    required this.category,
+    required this.category, // Expecting unified Category
     this.existingExpenseId,
-    required this.accountId, // --- ADDED: Made required ---
+    required this.accountId,
   });
 
   @override
@@ -30,11 +30,8 @@ class SaveExpenseRequested extends AddEditExpenseEvent {
         title,
         amount,
         date,
-        category,
+        category, // Updated prop
         existingExpenseId,
-        accountId, // --- ADDED to props ---
+        accountId,
       ];
-
-  // Removed incorrect getter:
-  // get accountId => null; // <-- REMOVED
 }

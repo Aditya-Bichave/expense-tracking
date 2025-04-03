@@ -1,21 +1,23 @@
+// lib/features/income/presentation/widgets/income_form.dart
+// MODIFIED FILE
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/main.dart'; // logger
-// Import reusable form fields
+import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
-import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // For themed padding
+// --- ADDED Import ---
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
+// --- END ADDED ---
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 
 class IncomeForm extends StatefulWidget {
   final Income? initialIncome;
-  // Callback expects category NAME string now
-  final Function(String title, double amount, String categoryName,
+  final Function(String title, double amount, Category category,
       String accountId, DateTime date, String? notes) onSubmit;
 
   const IncomeForm({
@@ -33,17 +35,13 @@ class _IncomeFormState extends State<IncomeForm> {
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   late TextEditingController _notesController;
-
   DateTime _selectedDate = DateTime.now();
-  IncomeCategory? _selectedCategory; // Store the IncomeCategory object
+  Category? _selectedCategory;
   String? _selectedAccountId;
-
-  final List<IncomeCategory> _incomeCategories = PredefinedIncomeCategory.values
-      .map((e) => IncomeCategory.fromPredefined(e))
-      .toList();
 
   @override
   void initState() {
+    /* ... initState logic ... */
     super.initState();
     final initial = widget.initialIncome;
     log.info(
@@ -54,23 +52,14 @@ class _IncomeFormState extends State<IncomeForm> {
     _notesController = TextEditingController(text: initial?.notes ?? '');
     _selectedDate = initial?.date ?? DateTime.now();
     _selectedAccountId = initial?.accountId;
-
-    if (initial != null) {
-      try {
-        _selectedCategory = _incomeCategories
-            .firstWhere((cat) => cat.name == initial.category.name);
-        log.info(
-            "[IncomeForm] Initial category set to: ${_selectedCategory?.name}");
-      } catch (e) {
-        log.warning(
-            "[IncomeForm] Could not find initial category '${initial.category.name}' in predefined list.");
-        _selectedCategory = null;
-      }
-    }
+    _selectedCategory = initial?.category;
+    log.info(
+        "[IncomeForm] Initial Category from entity: ${_selectedCategory?.name} (ID: ${_selectedCategory?.id})");
   }
 
   @override
   void dispose() {
+    /* ... dispose logic ... */
     _titleController.dispose();
     _amountController.dispose();
     _notesController.dispose();
@@ -78,18 +67,15 @@ class _IncomeFormState extends State<IncomeForm> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    // ... (selectDate logic remains the same) ...
+    /* ... date selection logic ... */
     final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
+        context: context,
+        initialDate: _selectedDate,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2101));
     if (pickedDate != null) {
       final TimeOfDay? pickedTime = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(_selectedDate),
-      );
+          context: context, initialTime: TimeOfDay.fromDateTime(_selectedDate));
       setState(() {
         _selectedDate = DateTime(
           pickedDate.year,
@@ -103,7 +89,18 @@ class _IncomeFormState extends State<IncomeForm> {
     }
   }
 
+  Future<void> _selectCategory(BuildContext context) async {
+    /* ... category selection logic ... */
+    final Category? result = await showCategoryPicker(
+        context, CategoryTypeFilter.income); // Specify Income type
+    if (result != null) {
+      setState(() => _selectedCategory = result);
+      log.info("[IncomeForm] Category selected via picker: ${result.name}");
+    }
+  }
+
   void _submitForm() {
+    /* ... submit logic ... */
     log.info("[IncomeForm] Submit button pressed.");
     if (_formKey.currentState!.validate()) {
       if (_selectedAccountId == null || _selectedCategory == null) {
@@ -114,18 +111,25 @@ class _IncomeFormState extends State<IncomeForm> {
             backgroundColor: Colors.red));
         return;
       }
+      if (_selectedCategory!.id == Category.uncategorized.id) {
+        log.warning(
+            "[IncomeForm] Validation failed: Cannot submit 'Uncategorized'.");
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Please select a specific category.'),
+            backgroundColor: Colors.red));
+        return;
+      }
       final title = _titleController.text.trim();
       final amount =
           double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0.0;
       final notes = _notesController.text.trim();
-      final categoryName = _selectedCategory!.name; // Pass name string
+      final category = _selectedCategory!;
       final accountId = _selectedAccountId!;
-
       log.info("[IncomeForm] Form validated. Calling onSubmit callback.");
       widget.onSubmit(
         title,
         amount,
-        categoryName,
+        category,
         accountId,
         _selectedDate,
         notes.isEmpty ? null : notes,
@@ -140,18 +144,16 @@ class _IncomeFormState extends State<IncomeForm> {
 
   @override
   Widget build(BuildContext context) {
+    // ... (build method logic remains the same, using _selectCategory in onTap) ...
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
-
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding ??
-            const EdgeInsets.all(16.0), // Themed padding
+        padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
         children: [
-          // --- Use AppTextFormField ---
           AppTextFormField(
             controller: _titleController,
             labelText: 'Title / Source',
@@ -166,8 +168,7 @@ class _IncomeFormState extends State<IncomeForm> {
             controller: _amountController,
             labelText: 'Amount',
             prefixText: '$currencySymbol ',
-            prefixIconData: Icons
-                .attach_money, // Consider a different icon color for income?
+            prefixIconData: Icons.attach_money,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
@@ -182,44 +183,60 @@ class _IncomeFormState extends State<IncomeForm> {
             },
           ),
           const SizedBox(height: 16),
-          // --- Use AppDropdownFormField ---
-          AppDropdownFormField<IncomeCategory>(
-            value: _selectedCategory,
-            labelText: 'Category',
-            hintText: 'Select income category',
-            prefixIconData: Icons.category_outlined,
-            items: _incomeCategories.map((IncomeCategory category) {
-              return DropdownMenuItem<IncomeCategory>(
-                  value: category, child: Text(category.name));
-            }).toList(),
-            onChanged: (IncomeCategory? newValue) {
-              setState(() {
-                _selectedCategory = newValue;
-              });
-              log.info(
-                  "[IncomeForm] Category selected: ${_selectedCategory?.name}");
+          FormField<Category>(
+            initialValue: _selectedCategory,
+            validator: (value) {
+              if (value == null) return 'Please select a category';
+              if (value.id == Category.uncategorized.id)
+                return 'Please select a specific category';
+              return null;
             },
-            validator: (value) =>
-                value == null ? 'Please select a category' : null,
+            builder: (formFieldState) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 12),
+                      shape: theme.inputDecorationTheme.enabledBorder ??
+                          const OutlineInputBorder(),
+                      leading: Icon(Icons.category_outlined,
+                          color: formFieldState.hasError
+                              ? theme.colorScheme.error
+                              : theme.inputDecorationTheme.prefixIconColor),
+                      title: Text(_selectedCategory?.name ?? 'Select Category',
+                          style: TextStyle(
+                              color: formFieldState.hasError
+                                  ? theme.colorScheme.error
+                                  : null)),
+                      subtitle: formFieldState.hasError
+                          ? Text(formFieldState.errorText!,
+                              style: TextStyle(
+                                  color: theme.colorScheme.error, fontSize: 12))
+                          : null,
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: () async {
+                        await _selectCategory(context);
+                        formFieldState.didChange(_selectedCategory);
+                      }),
+                ],
+              );
+            },
+            onSaved: (value) => _selectedCategory = value,
           ),
           const SizedBox(height: 16),
-          // AccountSelectorDropdown remains custom
           AccountSelectorDropdown(
             selectedAccountId: _selectedAccountId,
             onChanged: (String? newValue) {
-              setState(() {
-                _selectedAccountId = newValue;
-              });
+              setState(() => _selectedAccountId = newValue);
               log.info("[IncomeForm] Account selected: $_selectedAccountId");
             },
             validator: (value) =>
                 value == null ? 'Please select an account' : null,
           ),
           const SizedBox(height: 16),
-          // Date/Time Picker ListTile
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12), // Match dropdown padding
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             shape: theme.inputDecorationTheme.enabledBorder ??
                 const OutlineInputBorder(),
             leading: const Icon(Icons.calendar_today),
@@ -233,7 +250,6 @@ class _IncomeFormState extends State<IncomeForm> {
             onTap: () => _selectDate(context),
           ),
           const SizedBox(height: 16),
-          // --- Use AppTextFormField for Notes ---
           AppTextFormField(
             controller: _notesController,
             labelText: 'Notes (Optional)',
@@ -241,7 +257,6 @@ class _IncomeFormState extends State<IncomeForm> {
             prefixIconData: Icons.note_alt_outlined,
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
-            // No validator needed for optional field
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(

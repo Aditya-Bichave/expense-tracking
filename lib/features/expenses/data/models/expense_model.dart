@@ -1,12 +1,15 @@
+// lib/features/expenses/data/models/expense_model.dart
+// MODIFIED FILE
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
-import 'package:json_annotation/json_annotation.dart'; // Import
+// REMOVED: import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:expense_tracker/core/utils/enums.dart'; // Import CategorizationStatus
 
-part 'expense_model.g.dart'; // Ensure this is updated
+part 'expense_model.g.dart';
 
-@JsonSerializable() // Add Annotation
-@HiveType(typeId: 0)
+@JsonSerializable()
+@HiveType(typeId: 0) // Keep existing typeId
 class ExpenseModel extends HiveObject {
   @HiveField(0)
   final String id;
@@ -20,23 +23,45 @@ class ExpenseModel extends HiveObject {
   @HiveField(3)
   final DateTime date;
 
-  @HiveField(4)
-  final String categoryName;
+  // REMOVED old category fields
+  // @HiveField(4)
+  // final String categoryName;
+  // @HiveField(5)
+  // final String? subCategoryName;
 
-  @HiveField(5)
-  final String? subCategoryName;
+  @HiveField(4) // Reuse index 4
+  @JsonKey(includeIfNull: false) // Don't include if null
+  final String? categoryId; // NEW: Link to CategoryModel.id
+
+  @HiveField(5) // Reuse index 5
+  @JsonKey(
+      defaultValue: 'uncategorized', // Default value for JSON parsing
+      toJson: _categorizationStatusToJson,
+      fromJson: _categorizationStatusFromJson)
+  final String categorizationStatusValue; // NEW: Store enum value string
 
   @HiveField(6)
-  final String accountId;
+  final String accountId; // Keep index 6
+
+  @HiveField(7) // NEW index
+  @JsonKey(includeIfNull: false)
+  final double? confidenceScoreValue; // NEW: Store confidence score
+
+  // Helper functions for JSON serialization of enum
+  static String _categorizationStatusToJson(String statusValue) => statusValue;
+  static String _categorizationStatusFromJson(String? value) =>
+      value ?? CategorizationStatus.uncategorized.value;
 
   ExpenseModel({
     required this.id,
     required this.title,
     required this.amount,
     required this.date,
-    required this.categoryName,
-    this.subCategoryName,
+    // categoryName, subCategoryName REMOVED from constructor
+    this.categoryId, // Added
+    this.categorizationStatusValue = 'uncategorized', // Added with default
     required this.accountId,
+    this.confidenceScoreValue, // Added
   });
 
   factory ExpenseModel.fromEntity(Expense entity) {
@@ -45,27 +70,33 @@ class ExpenseModel extends HiveObject {
       title: entity.title,
       amount: entity.amount,
       date: entity.date,
-      categoryName: entity.category.name,
-      subCategoryName: entity.category.subCategory,
+      categoryId:
+          entity.category?.id, // Get ID from Category entity if available
+      categorizationStatusValue: entity.status.value, // Get string value
       accountId: entity.accountId,
+      confidenceScoreValue: entity.confidenceScore,
     );
   }
 
+  // toEntity now requires Category to be looked up elsewhere based on categoryId
   Expense toEntity() {
     return Expense(
       id: id,
       title: title,
       amount: amount,
       date: date,
-      category: Category(name: categoryName, subCategory: subCategoryName),
+      // Category object is NOT constructed here anymore.
+      // It will be fetched separately using categoryId by the repository/use case.
+      category: null, // Set to null initially
       accountId: accountId,
+      status: CategorizationStatusExtension.fromValue(
+          categorizationStatusValue), // Convert string back to enum
+      confidenceScore: confidenceScoreValue,
     );
   }
 
-  // --- Add JsonSerializable methods ---
   factory ExpenseModel.fromJson(Map<String, dynamic> json) =>
       _$ExpenseModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$ExpenseModelToJson(this);
-  // ------------------------------------
 }

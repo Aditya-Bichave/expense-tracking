@@ -1,4 +1,3 @@
-// lib/features/expenses/presentation/bloc/expense_list/expense_list_state.dart
 part of 'expense_list_bloc.dart';
 
 // Base state for this feature
@@ -30,47 +29,87 @@ class ExpenseListLoading extends ExpenseListState
 class ExpenseListLoaded extends ExpenseListState
     implements BaseListState<Expense> {
   @override
-  final List<Expense> items; // The list of expenses
+  final List<Expense>
+      items; // The list of expenses (now includes hydrated category)
   @override
   final DateTime? filterStartDate;
   @override
   final DateTime? filterEndDate;
   @override
-  final String? filterCategory;
+  final String? filterCategory; // Filter name (may need adjustment)
   @override
   final String? filterAccountId;
 
+  // --- ADDED Batch Edit State ---
+  final bool isInBatchEditMode;
+  final Set<String> selectedTransactionIds;
+  // --- END ADDED ---
+
   const ExpenseListLoaded({
-    required List<Expense> expenses,
+    required List<Expense> expenses, // Renamed parameter for clarity
     this.filterStartDate,
     this.filterEndDate,
     this.filterCategory,
     this.filterAccountId,
-  })  : items = expenses,
+    this.isInBatchEditMode = false, // Default to false
+    this.selectedTransactionIds = const {}, // Default to empty set
+  })  : items = expenses, // Assign to base 'items'
         super();
 
-  // --- ADDED: Concrete implementation for filtersApplied ---
   @override
   bool get filtersApplied =>
       filterStartDate != null ||
       filterEndDate != null ||
       filterCategory != null ||
       filterAccountId != null;
-  // ---------------------------------------------------------
 
-  // Props are handled by the base class via its getter
+  // Convenience getter
+  List<Expense> get expenses => items;
+
+  // --- ADDED copyWith method ---
+  ExpenseListLoaded copyWith({
+    List<Expense>? expenses,
+    DateTime? filterStartDate,
+    DateTime? filterEndDate,
+    String? filterCategory,
+    String? filterAccountId,
+    bool? isInBatchEditMode,
+    Set<String>? selectedTransactionIds,
+    // Flags to explicitly clear nullable fields if needed
+    bool clearFilterCategory = false,
+    bool clearFilterAccountId = false,
+    bool clearFilterStartDate = false,
+    bool clearFilterEndDate = false,
+  }) {
+    return ExpenseListLoaded(
+      expenses: expenses ?? this.items, // Use items here
+      filterStartDate: clearFilterStartDate
+          ? null
+          : (filterStartDate ?? this.filterStartDate),
+      filterEndDate:
+          clearFilterEndDate ? null : (filterEndDate ?? this.filterEndDate),
+      filterCategory:
+          clearFilterCategory ? null : (filterCategory ?? this.filterCategory),
+      filterAccountId: clearFilterAccountId
+          ? null
+          : (filterAccountId ?? this.filterAccountId),
+      isInBatchEditMode: isInBatchEditMode ?? this.isInBatchEditMode,
+      selectedTransactionIds:
+          selectedTransactionIds ?? this.selectedTransactionIds,
+    );
+  }
+  // --- END ADDED ---
+
   @override
   List<Object?> get props => [
-        // Need to explicitly list props here now
-        items,
+        items, // Use items here for Equatable comparison
         filterStartDate,
         filterEndDate,
         filterCategory,
         filterAccountId,
+        isInBatchEditMode, // Added
+        selectedTransactionIds, // Added
       ];
-
-  // Convenience getter (optional)
-  List<Expense> get expenses => items;
 }
 
 // Extend base error state
