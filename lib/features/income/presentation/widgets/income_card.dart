@@ -1,3 +1,4 @@
+// lib/features/income/presentation/widgets/income_card.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:expense_tracker/core/assets/app_assets.dart'; // Import asset catalog
 
 class IncomeCard extends StatelessWidget {
   final Income income;
@@ -21,34 +23,38 @@ class IncomeCard extends StatelessWidget {
   // Helper to select the correct icon based on UI mode
   Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
     final theme = Theme.of(context);
-    // Default Elemental Icon
     IconData defaultIconData =
         _getElementalIncomeCategoryIcon(income.category.name);
     String? svgPath;
     String categoryKey = income.category.name.toLowerCase();
 
+    // Define income color (could also come from theme eventually)
+    final Color incomeColor = Colors.green.shade800; // Example income color
+
     if (modeTheme != null) {
-      svgPath =
-          modeTheme.assets.getCategoryIcon(categoryKey, // Use normalized key
-              defaultPath: '' // Fallback handled below
-              );
+      // Attempt to get path from theme extension's asset map
+      svgPath = modeTheme.assets.getCategoryIcon(categoryKey, defaultPath: '');
       if (svgPath.isEmpty) svgPath = null;
     }
 
     if (svgPath != null) {
+      // log.debug("Using SVG path for $categoryKey: $svgPath");
       return SvgPicture.asset(
-        svgPath,
-        width: 22, height: 22,
-        colorFilter: ColorFilter.mode(
-            Colors.green.shade800, BlendMode.srcIn), // Use income color
+        svgPath, // Path comes from theme config
+        width: 22,
+        height: 22,
+        colorFilter:
+            ColorFilter.mode(incomeColor, BlendMode.srcIn), // Use income color
       );
     } else {
+      // Fallback to Material Icon
+      // log.debug("Using default Material Icon for $categoryKey");
       return Icon(defaultIconData,
-          size: 22, color: Colors.green.shade800); // Use income color
+          size: 22, color: incomeColor); // Use income color
     }
   }
 
-  // Helper function to get an Elemental icon based on income category name
+  // Helper function to get a fallback Material icon based on income category name
   IconData _getElementalIncomeCategoryIcon(String categoryName) {
     switch (categoryName.toLowerCase()) {
       case 'salary':
@@ -62,7 +68,7 @@ class IncomeCard extends StatelessWidget {
       case 'interest':
         return Icons.account_balance_outlined;
       default:
-        return Icons.attach_money;
+        return Icons.attach_money; // Generic fallback
     }
   }
 
@@ -73,6 +79,7 @@ class IncomeCard extends StatelessWidget {
     final currencySymbol = settingsState.currencySymbol;
     final modeTheme = context.modeTheme;
 
+    // Watch AccountListBloc to get the account name
     final accountState = context.watch<AccountListBloc>().state;
     String accountName = '...';
     if (accountState is AccountListLoaded) {
@@ -83,13 +90,21 @@ class IncomeCard extends StatelessWidget {
       } catch (_) {
         accountName = 'Deleted';
       }
+    } else if (accountState is AccountListError) {
+      accountName = 'Error';
     }
 
-    final Color incomeColor = Colors.green.shade700; // Define base income color
+    // Define colors for income (could be part of theme extension later)
+    final Color incomeColor = Colors.green.shade700;
     final Color incomeIconBgColor = Colors.green.shade100;
+    final Color incomeAmountColor = modeTheme?.incomeGlowColor ?? incomeColor;
 
     return Card(
       clipBehavior: Clip.antiAlias,
+      margin: theme.cardTheme.margin,
+      shape: theme.cardTheme.shape,
+      elevation: theme.cardTheme.elevation,
+      color: theme.cardTheme.color,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -99,7 +114,9 @@ class IncomeCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               CircleAvatar(
-                backgroundColor: incomeIconBgColor, // Specific income icon BG
+                backgroundColor:
+                    incomeIconBgColor, // Use specific income icon BG
+                foregroundColor: incomeColor, // Ensure contrast if needed
                 child: _buildIcon(context, modeTheme),
               ),
               SizedBox(width: theme.listTileTheme.horizontalTitleGap ?? 16),
@@ -120,6 +137,7 @@ class IncomeCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
+                      // Date moved below category/account line
                       DateFormatter.formatDateTime(income.date),
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant
@@ -155,8 +173,8 @@ class IncomeCard extends StatelessWidget {
                 CurrencyFormatter.format(income.amount, currencySymbol),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: modeTheme?.incomeGlowColor ??
-                      incomeColor, // Use glow or default income color
+                  color:
+                      incomeAmountColor, // Use theme glow or default income color
                 ),
               ),
             ],

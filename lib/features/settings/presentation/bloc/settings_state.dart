@@ -1,3 +1,4 @@
+// lib/features/settings/presentation/bloc/settings_state.dart
 part of 'settings_bloc.dart';
 
 // --- Status Enums ---
@@ -11,32 +12,16 @@ enum DataManagementStatus { initial, loading, success, error }
 enum UIMode { elemental, quantum, aether }
 
 // --- Country Info Helper ---
-class CountryInfo {
-  final String code; // e.g., 'US', 'GB', 'IN'
-  final String name; // e.g., 'United States', 'United Kingdom', 'India'
-  final String currencySymbol; // e.g., '$', '£', '₹'
-
-  const CountryInfo(
-      {required this.code, required this.name, required this.currencySymbol});
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CountryInfo &&
-          runtimeType == other.runtimeType &&
-          code == other.code;
-
-  @override
-  int get hashCode => code.hashCode;
-}
+// REMOVED CountryInfo definition (moved to core/data/countries.dart)
+// Use AppCountry from core/data/countries.dart instead
 
 class SettingsState extends Equatable {
   // --- Main settings ---
   final SettingsStatus status;
   final ThemeMode themeMode;
-  final String paletteIdentifier; // RENAMED from selectedThemeIdentifier
+  final String paletteIdentifier; // Name remains the same
   final UIMode uiMode;
-  final String selectedCountryCode;
+  final String selectedCountryCode; // Keep the code
   final bool isAppLockEnabled;
   final String? errorMessage;
 
@@ -51,41 +36,32 @@ class SettingsState extends Equatable {
 
   // --- Static Defaults & Data ---
   static const defaultThemeMode = ThemeMode.system;
-  static const defaultPaletteIdentifier =
-      AppTheme.elementalPalette1; // Use specific palette ID
+  // Use a default palette identifier from AppTheme
+  static const defaultPaletteIdentifier = AppTheme.elementalPalette1;
   static const defaultUIMode = UIMode.elemental;
-  static const defaultCountryCode = 'US';
-  static const defaultAppLockEnabled = false;
+  // Use default country code from AppCountries
+  static const String defaultCountryCode = AppCountries.defaultCountryCode;
+  // Use default from AppConstants
+  static const bool defaultAppLockEnabled = AppConstants.defaultAppLockEnabled;
 
-  static const List<CountryInfo> availableCountries = [
-    CountryInfo(code: 'US', name: 'United States', currencySymbol: '\$'),
-    CountryInfo(code: 'GB', name: 'United Kingdom', currencySymbol: '£'),
-    CountryInfo(code: 'EU', name: 'Eurozone', currencySymbol: '€'),
-    CountryInfo(code: 'IN', name: 'India', currencySymbol: '₹'),
-    CountryInfo(code: 'CA', name: 'Canada', currencySymbol: '\$'), // CAD
-    CountryInfo(code: 'AU', name: 'Australia', currencySymbol: '\$'), // AUD
-    CountryInfo(code: 'JP', name: 'Japan', currencySymbol: '¥'),
-    CountryInfo(code: 'CH', name: 'Switzerland', currencySymbol: 'CHF'),
-  ];
+  // REMOVED availableCountries (moved to core/data/countries.dart)
+  // REMOVED getCurrencyForCountry (moved to core/data/countries.dart)
 
-  static String getCurrencyForCountry(String? countryCode) {
-    final codeToUse = countryCode ?? defaultCountryCode;
-    return availableCountries
-        .firstWhere((c) => c.code == codeToUse,
-            orElse: () => availableCountries.first)
-        .currencySymbol;
-  }
-
-  String get currencySymbol => getCurrencyForCountry(selectedCountryCode);
+  // --- Computed Property ---
+  // Use the helper from AppCountries
+  String get currencySymbol =>
+      AppCountries.getCurrencyForCountry(selectedCountryCode);
 
   // --- Constructor ---
   const SettingsState({
     this.status = SettingsStatus.initial,
     this.themeMode = defaultThemeMode,
-    this.paletteIdentifier = defaultPaletteIdentifier, // Use renamed default
+    this.paletteIdentifier = defaultPaletteIdentifier,
     this.uiMode = defaultUIMode,
-    this.selectedCountryCode = defaultCountryCode,
-    this.isAppLockEnabled = defaultAppLockEnabled,
+    this.selectedCountryCode =
+        defaultCountryCode, // Use default from AppCountries
+    this.isAppLockEnabled =
+        defaultAppLockEnabled, // Use default from AppConstants
     this.errorMessage,
     this.packageInfoStatus = PackageInfoStatus.initial,
     this.appVersion,
@@ -94,10 +70,11 @@ class SettingsState extends Equatable {
     this.dataManagementMessage,
   });
 
+  // --- copyWith (no changes needed here for extraction) ---
   SettingsState copyWith({
     SettingsStatus? status,
     ThemeMode? themeMode,
-    String? paletteIdentifier, // RENAMED
+    String? paletteIdentifier,
     UIMode? uiMode,
     String? selectedCountryCode,
     bool? isAppLockEnabled,
@@ -115,7 +92,7 @@ class SettingsState extends Equatable {
     return SettingsState(
       status: status ?? this.status,
       themeMode: themeMode ?? this.themeMode,
-      paletteIdentifier: paletteIdentifier ?? this.paletteIdentifier, // RENAMED
+      paletteIdentifier: paletteIdentifier ?? this.paletteIdentifier,
       uiMode: uiMode ?? this.uiMode,
       selectedCountryCode: selectedCountryCode ?? this.selectedCountryCode,
       isAppLockEnabled: isAppLockEnabled ?? this.isAppLockEnabled,
@@ -134,14 +111,15 @@ class SettingsState extends Equatable {
     );
   }
 
+  // --- props (ensure currencySymbol is included) ---
   @override
   List<Object?> get props => [
         status,
         themeMode,
-        paletteIdentifier, // RENAMED
+        paletteIdentifier,
         uiMode,
         selectedCountryCode,
-        currencySymbol,
+        currencySymbol, // Make sure this computed property is in props
         isAppLockEnabled,
         errorMessage,
         packageInfoStatus,

@@ -1,3 +1,4 @@
+// lib/features/settings/presentation/bloc/settings_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
@@ -15,6 +16,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:expense_tracker/main.dart';
+
+import 'package:expense_tracker/core/data/countries.dart';
+import 'package:expense_tracker/core/constants/app_constants.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
@@ -34,11 +38,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         _backupDataUseCase = backupDataUseCase,
         _restoreDataUseCase = restoreDataUseCase,
         _clearAllDataUseCase = clearAllDataUseCase,
+        // Initialize with defaults from SettingsState static consts
         super(const SettingsState()) {
     // Settings handlers
     on<LoadSettings>(_onLoadSettings);
     on<UpdateTheme>(_onUpdateTheme);
-    on<UpdatePaletteIdentifier>(_onUpdatePaletteIdentifier); // RENAMED
+    on<UpdatePaletteIdentifier>(_onUpdatePaletteIdentifier);
     on<UpdateUIMode>(_onUpdateUIMode);
     on<UpdateCountry>(_onUpdateCountry);
     on<UpdateAppLock>(_onUpdateAppLock);
@@ -62,35 +67,34 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     PackageInfo? packageInfo;
     String? packageInfoLoadError;
     try {
-      // log.info("[SettingsBloc] Fetching PackageInfo..."); // Log less noise
       packageInfo = await PackageInfo.fromPlatform();
-      // log.info("[SettingsBloc] PackageInfo fetched: ${packageInfo.version}+${packageInfo.buildNumber}");
     } catch (e, s) {
       packageInfoLoadError = 'Failed to load app version.';
       log.severe("[SettingsBloc] Failed to load PackageInfo$e$s");
     }
 
     // Fetch settings concurrently
+    // Use defaults from SettingsState for initial values
     ThemeMode loadedThemeMode = SettingsState.defaultThemeMode;
-    String loadedPaletteIdentifier =
-        SettingsState.defaultPaletteIdentifier; // RENAMED
+    String loadedPaletteIdentifier = SettingsState.defaultPaletteIdentifier;
     UIMode loadedUIMode = SettingsState.defaultUIMode;
-    String? loadedCountryCode = SettingsState.defaultCountryCode;
-    bool loadedLock = SettingsState.defaultAppLockEnabled;
+    String loadedCountryCode =
+        SettingsState.defaultCountryCode; // Get default from state
+    bool loadedLock =
+        SettingsState.defaultAppLockEnabled; // Get default from state
     String? settingsLoadError;
 
     try {
-      // log.info("[SettingsBloc] Fetching settings from repository..."); // Log less noise
       final results = await Future.wait([
         _settingsRepository.getThemeMode(),
-        _settingsRepository.getPaletteIdentifier(), // RENAMED
+        _settingsRepository.getPaletteIdentifier(),
         _settingsRepository.getUIMode(),
         _settingsRepository.getSelectedCountryCode(),
         _settingsRepository.getAppLockEnabled(),
       ]);
 
       final themeModeResult = results[0] as Either<Failure, ThemeMode>;
-      final paletteIdResult = results[1] as Either<Failure, String>; // RENAMED
+      final paletteIdResult = results[1] as Either<Failure, String>;
       final uiModeResult = results[2] as Either<Failure, UIMode>;
       final countryResult = results[3] as Either<Failure, String?>;
       final appLockResult = results[4] as Either<Failure, bool>;
@@ -100,9 +104,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         (mode) => loadedThemeMode = mode,
       );
       paletteIdResult.fold(
-        // RENAMED
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
-        (id) => loadedPaletteIdentifier = id, // RENAMED
+        (id) => loadedPaletteIdentifier = id,
       );
       uiModeResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
@@ -110,6 +113,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       );
       countryResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
+        // Use default from SettingsState if null comes back
         (code) => loadedCountryCode = code ?? SettingsState.defaultCountryCode,
       );
       appLockResult.fold(
@@ -117,15 +121,13 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         (enabled) => loadedLock = enabled,
       );
 
-      // log.info("[SettingsBloc] Settings fetch complete. Errors: $settingsLoadError"); // Log less noise
-
       emit(state.copyWith(
         status: settingsLoadError != null
             ? SettingsStatus.error
             : SettingsStatus.loaded,
         errorMessage: settingsLoadError,
         themeMode: loadedThemeMode,
-        paletteIdentifier: loadedPaletteIdentifier, // RENAMED
+        paletteIdentifier: loadedPaletteIdentifier,
         uiMode: loadedUIMode,
         selectedCountryCode: loadedCountryCode,
         isAppLockEnabled: loadedLock,
@@ -178,26 +180,24 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         log.info("[SettingsBloc] Theme mode saved. Emitting new state.");
         emit(state.copyWith(
           themeMode: event.newMode,
-          status: SettingsStatus.loaded,
+          status: SettingsStatus.loaded, // Ensure status is loaded on success
           clearAllMessages: true,
         ));
+        // No need to publish DataChangedEvent for theme mode only
       },
     );
   }
 
   Future<void> _onUpdatePaletteIdentifier(
-      // RENAMED
-      UpdatePaletteIdentifier event,
-      Emitter<SettingsState> emit) async {
-    // RENAMED
+      UpdatePaletteIdentifier event, Emitter<SettingsState> emit) async {
     log.info(
-        "[SettingsBloc] Received UpdatePaletteIdentifier event: ${event.newIdentifier}"); // RENAMED
-    final result = await _settingsRepository
-        .savePaletteIdentifier(event.newIdentifier); // RENAMED
+        "[SettingsBloc] Received UpdatePaletteIdentifier event: ${event.newIdentifier}");
+    final result =
+        await _settingsRepository.savePaletteIdentifier(event.newIdentifier);
     result.fold(
       (failure) {
         log.warning(
-            "[SettingsBloc] Failed to save palette identifier: ${failure.message}"); // RENAMED
+            "[SettingsBloc] Failed to save palette identifier: ${failure.message}");
         emit(state.copyWith(
           status: SettingsStatus.error,
           errorMessage: failure.message,
@@ -206,12 +206,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       },
       (_) {
         log.info(
-            "[SettingsBloc] Palette identifier saved. Emitting new state."); // RENAMED
+            "[SettingsBloc] Palette identifier saved. Emitting new state.");
         emit(state.copyWith(
-          paletteIdentifier: event.newIdentifier, // RENAMED
+          paletteIdentifier: event.newIdentifier,
           status: SettingsStatus.loaded,
           clearAllMessages: true,
         ));
+        // Publish settings change event as palette affects UI generation
+        publishDataChangedEvent(
+            type: DataChangeType.settings, reason: DataChangeReason.updated);
       },
     );
   }
@@ -232,8 +235,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         ));
       },
       (_) {
-        log.info("[SettingsBloc] UI mode saved. Emitting new state.");
-        // Determine the default palette for the new UI mode
+        log.info("[SettingsBloc] UI mode saved. Determining default palette.");
+        // Determine and save the default palette for the new UI mode
         String defaultPalette;
         switch (event.newMode) {
           case UIMode.elemental:
@@ -246,18 +249,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
             defaultPalette = AppTheme.aetherPalette1;
             break;
         }
-        log.info(
-            "[SettingsBloc] Setting default palette for new UI mode to: $defaultPalette");
-        // Save the default palette for the new mode as well
-        _settingsRepository.savePaletteIdentifier(defaultPalette);
+        log.info("[SettingsBloc] Saving default palette: $defaultPalette");
+        _settingsRepository.savePaletteIdentifier(
+            defaultPalette); // Fire and forget is ok here
 
         emit(state.copyWith(
           uiMode: event.newMode,
-          paletteIdentifier: defaultPalette, // Update palette state too
+          paletteIdentifier: defaultPalette, // Update palette in state too
           status: SettingsStatus.loaded,
           clearAllMessages: true,
         ));
-        // Publish settings change event
         publishDataChangedEvent(
             type: DataChangeType.settings, reason: DataChangeReason.updated);
       },
@@ -287,6 +288,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           status: SettingsStatus.loaded,
           clearAllMessages: true,
         ));
+        // Publish event as currency symbol changes
         publishDataChangedEvent(
             type: DataChangeType.settings, reason: DataChangeReason.updated);
       },
@@ -315,11 +317,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           status: SettingsStatus.loaded,
           clearAllMessages: true,
         ));
+        // No need to publish DataChangedEvent for app lock
       },
     );
   }
 
-  // --- Data Management Handlers ---
+  // --- Data Management Handlers (Remain largely the same logic) ---
   Future<void> _onBackupRequested(
       BackupRequested event, Emitter<SettingsState> emit) async {
     log.info("[SettingsBloc] Received BackupRequested event.");
@@ -365,12 +368,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
             dataManagementStatus: DataManagementStatus.success,
             dataManagementMessage:
                 'Restore successful! App will reload data.'));
+        // Publish multiple events to trigger reloads across features
         publishDataChangedEvent(
-            type: DataChangeType.account, reason: DataChangeReason.added);
+            type: DataChangeType.account,
+            reason: DataChangeReason.added); // Or 'deleted' then 'added'
         publishDataChangedEvent(
             type: DataChangeType.expense, reason: DataChangeReason.added);
         publishDataChangedEvent(
             type: DataChangeType.income, reason: DataChangeReason.added);
+        // Reload settings as well, in case backup had different settings (though not implemented yet)
         add(const LoadSettings());
       },
     );

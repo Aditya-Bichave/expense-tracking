@@ -1,11 +1,16 @@
+// lib/features/settings/data/repositories/settings_repository_impl.dart
+
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsState for defaults and UIMode
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import UIMode
 import 'package:simple_logger/simple_logger.dart'; // Import Level for log.log
+
+// *** Import the new AppCountries helper ***
+import 'package:expense_tracker/core/data/countries.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDataSource localDataSource;
@@ -14,10 +19,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, ThemeMode>> getThemeMode() async {
-    // log.info("[SettingsRepo] Getting theme mode."); // Log less noise
     try {
       final themeMode = await localDataSource.getThemeMode();
-      // log.info("[SettingsRepo] Theme mode retrieved: ${themeMode.name}");
       return Right(themeMode);
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting theme mode$e$s');
@@ -42,45 +45,36 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, String>> getPaletteIdentifier() async {
-    // RENAMED
-    // log.info("[SettingsRepo] Getting palette identifier."); // Log less noise
     try {
-      final identifier =
-          await localDataSource.getPaletteIdentifier(); // RENAMED
-      // log.info("[SettingsRepo] Palette identifier retrieved: $identifier");
+      final identifier = await localDataSource.getPaletteIdentifier();
       return Right(identifier);
     } catch (e, s) {
-      log.log(Level.SEVERE,
-          '[SettingsRepo] Error getting palette identifier$e$s'); // RENAMED
+      log.log(
+          Level.SEVERE, '[SettingsRepo] Error getting palette identifier$e$s');
       return Left(SettingsFailure(
-          'Failed to load palette identifier: ${e.toString()}')); // RENAMED
+          'Failed to load palette identifier: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, void>> savePaletteIdentifier(String identifier) async {
-    // RENAMED
-    log.info(
-        "[SettingsRepo] Saving palette identifier: $identifier"); // RENAMED
+    log.info("[SettingsRepo] Saving palette identifier: $identifier");
     try {
-      await localDataSource.savePaletteIdentifier(identifier); // RENAMED
-      log.info(
-          "[SettingsRepo] Palette identifier saved successfully."); // RENAMED
+      await localDataSource.savePaletteIdentifier(identifier);
+      log.info("[SettingsRepo] Palette identifier saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      log.log(Level.SEVERE,
-          '[SettingsRepo] Error saving palette identifier$e$s'); // RENAMED
+      log.log(
+          Level.SEVERE, '[SettingsRepo] Error saving palette identifier$e$s');
       return Left(SettingsFailure(
-          'Failed to save palette identifier: ${e.toString()}')); // RENAMED
+          'Failed to save palette identifier: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, UIMode>> getUIMode() async {
-    // log.info("[SettingsRepo] Getting UI mode."); // Log less noise
     try {
       final uiMode = await localDataSource.getUIMode();
-      // log.info("[SettingsRepo] UI mode retrieved: ${uiMode.name}");
       return Right(uiMode);
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting UI mode$e$s');
@@ -105,10 +99,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, String?>> getSelectedCountryCode() async {
-    // log.info("[SettingsRepo] Getting selected country code."); // Log less noise
     try {
       final code = await localDataSource.getSelectedCountryCode();
-      // log.info("[SettingsRepo] Selected country code retrieved: $code");
       return Right(code);
     } catch (e, s) {
       log.log(Level.SEVERE,
@@ -136,19 +128,19 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, String>> getCurrencySymbol() async {
-    // log.info("[SettingsRepo] Deriving currency symbol."); // Log less noise
     try {
       final codeEither = await getSelectedCountryCode();
       return codeEither.fold(
         (failure) {
           log.warning(
               "[SettingsRepo] Failed to get country code for currency derivation: ${failure.message}. Defaulting.");
-          return Right(SettingsState.getCurrencyForCountry(
-              SettingsState.defaultCountryCode));
+          // *** FIXED: Call the method from AppCountries ***
+          return Right(AppCountries.getCurrencyForCountry(
+              AppCountries.defaultCountryCode));
         },
         (code) {
-          final symbol = SettingsState.getCurrencyForCountry(code);
-          // log.info("[SettingsRepo] Derived currency symbol: $symbol for code: $code");
+          // *** FIXED: Call the method from AppCountries ***
+          final symbol = AppCountries.getCurrencyForCountry(code);
           return Right(symbol);
         },
       );
@@ -162,10 +154,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
 
   @override
   Future<Either<Failure, bool>> getAppLockEnabled() async {
-    // log.info("[SettingsRepo] Getting app lock status."); // Log less noise
     try {
       final isEnabled = await localDataSource.getAppLockEnabled();
-      // log.info("[SettingsRepo] App lock status retrieved: $isEnabled");
       return Right(isEnabled);
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting app lock status$e$s');
