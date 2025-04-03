@@ -1,4 +1,7 @@
+import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc + UIMode
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -6,6 +9,10 @@ import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_b
 import 'package:expense_tracker/features/dashboard/presentation/widgets/overall_balance_card.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/income_expense_summary_card.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_pie_chart.dart';
+// Import placeholder Aether widgets
+import 'package:expense_tracker/features/aether_themes/presentation/widgets/financial_garden_widget.dart';
+import 'package:expense_tracker/features/aether_themes/presentation/widgets/personal_constellation_widget.dart';
+
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
 import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
@@ -63,13 +70,123 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  // --- Helper Widgets for different UI Modes ---
+
+  Widget _buildElementalQuantumDashboard(
+      BuildContext context, FinancialOverview overview, bool isQuantum) {
+    final theme = Theme.of(context);
+    return RefreshIndicator(
+      onRefresh: _refreshDashboard,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: isQuantum
+            ? const EdgeInsets.all(8.0) // Tighter padding for Quantum
+            : const EdgeInsets.all(16.0),
+        children: [
+          OverallBalanceCard(overview: overview),
+          SizedBox(height: isQuantum ? 8 : 16),
+          IncomeExpenseSummaryCard(overview: overview),
+          SizedBox(height: isQuantum ? 8 : 16),
+          // Conditional Chart/Table for Quantum
+          if (isQuantum)
+            _buildQuantumAssetTable(context, overview)
+          else
+            AssetDistributionPieChart(
+                accountBalances: overview.accountBalances),
+
+          SizedBox(height: isQuantum ? 16 : 24),
+          if (!isQuantum) // Only show placeholder text in Elemental
+            Center(
+                child: Text("More insights coming soon!",
+                    style: theme.textTheme.labelMedium)),
+          // TODO: Add more Quantum-specific data widgets here if needed
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAetherDashboard(BuildContext context,
+      SettingsState settingsState, FinancialOverview overview) {
+    // TODO: Choose between Garden/Constellation based on settingsState.selectedThemeIdentifier
+    // For now, default to Garden
+    final String themeId = settingsState.selectedThemeIdentifier;
+
+    if (themeId == AppTheme.aetherConstellationThemeId) {
+      return PersonalConstellationWidget(overview: overview);
+    } else {
+      // Default to Garden
+      return FinancialGardenWidget(overview: overview);
+    }
+  }
+
+  Widget _buildQuantumAssetTable(
+      BuildContext context, FinancialOverview overview) {
+    final theme = Theme.of(context);
+    final positiveBalances =
+        overview.accounts.where((acc) => acc.currentBalance > 0).toList();
+    final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
+
+    // Simple table representation
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0), // Quantum padding
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                'Asset Distribution (Table)',
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(color: theme.colorScheme.secondary),
+              ),
+            ),
+            if (positiveBalances.isEmpty)
+              const Center(
+                  child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Text("No positive balances to display."),
+              ))
+            else
+              DataTable(
+                columnSpacing: 12,
+                horizontalMargin: 8,
+                headingRowHeight: 30,
+                dataRowMinHeight: 35,
+                dataRowMaxHeight: 40,
+                columns: const [
+                  DataColumn(label: Text('Account')),
+                  DataColumn(label: Text('Balance'), numeric: true),
+                ],
+                rows: positiveBalances
+                    .map((account) => DataRow(
+                          cells: [
+                            DataCell(Text(account.name,
+                                overflow: TextOverflow.ellipsis)),
+                            DataCell(Text(CurrencyFormatter.format(
+                                account.currentBalance, currencySymbol))),
+                          ],
+                        ))
+                    .toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    log.info("[DashboardPage] build method called.");
+    log.info("[DashboardPage] Build method called.");
     final theme = Theme.of(context);
+    // Also watch SettingsBloc to determine UI mode
+    final settingsState = context.watch<SettingsBloc>().state;
+    final uiMode = settingsState.uiMode;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(
+            'Dashboard (${StringHelperExtension(uiMode.name).capitalize()})'), // Show mode in title
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -110,7 +227,7 @@ class _DashboardPageState extends State<DashboardPage> {
             } else if (state is DashboardLoaded ||
                 (state is DashboardLoading && state.isReloading)) {
               log.info(
-                  "[DashboardPage UI] State is DashboardLoaded or reloading. Building dashboard content.");
+                  "[DashboardPage UI] State is DashboardLoaded or reloading. Building dashboard content for mode: $uiMode");
               final overview = (state is DashboardLoaded)
                   ? state.overview
                   : (_dashboardBloc.state as DashboardLoaded?)
@@ -122,27 +239,23 @@ class _DashboardPageState extends State<DashboardPage> {
                     "[DashboardPage UI] Overview data is null during Loaded/Reloading state.");
                 child = const Center(child: Text("Loading data..."));
               } else {
-                child = RefreshIndicator(
-                  onRefresh: _refreshDashboard,
-                  child: ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16.0),
-                    children: [
-                      OverallBalanceCard(overview: overview),
-                      const SizedBox(height: 16),
-                      IncomeExpenseSummaryCard(overview: overview),
-                      const SizedBox(height: 16),
-                      // Filter balances for the chart here if not done in UseCase
-                      AssetDistributionPieChart(
-                        accountBalances: overview.accountBalances,
-                      ),
-                      const SizedBox(height: 24),
-                      Center(
-                          child: Text("More insights coming soon!",
-                              style: theme.textTheme.labelMedium)),
-                    ],
-                  ),
-                );
+                // --- Conditional Rendering based on UI Mode ---
+                switch (uiMode) {
+                  case UIMode.quantum:
+                    child = _buildElementalQuantumDashboard(
+                        context, overview, true);
+                    break;
+                  case UIMode.aether:
+                    child =
+                        _buildAetherDashboard(context, settingsState, overview);
+                    break;
+                  case UIMode.elemental:
+                  default:
+                    child = _buildElementalQuantumDashboard(
+                        context, overview, false);
+                    break;
+                }
+                // --- End Conditional Rendering ---
               }
             } else if (state is DashboardError) {
               log.info(
@@ -179,14 +292,27 @@ class _DashboardPageState extends State<DashboardPage> {
               child = const Center(child: CircularProgressIndicator());
             }
 
-            // Animate between child states
+            // Animate between child states (Root level for mode switching)
             return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
+              duration:
+                  const Duration(milliseconds: 400), // Slightly longer duration
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                // Use fade transition for simplicity between modes
+                return FadeTransition(opacity: animation, child: child);
+              },
               child: child,
             );
           },
         ),
       ),
     );
+  }
+}
+
+// Helper extension
+extension StringHelperExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

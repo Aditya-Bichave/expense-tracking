@@ -24,7 +24,7 @@ import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_b
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import UIMode
 
 final log = SimpleLogger(); // Create logger instance
 
@@ -32,7 +32,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Configure Logger (Optional: Set level, etc.)
-  log.setLevel(Level.WARNING, includeCallerInfo: false);
+  log.setLevel(Level.INFO,
+      includeCallerInfo: false); // Changed to INFO for more detail
   log.info("Application starting...");
 
   // Initialize Hive, SharedPreferences, DI
@@ -75,6 +76,10 @@ class InitializationErrorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: AppTheme.getThemeDataByIdentifier(AppTheme.elementalThemeId)
+          .light, // Use default
+      darkTheme:
+          AppTheme.getThemeDataByIdentifier(AppTheme.elementalThemeId).dark,
       home: Scaffold(
         body: Center(
           child: Padding(
@@ -346,23 +351,50 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    // Watch themeMode AND themeIdentifier
+    // Watch all relevant settings state
     final settingsState = context.watch<SettingsBloc>().state;
     final currentThemeMode = settingsState.themeMode;
-    final currentThemeIdentifier = settingsState.selectedThemeIdentifier;
-    final selectedThemeData =
-        AppTheme.getThemeDataByIdentifier(currentThemeIdentifier);
+    final currentUIMode = settingsState.uiMode;
+    final selectedColorThemeIdentifier = settingsState.selectedThemeIdentifier;
+    final isAppLockEnabled =
+        settingsState.isAppLockEnabled; // Needed for logic below
+
+    _needsAuth = isAppLockEnabled; // Update needsAuth based on current state
+
+    // --- Determine the FINAL theme data based on UI Mode ---
+    final AppThemeData finalThemeData;
+    // Select the base theme builder based on the UI Mode
+    switch (currentUIMode) {
+      case UIMode.quantum:
+        // TODO: Choose between Quantum themes (e.g., mono vs terminal) based on selectedColorThemeIdentifier if needed
+        finalThemeData =
+            AppTheme.getThemeDataByIdentifier(AppTheme.quantumMonoThemeId);
+        break;
+      case UIMode.aether:
+        // TODO: Choose between Aether sub-themes based on selectedColorThemeIdentifier if needed
+        finalThemeData =
+            AppTheme.getThemeDataByIdentifier(AppTheme.aetherGardenThemeId);
+        break;
+      case UIMode.elemental:
+      default:
+        // Elemental uses the selected color variant from settings
+        finalThemeData =
+            AppTheme.getThemeDataByIdentifier(selectedColorThemeIdentifier);
+        break;
+    }
+    // --- END Theme Determination Logic ---
 
     log.info(
-        "[AuthWrapper] Build method running. Status: NeedsAuth=$_needsAuth, IsAuthenticated=$_isAuthenticated, IsCheckingAuth=$_isCheckingAuth");
+        "[AuthWrapper] Build method running. Status: NeedsAuth=$_needsAuth, IsAuthenticated=$_isAuthenticated, IsCheckingAuth=$_isCheckingAuth, UIMode=$currentUIMode, ThemeID=$selectedColorThemeIdentifier");
 
-    // Determine light/dark themes based on selected identifier
-    final lightTheme = selectedThemeData.light;
-    final darkTheme = selectedThemeData.dark;
+    // Determine light/dark themes based on the FINAL theme data
+    final lightTheme = finalThemeData.light;
+    final darkTheme = finalThemeData.dark;
 
-    if (_isCheckingAuth && !_isAuthenticated) {
+    if (_isCheckingAuth && !_isAuthenticated && _needsAuth) {
+      // Only show loading if auth is needed and not done
       // Show loading/splash screen
-      log.info("[AuthWrapper UI] Showing Loading Screen.");
+      log.info("[AuthWrapper UI] Showing Loading Screen (Auth Check).");
       return MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: lightTheme,
@@ -410,27 +442,44 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
         ),
       );
     } else {
-      // Show main app
-      log.info("[AuthWrapper UI] Showing Main App (MyApp).");
-      return const MyApp();
+      // Show main app (either lock disabled or successfully authenticated)
+      if (!_isAuthenticated && !_needsAuth) {
+        // Update state if lock was just disabled
+        log.info(
+            "[AuthWrapper] Lock disabled, ensuring isAuthenticated is true.");
+        _isAuthenticated = true;
+      }
+      log.info(
+          "[AuthWrapper UI] Showing Main App (MyApp). Authenticated: $_isAuthenticated");
+      // Pass the final decided theme data down to MyApp
+      return MyApp(
+        lightTheme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: currentThemeMode,
+      );
     }
   }
 }
 
-// --- Original MyApp Widget (Modified for Theme) ---
+// --- MyApp Widget (Modified for Theme Injection) ---
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ThemeData lightTheme;
+  final ThemeData darkTheme;
+  final ThemeMode themeMode;
+
+  const MyApp({
+    super.key,
+    required this.lightTheme,
+    required this.darkTheme,
+    required this.themeMode,
+  });
 
   @override
   Widget build(BuildContext context) {
     final GoRouter router = AppRouter.router;
 
-    // Watch the SettingsBloc for theme changes within the authenticated app
-    final settingsState = context.watch<SettingsBloc>().state;
-    final currentThemeMode = settingsState.themeMode;
-    final currentThemeIdentifier = settingsState.selectedThemeIdentifier;
-    final selectedThemeData =
-        AppTheme.getThemeDataByIdentifier(currentThemeIdentifier);
+    // SettingsBloc is provided above AuthWrapper, so it's available here via context.read or BlocProvider.value
+    // No need to watch SettingsBloc *again* here for theme, as it's passed down.
 
     return MultiBlocProvider(
       providers: [
@@ -453,11 +502,11 @@ class MyApp extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        title: AppTheme.appName, // Use app name from theme
-        // Apply selected theme data
-        theme: selectedThemeData.light,
-        darkTheme: selectedThemeData.dark,
-        themeMode: currentThemeMode, // Apply selected mode
+        title: AppTheme.appName,
+        // Apply the THEMES PASSED DOWN from AuthWrapper
+        theme: lightTheme,
+        darkTheme: darkTheme,
+        themeMode: themeMode,
         debugShowCheckedModeBanner: false,
         routerConfig: router,
       ),

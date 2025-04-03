@@ -242,6 +242,35 @@ class _SettingsViewState extends State<SettingsView> {
     }
   }
 
+  // --- Helper to get theme identifiers relevant to the current UI mode ---
+  List<String> _getRelevantThemeIdentifiers(UIMode uiMode) {
+    switch (uiMode) {
+      case UIMode.elemental:
+        // Offer default elemental and color variants
+        return [
+          AppTheme.elementalThemeId,
+          AppTheme.pastelPeachId,
+          AppTheme.mintyFreshId,
+          AppTheme.lavenderDreamId,
+          AppTheme.sunnyYellowId,
+          AppTheme.oceanBlueId,
+          AppTheme.cherryBlossomId,
+        ];
+      case UIMode.quantum:
+        // Offer Quantum specific themes
+        return [
+          AppTheme.quantumMonoThemeId,
+          AppTheme.quantumTerminalThemeId,
+        ];
+      case UIMode.aether:
+        // Offer Aether sub-themes
+        return [
+          AppTheme.aetherGardenThemeId,
+          AppTheme.aetherConstellationThemeId,
+        ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -313,6 +342,11 @@ class _SettingsViewState extends State<SettingsView> {
               return const Center(child: CircularProgressIndicator());
             }
 
+            // Get relevant theme identifiers for the current UI mode
+            final relevantThemeIds = _getRelevantThemeIdentifiers(state.uiMode);
+            final currentThemeIdValid =
+                relevantThemeIds.contains(state.selectedThemeIdentifier);
+
             // Use Stack for overlay loading indicator during data operations
             return Stack(
               children: [
@@ -322,41 +356,87 @@ class _SettingsViewState extends State<SettingsView> {
                     // --- Appearance Section ---
                     _buildSectionHeader(context, 'Appearance'),
                     ListTile(
-                      // Theme Identifier Selection
+                      // UI Mode Selection
                       enabled: !isOverallLoading,
-                      leading: const Icon(Icons.palette_outlined),
-                      title: const Text('App Theme'),
+                      leading: const Icon(Icons.view_quilt_outlined),
+                      title: const Text('UI Mode'),
+                      subtitle: Text(AppTheme.uiModeNames[state.uiMode] ??
+                          state.uiMode.name),
+                      trailing: PopupMenuButton<UIMode>(
+                        enabled: !isOverallLoading,
+                        icon: const Icon(Icons.arrow_drop_down),
+                        tooltip: "Select UI Mode",
+                        onSelected: (UIMode newMode) {
+                          context
+                              .read<SettingsBloc>()
+                              .add(UpdateUIMode(newMode));
+                          // Maybe reset theme identifier to default for the new mode? Optional.
+                          // context.read<SettingsBloc>().add(UpdateThemeIdentifier(AppTheme.getDefaultIdentifierForMode(newMode)));
+                        },
+                        itemBuilder: (context) => UIMode.values
+                            .map((mode) => PopupMenuItem<UIMode>(
+                                  value: mode,
+                                  child: Text(
+                                      AppTheme.uiModeNames[mode] ??
+                                          StringExtension(mode.name)
+                                              .capitalize(),
+                                      style: theme.textTheme.bodyMedium),
+                                ))
+                            .toList(),
+                      ),
+                    ),
+                    // --- Theme Identifier Selection (Specific Theme/Color/Sub-theme) ---
+                    ListTile(
+                      enabled: !isOverallLoading,
+                      leading: Icon(state.uiMode == UIMode.aether
+                          ? Icons.auto_awesome_outlined
+                          : Icons
+                              .color_lens_outlined), // Different icon for Aether
+                      title: Text(state.uiMode == UIMode.aether
+                          ? 'Aether Theme'
+                          : 'Color Theme'), // Dynamic title
                       subtitle: Text(
                           AppTheme.getThemeName(state.selectedThemeIdentifier)),
                       trailing: PopupMenuButton<String>(
-                        enabled: !isOverallLoading,
-                        icon: const Icon(Icons.arrow_drop_down),
-                        tooltip: "Select App Theme",
-                        onSelected: (String newIdentifier) {
-                          context
-                              .read<SettingsBloc>()
-                              .add(UpdateThemeIdentifier(newIdentifier));
-                        },
-                        itemBuilder: (context) =>
-                            AppTheme.availableThemeIdentifiers
+                          enabled: !isOverallLoading,
+                          icon: const Icon(Icons.arrow_drop_down),
+                          tooltip: "Select Theme",
+                          // Ensure the current value exists in the items, otherwise don't set initialValue
+                          initialValue: currentThemeIdValid
+                              ? state.selectedThemeIdentifier
+                              : null,
+                          onSelected: (String newIdentifier) {
+                            // Only dispatch if the value changes
+                            if (state.selectedThemeIdentifier !=
+                                newIdentifier) {
+                              context
+                                  .read<SettingsBloc>()
+                                  .add(UpdateThemeIdentifier(newIdentifier));
+                            }
+                          },
+                          itemBuilder: (context) {
+                            // Show only relevant themes for the selected UI mode
+                            return relevantThemeIds
                                 .map((id) => PopupMenuItem<String>(
                                       value: id,
                                       child: Text(AppTheme.getThemeName(id),
                                           style: theme.textTheme.bodyMedium),
                                     ))
-                                .toList(),
-                      ),
+                                .toList();
+                          }),
                     ),
+                    // --- End Theme Identifier Selection ---
                     ListTile(
                       // Theme Mode (Light/Dark/System)
                       enabled: !isOverallLoading,
                       leading: const Icon(Icons.brightness_6_outlined),
-                      title: const Text('Theme Mode'),
-                      subtitle: Text(state.themeMode.name.capitalize()),
+                      title: const Text('Brightness Mode'),
+                      subtitle: Text(
+                          StringExtension(state.themeMode.name).capitalize()),
                       trailing: PopupMenuButton<ThemeMode>(
                         enabled: !isOverallLoading,
                         icon: const Icon(Icons.arrow_drop_down),
-                        tooltip: "Select Theme Mode",
+                        tooltip: "Select Brightness Mode",
                         onSelected: (ThemeMode newMode) {
                           context
                               .read<SettingsBloc>()
@@ -365,7 +445,8 @@ class _SettingsViewState extends State<SettingsView> {
                         itemBuilder: (context) => ThemeMode.values
                             .map((mode) => PopupMenuItem<ThemeMode>(
                                   value: mode,
-                                  child: Text(mode.name.capitalize(),
+                                  child: Text(
+                                      StringExtension(mode.name).capitalize(),
                                       style: theme.textTheme.bodyMedium),
                                 ))
                             .toList(),

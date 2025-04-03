@@ -1,16 +1,20 @@
+import 'package:expense_tracker/core/utils/currency_formatter.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
-import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart'; // <-- Correct import added
+import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/income/domain/entities/income_category.dart'; // Import IncomeCategory for filter dialog
+import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/features/expenses/presentation/pages/expense_list_page.dart'; // Import shared FilterDialogContent
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class IncomeListPage extends StatefulWidget {
+  // Changed to StatefulWidget
   const IncomeListPage({super.key});
 
   @override
@@ -18,8 +22,12 @@ class IncomeListPage extends StatefulWidget {
 }
 
 class _IncomeListPageState extends State<IncomeListPage> {
+  // Added State
   late IncomeListBloc _incomeListBloc;
   // AccountListBloc is assumed to be provided globally
+
+  // --- State for Table View Toggle ---
+  bool _isTableView = false;
 
   @override
   void initState() {
@@ -101,14 +109,75 @@ class _IncomeListPageState extends State<IncomeListPage> {
         false;
   }
 
+  // --- Build DataTable View ---
+  Widget _buildDataTable(BuildContext context, List<Income> incomes,
+      AccountListState accountState) {
+    final theme = Theme.of(context);
+    final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
+    final bool isQuantum =
+        context.read<SettingsBloc>().state.uiMode == UIMode.quantum;
+
+    Map<String, String> accountNames = {};
+    if (accountState is AccountListLoaded) {
+      accountNames = {for (var acc in accountState.accounts) acc.id: acc.name};
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columnSpacing: isQuantum ? 10 : 15,
+        horizontalMargin: isQuantum ? 8 : 12,
+        headingRowHeight: isQuantum ? 28 : 35,
+        dataRowMinHeight: isQuantum ? 30 : 35,
+        dataRowMaxHeight: isQuantum ? 35 : 40,
+        showCheckboxColumn: false,
+        columns: const [
+          DataColumn(label: Text('Date')),
+          DataColumn(label: Text('Title')),
+          DataColumn(label: Text('Category')),
+          DataColumn(label: Text('Account')),
+          DataColumn(label: Text('Amount'), numeric: true),
+        ],
+        rows: incomes.map((income) {
+          final accountName = accountNames[income.accountId] ?? 'Unknown';
+          return DataRow(
+            onSelectChanged: (_) => _navigateToEditIncome(income),
+            cells: [
+              DataCell(Text(DateFormatter.formatDate(income.date))),
+              DataCell(Text(income.title, overflow: TextOverflow.ellipsis)),
+              DataCell(
+                  Text(income.category.name, overflow: TextOverflow.ellipsis)),
+              DataCell(Text(accountName, overflow: TextOverflow.ellipsis)),
+              DataCell(Text(
+                  CurrencyFormatter.format(income.amount, currencySymbol))),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     log.info("[IncomeListPage] Build method called.");
     final theme = Theme.of(context);
+    final uiMode = context.watch<SettingsBloc>().state.uiMode;
+    final bool showTableViewToggle = uiMode == UIMode.quantum;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Income'),
         actions: [
+          // --- View Toggle Button (Quantum Mode Only) ---
+          if (showTableViewToggle)
+            IconButton(
+              icon: Icon(_isTableView
+                  ? Icons.view_list_outlined
+                  : Icons.table_rows_outlined),
+              tooltip:
+                  _isTableView ? 'Switch to Card View' : 'Switch to Table View',
+              onPressed: () => setState(() => _isTableView = !_isTableView),
+            ),
           // Filter button
           BlocBuilder<IncomeListBloc, IncomeListState>(
             builder: (context, state) {
@@ -132,12 +201,9 @@ class _IncomeListPageState extends State<IncomeListPage> {
         ],
       ),
       body: MultiBlocProvider(
-        // Provide necessary Blocs if not already available above
         providers: [
           BlocProvider.value(value: _incomeListBloc),
-          BlocProvider.value(
-              value:
-                  sl<AccountListBloc>()), // Ensure AccountListBloc is provided
+          BlocProvider.value(value: sl<AccountListBloc>()),
         ],
         child: BlocConsumer<IncomeListBloc, IncomeListState>(
           listener: (context, incomeState) {
@@ -159,12 +225,12 @@ class _IncomeListPageState extends State<IncomeListPage> {
           builder: (context, incomeState) {
             log.info(
                 "[IncomeListPage] BlocBuilder building for income state: ${incomeState.runtimeType}");
-            Widget child;
+            Widget listContent;
 
             if (incomeState is IncomeListLoading && !incomeState.isReloading) {
               log.info(
                   "[IncomeListPage UI] State is initial IncomeListLoading. Showing CircularProgressIndicator.");
-              child = const Center(child: CircularProgressIndicator());
+              listContent = const Center(child: CircularProgressIndicator());
             } else if (incomeState is IncomeListLoaded ||
                 (incomeState is IncomeListLoading && incomeState.isReloading)) {
               final incomes = (incomeState is IncomeListLoaded)
@@ -180,7 +246,8 @@ class _IncomeListPageState extends State<IncomeListPage> {
 
               if (incomes.isEmpty) {
                 log.info("[IncomeListPage UI] Income list is empty.");
-                child = Center(
+                listContent = Center(
+                  // Same empty state for now
                   child: Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
@@ -226,90 +293,89 @@ class _IncomeListPageState extends State<IncomeListPage> {
                 );
               } else {
                 log.info(
-                    "[IncomeListPage UI] Income list has ${incomes.length} items. Building ListView.");
-                // Need AccountListBloc to provide names for the IncomeCard
-                child = BlocBuilder<AccountListBloc, AccountListState>(
-                  builder: (context, accountState) {
-                    log.info(
-                        "[IncomeListPage UI] Nested AccountListBloc state: ${accountState.runtimeType}");
-                    // Handle account loading/error specifically (though IncomeCard might handle 'Unknown')
-                    if (accountState is AccountListLoading &&
-                        incomes.isNotEmpty) {
-                      // Show list slightly dimmed while loading names? Or just text.
-                      return const Center(
-                          child: Text("Loading account names..."));
-                    }
-                    if (accountState is AccountListError &&
-                        incomes.isNotEmpty) {
-                      // Show list, but IncomeCard will show 'Unknown Account' or similar
-                      log.warning(
-                          "[IncomeListPage] Error loading accounts: ${accountState.message}. Income cards might show unknown account.");
-                    }
+                    "[IncomeListPage UI] Income list has ${incomes.length} items. Building List/Table view. isTable: $_isTableView");
+                // --- CONDITIONAL LIST VIEW / TABLE VIEW ---
+                if (_isTableView && showTableViewToggle) {
+                  listContent = BlocBuilder<AccountListBloc, AccountListState>(
+                      builder: (context, accountState) {
+                    return _buildDataTable(context, incomes, accountState);
+                  });
+                } else {
+                  listContent = BlocBuilder<AccountListBloc, AccountListState>(
+                    // Key helps AnimatedSwitcher differentiate
+                    key: const ValueKey('income_list_cards'),
+                    builder: (context, accountState) {
+                      log.info(
+                          "[IncomeListPage UI] Nested AccountListBloc state: ${accountState.runtimeType}");
+                      if (accountState is AccountListLoading) {
+                        // Optionally show indicator while loading names
+                        // return const Center(child: Text("Loading account names..."));
+                      }
 
-                    // Build the main list
-                    return RefreshIndicator(
-                      onRefresh: _refreshIncome,
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        itemCount: incomes.length,
-                        itemBuilder: (context, index) {
-                          final income = incomes[index];
-                          return Dismissible(
-                            key: Key('income_${income.id}'), // Unique key
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              color: theme.colorScheme.errorContainer,
-                              alignment: Alignment.centerRight,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text("Delete",
-                                      style: TextStyle(
-                                          color: theme
-                                              .colorScheme.onErrorContainer,
-                                          fontWeight: FontWeight.bold)),
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.delete_sweep_outlined,
-                                      color:
-                                          theme.colorScheme.onErrorContainer),
-                                ],
+                      return RefreshIndicator(
+                        onRefresh: _refreshIncome,
+                        child: ListView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: incomes.length,
+                          itemBuilder: (context, index) {
+                            final income = incomes[index];
+                            return Dismissible(
+                              key:
+                                  Key('income_card_${income.id}'), // Unique key
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                color: theme.colorScheme.errorContainer,
+                                alignment: Alignment.centerRight,
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text("Delete",
+                                        style: TextStyle(
+                                            color: theme
+                                                .colorScheme.onErrorContainer,
+                                            fontWeight: FontWeight.bold)),
+                                    const SizedBox(width: 8),
+                                    Icon(Icons.delete_sweep_outlined,
+                                        color:
+                                            theme.colorScheme.onErrorContainer),
+                                  ],
+                                ),
                               ),
-                            ),
-                            confirmDismiss: (direction) =>
-                                _confirmDeletion(context, income),
-                            onDismissed: (direction) {
-                              log.info(
-                                  "[IncomeListPage] Dismissed income '${income.title}'. Dispatching delete request.");
-                              context
-                                  .read<IncomeListBloc>()
-                                  .add(DeleteIncomeRequested(income.id));
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(SnackBar(
-                                  content:
-                                      Text('Income "${income.title}" deleted.'),
-                                  backgroundColor:
-                                      Colors.orange, // Or theme color
-                                ));
-                            },
-                            // Use IncomeCard constructor correctly
-                            child: IncomeCard(
-                              income: income,
-                              onTap: () => _navigateToEditIncome(income),
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                );
+                              confirmDismiss: (direction) =>
+                                  _confirmDeletion(context, income),
+                              onDismissed: (direction) {
+                                log.info(
+                                    "[IncomeListPage] Dismissed income '${income.title}'. Dispatching delete request.");
+                                context
+                                    .read<IncomeListBloc>()
+                                    .add(DeleteIncomeRequested(income.id));
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(SnackBar(
+                                    content: Text(
+                                        'Income "${income.title}" deleted.'),
+                                    backgroundColor: Colors.orange,
+                                  ));
+                              },
+                              child: IncomeCard(
+                                income: income,
+                                onTap: () => _navigateToEditIncome(income),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  );
+                }
+                // --- END CONDITIONAL VIEW ---
               }
             } else if (incomeState is IncomeListError) {
               log.info(
                   "[IncomeListPage UI] State is IncomeListError: ${incomeState.message}. Showing error UI.");
-              child = Center(
+              listContent = Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -339,13 +405,16 @@ class _IncomeListPageState extends State<IncomeListPage> {
             } else {
               log.info(
                   "[IncomeListPage UI] State is Initial or Unknown. Showing loading indicator.");
-              child = const Center(child: CircularProgressIndicator());
+              listContent = const Center(child: CircularProgressIndicator());
             }
 
             // Animate state changes
             return AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
-              child: child,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: listContent,
             );
           },
         ),
@@ -384,8 +453,8 @@ class _IncomeListPageState extends State<IncomeListPage> {
         // Use the shared FilterDialogContent widget from expense_list_page
         return FilterDialogContent(
           isIncomeFilter: true, // Set flag
-          incomeCategoryNames: incomeCategoryNames, // Pass income categories
-          expenseCategoryNames: const [], // Pass empty list for expense categories
+          incomeCategoryNames: incomeCategoryNames,
+          expenseCategoryNames: const [], // Pass empty list
           initialStartDate: currentStart,
           initialEndDate: currentEnd,
           initialCategoryName: currentCategoryName,

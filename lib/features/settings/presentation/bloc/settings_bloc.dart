@@ -38,9 +38,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     // Settings handlers
     on<LoadSettings>(_onLoadSettings);
     on<UpdateTheme>(_onUpdateTheme);
-    on<UpdateThemeIdentifier>(
-        _onUpdateThemeIdentifier); // New theme identifier handler
-    on<UpdateCountry>(_onUpdateCountry); // New country handler
+    on<UpdateThemeIdentifier>(_onUpdateThemeIdentifier);
+    on<UpdateUIMode>(_onUpdateUIMode); // --- ADDED: UI Mode handler ---
+    on<UpdateCountry>(_onUpdateCountry);
     on<UpdateAppLock>(_onUpdateAppLock);
     // Data Management Handlers
     on<BackupRequested>(_onBackupRequested);
@@ -73,7 +73,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
     // Fetch settings concurrently
     ThemeMode loadedThemeMode = SettingsState.defaultThemeMode;
-    String loadedThemeIdentifier = AppTheme.defaultThemeId;
+    String loadedThemeIdentifier = SettingsState.defaultThemeIdentifier;
+    UIMode loadedUIMode = SettingsState.defaultUIMode; // --- ADDED ---
     String? loadedCountryCode = SettingsState.defaultCountryCode;
     bool loadedLock = SettingsState.defaultAppLockEnabled;
     String? settingsLoadError;
@@ -83,14 +84,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final results = await Future.wait([
         _settingsRepository.getThemeMode(),
         _settingsRepository.getThemeIdentifier(),
+        _settingsRepository.getUIMode(), // --- ADDED: Fetch UI Mode ---
         _settingsRepository.getSelectedCountryCode(),
         _settingsRepository.getAppLockEnabled(),
       ]);
 
       final themeModeResult = results[0] as Either<Failure, ThemeMode>;
       final themeIdResult = results[1] as Either<Failure, String>;
-      final countryResult = results[2] as Either<Failure, String?>;
-      final appLockResult = results[3] as Either<Failure, bool>;
+      final uiModeResult =
+          results[2] as Either<Failure, UIMode>; // --- ADDED ---
+      final countryResult = results[3] as Either<Failure, String?>;
+      final appLockResult = results[4] as Either<Failure, bool>;
 
       themeModeResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
@@ -100,6 +104,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
         (id) => loadedThemeIdentifier = id,
       );
+      // --- ADDED: Handle UI Mode result ---
+      uiModeResult.fold(
+        (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
+        (mode) => loadedUIMode = mode,
+      );
+      // --- END ADDED ---
       countryResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
         (code) => loadedCountryCode =
@@ -120,7 +130,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
             : SettingsStatus.loaded,
         errorMessage: settingsLoadError,
         themeMode: loadedThemeMode,
-        selectedThemeIdentifier: loadedThemeIdentifier, // Use identifier
+        selectedThemeIdentifier: loadedThemeIdentifier,
+        uiMode: loadedUIMode, // --- ADDED ---
         selectedCountryCode: loadedCountryCode,
         // currencySymbol derived in state getter
         isAppLockEnabled: loadedLock,
@@ -206,6 +217,36 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       },
     );
   }
+
+  // --- ADDED: UI Mode Handler ---
+  Future<void> _onUpdateUIMode(
+      UpdateUIMode event, Emitter<SettingsState> emit) async {
+    log.info(
+        "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}");
+    final result = await _settingsRepository.saveUIMode(event.newMode);
+    result.fold(
+      (failure) {
+        log.warning(
+            "[SettingsBloc] Failed to save UI mode: ${failure.message}");
+        emit(state.copyWith(
+          status: SettingsStatus.error,
+          errorMessage: failure.message,
+          clearAllMessages: true,
+        ));
+      },
+      (_) {
+        log.info("[SettingsBloc] UI mode saved. Emitting new state.");
+        emit(state.copyWith(
+          uiMode: event.newMode,
+          status: SettingsStatus.loaded,
+          clearAllMessages: true,
+        ));
+        // Note: We might need a DataChangedEvent for settings if UI structure changes drastically later
+        // publishDataChangedEvent(type: DataChangeType.settings, reason: DataChangeReason.updated);
+      },
+    );
+  }
+  // --- END ADDED ---
 
   Future<void> _onUpdateCountry(
       UpdateCountry event, Emitter<SettingsState> emit) async {

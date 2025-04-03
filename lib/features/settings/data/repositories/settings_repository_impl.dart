@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/settings/data/datasources/settings_loca
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsState for defaults
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsState for defaults and UIMode
 import 'package:simple_logger/simple_logger.dart'; // Import Level for log.log
 
 class SettingsRepositoryImpl implements SettingsRepository {
@@ -20,7 +20,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] Theme mode retrieved: ${themeMode.name}");
       return Right(themeMode);
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE, '[SettingsRepo] Error getting theme mode$e$s');
       return Left(
           SettingsFailure('Failed to load theme setting: ${e.toString()}'));
@@ -35,7 +34,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] Theme mode saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE, '[SettingsRepo] Error saving theme mode$e$s');
       return Left(
           SettingsFailure('Failed to save theme setting: ${e.toString()}'));
@@ -50,7 +48,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] Theme identifier retrieved: $identifier");
       return Right(identifier);
     } catch (e, s) {
-      // Use log.log
       log.log(
           Level.SEVERE, '[SettingsRepo] Error getting theme identifier$e$s');
       return Left(
@@ -66,12 +63,41 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] Theme identifier saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE, '[SettingsRepo] Error saving theme identifier$e$s');
       return Left(
           SettingsFailure('Failed to save theme identifier: ${e.toString()}'));
     }
   }
+
+  // --- ADDED: UI Mode ---
+  @override
+  Future<Either<Failure, UIMode>> getUIMode() async {
+    log.info("[SettingsRepo] Getting UI mode.");
+    try {
+      final uiMode = await localDataSource.getUIMode();
+      log.info("[SettingsRepo] UI mode retrieved: ${uiMode.name}");
+      return Right(uiMode);
+    } catch (e, s) {
+      log.log(Level.SEVERE, '[SettingsRepo] Error getting UI mode$e$s');
+      return Left(
+          SettingsFailure('Failed to load UI mode setting: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveUIMode(UIMode mode) async {
+    log.info("[SettingsRepo] Saving UI mode: ${mode.name}");
+    try {
+      await localDataSource.saveUIMode(mode);
+      log.info("[SettingsRepo] UI mode saved successfully.");
+      return const Right(null);
+    } catch (e, s) {
+      log.log(Level.SEVERE, '[SettingsRepo] Error saving UI mode$e$s');
+      return Left(
+          SettingsFailure('Failed to save UI mode setting: ${e.toString()}'));
+    }
+  }
+  // --- END ADDED ---
 
   @override
   Future<Either<Failure, String?>> getSelectedCountryCode() async {
@@ -81,7 +107,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] Selected country code retrieved: $code");
       return Right(code);
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE,
           '[SettingsRepo] Error getting selected country code$e$s');
       return Left(
@@ -98,7 +123,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] Selected country code saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE,
           '[SettingsRepo] Error saving selected country code$e$s');
       return Left(
@@ -106,7 +130,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
     }
   }
 
-  // --- Derived Currency Symbol ---
   @override
   Future<Either<Failure, String>> getCurrencySymbol() async {
     log.info("[SettingsRepo] Deriving currency symbol.");
@@ -116,12 +139,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
         (failure) {
           log.warning(
               "[SettingsRepo] Failed to get country code for currency derivation: ${failure.message}. Defaulting.");
-          // CORRECTED: Access static const directly
           return Right(SettingsState.getCurrencyForCountry(
               SettingsState.defaultCountryCode));
         },
         (code) {
-          // Use the static helper from SettingsState
           final symbol = SettingsState.getCurrencyForCountry(code);
           log.info(
               "[SettingsRepo] Derived currency symbol: $symbol for code: $code");
@@ -129,7 +150,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
         },
       );
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE,
           '[SettingsRepo] Unexpected error deriving currency symbol$e$s');
       return Left(SettingsFailure(
@@ -145,7 +165,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] App lock status retrieved: $isEnabled");
       return Right(isEnabled);
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE, '[SettingsRepo] Error getting app lock status$e$s');
       return Left(
           SettingsFailure('Failed to load app lock setting: ${e.toString()}'));
@@ -160,7 +179,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] App lock status saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      // Use log.log
       log.log(Level.SEVERE, '[SettingsRepo] Error saving app lock status$e$s');
       return Left(
           SettingsFailure('Failed to save app lock setting: ${e.toString()}'));

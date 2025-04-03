@@ -4,79 +4,123 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // Import
+import 'package:expense_tracker/core/theme/app_theme.dart'; // For aether icons maybe
 
 class IncomeCard extends StatelessWidget {
   final Income income;
-  // Remove categoryName and accountName, get them from the income object
-  // final String categoryName;
-  // final String accountName;
   final VoidCallback? onTap;
-  // Removed onEdit/onDelete, handled by parent Dismissible
-  // final VoidCallback? onEdit;
-  // final VoidCallback? onDelete;
 
   const IncomeCard({
     super.key,
     required this.income,
-    // Removed required categoryName/accountName
     this.onTap,
   });
+
+  // --- Placeholder for Aether Icons ---
+  IconData _getAetherIncomeIcon(String categoryName, String themeId) {
+    // TODO: Implement logic to return specific Aether icons based on themeId and category
+    // Example:
+    // if (themeId == AppTheme.aetherGardenThemeId) {
+    //    if (categoryName.toLowerCase() == 'salary') return Icons.water_drop; // Placeholder raindrop
+    // }
+    return Icons.arrow_upward; // Fallback to default elemental icon
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
+    final uiMode = settingsState.uiMode;
+
+    // Determine styles based on UI mode
+    final bool isQuantum = uiMode == UIMode.quantum;
+    final bool isAether = uiMode == UIMode.aether;
+    final EdgeInsets cardPadding = isQuantum
+        ? const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0)
+        : const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
+    final double iconSize = isQuantum ? 18 : 22;
+    final double spacing = isQuantum ? 10.0 : 16.0;
+    final TextStyle? titleStyle = isQuantum
+        ? theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)
+        : theme.textTheme.titleMedium;
+    final TextStyle? amountStyle = isQuantum
+        ? theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500, color: Colors.green.shade700)
+        : theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold, color: Colors.green.shade700);
+    final IconData displayIcon = isAether
+        ? _getAetherIncomeIcon(
+            income.category.name, settingsState.selectedThemeIdentifier)
+        : Icons.arrow_upward;
 
     // Account Name - Fetching handled in IncomeListPage's BlocBuilder now
-    // If needed here directly, would require passing AccountListBloc state or name lookup
+    final accountState = context.watch<AccountListBloc>().state;
+    String accountName = '...';
+    if (accountState is AccountListLoaded) {
+      try {
+        accountName = accountState.accounts
+            .firstWhere((acc) => acc.id == income.accountId)
+            .name;
+      } catch (_) {
+        accountName = 'Deleted';
+      }
+    }
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      elevation: 1,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        // Make whole card tappable
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          padding: cardPadding,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Icon for Income
               CircleAvatar(
-                backgroundColor: Colors.green.shade100,
-                child: Icon(Icons.arrow_upward,
-                    color: Colors.green.shade800, size: 22),
+                backgroundColor: isAether
+                    ? theme.colorScheme.tertiaryContainer
+                    : Colors.green.shade100,
+                child: Icon(displayIcon,
+                    color: isAether
+                        ? theme.colorScheme.onTertiaryContainer
+                        : Colors.green.shade800,
+                    size: iconSize),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: spacing),
               // Title, Category, Date, Notes
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(income.title,
-                        style: theme.textTheme.titleMedium,
+                        style: titleStyle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: 2),
+                    SizedBox(height: isQuantum ? 0 : 2),
                     Text(
-                      // Show category name from income object
-                      income.category.name,
+                      // Show category and account name (conditionally)
+                      '${income.category.name} ${isQuantum ? "" : "• $accountName"}',
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    SizedBox(height: isQuantum ? 0 : 2),
                     Text(
                       // Show date
-                      DateFormatter.formatDateTime(income.date),
+                      isQuantum
+                          ? DateFormatter.formatDate(income.date)
+                          : DateFormatter.formatDateTime(income.date),
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant
                               .withOpacity(0.8)),
                     ),
-                    // Display notes if available
-                    if (income.notes != null && income.notes!.isNotEmpty)
+                    // Display notes if available (maybe hide in Quantum?)
+                    if (!isQuantum &&
+                        income.notes != null &&
+                        income.notes!.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Row(
@@ -101,14 +145,11 @@ class IncomeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: spacing),
               // Amount
               Text(
                 CurrencyFormatter.format(income.amount, currencySymbol),
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green.shade700, // Income color
-                ),
+                style: amountStyle,
               ),
             ],
           ),

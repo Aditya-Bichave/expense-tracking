@@ -2,6 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'dart:math';
 import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:flutter_bloc/flutter_bloc.dart'; // To read settings
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/utils/currency_formatter.dart';
 
 class AssetDistributionPieChart extends StatefulWidget {
   final Map<String, double> accountBalances; // Map<AccountName, Balance>
@@ -14,15 +17,12 @@ class AssetDistributionPieChart extends StatefulWidget {
 
 class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
   int touchedIndex = -1;
-  // Use a fixed seed for pseudo-randomness, or generate based on account names for consistency
   late Random _random;
-  late Map<String, Color> _colorCache; // Cache colors per account name
+  late Map<String, Color> _colorCache;
 
   @override
   void initState() {
     super.initState();
-    // Initialize random with a seed based on the initial data keys hash code for some consistency
-    // This isn't perfect but better than fully random on every build.
     _random = Random(widget.accountBalances.keys.hashCode);
     _colorCache = {};
     _generateColorCache(widget.accountBalances.keys);
@@ -33,14 +33,11 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
   @override
   void didUpdateWidget(covariant AssetDistributionPieChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // If account keys change significantly, regenerate colors
     if (widget.accountBalances.keys.toSet() !=
         oldWidget.accountBalances.keys.toSet()) {
       log.info("[PieChart] Account keys changed, regenerating color cache.");
-      _random = Random(widget
-          .accountBalances.keys.hashCode); // Reset random based on new keys
+      _random = Random(widget.accountBalances.keys.hashCode);
       _generateColorCache(widget.accountBalances.keys);
-      // Reset touched index if the data changes significantly
       touchedIndex = -1;
     }
   }
@@ -52,32 +49,31 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     }
   }
 
-  // Generate a color based on the account name hash for better stability
   Color _generateColorForName(String name) {
-    // Simple hash-based color generation
     final hash = name.hashCode;
     final r = (hash & 0xFF0000) >> 16;
     final g = (hash & 0x00FF00) >> 8;
     final b = hash & 0x0000FF;
-    // Ensure reasonable brightness/saturation
     return Color.fromRGBO((r % 156) + 100, (g % 156) + 100, (b % 156) + 100, 1);
-
-    // --- Alternative: Keep using random but cache it ---
-    // if (!_colorCache.containsKey(name)) {
-    //   _colorCache[name] = Color.fromRGBO(
-    //     _random.nextInt(180) + 75, // Slightly less random range
-    //     _random.nextInt(180) + 75,
-    //     _random.nextInt(180) + 75,
-    //     1,
-    //   );
-    // }
-    // return _colorCache[name]!;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    log.info("[PieChart] Build method. TouchedIndex: $touchedIndex");
+    final settingsState = context.watch<SettingsBloc>().state;
+    final uiMode = settingsState.uiMode;
+    final currencySymbol = settingsState.currencySymbol;
+
+    log.info(
+        "[PieChart] Build method. TouchedIndex: $touchedIndex, Mode: $uiMode");
+
+    // --- Quantum Mode: Return null, handled by DashboardPage ---
+    // Note: We could render a table here, but dashboard page already does
+    if (uiMode == UIMode.quantum) {
+      log.info("[PieChart] Quantum mode active. Returning SizedBox.shrink().");
+      return const SizedBox.shrink(); // Dashboard page handles Quantum display
+    }
+    // --- End Quantum Mode Handling ---
 
     // Filter out accounts with zero or negative balance for the chart itself
     final positiveBalances = Map.fromEntries(
@@ -89,8 +85,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     if (positiveBalances.isEmpty) {
       log.info("[PieChart] No positive balances to display.");
       return Card(
-        elevation: 2,
-        margin: const EdgeInsets.symmetric(vertical: 8.0),
+        // Use Card theme
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Center(
@@ -112,8 +107,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         .toList();
 
     return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      // Use Card theme
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -159,9 +153,9 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
             const SizedBox(height: 18),
             // Legends
             Wrap(
-              spacing: 12.0, // Increase spacing
+              spacing: 12.0,
               runSpacing: 8.0,
-              alignment: WrapAlignment.center, // Center legends
+              alignment: WrapAlignment.center,
               children: List.generate(accountNames.length, (index) {
                 return _buildLegend(
                     accountNames[index], sectionColors[index], theme);
@@ -180,8 +174,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         Container(
             width: 14,
             height: 14,
-            decoration: BoxDecoration(
-                color: color, shape: BoxShape.circle)), // Use circle
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
         Text(name, style: theme.textTheme.bodySmall),
       ],
@@ -190,35 +183,32 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
 
   List<PieChartSectionData> showingSections(Map<String, double> data,
       List<Color> colors, double totalValue, ThemeData theme) {
+    // Reduce/remove animations in Quantum mode (handled by main check now)
+    // bool isQuantum = context.read<SettingsBloc>().state.uiMode == UIMode.quantum;
+
     return List.generate(data.length, (i) {
       final isTouched = i == touchedIndex;
-      final fontSize = isTouched ? 15.0 : 11.0; // Adjust font sizes
-      final radius = isTouched ? 70.0 : 60.0; // Increase radius difference
+      final fontSize = isTouched ? 15.0 : 11.0;
+      final radius = isTouched ? 70.0 : 60.0;
       final balance = data.values.elementAt(i);
       final percentage = totalValue > 0 ? (balance / totalValue * 100) : 0.0;
-
-      // Determine title color based on background luminance
       final titleColor =
           colors[i].computeLuminance() > 0.5 ? Colors.black : Colors.white;
 
       return PieChartSectionData(
         color: colors[i],
         value: balance,
-        title:
-            '${percentage.toStringAsFixed(0)}%', // Show percentage, no decimal if small
+        title: '${percentage.toStringAsFixed(0)}%',
         radius: radius,
         titleStyle: TextStyle(
           fontSize: fontSize,
           fontWeight: FontWeight.bold,
           color: titleColor,
-          shadows: const [
-            Shadow(color: Colors.black26, blurRadius: 2)
-          ], // Softer shadow
+          shadows: const [Shadow(color: Colors.black26, blurRadius: 2)],
         ),
-        borderSide: isTouched // Add border when touched
+        borderSide: isTouched
             ? BorderSide(color: theme.colorScheme.surface, width: 2)
-            : BorderSide(
-                color: colors[i].withOpacity(0)), // Use theme surface color
+            : BorderSide(color: colors[i].withOpacity(0)),
       );
     });
   }

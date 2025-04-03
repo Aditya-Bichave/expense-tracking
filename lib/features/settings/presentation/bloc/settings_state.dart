@@ -7,6 +7,9 @@ enum PackageInfoStatus { initial, loading, loaded, error }
 
 enum DataManagementStatus { initial, loading, success, error }
 
+// --- UI Mode Enum --- ADDED
+enum UIMode { elemental, quantum, aether }
+
 // --- Country Info Helper ---
 class CountryInfo {
   final String code; // e.g., 'US', 'GB', 'IN'
@@ -34,7 +37,8 @@ class SettingsState extends Equatable {
   final SettingsStatus status;
   final ThemeMode themeMode;
   final String
-      selectedThemeIdentifier; // ID for the chosen theme (e.g., 'pastelPeach')
+      selectedThemeIdentifier; // ID for the chosen theme (e.g., 'elemental')
+  final UIMode uiMode; // --- ADDED: UI Mode state ---
   final String selectedCountryCode; // e.g., 'US', 'IN'
   // currencySymbol is now a getter based on selectedCountryCode
   final bool isAppLockEnabled;
@@ -51,7 +55,10 @@ class SettingsState extends Equatable {
 
   // --- Static Defaults & Data ---
   static const defaultThemeMode = ThemeMode.system;
-  static const defaultThemeIdentifier = AppTheme.defaultThemeId;
+  // RENAMED from defaultThemeId
+  static const defaultThemeIdentifier = AppTheme.elementalThemeId;
+  static const defaultUIMode =
+      UIMode.elemental; // --- ADDED: Default UI Mode ---
   static const defaultCountryCode = 'US'; // Default country
   static const defaultAppLockEnabled = false;
 
@@ -59,10 +66,7 @@ class SettingsState extends Equatable {
   static const List<CountryInfo> availableCountries = [
     CountryInfo(code: 'US', name: 'United States', currencySymbol: '\$'),
     CountryInfo(code: 'GB', name: 'United Kingdom', currencySymbol: '£'),
-    CountryInfo(
-        code: 'EU',
-        name: 'Eurozone',
-        currencySymbol: '€'), // Represent Eurozone
+    CountryInfo(code: 'EU', name: 'Eurozone', currencySymbol: '€'),
     CountryInfo(code: 'IN', name: 'India', currencySymbol: '₹'),
     CountryInfo(code: 'CA', name: 'Canada', currencySymbol: '\$'), // CAD
     CountryInfo(code: 'AU', name: 'Australia', currencySymbol: '\$'), // AUD
@@ -88,6 +92,7 @@ class SettingsState extends Equatable {
     this.status = SettingsStatus.initial,
     this.themeMode = defaultThemeMode,
     this.selectedThemeIdentifier = defaultThemeIdentifier,
+    this.uiMode = defaultUIMode, // --- ADDED: uiMode ---
     this.selectedCountryCode = defaultCountryCode,
     this.isAppLockEnabled = defaultAppLockEnabled,
     this.errorMessage,
@@ -102,6 +107,7 @@ class SettingsState extends Equatable {
     SettingsStatus? status,
     ThemeMode? themeMode,
     String? selectedThemeIdentifier,
+    UIMode? uiMode, // --- ADDED ---
     String? selectedCountryCode,
     bool? isAppLockEnabled,
     String? errorMessage,
@@ -121,6 +127,7 @@ class SettingsState extends Equatable {
       themeMode: themeMode ?? this.themeMode,
       selectedThemeIdentifier:
           selectedThemeIdentifier ?? this.selectedThemeIdentifier,
+      uiMode: uiMode ?? this.uiMode, // --- ADDED ---
       selectedCountryCode: selectedCountryCode ?? this.selectedCountryCode,
       isAppLockEnabled: isAppLockEnabled ?? this.isAppLockEnabled,
       errorMessage: clearAllMessages || clearMainError
@@ -142,9 +149,10 @@ class SettingsState extends Equatable {
   List<Object?> get props => [
         status,
         themeMode,
-        selectedThemeIdentifier, // Use identifier in props
-        selectedCountryCode, // Use country code in props
-        currencySymbol, // Include derived symbol in props for changes
+        selectedThemeIdentifier,
+        uiMode, // --- ADDED ---
+        selectedCountryCode,
+        currencySymbol,
         isAppLockEnabled,
         errorMessage,
         packageInfoStatus,

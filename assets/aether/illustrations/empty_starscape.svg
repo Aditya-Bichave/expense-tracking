@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <defs>
+    <radialGradient id="stars" cx="50%" cy="50%" r="80%">
+      <stop offset="0%" stop-color="#1C2E45"/>
+      <stop offset="100%" stop-color="#121F2E"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#stars)"/>
+  <circle cx="100" cy="100" r="2" fill="#FFFFFF"/>
+  <circle cx="400" cy="120" r="2.5" fill="#A18BFF"/>
+  <circle cx="200" cy="400" r="2" fill="#CCCCFF"/>
+  <text x="50%" y="480" text-anchor="middle" fill="#ECEFF1" font-size="18" font-family="sans-serif">
+    "The galaxy is quiet today..."
+  </text>
+</svg>

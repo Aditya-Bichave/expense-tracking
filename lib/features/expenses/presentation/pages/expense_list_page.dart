@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -5,18 +6,30 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
-import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart'; // Summary BLoC for SummaryCard
+import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/widgets/summary_card.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/category.dart'
     as entity; // Use prefix
-import 'package:expense_tracker/features/income/domain/entities/income_category.dart'; // Import for FilterDialog
+import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart'; // Import AccountSelectorDropdown
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // Import AccountListBloc for filter
+import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
-class ExpenseListPage extends StatelessWidget {
+class ExpenseListPage extends StatefulWidget {
+  // Changed to StatefulWidget
   const ExpenseListPage({super.key});
+
+  @override
+  State<ExpenseListPage> createState() => _ExpenseListPageState();
+}
+
+class _ExpenseListPageState extends State<ExpenseListPage> {
+  // Added State class
+
+  // --- State for Table View Toggle ---
+  bool _isTableView = false;
 
   // Method to handle manual pull-to-refresh
   Future<void> _refreshExpenses(BuildContext context) async {
@@ -79,18 +92,89 @@ class ExpenseListPage extends StatelessWidget {
         false;
   }
 
+  // --- Build DataTable View ---
+  Widget _buildDataTable(BuildContext context, List<Expense> expenses,
+      AccountListState accountState) {
+    final theme = Theme.of(context);
+    final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
+    final bool isQuantum =
+        context.read<SettingsBloc>().state.uiMode == UIMode.quantum;
+
+    Map<String, String> accountNames = {};
+    if (accountState is AccountListLoaded) {
+      accountNames = {for (var acc in accountState.accounts) acc.id: acc.name};
+    }
+
+    return SingleChildScrollView(
+      // Make table scrollable horizontally
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columnSpacing: isQuantum ? 10 : 15, // Adjust spacing
+        horizontalMargin: isQuantum ? 8 : 12,
+        headingRowHeight: isQuantum ? 28 : 35,
+        dataRowMinHeight: isQuantum ? 30 : 35,
+        dataRowMaxHeight: isQuantum ? 35 : 40,
+        showCheckboxColumn: false, // No checkboxes for now
+        columns: const [
+          DataColumn(label: Text('Date')),
+          DataColumn(label: Text('Title')),
+          DataColumn(label: Text('Category')),
+          DataColumn(label: Text('Account')),
+          DataColumn(label: Text('Amount'), numeric: true),
+        ],
+        rows: expenses.map((expense) {
+          final accountName = accountNames[expense.accountId] ?? 'Unknown';
+          return DataRow(
+            onSelectChanged: (_) =>
+                _navigateToEdit(context, expense), // Make row tappable
+            cells: [
+              DataCell(Text(DateFormatter.formatDate(expense.date))),
+              DataCell(Text(expense.title, overflow: TextOverflow.ellipsis)),
+              DataCell(Text(expense.category.displayName,
+                  overflow: TextOverflow.ellipsis)),
+              DataCell(Text(accountName, overflow: TextOverflow.ellipsis)),
+              DataCell(Text(
+                  CurrencyFormatter.format(expense.amount, currencySymbol))),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  void _navigateToEdit(BuildContext context, Expense expense) {
+    log.info(
+        "[ExpenseListPage] Tapped expense '${expense.title}'. Navigating to edit.");
+    context.pushNamed('edit_expense',
+        pathParameters: {'id': expense.id}, extra: expense);
+  }
+
   @override
   Widget build(BuildContext context) {
     log.info("[ExpenseListPage] Build method called.");
     final theme = Theme.of(context);
-    // Ensure AccountListBloc is available for the filter dialog
+    final uiMode = context.watch<SettingsBloc>().state.uiMode;
+    final bool showTableViewToggle =
+        uiMode == UIMode.quantum; // Only show toggle in Quantum
+
+    // Ensure AccountListBloc is available for filter dialog and DataTable
     return BlocProvider.value(
-      value:
-          sl<AccountListBloc>(), // Provide AccountListBloc if not already above
+      value: sl<AccountListBloc>(),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Expenses'),
           actions: [
+            // --- View Toggle Button (Quantum Mode Only) ---
+            if (showTableViewToggle)
+              IconButton(
+                icon: Icon(_isTableView
+                    ? Icons.view_list_outlined
+                    : Icons.table_rows_outlined),
+                tooltip: _isTableView
+                    ? 'Switch to Card View'
+                    : 'Switch to Table View',
+                onPressed: () => setState(() => _isTableView = !_isTableView),
+              ),
             // Filter button
             BlocBuilder<ExpenseListBloc, ExpenseListState>(
               builder: (context, state) {
@@ -117,7 +201,7 @@ class ExpenseListPage extends StatelessWidget {
           onRefresh: () => _refreshExpenses(context),
           child: Column(
             children: [
-              // Summary Card (reacts to ExpenseList changes via its own listener)
+              // Summary Card (Always show, adapts internally if needed)
               const SummaryCard(),
               const Divider(height: 1, thickness: 1),
               Expanded(
@@ -141,12 +225,13 @@ class ExpenseListPage extends StatelessWidget {
                   builder: (context, state) {
                     log.info(
                         "[ExpenseListPage] BlocBuilder building for state: ${state.runtimeType}");
-                    Widget child;
+                    Widget listContent; // Content for the list area
 
                     if (state is ExpenseListLoading && !state.isReloading) {
                       log.info(
                           "[ExpenseListPage UI] State is initial ExpenseListLoading. Showing CircularProgressIndicator.");
-                      child = const Center(child: CircularProgressIndicator());
+                      listContent =
+                          const Center(child: CircularProgressIndicator());
                     } else if (state is ExpenseListLoaded ||
                         (state is ExpenseListLoading && state.isReloading)) {
                       final expenses = (state is ExpenseListLoaded)
@@ -163,7 +248,8 @@ class ExpenseListPage extends StatelessWidget {
 
                       if (expenses.isEmpty) {
                         log.info("[ExpenseListPage UI] Expense list is empty.");
-                        child = Center(
+                        listContent = Center(
+                          // Keep empty state same for now
                           child: Padding(
                             padding: const EdgeInsets.all(20.0),
                             child: Column(
@@ -215,69 +301,81 @@ class ExpenseListPage extends StatelessWidget {
                         );
                       } else {
                         log.info(
-                            "[ExpenseListPage UI] Expense list has ${expenses.length} items. Building ListView.");
-                        child = ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: expenses.length,
-                          itemBuilder: (context, index) {
-                            final expense = expenses[index];
-                            return Dismissible(
-                              key: Key('expense_${expense.id}'),
-                              direction: DismissDirection.endToStart,
-                              background: Container(
-                                color: theme.colorScheme.errorContainer,
-                                alignment: Alignment.centerRight,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Text("Delete",
-                                        style: TextStyle(
-                                            color: theme
-                                                .colorScheme.onErrorContainer,
-                                            fontWeight: FontWeight.bold)),
-                                    const SizedBox(width: 8),
-                                    Icon(Icons.delete_sweep_outlined,
-                                        color:
-                                            theme.colorScheme.onErrorContainer),
-                                  ],
+                            "[ExpenseListPage UI] Expense list has ${expenses.length} items. Building List/Table View. isTable: $_isTableView");
+
+                        // --- CONDITIONAL LIST VIEW / TABLE VIEW ---
+                        if (_isTableView && showTableViewToggle) {
+                          // Need AccountListBloc state for names in table
+                          listContent =
+                              BlocBuilder<AccountListBloc, AccountListState>(
+                                  builder: (context, accountState) {
+                            return _buildDataTable(
+                                context, expenses, accountState);
+                          });
+                        } else {
+                          // Build ListView with Cards (standard or Quantum styled)
+                          listContent = ListView.builder(
+                            // Key helps AnimatedSwitcher differentiate
+                            key: const ValueKey('expense_list_cards'),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: expenses.length,
+                            itemBuilder: (context, index) {
+                              final expense = expenses[index];
+                              return Dismissible(
+                                // Keep Dismissible for card view
+                                key: Key('expense_card_${expense.id}'),
+                                direction: DismissDirection.endToStart,
+                                background: Container(
+                                  color: theme.colorScheme.errorContainer,
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Text("Delete",
+                                          style: TextStyle(
+                                              color: theme
+                                                  .colorScheme.onErrorContainer,
+                                              fontWeight: FontWeight.bold)),
+                                      const SizedBox(width: 8),
+                                      Icon(Icons.delete_sweep_outlined,
+                                          color: theme
+                                              .colorScheme.onErrorContainer),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              confirmDismiss: (direction) =>
-                                  _confirmDeletion(context, expense),
-                              onDismissed: (direction) {
-                                log.info(
-                                    "[ExpenseListPage] Dismissed expense '${expense.title}'. Dispatching delete request.");
-                                context
-                                    .read<ExpenseListBloc>()
-                                    .add(DeleteExpenseRequested(expense.id));
-                                ScaffoldMessenger.of(context)
-                                  ..hideCurrentSnackBar()
-                                  ..showSnackBar(SnackBar(
-                                    content: Text(
-                                        'Expense "${expense.title}" deleted.'),
-                                    backgroundColor: Colors.orange,
-                                  ));
-                              },
-                              child: ExpenseCard(
-                                expense: expense,
-                                onTap: () {
+                                confirmDismiss: (direction) =>
+                                    _confirmDeletion(context, expense),
+                                onDismissed: (direction) {
                                   log.info(
-                                      "[ExpenseListPage] Tapped expense '${expense.title}'. Navigating to edit.");
-                                  context.pushNamed('edit_expense',
-                                      pathParameters: {'id': expense.id},
-                                      extra: expense);
+                                      "[ExpenseListPage] Dismissed expense '${expense.title}'. Dispatching delete request.");
+                                  context
+                                      .read<ExpenseListBloc>()
+                                      .add(DeleteExpenseRequested(expense.id));
+                                  ScaffoldMessenger.of(context)
+                                    ..hideCurrentSnackBar()
+                                    ..showSnackBar(SnackBar(
+                                      content: Text(
+                                          'Expense "${expense.title}" deleted.'),
+                                      backgroundColor: Colors.orange,
+                                    ));
                                 },
-                              ),
-                            );
-                          },
-                        );
+                                child: ExpenseCard(
+                                  expense: expense,
+                                  onTap: () =>
+                                      _navigateToEdit(context, expense),
+                                ),
+                              );
+                            },
+                          );
+                        }
+                        // --- END CONDITIONAL VIEW ---
                       }
                     } else if (state is ExpenseListError) {
                       log.info(
                           "[ExpenseListPage UI] State is ExpenseListError: ${state.message}. Showing error UI.");
-                      child = Center(
+                      listContent = Center(
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -309,13 +407,19 @@ class ExpenseListPage extends StatelessWidget {
                       // Fallback for Initial state
                       log.info(
                           "[ExpenseListPage UI] State is Initial or Unknown. Showing loading indicator.");
-                      child = const Center(child: CircularProgressIndicator());
+                      listContent =
+                          const Center(child: CircularProgressIndicator());
                     }
 
-                    // Animate state changes
+                    // Animate list state changes
                     return AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      child: child,
+                      // Animate between card list and table view
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
+                      child: listContent,
                     );
                   },
                 ),
@@ -337,7 +441,7 @@ class ExpenseListPage extends StatelessWidget {
     );
   }
 
-  // Filter Dialog Logic
+  // Filter Dialog Logic (Remains the same, uses shared widget)
   void _showFilterDialog(BuildContext context, ExpenseListState currentState) {
     log.info("[ExpenseListPage] Showing filter dialog.");
     DateTime? currentStart;
@@ -360,8 +464,9 @@ class ExpenseListPage extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return FilterDialogContent(
+          // Use the shared widget
           isIncomeFilter: false, // It's for expenses
-          expenseCategoryNames: expenseCategoryNames, // Pass expense categories
+          expenseCategoryNames: expenseCategoryNames,
           incomeCategoryNames: const [], // Pass empty list for income
           initialStartDate: currentStart,
           initialEndDate: currentEnd,
@@ -399,6 +504,7 @@ class ExpenseListPage extends StatelessWidget {
 }
 
 // --- FilterDialogContent Widget (Shared between Expense and Income) ---
+// (Ensure this is defined correctly, likely still in expense_list_page.dart for now)
 class FilterDialogContent extends StatefulWidget {
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
