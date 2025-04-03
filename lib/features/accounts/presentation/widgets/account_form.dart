@@ -3,6 +3,10 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+// Import reusable form fields
+import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
+import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // For themed padding
 
 class AccountForm extends StatefulWidget {
   final AssetAccount? initialAccount;
@@ -18,6 +22,15 @@ class AccountForm extends StatefulWidget {
   State<AccountForm> createState() => _AccountFormState();
 }
 
+// Keep capitalize extension local or move to utils
+extension StringExtensionCapitalize on String {
+  String capitalizeForm() {
+    // Renamed to avoid conflict if moved globally later
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
+  }
+}
+
 class _AccountFormState extends State<AccountForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
@@ -30,7 +43,6 @@ class _AccountFormState extends State<AccountForm> {
     final initial = widget.initialAccount;
     _nameController = TextEditingController(text: initial?.name ?? '');
     _initialBalanceController = TextEditingController(
-      // Ensure correct formatting on init
       text: initial?.initialBalance.toStringAsFixed(2) ?? '0.00',
     );
     _selectedType = initial?.type ?? AssetType.bank;
@@ -44,13 +56,11 @@ class _AccountFormState extends State<AccountForm> {
   }
 
   void _submitForm() {
-    // Ensure validation passes before submitting
     if (_formKey.currentState!.validate()) {
       final name = _nameController.text.trim();
-      // Use double.tryParse for safety, default to 0.0 if parsing fails
-      final initialBalance =
-          double.tryParse(_initialBalanceController.text.replaceAll(',', '')) ??
-              0.0;
+      final initialBalance = double.tryParse(
+              _initialBalanceController.text.replaceAll(',', '.')) ??
+          0.0;
       widget.onSubmit(name, _selectedType, initialBalance);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -63,62 +73,44 @@ class _AccountFormState extends State<AccountForm> {
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol; // Use default if null
     final theme = Theme.of(context);
+    final modeTheme = context.modeTheme;
 
     return Form(
       key: _formKey,
       child: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: modeTheme?.pagePadding ??
+            const EdgeInsets.all(16.0), // Themed padding
         children: [
-          TextFormField(
+          // --- Use AppTextFormField ---
+          AppTextFormField(
             controller: _nameController,
-            decoration: InputDecoration(
-              labelText: 'Account Name',
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(Icons.edit),
-              // Add clear button
-              suffixIcon: _nameController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => _nameController.clear(),
-                      tooltip: 'Clear',
-                    )
-                  : null,
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter an account name';
-              }
-              return null;
-            },
-            // Update suffix icon state on change
-            onChanged: (_) => setState(() {}),
+            labelText: 'Account Name',
+            prefixIconData: Icons.edit,
             textCapitalization: TextCapitalization.words,
+            validator: (value) => (value == null || value.trim().isEmpty)
+                ? 'Please enter an account name'
+                : null,
           ),
           const SizedBox(height: 16),
-          DropdownButtonFormField<AssetType>(
+          // --- Use AppDropdownFormField ---
+          AppDropdownFormField<AssetType>(
             value: _selectedType,
-            decoration: InputDecoration(
-              labelText: 'Account Type',
-              border: const OutlineInputBorder(),
-              prefixIcon: const Icon(
-                  Icons.category_outlined), // Use specific icon if desired
-            ),
+            labelText: 'Account Type',
+            prefixIconData: Icons.category_outlined,
             items: AssetType.values.map((AssetType type) {
+              // Create dummy account just to get icon
+              final iconData =
+                  AssetAccount(id: '', name: '', type: type, currentBalance: 0)
+                      .iconData;
               return DropdownMenuItem<AssetType>(
                 value: type,
                 child: Row(
-                  // Add icon to dropdown item
                   children: [
-                    Icon(
-                      // Get icon dynamically
-                      AssetAccount(
-                              id: '', name: '', type: type, currentBalance: 0)
-                          .iconData,
-                      size: 20,
-                      color: theme.colorScheme.secondary,
-                    ),
+                    Icon(iconData,
+                        size: 20, color: theme.colorScheme.secondary),
                     const SizedBox(width: 8),
-                    Text(type.name.capitalize()),
+                    // Use the local capitalize extension
+                    Text(type.name.capitalizeForm()),
                   ],
                 ),
               );
@@ -130,59 +122,43 @@ class _AccountFormState extends State<AccountForm> {
                 });
               }
             },
-            validator: (value) {
-              if (value == null) {
-                return 'Please select an account type';
-              }
-              return null;
-            },
+            validator: (value) =>
+                value == null ? 'Please select an account type' : null,
           ),
           const SizedBox(height: 16),
-          TextFormField(
+          // --- Use AppTextFormField ---
+          AppTextFormField(
             controller: _initialBalanceController,
-            decoration: InputDecoration(
-                labelText: 'Initial Balance',
-                border: const OutlineInputBorder(),
-                prefixText: '$currencySymbol ', // Use dynamic symbol
-                prefixIcon: const Icon(Icons.account_balance_wallet_outlined)),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            // Allow negative numbers and decimal point/comma
+            labelText: 'Initial Balance',
+            prefixText: '$currencySymbol ',
+            prefixIconData: Icons.account_balance_wallet_outlined,
+            keyboardType: const TextInputType.numberWithOptions(
+                signed: true, decimal: true), // Allow negative for balance
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^-?\d*[,.]?\d{0,2}')),
             ],
             validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter an initial balance (can be 0)';
-              }
-              // Allow comma as decimal separator
-              if (double.tryParse(value.replaceAll(',', '.')) == null) {
+              if (value == null || value.isEmpty)
+                return 'Please enter an initial balance (can be 0 or negative)';
+              if (double.tryParse(value.replaceAll(',', '.')) == null)
                 return 'Please enter a valid number';
-              }
               return null;
             },
           ),
           const SizedBox(height: 32),
           ElevatedButton.icon(
             icon: Icon(widget.initialAccount == null ? Icons.add : Icons.save),
+            label: Text(widget.initialAccount == null
+                ? 'Add Account'
+                : 'Update Account'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,
-            label: Text(widget.initialAccount == null
-                ? 'Add Account'
-                : 'Update Account'),
           ),
         ],
       ),
     );
-  }
-}
-
-// Keep the capitalize extension here or move to a shared utils file
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

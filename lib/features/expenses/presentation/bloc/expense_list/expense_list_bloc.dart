@@ -1,6 +1,8 @@
+// lib/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:expense_tracker/core/common/base_list_state.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
@@ -9,6 +11,7 @@ import 'package:expense_tracker/features/expenses/domain/usecases/get_expenses.d
 import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl helper & publish
 import 'package:expense_tracker/core/events/data_change_event.dart'; // Import event
 
+// Import the specific states for this BLoC
 part 'expense_list_event.dart';
 part 'expense_list_state.dart';
 
@@ -21,8 +24,7 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
   DateTime? _currentStartDate;
   DateTime? _currentEndDate;
   String? _currentCategory;
-  String?
-      _currentAccountId; // Filter applied in repo, store for state consistency
+  String? _currentAccountId;
 
   ExpenseListBloc({
     required GetExpensesUseCase getExpensesUseCase,
@@ -30,14 +32,14 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
     required Stream<DataChangedEvent> dataChangeStream,
   })  : _getExpensesUseCase = getExpensesUseCase,
         _deleteExpenseUseCase = deleteExpenseUseCase,
-        super(ExpenseListInitial()) {
+        super(const ExpenseListInitial()) {
+    // Use const constructor for initial state
     on<LoadExpenses>(_onLoadExpenses);
     on<FilterExpenses>(_onFilterExpenses);
     on<DeleteExpenseRequested>(_onDeleteExpenseRequested);
     on<_DataChanged>(_onDataChanged);
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Expense list needs refresh if Expenses or Settings (currency) change
       if (event.type == DataChangeType.expense ||
           event.type == DataChangeType.settings) {
         log.info(
@@ -45,9 +47,8 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
         add(const _DataChanged());
       }
     }, onError: (error, stackTrace) {
-      log.severe("[ExpenseListBloc] Error in dataChangeStream listener" +
-          error +
-          stackTrace);
+      log.severe(
+          "[ExpenseListBloc] Error in dataChangeStream listener"); // Pass error and stackTrace
     });
     log.info("[ExpenseListBloc] Initialized and subscribed to data changes.");
   }
@@ -57,7 +58,6 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
       _DataChanged event, Emitter<ExpenseListState> emit) async {
     log.info(
         "[ExpenseListBloc] Handling _DataChanged event. Dispatching LoadExpenses(forceReload: true).");
-    // Always force reload on data change
     add(const LoadExpenses(forceReload: true));
   }
 
@@ -66,6 +66,7 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
     log.info(
         "[ExpenseListBloc] Received LoadExpenses event (forceReload: ${event.forceReload}). Current state: ${state.runtimeType}");
 
+    // Emit Loading state using the correct class name
     if (state is! ExpenseListLoaded || event.forceReload) {
       emit(ExpenseListLoading(isReloading: state is ExpenseListLoaded));
       log.info(
@@ -75,7 +76,6 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
           "[ExpenseListBloc] State is Loaded and no force reload. Refreshing data silently.");
     }
 
-    // Use the stored filters for reloading/refreshing
     final params = GetExpensesParams(
       startDate: _currentStartDate,
       endDate: _currentEndDate,
@@ -94,13 +94,15 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
         (failure) {
           log.warning(
               "[ExpenseListBloc] Load failed: ${failure.message}. Emitting ExpenseListError.");
+          // Emit Error state using the correct class name
           emit(ExpenseListError(_mapFailureToMessage(failure)));
         },
         (expenses) {
           log.info(
               "[ExpenseListBloc] Load successful. Emitting ExpenseListLoaded with ${expenses.length} expenses.");
+          // Emit Loaded state using the correct class name and parameters
           emit(ExpenseListLoaded(
-            expenses: expenses,
+            expenses: expenses, // Pass the fetched expenses
             filterStartDate: _currentStartDate,
             filterEndDate: _currentEndDate,
             filterCategory: _currentCategory,
@@ -108,8 +110,10 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
           ));
         },
       );
-    } catch (e) {
-      log.severe("[ExpenseListBloc] Unexpected error in _onLoadExpenses$e");
+    } catch (e, s) {
+      // Capture stack trace
+      log.severe("[ExpenseListBloc] Unexpected error in _onLoadExpenses");
+      // Emit Error state using the correct class name
       emit(ExpenseListError(
           "An unexpected error occurred loading expenses: ${e.toString()}"));
     }
@@ -118,18 +122,13 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
   Future<void> _onFilterExpenses(
       FilterExpenses event, Emitter<ExpenseListState> emit) async {
     log.info("[ExpenseListBloc] Received FilterExpenses event.");
-
-    // Update the stored filters
     _currentStartDate = event.startDate;
     _currentEndDate = event.endDate;
     _currentCategory = event.category;
-    _currentAccountId = event.accountId; // Store account filter if provided
+    _currentAccountId = event.accountId;
     log.info(
         "[ExpenseListBloc] Filters updated: AccID=$_currentAccountId, Start=$_currentStartDate, End=$_currentEndDate, Cat=$_currentCategory");
-
-    // Trigger load with new filters (LoadExpenses will handle emitting Loading state)
-    add(const LoadExpenses(
-        forceReload: true)); // Force reload to apply filters immediately
+    add(const LoadExpenses(forceReload: true));
   }
 
   Future<void> _onDeleteExpenseRequested(
@@ -138,18 +137,18 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
         "[ExpenseListBloc] Received DeleteExpenseRequested for ID: ${event.expenseId}");
     final currentState = state;
 
+    // Ensure state is ExpenseListLoaded before optimistic update
     if (currentState is ExpenseListLoaded) {
       log.info(
           "[ExpenseListBloc] Current state is Loaded. Performing optimistic delete.");
-      // Optimistic UI Update
-      final optimisticList = currentState.expenses
-          .where((exp) => exp.id != event.expenseId)
-          .toList();
+      // Optimistic UI Update using 'items' from base state
+      final optimisticList =
+          currentState.items.where((exp) => exp.id != event.expenseId).toList();
       log.info(
           "[ExpenseListBloc] Optimistic list size: ${optimisticList.length}. Emitting updated ExpenseListLoaded.");
-      // Emit updated state with item removed
+      // Emit updated state using the correct class name
       emit(ExpenseListLoaded(
-        expenses: optimisticList,
+        expenses: optimisticList, // Pass as 'expenses'
         filterStartDate: currentState.filterStartDate,
         filterEndDate: currentState.filterEndDate,
         filterCategory: currentState.filterCategory,
@@ -166,27 +165,26 @@ class ExpenseListBloc extends Bloc<ExpenseListEvent, ExpenseListState> {
           (failure) {
             log.warning(
                 "[ExpenseListBloc] Deletion failed: ${failure.message}. Reverting UI and emitting Error.");
-            // Revert the optimistic update
+            // Revert the optimistic update by emitting the original state
             emit(currentState);
-            // Emit an error state *after* reverting
+            // Emit Error state using the correct class name
             emit(ExpenseListError(_mapFailureToMessage(failure,
                 context: "Failed to delete expense")));
           },
           (_) {
             log.info(
                 "[ExpenseListBloc] Deletion successful. Publishing DataChangedEvent.");
-            // Publish event so other Blocs can react
             publishDataChangedEvent(
                 type: DataChangeType.expense, reason: DataChangeReason.deleted);
+            // No state change needed here as UI was updated optimistically
           },
         );
       } catch (e, s) {
-        // ignore: prefer_interpolation_to_compose_strings
+        // Capture stack trace
         log.severe(
-            "[ExpenseListBloc] Unexpected error in _onDeleteExpenseRequested for ID ${event.expenseId}" +
-                e.toString() +
-                s.toString());
+            "[ExpenseListBloc] Unexpected error in _onDeleteExpenseRequested for ID ${event.expenseId}");
         emit(currentState); // Revert optimistic update
+        // Emit Error state using the correct class name
         emit(ExpenseListError(
             "An unexpected error occurred during deletion: ${e.toString()}"));
       }

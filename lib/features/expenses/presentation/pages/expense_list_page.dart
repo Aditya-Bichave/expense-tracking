@@ -1,567 +1,33 @@
 // lib/features/expenses/presentation/pages/expense_list_page.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // Import Theme Extension & helper
-import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import Settings Bloc & UIMode
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/core/common/generic_list_page.dart'; // Import Generic List Page
+import 'package:expense_tracker/core/common/base_list_state.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // Import AssetKeys
+import 'package:expense_tracker/core/utils/currency_formatter.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart'; // For Filter Dialog
+import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart'; // For triggering summary reload
+import 'package:expense_tracker/features/expenses/domain/entities/category.dart'
+    as entityCategory; // Use prefix
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
-import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart'; // For SummaryCard trigger
-import 'package:expense_tracker/features/analytics/presentation/widgets/summary_card.dart'; // Summary Card Widget
-import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/category.dart'
-    as entity; // Use prefix for Category entity
-import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart'; // Import AccountSelectorDropdown
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // Import AccountListBloc for filter
-import 'package:flutter_svg/flutter_svg.dart'; // Import SVG picture
+import 'package:expense_tracker/features/income/domain/entities/income_category.dart'; // For filter dialog argument
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/main.dart'; // logger
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:expense_tracker/core/assets/app_assets.dart'; // Default assets
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 
-// Import Constants
-import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/assets/app_assets.dart';
-
-class ExpenseListPage extends StatefulWidget {
-  const ExpenseListPage({super.key});
-
-  @override
-  _ExpenseListPageState createState() => _ExpenseListPageState();
-}
-
-class _ExpenseListPageState extends State<ExpenseListPage> {
-  // --- Lifecycle & Refresh ---
-  @override
-  void initState() {
-    super.initState();
-    log.info("[ExpenseListPage] initState called.");
-    // Initial load is handled by Bloc creation in main.dart or MultiBlocProvider
-    // Ensure dependent Blocs are loaded if necessary (e.g., AccountListBloc)
-    final accountBloc = sl<AccountListBloc>();
-    if (accountBloc.state is AccountListInitial) {
-      log.info(
-          "[ExpenseListPage] AccountListBloc is initial, dispatching LoadAccounts.");
-      accountBloc.add(const LoadAccounts());
-    }
-  }
-
-  Future<void> _refreshExpenses(BuildContext context) async {
-    log.info("[ExpenseListPage] Pull-to-refresh triggered.");
-    try {
-      // Use context.read safely within async gap IF BuildContext is still valid
-      if (!mounted) return;
-      context
-          .read<ExpenseListBloc>()
-          .add(const LoadExpenses(forceReload: true));
-
-      // Trigger summary reload based on current expense filters
-      final expenseState = context.read<ExpenseListBloc>().state;
-      if (mounted) {
-        // Check mount again before reading SummaryBloc
-        context.read<SummaryBloc>().add(LoadSummary(
-              startDate: expenseState is ExpenseListLoaded
-                  ? expenseState.filterStartDate
-                  : null,
-              endDate: expenseState is ExpenseListLoaded
-                  ? expenseState.filterEndDate
-                  : null,
-              forceReload: true,
-              updateFilters: false, // Don't update summary filters, just reload
-            ));
-      }
-
-      // Wait for expense list to finish
-      await context
-          .read<ExpenseListBloc>()
-          .stream
-          .firstWhere((state) =>
-              state is ExpenseListLoaded || state is ExpenseListError)
-          .timeout(const Duration(seconds: 5));
-      log.info("[ExpenseListPage] Refresh stream finished or timed out.");
-    } catch (e) {
-      log.warning("[ExpenseListPage] Error during refresh: $e");
-    }
-  }
-
-  // --- Navigation & Dialogs ---
-
-  void _navigateToAdd(BuildContext context) {
-    log.info("[ExpenseListPage] FAB tapped. Navigating to add expense.");
-    // Use constant route name
-    context.pushNamed(RouteNames.addExpense);
-  }
-
-  void _navigateToEdit(BuildContext context, Expense expense) {
-    log.info(
-        "[ExpenseListPage] Tapped expense '${expense.title}'. Navigating to edit.");
-    // Use constant route name and param name
-    context.pushNamed(
-      RouteNames.editExpense,
-      pathParameters: {RouteNames.paramId: expense.id},
-      extra: expense,
-    );
-  }
-
-  Future<bool> _confirmDeletion(BuildContext context, Expense expense) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (BuildContext ctx) => AlertDialog(
-            title: const Text("Confirm Deletion"),
-            content: Text(
-                'Are you sure you want to delete the expense "${expense.title}"?',
-                style: Theme.of(ctx).textTheme.bodyMedium),
-            actions: <Widget>[
-              TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text("Cancel")),
-              TextButton(
-                  style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(ctx).colorScheme.error),
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text("Delete")),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  // --- UI Builders ---
-
-  // Builder for Quantum Data Table View
-  Widget _buildQuantumExpenseTable(
-      BuildContext context, List<Expense> expenses) {
-    final theme = Theme.of(context);
-    final settingsState = context.watch<SettingsBloc>().state;
-    final currencySymbol = settingsState.currencySymbol;
-    final accountState = context.watch<AccountListBloc>().state;
-
-    final rows = expenses.map((exp) {
-      String accountName = '...'; // Placeholder while loading/error
-      if (accountState is AccountListLoaded) {
-        try {
-          accountName = accountState.accounts
-              .firstWhere((acc) => acc.id == exp.accountId)
-              .name;
-        } catch (_) {
-          accountName = 'N/A'; // Or Deleted Account
-        }
-      } else if (accountState is AccountListError) {
-        accountName = 'Error';
-      }
-
-      return DataRow(cells: [
-        DataCell(Text(DateFormatter.formatDate(exp.date),
-            style: theme.textTheme.bodySmall)),
-        DataCell(Tooltip(
-            message: exp.title,
-            child: Text(exp.title, overflow: TextOverflow.ellipsis))),
-        DataCell(Tooltip(
-            message: exp.category.displayName,
-            child: Text(exp.category.displayName,
-                overflow: TextOverflow.ellipsis))),
-        DataCell(Tooltip(
-            message: accountName,
-            child: Text(accountName, overflow: TextOverflow.ellipsis))),
-        DataCell(Text(
-          CurrencyFormatter.format(exp.amount, currencySymbol),
-          style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.error, // Use Quantum error color
-              fontWeight: FontWeight.w500),
-          textAlign: TextAlign.end,
-        )),
-      ]);
-    }).toList();
-
-    // Wrap in a Card for consistent Quantum look
-    return Card(
-      margin: EdgeInsets.zero, // No margin, let parent handle padding
-      shape: theme.cardTheme.shape, // Use theme shape
-      elevation: theme.cardTheme.elevation, // Use theme elevation
-      color: theme.cardTheme.color, // Use theme color
-      clipBehavior: theme.cardTheme.clipBehavior ?? Clip.none,
-      child: SingleChildScrollView(
-        // Make table horizontally scrollable
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columnSpacing: theme.dataTableTheme.columnSpacing ?? 12,
-          headingRowHeight: theme.dataTableTheme.headingRowHeight ?? 36,
-          dataRowMinHeight: theme.dataTableTheme.dataRowMinHeight ?? 36,
-          dataRowMaxHeight: theme.dataTableTheme.dataRowMaxHeight ?? 40,
-          headingTextStyle: theme.dataTableTheme.headingTextStyle ??
-              theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
-          dataTextStyle:
-              theme.dataTableTheme.dataTextStyle ?? theme.textTheme.bodySmall,
-          dividerThickness: theme.dataTableTheme.dividerThickness,
-          dataRowColor: theme.dataTableTheme.dataRowColor,
-          columns: const [
-            DataColumn(label: Text('Date')),
-            DataColumn(label: Text('Title')),
-            DataColumn(label: Text('Category')),
-            DataColumn(label: Text('Account')),
-            DataColumn(label: Text('Amount'), numeric: true),
-          ],
-          rows: rows,
-        ),
-      ),
-    );
-  }
-
-  // Builder for Standard (Elemental/Aether) List View
-  Widget _buildStandardExpenseList(
-      BuildContext context, List<Expense> expenses) {
-    // Need AccountListBloc access for ExpenseCard to display names correctly
-    return BlocBuilder<AccountListBloc, AccountListState>(
-      builder: (context, accountState) {
-        if (accountState is AccountListLoading && expenses.isNotEmpty) {
-          // Optionally show a loading indicator overlay or just let cards show '...'
-        } else if (accountState is AccountListError) {
-          log.warning(
-              "[ExpenseListPage] Account list error state: ${accountState.message}. Cards may show 'Deleted Account'.");
-        }
-        // Use ListView.separated for better visual spacing
-        return ListView.separated(
-          padding: const EdgeInsets.only(bottom: 80), // Padding for FAB
-          itemCount: expenses.length,
-          itemBuilder: (context, index) {
-            final expense = expenses[index];
-            return Dismissible(
-              key: Key('expense_${expense.id}'),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                color: Theme.of(context).colorScheme.errorContainer,
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text("Delete",
-                        style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onErrorContainer,
-                            fontWeight: FontWeight.bold)),
-                    const SizedBox(width: 8),
-                    Icon(Icons.delete_sweep_outlined,
-                        color: Theme.of(context).colorScheme.onErrorContainer),
-                  ],
-                ),
-              ),
-              confirmDismiss: (direction) => _confirmDeletion(context, expense),
-              onDismissed: (direction) {
-                log.info(
-                    "[ExpenseListPage] Dismissed expense '${expense.title}'. Dispatching delete request.");
-                context
-                    .read<ExpenseListBloc>()
-                    .add(DeleteExpenseRequested(expense.id));
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(
-                    content: Text('Expense "${expense.title}" deleted.'),
-                    backgroundColor: Colors.orange,
-                  ));
-              },
-              // ExpenseCard internally uses AccountListBloc state via context.watch
-              child: ExpenseCard(
-                expense: expense,
-                onTap: () => _navigateToEdit(context, expense),
-              ),
-            );
-          },
-          separatorBuilder: (context, index) =>
-              const SizedBox(height: 0), // Let Card margins handle spacing
-        );
-      },
-    );
-  }
-
-  // --- Main Build Method ---
-  @override
-  Widget build(BuildContext context) {
-    log.info("[ExpenseListPage] Build method called.");
-    final theme = Theme.of(context);
-    final modeTheme = context.modeTheme; // Get Theme Extension
-    final uiMode = context.watch<SettingsBloc>().state.uiMode;
-    final bool useTables = modeTheme?.preferDataTableForLists ?? false;
-
-    // Provide AccountListBloc for both standard list (for cards) and filter dialog
-    return BlocProvider.value(
-      value: sl<AccountListBloc>(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Expenses'),
-          actions: [
-            BlocBuilder<ExpenseListBloc, ExpenseListState>(
-              builder: (context, state) {
-                bool filtersApplied = false;
-                if (state is ExpenseListLoaded) {
-                  filtersApplied = state.filterStartDate != null ||
-                      state.filterEndDate != null ||
-                      state.filterCategory != null ||
-                      state.filterAccountId != null;
-                }
-                return IconButton(
-                  icon: Icon(filtersApplied
-                      ? Icons.filter_list
-                      : Icons.filter_list_off_outlined),
-                  tooltip: 'Filter Expenses',
-                  onPressed: () =>
-                      _showFilterDialog(context, state), // Pass current state
-                );
-              },
-            ),
-          ],
-        ),
-        body: RefreshIndicator(
-          onRefresh: () => _refreshExpenses(context),
-          child: Column(
-            // Use Column to stack SummaryCard and the list/table
-            children: [
-              // Summary Card reacts to ExpenseList changes via its own listener to SummaryBloc
-              const SummaryCard(),
-              Divider(
-                  height: theme.dividerTheme.thickness ?? 1,
-                  thickness: theme.dividerTheme.thickness ?? 1,
-                  color: theme.dividerTheme.color),
-              Expanded(
-                // List/Table takes remaining space
-                child: BlocConsumer<ExpenseListBloc, ExpenseListState>(
-                  listener: (context, state) {
-                    if (state is ExpenseListError) {
-                      log.warning(
-                          "[ExpenseListPage] Error state detected: ${state.message}");
-                      ScaffoldMessenger.of(context)
-                        ..hideCurrentSnackBar()
-                        ..showSnackBar(SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: theme.colorScheme.error));
-                    }
-                  },
-                  builder: (context, state) {
-                    Widget listContent;
-
-                    if (state is ExpenseListLoading && !state.isReloading) {
-                      listContent =
-                          const Center(child: CircularProgressIndicator());
-                    } else if (state is ExpenseListLoaded ||
-                        (state is ExpenseListLoading && state.isReloading)) {
-                      final expenses = (state is ExpenseListLoaded)
-                          ? state.expenses
-                          : (context.read<ExpenseListBloc>().state
-                                      as ExpenseListLoaded?)
-                                  ?.expenses ??
-                              [];
-                      final bool filtersActive = state is ExpenseListLoaded &&
-                          (state.filterStartDate != null ||
-                              state.filterEndDate != null ||
-                              state.filterCategory != null ||
-                              state.filterAccountId != null);
-
-                      if (expenses.isEmpty) {
-                        // Empty State Logic
-                        String emptyText = filtersActive
-                            ? 'No expenses match filters.'
-                            : 'No expenses yet.';
-                        String buttonText =
-                            filtersActive ? 'Clear Filters' : '';
-                        VoidCallback? buttonAction = filtersActive
-                            ? () {
-                                log.info("[ExpenseListPage] Clearing filters.");
-                                context
-                                    .read<ExpenseListBloc>()
-                                    .add(const FilterExpenses());
-                                // Also reload summary with cleared filters
-                                context.read<SummaryBloc>().add(
-                                    const LoadSummary(
-                                        forceReload: true,
-                                        updateFilters: true));
-                              }
-                            : null;
-                        String illustrationKey = filtersActive
-                            ? 'empty_filter'
-                            : 'empty_transactions';
-                        // Get default path from AppAssets
-                        String defaultIllustration = filtersActive
-                            ? AppAssets
-                                .elIlluEmptyCalendar // Example Elemental default
-                            : AppAssets.elIlluEmptyAddTransaction;
-
-                        listContent = Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SvgPicture.asset(
-                                    // Use getIllustration with default from AppAssets
-                                    modeTheme?.assets.getIllustration(
-                                            illustrationKey,
-                                            defaultPath: defaultIllustration) ??
-                                        defaultIllustration,
-                                    height: 100,
-                                    colorFilter: ColorFilter.mode(
-                                        theme.colorScheme.secondary,
-                                        BlendMode.srcIn)),
-                                const SizedBox(height: 16),
-                                Text(emptyText,
-                                    style: theme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                            color: theme.colorScheme.secondary),
-                                    textAlign: TextAlign.center),
-                                const SizedBox(height: 8),
-                                if (filtersActive)
-                                  ElevatedButton.icon(
-                                      icon:
-                                          const Icon(Icons.clear_all, size: 18),
-                                      label: Text(buttonText),
-                                      style: ElevatedButton.styleFrom(
-                                          visualDensity: VisualDensity.compact),
-                                      onPressed: buttonAction)
-                                else
-                                  Text('Tap "+" to add your first expense!',
-                                      style: theme.textTheme.bodyMedium),
-                              ],
-                            ),
-                          ),
-                        );
-                      } else {
-                        // Choose list or table based on UI mode flag
-                        listContent = (uiMode == UIMode.quantum && useTables)
-                            ? _buildQuantumExpenseTable(context, expenses)
-                            : _buildStandardExpenseList(context, expenses);
-                      }
-                    } else if (state is ExpenseListError) {
-                      // Error State UI
-                      listContent = Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.error_outline,
-                                  color: theme.colorScheme.error, size: 50),
-                              const SizedBox(height: 16),
-                              Text('Error Loading Expenses',
-                                  style: theme.textTheme.titleLarge),
-                              const SizedBox(height: 8),
-                              Text(state.message,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: theme.colorScheme.error)),
-                              const SizedBox(height: 20),
-                              ElevatedButton.icon(
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Retry'),
-                                onPressed: () => context
-                                    .read<ExpenseListBloc>()
-                                    .add(const LoadExpenses(forceReload: true)),
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    } else {
-                      // Initial State
-                      listContent =
-                          const Center(child: CircularProgressIndicator());
-                    }
-                    // Animate between list/table/empty/error states
-                    return AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: listContent);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          heroTag: 'fab_expenses',
-          onPressed: () => _navigateToAdd(context),
-          tooltip: 'Add Expense',
-          child: modeTheme != null &&
-                  modeTheme.assets
-                      .getCommonIcon(AppModeTheme.iconAdd, defaultPath: '')
-                      .isNotEmpty
-              ? SvgPicture.asset(
-                  // Use AppAssets constant as the default path
-                  modeTheme.assets.getCommonIcon(AppModeTheme.iconAdd,
-                      defaultPath: AppAssets.elComIconAdd),
-                  width: 24,
-                  height: 24,
-                  colorFilter: ColorFilter.mode(
-                      theme.floatingActionButtonTheme.foregroundColor ??
-                          Colors.white,
-                      BlendMode.srcIn))
-              : const Icon(Icons.add), // Material Icon Fallback
-        ),
-      ),
-    );
-  }
-
-  // --- Filter Dialog ---
-  void _showFilterDialog(BuildContext context, ExpenseListState currentState) {
-    log.info("[ExpenseListPage] Showing filter dialog.");
-    DateTime? currentStart;
-    DateTime? currentEnd;
-    String? currentCategoryName;
-    String? currentAccountId;
-    if (currentState is ExpenseListLoaded) {
-      currentStart = currentState.filterStartDate;
-      currentEnd = currentState.filterEndDate;
-      currentCategoryName = currentState.filterCategory;
-      currentAccountId = currentState.filterAccountId;
-    }
-    // Get category names from the *entity* definition
-    final List<String> expenseCategoryNames = entity.PredefinedCategory.values
-        .map<String>((e) => entity.Category.fromPredefined(e).name)
-        .toList();
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        // Use the existing FilterDialogContent (needs AccountListBloc provided)
-        // It's already provided by the main Scaffold's BlocProvider.value above
-        return FilterDialogContent(
-          isIncomeFilter: false, // Specify this is for expenses
-          expenseCategoryNames: expenseCategoryNames,
-          incomeCategoryNames: const [], // Provide empty list for income names
-          initialStartDate: currentStart,
-          initialEndDate: currentEnd,
-          initialCategoryName: currentCategoryName,
-          initialAccountId: currentAccountId,
-          onApplyFilter: (startDate, endDate, categoryName, accountId) {
-            log.info(
-                "[ExpenseListPage] Filter dialog applied. Start=$startDate, End=$endDate, Cat=$categoryName, AccID=$accountId");
-            // Read Blocs using the *original* context (from the page build method), not dialogContext
-            context.read<ExpenseListBloc>().add(FilterExpenses(
-                startDate: startDate,
-                endDate: endDate,
-                category: categoryName,
-                accountId: accountId));
-            context.read<SummaryBloc>().add(LoadSummary(
-                startDate: startDate,
-                endDate: endDate,
-                forceReload: true,
-                updateFilters: true));
-            Navigator.of(dialogContext).pop(); // Close dialog
-          },
-          onClearFilter: () {
-            log.info("[ExpenseListPage] Filter dialog cleared.");
-            // Read Blocs using the *original* context
-            context.read<ExpenseListBloc>().add(const FilterExpenses());
-            context
-                .read<SummaryBloc>()
-                .add(const LoadSummary(forceReload: true, updateFilters: true));
-            Navigator.of(dialogContext).pop(); // Close dialog
-          },
-        );
-      },
-    );
-  }
-} // End of _ExpenseListPageState
-
-// --- FilterDialogContent Widget (Keep as defined previously) ---
-// (Ensure this widget uses context.watch<AccountListBloc> internally for the dropdown)
+// --- Reusable Filter Dialog ---
+// Keep the FilterDialogContent and _FilterDialogContentState classes here
+// OR move them to a shared location like 'lib/core/widgets/filter_dialog.dart'
+// (Code for FilterDialogContent and _FilterDialogContentState is omitted here for brevity,
+// assume it's the same as in step 5 of the previous response)
 class FilterDialogContent extends StatefulWidget {
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
@@ -604,11 +70,11 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
     _selectedEndDate = widget.initialEndDate;
     _selectedCategoryName = widget.initialCategoryName;
     _selectedAccountId = widget.initialAccountId;
-    // log.info("[FilterDialog] InitState. isIncome: ${widget.isIncomeFilter}. Initial Filters: Start=$_selectedStartDate, End=$_selectedEndDate, Cat=$_selectedCategoryName, AccID=$_selectedAccountId");
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
+        /* ... DatePicker config ... */
         context: context,
         initialDate: (isStartDate ? _selectedStartDate : _selectedEndDate) ??
             DateTime.now(),
@@ -620,15 +86,13 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
           _selectedStartDate = picked;
           if (_selectedEndDate != null &&
               _selectedEndDate!.isBefore(_selectedStartDate!)) {
-            _selectedEndDate =
-                _selectedStartDate; // Ensure end date is not before start date
+            _selectedEndDate = _selectedStartDate;
           }
         } else {
           _selectedEndDate = picked;
           if (_selectedStartDate != null &&
               _selectedStartDate!.isAfter(_selectedEndDate!)) {
-            _selectedStartDate =
-                _selectedEndDate; // Ensure start date is not after end date
+            _selectedStartDate = _selectedEndDate;
           }
         }
       });
@@ -638,8 +102,6 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // FilterDialogContent needs access to AccountListBloc to populate the dropdown
-    // It should already be provided by the page that shows the dialog
     return AlertDialog(
       title: Text('Filter ${widget.isIncomeFilter ? "Income" : "Expenses"}'),
       contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -648,7 +110,9 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
+            // Start Date ListTile
             ListTile(
+                /* ... Start Date UI ... */
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.date_range_outlined),
                 title: Text(_selectedStartDate == null
@@ -662,7 +126,9 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
                         tooltip: "Clear Start Date")
                     : null,
                 onTap: () => _selectDate(context, true)),
+            // End Date ListTile
             ListTile(
+                /* ... End Date UI ... */
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.date_range),
                 title: Text(_selectedEndDate == null
@@ -677,7 +143,9 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
                     : null,
                 onTap: () => _selectDate(context, false)),
             const SizedBox(height: 15),
+            // Category Dropdown
             DropdownButtonFormField<String>(
+              /* ... Category Dropdown UI ... */
               value: _selectedCategoryName,
               hint: const Text('All Categories'),
               isExpanded: true,
@@ -698,12 +166,13 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
                   contentPadding: theme.inputDecorationTheme.contentPadding),
             ),
             const SizedBox(height: 15),
-            // AccountSelectorDropdown requires AccountListBloc provided above it (which it is in this case)
+            // Account Dropdown (needs AccountListBloc provided)
             AccountSelectorDropdown(
+              /* ... Account Dropdown UI ... */
               selectedAccountId: _selectedAccountId,
               labelText: 'Account (Optional)',
               hintText: 'All Accounts',
-              validator: null, // No validation needed here, it's optional
+              validator: null, // Optional filter
               onChanged: (String? newAccountId) {
                 setState(() => _selectedAccountId = newAccountId);
               },
@@ -724,6 +193,250 @@ class _FilterDialogContentState extends State<FilterDialogContent> {
             onPressed: () => widget.onApplyFilter(_selectedStartDate,
                 _selectedEndDate, _selectedCategoryName, _selectedAccountId)),
       ],
+    );
+  }
+}
+// --- End Filter Dialog ---
+
+class ExpenseListPage extends StatelessWidget {
+  const ExpenseListPage({super.key});
+
+  // --- Specific Builders for Expenses ---
+
+  Widget _buildExpenseItem(
+      BuildContext context, Expense item, VoidCallback onTapEdit) {
+    // ExpenseCard needs AccountListBloc provided higher up (GenericListPage does this)
+    return ExpenseCard(expense: item, onTap: onTapEdit);
+  }
+
+  Widget _buildExpenseTable(BuildContext context, List<Expense> items) {
+    // This is the logic from the old _buildQuantumExpenseTable
+    final theme = Theme.of(context);
+    final settingsState = context.watch<SettingsBloc>().state;
+    final currencySymbol = settingsState.currencySymbol;
+    // AccountListBloc is provided by GenericListPage
+    final accountState = context.watch<AccountListBloc>().state;
+
+    final rows = items.map((exp) {
+      String accountName = '...'; // Placeholder
+      if (accountState is AccountListLoaded) {
+        try {
+          accountName = accountState.items // Use items from base state
+              .firstWhere((acc) => acc.id == exp.accountId)
+              .name;
+        } catch (_) {
+          accountName = 'N/A';
+        }
+      } else if (accountState is AccountListError) {
+        accountName = 'Error';
+      }
+
+      return DataRow(cells: [
+        DataCell(Text(DateFormatter.formatDate(exp.date),
+            style: theme.textTheme.bodySmall)),
+        DataCell(Tooltip(
+            message: exp.title,
+            child: Text(exp.title, overflow: TextOverflow.ellipsis))),
+        DataCell(Tooltip(
+            message: exp.category.displayName,
+            child: Text(exp.category.displayName,
+                overflow: TextOverflow.ellipsis))),
+        DataCell(Tooltip(
+            message: accountName,
+            child: Text(accountName, overflow: TextOverflow.ellipsis))),
+        DataCell(Text(
+          CurrencyFormatter.format(exp.amount, currencySymbol),
+          style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.error, fontWeight: FontWeight.w500),
+          textAlign: TextAlign.end,
+        )),
+      ]);
+    }).toList();
+
+    // Consistent Card wrapping for the table
+    return Card(
+      margin: EdgeInsets.zero, // Use ListView padding
+      shape: theme.cardTheme.shape,
+      elevation: theme.cardTheme.elevation,
+      color: theme.cardTheme.color,
+      clipBehavior: theme.cardTheme.clipBehavior ?? Clip.none,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columnSpacing: theme.dataTableTheme.columnSpacing ?? 12,
+          headingRowHeight: theme.dataTableTheme.headingRowHeight ?? 36,
+          dataRowMinHeight: theme.dataTableTheme.dataRowMinHeight ?? 36,
+          dataRowMaxHeight: theme.dataTableTheme.dataRowMaxHeight ?? 40,
+          headingTextStyle: theme.dataTableTheme.headingTextStyle ??
+              theme.textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
+          dataTextStyle:
+              theme.dataTableTheme.dataTextStyle ?? theme.textTheme.bodySmall,
+          dividerThickness: theme.dataTableTheme.dividerThickness,
+          dataRowColor: theme.dataTableTheme.dataRowColor,
+          columns: const [
+            DataColumn(label: Text('Date')),
+            DataColumn(label: Text('Title')),
+            DataColumn(label: Text('Category')),
+            DataColumn(label: Text('Account')),
+            DataColumn(label: Text('Amount'), numeric: true),
+          ],
+          rows: rows,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, bool filtersApplied) {
+    final theme = Theme.of(context);
+    final modeTheme = context.modeTheme;
+    String emptyText =
+        filtersApplied ? 'No expenses match filters.' : 'No expenses yet.';
+    // Use AssetKeys for consistency
+    String illustrationKey = filtersApplied
+        ? AssetKeys.illuEmptyFilter
+        : AssetKeys.illuEmptyTransactions;
+    // Provide default paths from AppAssets
+    String defaultIllustration = filtersApplied
+        ? AppAssets.elIlluEmptyCalendar
+        : AppAssets.elIlluEmptyAddTransaction;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SvgPicture.asset(
+                modeTheme?.assets.getIllustration(illustrationKey,
+                        defaultPath: defaultIllustration) ??
+                    defaultIllustration,
+                height: 100,
+                colorFilter: ColorFilter.mode(
+                    theme.colorScheme.secondary, BlendMode.srcIn)),
+            const SizedBox(height: 16),
+            Text(emptyText,
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(color: theme.colorScheme.secondary),
+                textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            if (filtersApplied)
+              ElevatedButton.icon(
+                  icon: const Icon(Icons.clear_all, size: 18),
+                  label: const Text('Clear Filters'),
+                  style: ElevatedButton.styleFrom(
+                      visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    log.info(
+                        "[ExpenseListPage] Clearing filters via empty state.");
+                    // Dispatch FilterExpenses with no arguments to clear
+                    context.read<ExpenseListBloc>().add(const FilterExpenses());
+                    // Also reload summary with cleared filters
+                    context.read<SummaryBloc>().add(const LoadSummary(
+                        forceReload: true, updateFilters: true));
+                  })
+            else
+              Text('Tap "+" to add your first expense!',
+                  style: theme.textTheme.bodyMedium),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showExpenseFilterDialog(
+      BuildContext context, BaseListState currentState) {
+    log.info("[ExpenseListPage] Showing filter dialog.");
+    // Get category names from the *entity* definition
+    final List<String> expenseCategoryNames = entityCategory
+        .PredefinedCategory.values
+        .map<String>((e) => entityCategory.Category.fromPredefined(e).name)
+        .toList();
+    // Get income categories just to pass them (FilterDialog needs both lists)
+    final List<String> incomeCategoryNames = PredefinedIncomeCategory.values
+        .map<String>((e) => IncomeCategory.fromPredefined(e).name)
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        // Provide AccountListBloc again specifically for the dialog's dropdown
+        return BlocProvider.value(
+          value: sl<AccountListBloc>(), // Ensure AccountListBloc is available
+          child: FilterDialogContent(
+            isIncomeFilter: false, // Specify this is for expenses
+            expenseCategoryNames: expenseCategoryNames,
+            incomeCategoryNames: incomeCategoryNames, // Pass income names
+            initialStartDate: currentState.filterStartDate,
+            initialEndDate: currentState.filterEndDate,
+            initialCategoryName: currentState.filterCategory,
+            initialAccountId: currentState.filterAccountId,
+            onApplyFilter: (startDate, endDate, categoryName, accountId) {
+              log.info(
+                  "[ExpenseListPage] Filter dialog applied. Start=$startDate, End=$endDate, Cat=$categoryName, AccID=$accountId");
+              // Dispatch specific FilterExpenses event
+              context.read<ExpenseListBloc>().add(FilterExpenses(
+                  startDate: startDate,
+                  endDate: endDate,
+                  category: categoryName,
+                  accountId: accountId));
+              // Trigger summary reload with new filters
+              context.read<SummaryBloc>().add(LoadSummary(
+                  startDate: startDate,
+                  endDate: endDate,
+                  forceReload: true,
+                  updateFilters: true));
+              Navigator.of(dialogContext).pop(); // Close dialog
+            },
+            onClearFilter: () {
+              log.info("[ExpenseListPage] Filter dialog cleared.");
+              // Dispatch specific FilterExpenses event with no args
+              context.read<ExpenseListBloc>().add(const FilterExpenses());
+              // Trigger summary reload with cleared filters
+              context.read<SummaryBloc>().add(
+                  const LoadSummary(forceReload: true, updateFilters: true));
+              Navigator.of(dialogContext).pop(); // Close dialog
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _confirmExpenseDeletion(
+      BuildContext context, Expense item) async {
+    // Reusing the generic confirmation dialog logic
+    return await AppDialogs.showConfirmation(
+          context,
+          title: "Confirm Deletion",
+          content:
+              'Are you sure you want to delete the expense "${item.title}"?',
+          confirmText: "Delete",
+          confirmColor: Theme.of(context).colorScheme.error, // Use theme color
+        ) ??
+        false; // Return false if dismissed
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Instantiate GenericListPage with Expense-specific types and builders
+    return GenericListPage<Expense, ExpenseListBloc, ExpenseListEvent,
+        ExpenseListState>(
+      pageTitle: 'Expenses',
+      addRouteName: RouteNames.addExpense,
+      editRouteName: RouteNames.editExpense,
+      itemHeroTagPrefix: 'expense',
+      fabHeroTag: 'fab_expenses',
+      showSummaryCard: true, // Expenses page shows the summary card
+      // Provide the specific builders and event creators
+      itemBuilder: _buildExpenseItem,
+      tableBuilder: _buildExpenseTable,
+      emptyStateBuilder: _buildEmptyState,
+      filterDialogBuilder: _showExpenseFilterDialog,
+      deleteConfirmationBuilder:
+          _confirmExpenseDeletion, // Pass the updated confirmation method
+      deleteEventBuilder: (id) => DeleteExpenseRequested(id),
+      loadEventBuilder: ({bool forceReload = false}) =>
+          LoadExpenses(forceReload: forceReload),
     );
   }
 }

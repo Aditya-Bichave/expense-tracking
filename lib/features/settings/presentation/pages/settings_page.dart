@@ -12,8 +12,9 @@ import 'package:local_auth/local_auth.dart';
 // Utils / Constants / Data
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/theme/app_theme.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // For context.modeTheme helper
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/data/countries.dart'; // Import AppCountries
+import 'package:expense_tracker/core/utils/app_dialogs.dart'; // Import AppDialogs
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -35,123 +36,7 @@ class _SettingsViewState extends State<SettingsView> {
   final LocalAuthentication _localAuth = LocalAuthentication();
   bool _isAuthenticating = false;
 
-  // --- Dialog Functions (Keep as before) ---
-  Future<bool?> _showConfirmationDialog({
-    required BuildContext context,
-    required String title,
-    required String content,
-    required String confirmText,
-    Color? confirmColor,
-  }) async {
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false, // User must tap button!
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content, style: Theme.of(ctx).textTheme.bodyMedium),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(ctx).pop(false);
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                  foregroundColor:
-                      confirmColor ?? Theme.of(ctx).colorScheme.primary),
-              child: Text(confirmText),
-              onPressed: () {
-                Navigator.of(ctx).pop(true);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<bool?> _showStrongConfirmationDialog({
-    required BuildContext context,
-    required String title,
-    required String content,
-    required String confirmText,
-    required String confirmationPhrase,
-  }) async {
-    final controller = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          title: Text(title),
-          content: StatefulBuilder(
-            // Needed to update validation state live
-            builder: (context, setDialogState) {
-              return Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(content,
-                        style: Theme.of(context).textTheme.bodyMedium),
-                    const SizedBox(height: 15),
-                    Text('Please type "$confirmationPhrase" to confirm:',
-                        style: Theme.of(context).textTheme.bodySmall),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: controller,
-                      decoration: InputDecoration(
-                          hintText: confirmationPhrase,
-                          border: const OutlineInputBorder(),
-                          isDense: true),
-                      autovalidateMode: AutovalidateMode
-                          .onUserInteraction, // Validate as user types
-                      validator: (value) => (value != confirmationPhrase)
-                          ? 'Incorrect phrase'
-                          : null,
-                      onChanged: (_) => setDialogState(
-                          () {}), // Trigger rebuild to enable/disable button maybe
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(ctx).pop(false),
-            ),
-            ValueListenableBuilder<TextEditingValue>(
-              // Listen to controller to enable/disable button
-              valueListenable: controller,
-              builder: (context, value, child) {
-                return TextButton(
-                  style: TextButton.styleFrom(
-                      foregroundColor: Theme.of(ctx).colorScheme.error),
-                  onPressed: value.text == confirmationPhrase
-                      ? () {
-                          if (formKey.currentState?.validate() ?? false) {
-                            Navigator.of(ctx).pop(true);
-                          }
-                        }
-                      : null, // Disable if phrase doesn't match
-                  child: Text(confirmText),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // --- Event Handlers (Keep as before, using context.read<SettingsBloc>()) ---
+  // --- Event Handlers using AppDialogs ---
   void _handleBackup(BuildContext context) {
     log.info("[SettingsPage] Backup requested.");
     context.read<SettingsBloc>().add(const BackupRequested());
@@ -159,14 +44,16 @@ class _SettingsViewState extends State<SettingsView> {
 
   void _handleRestore(BuildContext context) async {
     log.info("[SettingsPage] Restore requested.");
-    final confirmed = await _showConfirmationDialog(
-      context: context,
+    // --- Use AppDialogs (Context is first argument) ---
+    final confirmed = await AppDialogs.showConfirmation(
+      context, // Pass context as the first argument
       title: "Confirm Restore",
       content:
           "Restoring from backup will overwrite all current data. Are you sure you want to proceed?",
       confirmText: "Restore",
       confirmColor: Colors.orange[700],
     );
+    // --------------------------------------------------
     if (confirmed == true) {
       log.info("[SettingsPage] Restore confirmed by user.");
       context.read<SettingsBloc>().add(const RestoreRequested());
@@ -177,14 +64,17 @@ class _SettingsViewState extends State<SettingsView> {
 
   void _handleClearData(BuildContext context) async {
     log.info("[SettingsPage] Clear All Data requested.");
-    final confirmed = await _showStrongConfirmationDialog(
-      context: context,
+    // --- Use AppDialogs (Context is first argument) ---
+    final confirmed = await AppDialogs.showStrongConfirmation(
+      context, // Pass context as the first argument
       title: "Confirm Clear All Data",
       content:
           "This action will permanently delete ALL accounts, expenses, and income data. This cannot be undone.",
       confirmText: "Clear Data",
       confirmationPhrase: "DELETE",
+      confirmColor: Theme.of(context).colorScheme.error,
     );
+    // --------------------------------------------------
     if (confirmed == true) {
       log.info("[SettingsPage] Clear All Data confirmed by user.");
       context.read<SettingsBloc>().add(const ClearDataRequested());
@@ -203,27 +93,31 @@ class _SettingsViewState extends State<SettingsView> {
       if (enable) {
         canAuth = await _localAuth.canCheckBiometrics ||
             await _localAuth.isDeviceSupported();
-        if (!canAuth) {
+        if (!canAuth && mounted) {
+          // Added mounted check before showing SnackBar
           log.warning(
               "[SettingsPage] Cannot enable App Lock: Biometrics/Device lock not available/setup.");
-          if (mounted) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
-                content: const Text(
-                    "Cannot enable App Lock. Please set up device screen lock or biometrics first."),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ));
-          }
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(
+              content: const Text(
+                  "Cannot enable App Lock. Please set up device screen lock or biometrics first."),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ));
+          // Important: Reset _isAuthenticating if we return early
+          setState(() => _isAuthenticating = false);
           return; // Exit early
         }
       }
-      log.info(
-          "[SettingsPage] Dispatching UpdateAppLock event. IsEnabled: $enable");
-      context.read<SettingsBloc>().add(UpdateAppLock(enable));
+      // Only proceed if canAuth is true (when enabling) or if disabling
+      if (mounted) {
+        // Check mounted before accessing context
+        log.info(
+            "[SettingsPage] Dispatching UpdateAppLock event. IsEnabled: $enable");
+        context.read<SettingsBloc>().add(UpdateAppLock(enable));
+      }
     } on PlatformException catch (e, s) {
-      log.severe(
-          "[SettingsPage] PlatformException checking/setting App Lock$e$s");
+      log.severe("[SettingsPage] PlatformException checking/setting App Lock");
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -233,8 +127,7 @@ class _SettingsViewState extends State<SettingsView> {
           ));
       }
     } catch (e, s) {
-      log.severe(
-          "[SettingsPage] Unexpected error checking/setting App Lock$e$s");
+      log.severe("[SettingsPage] Unexpected error checking/setting App Lock");
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -246,13 +139,12 @@ class _SettingsViewState extends State<SettingsView> {
       }
     } finally {
       if (mounted) {
-        // Ensure state is reset
         setState(() => _isAuthenticating = false);
       }
     }
   }
 
-  // --- Helper Functions (Keep as before) ---
+  // --- Helper Functions (Remain the same) ---
   List<String> _getRelevantPaletteIdentifiers(UIMode uiMode) {
     switch (uiMode) {
       case UIMode.elemental:
@@ -285,7 +177,6 @@ class _SettingsViewState extends State<SettingsView> {
     final color = isDisabled
         ? theme.disabledColor
         : theme.listTileTheme.iconColor ?? theme.colorScheme.onSurfaceVariant;
-
     const Map<String, IconData> standardIcons = {
       'settings': Icons.settings_outlined,
       'ui_mode': Icons.view_quilt_outlined,
@@ -299,7 +190,6 @@ class _SettingsViewState extends State<SettingsView> {
       'info': Icons.info_outline,
       'license': Icons.article_outlined,
     };
-
     return Icon(standardIcons[semanticName] ?? Icons.help_outline,
         color: color);
   }
@@ -321,11 +211,11 @@ class _SettingsViewState extends State<SettingsView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // final modeTheme = context.modeTheme; // No longer needed directly for icons
+    final modeTheme = context.modeTheme;
 
     return BlocListener<SettingsBloc, SettingsState>(
       listener: (context, state) {
-        // Feedback messages (Keep as before)
+        // Feedback messages
         if (state.dataManagementStatus == DataManagementStatus.success &&
             state.dataManagementMessage != null) {
           ScaffoldMessenger.of(context)
@@ -377,18 +267,18 @@ class _SettingsViewState extends State<SettingsView> {
 
             final List<String> relevantPaletteIdentifiers =
                 _getRelevantPaletteIdentifiers(state.uiMode);
-            // Use AppCountries for dropdown items and initial value finding
             final AppCountry? currentCountry =
                 AppCountries.findCountryByCode(state.selectedCountryCode);
 
             return Stack(
               children: [
                 ListView(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 8) ??
+                      const EdgeInsets.symmetric(vertical: 8.0),
                   children: [
                     _buildSectionHeader(context, 'Appearance'),
+                    // UI Mode ListTile
                     ListTile(
-                      // UI Mode
                       enabled: !isOverallLoading,
                       leading: _buildLeadingIcon(
                           context, 'ui_mode', isOverallLoading),
@@ -400,16 +290,14 @@ class _SettingsViewState extends State<SettingsView> {
                       subtitle: Text(AppTheme.uiModeNames[state.uiMode] ??
                           StringExtension(state.uiMode.name).capitalize()),
                       trailing: PopupMenuButton<UIMode>(
+                        /* ... */
                         enabled: !isOverallLoading,
                         icon: const Icon(Icons.arrow_drop_down),
                         tooltip: "Select UI Mode",
                         initialValue: state.uiMode,
-                        onSelected: (UIMode newMode) {
-                          context
-                              .read<SettingsBloc>()
-                              .add(UpdateUIMode(newMode));
-                          // Bloc handler now manages default palette selection
-                        },
+                        onSelected: (UIMode newMode) => context
+                            .read<SettingsBloc>()
+                            .add(UpdateUIMode(newMode)),
                         itemBuilder: (context) => UIMode.values
                             .map((mode) => PopupMenuItem<UIMode>(
                                   value: mode,
@@ -422,8 +310,8 @@ class _SettingsViewState extends State<SettingsView> {
                             .toList(),
                       ),
                     ),
+                    // Palette ListTile
                     ListTile(
-                      // Palette
                       enabled: !isOverallLoading &&
                           relevantPaletteIdentifiers.isNotEmpty,
                       leading: _buildLeadingIcon(
@@ -443,6 +331,7 @@ class _SettingsViewState extends State<SettingsView> {
                       trailing: relevantPaletteIdentifiers.isEmpty
                           ? null
                           : PopupMenuButton<String>(
+                              /* ... */
                               enabled: !isOverallLoading,
                               icon: const Icon(Icons.arrow_drop_down),
                               tooltip: "Select Palette",
@@ -462,8 +351,8 @@ class _SettingsViewState extends State<SettingsView> {
                                       .toList(),
                             ),
                     ),
+                    // Brightness ListTile
                     ListTile(
-                      // Brightness
                       enabled: !isOverallLoading,
                       leading: _buildLeadingIcon(
                           context, 'brightness', isOverallLoading),
@@ -475,6 +364,7 @@ class _SettingsViewState extends State<SettingsView> {
                       subtitle: Text(
                           StringExtension(state.themeMode.name).capitalize()),
                       trailing: PopupMenuButton<ThemeMode>(
+                        /* ... */
                         enabled: !isOverallLoading,
                         icon: const Icon(Icons.arrow_drop_down),
                         tooltip: "Select Brightness Mode",
@@ -495,13 +385,12 @@ class _SettingsViewState extends State<SettingsView> {
 
                     const Divider(),
                     _buildSectionHeader(context, 'Regional'),
+                    // Country Dropdown
                     Padding(
-                      // Country / Currency Dropdown
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16.0, vertical: 8.0),
                       child: DropdownButtonFormField<String>(
-                        value:
-                            currentCountry?.code, // Use code from found country
+                        value: currentCountry?.code,
                         decoration: InputDecoration(
                             labelText: 'Country / Currency',
                             icon: _buildLeadingIcon(
@@ -513,11 +402,11 @@ class _SettingsViewState extends State<SettingsView> {
                         hint: const Text('Select Country'),
                         isExpanded: true,
                         items: AppCountries.availableCountries
-                            .map((AppCountry country) => // Use AppCountries
-                                DropdownMenuItem<String>(
-                                    value: country.code,
-                                    child: Text(
-                                        '${country.name} (${country.currencySymbol})')))
+                            .map((AppCountry country) => DropdownMenuItem<
+                                    String>(
+                                value: country.code,
+                                child: Text(
+                                    '${country.name} (${country.currencySymbol})')))
                             .toList(),
                         onChanged: isOverallLoading
                             ? null
@@ -533,6 +422,7 @@ class _SettingsViewState extends State<SettingsView> {
 
                     const Divider(),
                     _buildSectionHeader(context, 'Security'),
+                    // App Lock SwitchListTile
                     SwitchListTile(
                       secondary: _buildLeadingIcon(
                           context, 'security', isOverallLoading),
@@ -555,8 +445,8 @@ class _SettingsViewState extends State<SettingsView> {
 
                     const Divider(),
                     _buildSectionHeader(context, 'Data Management'),
+                    // Backup ListTile
                     ListTile(
-                      // Backup
                       enabled: !isOverallLoading,
                       leading: _buildLeadingIcon(
                           context, 'backup', isOverallLoading),
@@ -576,8 +466,8 @@ class _SettingsViewState extends State<SettingsView> {
                           ? null
                           : () => _handleBackup(context),
                     ),
+                    // Restore ListTile
                     ListTile(
-                      // Restore
                       enabled: !isOverallLoading,
                       leading: _buildLeadingIcon(
                           context, 'restore', isOverallLoading),
@@ -595,10 +485,11 @@ class _SettingsViewState extends State<SettingsView> {
                           color: isOverallLoading ? theme.disabledColor : null),
                       onTap: isOverallLoading
                           ? null
-                          : () => _handleRestore(context),
+                          : () =>
+                              _handleRestore(context), // Calls updated handler
                     ),
+                    // Clear Data ListTile
                     ListTile(
-                      // Clear Data
                       enabled: !isOverallLoading,
                       leading: _buildLeadingIcon(
                           context, 'delete', isOverallLoading),
@@ -617,13 +508,14 @@ class _SettingsViewState extends State<SettingsView> {
                           color: isOverallLoading ? theme.disabledColor : null),
                       onTap: isOverallLoading
                           ? null
-                          : () => _handleClearData(context),
+                          : () => _handleClearData(
+                              context), // Calls updated handler
                     ),
 
                     const Divider(),
                     _buildSectionHeader(context, 'About'),
+                    // Version ListTile
                     ListTile(
-                      // App Version
                       enabled: !isOverallLoading,
                       leading:
                           _buildLeadingIcon(context, 'info', isOverallLoading),
@@ -644,8 +536,8 @@ class _SettingsViewState extends State<SettingsView> {
                                   ? theme.disabledColor
                                   : null)),
                     ),
+                    // Licenses ListTile
                     ListTile(
-                      // Licenses
                       enabled: !isOverallLoading,
                       leading: _buildLeadingIcon(
                           context, 'license', isOverallLoading),
@@ -669,7 +561,7 @@ class _SettingsViewState extends State<SettingsView> {
                   ],
                 ),
 
-                // Loading Overlay (Keep as before)
+                // Loading Overlay
                 if (isOverallLoading)
                   Positioned.fill(
                     child: Container(
@@ -705,9 +597,9 @@ class _SettingsViewState extends State<SettingsView> {
       ),
     );
   }
-} // End of _SettingsViewState
+}
 
-// Keep Capitalize extension
+// Keep Capitalize extension local or move to utils
 extension StringExtension on String {
   String capitalize() {
     if (isEmpty) return this;
