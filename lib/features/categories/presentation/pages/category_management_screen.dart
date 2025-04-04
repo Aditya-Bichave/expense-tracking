@@ -1,50 +1,51 @@
+// lib/features/categories/presentation/pages/category_management_screen.dart
+// MODIFIED FILE
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
-// Import Add/Edit Category Screen (to be created)
-// import 'package:expense_tracker/features/categories/presentation/pages/add_edit_category_screen.dart';
+// --- UPDATED Import ---
+import 'package:expense_tracker/features/categories/presentation/pages/add_edit_category_screen.dart';
+// --- END UPDATED ---
+import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For availableIcons map
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart'; // For navigation if needed
+// import 'package:go_router/go_router.dart'; // Keep if using named routes
 
 class CategoryManagementScreen extends StatelessWidget {
   const CategoryManagementScreen({super.key});
 
-  // Navigation helper (replace 'add_edit_category_route' with actual route name)
+  // Navigation helper now uses MaterialPageRoute with the implemented screen
   void _navigateToAddEdit(BuildContext context, {Category? category}) {
     log.info(
         "[CategoryMgmtScreen] Navigating to Add/Edit. Category: ${category?.name}");
-    // Option 1: Using GoRouter push/pushNamed if route is defined
-    // context.pushNamed('add_edit_category_route', extra: category);
-
-    // Option 2: Using MaterialPageRoute (simpler if no complex routing needed)
     Navigator.of(context).push(MaterialPageRoute(
+      // Provide the CategoryManagementBloc down to the AddEdit screen
+      // This allows AddEdit screen to dispatch Add/Update events
       builder: (_) => BlocProvider.value(
-        value: BlocProvider.of<CategoryManagementBloc>(
-            context), // Pass existing bloc? Or create new? Re-using for simplicity
-        child: AddEditCategoryScreen(
-            initialCategory: category), // Pass category for editing
+        value: BlocProvider.of<CategoryManagementBloc>(context),
+        child: AddEditCategoryScreen(initialCategory: category),
       ),
     ));
   }
 
   void _handleDelete(BuildContext context, Category category) async {
     log.info("[CategoryMgmtScreen] Delete requested for: ${category.name}");
+    // Confirmation dialog as before
     final confirmed = await AppDialogs.showConfirmation(
       context,
       title: "Confirm Delete",
       content:
-          "Are you sure you want to delete the category '${category.name}'?\n\nTransactions using this category will be marked as 'Uncategorized'.", // Simplification: Reassigning handled in Bloc/UseCase
+          "Are you sure you want to delete the category '${category.name}'?\n\nThis action cannot be undone easily and might affect transaction history if reassignment fails.",
       confirmText: "Delete",
       confirmColor: Theme.of(context).colorScheme.error,
     );
-
     if (confirmed == true) {
       log.info("[CategoryMgmtScreen] Delete confirmed for: ${category.name}");
+      // Transaction reassignment logic needs to be robust in the UseCase/Bloc
       context
           .read<CategoryManagementBloc>()
           .add(DeleteCategory(categoryId: category.id));
@@ -55,7 +56,6 @@ class CategoryManagementScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Assuming CategoryManagementBloc is provided higher up or created here
     return BlocProvider<CategoryManagementBloc>(
       create: (context) =>
           sl<CategoryManagementBloc>()..add(const LoadCategories()),
@@ -65,7 +65,8 @@ class CategoryManagementScreen extends StatelessWidget {
         ),
         body: BlocConsumer<CategoryManagementBloc, CategoryManagementState>(
           listener: (context, state) {
-            if (state.status == CategoryManagementStatus.error &&
+            /* ... Listener logic remains the same ... */ if (state.status ==
+                    CategoryManagementStatus.error &&
                 state.errorMessage != null) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
@@ -80,7 +81,12 @@ class CategoryManagementScreen extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
 
-            if (state.customCategories.isEmpty) {
+            // Combine custom and predefined (for potential editing later)
+            // For now, only list custom categories for management.
+            final categoriesToList = state
+                .customCategories; // Change this later for predefined personalization
+
+            if (categoriesToList.isEmpty) {
               return Center(
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -93,44 +99,47 @@ class CategoryManagementScreen extends StatelessWidget {
               );
             }
 
-            // Display list of custom categories
             return ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: state.customCategories.length,
+              itemCount: categoriesToList.length,
               itemBuilder: (context, index) {
-                final category = state.customCategories[index];
+                final category = categoriesToList[index];
+                // Get IconData for display
+                final IconData displayIconData =
+                    availableIcons[category.iconName] ??
+                        Icons.help_outline; // Fallback
+
                 return AppCard(
-                  // Use AppCard for consistent styling
                   margin:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: category.displayColor.withOpacity(0.2),
-                      child: Icon(
-                        // TODO: Implement proper icon mapping based on category.iconName
-                        Icons.category, // Placeholder
-                        color: category.displayColor,
-                        size: 20,
-                      ),
+                      child: Icon(displayIconData,
+                          color: category.displayColor, size: 20),
                     ),
                     title: Text(category.name),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined),
-                          tooltip: 'Edit Category',
-                          onPressed: () =>
-                              _navigateToAddEdit(context, category: category),
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.delete_outline,
-                              color: Theme.of(context).colorScheme.error),
-                          tooltip: 'Delete Category',
-                          onPressed: () => _handleDelete(context, category),
-                        ),
-                      ],
-                    ),
+                    // Only show edit/delete for custom categories
+                    trailing: category.isCustom
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined),
+                                tooltip: 'Edit Category',
+                                onPressed: () => _navigateToAddEdit(context,
+                                    category: category),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete_outline,
+                                    color: Theme.of(context).colorScheme.error),
+                                tooltip: 'Delete Category',
+                                onPressed: () =>
+                                    _handleDelete(context, category),
+                              ),
+                            ],
+                          )
+                        : null, // No actions for predefined categories yet
                   ),
                 );
               },
@@ -147,22 +156,4 @@ class CategoryManagementScreen extends StatelessWidget {
   }
 }
 
-// Placeholder for AddEditCategoryScreen - CREATE THIS FILE NEXT
-class AddEditCategoryScreen extends StatelessWidget {
-  final Category? initialCategory;
-  const AddEditCategoryScreen({super.key, this.initialCategory});
-
-  @override
-  Widget build(BuildContext context) {
-    // TODO: Implement the form UI for adding/editing categories
-    return Scaffold(
-      appBar: AppBar(
-          title:
-              Text(initialCategory == null ? 'Add Category' : 'Edit Category')),
-      body: Center(
-          child: Text(initialCategory == null
-              ? 'Add Category Form Placeholder'
-              : 'Edit Category Form Placeholder for ${initialCategory!.name}')),
-    );
-  }
-}
+// REMOVED Placeholder for AddEditCategoryScreen - Now imported

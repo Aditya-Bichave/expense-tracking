@@ -1,10 +1,10 @@
+// lib/features/categories/presentation/pages/add_edit_category_screen.dart
+// MODIFIED FILE (Implement UI)
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
-// --- ADDED Import ---
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
-// --- END ADDED ---
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -19,39 +19,47 @@ class AddEditCategoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isEditing = initialCategory != null;
-    // Assuming CategoryManagementBloc is provided by the navigator
+    // Assuming CategoryManagementBloc is provided via BlocProvider.value in CategoryManagementScreen
+    // If navigating differently, ensure the Bloc is available here.
 
     return Scaffold(
-        appBar: AppBar(
-          title: Text(isEditing ? 'Edit Category' : 'Add Category'),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Edit Category' : 'Add Category'),
+        leading: IconButton(
+          // Add explicit back button
+          icon: const Icon(Icons.close),
+          tooltip: 'Cancel',
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        body: CategoryForm(
-          // Use a dedicated form widget
+      ),
+      // Use SafeArea to avoid overlaps
+      body: SafeArea(
+        child: CategoryForm(
           initialCategory: initialCategory,
           onSubmit: (name, iconName, colorHex) {
             log.info(
                 "[AddEditCategoryScreen] Form submitted. Name: $name, Icon: $iconName, Color: $colorHex");
             final bloc = context.read<CategoryManagementBloc>();
             if (isEditing) {
-              // Create a NEW Category entity with updated values
               final updatedCategory = Category(
-                id: initialCategory!.id, // Keep original ID
-                name: name,
-                iconName: iconName,
-                colorHex: colorHex,
-                isCustom:
-                    initialCategory!.isCustom, // Keep original custom status
-                parentCategoryId: initialCategory!.parentCategoryId,
+                // Create the updated entity
+                id: initialCategory!.id,
+                name: name, iconName: iconName, colorHex: colorHex,
+                isCustom: initialCategory!
+                    .isCustom, // Preserve original custom status
+                parentCategoryId:
+                    initialCategory!.parentCategoryId, // Preserve parent
               );
               bloc.add(UpdateCategory(category: updatedCategory));
             } else {
               bloc.add(AddCategory(
                   name: name, iconName: iconName, colorHex: colorHex));
             }
-            // Pop *after* dispatching the event
-            Navigator.of(context).pop();
+            Navigator.of(context).pop(); // Pop after submitting
           },
-        ));
+        ),
+      ),
+    );
   }
 }
 
@@ -73,9 +81,8 @@ class CategoryForm extends StatefulWidget {
 class _CategoryFormState extends State<CategoryForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  // Use the string identifier for the icon name
-  String _selectedIconName = 'default_category_icon'; // Default icon identifier
-  Color _selectedColor = Colors.blue; // Default color
+  String _selectedIconName = 'default_category_icon';
+  Color _selectedColor = Colors.blue;
 
   @override
   void initState() {
@@ -84,7 +91,10 @@ class _CategoryFormState extends State<CategoryForm> {
         TextEditingController(text: widget.initialCategory?.name ?? '');
     _selectedIconName =
         widget.initialCategory?.iconName ?? 'default_category_icon';
-    _selectedColor = widget.initialCategory?.displayColor ?? Colors.blue;
+    // Use ColorUtils to parse hex, default if editing or adding
+    _selectedColor = widget.initialCategory != null
+        ? ColorUtils.fromHex(widget.initialCategory!.colorHex)
+        : Colors.blue;
   }
 
   @override
@@ -106,10 +116,9 @@ class _CategoryFormState extends State<CategoryForm> {
     }
   }
 
-  // --- Update Icon Picker Call ---
+  // Show Icon Picker
   void _showIconPicker() async {
     log.info("[CategoryForm] Icon picker requested");
-    // Call the dialog function
     final String? selectedIcon =
         await showIconPicker(context, _selectedIconName);
     if (selectedIcon != null && selectedIcon != _selectedIconName) {
@@ -119,29 +128,51 @@ class _CategoryFormState extends State<CategoryForm> {
       log.info("[CategoryForm] Icon selection cancelled or unchanged.");
     }
   }
-  // --- END Update ---
 
-  // Color Picker logic remains the same
+  // Show Color Picker (with accessibility check example)
   void _showColorPicker() {
     log.info("[CategoryForm] Color picker requested.");
+    Color pickerColor = _selectedColor; // Temp color for picker
     showDialog(
-      /* ... ColorPicker Dialog ... */
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Pick a color'),
         content: SingleChildScrollView(
           child: ColorPicker(
-            pickerColor: _selectedColor,
-            onColorChanged: (color) => setState(() => _selectedColor = color),
+            pickerColor: pickerColor, // Use temp color
+            onColorChanged: (color) => pickerColor = color, // Update temp color
             pickerAreaHeightPercent: 0.8,
             enableAlpha: false,
+            // --- Accessibility Check Example (Simple Contrast) ---
+            colorPickerWidth: 300,
+            displayThumbColor: true,
+            paletteType: PaletteType.hueWheel, // Or other types
+            labelTypes: const [ColorLabelType.hex],
+            pickerAreaBorderRadius: BorderRadius.circular(8),
+            // You might add custom actions or previews here to check contrast
           ),
         ),
         actions: <Widget>[
           TextButton(
-            child: const Text('Got it'),
+            child: const Text('Cancel'),
             onPressed: () => Navigator.of(context).pop(),
           ),
+          TextButton(
+              child: const Text('Select'),
+              onPressed: () {
+                // Basic contrast check (example against white text)
+                // Use a proper accessibility library for robust checks
+                final contrast =
+                    ThemeData.estimateBrightnessForColor(pickerColor);
+                if (contrast == Brightness.light) {
+                  log.warning(
+                      "[CategoryForm] Selected color might have low contrast with white text.");
+                  // Optionally show another warning dialog
+                }
+                setState(
+                    () => _selectedColor = pickerColor); // Set the actual color
+                Navigator.of(context).pop();
+              }),
         ],
       ),
     );
@@ -151,61 +182,85 @@ class _CategoryFormState extends State<CategoryForm> {
   Widget build(BuildContext context) {
     final modeTheme = context.modeTheme;
     final theme = Theme.of(context);
-
-    // Get the IconData for the currently selected icon name for display
+    // Get IconData for display
     final IconData displayIconData =
-        availableIcons[_selectedIconName] ?? Icons.help_outline;
+        availableIcons[_selectedIconName] ?? Icons.category_outlined;
 
     return Form(
       key: _formKey,
       child: ListView(
+        // Use ListView for scrollability on small screens
         padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
         children: [
           AppTextFormField(
-            controller: _nameController,
-            labelText: 'Category Name',
-            prefixIconData: Icons.label_outline,
-            textCapitalization: TextCapitalization.words,
-            validator: (value) => (value == null || value.trim().isEmpty)
-                ? 'Please enter a category name'
-                : null,
-          ),
-          const SizedBox(height: 16),
-          // --- UPDATED Icon Picker Tile ---
+              controller: _nameController,
+              labelText: 'Category Name',
+              prefixIconData: Icons.label_outline,
+              textCapitalization: TextCapitalization.words,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty)
+                  return 'Please enter a category name';
+                // TODO: Add check for name uniqueness against state.categories in BlocListener or here
+                return null;
+              }),
+          const SizedBox(height: 20),
+          Text("Appearance", style: theme.textTheme.titleMedium),
+          const SizedBox(height: 10),
+          // Icon Picker Tile
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: theme.inputDecorationTheme.enabledBorder ??
-                const OutlineInputBorder(),
-            leading: Icon(displayIconData,
-                color: theme.colorScheme.primary), // Show selected icon
+            contentPadding: const EdgeInsets.symmetric(
+                horizontal: 0), // No padding needed if inside ListView padding
+            shape: RoundedRectangleBorder(
+                side: BorderSide(color: theme.dividerColor),
+                borderRadius: BorderRadius.circular(12) // Match input border
+                ),
+            tileColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: Icon(displayIconData,
+                  color: _selectedColor,
+                  size: 28), // Show selected icon colored
+            ),
             title: const Text('Icon'),
-            subtitle: Text(_selectedIconName), // Display selected icon name
-            trailing:
-                Icon(Icons.edit_outlined, color: theme.colorScheme.primary),
-            onTap: _showIconPicker, // Open icon picker
+            subtitle: Text(_selectedIconName),
+            trailing: Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child:
+                  Icon(Icons.edit_outlined, color: theme.colorScheme.primary),
+            ),
+            onTap: _showIconPicker,
           ),
-          // --- END UPDATE ---
           const SizedBox(height: 16),
+          // Color Picker Tile
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: theme.inputDecorationTheme.enabledBorder ??
-                const OutlineInputBorder(),
-            leading: Icon(Icons.color_lens_outlined, color: _selectedColor),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+            shape: RoundedRectangleBorder(
+                side: BorderSide(color: theme.dividerColor),
+                borderRadius: BorderRadius.circular(12) // Match input border
+                ),
+            tileColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 12.0),
+              child: Icon(Icons.color_lens_outlined,
+                  color: _selectedColor, size: 28),
+            ),
             title: const Text('Color'),
             subtitle: Text(ColorUtils.toHex(_selectedColor)),
-            trailing: Container(
-              width: 24,
-              height: 24,
-              color: _selectedColor,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                  color: _selectedColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: theme.dividerColor)),
+            trailing: Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                    color: _selectedColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: theme.dividerColor)),
+              ),
             ),
             onTap: _showColorPicker,
           ),
-          const SizedBox(height: 32),
+          // TODO: Add Parent Category Selector if implementing sub-categories
+          const SizedBox(height: 40),
           ElevatedButton.icon(
             icon: const Icon(Icons.save),
             label: Text(widget.initialCategory == null
