@@ -1,35 +1,30 @@
 // lib/features/income/domain/repositories/income_repository.dart
-// MODIFIED FILE
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
+// --- Import Model instead of Entity ---
+import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/core/utils/enums.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 
 abstract class IncomeRepository {
-  Future<Either<Failure, List<Income>>> getIncomes({
+  // --- MODIFIED Return Type ---
+  Future<Either<Failure, List<IncomeModel>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Note: This filter might need to use ID now
+    String? category, // Filter by Category ID
     String? accountId,
   });
+  // --- END MODIFIED ---
+
+  // Keep Add/Update returning Entity for now
   Future<Either<Failure, Income>> addIncome(Income income);
   Future<Either<Failure, Income>> updateIncome(Income income);
+
   Future<Either<Failure, void>> deleteIncome(String id);
   Future<Either<Failure, double>> getTotalIncomeForAccount(String accountId,
       {DateTime? startDate, DateTime? endDate});
-
-  /// Updates only the categorization details of an income record.
-  Future<Either<Failure, void>> updateIncomeCategorization(
-      String incomeId,
-      String? categoryId, // Nullable if setting to uncategorized explicitly
-      CategorizationStatus status,
-      double? confidenceScore);
-
-  // --- ADDED METHOD ---
-  /// Reassigns incomes from one category to another in bulk.
-  /// Sets status to 'categorized' and clears confidence.
+  Future<Either<Failure, void>> updateIncomeCategorization(String incomeId,
+      String? categoryId, CategorizationStatus status, double? confidenceScore);
   Future<Either<Failure, int>> reassignIncomesCategory(
-      String oldCategoryId, String newCategoryId // Typically 'uncategorized' ID
-      );
-  // --- END ADDED ---
+      String oldCategoryId, String newCategoryId);
 }

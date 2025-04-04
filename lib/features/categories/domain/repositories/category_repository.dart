@@ -24,4 +24,6 @@ abstract class CategoryRepository {
       Category category); // Category now includes type
   Future<Either<Failure, void>> deleteCustomCategory(
       String categoryId, String fallbackCategoryId);
+
+  void invalidateCache(); // Add this method signature
 }

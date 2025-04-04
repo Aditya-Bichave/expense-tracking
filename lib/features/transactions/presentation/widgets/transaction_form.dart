@@ -11,7 +11,7 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:toggle_switch/toggle_switch.dart'; // Add dependency: flutter pub add toggle_switch
+import 'package:toggle_switch/toggle_switch.dart'; // Ensure this dependency is added
 
 // Callback includes the selected type
 typedef TransactionSubmitCallback = void Function(
@@ -35,7 +35,7 @@ class TransactionForm extends StatefulWidget {
     required this.onSubmit,
     this.initialTransaction,
     this.initialType = TransactionType.expense,
-    this.initialCategory, // Added
+    this.initialCategory,
   });
 
   @override
@@ -52,6 +52,9 @@ class _TransactionFormState extends State<TransactionForm> {
   String? _selectedAccountId;
   late TransactionType _transactionType;
 
+  final GlobalKey<FormFieldState<Category>> _categoryFormFieldKey =
+      GlobalKey<FormFieldState<Category>>();
+
   @override
   void initState() {
     super.initState();
@@ -66,14 +69,12 @@ class _TransactionFormState extends State<TransactionForm> {
     _notesController = TextEditingController(text: initial?.notes ?? '');
     _selectedDate = initial?.date ?? DateTime.now();
     _selectedAccountId = initial?.accountId;
-    // Use passed initialCategory if available, otherwise fallback to transaction's category
     _selectedCategory = widget.initialCategory ?? initial?.category;
 
     log.info(
-        "[TransactionForm] Initial Category: ${_selectedCategory?.name} (ID: ${_selectedCategory?.id})");
+        "[TransactionForm] Initial Category set in form state: ${_selectedCategory?.name} (ID: ${_selectedCategory?.id})");
   }
 
-  // --- ADDED: Update state if initialCategory from parent changes ---
   @override
   void didUpdateWidget(covariant TransactionForm oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -83,19 +84,31 @@ class _TransactionFormState extends State<TransactionForm> {
       setState(() {
         _selectedCategory = widget.initialCategory;
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _categoryFormFieldKey.currentState?.didChange(_selectedCategory);
+          // Don't auto-validate here, let submit handle it
+          // _categoryFormFieldKey.currentState?.validate();
+        }
+      });
     }
-    // Also update type if initialType changes (though less common)
     if (widget.initialType != oldWidget.initialType &&
         widget.initialTransaction == null) {
       log.info(
           "[TransactionForm] didUpdateWidget: initialType changed to ${widget.initialType.name}");
       setState(() {
         _transactionType = widget.initialType;
-        _selectedCategory = null; // Reset category on type change
+        _selectedCategory = null;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _categoryFormFieldKey.currentState?.didChange(null);
+          // Don't auto-validate here
+          // _categoryFormFieldKey.currentState?.validate();
+        }
       });
     }
   }
-  // --- END ADDED ---
 
   @override
   void dispose() {
@@ -106,25 +119,26 @@ class _TransactionFormState extends State<TransactionForm> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    // ... (keep implementation) ...
     final DateTime? pickedDate = await showDatePicker(
         context: context,
         initialDate: _selectedDate,
         firstDate: DateTime(2000),
         lastDate: DateTime(2101));
-    if (pickedDate != null) {
+    if (pickedDate != null && mounted) {
       final TimeOfDay? pickedTime = await showTimePicker(
           context: context, initialTime: TimeOfDay.fromDateTime(_selectedDate));
-      setState(() {
-        _selectedDate = DateTime(
-          pickedDate.year,
-          pickedDate.month,
-          pickedDate.day,
-          pickedTime?.hour ?? _selectedDate.hour,
-          pickedTime?.minute ?? _selectedDate.minute,
-        );
-        log.info("[TransactionForm] Date selected: $_selectedDate");
-      });
+      if (mounted) {
+        setState(() {
+          _selectedDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime?.hour ?? _selectedDate.hour,
+            pickedTime?.minute ?? _selectedDate.minute,
+          );
+          log.info("[TransactionForm] Date selected: $_selectedDate");
+        });
+      }
     }
   }
 
@@ -137,46 +151,70 @@ class _TransactionFormState extends State<TransactionForm> {
 
     final Category? result = await showCategoryPicker(context, categoryFilter);
     if (result != null && mounted) {
-      // Check mounted
       setState(() => _selectedCategory = result);
       log.info(
           "[TransactionForm] Category selected via picker: ${result.name} (ID: ${result.id})");
-      // Explicitly validate the category field after selection
-      _formKey.currentState?.validate();
+      // Update FormField state AFTER setting state
+      _categoryFormFieldKey.currentState?.didChange(_selectedCategory);
+      // Optionally validate only this field after selection
+      _categoryFormFieldKey.currentState?.validate();
     }
   }
 
   void _submitForm() {
     log.info("[TransactionForm] Submit button pressed.");
-    // --- Trigger validation BEFORE checking fields ---
-    if (_formKey.currentState?.validate() ?? false) {
-      // Validation passed, proceed with submission checks
+
+    // --- MODIFIED: Validate all fields EXCEPT category initially ---
+    // We manually validate category later if needed
+    bool otherFieldsValid = _formKey.currentState?.validate() ?? false;
+    // Find the category field state and temporarily clear its error if validation failed overall
+    final categoryFieldState = _categoryFormFieldKey.currentState;
+    bool categoryWasInvalid = categoryFieldState?.hasError ?? false;
+    if (!otherFieldsValid && categoryWasInvalid) {
+      // If the only error was the category field (which we initially allow to be null)
+      // consider the rest of the form valid for now.
+      // This is a bit heuristic, might need refinement.
+      final errorTextBefore = categoryFieldState?.errorText;
+      categoryFieldState?.validate(); // Re-validate category field
+      if (categoryFieldState?.isValid ?? false) {
+        // If category is actually valid now, or was just null
+        otherFieldsValid = true; // Assume other fields were okay
+      } else {
+        categoryFieldState?.setState(() {
+          // Manually clear error if needed for now
+          // This is hacky, BLoC should drive error display
+        });
+      }
+    }
+
+    if (otherFieldsValid) {
+      // Now check category specifically
+      final categoryToSubmit = _selectedCategory ?? Category.uncategorized;
+      // Account ID validation still relies on AccountSelectorDropdown validator
       if (_selectedAccountId == null) {
         log.warning(
-            "[TransactionForm] Submit prevented: Account not selected.");
-        // Validation should handle showing the error to the user
+            "[TransactionForm] Submit prevented: Account not selected (Validation Error).");
+        // Error snackbar shown by general validation fail below
         return;
       }
-      // Use 'Uncategorized' as a placeholder if _selectedCategory is null after validation attempt
-      final categoryToSubmit = _selectedCategory ?? Category.uncategorized;
 
+      // --- Call onSubmit, BLoC will handle the uncategorized case ---
       final title = _titleController.text.trim();
       final amount =
           double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0.0;
       final notes = _notesController.text.trim();
-      final accountId = _selectedAccountId!; // Already checked for null
+      final accountId = _selectedAccountId!;
 
       log.info(
-          "[TransactionForm] Form validated. Calling onSubmit with Type: ${_transactionType.name}, Category: ${categoryToSubmit.name}");
+          "[TransactionForm] Form fields validated (excluding initial category check). Calling onSubmit callback.");
       widget.onSubmit(
-        _transactionType,
-        title, amount, _selectedDate,
-        categoryToSubmit, // Pass the selected or uncategorized
+        _transactionType, title, amount, _selectedDate,
+        categoryToSubmit, // Pass selected or Uncategorized
         accountId,
         notes.isEmpty ? null : notes,
       );
     } else {
-      log.warning("[TransactionForm] Form validation failed.");
+      log.warning("[TransactionForm] Form validation failed (other fields).");
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(
@@ -226,7 +264,10 @@ class _TransactionFormState extends State<TransactionForm> {
                         "[TransactionForm] Toggled type to: ${newType.name}");
                     setState(() {
                       _transactionType = newType;
-                      _selectedCategory = null; // Reset category
+                      _selectedCategory = null;
+                      _categoryFormFieldKey.currentState?.didChange(null);
+                      _categoryFormFieldKey.currentState
+                          ?.validate(); // Re-validate after type change
                     });
                   }
                 },
@@ -271,19 +312,16 @@ class _TransactionFormState extends State<TransactionForm> {
 
           // --- Category Picker using FormField ---
           FormField<Category>(
-            key: ValueKey(
-                'category_field_${_transactionType.name}'), // Change key on type switch to reset validation
+            key: _categoryFormFieldKey,
             initialValue: _selectedCategory,
+            // --- MODIFIED VALIDATOR: Always return null initially ---
             validator: (value) {
-              // Only require selection if NOT suggesting or creating
-              // This validation might be better handled purely in the BLoC submission logic
-              if (value == null) return 'Please select a category';
-              // if (value.id == Category.uncategorized.id) return 'Please select a specific category'; // Allow Uncategorized temporarily
+              // Let the _submitForm logic handle the check after suggestion flow
               return null;
             },
+            // --- END MODIFIED ---
             builder: (formFieldState) {
-              Category? displayCategory =
-                  formFieldState.value; // Use value from form state
+              Category? displayCategory = _selectedCategory;
               Color displayColor =
                   displayCategory?.displayColor ?? theme.disabledColor;
               IconData displayIcon = Icons.category_outlined;
@@ -291,56 +329,53 @@ class _TransactionFormState extends State<TransactionForm> {
                 displayIcon = availableIcons[displayCategory.iconName] ??
                     Icons.help_outline;
               }
+              final BorderRadius defaultRadius = BorderRadius.circular(12.0);
+              BorderRadius inputBorderRadius = defaultRadius;
+              final borderConfig = theme.inputDecorationTheme.enabledBorder;
+              if (borderConfig is OutlineInputBorder) {
+                inputBorderRadius = borderConfig.borderRadius;
+              }
+              // --- Check error state from the field itself ---
+              bool hasError = formFieldState.hasError;
+              // --- End Check ---
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   InputDecorator(
-                    // Use InputDecorator for consistent styling with errors
                     decoration: InputDecoration(
-                      contentPadding:
-                          EdgeInsets.zero, // Control padding via ListTile
-                      errorText: formFieldState.errorText,
-                      border: InputBorder.none, // Remove default border
+                      contentPadding: EdgeInsets.zero,
+                      // --- Show error text if validation failed ---
+                      errorText: hasError ? formFieldState.errorText : null,
+                      // --- End Show ---
+                      border: InputBorder.none,
                       enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder
-                          .none, // Control error state via ListTile shape/color
+                      errorBorder: InputBorder.none,
                       isDense: true,
                     ),
                     child: ListTile(
                         contentPadding:
                             const EdgeInsets.symmetric(horizontal: 12),
-                        shape:
-                            theme.inputDecorationTheme.enabledBorder?.copyWith(
-                                  borderSide: formFieldState.hasError
-                                      ? BorderSide(
-                                          color: theme.colorScheme.error,
-                                          width: 1.5)
-                                      : theme.inputDecorationTheme.enabledBorder
-                                              ?.borderSide ??
-                                          const BorderSide(),
-                                ) ??
-                                OutlineInputBorder(
-                                    borderSide: formFieldState.hasError
-                                        ? BorderSide(
-                                            color: theme.colorScheme.error,
-                                            width: 1.5)
-                                        : const BorderSide()),
+                        shape: OutlineInputBorder(
+                            borderRadius: inputBorderRadius,
+                            borderSide: hasError
+                                ? BorderSide(
+                                    color: theme.colorScheme.error, width: 1.5)
+                                : theme.inputDecorationTheme.enabledBorder
+                                        ?.borderSide ??
+                                    BorderSide(color: theme.dividerColor)),
                         leading: Icon(displayIcon,
-                            color: formFieldState.hasError
+                            color: hasError
                                 ? theme.colorScheme.error
                                 : displayColor),
                         title: Text(displayCategory?.name ?? 'Select Category',
                             style: TextStyle(
-                                color: formFieldState.hasError
-                                    ? theme.colorScheme.error
-                                    : null)),
-                        // Removed subtitle error display, handled by InputDecorator
+                                color:
+                                    hasError ? theme.colorScheme.error : null)),
                         trailing: const Icon(Icons.arrow_drop_down),
                         onTap: () async {
                           await _selectCategory(context);
-                          formFieldState.didChange(
-                              _selectedCategory); // Update FormField state
+                          // formFieldState.didChange(_selectedCategory); // Already happens in _selectCategory
                         }),
                   ),
                 ],

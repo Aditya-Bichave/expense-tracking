@@ -1,15 +1,14 @@
 part of 'add_edit_transaction_bloc.dart';
 
-// Status for the entire Add/Edit process
 enum AddEditStatus {
-  initial, // Before initialization
-  ready, // Ready for user input or editing
-  loading, // Generic loading (e.g., fetching suggestion, preparing navigation)
-  suggestingCategory, // Suggestion found, waiting for user action
-  navigatingToCreateCategory, // State indicating navigation is happening
-  saving, // Saving the transaction to the database
-  success, // Save completed successfully
-  error // An error occurred
+  initial,
+  ready,
+  loading,
+  suggestingCategory,
+  navigatingToCreateCategory,
+  saving,
+  success,
+  error
 }
 
 class AddEditTransactionState extends Equatable {
@@ -19,10 +18,10 @@ class AddEditTransactionState extends Equatable {
   final String? errorMessage;
   final Category? suggestedCategory;
   final Category? newlyCreatedCategory;
-  // --- ADDED Flag ---
-  final bool askCreateCategory; // Flag to trigger the "Create/Select" dialog
 
-  // Store form data temporarily
+  // --- ADDED FLAG ---
+  final bool askCreateCategory; // Flag to signal UI to show the dialog
+
   final String? tempTitle;
   final double? tempAmount;
   final DateTime? tempDate;
@@ -36,7 +35,8 @@ class AddEditTransactionState extends Equatable {
     this.errorMessage,
     this.suggestedCategory,
     this.newlyCreatedCategory,
-    this.askCreateCategory = false, // Initialize flag
+    // --- Default flag to false ---
+    this.askCreateCategory = false,
     this.tempTitle,
     this.tempAmount,
     this.tempDate,
@@ -55,7 +55,8 @@ class AddEditTransactionState extends Equatable {
     ValueGetter<String?>? errorMessage,
     ValueGetter<Category?>? suggestedCategory,
     ValueGetter<Category?>? newlyCreatedCategory,
-    bool? askCreateCategory, // Add flag to copyWith
+    // --- ADDED flag to copyWith ---
+    bool? askCreateCategory,
     String? tempTitle,
     double? tempAmount,
     DateTime? tempDate,
@@ -66,13 +67,9 @@ class AddEditTransactionState extends Equatable {
     bool clearSuggestion = false,
     bool clearNewlyCreated = false,
     bool clearTempData = false,
+    // --- Added flag to clear askCreateCategory ---
+    bool clearAskCreateFlag = false,
   }) {
-    // If status is changing *away* from suggesting or navigating, reset the askCreate flag
-    final bool shouldResetAskFlag = (status != null &&
-        status != AddEditStatus.suggestingCategory &&
-        status != AddEditStatus.navigatingToCreateCategory &&
-        status != AddEditStatus.ready);
-
     return AddEditTransactionState(
       status: status ?? this.status,
       transactionType: transactionType ?? this.transactionType,
@@ -92,9 +89,10 @@ class AddEditTransactionState extends Equatable {
           : (newlyCreatedCategory != null
               ? newlyCreatedCategory()
               : this.newlyCreatedCategory),
-      askCreateCategory: shouldResetAskFlag
+      // --- Assign flag ---
+      askCreateCategory: clearAskCreateFlag
           ? false
-          : (askCreateCategory ?? this.askCreateCategory), // Assign flag
+          : (askCreateCategory ?? this.askCreateCategory),
       tempTitle: clearTempData ? null : (tempTitle ?? this.tempTitle),
       tempAmount: clearTempData ? null : (tempAmount ?? this.tempAmount),
       tempDate: clearTempData ? null : (tempDate ?? this.tempDate),
@@ -108,17 +106,10 @@ class AddEditTransactionState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        transactionType,
-        initialTransaction,
-        errorMessage,
-        suggestedCategory,
-        newlyCreatedCategory,
-        askCreateCategory, // Add flag to props
-        tempTitle,
-        tempAmount,
-        tempDate,
-        tempAccountId,
-        tempNotes,
+        status, transactionType, initialTransaction, errorMessage,
+        suggestedCategory, newlyCreatedCategory,
+        // --- Add flag to props ---
+        askCreateCategory,
+        tempTitle, tempAmount, tempDate, tempAccountId, tempNotes,
       ];
 }

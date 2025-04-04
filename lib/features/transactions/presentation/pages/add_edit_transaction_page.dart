@@ -2,7 +2,7 @@ import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import CategoryType
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_form.dart';
@@ -29,8 +29,7 @@ class AddEditTransactionPage extends StatefulWidget {
 class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   late final AddEditTransactionBloc _bloc;
   TransactionEntity? _initialTransactionEntity;
-  // --- REMOVED _askedCreateCustom flag, use Bloc state flag ---
-  // bool _askedCreateCustom = false;
+  // Removed _askedCreateCustom flag, rely on Bloc state flag
   AddEditStatus? _previousStatus;
 
   @override
@@ -60,7 +59,6 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   @override
   void dispose() {
-    // Bloc lifecycle can be managed by GetIt if registered as factory
     super.dispose();
   }
 
@@ -84,7 +82,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           _bloc.add(AcceptCategorySuggestion(suggestedCategory));
         } else {
           log.info("[AddEditTxnPage] Suggestion rejected.");
-          _bloc.add(const RejectCategorySuggestion());
+          _bloc.add(
+              const RejectCategorySuggestion()); // Bloc will handle setting ask flag
         }
       });
     });
@@ -106,6 +105,9 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         barrierDismissible: false,
       ).then((create) {
         if (!mounted) return;
+        // Clear the ask flag regardless of choice, as the dialog was shown
+        _bloc.emit(_bloc.state.copyWith(clearAskCreateFlag: true));
+
         if (create == true) {
           log.info("[AddEditTxnPage] User chose to create a new category.");
           _bloc.add(const CreateCustomCategoryRequested());
@@ -116,35 +118,34 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             ..hideCurrentSnackBar()
             ..showSnackBar(const SnackBar(
                 content: Text("Please select a category manually.")));
-          // No need to change state, UI stays on form
+          // Status is already 'ready', user can now use the form picker
         }
       });
     });
   }
 
-  // --- Navigate to Add Category ---
+  // --- Navigate to Add Category Screen ---
   Future<void> _navigateToAddCategory(
       BuildContext context, TransactionType currentType) async {
     log.info(
         "[AddEditTxnPage] Navigating to Add Category screen for type: ${currentType.name}");
 
-    // Use Navigator.push and wait for the result
+    final categoryType = currentType == TransactionType.expense
+        ? CategoryType.expense
+        : CategoryType.income;
+
     final result = await Navigator.of(context).push<Category>(
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
           value: sl<CategoryManagementBloc>(),
           child: AddEditCategoryScreen(
-            // Pass the current transaction type so the Add Category screen knows
-            // whether to create an Expense or Income category.
-            initialType: currentType == TransactionType.expense
-                ? CategoryType.expense
-                : CategoryType.income,
+            initialType: categoryType, // Pass the type
           ),
         ),
       ),
     );
 
-    if (!mounted) return; // Check mounted after await
+    if (!mounted) return;
 
     if (result != null) {
       log.info(
@@ -153,8 +154,6 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     } else {
       log.info(
           "[AddEditTxnPage] Add Category screen popped without returning a category. Returning to form.");
-      // Reset status to ready to allow user interaction
-      // --- Use correct enum ---
       _bloc.emit(_bloc.state.copyWith(status: AddEditStatus.ready));
     }
   }
@@ -163,13 +162,14 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   Widget build(BuildContext context) {
     final bool isEditing = _initialTransactionEntity != null;
 
-    // Provide the BLoC instance managed by this stateful widget
     return BlocProvider.value(
       value: _bloc,
       child: BlocListener<AddEditTransactionBloc, AddEditTransactionState>(
         listener: (context, state) {
           log.fine(
-              "[AddEditTxnPage] BlocListener: Status=${state.status}, PrevStatus=$_previousStatus, AskCreate=${state.askCreateCategory}");
+              "[AddEditTxnPage] BlocListener: Status=${state.status}, PrevStatus=$_previousStatus, Suggestion=${state.suggestedCategory?.name}, AskCreate=${state.askCreateCategory}");
+
+          // --- Handle State Transitions for Dialogs/Navigation ---
 
           // 1. Show Suggestion Dialog
           if (state.status == AddEditStatus.suggestingCategory &&
@@ -177,14 +177,14 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               state.suggestedCategory != null) {
             _showSuggestionDialog(context, state.suggestedCategory!);
           }
-          // 2. Ask "Create Custom?" Dialog (Triggered by flag in state)
-          else if (state.askCreateCategory && // Check the flag
-              !state.isEditing && // Only ask when adding new
-              _previousStatus != state.status) {
-            // Avoid re-showing on simple rebuilds
+          // 2. Ask "Create Custom?" Dialog (Triggered by flag)
+          else if (state.askCreateCategory &&
+              _previousStatus !=
+                  AddEditStatus.initial /* Avoid triggering on init */) {
+            // Check the flag directly
             _askCreateCustomCategory(context);
           }
-          // 3. Navigate to Add Category
+          // 3. Navigate to Add Category (Triggered by dedicated state)
           else if (state.status == AddEditStatus.navigatingToCreateCategory &&
               _previousStatus != AddEditStatus.navigatingToCreateCategory) {
             _navigateToAddCategory(context, state.transactionType);
@@ -203,15 +203,16 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                   backgroundColor: Colors.green,
                 ),
               );
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              log.warning(
-                  "[AddEditTxnPage] Cannot pop context after successful save.");
-              context.go(RouteNames.transactionsList);
-            }
+            // Pop after showing snackbar
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && context.canPop()) {
+                context.pop();
+              } else if (mounted) {
+                context.go(RouteNames.transactionsList);
+              }
+            });
           }
-          // 5. Handle Error
+          // 5. Handle Error State
           else if (state.status == AddEditStatus.error &&
               state.errorMessage != null &&
               _previousStatus != AddEditStatus.error) {
@@ -225,13 +226,17 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                   backgroundColor: Theme.of(context).colorScheme.error,
                 ),
               );
-            // Reset to ready state to allow user to fix form/retry
-            // --- Use correct enum ---
-            _bloc.emit(state.copyWith(
-                status: AddEditStatus.ready, clearErrorMessage: true));
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                // Dispatch event to clear error and reset status
+                _bloc.add(const ClearMessages());
+                // Setting status directly here might be overridden if ClearMessages does it
+                _bloc.emit(_bloc.state.copyWith(status: AddEditStatus.ready));
+              }
+            });
           }
 
-          // Update previous state tracking *after* processing transitions
+          // Update previous state tracking
           _previousStatus = state.status;
         },
         child: Scaffold(
@@ -250,41 +255,47 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             ),
           ),
           body: BlocBuilder<AddEditTransactionBloc, AddEditTransactionState>(
-            // --- Fix BlocProvider.value generic type ---
-            // No, BlocBuilder infers the type from context, this part is fine
             builder: (context, state) {
               log.fine("[AddEditTxnPage] BlocBuilder: Status=${state.status}");
 
-              // Show loading indicator for saving/processing/navigating
-              if (state.status == AddEditStatus.saving ||
-                  state.status == AddEditStatus.loading ||
-                  state.status == AddEditStatus.navigatingToCreateCategory) {
-                return const Center(child: CircularProgressIndicator());
-              }
+              final isLoadingOverlayVisible = state.status ==
+                      AddEditStatus.saving ||
+                  state.status == AddEditStatus.loading || // General loading
+                  state.status == AddEditStatus.navigatingToCreateCategory;
 
-              // Show the form otherwise (ready, suggesting, error, initial)
-              return TransactionForm(
-                key: ValueKey(state.transactionType.toString() +
-                    (state.initialTransaction?.id ?? 'new')),
-                initialTransaction: state.initialTransaction,
-                initialType: state.transactionType,
-                // --- Pass effective category for pre-filling ---
-                initialCategory: state.effectiveCategory,
-                onSubmit:
-                    (type, title, amount, date, category, accountId, notes) {
-                  log.info(
-                      "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.");
-                  context.read<AddEditTransactionBloc>().add(
-                        SaveTransactionRequested(
-                          title: title,
-                          amount: amount,
-                          date: date,
-                          category: category,
-                          accountId: accountId,
-                          notes: notes,
-                        ),
-                      );
-                },
+              return Stack(
+                children: [
+                  // The actual form
+                  TransactionForm(
+                    key: ValueKey(state.transactionType.toString() +
+                        (state.initialTransaction?.id ?? 'new') +
+                        (state.effectiveCategory?.id ?? 'none')),
+                    initialTransaction: state.initialTransaction,
+                    initialType: state.transactionType,
+                    initialCategory:
+                        state.effectiveCategory, // Pass effective category
+                    onSubmit: (type, title, amount, date, category, accountId,
+                        notes) {
+                      log.info(
+                          "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.");
+                      context.read<AddEditTransactionBloc>().add(
+                            SaveTransactionRequested(
+                              title: title, amount: amount, date: date,
+                              category: category, // Category from form
+                              accountId: accountId, notes: notes,
+                            ),
+                          );
+                    },
+                  ),
+                  // Loading Overlay
+                  if (isLoadingOverlayVisible)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.1),
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                    ),
+                ],
               );
             },
           ),
@@ -293,11 +304,3 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     );
   }
 }
-
-
-// --- TODO Reminder ---
-// 1. Modify AddEditCategoryScreen constructor to accept optional `initialType`
-//    and use it to set the initial value of the type dropdown (and maybe disable it).
-// 2. Modify AddEditCategoryScreen's submit logic to pop with the created Category object.
-// 3. Modify TransactionForm to accept `initialCategory` parameter and use it in initState.
-// 4. Refine the state transition logic in the BlocListener if needed.
