@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/enums.dart'; // CategorizationStatus
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 // Import ApplyCategoryToBatchUseCase (Assuming it's refactored to use the primary TransactionType)
 import 'package:expense_tracker/features/categories/domain/usecases/apply_category_to_batch.dart';

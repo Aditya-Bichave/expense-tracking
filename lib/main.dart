@@ -23,37 +23,34 @@ import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
 
-// Import Blocs needed globally (List/Management Blocs)
+// Import Blocs needed globally
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
-// REMOVED: import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
-// REMOVED: import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart'; // ADDED TransactionListBloc
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart'; // ADDED CategoryManagementBloc
+// --- ADDED Data Management Bloc Import ---
+import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 
 final log = SimpleLogger();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  log.setLevel(Level.INFO,
-      includeCallerInfo: false); // Adjust log level as needed
+  log.setLevel(Level.WARNING, includeCallerInfo: false);
   log.info("==========================================");
   log.info(" Spend Savvy Application Starting...");
   log.info("==========================================");
 
   try {
     await Hive.initFlutter();
-    // Register ALL Adapters
     Hive.registerAdapter(ExpenseModelAdapter());
     Hive.registerAdapter(AssetAccountModelAdapter());
     Hive.registerAdapter(IncomeModelAdapter());
     Hive.registerAdapter(CategoryModelAdapter());
     Hive.registerAdapter(UserHistoryRuleModelAdapter());
 
-    // Open ALL Boxes
     final expenseBox =
         await Hive.openBox<ExpenseModel>(HiveConstants.expenseBoxName);
     final accountBox =
@@ -64,10 +61,8 @@ Future<void> main() async {
         await Hive.openBox<CategoryModel>(HiveConstants.categoryBoxName);
     final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
         HiveConstants.userHistoryRuleBoxName);
-
     final prefs = await SharedPreferences.getInstance();
 
-    // Initialize Service Locator with all dependencies
     await initLocator(
       prefs: prefs,
       expenseBox: expenseBox,
@@ -87,43 +82,36 @@ Future<void> main() async {
   }
 
   // --- Global Bloc Providers ---
-  // Provide Blocs that need to be accessed across multiple features or globally.
-  // Use lazy: false to create them immediately if they listen to streams on init.
   runApp(MultiBlocProvider(
     providers: [
-      // Settings is fundamental
       BlocProvider<SettingsBloc>(
         create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
-        lazy: false, // Load settings immediately
+        lazy: false,
       ),
-      // Data List Blocs needed across tabs/dashboard
+      // --- ADDED DataManagementBloc Provider ---
+      BlocProvider<DataManagementBloc>(
+        create: (context) => sl<DataManagementBloc>(),
+        lazy: true, // Can be lazy as it's mostly user-triggered
+      ),
       BlocProvider<AccountListBloc>(
         create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
-        lazy: false, // Load accounts for dashboard/account tab
+        lazy: false,
       ),
       BlocProvider<TransactionListBloc>(
-        // ADDED Unified Transaction Bloc
         create: (context) =>
             sl<TransactionListBloc>()..add(const LoadTransactions()),
-        lazy:
-            false, // Load transactions for dashboard preview / transactions tab
+        lazy: false,
       ),
-      // REMOVED old list Blocs:
-      // BlocProvider<ExpenseListBloc>(...),
-      // BlocProvider<IncomeListBloc>(...),
       BlocProvider<CategoryManagementBloc>(
-        // Needed for category selection/management
         create: (context) =>
             sl<CategoryManagementBloc>()..add(const LoadCategories()),
-        lazy: false, // Load categories for pickers/display
+        lazy: false,
       ),
       BlocProvider<DashboardBloc>(
-        // Dashboard state
         create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
         lazy: false,
       ),
       BlocProvider<SummaryBloc>(
-        // Analytics Summary (if used e.g., on Dashboard)
         create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
         lazy: false,
       ),
@@ -132,7 +120,7 @@ Future<void> main() async {
   ));
 }
 
-// Widget to display critical initialization errors
+// ... (Rest of main.dart - InitializationErrorApp, AuthWrapper, MyApp - remains the same) ...
 class InitializationErrorApp extends StatelessWidget {
   final Object error;
   const InitializationErrorApp({super.key, required this.error});
@@ -399,7 +387,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       }
     } on PlatformException catch (e, s) {
       errorMsg = "Authentication Error: ${e.message ?? e.code}";
-      log.severe("[AuthWrapper] PlatformException during authenticate");
+      log.severe("[AuthWrapper] PlatformException during authenticate: $e\n$s");
       if (mounted && e.code != 'auth_in_progress' && e.code != 'user_cancel') {
         // Don't show snackbar for cancellation or overlap
         _showAuthErrorSnackbar(errorMsg);
@@ -407,7 +395,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       // Handle specific errors like 'NotEnrolled', 'LockedOut', etc. if needed
     } catch (e, s) {
       errorMsg = "An unexpected error occurred during authentication.";
-      log.severe("[AuthWrapper] Exception during authenticate");
+      log.severe("[AuthWrapper] Exception during authenticate: $e\n$s");
       if (mounted) _showAuthErrorSnackbar(errorMsg);
     } finally {
       if (mounted) {
@@ -456,15 +444,12 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    // Watch settings to react to theme changes etc.
-    // Ensure SettingsBloc is accessed only after it's likely initialized
     SettingsState settingsState;
     try {
       settingsState = context.watch<SettingsBloc>().state;
     } catch (e) {
       log.warning(
           "[AuthWrapper] Error watching SettingsBloc state in build: $e. Using defaults.");
-      // Use defaults if SettingsBloc isn't ready/available yet
       settingsState = const SettingsState();
     }
 
@@ -473,26 +458,19 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     final currentPaletteIdentifier = settingsState.paletteIdentifier;
 
     log.fine(
-      "[AuthWrapper] Build: UIMode=$currentUiMode, Palette=$currentPaletteIdentifier, Brightness=$currentThemeMode, NeedsAuth=$_needsAuth, IsAuthenticated=$_isAuthenticated, IsCheckingAuth=$_isCheckingAuth",
-    );
+        "[AuthWrapper] Build: UIMode=$currentUiMode, Palette=$currentPaletteIdentifier, Brightness=$currentThemeMode, NeedsAuth=$_needsAuth, IsAuthenticated=$_isAuthenticated, IsCheckingAuth=$_isCheckingAuth");
 
-    // Build theme based on the *current* state from SettingsBloc
-    final AppThemeDataPair finalThemeDataPair = AppTheme.buildTheme(
-      currentUiMode,
-      currentPaletteIdentifier,
-    );
+    final AppThemeDataPair finalThemeDataPair =
+        AppTheme.buildTheme(currentUiMode, currentPaletteIdentifier);
     final lightTheme = finalThemeDataPair.light;
     final darkTheme = finalThemeDataPair.dark;
 
-    // Determine the UI state
     Widget content;
     if (_isCheckingAuth && !_isAuthenticated && _needsAuth) {
-      // Initial loading or checking authentication state when lock is enabled
       log.fine("[AuthWrapper UI] Showing Loading Screen (during auth check).");
       content =
           const Scaffold(body: Center(child: CircularProgressIndicator()));
     } else if (_needsAuth && !_isAuthenticated) {
-      // Lock is enabled, but user is not authenticated (failed or cancelled)
       log.fine("[AuthWrapper UI] Showing Locked Screen.");
       content = Scaffold(
         body: Center(
@@ -513,12 +491,10 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
                 const SizedBox(height: 32),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 24, vertical: 12),
-                  ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 12)),
                   icon: const Icon(Icons.fingerprint),
                   label: const Text('Authenticate / Retry'),
-                  // Pass isRetry: true to the authenticate function
                   onPressed: _isCheckingAuth
                       ? null
                       : () => _authenticate(isRetry: true),
@@ -529,27 +505,20 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
         ),
       );
     } else {
-      // Either lock is disabled OR user is authenticated
       log.fine(
           "[AuthWrapper UI] Showing Main App (MyApp). Authenticated=$_isAuthenticated, NeedsAuth=$_needsAuth");
-      // The MultiBlocProvider for list Blocs is already wrapping this AuthWrapper in main()
-      // So we just need to return MyApp directly here.
       content = MyApp(
-        lightTheme: lightTheme,
-        darkTheme: darkTheme,
-        themeMode: currentThemeMode,
-      );
+          lightTheme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: currentThemeMode);
     }
 
-    // Return the MaterialApp wrapping the content
-    // This MaterialApp provides the theme for the locked/loading screens
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: currentThemeMode,
-      home:
-          content, // Display the determined content (Loading, Locked, or MyApp)
+      home: content,
     );
   }
 }
@@ -569,16 +538,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Get the configured GoRouter instance
     final GoRouter router = AppRouter.router;
-
     return MaterialApp.router(
-      title: AppConstants.appName, // Use constant
+      title: AppConstants.appName,
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: themeMode,
       debugShowCheckedModeBanner: false,
-      routerConfig: router, // Use routerConfig
+      routerConfig: router,
     );
   }
 }

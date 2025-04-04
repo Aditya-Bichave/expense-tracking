@@ -1,14 +1,17 @@
+// lib/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_state.dart
 part of 'add_edit_transaction_bloc.dart';
 
+// Keep AddEditStatus enum
 enum AddEditStatus {
   initial,
-  ready,
-  loading,
-  suggestingCategory,
-  navigatingToCreateCategory,
-  saving,
-  success,
-  error
+  ready, // Form is ready for input or display
+  loading, // General loading (e.g., during auto-categorization)
+  suggestingCategory, // Suggestion is ready to be shown
+  askingCreateCategory, // Prompting user to create or select existing
+  navigatingToCreateCategory, // In the process of navigating
+  saving, // Actively saving the transaction
+  success, // Save successful
+  error // An error occurred
 }
 
 class AddEditTransactionState extends Equatable {
@@ -17,11 +20,11 @@ class AddEditTransactionState extends Equatable {
   final TransactionEntity? initialTransaction;
   final String? errorMessage;
   final Category? suggestedCategory;
-  final Category? newlyCreatedCategory;
+  final Category? newlyCreatedCategory; // Category just created via navigation
 
-  // --- ADDED FLAG ---
-  final bool askCreateCategory; // Flag to signal UI to show the dialog
+  // REMOVED askCreateCategory flag
 
+  // Keep temporary fields for form state persistence during async ops
   final String? tempTitle;
   final double? tempAmount;
   final DateTime? tempDate;
@@ -35,8 +38,7 @@ class AddEditTransactionState extends Equatable {
     this.errorMessage,
     this.suggestedCategory,
     this.newlyCreatedCategory,
-    // --- Default flag to false ---
-    this.askCreateCategory = false,
+    // REMOVED askCreateCategory from constructor
     this.tempTitle,
     this.tempAmount,
     this.tempDate,
@@ -45,6 +47,7 @@ class AddEditTransactionState extends Equatable {
   });
 
   bool get isEditing => initialTransaction != null;
+  // Effective category considers newly created one first, then initial
   Category? get effectiveCategory =>
       newlyCreatedCategory ?? initialTransaction?.category;
 
@@ -55,8 +58,7 @@ class AddEditTransactionState extends Equatable {
     ValueGetter<String?>? errorMessage,
     ValueGetter<Category?>? suggestedCategory,
     ValueGetter<Category?>? newlyCreatedCategory,
-    // --- ADDED flag to copyWith ---
-    bool? askCreateCategory,
+    // REMOVED askCreateCategory parameter
     String? tempTitle,
     double? tempAmount,
     DateTime? tempDate,
@@ -67,32 +69,40 @@ class AddEditTransactionState extends Equatable {
     bool clearSuggestion = false,
     bool clearNewlyCreated = false,
     bool clearTempData = false,
-    // --- Added flag to clear askCreateCategory ---
-    bool clearAskCreateFlag = false,
+    // REMOVED clearAskCreateFlag parameter
   }) {
+    // If status is changing, clear related temporary states
+    final bool shouldClearSuggestion = clearSuggestion ||
+        (status != null && status != AddEditStatus.suggestingCategory);
+    final bool shouldClearNewlyCreated = clearNewlyCreated ||
+        (status != null &&
+            status != AddEditStatus.ready &&
+            status !=
+                AddEditStatus
+                    .saving); // Clear if status changes away from ready/saving after creation
+    final bool shouldClearError =
+        clearErrorMessage || (status != null && status != AddEditStatus.error);
+
     return AddEditTransactionState(
       status: status ?? this.status,
       transactionType: transactionType ?? this.transactionType,
       initialTransaction: clearInitialTransaction
           ? null
           : (initialTransaction ?? this.initialTransaction),
-      errorMessage: clearErrorMessage
+      errorMessage: shouldClearError
           ? null
           : (errorMessage != null ? errorMessage() : this.errorMessage),
-      suggestedCategory: clearSuggestion
+      suggestedCategory: shouldClearSuggestion
           ? null
           : (suggestedCategory != null
               ? suggestedCategory()
               : this.suggestedCategory),
-      newlyCreatedCategory: clearNewlyCreated
+      newlyCreatedCategory: shouldClearNewlyCreated
           ? null
           : (newlyCreatedCategory != null
               ? newlyCreatedCategory()
               : this.newlyCreatedCategory),
-      // --- Assign flag ---
-      askCreateCategory: clearAskCreateFlag
-          ? false
-          : (askCreateCategory ?? this.askCreateCategory),
+      // REMOVED askCreateCategory assignment
       tempTitle: clearTempData ? null : (tempTitle ?? this.tempTitle),
       tempAmount: clearTempData ? null : (tempAmount ?? this.tempAmount),
       tempDate: clearTempData ? null : (tempDate ?? this.tempDate),
@@ -108,8 +118,7 @@ class AddEditTransactionState extends Equatable {
   List<Object?> get props => [
         status, transactionType, initialTransaction, errorMessage,
         suggestedCategory, newlyCreatedCategory,
-        // --- Add flag to props ---
-        askCreateCategory,
+        // REMOVED askCreateCategory from props
         tempTitle, tempAmount, tempDate, tempAccountId, tempNotes,
       ];
 }

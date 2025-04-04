@@ -1,10 +1,11 @@
+// lib/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
-import 'package:expense_tracker/core/utils/enums.dart'; // CategorizationStatus
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart'; // Updated import
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
@@ -18,12 +19,12 @@ import 'package:expense_tracker/features/categories/domain/usecases/categorize_t
 // Repositories
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
-import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart'; // Import Category Repo
+import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 // Helpers
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Only needed for ValueGetter potentially
 import 'package:uuid/uuid.dart';
 
 part 'add_edit_transaction_event.dart';
@@ -38,7 +39,7 @@ class AddEditTransactionBloc
   final CategorizeTransactionUseCase _categorizeTransactionUseCase;
   final ExpenseRepository _expenseRepository;
   final IncomeRepository _incomeRepository;
-  final CategoryRepository _categoryRepository; // Add Category Repo
+  final CategoryRepository _categoryRepository;
   final Uuid _uuid;
 
   AddEditTransactionBloc({
@@ -49,7 +50,7 @@ class AddEditTransactionBloc
     required CategorizeTransactionUseCase categorizeTransactionUseCase,
     required ExpenseRepository expenseRepository,
     required IncomeRepository incomeRepository,
-    required CategoryRepository categoryRepository, // Inject Category Repo
+    required CategoryRepository categoryRepository,
   })  : _addExpenseUseCase = addExpenseUseCase,
         _updateExpenseUseCase = updateExpenseUseCase,
         _addIncomeUseCase = addIncomeUseCase,
@@ -57,7 +58,7 @@ class AddEditTransactionBloc
         _categorizeTransactionUseCase = categorizeTransactionUseCase,
         _expenseRepository = expenseRepository,
         _incomeRepository = incomeRepository,
-        _categoryRepository = categoryRepository, // Assign Category Repo
+        _categoryRepository = categoryRepository,
         _uuid = const Uuid(),
         super(const AddEditTransactionState()) {
     on<InitializeTransaction>(_onInitializeTransaction);
@@ -72,30 +73,28 @@ class AddEditTransactionBloc
     log.info("[AddEditTransactionBloc] Initialized.");
   }
 
-  // --- Keep _onInitializeTransaction, _onTransactionTypeChanged, _onSaveTransactionRequested ---
-  // --- _askCreateCustomCategoryDialog, _onAcceptCategorySuggestion, _onRejectCategorySuggestion ---
-  // --- _onCreateCustomCategoryRequested, _onClearMessages, _mapFailureToMessage AS THEY ARE ---
   void _onInitializeTransaction(
       InitializeTransaction event, Emitter<AddEditTransactionState> emit) {
     log.info(
         "[AddEditTransactionBloc] Initializing. Has initial data: ${event.initialTransaction != null}");
     if (event.initialTransaction != null) {
+      final initial = event.initialTransaction!;
       emit(state.copyWith(
-        initialTransaction: event.initialTransaction,
-        transactionType: event.initialTransaction!.type,
+        initialTransaction: initial,
+        transactionType: initial.type,
         status: AddEditStatus.ready,
-        tempTitle: event.initialTransaction!.title,
-        tempAmount: event.initialTransaction!.amount,
-        tempDate: event.initialTransaction!.date,
-        tempAccountId: event.initialTransaction!.accountId,
-        tempNotes: () => event.initialTransaction!.notes,
-        clearAskCreateFlag: true,
+        // Store initial form values in temp fields
+        tempTitle: initial.title,
+        tempAmount: initial.amount,
+        tempDate: initial.date,
+        tempAccountId: initial.accountId,
+        tempNotes: () => initial.notes, // Use ValueGetter for nullable notes
         clearErrorMessage: true,
-        clearSuggestion: true,
-        clearNewlyCreated: true,
       ));
     } else {
-      emit(const AddEditTransactionState(status: AddEditStatus.ready));
+      // Ensure temp fields are cleared when starting fresh
+      emit(const AddEditTransactionState(status: AddEditStatus.ready)
+          .copyWith(clearTempData: true));
     }
   }
 
@@ -106,10 +105,10 @@ class AddEditTransactionBloc
     if (state.transactionType != event.newType) {
       emit(state.copyWith(
         transactionType: event.newType,
-        status: AddEditStatus.ready,
-        suggestedCategory: () => null,
-        newlyCreatedCategory: () => null,
-        clearAskCreateFlag: true,
+        status: AddEditStatus.ready, // Reset status
+        // Clear suggestion/newly created category when type changes
+        clearSuggestion: true,
+        clearNewlyCreated: true,
         clearErrorMessage: true,
       ));
     }
@@ -120,8 +119,9 @@ class AddEditTransactionBloc
     log.info(
         "[AddEditTransactionBloc] SaveRequested. Category selected: ${event.category.name} (ID: ${event.category.id})");
 
+    // Store form data in temp fields before potentially async operations
     emit(state.copyWith(
-      status: AddEditStatus.loading,
+      status: AddEditStatus.loading, // Indicate processing start
       tempTitle: event.title,
       tempAmount: event.amount,
       tempDate: event.date,
@@ -130,99 +130,87 @@ class AddEditTransactionBloc
       clearErrorMessage: true,
       clearSuggestion: true,
       clearNewlyCreated: true,
-      clearAskCreateFlag: true,
     ));
 
     if (event.category.id == Category.uncategorized.id) {
       log.info(
           "[AddEditTransactionBloc] No specific category selected. Attempting auto-categorization...");
-      final catParams = CategorizeTransactionParams(
-          description: event.title, merchantId: null);
-      final catResult = await _categorizeTransactionUseCase(catParams);
-
-      await catResult.fold((failure) async {
-        log.warning(
-            "[AddEditTransactionBloc] Auto-categorization failed: ${failure.message}. Setting askCreateCategory flag.");
-        emit(state.copyWith(
-            status: AddEditStatus.ready, askCreateCategory: true));
-      }, (result) async {
-        if (result.category != null &&
-            result.status == CategorizationStatus.needsReview) {
-          log.info(
-              "[AddEditTransactionBloc] Suggestion found: ${result.category!.name}. Emitting SuggestingCategory state.");
-          emit(state.copyWith(
-            status: AddEditStatus.suggestingCategory,
-            suggestedCategory: () => result.category,
-            clearAskCreateFlag: true,
-          ));
-        } else {
-          log.info(
-              "[AddEditTransactionBloc] No suggestion or direct categorization. Setting askCreateCategory flag.");
-          emit(state.copyWith(
-              status: AddEditStatus.ready, askCreateCategory: true));
-        }
-      });
+      await _handleAutoCategorization(emit);
     } else {
       log.info(
           "[AddEditTransactionBloc] User selected specific category '${event.category.name}'. Saving.");
+      // Directly proceed to save with the user-selected category
       await _performSave(
           event.category, emit, CategorizationStatus.categorized, 1.0);
     }
   }
 
-  void _askCreateCustomCategoryDialog(Emitter<AddEditTransactionState> emit) {
-    emit(state.copyWith(
-        status: AddEditStatus.ready,
-        clearSuggestion: true,
-        askCreateCategory: true // Set flag
-        ));
+  // --- Helper for Auto-Categorization ---
+  Future<void> _handleAutoCategorization(
+      Emitter<AddEditTransactionState> emit) async {
+    final catParams = CategorizeTransactionParams(
+        description: state.tempTitle ?? '',
+        merchantId: null); // TODO: Get merchantId if available
+    final catResult = await _categorizeTransactionUseCase(catParams);
+
+    await catResult.fold((failure) async {
+      log.warning(
+          "[AddEditTransactionBloc] Auto-categorization failed: ${failure.message}. Emitting AskingCreateCategory state.");
+      // Transition to a state indicating the user needs to choose creation or selection
+      emit(state.copyWith(status: AddEditStatus.askingCreateCategory));
+    }, (result) async {
+      if (result.category != null &&
+          result.status == CategorizationStatus.needsReview) {
+        log.info(
+            "[AddEditTransactionBloc] Suggestion found: ${result.category!.name}. Emitting SuggestingCategory state.");
+        emit(state.copyWith(
+            status: AddEditStatus.suggestingCategory,
+            suggestedCategory: () => result.category));
+      } else {
+        log.info(
+            "[AddEditTransactionBloc] No suggestion or direct categorization. Emitting AskingCreateCategory state.");
+        emit(state.copyWith(status: AddEditStatus.askingCreateCategory));
+      }
+    });
   }
+  // --- End Helper ---
 
   Future<void> _onAcceptCategorySuggestion(AcceptCategorySuggestion event,
       Emitter<AddEditTransactionState> emit) async {
     log.info(
         "[AddEditTransactionBloc] User accepted suggestion: ${event.suggestedCategory.name}");
-    emit(state.copyWith(clearSuggestion: true, clearAskCreateFlag: true));
+    // Suggestion accepted, proceed to save with this category
     await _performSave(
         event.suggestedCategory, emit, CategorizationStatus.categorized, 1.0);
   }
 
-  Future<void> _onRejectCategorySuggestion(RejectCategorySuggestion event,
-      Emitter<AddEditTransactionState> emit) async {
+  void _onRejectCategorySuggestion(
+      RejectCategorySuggestion event, Emitter<AddEditTransactionState> emit) {
     log.info(
-        "[AddEditTransactionBloc] User rejected suggestion. Setting askCreateCategory flag.");
+        "[AddEditTransactionBloc] User rejected suggestion. Emitting AskingCreateCategory state.");
+    // Suggestion rejected, ask user if they want to create or select existing
     emit(state.copyWith(
-        status: AddEditStatus.ready,
-        clearSuggestion: true,
-        askCreateCategory: true));
+        status: AddEditStatus.askingCreateCategory, clearSuggestion: true));
   }
 
   void _onCreateCustomCategoryRequested(CreateCustomCategoryRequested event,
       Emitter<AddEditTransactionState> emit) {
     log.info(
         "[AddEditTransactionBloc] User requested to create custom category. Emitting navigation state.");
-    emit(state.copyWith(
-        status: AddEditStatus.navigatingToCreateCategory,
-        clearSuggestion: true,
-        clearAskCreateFlag: true));
+    // Transition to state indicating navigation is happening
+    emit(state.copyWith(status: AddEditStatus.navigatingToCreateCategory));
   }
 
   Future<void> _onCategoryCreated(
       CategoryCreated event, Emitter<AddEditTransactionState> emit) async {
     log.info(
         "[AddEditTransactionBloc] Received newly created category: ${event.newCategory.name}");
+    _categoryRepository.invalidateCache(); // Invalidate cache
+    log.info("[AddEditTransactionBloc] Invalidated category cache.");
 
-    // --- Invalidate Category Cache AFTER category is created ---
-    log.info(
-        "[AddEditTransactionBloc] Invalidating category repository cache.");
-    _categoryRepository.invalidateCache();
-    // --- End Invalidation ---
-
-    emit(state.copyWith(
-        newlyCreatedCategory: () => event.newCategory,
-        status: AddEditStatus.loading, // Show loading before save
-        clearAskCreateFlag: true));
-    // Add a tiny delay to increase chances of cache being ready for _performSave's internal fetch
+    // Set the newly created category and proceed to save
+    emit(state.copyWith(newlyCreatedCategory: () => event.newCategory));
+    // Add a small delay to increase chances of cache being ready if needed internally by save
     await Future.delayed(const Duration(milliseconds: 50));
     await _performSave(
         event.newCategory, emit, CategorizationStatus.categorized, 1.0);
@@ -230,12 +218,11 @@ class AddEditTransactionBloc
 
   void _onClearMessages(
       ClearMessages event, Emitter<AddEditTransactionState> emit) {
-    emit(state.copyWith(
-        status: (state.status == AddEditStatus.error)
-            ? AddEditStatus.ready
-            : state.status,
-        clearErrorMessage: true,
-        clearAskCreateFlag: true));
+    // Reset to ready state when clearing messages, unless already successful
+    final nextStatus = state.status == AddEditStatus.success
+        ? AddEditStatus.success
+        : AddEditStatus.ready;
+    emit(state.copyWith(status: nextStatus, clearErrorMessage: true));
     log.info("[AddEditTransactionBloc] Cleared messages.");
   }
 
@@ -244,31 +231,22 @@ class AddEditTransactionBloc
       Category categoryToSave, Emitter<AddEditTransactionState> emit,
       [CategorizationStatus status = CategorizationStatus.categorized,
       double? confidence = 1.0]) async {
-    // --- Use categoryToSave directly, no need to prioritize newlyCreatedCategory from state here ---
-    // final Category categoryToUse = state.newlyCreatedCategory ?? categoryToSave;
-    final Category categoryToUse = categoryToSave;
-
     log.info(
-        "[AddEditTransactionBloc] _performSave called. Category To Use: ${categoryToUse.name}, Status: $status");
-    emit(state.copyWith(
-        status: AddEditStatus.saving,
-        clearSuggestion: true,
-        clearNewlyCreated: true,
-        clearAskCreateFlag: true));
+        "[AddEditTransactionBloc] _performSave called. Category To Use: ${categoryToSave.name}, Status: $status");
+    emit(state.copyWith(status: AddEditStatus.saving));
 
     final isEditing = state.isEditing;
     final id = state.initialTransaction?.id ?? _uuid.v4();
     final transactionType = state.transactionType;
 
-    dynamic entityToSave;
-    Either<Failure, dynamic> saveResult;
-
+    // Use temp data stored in the state
     final title = state.tempTitle ?? '';
     final amount = state.tempAmount ?? 0.0;
     final date = state.tempDate ?? DateTime.now();
     final accountId = state.tempAccountId ?? '';
     final notes = state.tempNotes;
 
+    // Basic validation before proceeding
     if (title.isEmpty || amount <= 0 || accountId.isEmpty) {
       log.warning(
           "[AddEditTransactionBloc] Invalid data during _performSave. Aborting.");
@@ -279,12 +257,16 @@ class AddEditTransactionBloc
       return;
     }
 
+    // Determine final category object and status
     Category? finalCategoryForEntity =
-        categoryToUse.id == Category.uncategorized.id ? null : categoryToUse;
+        categoryToSave.id == Category.uncategorized.id ? null : categoryToSave;
     if (finalCategoryForEntity == null) {
       status = CategorizationStatus.uncategorized;
       confidence = null;
     }
+
+    dynamic entityToSave;
+    Either<Failure, dynamic> saveResult;
 
     // Create the final entity object
     if (transactionType == TransactionType.expense) {
@@ -331,30 +313,17 @@ class AddEditTransactionBloc
             status: AddEditStatus.error,
             errorMessage: () => _mapFailureToMessage(failure),
             clearTempData: true,
-            clearNewlyCreated:
-                true // Clear any potentially stored new category on error
-            ));
+            clearNewlyCreated: true));
       },
       (savedEntity) async {
-        // --- Remove internal re-fetch - rely on DataChangedEvent and list reload ---
-        // Category? finalHydratedCategory = finalCategoryForEntity;
-        // if (finalHydratedCategory != null) { ... re-fetch logic removed ... }
-        // --- End Removal ---
-
         log.info(
             "[AddEditTransactionBloc] Save successful for ID: ${savedEntity.id}.");
-
-        // --- ADD Delay before publishing event ---
-        await Future.delayed(const Duration(milliseconds: 100)); // Small delay
-        // --- End Delay ---
-
-        // Emit success first
+        await Future.delayed(const Duration(
+            milliseconds: 50)); // Short delay before event/state change
         emit(state.copyWith(
             status: AddEditStatus.success,
             clearTempData: true,
             clearNewlyCreated: true));
-
-        // Then publish event
         publishDataChangedEvent(
             type: transactionType == TransactionType.expense
                 ? DataChangeType.expense

@@ -3,6 +3,7 @@
 
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:flutter/material.dart';

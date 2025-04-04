@@ -1,6 +1,7 @@
 // lib/features/expenses/domain/repositories/expense_repository.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 // --- Import Model instead of Entity ---
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';

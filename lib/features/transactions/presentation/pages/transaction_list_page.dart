@@ -1,10 +1,10 @@
+// lib/features/transactions/presentation/pages/transaction_list_page.dart
 // ignore_for_file: unused_element
 
 import 'dart:async'; // For Timer (debounce)
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
-import 'package:expense_tracker/core/widgets/transaction_list_item.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // The intended Category entity
 import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
@@ -16,15 +16,18 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_dialog.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_sort_sheet.dart';
+// Import the new decomposed widgets
+import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_header.dart';
+import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_calendar_view.dart';
+import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/foundation.dart' hide Category; // For listEquals
 import 'package:flutter/material.dart'; // Hide the conflicting Category
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart'; // Needed for orElse fallback
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:table_calendar/table_calendar.dart'; // Needed for orElse fallback
 
 class TransactionListPage extends StatefulWidget {
   const TransactionListPage({super.key});
@@ -46,7 +49,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
   List<TransactionEntity> _currentTransactionsForCalendar = [];
   StreamSubscription? _blocSubscription;
 
-  // --- Keep initState, dispose, _listenToBlocChanges, _setupInitialCalendarData as they are ---
   @override
   void initState() {
     super.initState();
@@ -122,52 +124,38 @@ class _TransactionListPageState extends State<TransactionListPage> {
         .add(const SearchChanged(searchTerm: null));
   }
 
-  // --- UPDATED NAVIGATION to use new route name ---
   void _navigateToDetailOrEdit(
       BuildContext context, TransactionEntity transaction) {
     log.info(
         "[TxnListPage] _navigateToDetailOrEdit called for ${transaction.type.name} ID: ${transaction.id}");
-
-    // Use the unified edit route name
     const String routeName = RouteNames.editTransaction;
-
     final Map<String, String> params = {
       RouteNames.paramTransactionId: transaction.id
     };
-
     final dynamic extraData = transaction.originalEntity;
 
     if (extraData == null) {
       log.severe(
           "[TxnListPage] CRITICAL: originalEntity is null for transaction ID ${transaction.id}. Cannot navigate.");
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Error preparing navigation data."),
-        backgroundColor: Colors.red,
-      ));
+          content: Text("Error preparing navigation data."),
+          backgroundColor: Colors.red));
       return;
     }
-
     log.info("[TxnListPage] Attempting navigation via pushNamed:");
     log.info("  Route Name: $routeName");
     log.info("  Path Params: $params");
     log.info("  Extra Data Type: ${extraData?.runtimeType}");
-
     try {
-      context.pushNamed(
-        routeName,
-        pathParameters: params,
-        extra: extraData,
-      );
+      context.pushNamed(routeName, pathParameters: params, extra: extraData);
       log.info("[TxnListPage] pushNamed executed.");
     } catch (e, s) {
       log.severe("[TxnListPage] Error executing pushNamed: $e\n$s");
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Error navigating to edit screen: $e"),
-        backgroundColor: Colors.red,
-      ));
+          content: Text("Error navigating to edit screen: $e"),
+          backgroundColor: Colors.red));
     }
   }
-  // --- END UPDATED ---
 
   void _handleChangeCategoryRequest(
       BuildContext context, TransactionEntity transaction) async {
@@ -207,7 +195,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
         false;
   }
 
-  // --- Keep Dialog/Sheet Show Methods as they are ---
   void _showFilterDialog(
       BuildContext context, TransactionListState currentState) async {
     log.info("[TxnListPage] Showing filter dialog.");
@@ -275,7 +262,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         });
   }
 
-  // --- Keep Calendar Specific Logic as it is ---
+  // --- Calendar Specific Logic ---
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     final normalizedSelectedDay =
         DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
@@ -328,7 +315,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         "[TxnListPage] Updated selected day transactions for $_selectedDay. Count: ${_selectedDayTransactions.length}");
   }
 
-  // --- Keep Build Methods as they are (mostly) ---
+  // --- Main Build Method ---
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -337,7 +324,16 @@ class _TransactionListPageState extends State<TransactionListPage> {
     return Scaffold(
       body: Column(
         children: [
-          _buildHeaderControls(context, theme),
+          // Use the extracted header widget
+          TransactionListHeader(
+            searchController: _searchController,
+            onClearSearch: _clearSearch,
+            onToggleCalendarView: () =>
+                setState(() => _showCalendarView = !_showCalendarView),
+            isCalendarViewShown: _showCalendarView,
+            showFilterDialog: _showFilterDialog,
+            showSortDialog: _showSortDialog,
+          ),
           const Divider(height: 1, thickness: 1),
           Expanded(
             child: BlocConsumer<TransactionListBloc, TransactionListState>(
@@ -369,12 +365,31 @@ class _TransactionListPageState extends State<TransactionListPage> {
                     child: _showCalendarView
                         ? KeyedSubtree(
                             key: const ValueKey('calendar_view'),
-                            child: _buildCalendarView(context, state, settings),
+                            // Use the extracted calendar view widget
+                            child: TransactionCalendarView(
+                              state: state,
+                              settings: settings,
+                              calendarFormat: _calendarFormat,
+                              focusedDay: _focusedDay,
+                              selectedDay: _selectedDay,
+                              selectedDayTransactions: _selectedDayTransactions,
+                              currentTransactionsForCalendar:
+                                  _currentTransactionsForCalendar,
+                              getEventsForDay: _getEventsForDay,
+                              onDaySelected: _onDaySelected,
+                              onFormatChanged: _onFormatChanged,
+                              onPageChanged: _onPageChanged,
+                              navigateToDetailOrEdit: _navigateToDetailOrEdit,
+                            ),
                           )
                         : KeyedSubtree(
                             key: const ValueKey('list_view'),
-                            child:
-                                _buildTransactionList(context, state, settings),
+                            // Use the extracted list view widget
+                            child: TransactionListView(
+                              state: state,
+                              settings: settings,
+                              navigateToDetailOrEdit: _navigateToDetailOrEdit,
+                            ),
                           ),
                   ),
                 );
@@ -385,372 +400,60 @@ class _TransactionListPageState extends State<TransactionListPage> {
       ),
       floatingActionButton:
           BlocBuilder<TransactionListBloc, TransactionListState>(
-              builder: (context, state) {
-        final bool showFab = state.isInBatchEditMode && !_showCalendarView;
-        final int count = state.selectedTransactionIds.length;
-        return AnimatedScale(
-          duration: const Duration(milliseconds: 200),
-          scale: showFab ? 1.0 : 0.0,
-          child: FloatingActionButton.extended(
-            key: const ValueKey('batch_fab'),
-            heroTag: 'transactions_batch_fab',
-            onPressed: count > 0
-                ? () async {
-                    log.info("[TxnListPage] Batch categorize button pressed.");
-                    final type = _getDominantTransactionType(state) ??
-                        TransactionType.expense;
-                    final Category? selectedCategory = await showCategoryPicker(
-                        context,
-                        type == TransactionType.expense
-                            ? CategoryTypeFilter.expense
-                            : CategoryTypeFilter.income);
-                    if (selectedCategory != null &&
-                        selectedCategory.id != Category.uncategorized.id &&
-                        context.mounted) {
-                      context
-                          .read<TransactionListBloc>()
-                          .add(ApplyBatchCategory(selectedCategory.id));
-                    } else if (selectedCategory?.id ==
-                            Category.uncategorized.id &&
-                        context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text("Please select a specific category.")));
-                    }
-                  }
-                : null,
-            label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
-            icon: const Icon(Icons.category_rounded),
-            backgroundColor: count > 0
-                ? theme.colorScheme.secondaryContainer
-                : theme.disabledColor.withOpacity(0.1),
-            foregroundColor: count > 0
-                ? theme.colorScheme.onSecondaryContainer
-                : theme.disabledColor,
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildHeaderControls(BuildContext context, ThemeData theme) {
-    // ... keep this implementation as is ...
-    return BlocBuilder<TransactionListBloc, TransactionListState>(
         builder: (context, state) {
-      final isInBatchMode = state.isInBatchEditMode;
-      final bool hasSearchTerm =
-          state.searchTerm != null && state.searchTerm!.isNotEmpty;
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 4.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: "Search title, category, amount...",
-                prefixIcon: const Icon(Icons.search, size: 20),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none),
-                enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none),
-                focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide(color: theme.colorScheme.primary)),
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                isDense: true,
-                suffixIcon: hasSearchTerm
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, size: 18),
-                        tooltip: "Clear Search",
-                        onPressed: _clearSearch)
-                    : null,
-              ),
+          final bool showFab = state.isInBatchEditMode && !_showCalendarView;
+          final int count = state.selectedTransactionIds.length;
+          return AnimatedScale(
+            duration: const Duration(milliseconds: 200),
+            scale: showFab ? 1.0 : 0.0,
+            child: FloatingActionButton.extended(
+              key: const ValueKey('batch_fab'),
+              heroTag: 'transactions_batch_fab',
+              onPressed: count > 0
+                  ? () async {
+                      log.info(
+                          "[TxnListPage] Batch categorize button pressed.");
+                      final type = _getDominantTransactionType(state) ??
+                          TransactionType.expense;
+                      final Category? selectedCategory =
+                          await showCategoryPicker(
+                              context,
+                              type == TransactionType.expense
+                                  ? CategoryTypeFilter.expense
+                                  : CategoryTypeFilter.income);
+                      if (selectedCategory != null &&
+                          selectedCategory.id != Category.uncategorized.id &&
+                          context.mounted) {
+                        context
+                            .read<TransactionListBloc>()
+                            .add(ApplyBatchCategory(selectedCategory.id));
+                      } else if (selectedCategory?.id ==
+                              Category.uncategorized.id &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    "Please select a specific category.")));
+                      }
+                    }
+                  : null,
+              label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
+              icon: const Icon(Icons.category_rounded),
+              backgroundColor: count > 0
+                  ? theme.colorScheme.secondaryContainer
+                  : theme.disabledColor.withOpacity(0.1),
+              foregroundColor: count > 0
+                  ? theme.colorScheme.onSecondaryContainer
+                  : theme.disabledColor,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    TextButton.icon(
-                      icon: Icon(Icons.filter_list_rounded,
-                          size: 18,
-                          color: state.filtersApplied
-                              ? theme.colorScheme.primary
-                              : null),
-                      label: Text("Filter",
-                          style: theme.textTheme.labelMedium?.copyWith(
-                              color: state.filtersApplied
-                                  ? theme.colorScheme.primary
-                                  : null)),
-                      onPressed: () => _showFilterDialog(context, state),
-                      style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact),
-                    ),
-                    TextButton.icon(
-                      icon: const Icon(Icons.sort_rounded, size: 18),
-                      label: Text("Sort", style: theme.textTheme.labelMedium),
-                      onPressed: () => _showSortDialog(context, state),
-                      style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                          _showCalendarView
-                              ? Icons.view_list_rounded
-                              : Icons.calendar_today_rounded,
-                          size: 20),
-                      tooltip:
-                          _showCalendarView ? "List View" : "Calendar View",
-                      onPressed: () => setState(
-                          () => _showCalendarView = !_showCalendarView),
-                    ),
-                    IconButton(
-                      icon: Icon(
-                          isInBatchMode
-                              ? Icons.cancel_outlined
-                              : Icons.select_all_rounded,
-                          size: 20),
-                      tooltip: isInBatchMode
-                          ? "Cancel Selection"
-                          : "Select Multiple",
-                      color: isInBatchMode ? theme.colorScheme.primary : null,
-                      onPressed: () => context
-                          .read<TransactionListBloc>()
-                          .add(const ToggleBatchEdit()),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    });
-  }
-
-  Widget _buildCalendarView(BuildContext context, TransactionListState state,
-      SettingsState settings) {
-    // ... keep this implementation as is ...
-    final theme = Theme.of(context);
-
-    if (state.status == ListStatus.loading &&
-        _currentTransactionsForCalendar.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (state.status == ListStatus.error &&
-        _currentTransactionsForCalendar.isEmpty) {
-      return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                  "Error loading data for calendar: ${state.errorMessage}",
-                  style: TextStyle(color: theme.colorScheme.error),
-                  textAlign: TextAlign.center)));
-    }
-
-    return Column(
-      children: [
-        TableCalendar<TransactionEntity>(
-          firstDay: DateTime.utc(2010, 1, 1),
-          lastDay: DateTime.utc(2040, 12, 31),
-          focusedDay: _focusedDay,
-          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-          calendarFormat: _calendarFormat,
-          availableCalendarFormats: const {
-            CalendarFormat.month: 'Month',
-            CalendarFormat.twoWeeks: '2 Weeks',
-            CalendarFormat.week: 'Week',
-          },
-          eventLoader: (day) => _getEventsForDay(day),
-          calendarStyle: CalendarStyle(
-            todayDecoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                shape: BoxShape.circle),
-            selectedDecoration: BoxDecoration(
-                color: theme.colorScheme.primary, shape: BoxShape.circle),
-            markerDecoration: BoxDecoration(
-                color: theme.colorScheme.secondary, shape: BoxShape.circle),
-            outsideDaysVisible: false,
-            markersMaxCount: 1,
-            markerSize: 5.0,
-            markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
-            weekendTextStyle:
-                TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
-            selectedTextStyle: TextStyle(color: theme.colorScheme.onPrimary),
-            todayTextStyle: TextStyle(color: theme.colorScheme.primary),
-          ),
-          headerStyle: HeaderStyle(
-            formatButtonVisible: true,
-            titleCentered: true,
-            titleTextStyle: theme.textTheme.titleMedium!,
-            formatButtonTextStyle:
-                TextStyle(color: theme.colorScheme.primary, fontSize: 12),
-            formatButtonDecoration: BoxDecoration(
-              border:
-                  Border.all(color: theme.colorScheme.primary.withOpacity(0.5)),
-              borderRadius: BorderRadius.circular(12.0),
-            ),
-            leftChevronIcon:
-                Icon(Icons.chevron_left, color: theme.colorScheme.primary),
-            rightChevronIcon:
-                Icon(Icons.chevron_right, color: theme.colorScheme.primary),
-          ),
-          onDaySelected: _onDaySelected,
-          onFormatChanged: _onFormatChanged,
-          onPageChanged: _onPageChanged,
-          calendarBuilders: CalendarBuilders(
-            markerBuilder: (context, day, events) {
-              if (events.isEmpty) return null;
-              return Positioned(
-                right: 1,
-                bottom: 1,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.secondary),
-                ),
-              );
-            },
-          ),
-        ),
-        const Divider(height: 1, thickness: 1),
-        Expanded(
-          child: _buildSelectedDayTransactionList(context, settings),
-        ),
-      ],
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildSelectedDayTransactionList(
-      BuildContext context, SettingsState settings) {
-    // ... keep this implementation as is ...
-    final theme = Theme.of(context);
-    if (_selectedDayTransactions.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40.0),
-          child: Text(
-              "No transactions on ${DateFormatter.formatDate(_selectedDay ?? _focusedDay)}.",
-              style: theme.textTheme.bodyMedium),
-        ),
-      );
-    }
-    return ListView.builder(
-      key: ValueKey(_selectedDay),
-      padding: const EdgeInsets.only(top: 8.0, bottom: 80.0),
-      itemCount: _selectedDayTransactions.length,
-      itemBuilder: (ctx, index) {
-        final transaction = _selectedDayTransactions[index];
-        return TransactionListItem(
-          transaction: transaction,
-          currencySymbol: settings.currencySymbol,
-          onTap: () => _navigateToDetailOrEdit(context, transaction),
-        )
-            .animate()
-            .fadeIn(delay: (50 * index).ms, duration: 300.ms)
-            .slideX(begin: 0.2, curve: Curves.easeOutCubic);
-      },
-    ).animate().fadeIn(duration: 200.ms);
-  }
-
-  Widget _buildTransactionList(BuildContext context, TransactionListState state,
-      SettingsState settings) {
-    // ... keep this implementation as is (using the version WITHOUT Dismissible) ...
-    final theme = Theme.of(context);
-
-    if (state.status == ListStatus.loading && state.transactions.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (state.status == ListStatus.error && state.transactions.isEmpty) {
-      return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                  "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
-                  style: TextStyle(color: theme.colorScheme.error),
-                  textAlign: TextAlign.center)));
-    }
-    if (state.transactions.isEmpty &&
-        state.status != ListStatus.loading &&
-        state.status != ListStatus.reloading) {
-      return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(30.0),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.receipt_long_outlined,
-                        size: 60,
-                        color: theme.colorScheme.secondary.withOpacity(0.7)),
-                    const SizedBox(height: 16),
-                    Text(
-                        state.filtersApplied
-                            ? "No transactions match filters"
-                            : "No transactions recorded yet",
-                        style: theme.textTheme.headlineSmall),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.filtersApplied
-                          ? "Try adjusting or clearing the filters."
-                          : "Tap the '+' button to add your first expense or income.",
-                      style: theme.textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-                  ])));
-    }
-
-    return ListView.builder(
-      padding:
-          const EdgeInsets.only(top: 0, bottom: 80), // Ensure padding for FAB
-      itemCount: state.transactions.length,
-      itemBuilder: (ctx, index) {
-        final transaction = state.transactions[index];
-        final isSelected =
-            state.selectedTransactionIds.contains(transaction.id);
-
-        return Container(
-          // Use Container for background color
-          key: ValueKey(
-              "${transaction.id}_list_item_${isSelected}"), // Unique key for item
-          color: isSelected
-              ? theme.colorScheme.primaryContainer.withOpacity(0.3)
-              : Colors.transparent,
-          child: TransactionListItem(
-            transaction: transaction,
-            currencySymbol: settings.currencySymbol,
-            onTap: () {
-              // Assign tap logic directly here
-              if (state.isInBatchEditMode) {
-                log.fine(
-                    "[TxnListPage] Item tapped in batch mode. Toggling selection for ${transaction.id}.");
-                context
-                    .read<TransactionListBloc>()
-                    .add(SelectTransaction(transaction.id));
-              } else {
-                log.fine(
-                    "[TxnListPage] Item tapped in normal mode. Navigating to edit for ${transaction.id}.");
-                _navigateToDetailOrEdit(
-                    context, transaction); // Navigate on normal tap
-              }
-            },
-          ),
-        ).animate().fadeIn(delay: (20 * index).ms).slideY(begin: 0.1);
-      },
-    );
-  }
-
+  // Helper to determine dominant type remains the same
   TransactionType? _getDominantTransactionType(TransactionListState state) {
-    // ... keep this implementation as is ...
     if (state.selectedTransactionIds.isEmpty) return null;
     TransactionType? type;
     for (final id in state.selectedTransactionIds) {
@@ -777,7 +480,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   }
 }
 
-// --- Keep StringCapExtension as is ---
+// String capitalization extension remains the same
 extension StringCapExtension on String {
   String capitalize() {
     if (isEmpty) return this;

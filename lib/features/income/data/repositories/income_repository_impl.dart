@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';

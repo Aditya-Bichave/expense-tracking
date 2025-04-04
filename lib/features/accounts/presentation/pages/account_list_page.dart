@@ -1,101 +1,90 @@
-import 'package:expense_tracker/core/common/generic_list_page.dart';
+// ... other imports ...
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_card.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Keep for potential future use (e.g., currency in empty state)
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/core/utils/app_dialogs.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
-// This widget might be deprecated soon in favor of AccountsTabPage,
-// but we'll keep it functional for now based on the provided code.
 class AccountListPage extends StatelessWidget {
   const AccountListPage({super.key});
 
-  // Helper to navigate to the edit page for an account
-  // It uses pushNamed, assuming 'edit_account' is defined appropriately in the router,
-  // potentially pushed onto the root navigator.
   void _navigateToEditAccount(BuildContext context, AssetAccount account) {
     log.info("[AccountListPage] Navigating to Edit Account ID: ${account.id}");
     context.pushNamed(RouteNames.editAccount,
-        // Use the correct parameter name as defined in your router
-        pathParameters: {
-          RouteNames.paramAccountId: account.id
-        }, // Assuming param name is 'accountId'
-        extra: account // Pass the account data for pre-filling the form
-        );
+        pathParameters: {RouteNames.paramAccountId: account.id},
+        extra: account);
   }
 
-  // --- Specific Builders for Accounts ---
-
-  // Builds the widget for a single account item in the list.
-  Widget _buildAccountItem(
-    BuildContext context,
-    AssetAccount item,
-    VoidCallback onEditTap, // Callback triggered when the item should be edited
-  ) {
-    // AccountCard handles the visual representation. Pass the edit callback to its onTap.
-    return AccountCard(account: item, onTap: onEditTap);
+  // --- CORRECTED: Return Future<bool> ---
+  Future<bool> _handleDelete(BuildContext context, AssetAccount item) async {
+    final confirmed = await AppDialogs.showConfirmation(
+      context,
+      title: "Confirm Deletion",
+      content:
+          'Are you sure you want to delete the account "${item.name}"?\n\nThis action might fail if there are existing transactions linked to this account.',
+      confirmText: "Delete",
+      confirmColor: Theme.of(context).colorScheme.error,
+    );
+    // Return the result (true if confirmed, false or null otherwise)
+    // Default to false if dialog is dismissed without selection
+    if (confirmed == true && context.mounted) {
+      context.read<AccountListBloc>().add(DeleteAccountRequested(item.id));
+      return true; // Indicate dismissal should proceed
+    }
+    return false; // Indicate dismissal should not proceed
   }
+  // --- END CORRECTION ---
 
-  // Builds the widget displayed when the account list is empty.
-  Widget _buildEmptyState(BuildContext context, bool filtersApplied) {
-    // filtersApplied is provided by GenericListPage but currently unused here as filtering isn't implemented for accounts list.
+  Widget _buildEmptyState(BuildContext context) {
+    // ... empty state implementation (no changes needed) ...
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
-    // Define asset keys for illustration based on theme potentially
-    String illustrationKey =
-        AssetKeys.illuEmptyWallet; // Default illustration key
-    String defaultIllustration =
-        AppAssets.elIlluEmptyWallet; // Default asset path
+    String illustrationKey = AssetKeys.illuEmptyWallet;
+    String defaultIllustration = AppAssets.elIlluEmptyWallet;
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(30.0), // Increased padding
+        padding: const EdgeInsets.all(30.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SvgPicture.asset(
-              // Get illustration path from theme or use default
               modeTheme?.assets.getIllustration(illustrationKey,
                       defaultPath: defaultIllustration) ??
                   defaultIllustration,
-              height: 120, // Slightly larger illustration
+              height: 120,
               colorFilter: ColorFilter.mode(
                   theme.colorScheme.secondary.withOpacity(0.8),
-                  BlendMode.srcIn), // Use theme color
+                  BlendMode.srcIn),
             ),
             const SizedBox(height: 24),
-            Text(
-              'No accounts yet!',
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(color: theme.colorScheme.secondary),
-              textAlign: TextAlign.center,
-            ),
+            Text('No accounts yet!',
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(color: theme.colorScheme.secondary),
+                textAlign: TextAlign.center),
             const SizedBox(height: 12),
             Text(
-              'Tap the "+" button below to add your first bank account, cash wallet, or other assets.',
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
+                'Tap the "+" button below to add your first bank account, cash wallet, or other assets.',
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                textAlign: TextAlign.center),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               icon: const Icon(Icons.add),
               label: const Text('Add First Account'),
-              onPressed: () => context.pushNamed(
-                  RouteNames.addAccount), // Navigate using route name
+              onPressed: () => context.pushNamed(RouteNames.addAccount),
               style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
             )
           ],
         ),
@@ -103,77 +92,157 @@ class AccountListPage extends StatelessWidget {
     );
   }
 
-  // Builds and shows the confirmation dialog before deleting an account.
-  Future<bool> _confirmAccountDeletion(
-      BuildContext context, AssetAccount item) async {
-    return await AppDialogs.showConfirmation(
-          context,
-          title: "Confirm Deletion",
-          content:
-              'Are you sure you want to delete the account "${item.name}"?\n\nThis action might fail if there are existing transactions linked to this account.',
-          confirmText: "Delete",
-          confirmColor: Theme.of(context)
-              .colorScheme
-              .error, // Use error color for destructive action
-        ) ??
-        false; // Return false if dialog is dismissed
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Provide the AccountListBloc to this widget tree.
-    // Load accounts immediately if the Bloc is created here.
+    final theme = Theme.of(context);
+    final modeTheme = context.modeTheme;
+
     return BlocProvider<AccountListBloc>(
       create: (_) => sl<AccountListBloc>()..add(const LoadAccounts()),
-      child: Builder(// Use Builder to get context with the Bloc
-          builder: (innerContext) {
-        return GenericListPage<AssetAccount, AccountListBloc, AccountListEvent,
-            AccountListState>(
-          pageTitle: 'Accounts', // Title for the AppBar
-          addRouteName:
-              RouteNames.addAccount, // Route for the default FAB action
-          // editRouteName parameter removed
-          itemHeroTagPrefix: 'account', // Prefix for potential Hero animations
-          fabHeroTag: 'fab_accounts', // Hero tag for the default FAB
-          showSummaryCard: false, // Don't show the analytics summary card here
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Accounts')),
+        body: BlocConsumer<AccountListBloc, AccountListState>(
+          listener: (context, state) {
+            if (state is AccountListError) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: theme.colorScheme.error));
+            }
+          },
+          builder: (context, state) {
+            Widget bodyContent;
 
-          // Provide the builder for individual list items
-          itemBuilder: (
-            BuildContext
-                itemBuilderContext, // Context specific to the item builder
-            AssetAccount accountItem, // The data for the current item
-            bool isSelected, // Selection state (unused in this implementation)
-          ) {
-            // Call the local helper to build the AccountCard, passing the edit action
-            return _buildAccountItem(
-              itemBuilderContext,
-              accountItem,
-              // Lambda function to navigate to edit screen when the card is tapped
-              () => _navigateToEditAccount(innerContext, accountItem),
+            // --- CORRECTED: Access 'items' only on AccountListLoaded state ---
+            if (state is AccountListLoading && !state.isReloading) {
+              bodyContent = const Center(child: CircularProgressIndicator());
+            } else if (state is AccountListLoaded ||
+                (state is AccountListLoading && state.isReloading)) {
+              // Determine the list to display (current or previous if reloading)
+              List<AssetAccount> accounts = [];
+              if (state is AccountListLoaded) {
+                accounts =
+                    state.items; // Access items directly from loaded state
+              } else if (state is AccountListLoading && state.isReloading) {
+                // Try to get previous state data if available
+                final previousState = context.read<AccountListBloc>().state;
+                if (previousState is AccountListLoaded) {
+                  accounts = previousState.items;
+                }
+              }
+
+              if (accounts.isEmpty &&
+                  !(state is AccountListLoading && state.isReloading)) {
+                // Avoid showing empty state during reload flicker
+                bodyContent = _buildEmptyState(context);
+              } else {
+                bodyContent = RefreshIndicator(
+                  onRefresh: () async {
+                    context
+                        .read<AccountListBloc>()
+                        .add(const LoadAccounts(forceReload: true));
+                    await context.read<AccountListBloc>().stream.firstWhere(
+                        (s) => s is! AccountListLoading || !s.isReloading);
+                  },
+                  child: ListView.builder(
+                    padding:
+                        modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+                            const EdgeInsets.only(top: 8.0, bottom: 80.0),
+                    itemCount: accounts.length,
+                    itemBuilder: (ctx, index) {
+                      final account = accounts[index];
+                      return Dismissible(
+                        key: Key('account_dismiss_${account.id}'),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          /* ... background ... */
+                          color: theme.colorScheme.errorContainer,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Text("Delete",
+                                    style: TextStyle(
+                                        color:
+                                            theme.colorScheme.onErrorContainer,
+                                        fontWeight: FontWeight.bold)),
+                                const SizedBox(width: 8),
+                                Icon(Icons.delete_sweep_outlined,
+                                    color: theme.colorScheme.onErrorContainer)
+                              ]),
+                        ),
+                        // --- CORRECTED: Pass the Future<bool> function ---
+                        confirmDismiss: (_) => _handleDelete(context, account),
+                        // --- END CORRECTION ---
+                        child: AccountCard(
+                                account: account,
+                                onTap: () =>
+                                    _navigateToEditAccount(context, account))
+                            .animate(delay: (50 * index).ms)
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: 0.2, curve: Curves.easeOut),
+                      );
+                    },
+                  ),
+                );
+              }
+            } else if (state is AccountListError) {
+              bodyContent = Center(
+                /* ... error display ... */
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline,
+                          color: theme.colorScheme.error, size: 50),
+                      const SizedBox(height: 16),
+                      Text('Error loading accounts',
+                          style: theme.textTheme.titleLarge
+                              ?.copyWith(color: theme.colorScheme.error)),
+                      const SizedBox(height: 8),
+                      Text(state.message,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: theme.colorScheme.error)),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                        onPressed: () => context
+                            .read<AccountListBloc>()
+                            .add(const LoadAccounts(forceReload: true)),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              bodyContent = const Center(child: CircularProgressIndicator());
+            }
+
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: KeyedSubtree(
+                // --- CORRECTED: Use concrete state type for key ---
+                key: ValueKey(state.runtimeType.toString() +
+                    (state is AccountListLoaded
+                        ? state.items.length.toString()
+                        : '')),
+                // --- END CORRECTION ---
+                child: bodyContent,
+              ),
             );
           },
-
-          tableBuilder:
-              null, // No table view implementation for accounts currently
-          emptyStateBuilder:
-              _buildEmptyState, // Provide the empty state builder
-          filterDialogBuilder:
-              null, // No filtering implemented for accounts currently
-
-          // Provide the delete confirmation dialog builder
-          deleteConfirmationBuilder: (dialogContext, item) =>
-              _confirmAccountDeletion(dialogContext, item),
-          // Provide the function to create the delete event for the Bloc
-          deleteEventBuilder: (id) => DeleteAccountRequested(id),
-          // Provide the function to create the load event for the Bloc
-          loadEventBuilder: ({bool forceReload = false}) =>
-              LoadAccounts(forceReload: forceReload),
-
-          // No custom FAB or AppBar actions needed for this basic list
-          appBarActions: null,
-          floatingActionButton: null, // Use default FAB from GenericListPage
-        );
-      }),
+        ),
+        floatingActionButton: FloatingActionButton(
+          heroTag: 'fab_accounts',
+          onPressed: () => context.pushNamed(RouteNames.addAccount),
+          tooltip: 'Add Account',
+          child: const Icon(Icons.add),
+        ),
+      ),
     );
   }
 }
