@@ -1,5 +1,4 @@
 // lib/core/di/service_locator.dart
-// FINAL VERSION (with all category UseCases and updated Bloc registrations)
 import 'dart:async';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -10,24 +9,24 @@ import 'package:expense_tracker/main.dart'; // Import logger
 // Import Event
 import 'package:expense_tracker/core/events/data_change_event.dart';
 
-// Import Data Sources
+// --- Data Sources ---
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
 import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
 import 'package:expense_tracker/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:expense_tracker/features/categories/data/datasources/category_local_data_source.dart';
-import 'package:expense_tracker/features/categories/data/datasources/category_predefined_data_source.dart'; // Keep abstract import
+import 'package:expense_tracker/features/categories/data/datasources/category_predefined_data_source.dart';
 import 'package:expense_tracker/features/categories/data/datasources/user_history_local_data_source.dart';
 import 'package:expense_tracker/features/categories/data/datasources/merchant_category_data_source.dart';
 
-// Import Models (needed for Hive Box types)
+// --- Models (needed for Hive Box types) ---
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
 
-// Import Repositories (Interfaces)
+// --- Repositories (Interfaces) ---
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
@@ -37,7 +36,7 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/features/categories/domain/repositories/user_history_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/merchant_category_repository.dart';
 
-// Import Repositories (Implementations)
+// --- Repositories (Implementations) ---
 import 'package:expense_tracker/features/expenses/data/repositories/expense_repository_impl.dart';
 import 'package:expense_tracker/features/accounts/data/repositories/asset_account_repository_impl.dart';
 import 'package:expense_tracker/features/income/data/repositories/income_repository_impl.dart';
@@ -47,56 +46,62 @@ import 'package:expense_tracker/features/categories/data/repositories/category_r
 import 'package:expense_tracker/features/categories/data/repositories/user_history_repository_impl.dart';
 import 'package:expense_tracker/features/categories/data/repositories/merchant_category_repository_impl.dart';
 
-// Import Use Cases
+// --- Use Cases ---
+// Expenses
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/delete_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/get_expenses.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
+// Accounts
 import 'package:expense_tracker/features/accounts/domain/usecases/add_asset_account.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/delete_asset_account.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/get_asset_accounts.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/update_asset_account.dart';
+// Income
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/delete_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/get_incomes.dart';
 import 'package:expense_tracker/features/income/domain/usecases/update_income.dart';
-import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
-import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';
-import 'package:expense_tracker/features/settings/domain/usecases/backup_data_usecase.dart';
-import 'package:expense_tracker/features/settings/domain/usecases/restore_data_usecase.dart';
-import 'package:expense_tracker/features/settings/domain/usecases/clear_all_data_usecase.dart';
-// --- Import Category Use Cases ---
+// Categories
 import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_expense_categories.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_income_categories.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/add_custom_category.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/update_custom_category.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/delete_custom_category.dart';
-// --- CORRECTED Import ---
-import 'package:expense_tracker/features/categories/domain/usecases/delete_custom_category.dart';
-// --- END CORRECTION ---
 import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/categorize_transaction.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/apply_category_to_batch.dart';
-// --- END Category Use Cases ---
+// Analytics & Dashboard
+import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
+import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';
+// Settings & Data Management
+import 'package:expense_tracker/features/settings/domain/usecases/backup_data_usecase.dart';
+import 'package:expense_tracker/features/settings/domain/usecases/restore_data_usecase.dart';
+import 'package:expense_tracker/features/settings/domain/usecases/clear_all_data_usecase.dart';
+// Transactions (New)
+import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 
-// Import Blocs
+// --- Blocs ---
+// Add/Edit Blocs
 import 'package:expense_tracker/features/expenses/presentation/bloc/add_edit_expense/add_edit_expense_bloc.dart';
-import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_account/add_edit_account_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/income/presentation/bloc/add_edit_income/add_edit_income_bloc.dart';
-import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+// List/Management Blocs
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+// Transactions (New)
+import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+// REMOVED old list Blocs: ExpenseListBloc, IncomeListBloc
 
-// Import Entities
+// Import Entities needed for factory parameters
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // Import unified category entity
+// Note: Category entity already imported via repositories/usecases
 
 final sl = GetIt.instance;
 
@@ -134,11 +139,11 @@ Future<void> initLocator({
 
   // *** Feature Registrations (Order Matters for Dependencies) ***
   _registerSettingsFeature();
-  _registerIncomeFeature();
-  _registerExpensesFeature();
-  _registerCategoryFeature(); // Register Category first
-  // Register Income/Expense Repositories *before* Account Repo which depends on them
-  _registerAccountsFeature(); // Now Income/Expense repos are available
+  _registerIncomeFeature(); // Needed by Repos/UseCases used in later features
+  _registerExpensesFeature(); // Needed by Repos/UseCases used in later features
+  _registerCategoryFeature(); // Needs Income/Expense repos for delete use case
+  _registerAccountsFeature(); // Needs Income/Expense repos for balance calculation
+  _registerTransactionsFeature(); // Needs Income/Expense repos and Category use cases
   _registerAnalyticsAndDashboardFeatures(); // Needs Txn Repos
 
   log.info("Service Locator initialization complete.");
@@ -148,17 +153,21 @@ Future<void> initLocator({
 
 void _registerSettingsFeature() {
   log.info("Registering Settings Feature dependencies...");
+  // --- Data Layer ---
   sl.registerLazySingleton<SettingsLocalDataSource>(
       () => SettingsLocalDataSourceImpl(prefs: sl()));
-  sl.registerLazySingleton<SettingsRepository>(
-      () => SettingsRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton<DataManagementRepository>(() =>
       DataManagementRepositoryImpl(
           accountBox: sl(), expenseBox: sl(), incomeBox: sl()));
+  // --- Domain Layer ---
+  sl.registerLazySingleton<SettingsRepository>(
+      () => SettingsRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton(() => BackupDataUseCase(sl()));
   sl.registerLazySingleton(() => RestoreDataUseCase(sl()));
   sl.registerLazySingleton(() => ClearAllDataUseCase(sl()));
-  sl.registerLazySingleton(() => SettingsBloc(
+  // --- Presentation Layer ---
+  sl.registerFactory(() => SettingsBloc(
+      // Use Factory for Blocs that might be recreated
       settingsRepository: sl(),
       backupDataUseCase: sl(),
       restoreDataUseCase: sl(),
@@ -168,7 +177,7 @@ void _registerSettingsFeature() {
 
 void _registerCategoryFeature() {
   log.info("Registering Category Feature dependencies...");
-  // DataSources
+  // --- Data Layer ---
   sl.registerLazySingleton<CategoryLocalDataSource>(
       () => HiveCategoryLocalDataSource(sl()));
   sl.registerLazySingleton<CategoryPredefinedDataSource>(
@@ -181,7 +190,6 @@ void _registerCategoryFeature() {
       () => HiveUserHistoryLocalDataSource(sl()));
   sl.registerLazySingleton<MerchantCategoryDataSource>(
       () => AssetMerchantCategoryDataSource());
-  // Repositories
   sl.registerLazySingleton<CategoryRepository>(() => CategoryRepositoryImpl(
       localDataSource: sl(),
       expensePredefinedDataSource: sl(instanceName: 'expensePredefined'),
@@ -190,25 +198,26 @@ void _registerCategoryFeature() {
       () => UserHistoryRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton<MerchantCategoryRepository>(
       () => MerchantCategoryRepositoryImpl(dataSource: sl()));
-  // Use Cases
+  // --- Domain Layer ---
   sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
   sl.registerLazySingleton(() => GetExpenseCategoriesUseCase(sl()));
   sl.registerLazySingleton(() => GetIncomeCategoriesUseCase(sl()));
-  sl.registerLazySingleton(() => AddCustomCategoryUseCase(sl(), sl()));
-  sl.registerLazySingleton(() => UpdateCustomCategoryUseCase(sl()));
-  // Register Delete UseCase - Ensure Expense/Income repos are registered *before* this feature registration call
-  sl.registerLazySingleton(() => DeleteCustomCategoryUseCase(sl(), sl(), sl()));
   sl.registerLazySingleton(
-      () => SaveUserCategorizationHistoryUseCase(sl(), sl()));
+      () => AddCustomCategoryUseCase(sl(), sl())); // Inject Uuid
+  sl.registerLazySingleton(() => UpdateCustomCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteCustomCategoryUseCase(
+      sl(), sl(), sl())); // Needs Category, Expense, Income repos
+  sl.registerLazySingleton(
+      () => SaveUserCategorizationHistoryUseCase(sl(), sl())); // Inject Uuid
   sl.registerLazySingleton(() => CategorizeTransactionUseCase(
       userHistoryRepository: sl(),
       merchantCategoryRepository: sl(),
       categoryRepository: sl()));
-  // Register ApplyBatch UseCase - Ensure Expense/Income repos are registered *before* this
   sl.registerLazySingleton(() => ApplyCategoryToBatchUseCase(
       expenseRepository: sl(), incomeRepository: sl()));
-  // Blocs
+  // --- Presentation Layer ---
   sl.registerFactory(() => CategoryManagementBloc(
+      // Use Factory
       getCategoriesUseCase: sl(),
       addCustomCategoryUseCase: sl(),
       updateCustomCategoryUseCase: sl(),
@@ -218,29 +227,28 @@ void _registerCategoryFeature() {
 
 void _registerAccountsFeature() {
   log.info("Registering Accounts Feature dependencies...");
-  // Data sources
+  // --- Data Layer ---
   sl.registerLazySingleton<AssetAccountLocalDataSource>(
       () => HiveAssetAccountLocalDataSource(sl<Box<AssetAccountModel>>()));
-  // Repositories
   sl.registerLazySingleton<AssetAccountRepository>(
       () => AssetAccountRepositoryImpl(
-            localDataSource: sl(),
-            // CORRECTED: Depend on Interfaces, not Implementations
-            incomeRepository: sl<IncomeRepository>(),
-            expenseRepository: sl<ExpenseRepository>(),
+          localDataSource: sl(),
+          incomeRepository: sl<IncomeRepository>(), // Depend on interface
+          expenseRepository: sl<ExpenseRepository>() // Depend on interface
           ));
-  // Use cases
+  // --- Domain Layer ---
   sl.registerLazySingleton(() => AddAssetAccountUseCase(sl()));
   sl.registerLazySingleton(() => GetAssetAccountsUseCase(sl()));
   sl.registerLazySingleton(() => UpdateAssetAccountUseCase(sl()));
   sl.registerLazySingleton(() => DeleteAssetAccountUseCase(sl()));
-  // Blocs
+  // --- Presentation Layer ---
   sl.registerFactoryParam<AddEditAccountBloc, AssetAccount?, void>(
       (initialAccount, _) => AddEditAccountBloc(
           addAssetAccountUseCase: sl(),
           updateAssetAccountUseCase: sl(),
           initialAccount: initialAccount));
-  sl.registerLazySingleton(() => AccountListBloc(
+  sl.registerFactory(() => AccountListBloc(
+      // Use Factory
       getAssetAccountsUseCase: sl(),
       deleteAssetAccountUseCase: sl(),
       dataChangeStream: sl<Stream<DataChangedEvent>>()));
@@ -249,18 +257,17 @@ void _registerAccountsFeature() {
 
 void _registerIncomeFeature() {
   log.info("Registering Income Feature dependencies...");
-  // Data sources
+  // --- Data Layer ---
   sl.registerLazySingleton<IncomeLocalDataSource>(
       () => HiveIncomeLocalDataSource(sl<Box<IncomeModel>>()));
-  // Repositories
   sl.registerLazySingleton<IncomeRepository>(
       () => IncomeRepositoryImpl(localDataSource: sl()));
-  // Use cases
+  // --- Domain Layer ---
   sl.registerLazySingleton(() => AddIncomeUseCase(sl()));
   sl.registerLazySingleton(() => GetIncomesUseCase(sl()));
   sl.registerLazySingleton(() => UpdateIncomeUseCase(sl()));
   sl.registerLazySingleton(() => DeleteIncomeUseCase(sl()));
-  // Blocs
+  // --- Presentation Layer ---
   sl.registerFactoryParam<AddEditIncomeBloc, Income?, void>(
       (initialIncome, _) => AddEditIncomeBloc(
           addIncomeUseCase: sl(),
@@ -268,29 +275,23 @@ void _registerIncomeFeature() {
           categorizeTransactionUseCase: sl(),
           incomeRepository: sl(),
           initialIncome: initialIncome));
-  sl.registerLazySingleton(() => IncomeListBloc(
-      getIncomesUseCase: sl(),
-      deleteIncomeUseCase: sl(),
-      applyCategoryToBatchUseCase: sl(),
-      saveUserHistoryUseCase: sl(),
-      dataChangeStream: sl<Stream<DataChangedEvent>>()));
+  // REMOVED IncomeListBloc registration
   log.info("Income Feature dependencies registered.");
 }
 
 void _registerExpensesFeature() {
   log.info("Registering Expenses Feature dependencies...");
-  // Data sources
+  // --- Data Layer ---
   sl.registerLazySingleton<ExpenseLocalDataSource>(
       () => HiveExpenseLocalDataSource(sl<Box<ExpenseModel>>()));
-  // Repositories
   sl.registerLazySingleton<ExpenseRepository>(
       () => ExpenseRepositoryImpl(localDataSource: sl()));
-  // Use cases
+  // --- Domain Layer ---
   sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
   sl.registerLazySingleton(() => GetExpensesUseCase(sl()));
   sl.registerLazySingleton(() => UpdateExpenseUseCase(sl()));
   sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
-  // Blocs
+  // --- Presentation Layer ---
   sl.registerFactoryParam<AddEditExpenseBloc, Expense?, void>(
       (initialExpense, _) => AddEditExpenseBloc(
           addExpenseUseCase: sl(),
@@ -298,28 +299,51 @@ void _registerExpensesFeature() {
           categorizeTransactionUseCase: sl(),
           expenseRepository: sl(),
           initialExpense: initialExpense));
-  sl.registerLazySingleton(() => ExpenseListBloc(
-      getExpensesUseCase: sl(),
-      deleteExpenseUseCase: sl(),
-      applyCategoryToBatchUseCase: sl(),
-      saveUserHistoryUseCase: sl(),
-      dataChangeStream: sl<Stream<DataChangedEvent>>()));
+  // REMOVED ExpenseListBloc registration
   log.info("Expenses Feature dependencies registered.");
 }
 
+// --- NEW Transactions Feature Registration ---
+void _registerTransactionsFeature() {
+  log.info("Registering Transactions Feature dependencies...");
+  // --- Domain Layer ---
+  sl.registerLazySingleton(() => GetTransactionsUseCase(
+        expenseRepository: sl(),
+        incomeRepository: sl(),
+      ));
+  // Delete use cases are already registered in their respective features
+
+  // --- Presentation Layer ---
+  sl.registerFactory(() => TransactionListBloc(
+        // Use Factory
+        getTransactionsUseCase: sl(),
+        deleteExpenseUseCase: sl(),
+        deleteIncomeUseCase: sl(),
+        applyCategoryToBatchUseCase: sl(),
+        saveUserHistoryUseCase: sl(),
+        expenseRepository: sl(), // Inject repo
+        incomeRepository: sl(), // Inject repo
+        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+      ));
+  log.info("Transactions Feature dependencies registered.");
+}
+// --- END NEW ---
+
 void _registerAnalyticsAndDashboardFeatures() {
   log.info("Registering Analytics & Dashboard Features dependencies...");
-  // Use cases
+  // --- Domain Layer ---
   sl.registerLazySingleton(() => GetExpenseSummaryUseCase(sl()));
   sl.registerLazySingleton(() => GetFinancialOverviewUseCase(
       accountRepository: sl(),
       incomeRepository: sl(),
       expenseRepository: sl()));
-  // Blocs
-  sl.registerLazySingleton(() => SummaryBloc(
+  // --- Presentation Layer ---
+  sl.registerFactory(() => SummaryBloc(
+      // Use Factory
       getExpenseSummaryUseCase: sl(),
       dataChangeStream: sl<Stream<DataChangedEvent>>()));
-  sl.registerLazySingleton(() => DashboardBloc(
+  sl.registerFactory(() => DashboardBloc(
+      // Use Factory
       getFinancialOverviewUseCase: sl(),
       dataChangeStream: sl<Stream<DataChangedEvent>>()));
   log.info("Analytics & Dashboard Features dependencies registered.");
@@ -332,7 +356,8 @@ void publishDataChangedEvent(
     try {
       sl<StreamController<DataChangedEvent>>()
           .add(DataChangedEvent(type: type, reason: reason));
-      log.info("Published DataChangedEvent: Type=$type, Reason=$reason");
+      log.fine(
+          "Published DataChangedEvent: Type=$type, Reason=$reason"); // Use fine level
     } catch (e, s) {
       log.severe("Error publishing DataChangedEvent$e$s");
     }

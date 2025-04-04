@@ -1,31 +1,28 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart'; // For Color
-import 'package:expense_tracker/core/utils/color_utils.dart'; // Helper for hex parsing (create this next)
+import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/utils/color_utils.dart';
+import 'category_type.dart'; // Import the new enum
 
 class Category extends Equatable {
-  final String id; // Predefined name or UUID for custom
+  final String id;
   final String name;
-  final String iconName; // Asset name or identifier
-  final String colorHex; // Stored as hex string (e.g., "#FF00FF")
+  final String iconName;
+  final String colorHex;
+  final CategoryType type; // ADDED: Type of category
   final bool isCustom;
-  final String? parentCategoryId; // Optional for hierarchy
+  final String? parentCategoryId; // For future subcategories
 
   const Category({
     required this.id,
     required this.name,
     required this.iconName,
     required this.colorHex,
+    required this.type, // ADDED
     required this.isCustom,
     this.parentCategoryId,
   });
 
-  // Helper to get the actual Color object
-  Color get displayColor {
-    return ColorUtils.fromHex(colorHex);
-  }
-
-  // Optional: Helper for display name (useful if subcategories are implemented)
-  // String get hierarchicalName => parentCategory != null ? '${parentCategory.name} > $name' : name;
+  Color get displayColor => ColorUtils.fromHex(colorHex);
 
   @override
   List<Object?> get props => [
@@ -33,16 +30,41 @@ class Category extends Equatable {
         name,
         iconName,
         colorHex,
+        type, // ADDED
         isCustom,
         parentCategoryId,
       ];
 
-  // Optional: Default 'Uncategorized' category static instance
+  // Update Uncategorized (make it expense type by default)
   static final uncategorized = Category(
     id: 'uncategorized',
     name: 'Uncategorized',
-    iconName: 'icon_question_mark', // Define a default icon identifier
+    iconName: 'question', // Use a name from availableIcons map
     colorHex: '#808080', // Grey
+    type: CategoryType.expense, // Default type
     isCustom: false,
   );
+
+  // Helper to create a copy with modified fields
+  Category copyWith({
+    String? id,
+    String? name,
+    String? iconName,
+    String? colorHex,
+    CategoryType? type,
+    bool? isCustom,
+    ValueGetter<String?>?
+        parentCategoryId, // Use ValueGetter for nullable fields
+  }) {
+    return Category(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      iconName: iconName ?? this.iconName,
+      colorHex: colorHex ?? this.colorHex,
+      type: type ?? this.type,
+      isCustom: isCustom ?? this.isCustom,
+      parentCategoryId:
+          parentCategoryId != null ? parentCategoryId() : this.parentCategoryId,
+    );
+  }
 }

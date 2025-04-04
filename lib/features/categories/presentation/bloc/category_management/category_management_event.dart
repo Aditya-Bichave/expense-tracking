@@ -17,16 +17,19 @@ class AddCategory extends CategoryManagementEvent {
   final String name;
   final String iconName;
   final String colorHex;
+  final CategoryType type; // ADDED: Required type for new category
   final String? parentId;
 
   const AddCategory({
     required this.name,
     required this.iconName,
     required this.colorHex,
+    required this.type, // ADDED
     this.parentId,
   });
   @override
-  List<Object?> get props => [name, iconName, colorHex, parentId];
+  List<Object?> get props =>
+      [name, iconName, colorHex, type, parentId]; // ADDED type
 }
 
 class UpdateCategory extends CategoryManagementEvent {
@@ -41,4 +44,9 @@ class DeleteCategory extends CategoryManagementEvent {
   const DeleteCategory({required this.categoryId});
   @override
   List<Object> get props => [categoryId];
+}
+
+// Optional: Event to clear messages
+class ClearCategoryMessages extends CategoryManagementEvent {
+  const ClearCategoryMessages();
 }

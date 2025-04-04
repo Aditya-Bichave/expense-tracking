@@ -1,8 +1,8 @@
 [
-    { "id": "salary", "name": "Salary", "iconName": "salary", "colorHex": "#26A69A", "isCustom": false },
-    { "id": "freelance", "name": "Freelance", "iconName": "freelance", "colorHex": "#29B6F6", "isCustom": false },
-    { "id": "bonus", "name": "Bonus", "iconName": "gift", "colorHex": "#FFEE58", "isCustom": false },
-    { "id": "gift", "name": "Gift", "iconName": "gift", "colorHex": "#FF7043", "isCustom": false },
-    { "id": "interest", "name": "Interest", "iconName": "interest", "colorHex": "#9CCC65", "isCustom": false },
-    { "id": "other_income", "name": "Other Income", "iconName": "default_category_icon", "colorHex": "#78909C", "isCustom": false }
+    { "id": "salary", "name": "Salary", "iconName": "salary", "colorHex": "#26A69A", "isCustom": false, "typeIndex": 1 },
+    { "id": "freelance", "name": "Freelance", "iconName": "freelance", "colorHex": "#29B6F6", "isCustom": false, "typeIndex": 1 },
+    { "id": "bonus", "name": "Bonus", "iconName": "gift", "colorHex": "#FFEE58", "isCustom": false, "typeIndex": 1 },
+    { "id": "gift", "name": "Gift", "iconName": "gift", "colorHex": "#FF7043", "isCustom": false, "typeIndex": 1 },
+    { "id": "interest", "name": "Interest", "iconName": "interest", "colorHex": "#9CCC65", "isCustom": false, "typeIndex": 1 },
+    { "id": "other_income", "name": "Other Income", "iconName": "default_category_icon", "colorHex": "#78909C", "isCustom": false, "typeIndex": 1 }
   ]

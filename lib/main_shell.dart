@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/core/constants/route_names.dart'; // Import route names
 
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -11,59 +12,87 @@ class MainShell extends StatelessWidget {
 
   // Function to handle tapping on the BottomNavigationBar items
   void _onTap(BuildContext context, int index) {
-    // Use the navigationShell to navigate to the corresponding branch (page)
-    // The index parameter corresponds to the branch index in the StatefulShellRoute
     navigationShell.goBranch(
       index,
-      // If tapping the same item again, should it reset the navigation stack?
-      // Setting initialLocation to true resets the stack, false preserves it.
       initialLocation: index == navigationShell.currentIndex,
     );
   }
 
+  // Helper to get the icon for each tab index
+  IconData _getIconForIndex(int index, bool isActive) {
+    switch (index) {
+      case 0: // Dashboard
+        return isActive ? Icons.dashboard_rounded : Icons.dashboard_outlined;
+      case 1: // Transactions
+        return isActive
+            ? Icons.receipt_long_rounded
+            : Icons.receipt_long_outlined;
+      case 2: // Budgets & Cats
+        return isActive
+            ? Icons.pie_chart_rounded
+            : Icons.pie_chart_outline_rounded;
+      case 3: // Accounts
+        return isActive
+            ? Icons.account_balance_wallet_rounded
+            : Icons.account_balance_wallet_outlined;
+      case 4: // Settings
+        return isActive ? Icons.settings_rounded : Icons.settings_outlined;
+      default:
+        return Icons.help_outline; // Fallback
+    }
+  }
+
+  // Helper to get the label for each tab index
+  String _getLabelForIndex(int index) {
+    switch (index) {
+      case 0:
+        return 'Dashboard';
+      case 1:
+        return 'Transactions';
+      case 2:
+        return 'Budgets'; // Simplified Label
+      case 3:
+        return 'Accounts';
+      case 4:
+        return 'Settings';
+      default:
+        return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final navTheme = theme.bottomNavigationBarTheme;
+
     return Scaffold(
-      // The body displays the widget based on the current active branch
-      body: navigationShell,
+      body: navigationShell, // The page content for the current branch
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: navigationShell.currentIndex, // Highlight the active tab
-        onTap: (index) => _onTap(context, index), // Handle tab selection
-        type: BottomNavigationBarType.fixed, // Ensures all labels are visible
-        // Use theme colors for better consistency
-        selectedItemColor: Theme.of(context).colorScheme.primary,
+        currentIndex: navigationShell.currentIndex,
+        onTap: (index) => _onTap(context, index),
+        // Use theme properties for styling
+        type: navTheme.type ?? BottomNavigationBarType.fixed,
+        backgroundColor: navTheme.backgroundColor,
+        selectedItemColor:
+            navTheme.selectedItemColor ?? theme.colorScheme.primary,
         unselectedItemColor:
-            Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: 'Expenses',
-          ),
-          BottomNavigationBarItem(
-            // Using a suitable icon for Income
-            icon: Icon(Icons.trending_up_outlined),
-            activeIcon: Icon(Icons.trending_up),
-            label: 'Income',
-          ),
-          BottomNavigationBarItem(
-            // Using a suitable icon for Accounts
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            activeIcon: Icon(Icons.account_balance_wallet),
-            label: 'Accounts',
-          ),
-          // --- Settings Item ---
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
+            navTheme.unselectedItemColor ?? theme.colorScheme.onSurfaceVariant,
+        selectedLabelStyle: navTheme.selectedLabelStyle,
+        unselectedLabelStyle: navTheme.unselectedLabelStyle,
+        selectedIconTheme: navTheme.selectedIconTheme,
+        unselectedIconTheme: navTheme.unselectedIconTheme,
+        showSelectedLabels: navTheme.showSelectedLabels,
+        showUnselectedLabels: navTheme.showUnselectedLabels,
+        elevation: navTheme.elevation ?? 8.0, // Default elevation if not themed
+        items: List.generate(5, (index) {
+          // Generate 5 items
+          final isActive = index == navigationShell.currentIndex;
+          return BottomNavigationBarItem(
+            icon: Icon(_getIconForIndex(index, false)),
+            activeIcon: Icon(_getIconForIndex(index, true)),
+            label: _getLabelForIndex(index),
+          );
+        }),
       ),
     );
   }

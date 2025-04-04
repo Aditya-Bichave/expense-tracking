@@ -1,8 +1,7 @@
-// lib/features/categories/presentation/pages/add_edit_category_screen.dart
-// FINAL VERSION (No changes from Phase 11)
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import enum
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +18,11 @@ class AddEditCategoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isEditing = initialCategory != null;
-    // Assuming CategoryManagementBloc is provided by the navigator (e.g., BlocProvider.value in CategoryManagementScreen)
+    log.info(
+        "[AddEditCategoryScreen] Building. Editing: $isEditing. Category: ${initialCategory?.name}");
+
+    // CategoryManagementBloc is expected to be provided by the route or parent widget
+    // (e.g., via BlocProvider.value from CategoryManagementScreen)
 
     return Scaffold(
       appBar: AppBar(
@@ -33,24 +36,31 @@ class AddEditCategoryScreen extends StatelessWidget {
       body: SafeArea(
         child: CategoryForm(
           initialCategory: initialCategory,
-          onSubmit: (name, iconName, colorHex) {
+          onSubmit: (name, iconName, colorHex, type, parentId) {
             log.info(
-                "[AddEditCategoryScreen] Form submitted. Name: $name, Icon: $iconName, Color: $colorHex");
+                "[AddEditCategoryScreen] Form submitted. Name: $name, Icon: $iconName, Color: $colorHex, Type: ${type.name}, Parent: $parentId");
             final bloc = context.read<CategoryManagementBloc>();
             if (isEditing) {
-              final updatedCategory = Category(
-                // Create the updated entity
-                id: initialCategory!.id,
-                name: name, iconName: iconName, colorHex: colorHex,
-                isCustom: initialCategory!.isCustom,
-                parentCategoryId: initialCategory!.parentCategoryId,
+              // Ensure we don't change the type or custom status on edit
+              final updatedCategory = initialCategory!.copyWith(
+                name: name,
+                iconName: iconName,
+                colorHex: colorHex,
+                // Type and isCustom should not change during edit
+                // parentId update logic if subcategories are implemented
               );
               bloc.add(UpdateCategory(category: updatedCategory));
             } else {
+              // Pass the selected type when adding
               bloc.add(AddCategory(
-                  name: name, iconName: iconName, colorHex: colorHex));
+                name: name,
+                iconName: iconName,
+                colorHex: colorHex,
+                type: type, // Pass type for new category
+                parentId: parentId, // Pass parent for new subcategory
+              ));
             }
-            Navigator.of(context).pop(); // Pop after submitting
+            Navigator.of(context).pop(); // Pop back after submitting
           },
         ),
       ),
@@ -61,7 +71,9 @@ class AddEditCategoryScreen extends StatelessWidget {
 // --- Category Form Widget ---
 class CategoryForm extends StatefulWidget {
   final Category? initialCategory;
-  final Function(String name, String iconName, String colorHex) onSubmit;
+  // Updated signature includes CategoryType and optional parentId
+  final Function(String name, String iconName, String colorHex,
+      CategoryType type, String? parentId) onSubmit;
 
   const CategoryForm({
     super.key,
@@ -76,19 +88,25 @@ class CategoryForm extends StatefulWidget {
 class _CategoryFormState extends State<CategoryForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  String _selectedIconName = 'default_category_icon';
+  String _selectedIconName = 'category'; // Default icon name
   Color _selectedColor = Colors.blue;
+  CategoryType _selectedType =
+      CategoryType.expense; // Default type for new categories
+  String? _selectedParentId; // For subcategories later
 
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.initialCategory?.name ?? '');
-    _selectedIconName =
-        widget.initialCategory?.iconName ?? 'default_category_icon';
-    _selectedColor = widget.initialCategory != null
-        ? ColorUtils.fromHex(widget.initialCategory!.colorHex)
-        : Colors.blue;
+    final initial = widget.initialCategory;
+    _nameController = TextEditingController(text: initial?.name ?? '');
+    _selectedIconName = initial?.iconName ?? 'category';
+    _selectedColor =
+        initial != null ? ColorUtils.fromHex(initial.colorHex) : Colors.blue;
+    // IMPORTANT: Do not change type when editing! Only set initial type if editing.
+    _selectedType = initial?.type ?? CategoryType.expense;
+    _selectedParentId = initial?.parentCategoryId;
+    log.info(
+        "[CategoryForm] initState. Initial Type: ${_selectedType.name}, Icon: $_selectedIconName, Color: $_selectedColor");
   }
 
   @override
@@ -99,14 +117,20 @@ class _CategoryFormState extends State<CategoryForm> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
+      log.info(
+          "[CategoryForm] Form validated. Submitting with Type: ${_selectedType.name}, Parent: $_selectedParentId");
       widget.onSubmit(
         _nameController.text.trim(),
         _selectedIconName,
         ColorUtils.toHex(_selectedColor),
+        _selectedType, // Pass the selected type
+        _selectedParentId, // Pass the selected parent ID
       );
     } else {
+      log.warning("[CategoryForm] Form validation failed.");
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Please correct the errors in the form.')));
+          content: Text('Please correct the errors in the form.'),
+          backgroundColor: Colors.orangeAccent));
     }
   }
 
@@ -126,7 +150,7 @@ class _CategoryFormState extends State<CategoryForm> {
   // Show Color Picker
   void _showColorPicker() {
     log.info("[CategoryForm] Color picker requested.");
-    Color pickerColor = _selectedColor;
+    Color pickerColor = _selectedColor; // Start with current color
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -134,14 +158,16 @@ class _CategoryFormState extends State<CategoryForm> {
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: pickerColor,
-            onColorChanged: (color) => pickerColor = color,
+            onColorChanged: (color) =>
+                pickerColor = color, // Update temporary color
             pickerAreaHeightPercent: 0.8,
-            enableAlpha: false,
-            colorPickerWidth: 300,
+            enableAlpha: false, // Disable alpha for category colors
+            colorPickerWidth: 300, // Adjust width as needed
             displayThumbColor: true,
-            paletteType: PaletteType.hueWheel,
+            paletteType: PaletteType.hsvWithHue, // Or other palette types
             labelTypes: const [ColorLabelType.hex],
             pickerAreaBorderRadius: BorderRadius.circular(8),
+            hexInputBar: true, // Show hex input
           ),
         ),
         actions: <Widget>[
@@ -152,13 +178,27 @@ class _CategoryFormState extends State<CategoryForm> {
           TextButton(
               child: const Text('Select'),
               onPressed: () {
-                /* TODO: Add contrast check if desired */ setState(
-                    () => _selectedColor = pickerColor);
+                // TODO: Add contrast check against common background colors if desired
+                log.info("[CategoryForm] New Color selected: $pickerColor");
+                setState(
+                    () => _selectedColor = pickerColor); // Update final color
                 Navigator.of(context).pop();
               }),
         ],
       ),
     );
+  }
+
+  // Placeholder for Parent Category Picker (Implement when needed)
+  void _showParentPicker() {
+    log.warning("[CategoryForm] Parent Category Picker not implemented yet.");
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Sub-category selection coming soon!")));
+    // Implementation would involve:
+    // 1. Fetching existing categories (of the same _selectedType).
+    // 2. Showing a dialog/modal with a searchable list.
+    // 3. Allowing selection of a parent or "None".
+    // 4. Updating _selectedParentId state.
   }
 
   @override
@@ -167,24 +207,93 @@ class _CategoryFormState extends State<CategoryForm> {
     final theme = Theme.of(context);
     final IconData displayIconData =
         availableIcons[_selectedIconName] ?? Icons.category_outlined;
+    final bool isEditing = widget.initialCategory != null;
 
     return Form(
       key: _formKey,
       child: ListView(
         padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
         children: [
+          // --- Category Type Selector (Only for Adding) ---
+          if (!isEditing)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: DropdownButtonFormField<CategoryType>(
+                value: _selectedType,
+                decoration: const InputDecoration(
+                  labelText: 'Category Type',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.swap_horiz_outlined),
+                  hintText: 'Select if Expense or Income',
+                ),
+                items: CategoryType.values.map((type) {
+                  return DropdownMenuItem<CategoryType>(
+                    value: type,
+                    child: Text(type.name.capitalize()), // Capitalize name
+                  );
+                }).toList(),
+                onChanged: (CategoryType? newValue) {
+                  if (newValue != null) {
+                    setState(() => _selectedType = newValue);
+                  }
+                },
+                validator: (value) =>
+                    value == null ? 'Please select a type' : null,
+              ),
+            )
+          else // Show read-only type when editing
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: InputDecorator(
+                // Use InputDecorator for consistent styling
+                decoration: InputDecoration(
+                  labelText: 'Category Type',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.swap_horiz_outlined),
+                  // Style to look disabled
+                  enabledBorder: OutlineInputBorder(
+                    borderSide:
+                        BorderSide(color: theme.disabledColor.withOpacity(0.5)),
+                  ),
+                  filled: true,
+                  fillColor: theme.disabledColor.withOpacity(0.05),
+                ),
+                child: Text(_selectedType.name.capitalize(),
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(color: theme.disabledColor)),
+              ),
+            ),
+
+          // --- Category Name ---
           AppTextFormField(
               controller: _nameController,
               labelText: 'Category Name',
               prefixIconData: Icons.label_outline,
               textCapitalization: TextCapitalization.words,
               validator: (value) {
-                if (value == null || value.trim().isEmpty)
+                if (value == null || value.trim().isEmpty) {
                   return 'Please enter a category name';
-                // TODO: Add check for name uniqueness
+                }
+                // TODO: Add check for name uniqueness within the same type/parent
                 return null;
               }),
           const SizedBox(height: 20),
+
+          // --- Parent Category Selector (Placeholder UI) ---
+          ListTile(
+            leading: const Icon(Icons.account_tree_outlined),
+            title: const Text("Parent Category"),
+            subtitle: Text(_selectedParentId ?? "None (Top Level)"),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: _showParentPicker, // Calls the placeholder function
+            shape: RoundedRectangleBorder(
+                side: BorderSide(color: theme.dividerColor),
+                borderRadius: BorderRadius.circular(8)),
+            tileColor: theme.colorScheme.surfaceContainerHighest,
+          ),
+          const SizedBox(height: 20),
+
+          // --- Appearance Section ---
           Text("Appearance", style: theme.textTheme.titleMedium),
           const SizedBox(height: 10),
           // Icon Picker Tile
@@ -193,12 +302,11 @@ class _CategoryFormState extends State<CategoryForm> {
             shape: RoundedRectangleBorder(
                 side: BorderSide(color: theme.dividerColor),
                 borderRadius: BorderRadius.circular(12)),
-            tileColor: theme.colorScheme
-                .surfaceContainerHighest, // Use a distinct background
+            tileColor: theme.colorScheme.surfaceContainerHighest,
             leading: Padding(
               padding: const EdgeInsets.only(left: 0.0),
               child: Icon(displayIconData, color: _selectedColor, size: 28),
-            ), // Show selected icon colored
+            ),
             title: const Text('Icon'),
             subtitle: Text(_selectedIconName),
             trailing: Padding(
@@ -231,17 +339,19 @@ class _CategoryFormState extends State<CategoryForm> {
                 decoration: BoxDecoration(
                     color: _selectedColor,
                     shape: BoxShape.circle,
-                    border: Border.all(color: theme.dividerColor)),
+                    border:
+                        Border.all(color: theme.dividerColor.withOpacity(0.5))),
               ),
             ),
             onTap: _showColorPicker,
           ),
           const SizedBox(height: 40),
+
+          // --- Submit Button ---
           ElevatedButton.icon(
-            icon: const Icon(Icons.save),
-            label: Text(widget.initialCategory == null
-                ? 'Add Category'
-                : 'Update Category'),
+            icon: Icon(
+                isEditing ? Icons.save_outlined : Icons.add_circle_outline),
+            label: Text(isEditing ? 'Update Category' : 'Add Category'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
               textStyle: theme.textTheme.titleMedium,
@@ -251,5 +361,13 @@ class _CategoryFormState extends State<CategoryForm> {
         ],
       ),
     );
+  }
+}
+
+// Helper extension (if not already in utils)
+extension StringCapExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
