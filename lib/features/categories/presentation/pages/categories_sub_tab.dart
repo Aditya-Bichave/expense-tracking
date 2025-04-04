@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // Import for themed padding
 
 class CategoriesSubTab extends StatelessWidget {
   const CategoriesSubTab({super.key});
@@ -38,6 +39,8 @@ class CategoriesSubTab extends StatelessWidget {
   Widget _buildCategoryList(
       BuildContext context, List<Category> categories, String title) {
     final theme = Theme.of(context);
+    final modeTheme = context.modeTheme; // Get themed padding
+
     if (categories.isEmpty) {
       return Center(
           child: Padding(
@@ -49,7 +52,10 @@ class CategoriesSubTab extends StatelessWidget {
     categories
         .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      // --- MODIFIED: Apply themed padding OR a default, including bottom padding for FAB ---
+      padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
+          const EdgeInsets.only(
+              top: 8.0, bottom: 90.0), // Increased bottom padding
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final category = categories[index];
@@ -64,6 +70,8 @@ class CategoriesSubTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final modeTheme = context.modeTheme; // Get themed padding
+
     // Use DefaultTabController to match Management Screen or simplify view
     return DefaultTabController(
       length: 2,
@@ -111,9 +119,16 @@ class CategoriesSubTab extends StatelessWidget {
               },
             ),
           ),
-          // Button to navigate to Management Screen
+          // --- MODIFIED: Wrapped button in Padding with adequate bottom spacing ---
+          // Add padding to avoid overlap with the FAB
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            // Use themed horizontal padding if available
+            padding: EdgeInsets.fromLTRB(
+              modeTheme?.pagePadding.left ?? 16.0,
+              16.0, // Top padding
+              modeTheme?.pagePadding.right ?? 16.0,
+              32.0, // INCREASED Bottom padding (adjust if needed based on FAB size/position)
+            ),
             child: ElevatedButton.icon(
               icon: const Icon(Icons.settings_outlined),
               label: const Text("Manage Categories"),
@@ -123,6 +138,7 @@ class CategoriesSubTab extends StatelessWidget {
               ),
             ),
           )
+          // --- END MODIFIED ---
         ],
       ),
     );

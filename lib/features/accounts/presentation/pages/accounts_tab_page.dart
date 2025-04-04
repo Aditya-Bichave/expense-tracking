@@ -17,54 +17,44 @@ import 'package:expense_tracker/main.dart';
 class AccountsTabPage extends StatelessWidget {
   const AccountsTabPage({super.key});
 
-  void _navigateToEditAccount(BuildContext context, AssetAccount account) {
-    log.info("[AccountsTabPage] Navigating to Edit Account ID: ${account.id}");
-    // Use pushNamed for sub-routes within the shell branch if desired,
-    // or context.push for routes potentially outside the shell branch (like Add/Edit)
-    context.pushNamed(RouteNames.editAccount,
-        pathParameters: {
-          RouteNames.paramAccountId: account.id
-        }, // Use correct param name
-        extra: account);
-  }
+  // Removed _navigateToEditAccount as it's not needed directly here anymore
+  // void _navigateToEditAccount(BuildContext context, AssetAccount account) { ... }
 
   void _navigateToAccountDetail(BuildContext context, AssetAccount account) {
     log.info(
         "[AccountsTabPage] Navigating to Account Detail Placeholder for ID: ${account.id}");
-    context.pushNamed(RouteNames.accountDetail,
-        pathParameters: {RouteNames.paramAccountId: account.id});
+    // Navigate to Edit screen when tapping the card for now
+    // Use pushNamed for routes potentially outside the shell branch
+    context.pushNamed(RouteNames.editAccount,
+        pathParameters: {RouteNames.paramAccountId: account.id},
+        extra: account);
+
+    // Original Detail Navigation (Uncomment if detail screen is implemented)
+    // context.pushNamed(RouteNames.accountDetail,
+    //     pathParameters: {RouteNames.paramAccountId: account.id});
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
-    // Ensure AccountListBloc is available - Assuming it's provided globally or by parent navigator
-    // If not, uncomment the BlocProvider line
-    // return BlocProvider<AccountListBloc>(
-    //   create: (_) => sl<AccountListBloc>()..add(const LoadAccounts()), // Load if not already loaded
-    //   child: _buildContent(context, theme, modeTheme),
-    // );
+    // Assuming AccountListBloc is provided globally
     return _buildContent(context, theme, modeTheme);
   }
 
   Widget _buildContent(
       BuildContext context, ThemeData theme, AppModeTheme? modeTheme) {
     return Scaffold(
-      // AppBar might be handled by MainShell or be specific here
-      // appBar: AppBar(title: const Text('Accounts')),
       body: RefreshIndicator(
         onRefresh: () async {
           context
               .read<AccountListBloc>()
               .add(const LoadAccounts(forceReload: true));
-          // Add a small delay or wait for the bloc stream if needed
           await context.read<AccountListBloc>().stream.firstWhere(
               (state) => state is! AccountListLoading || !state.isReloading);
         },
         child: ListView(
-          padding: modeTheme?.pagePadding.copyWith(
-                  top: 8, bottom: 80) ?? // Add bottom padding for potential FAB
+          padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
               const EdgeInsets.only(top: 8.0, bottom: 80.0),
           children: [
             // --- Assets Section ---
@@ -87,8 +77,16 @@ class AccountsTabPage extends StatelessWidget {
                 }
                 if (state is AccountListLoaded ||
                     (state is AccountListLoading && state.isReloading)) {
-                  final accounts = (state as BaseListState<AssetAccount>)
-                      .items; // Use base state items
+                  // Ensure we cast correctly to access items
+                  final accounts = (state is AccountListLoaded)
+                      ? state.items
+                      : (context.read<AccountListBloc>().state
+                              is AccountListLoaded)
+                          ? (context.read<AccountListBloc>().state
+                                  as AccountListLoaded)
+                              .items
+                          : <AssetAccount>[]; // Default to empty list
+
                   final double totalAssets = accounts.fold(
                       0.0, (sum, acc) => sum + acc.currentBalance);
                   final settingsState = context.watch<SettingsBloc>().state;
@@ -123,9 +121,10 @@ class AccountsTabPage extends StatelessWidget {
                               horizontal: 16.0, vertical: 24.0),
                           child: Center(
                             child: Text(
-                              'No asset accounts added yet.',
+                              'No asset accounts added yet.\nTap the "+" button to add one.',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant),
+                              textAlign: TextAlign.center, // Center align text
                             ),
                           ),
                         )
@@ -138,30 +137,17 @@ class AccountsTabPage extends StatelessWidget {
                             final account = accounts[index];
                             return AccountCard(
                               account: account,
-                              onTap: () => _navigateToAccountDetail(context,
-                                  account), // Navigate to Detail Placeholder
-                              // TODO: Add long-press or trailing button for Edit/Delete later
+                              onTap: () => _navigateToAccountDetail(
+                                  context, account), // Navigate on tap
                             );
                           },
                         ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0, vertical: 12.0),
-                        child: OutlinedButton.icon(
-                          icon: const Icon(Icons.add_circle_outline),
-                          label: const Text('Add Asset Account'),
-                          onPressed: () =>
-                              context.pushNamed(RouteNames.addAccount),
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            textStyle: theme.textTheme.labelLarge,
-                            side: BorderSide(
-                                color:
-                                    theme.colorScheme.primary.withOpacity(0.5)),
-                            foregroundColor: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ),
+                      // --- REMOVED Add Asset Account Button ---
+                      // Padding(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      //   child: OutlinedButton.icon(...)
+                      // ),
+                      // --- END REMOVED ---
                     ],
                   );
                 }
@@ -175,7 +161,7 @@ class AccountsTabPage extends StatelessWidget {
 
             const Divider(height: 30),
 
-            // --- Liabilities Section ---
+            // --- Liabilities Section (Remains the same) ---
             const SectionHeader(title: 'Liabilities'),
             Padding(
               padding:
@@ -197,7 +183,6 @@ class AccountsTabPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            // Placeholder Card or Text
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
@@ -218,7 +203,6 @@ class AccountsTabPage extends StatelessWidget {
                 label: Text('Add Liability Account',
                     style: TextStyle(color: theme.disabledColor)),
                 onPressed: null, // Disabled for now
-                // onPressed: () => context.pushNamed(RouteNames.addLiabilityAccount), // Route to placeholder
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   textStyle: theme.textTheme.labelLarge,

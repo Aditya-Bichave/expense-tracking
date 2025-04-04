@@ -1,20 +1,12 @@
 // lib/features/dashboard/presentation/pages/dashboard_page.dart
-// --- Add imports ---
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart'; // Needed for TransactionListItem usage
+import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/placeholder_screen.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/core/widgets/transaction_list_item.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For TransactionListItem icon lookup
-// --- Import unified transaction components ---
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-// --- Remove old imports if present ---
-// import 'package:expense_tracker/features/expenses/domain/entities/expense.dart'; // No longer needed directly here
-// import 'package:expense_tracker/features/income/domain/entities/income.dart'; // No longer needed directly here
-// import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart'; // REMOVE
-// import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart'; // REMOVE
-// --- Existing imports ---
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/financial_garden_widget.dart';
@@ -55,11 +47,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     // Ensure dependent BLoCs are loaded if not already handled globally
     _ensureBlocLoaded<AccountListBloc>(() => const LoadAccounts());
-    // --- Use TransactionListBloc ---
     _ensureBlocLoaded<TransactionListBloc>(() => const LoadTransactions());
-    // --- Remove checks for old Blocs ---
-    // _ensureBlocLoaded<ExpenseListBloc>(() => const LoadExpenses()); // REMOVE
-    // _ensureBlocLoaded<IncomeListBloc>(() => const LoadIncomes()); // REMOVE
   }
 
   // Helper to check and load dependent BLoCs if needed
@@ -75,7 +63,6 @@ class _DashboardPageState extends State<DashboardPage> {
     } catch (e) {
       log.severe(
           "[DashboardPage] Error ensuring ${T.toString()} is loaded: $e");
-      // Optionally show an error message to the user
     }
   }
 
@@ -89,13 +76,9 @@ class _DashboardPageState extends State<DashboardPage> {
       context
           .read<AccountListBloc>()
           .add(const LoadAccounts(forceReload: true));
-      // --- Refresh unified list ---
       context
           .read<TransactionListBloc>()
           .add(const LoadTransactions(forceReload: true));
-      // --- Remove old refreshes ---
-      // context.read<ExpenseListBloc>().add(const LoadExpenses(forceReload: true)); // REMOVE
-      // context.read<IncomeListBloc>().add(const LoadIncomes(forceReload: true)); // REMOVE
     } catch (e) {
       log.warning("Error triggering dependent Blocs refresh during pull: $e");
     }
@@ -113,52 +96,20 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  void _showQuickActions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) => Wrap(
-        children: <Widget>[
-          ListTile(
-            leading: const Icon(Icons.remove_circle_outline), // Expense icon
-            title: const Text('Add Expense'),
-            onTap: () {
-              Navigator.pop(ctx);
-              // Use context.pushNamed for potentially pushing onto root navigator
-              context.pushNamed(RouteNames.addExpense);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.add_circle_outline), // Income icon
-            title: const Text('Add Income'),
-            onTap: () {
-              Navigator.pop(ctx);
-              context.pushNamed(RouteNames.addIncome);
-            },
-          ),
-          // Add Transfer option later if needed
-        ],
-      ),
-    );
-  }
-
   // --- Recent Transactions Section Widget ---
   Widget _buildRecentTransactions(
       BuildContext context, SettingsState settings) {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
-
-    // --- Watch the unified TransactionListBloc ---
     final transactionState = context.watch<TransactionListBloc>().state;
 
     List<TransactionEntity> recentItems = [];
-    bool isLoading = transactionState.status == ListStatus.loading ||
-        transactionState.status == ListStatus.reloading;
+    // Only show loading if initial load is happening for transactions
+    bool isLoading = transactionState.status == ListStatus.loading;
     String? errorMsg = transactionState.errorMessage;
 
-    if (!isLoading &&
-        errorMsg == null &&
-        transactionState.status == ListStatus.success) {
-      // Already sorted by date descending in the BLoC/UseCase by default
+    if (transactionState.status == ListStatus.success ||
+        transactionState.status == ListStatus.reloading) {
       recentItems =
           transactionState.transactions.take(5).toList(); // Show latest 5
     }
@@ -170,13 +121,13 @@ class _DashboardPageState extends State<DashboardPage> {
             title: 'Recent Activity',
             padding: EdgeInsets.fromLTRB(16, 24, 16, 8)),
         if (isLoading &&
-            recentItems.isEmpty) // Show loading only if list is empty
+            recentItems.isEmpty) // Show loading only if list is truly empty
           const Center(
               child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 24.0),
                   child: CircularProgressIndicator(strokeWidth: 2)))
         else if (errorMsg != null &&
-            recentItems.isEmpty) // Show error only if list is empty
+            recentItems.isEmpty) // Show error only if list is truly empty
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
@@ -200,19 +151,15 @@ class _DashboardPageState extends State<DashboardPage> {
             itemCount: recentItems.length,
             itemBuilder: (ctx, index) {
               final item = recentItems[index];
-              // Use the common TransactionListItem widget
               return TransactionListItem(
                 transaction: item,
                 currencySymbol: currencySymbol,
                 onTap: () {
-                  // Navigate to edit page based on type
-                  final routeName = item.type == TransactionType.expense
-                      ? RouteNames.editExpense
-                      : RouteNames.editIncome;
+                  // Use unified edit route
+                  const String routeName = RouteNames.editTransaction;
                   context.pushNamed(routeName,
                       pathParameters: {RouteNames.paramTransactionId: item.id},
-                      extra: item.originalEntity // Pass original for edit form
-                      );
+                      extra: item.originalEntity);
                 },
               );
             },
@@ -224,8 +171,8 @@ class _DashboardPageState extends State<DashboardPage> {
             child: TextButton.icon(
               icon: const Icon(Icons.arrow_forward, size: 18),
               label: const Text('View All Transactions'),
-              // Navigate to the Transactions Tab using GoRouter path
-              onPressed: () => context.go(RouteNames.transactionsList),
+              onPressed: () => context.go(RouteNames
+                  .transactionsList), // Navigate to the Transactions Tab
               style: TextButton.styleFrom(
                 foregroundColor: theme.colorScheme.secondary,
                 textStyle: theme.textTheme.labelLarge,
@@ -239,7 +186,6 @@ class _DashboardPageState extends State<DashboardPage> {
 
   // --- Dashboard Build Logic ---
 
-  // Builder for Elemental/Quantum modes
   Widget _buildElementalQuantumDashboard(BuildContext context,
       FinancialOverview overview, SettingsState settings) {
     final theme = Theme.of(context);
@@ -252,58 +198,30 @@ class _DashboardPageState extends State<DashboardPage> {
       const SizedBox(height: 16),
       IncomeExpenseSummaryCard(overview: overview),
       const SizedBox(height: 16),
-      // Placeholder Widgets (using simple Cards)
-      Card(
-          elevation: 1,
-          child: ListTile(
-              leading:
-                  Icon(Icons.donut_small_outlined, color: theme.disabledColor),
-              title: Text('Budget Overview'),
-              subtitle: Text('Coming Soon!'),
-              enabled: false)),
-      const SizedBox(height: 16),
-      Card(
-          elevation: 1,
-          child: ListTile(
-              leading: Icon(Icons.savings_outlined, color: theme.disabledColor),
-              title: Text('Savings Goals'),
-              subtitle: Text('Coming Soon!'),
-              enabled: false)),
-      const SizedBox(height: 16),
-      Card(
-          elevation: 1,
-          child: ListTile(
-              leading:
-                  Icon(Icons.insights_outlined, color: theme.disabledColor),
-              title: Text('Aspirant Engine Insights'),
-              subtitle: Text('Coming Soon!'),
-              enabled: false)),
-      const SizedBox(height: 16),
       // Conditional asset display
       if (isQuantum && useTables)
         _buildQuantumAssetTable(context, overview.accountBalances, settings)
-      else if (!isQuantum)
+      else if (!isQuantum) // Show Pie Chart for Elemental
         AssetDistributionPieChart(accountBalances: overview.accountBalances)
       else
-        const SizedBox.shrink(),
+        const SizedBox
+            .shrink(), // Don't show table/pie if Quantum but tables disabled
 
-      // Recent Transactions Section (Uses TransactionListBloc)
       _buildRecentTransactions(context, settings),
-
-      const SizedBox(height: 80), // Padding at bottom for FAB
+      const SizedBox(height: 80), // Padding at bottom for global FAB
     ];
 
     return RefreshIndicator(
       onRefresh: _refreshDashboard,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
+        padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 8) ??
+            const EdgeInsets.symmetric(vertical: 8.0),
         children: children,
       ),
     );
   }
 
-  // Specific widget for Quantum Asset Table
   Widget _buildQuantumAssetTable(BuildContext context,
       Map<String, double> accountBalances, SettingsState settings) {
     final theme = Theme.of(context);
@@ -324,7 +242,12 @@ class _DashboardPageState extends State<DashboardPage> {
     }).toList();
 
     if (rows.isEmpty) {
-      return Card(/* ... empty state ... */);
+      return Card(
+          child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                  child: Text("No accounts with balance.",
+                      style: theme.textTheme.bodyMedium))));
     }
     return Card(
       margin: theme.cardTheme.margin,
@@ -345,7 +268,7 @@ class _DashboardPageState extends State<DashboardPage> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                /* ... table properties ... */ columns: const [
+                columns: const [
                   DataColumn(label: Text('Account')),
                   DataColumn(label: Text('Balance'), numeric: true),
                 ],
@@ -358,7 +281,6 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  // Specific Widget Builder for Aether Dashboard Body
   Widget _buildAetherDashboardBody(BuildContext context,
       FinancialOverview overview, SettingsState settings) {
     final theme = Theme.of(context);
@@ -366,9 +288,12 @@ class _DashboardPageState extends State<DashboardPage> {
     final paletteId = settings.paletteIdentifier;
 
     Widget aetherContent;
+    // Example: Choose visual based on palette
     if (paletteId == AppTheme.aetherPalette2) {
+      // Garden
       aetherContent = const FinancialGardenWidget();
     } else {
+      // Default to Starfield/Mystic/Calm
       aetherContent = const PersonalConstellationWidget();
     }
 
@@ -376,22 +301,32 @@ class _DashboardPageState extends State<DashboardPage> {
       onRefresh: _refreshDashboard,
       child: Stack(
         children: [
-          if (modeTheme?.assets.mainBackgroundDark != null)
+          // Background (ensure path is correct in theme config)
+          if (modeTheme?.assets.mainBackgroundDark != null &&
+              modeTheme!.assets.mainBackgroundDark!.isNotEmpty)
             Positioned.fill(
               child: SvgPicture.asset(
-                modeTheme!.assets.mainBackgroundDark!,
+                modeTheme.assets.mainBackgroundDark!,
                 fit: BoxFit.cover,
               ),
             ),
           ListView(
             physics: const AlwaysScrollableScrollPhysics(),
+            padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+                const EdgeInsets.only(top: 8.0, bottom: 80.0), // Themed padding
             children: [
-              Container(height: 300, child: aetherContent), // Placeholder viz
+              // Aether-specific Visualization Area
+              Container(
+                  height: 300, // Adjust height as needed
+                  alignment: Alignment.center,
+                  child: aetherContent),
+              const SizedBox(height: 16), // Spacing after viz
+              // Common Dashboard Cards
               OverallBalanceCard(overview: overview),
+              const SizedBox(height: 16),
               IncomeExpenseSummaryCard(overview: overview),
-              _buildRecentTransactions(
-                  context, settings), // Recent transactions
-              const SizedBox(height: 80),
+              // Recent Transactions
+              _buildRecentTransactions(context, settings),
             ],
           ),
         ],
@@ -407,10 +342,20 @@ class _DashboardPageState extends State<DashboardPage> {
     final uiMode = settingsState.uiMode;
 
     return Scaffold(
-      appBar:
-          uiMode == UIMode.aether ? null : AppBar(/* ... AppBar setup ... */),
+      // Aether might not have a traditional AppBar
+      appBar: uiMode == UIMode.aether
+          ? null
+          : AppBar(title: const Text("Dashboard")),
       body: BlocConsumer<DashboardBloc, DashboardState>(
-        listener: (context, state) {/* ... Error listener ... */},
+        listener: (context, state) {
+          if (state is DashboardError) {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(SnackBar(
+                  content: Text("Dashboard Error: ${state.message}"),
+                  backgroundColor: theme.colorScheme.error));
+          }
+        },
         builder: (context, state) {
           log.fine(
               "[DashboardPage] BlocBuilder building for state: ${state.runtimeType}");
@@ -425,10 +370,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 : (context.read<DashboardBloc>().state as DashboardLoaded?)
                     ?.overview;
             if (overview == null) {
-              bodyContent = const Center(
-                  child: Text("Loading overview data...")); // Should be brief
+              bodyContent =
+                  const Center(child: Text("Loading overview data..."));
             } else {
-              // Switch based on UI Mode
               switch (uiMode) {
                 case UIMode.aether:
                   bodyContent = _buildAetherDashboardBody(
@@ -462,12 +406,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: bodyContent));
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'dashboard_fab',
-        onPressed: () => _showQuickActions(context),
-        tooltip: 'Quick Actions',
-        child: const Icon(Icons.add),
-      ),
+      // FAB is now handled globally by MainShell
     );
   }
 }

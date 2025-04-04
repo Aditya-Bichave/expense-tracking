@@ -1,22 +1,23 @@
-// lib/features/categories/presentation/widgets/category_picker_dialog.dart
-// MODIFIED FILE
+import 'package:expense_tracker/core/constants/route_names.dart'; // For navigation
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import type
 import 'package:expense_tracker/features/categories/domain/usecases/get_expense_categories.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_income_categories.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For icon lookup
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // Import GoRouter for push
 
-// --- MOVED Enum Definition Here ---
+// Enum Definition
 enum CategoryTypeFilter { expense, income }
-// --- END MOVED Enum ---
 
 // Function to show the category picker modal bottom sheet
 Future<Category?> showCategoryPicker(
   BuildContext context,
-  CategoryTypeFilter categoryType, // Uses the enum defined above
+  CategoryTypeFilter categoryType,
 ) async {
   return await showModalBottomSheet<Category?>(
     context: context,
@@ -25,8 +26,7 @@ Future<Category?> showCategoryPicker(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (builderContext) {
-      return CategoryPickerDialogContent(
-          categoryType: categoryType); // Pass type
+      return CategoryPickerDialogContent(categoryType: categoryType);
     },
   );
 }
@@ -43,7 +43,6 @@ class CategoryPickerDialogContent extends StatefulWidget {
 
 class _CategoryPickerDialogContentState
     extends State<CategoryPickerDialogContent> {
-  // ... (State logic remains the same) ...
   final GetExpenseCategoriesUseCase _getExpenseCategoriesUseCase =
       sl<GetExpenseCategoriesUseCase>();
   final GetIncomeCategoriesUseCase _getIncomeCategoriesUseCase =
@@ -90,8 +89,12 @@ class _CategoryPickerDialogContentState
     }, (categories) {
       log.info(
           "[CategoryPicker] Loaded ${categories.length} ${widget.categoryType.name} categories.");
-      categories.removeWhere((cat) => cat.id == Category.uncategorized.id);
-      _allCategories = categories;
+      // Exclude 'Uncategorized' from the picker list
+      _allCategories = categories
+          .where((cat) => cat.id != Category.uncategorized.id)
+          .toList();
+      _allCategories
+          .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       _filterCategories();
       setState(() {
         _isLoading = false;
@@ -108,17 +111,39 @@ class _CategoryPickerDialogContentState
     });
   }
 
+  // --- Navigate to Add Category ---
+  void _navigateToAddCategory() {
+    Navigator.pop(context); // Close the picker first
+
+    // Determine the type to pass to the Add Category screen
+    final categoryType = widget.categoryType == CategoryTypeFilter.expense
+        ? CategoryType.expense
+        : CategoryType.income;
+
+    // Navigate using the defined route structure
+    // This assumes AddEditCategoryScreen can handle the initialType parameter
+    context.push(
+      '${RouteNames.budgetsAndCats}/${RouteNames.manageCategories}/${RouteNames.addCategory}',
+      // Optionally pass the type as extra data if AddEditCategoryScreen doesn't take constructor params for this
+      // extra: {'initialType': categoryType} // Example if using extra
+    );
+    log.info(
+        "[CategoryPicker] Navigating to Add Category screen for type: ${categoryType.name}.");
+  }
+
   @override
   Widget build(BuildContext context) {
-    // ... (Build logic remains the same) ...
     final theme = Theme.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
-    final sheetHeight = screenHeight * 0.65;
+    final sheetHeight = screenHeight * 0.7; // Adjusted height
+
     return Container(
       height: sheetHeight,
-      padding: const EdgeInsets.all(16.0),
+      padding:
+          const EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0, bottom: 8.0),
       child: Column(
         children: [
+          // Drag Handle
           Container(
             width: 40,
             height: 4,
@@ -127,10 +152,12 @@ class _CategoryPickerDialogContentState
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(10)),
           ),
+          // Title
           Text(
               "Select ${widget.categoryType == CategoryTypeFilter.expense ? 'Expense' : 'Income'} Category",
               style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
+          // Search Field
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -145,9 +172,11 @@ class _CategoryPickerDialogContentState
                       icon: const Icon(Icons.clear),
                       onPressed: () => _searchController.clear())
                   : null,
+              isDense: true,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
+          // Category List
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -164,24 +193,42 @@ class _CategoryPickerDialogContentState
                             itemCount: _filteredCategories.length,
                             itemBuilder: (context, index) {
                               final category = _filteredCategories[index];
-                              final iconWidget = Icon(Icons.category,
-                                  color: category.displayColor, size: 20);
+                              final iconData =
+                                  availableIcons[category.iconName] ??
+                                      Icons.category_outlined;
                               return ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor:
                                       category.displayColor.withOpacity(0.15),
-                                  child: iconWidget,
+                                  child: Icon(iconData,
+                                      color: category.displayColor, size: 20),
                                 ),
                                 title: Text(category.name),
                                 onTap: () {
                                   log.info(
                                       "[CategoryPicker] Selected: ${category.name}");
-                                  Navigator.of(context).pop(category);
+                                  Navigator.of(context)
+                                      .pop(category); // Return selected
                                 },
                               );
                             },
                           ),
           ),
+          const Divider(height: 1),
+          // --- ADDED: Add New Category Button ---
+          ListTile(
+            leading: Icon(Icons.add_circle_outline,
+                color: theme.colorScheme.primary),
+            title: Text("Add New Category",
+                style: TextStyle(color: theme.colorScheme.primary)),
+            onTap: _navigateToAddCategory, // Call the navigation function
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 4.0), // Adjust padding
+          ),
+          SizedBox(
+              height: MediaQuery.of(context).padding.bottom /
+                  2), // SafeArea padding
+          // --- END ADDED ---
         ],
       ),
     );

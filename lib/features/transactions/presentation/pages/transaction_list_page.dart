@@ -22,8 +22,9 @@ import 'package:flutter/material.dart'; // Hide the conflicting Category
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:table_calendar/table_calendar.dart'; // Import table_calendar (should work now)
+import 'package:table_calendar/table_calendar.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart'; // Needed for orElse fallback
 
 class TransactionListPage extends StatefulWidget {
   const TransactionListPage({super.key});
@@ -45,6 +46,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   List<TransactionEntity> _currentTransactionsForCalendar = [];
   StreamSubscription? _blocSubscription;
 
+  // --- Keep initState, dispose, _listenToBlocChanges, _setupInitialCalendarData as they are ---
   @override
   void initState() {
     super.initState();
@@ -52,7 +54,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _selectedDay =
         DateTime(_focusedDay.year, _focusedDay.month, _focusedDay.day);
 
-    // Initial setup and listener
     _setupInitialCalendarData();
     _listenToBlocChanges();
   }
@@ -67,17 +68,15 @@ class _TransactionListPageState extends State<TransactionListPage> {
   }
 
   void _listenToBlocChanges() {
-    // Listen to subsequent state changes
     _blocSubscription =
         context.read<TransactionListBloc>().stream.listen((state) {
       if (state.status == ListStatus.success && mounted) {
-        // Check if the actual list data has changed to avoid unnecessary rebuilds
         if (!listEquals(_currentTransactionsForCalendar, state.transactions)) {
           log.fine(
               "[TxnListPage] BLoC state updated, refreshing calendar data cache.");
           setState(() {
             _currentTransactionsForCalendar = state.transactions;
-            _updateSelectedDayTransactions(); // Update list for currently selected day
+            _updateSelectedDayTransactions();
           });
         }
       } else if (state.status != ListStatus.success &&
@@ -85,7 +84,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
           _currentTransactionsForCalendar.isNotEmpty) {
         log.fine(
             "[TxnListPage] BLoC state not success, clearing calendar data cache.");
-        // Clear local cache if BLoC state is no longer success (e.g., error or loading)
         setState(() {
           _currentTransactionsForCalendar = [];
           _selectedDayTransactions = [];
@@ -119,19 +117,57 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   void _clearSearch() {
     _searchController.clear();
+    context
+        .read<TransactionListBloc>()
+        .add(const SearchChanged(searchTerm: null));
   }
 
+  // --- UPDATED NAVIGATION to use new route name ---
   void _navigateToDetailOrEdit(
       BuildContext context, TransactionEntity transaction) {
     log.info(
-        "[TxnListPage] Navigating to detail/edit for ${transaction.type.name} ID: ${transaction.id}");
-    final routeName = transaction.type == TransactionType.expense
-        ? RouteNames.editExpense
-        : RouteNames.editIncome;
-    context.pushNamed(routeName,
-        pathParameters: {RouteNames.paramTransactionId: transaction.id},
-        extra: transaction.originalEntity);
+        "[TxnListPage] _navigateToDetailOrEdit called for ${transaction.type.name} ID: ${transaction.id}");
+
+    // Use the unified edit route name
+    const String routeName = RouteNames.editTransaction;
+
+    final Map<String, String> params = {
+      RouteNames.paramTransactionId: transaction.id
+    };
+
+    final dynamic extraData = transaction.originalEntity;
+
+    if (extraData == null) {
+      log.severe(
+          "[TxnListPage] CRITICAL: originalEntity is null for transaction ID ${transaction.id}. Cannot navigate.");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Error preparing navigation data."),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    log.info("[TxnListPage] Attempting navigation via pushNamed:");
+    log.info("  Route Name: $routeName");
+    log.info("  Path Params: $params");
+    log.info("  Extra Data Type: ${extraData?.runtimeType}");
+
+    try {
+      context.pushNamed(
+        routeName,
+        pathParameters: params,
+        extra: extraData,
+      );
+      log.info("[TxnListPage] pushNamed executed.");
+    } catch (e, s) {
+      log.severe("[TxnListPage] Error executing pushNamed: $e\n$s");
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Error navigating to edit screen: $e"),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
+  // --- END UPDATED ---
 
   void _handleChangeCategoryRequest(
       BuildContext context, TransactionEntity transaction) async {
@@ -171,8 +207,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         false;
   }
 
-  // --- Dialog/Sheet Show Methods ---
-
+  // --- Keep Dialog/Sheet Show Methods as they are ---
   void _showFilterDialog(
       BuildContext context, TransactionListState currentState) async {
     log.info("[TxnListPage] Showing filter dialog.");
@@ -195,8 +230,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
       context: context,
       builder: (dialogContext) {
         return BlocProvider.value(
-          value: BlocProvider.of<AccountListBloc>(
-              context), // Provide AccountListBloc
+          value: BlocProvider.of<AccountListBloc>(context),
           child: TransactionFilterDialog(
             availableCategories: categories,
             initialStartDate: currentState.startDate,
@@ -241,8 +275,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         });
   }
 
-  // --- Calendar Specific Logic ---
-
+  // --- Keep Calendar Specific Logic as it is ---
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     final normalizedSelectedDay =
         DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
@@ -251,7 +284,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
       setState(() {
         _selectedDay = normalizedSelectedDay;
         _focusedDay = focusedDay;
-        _updateSelectedDayTransactions(); // Update list shown below calendar
+        _updateSelectedDayTransactions();
       });
     }
   }
@@ -268,12 +301,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
   void _onPageChanged(DateTime focusedDay) {
     log.fine("[TxnListPage] Calendar page changed, focused day: $focusedDay");
     setState(() {
-      // Update focused day and trigger rebuild for potential marker updates
       _focusedDay = focusedDay;
     });
   }
 
-  // Filters the locally cached full transaction list
   List<TransactionEntity> _getEventsForDay(DateTime day) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
     return _currentTransactionsForCalendar.where((txn) {
@@ -285,9 +316,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   void _updateSelectedDayTransactions() {
     if (_selectedDay != null && mounted) {
-      // Check mounted
       setState(() {
-        // Update state to reflect changes
         _selectedDayTransactions = _getEventsForDay(_selectedDay!);
       });
     } else if (mounted) {
@@ -299,8 +328,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         "[TxnListPage] Updated selected day transactions for $_selectedDay. Count: ${_selectedDayTransactions.length}");
   }
 
-  // --- Build Methods ---
-
+  // --- Keep Build Methods as they are (mostly) ---
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -312,8 +340,17 @@ class _TransactionListPageState extends State<TransactionListPage> {
           _buildHeaderControls(context, theme),
           const Divider(height: 1, thickness: 1),
           Expanded(
-            child: BlocBuilder<TransactionListBloc, TransactionListState>(
-              // Use BlocBuilder for content switching
+            child: BlocConsumer<TransactionListBloc, TransactionListState>(
+              listener: (context, state) {
+                if (state.status == ListStatus.error &&
+                    state.errorMessage != null) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(SnackBar(
+                        content: Text("Error: ${state.errorMessage!}"),
+                        backgroundColor: theme.colorScheme.error));
+                }
+              },
               builder: (context, state) {
                 return RefreshIndicator(
                   onRefresh: () async {
@@ -331,7 +368,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
                         FadeTransition(opacity: animation, child: child),
                     child: _showCalendarView
                         ? KeyedSubtree(
-                            // Use KeyedSubtree to ensure state is kept/reset correctly
                             key: const ValueKey('calendar_view'),
                             child: _buildCalendarView(context, state, settings),
                           )
@@ -396,25 +432,50 @@ class _TransactionListPageState extends State<TransactionListPage> {
     );
   }
 
-  // Helper: Build Header Controls
   Widget _buildHeaderControls(BuildContext context, ThemeData theme) {
+    // ... keep this implementation as is ...
     return BlocBuilder<TransactionListBloc, TransactionListState>(
         builder: (context, state) {
       final isInBatchMode = state.isInBatchEditMode;
+      final bool hasSearchTerm =
+          state.searchTerm != null && state.searchTerm!.isNotEmpty;
       return Padding(
         padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 4.0),
         child: Column(
           children: [
             TextField(
               controller: _searchController,
-              decoration: InputDecoration(/* ... Search Decoration ... */),
+              decoration: InputDecoration(
+                hintText: "Search title, category, amount...",
+                prefixIcon: const Icon(Icons.search, size: 20),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: theme.colorScheme.primary)),
+                filled: true,
+                fillColor: theme.colorScheme.surfaceContainerHighest,
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                isDense: true,
+                suffixIcon: hasSearchTerm
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        tooltip: "Clear Search",
+                        onPressed: _clearSearch)
+                    : null,
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    /* Filter Button */ TextButton.icon(
+                    TextButton.icon(
                       icon: Icon(Icons.filter_list_rounded,
                           size: 18,
                           color: state.filtersApplied
@@ -429,7 +490,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                       style: TextButton.styleFrom(
                           visualDensity: VisualDensity.compact),
                     ),
-                    /* Sort Button */ TextButton.icon(
+                    TextButton.icon(
                       icon: const Icon(Icons.sort_rounded, size: 18),
                       label: Text("Sort", style: theme.textTheme.labelMedium),
                       onPressed: () => _showSortDialog(context, state),
@@ -440,7 +501,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 ),
                 Row(
                   children: [
-                    /* Calendar Toggle */ IconButton(
+                    IconButton(
                       icon: Icon(
                           _showCalendarView
                               ? Icons.view_list_rounded
@@ -451,7 +512,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                       onPressed: () => setState(
                           () => _showCalendarView = !_showCalendarView),
                     ),
-                    /* Batch Edit Toggle */ IconButton(
+                    IconButton(
                       icon: Icon(
                           isInBatchMode
                               ? Icons.cancel_outlined
@@ -475,10 +536,25 @@ class _TransactionListPageState extends State<TransactionListPage> {
     });
   }
 
-  // Helper: Build Calendar View
   Widget _buildCalendarView(BuildContext context, TransactionListState state,
       SettingsState settings) {
+    // ... keep this implementation as is ...
     final theme = Theme.of(context);
+
+    if (state.status == ListStatus.loading &&
+        _currentTransactionsForCalendar.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.status == ListStatus.error &&
+        _currentTransactionsForCalendar.isEmpty) {
+      return Center(
+          child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                  "Error loading data for calendar: ${state.errorMessage}",
+                  style: TextStyle(color: theme.colorScheme.error),
+                  textAlign: TextAlign.center)));
+    }
 
     return Column(
       children: [
@@ -493,26 +569,21 @@ class _TransactionListPageState extends State<TransactionListPage> {
             CalendarFormat.twoWeeks: '2 Weeks',
             CalendarFormat.week: 'Week',
           },
-          // Use the function reference directly
           eventLoader: (day) => _getEventsForDay(day),
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.3),
-              shape: BoxShape.circle,
-            ),
+                color: theme.colorScheme.primary.withOpacity(0.3),
+                shape: BoxShape.circle),
             selectedDecoration: BoxDecoration(
-              color: theme.colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
+                color: theme.colorScheme.primary, shape: BoxShape.circle),
             markerDecoration: BoxDecoration(
-              color: theme.colorScheme.secondary,
-              shape: BoxShape.circle,
-            ),
-            outsideDaysVisible: false, markersMaxCount: 1, markerSize: 5.0,
+                color: theme.colorScheme.secondary, shape: BoxShape.circle),
+            outsideDaysVisible: false,
+            markersMaxCount: 1,
+            markerSize: 5.0,
             markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
             weekendTextStyle:
                 TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
-            // Highlight selected day text color
             selectedTextStyle: TextStyle(color: theme.colorScheme.onPrimary),
             todayTextStyle: TextStyle(color: theme.colorScheme.primary),
           ),
@@ -545,16 +616,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: theme.colorScheme.secondary,
-                  ),
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.secondary),
                 ),
               );
             },
           ),
         ),
         const Divider(height: 1, thickness: 1),
-        // Selected Day's Transactions List
         Expanded(
           child: _buildSelectedDayTransactionList(context, settings),
         ),
@@ -562,9 +631,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
     );
   }
 
-  // Helper: Build Selected Day's Transaction List
   Widget _buildSelectedDayTransactionList(
       BuildContext context, SettingsState settings) {
+    // ... keep this implementation as is ...
     final theme = Theme.of(context);
     if (_selectedDayTransactions.isEmpty) {
       return Center(
@@ -576,10 +645,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
         ),
       );
     }
-    // Animate the appearance of the list itself when day changes
     return ListView.builder(
-      key: ValueKey(
-          _selectedDay), // Change key when day changes to trigger animation
+      key: ValueKey(_selectedDay),
       padding: const EdgeInsets.only(top: 8.0, bottom: 80.0),
       itemCount: _selectedDayTransactions.length,
       itemBuilder: (ctx, index) {
@@ -593,13 +660,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
             .fadeIn(delay: (50 * index).ms, duration: 300.ms)
             .slideX(begin: 0.2, curve: Curves.easeOutCubic);
       },
-    ).animate().fadeIn(duration: 200.ms); // Fade in the whole list
+    ).animate().fadeIn(duration: 200.ms);
   }
 
-  // Helper: Build Transaction List View
   Widget _buildTransactionList(BuildContext context, TransactionListState state,
       SettingsState settings) {
+    // ... keep this implementation as is (using the version WITHOUT Dismissible) ...
     final theme = Theme.of(context);
+
     if (state.status == ListStatus.loading && state.transactions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -607,92 +675,109 @@ class _TransactionListPageState extends State<TransactionListPage> {
       return Center(
           child: Padding(
               padding: const EdgeInsets.all(20.0),
-              child: Text("Error: ${state.errorMessage}",
+              child: Text(
+                  "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
                   style: TextStyle(color: theme.colorScheme.error),
                   textAlign: TextAlign.center)));
     }
-    if (state.transactions.isEmpty && state.status != ListStatus.loading) {
+    if (state.transactions.isEmpty &&
+        state.status != ListStatus.loading &&
+        state.status != ListStatus.reloading) {
       return Center(
           child: Padding(
               padding: const EdgeInsets.all(30.0),
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [/* ... Empty State UI ... */])));
+                  children: [
+                    Icon(Icons.receipt_long_outlined,
+                        size: 60,
+                        color: theme.colorScheme.secondary.withOpacity(0.7)),
+                    const SizedBox(height: 16),
+                    Text(
+                        state.filtersApplied
+                            ? "No transactions match filters"
+                            : "No transactions recorded yet",
+                        style: theme.textTheme.headlineSmall),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.filtersApplied
+                          ? "Try adjusting or clearing the filters."
+                          : "Tap the '+' button to add your first expense or income.",
+                      style: theme.textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ])));
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 0, bottom: 80),
+      padding:
+          const EdgeInsets.only(top: 0, bottom: 80), // Ensure padding for FAB
       itemCount: state.transactions.length,
       itemBuilder: (ctx, index) {
         final transaction = state.transactions[index];
         final isSelected =
             state.selectedTransactionIds.contains(transaction.id);
 
-        return Dismissible(
+        return Container(
+          // Use Container for background color
           key: ValueKey(
-              "${transaction.id}_list_item"), // Unique key for dismissible
-          direction: state.isInBatchEditMode
-              ? DismissDirection.none
-              : DismissDirection.endToStart,
-          confirmDismiss: (_) => _confirmDeletion(context, transaction),
-          onDismissed: (_) => context
-              .read<TransactionListBloc>()
-              .add(DeleteTransaction(transaction)),
-          background: Container(/* ... Delete background ... */),
-          child: Material(
-            color: isSelected
-                ? theme.colorScheme.primaryContainer.withOpacity(0.2)
-                : Colors.transparent,
-            child: InkWell(
-              onLongPress: !state.isInBatchEditMode
-                  ? () {
-                      context
-                          .read<TransactionListBloc>()
-                          .add(const ToggleBatchEdit());
-                      context
-                          .read<TransactionListBloc>()
-                          .add(SelectTransaction(transaction.id));
-                    }
-                  : () {
-                      context
-                          .read<TransactionListBloc>()
-                          .add(SelectTransaction(transaction.id));
-                    },
-              onTap: state.isInBatchEditMode
-                  ? () => context
-                      .read<TransactionListBloc>()
-                      .add(SelectTransaction(transaction.id))
-                  : () => _navigateToDetailOrEdit(context, transaction),
-              child: TransactionListItem(
-                transaction: transaction,
-                currencySymbol: settings.currencySymbol,
-                onTap: () {}, // Tap handled by InkWell
-              ),
-            ),
+              "${transaction.id}_list_item_${isSelected}"), // Unique key for item
+          color: isSelected
+              ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+              : Colors.transparent,
+          child: TransactionListItem(
+            transaction: transaction,
+            currencySymbol: settings.currencySymbol,
+            onTap: () {
+              // Assign tap logic directly here
+              if (state.isInBatchEditMode) {
+                log.fine(
+                    "[TxnListPage] Item tapped in batch mode. Toggling selection for ${transaction.id}.");
+                context
+                    .read<TransactionListBloc>()
+                    .add(SelectTransaction(transaction.id));
+              } else {
+                log.fine(
+                    "[TxnListPage] Item tapped in normal mode. Navigating to edit for ${transaction.id}.");
+                _navigateToDetailOrEdit(
+                    context, transaction); // Navigate on normal tap
+              }
+            },
           ),
         ).animate().fadeIn(delay: (20 * index).ms).slideY(begin: 0.1);
       },
     );
   }
 
-  // Helper to determine dominant type in selection
   TransactionType? _getDominantTransactionType(TransactionListState state) {
+    // ... keep this implementation as is ...
     if (state.selectedTransactionIds.isEmpty) return null;
     TransactionType? type;
     for (final id in state.selectedTransactionIds) {
-      final txn = state.transactions.firstWhere((t) => t.id == id,
-          orElse: () => throw Exception("Selected ID not found in state"));
+      final txn = state.transactions.firstWhere((t) => t.id == id, orElse: () {
+        log.severe(
+            "[TxnListPage] CRITICAL: Selected ID $id not found in state during dominant type check!");
+        return TransactionEntity.fromExpense(Expense(
+          id: 'error_$id', // Make ID unique for debugging
+          title: 'Error: Not Found',
+          amount: 0,
+          date: DateTime.now(),
+          accountId: 'error_account',
+        ));
+      });
+      if (txn.accountId == 'error_account') continue;
+
       if (type == null) {
         type = txn.type;
       } else if (type != txn.type) {
-        return null; /* Mixed types */
+        return null;
       }
     }
     return type;
   }
 }
 
-// Helper extension
+// --- Keep StringCapExtension as is ---
 extension StringCapExtension on String {
   String capitalize() {
     if (isEmpty) return this;

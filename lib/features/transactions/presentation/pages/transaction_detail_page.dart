@@ -1,6 +1,9 @@
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // To potentially get account name
+import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For icon lookup
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -14,27 +17,60 @@ class TransactionDetailPage extends StatelessWidget {
 
   const TransactionDetailPage({super.key, required this.transaction});
 
-  // TODO: Implement delete confirmation and action
+  // Handle Delete Action
   void _handleDelete(BuildContext context) async {
-    log.warning("Delete from Detail Page - Not fully implemented");
-    // final confirmed = await AppDialogs.showConfirmation(...);
-    // if (confirmed == true && context.mounted) {
-    //    context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
-    //    context.pop(); // Go back after delete
-    // }
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text("Delete action TBD")));
+    log.info("[TxnDetailPage] Delete requested for TXN ID: ${transaction.id}");
+    final confirmed = await AppDialogs.showConfirmation(
+      context,
+      title: "Confirm Deletion",
+      content:
+          'Are you sure you want to permanently delete this ${transaction.type.name}:\n"${transaction.title}"?',
+      confirmText: "Delete",
+      confirmColor: Theme.of(context).colorScheme.error,
+    );
+    if (confirmed == true && context.mounted) {
+      log.info("[TxnDetailPage] Delete confirmed.");
+      // Dispatch delete event to the list BLoC
+      context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
+      // Pop back to the list screen after deletion is requested
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(RouteNames.transactionsList); // Fallback navigation
+      }
+    } else {
+      log.info("[TxnDetailPage] Delete cancelled.");
+    }
   }
 
-  // TODO: Implement navigation to Edit page
+  // Navigate to the unified Edit page
   void _navigateToEdit(BuildContext context) {
-    log.info("Navigate to Edit from Detail Page");
-    final routeName = transaction.type == TransactionType.expense
-        ? RouteNames.editExpense
-        : RouteNames.editIncome;
-    context.pushNamed(routeName,
-        pathParameters: {RouteNames.paramTransactionId: transaction.id},
-        extra: transaction.originalEntity);
+    log.info(
+        "[TxnDetailPage] Navigate to Edit requested for TXN ID: ${transaction.id}");
+    // Use the unified edit route name
+    const String routeName = RouteNames.editTransaction;
+    final Map<String, String> params = {
+      RouteNames.paramTransactionId: transaction.id
+    };
+    final dynamic extraData =
+        transaction.originalEntity; // Pass original Expense/Income
+
+    if (extraData == null) {
+      log.severe(
+          "[TxnDetailPage] CRITICAL: originalEntity is null for transaction ID ${transaction.id}. Cannot navigate.");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Error preparing edit data."),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    log.info("[TxnDetailPage] Navigating via pushNamed:");
+    log.info("  Route Name: $routeName");
+    log.info("  Path Params: $params");
+    log.info("  Extra Data Type: ${extraData?.runtimeType}");
+
+    context.pushNamed(routeName, pathParameters: params, extra: extraData);
   }
 
   @override
@@ -45,7 +81,20 @@ class TransactionDetailPage extends StatelessWidget {
     final isExpense = transaction.type == TransactionType.expense;
     final amountColor = isExpense
         ? theme.colorScheme.error
-        : theme.colorScheme.tertiary; // Or a success green
+        : Colors.green.shade700; // Use consistent green for income amount
+
+    // Attempt to get account name
+    final accountState = context.watch<AccountListBloc>().state;
+    String accountName = 'Loading...'; // Default
+    if (accountState is AccountListLoaded) {
+      try {
+        accountName = accountState.items
+            .firstWhere((acc) => acc.id == transaction.accountId)
+            .name;
+      } catch (_) {
+        accountName = 'Unknown/Deleted Account';
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -99,10 +148,13 @@ class TransactionDetailPage extends StatelessWidget {
           if (transaction.category != null)
             _buildDetailRow(
               context,
-              icon: Icons.category_outlined, // TODO: Use actual category icon
+              icon: availableIcons[transaction.category!.iconName] ??
+                  Icons.category_outlined, // Use actual icon
               label: 'Category',
               value: transaction.category!.name,
               valueColor: transaction.category!.displayColor,
+              iconColor:
+                  transaction.category!.displayColor, // Color the icon too
             )
           else
             _buildDetailRow(
@@ -116,8 +168,7 @@ class TransactionDetailPage extends StatelessWidget {
             context,
             icon: Icons.account_balance_wallet_outlined,
             label: 'Account',
-            // TODO: Fetch account name based on transaction.accountId
-            value: 'Account Name (ID: ${transaction.accountId})',
+            value: accountName, // Show fetched name
           ),
           if (transaction.notes != null && transaction.notes!.isNotEmpty)
             _buildDetailRow(
@@ -127,9 +178,6 @@ class TransactionDetailPage extends StatelessWidget {
               value: transaction.notes!,
               isMultiline: true,
             ),
-
-          // TODO: Add Map View if location data is added later
-          // TODO: Add Receipt attachment display if implemented later
         ],
       ),
     );
@@ -141,6 +189,7 @@ class TransactionDetailPage extends StatelessWidget {
       required String label,
       required String value,
       Color? valueColor,
+      Color? iconColor, // Optional color for the icon
       bool isMultiline = false}) {
     final theme = Theme.of(context);
     return Padding(
@@ -149,7 +198,10 @@ class TransactionDetailPage extends StatelessWidget {
         crossAxisAlignment:
             isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 20, color: theme.colorScheme.secondary),
+          Icon(icon,
+              size: 20,
+              color: iconColor ??
+                  theme.colorScheme.secondary), // Use iconColor or default
           const SizedBox(width: 16),
           Text('$label:', style: theme.textTheme.bodyLarge),
           const SizedBox(width: 8),

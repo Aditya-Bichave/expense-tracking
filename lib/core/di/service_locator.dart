@@ -79,29 +79,29 @@ import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial
 import 'package:expense_tracker/features/settings/domain/usecases/backup_data_usecase.dart';
 import 'package:expense_tracker/features/settings/domain/usecases/restore_data_usecase.dart';
 import 'package:expense_tracker/features/settings/domain/usecases/clear_all_data_usecase.dart';
-// Transactions (New)
+// Transactions (Use Cases)
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 
 // --- Blocs ---
-// Add/Edit Blocs
-import 'package:expense_tracker/features/expenses/presentation/bloc/add_edit_expense/add_edit_expense_bloc.dart';
+// Add/Edit Account Bloc
 import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_account/add_edit_account_bloc.dart';
-import 'package:expense_tracker/features/income/presentation/bloc/add_edit_income/add_edit_income_bloc.dart';
+// Add/Edit Category Bloc
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 // List/Management Blocs
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-// Transactions (New)
+// Transactions (List Bloc)
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-// REMOVED old list Blocs: ExpenseListBloc, IncomeListBloc
+// --- Import New Transaction Bloc ---
+import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 
 // Import Entities needed for factory parameters
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
-// Note: Category entity already imported via repositories/usecases
+// No longer needed:
+// import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+// import 'package:expense_tracker/features/income/domain/entities/income.dart';
 
 final sl = GetIt.instance;
 
@@ -139,12 +139,13 @@ Future<void> initLocator({
 
   // *** Feature Registrations (Order Matters for Dependencies) ***
   _registerSettingsFeature();
-  _registerIncomeFeature(); // Needed by Repos/UseCases used in later features
-  _registerExpensesFeature(); // Needed by Repos/UseCases used in later features
-  _registerCategoryFeature(); // Needs Income/Expense repos for delete use case
-  _registerAccountsFeature(); // Needs Income/Expense repos for balance calculation
-  _registerTransactionsFeature(); // Needs Income/Expense repos and Category use cases
-  _registerAnalyticsAndDashboardFeatures(); // Needs Txn Repos
+  _registerIncomeFeature();
+  _registerExpensesFeature();
+  _registerCategoryFeature();
+  _registerAccountsFeature();
+  _registerTransactionsFeature(); // Existing List Bloc
+  _registerAddEditTransactionFeature(); // NEW: Unified Add/Edit Bloc
+  _registerAnalyticsAndDashboardFeatures();
 
   log.info("Service Locator initialization complete.");
 }
@@ -167,7 +168,6 @@ void _registerSettingsFeature() {
   sl.registerLazySingleton(() => ClearAllDataUseCase(sl()));
   // --- Presentation Layer ---
   sl.registerFactory(() => SettingsBloc(
-      // Use Factory for Blocs that might be recreated
       settingsRepository: sl(),
       backupDataUseCase: sl(),
       restoreDataUseCase: sl(),
@@ -205,8 +205,7 @@ void _registerCategoryFeature() {
   sl.registerLazySingleton(
       () => AddCustomCategoryUseCase(sl(), sl())); // Inject Uuid
   sl.registerLazySingleton(() => UpdateCustomCategoryUseCase(sl()));
-  sl.registerLazySingleton(() => DeleteCustomCategoryUseCase(
-      sl(), sl(), sl())); // Needs Category, Expense, Income repos
+  sl.registerLazySingleton(() => DeleteCustomCategoryUseCase(sl(), sl(), sl()));
   sl.registerLazySingleton(
       () => SaveUserCategorizationHistoryUseCase(sl(), sl())); // Inject Uuid
   sl.registerLazySingleton(() => CategorizeTransactionUseCase(
@@ -217,7 +216,6 @@ void _registerCategoryFeature() {
       expenseRepository: sl(), incomeRepository: sl()));
   // --- Presentation Layer ---
   sl.registerFactory(() => CategoryManagementBloc(
-      // Use Factory
       getCategoriesUseCase: sl(),
       addCustomCategoryUseCase: sl(),
       updateCustomCategoryUseCase: sl(),
@@ -230,12 +228,11 @@ void _registerAccountsFeature() {
   // --- Data Layer ---
   sl.registerLazySingleton<AssetAccountLocalDataSource>(
       () => HiveAssetAccountLocalDataSource(sl<Box<AssetAccountModel>>()));
-  sl.registerLazySingleton<AssetAccountRepository>(
-      () => AssetAccountRepositoryImpl(
+  sl.registerLazySingleton<AssetAccountRepository>(() =>
+      AssetAccountRepositoryImpl(
           localDataSource: sl(),
-          incomeRepository: sl<IncomeRepository>(), // Depend on interface
-          expenseRepository: sl<ExpenseRepository>() // Depend on interface
-          ));
+          incomeRepository: sl<IncomeRepository>(),
+          expenseRepository: sl<ExpenseRepository>()));
   // --- Domain Layer ---
   sl.registerLazySingleton(() => AddAssetAccountUseCase(sl()));
   sl.registerLazySingleton(() => GetAssetAccountsUseCase(sl()));
@@ -248,7 +245,6 @@ void _registerAccountsFeature() {
           updateAssetAccountUseCase: sl(),
           initialAccount: initialAccount));
   sl.registerFactory(() => AccountListBloc(
-      // Use Factory
       getAssetAccountsUseCase: sl(),
       deleteAssetAccountUseCase: sl(),
       dataChangeStream: sl<Stream<DataChangedEvent>>()));
@@ -268,14 +264,7 @@ void _registerIncomeFeature() {
   sl.registerLazySingleton(() => UpdateIncomeUseCase(sl()));
   sl.registerLazySingleton(() => DeleteIncomeUseCase(sl()));
   // --- Presentation Layer ---
-  sl.registerFactoryParam<AddEditIncomeBloc, Income?, void>(
-      (initialIncome, _) => AddEditIncomeBloc(
-          addIncomeUseCase: sl(),
-          updateIncomeUseCase: sl(),
-          categorizeTransactionUseCase: sl(),
-          incomeRepository: sl(),
-          initialIncome: initialIncome));
-  // REMOVED IncomeListBloc registration
+  // Removed AddEditIncomeBloc registration
   log.info("Income Feature dependencies registered.");
 }
 
@@ -292,40 +281,46 @@ void _registerExpensesFeature() {
   sl.registerLazySingleton(() => UpdateExpenseUseCase(sl()));
   sl.registerLazySingleton(() => DeleteExpenseUseCase(sl()));
   // --- Presentation Layer ---
-  sl.registerFactoryParam<AddEditExpenseBloc, Expense?, void>(
-      (initialExpense, _) => AddEditExpenseBloc(
-          addExpenseUseCase: sl(),
-          updateExpenseUseCase: sl(),
-          categorizeTransactionUseCase: sl(),
-          expenseRepository: sl(),
-          initialExpense: initialExpense));
-  // REMOVED ExpenseListBloc registration
+  // Removed AddEditExpenseBloc registration
   log.info("Expenses Feature dependencies registered.");
 }
 
-// --- NEW Transactions Feature Registration ---
 void _registerTransactionsFeature() {
-  log.info("Registering Transactions Feature dependencies...");
+  log.info("Registering Transactions Feature (List) dependencies...");
   // --- Domain Layer ---
-  sl.registerLazySingleton(() => GetTransactionsUseCase(
-        expenseRepository: sl(),
-        incomeRepository: sl(),
-      ));
-  // Delete use cases are already registered in their respective features
+  sl.registerLazySingleton(() =>
+      GetTransactionsUseCase(expenseRepository: sl(), incomeRepository: sl()));
+  // Delete use cases are already registered
 
-  // --- Presentation Layer ---
+  // --- Presentation Layer (List Bloc) ---
   sl.registerFactory(() => TransactionListBloc(
-        // Use Factory
         getTransactionsUseCase: sl(),
         deleteExpenseUseCase: sl(),
         deleteIncomeUseCase: sl(),
         applyCategoryToBatchUseCase: sl(),
         saveUserHistoryUseCase: sl(),
-        expenseRepository: sl(), // Inject repo
-        incomeRepository: sl(), // Inject repo
+        expenseRepository: sl(),
+        incomeRepository: sl(),
         dataChangeStream: sl<Stream<DataChangedEvent>>(),
       ));
-  log.info("Transactions Feature dependencies registered.");
+  log.info("Transactions Feature (List) dependencies registered.");
+}
+
+// --- NEW: Register Unified Add/Edit Transaction Bloc ---
+void _registerAddEditTransactionFeature() {
+  log.info("Registering Add/Edit Transaction Feature dependencies...");
+  // Register the new unified Bloc
+  sl.registerFactory<AddEditTransactionBloc>(() => AddEditTransactionBloc(
+        addExpenseUseCase: sl(),
+        updateExpenseUseCase: sl(),
+        addIncomeUseCase: sl(),
+        updateIncomeUseCase: sl(),
+        categorizeTransactionUseCase: sl(),
+        expenseRepository: sl(),
+        incomeRepository: sl(),
+        // initialTransaction is passed via param1 in the page if needed
+      ));
+  log.info("Add/Edit Transaction Feature dependencies registered.");
 }
 // --- END NEW ---
 
@@ -339,25 +334,22 @@ void _registerAnalyticsAndDashboardFeatures() {
       expenseRepository: sl()));
   // --- Presentation Layer ---
   sl.registerFactory(() => SummaryBloc(
-      // Use Factory
       getExpenseSummaryUseCase: sl(),
       dataChangeStream: sl<Stream<DataChangedEvent>>()));
   sl.registerFactory(() => DashboardBloc(
-      // Use Factory
       getFinancialOverviewUseCase: sl(),
       dataChangeStream: sl<Stream<DataChangedEvent>>()));
   log.info("Analytics & Dashboard Features dependencies registered.");
 }
 
-// Helper function to publish data change events
+// --- Keep publishDataChangedEvent as is ---
 void publishDataChangedEvent(
     {required DataChangeType type, required DataChangeReason reason}) {
   if (sl.isRegistered<StreamController<DataChangedEvent>>()) {
     try {
       sl<StreamController<DataChangedEvent>>()
           .add(DataChangedEvent(type: type, reason: reason));
-      log.fine(
-          "Published DataChangedEvent: Type=$type, Reason=$reason"); // Use fine level
+      log.fine("Published DataChangedEvent: Type=$type, Reason=$reason");
     } catch (e, s) {
       log.severe("Error publishing DataChangedEvent$e$s");
     }

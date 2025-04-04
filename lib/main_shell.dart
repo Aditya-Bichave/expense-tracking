@@ -1,6 +1,7 @@
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/core/constants/route_names.dart'; // Import route names
+import 'package:expense_tracker/main.dart'; // Import logger
 
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -50,7 +51,7 @@ class MainShell extends StatelessWidget {
       case 1:
         return 'Transactions';
       case 2:
-        return 'Budgets'; // Simplified Label
+        return 'Budgets';
       case 3:
         return 'Accounts';
       case 4:
@@ -60,17 +61,101 @@ class MainShell extends StatelessWidget {
     }
   }
 
+  // Helper to show context-aware add actions
+  void _showAddActions(BuildContext context, int currentIndex) {
+    log.info(
+        "[MainShell] FAB pressed on tab index: $currentIndex. Showing actions.");
+    List<Widget> actions = [];
+
+    switch (currentIndex) {
+      case 0: // Dashboard - Offer Quick Add Transaction
+      case 1: // Transactions - Offer Add Transaction
+        actions = [
+          ListTile(
+            leading: const Icon(Icons.post_add_rounded), // Generic Add icon
+            title: const Text('Add Transaction'),
+            onTap: () {
+              Navigator.pop(context); // Close bottom sheet
+              // --- Use new unified route ---
+              context.pushNamed(RouteNames.addTransaction);
+              log.info("[MainShell] Navigating to Add Transaction.");
+              // --- End Use ---
+            },
+          ),
+          // Remove separate Expense/Income options
+          // ListTile(leading: ..., title: Text('Add Expense'), onTap: ...),
+          // ListTile(leading: ..., title: Text('Add Income'), onTap: ...),
+        ];
+        break;
+      case 2: // Budgets & Cats - Offer Add Category (Budget later)
+        actions = [
+          ListTile(
+            leading: const Icon(Icons.create_new_folder_outlined),
+            title: const Text('Add Category'),
+            onTap: () {
+              Navigator.pop(context); // Close bottom sheet
+              // Navigate using the route path defined in router.dart
+              context.push(
+                  '${RouteNames.budgetsAndCats}/${RouteNames.manageCategories}/${RouteNames.addCategory}');
+              log.info("[MainShell] Navigating to Add Category.");
+            },
+          ),
+        ];
+        break;
+      case 3: // Accounts - Offer Add Account
+        actions = [
+          ListTile(
+            leading: const Icon(Icons.account_balance_wallet_outlined),
+            title: const Text('Add Asset Account'),
+            onTap: () {
+              Navigator.pop(context); // Close bottom sheet
+              context.pushNamed(RouteNames.addAccount);
+              log.info("[MainShell] Navigating to Add Account.");
+            },
+          ),
+        ];
+        break;
+      case 4: // Settings - No default add action
+      default:
+        log.info("[MainShell] No specific FAB actions for tab $currentIndex.");
+        return; // Don't show the sheet if no actions
+    }
+
+    // Show the modal bottom sheet
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Wrap(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(10)),
+          ),
+          ...actions,
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final navTheme = theme.bottomNavigationBarTheme;
+    final currentTabIndex = navigationShell.currentIndex;
+    final bool showFab = currentTabIndex != 4;
 
     return Scaffold(
-      body: navigationShell, // The page content for the current branch
+      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: navigationShell.currentIndex,
+        currentIndex: currentTabIndex,
         onTap: (index) => _onTap(context, index),
-        // Use theme properties for styling
         type: navTheme.type ?? BottomNavigationBarType.fixed,
         backgroundColor: navTheme.backgroundColor,
         selectedItemColor:
@@ -83,9 +168,8 @@ class MainShell extends StatelessWidget {
         unselectedIconTheme: navTheme.unselectedIconTheme,
         showSelectedLabels: navTheme.showSelectedLabels,
         showUnselectedLabels: navTheme.showUnselectedLabels,
-        elevation: navTheme.elevation ?? 8.0, // Default elevation if not themed
+        elevation: navTheme.elevation ?? 8.0,
         items: List.generate(5, (index) {
-          // Generate 5 items
           final isActive = index == navigationShell.currentIndex;
           return BottomNavigationBarItem(
             icon: Icon(_getIconForIndex(index, false)),
@@ -94,6 +178,15 @@ class MainShell extends StatelessWidget {
           );
         }),
       ),
+      floatingActionButton: showFab
+          ? FloatingActionButton(
+              heroTag: 'main_shell_fab',
+              onPressed: () => _showAddActions(context, currentTabIndex),
+              tooltip: 'Add',
+              child: const Icon(Icons.add),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
