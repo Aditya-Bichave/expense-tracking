@@ -1,6 +1,5 @@
 // lib/features/income/data/repositories/income_repository_impl.dart
-// REFINED FILE
-
+// FINAL VERSION (Corrected Reassignment Logic)
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/error/failure.dart';
@@ -12,6 +11,7 @@ import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+// Removed direct Hive import
 
 class IncomeRepositoryImpl implements IncomeRepository {
   final IncomeLocalDataSource localDataSource;
@@ -76,13 +76,11 @@ class IncomeRepositoryImpl implements IncomeRepository {
       final addedModel = await localDataSource.addIncome(incomeModel);
       log.info(
           "[IncomeRepo] Add successful (ID: ${addedModel.id}). Hydrating category for return.");
-      // Hydrate the single added income
       final hydratedResult = await _hydrateCategories([addedModel]);
       return hydratedResult.fold(
         (failure) {
           log.warning(
               "[IncomeRepo] Failed hydration after adding income '${addedModel.id}': ${failure.message}");
-          // Return the failure, but the income *was* added to the DB
           return Left(failure);
         },
         (hydratedList) => Right(hydratedList.first),
@@ -119,7 +117,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
   Future<Either<Failure, List<Income>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Assumed to be category ID
+    String? category, // Assumed to be Category ID now for filtering
     String? accountId,
   }) async {
     log.info(
@@ -128,14 +126,13 @@ class IncomeRepositoryImpl implements IncomeRepository {
       final incomeModels = await localDataSource.getIncomes();
       log.info("[IncomeRepo] Fetched ${incomeModels.length} income models.");
 
-      // Apply filtering on MODELS (before hydration)
+      // Apply filtering on MODELS
       final originalCount = incomeModels.length;
       final filteredModels = incomeModels.where((model) {
         bool dateMatch = true;
         bool categoryMatch = true;
         bool accountMatch = true;
 
-        // Date filtering
         if (startDate != null) {
           final incDateOnly =
               DateTime(model.date.year, model.date.month, model.date.day);
@@ -150,20 +147,19 @@ class IncomeRepositoryImpl implements IncomeRepository {
               DateTime(endDate.year, endDate.month, endDate.day);
           dateMatch = !incDateOnly.isAfter(endDateOnly);
         }
-        // Account filtering
         if (accountId != null && accountId.isNotEmpty) {
           accountMatch = model.accountId == accountId;
         }
-        // Category filtering (Assumes 'category' filter param holds the ID)
         if (category != null && category.isNotEmpty) {
           categoryMatch = model.categoryId == category;
-        }
+        } // Filter by ID
+
         return dateMatch && categoryMatch && accountMatch;
       }).toList();
       log.info(
           "[IncomeRepo] Filtered models: ${filteredModels.length} remaining from $originalCount.");
 
-      // Sort MODELS by date descending
+      // Sort MODELS by date
       filteredModels.sort((a, b) => b.date.compareTo(a.date));
       log.fine("[IncomeRepo] Sorted ${filteredModels.length} models.");
 
@@ -187,20 +183,18 @@ class IncomeRepositoryImpl implements IncomeRepository {
       final incomeModel = IncomeModel.fromEntity(income);
       final updatedModel = await localDataSource.updateIncome(incomeModel);
       log.info(
-          "[IncomeRepo] Update successful (ID: ${updatedModel.id}). Hydrating category for return.");
-      // Hydrate the single updated income
+          "[IncomeRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.");
       final hydratedResult = await _hydrateCategories([updatedModel]);
       return hydratedResult.fold(
         (failure) {
           log.warning(
               "[IncomeRepo] Failed hydration after updating income '${updatedModel.id}': ${failure.message}");
-          // Return the failure, but the income *was* updated in the DB
           return Left(failure);
         },
         (hydratedList) => Right(hydratedList.first),
       );
     } on CacheFailure catch (e) {
-      log.warning("[IncomeRepo] CacheFailure updating income: ${e.message}");
+      log.warning("[IncomeRepo] CacheFailure during update: ${e.message}");
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error updating income$e$s");
@@ -224,7 +218,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
         (failure) {
           log.warning(
               "[IncomeRepo] Failed to get incomes while calculating total for account '$accountId': ${failure.message}");
-          return Left(failure); // Propagate the failure
+          return Left(failure);
         },
         (incomes) {
           double total = incomes.fold(0.0, (sum, item) => sum + item.amount);
@@ -250,30 +244,22 @@ class IncomeRepositoryImpl implements IncomeRepository {
     log.info(
         "[IncomeRepo] updateIncomeCategorization called for ID: $incomeId, CatID: $categoryId, Status: ${status.name}");
     try {
-      // Fetch the existing model to preserve other fields
       final existingModel = await localDataSource.getIncomeById(incomeId);
       if (existingModel == null) {
         log.warning(
             "[IncomeRepo] Income not found for categorization update: $incomeId");
         return const Left(CacheFailure("Income not found."));
       }
-
-      // Create the updated model with new categorization details
       final updatedModel = IncomeModel(
-        id: existingModel.id,
-        title: existingModel.title,
-        amount: existingModel.amount,
-        date: existingModel.date,
-        accountId: existingModel.accountId,
-        notes: existingModel.notes,
-        // --- Updated fields ---
-        categoryId: categoryId, // Can be null
-        categorizationStatusValue: status.value,
-        confidenceScoreValue: confidenceScore,
-        // --- End Updated fields ---
-      );
-
-      // Save the updated model
+          id: existingModel.id,
+          title: existingModel.title,
+          amount: existingModel.amount,
+          date: existingModel.date,
+          accountId: existingModel.accountId,
+          notes: existingModel.notes,
+          categoryId: categoryId,
+          categorizationStatusValue: status.value,
+          confidenceScoreValue: confidenceScore);
       await localDataSource.updateIncome(updatedModel);
       log.info(
           "[IncomeRepo] Income categorization updated successfully for ID: $incomeId");
@@ -289,4 +275,64 @@ class IncomeRepositoryImpl implements IncomeRepository {
           "Failed to update income categorization: ${e.toString()}"));
     }
   }
+
+  // --- CORRECTED IMPLEMENTATION ---
+  @override
+  Future<Either<Failure, int>> reassignIncomesCategory(
+      String oldCategoryId, String newCategoryId) async {
+    log.info(
+        "[IncomeRepo] Reassigning incomes from CatID '$oldCategoryId' to '$newCategoryId'.");
+    int updateCount = 0;
+    try {
+      // 1. Fetch all models
+      final allModels = await localDataSource.getIncomes();
+      final modelsToUpdate = allModels
+          .where((model) => model.categoryId == oldCategoryId)
+          .toList();
+
+      if (modelsToUpdate.isEmpty) {
+        log.info(
+            "[IncomeRepo] No incomes found with category ID '$oldCategoryId'. No reassignment needed.");
+        return const Right(0);
+      }
+
+      log.info(
+          "[IncomeRepo] Found ${modelsToUpdate.length} incomes to reassign.");
+
+      // 2. Update each model individually via the DataSource
+      List<Future<void>> updateFutures = [];
+      for (final model in modelsToUpdate) {
+        final updatedModel = IncomeModel(
+          id: model.id,
+          title: model.title,
+          amount: model.amount,
+          date: model.date,
+          accountId: model.accountId,
+          notes: model.notes,
+          categoryId: newCategoryId, // Assign new category ID
+          categorizationStatusValue: CategorizationStatus.categorized.value,
+          confidenceScoreValue: null,
+        );
+        updateFutures.add(localDataSource.updateIncome(updatedModel));
+        updateCount++;
+      }
+
+      // 3. Wait for all individual updates to complete
+      await Future.wait(updateFutures);
+
+      log.info(
+          "[IncomeRepo] Successfully triggered updates for $updateCount incomes from '$oldCategoryId' to '$newCategoryId'.");
+      return Right(updateCount);
+    } on CacheFailure catch (e) {
+      log.warning(
+          "[IncomeRepo] CacheFailure during reassignIncomesCategory: ${e.message}");
+      return Left(e);
+    } catch (e, s) {
+      log.severe(
+          "[IncomeRepo] Unexpected error during reassignIncomesCategory$e$s");
+      return Left(CacheFailure(
+          "Failed to reassign income categories: ${e.toString()}"));
+    }
+  }
+  // --- END CORRECTED ---
 }

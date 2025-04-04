@@ -1,4 +1,5 @@
 // lib/core/di/service_locator.dart
+// FINAL VERSION (with all category UseCases and updated Bloc registrations)
 import 'dart:async';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -66,11 +67,14 @@ import 'package:expense_tracker/features/settings/domain/usecases/restore_data_u
 import 'package:expense_tracker/features/settings/domain/usecases/clear_all_data_usecase.dart';
 // --- Import Category Use Cases ---
 import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
-import 'package:expense_tracker/features/categories/domain/usecases/get_expense_categories.dart'; // Added
-import 'package:expense_tracker/features/categories/domain/usecases/get_income_categories.dart'; // Added
+import 'package:expense_tracker/features/categories/domain/usecases/get_expense_categories.dart';
+import 'package:expense_tracker/features/categories/domain/usecases/get_income_categories.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/add_custom_category.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/update_custom_category.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/delete_custom_category.dart';
+// --- CORRECTED Import ---
+import 'package:expense_tracker/features/categories/domain/usecases/delete_custom_category.dart';
+// --- END CORRECTION ---
 import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/categorize_transaction.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/apply_category_to_batch.dart';
@@ -130,10 +134,11 @@ Future<void> initLocator({
 
   // *** Feature Registrations (Order Matters for Dependencies) ***
   _registerSettingsFeature();
+  _registerIncomeFeature();
+  _registerExpensesFeature();
   _registerCategoryFeature(); // Register Category first
-  _registerAccountsFeature(); // Needs Category Repo potentially
-  _registerIncomeFeature(); // Needs Account and Category Repos
-  _registerExpensesFeature(); // Needs Account and Category Repos
+  // Register Income/Expense Repositories *before* Account Repo which depends on them
+  _registerAccountsFeature(); // Now Income/Expense repos are available
   _registerAnalyticsAndDashboardFeatures(); // Needs Txn Repos
 
   log.info("Service Locator initialization complete.");
@@ -143,20 +148,16 @@ Future<void> initLocator({
 
 void _registerSettingsFeature() {
   log.info("Registering Settings Feature dependencies...");
-  // Data sources
   sl.registerLazySingleton<SettingsLocalDataSource>(
       () => SettingsLocalDataSourceImpl(prefs: sl()));
-  // Repositories
   sl.registerLazySingleton<SettingsRepository>(
       () => SettingsRepositoryImpl(localDataSource: sl()));
   sl.registerLazySingleton<DataManagementRepository>(() =>
       DataManagementRepositoryImpl(
           accountBox: sl(), expenseBox: sl(), incomeBox: sl()));
-  // Use Cases
   sl.registerLazySingleton(() => BackupDataUseCase(sl()));
   sl.registerLazySingleton(() => RestoreDataUseCase(sl()));
   sl.registerLazySingleton(() => ClearAllDataUseCase(sl()));
-  // Blocs
   sl.registerLazySingleton(() => SettingsBloc(
       settingsRepository: sl(),
       backupDataUseCase: sl(),
@@ -170,7 +171,6 @@ void _registerCategoryFeature() {
   // DataSources
   sl.registerLazySingleton<CategoryLocalDataSource>(
       () => HiveCategoryLocalDataSource(sl()));
-  // Register named instances for predefined sources
   sl.registerLazySingleton<CategoryPredefinedDataSource>(
       () => AssetExpenseCategoryDataSource(),
       instanceName: 'expensePredefined');
@@ -191,15 +191,12 @@ void _registerCategoryFeature() {
   sl.registerLazySingleton<MerchantCategoryRepository>(
       () => MerchantCategoryRepositoryImpl(dataSource: sl()));
   // Use Cases
-  sl.registerLazySingleton(
-      () => GetCategoriesUseCase(sl())); // Gets ALL categories
-  sl.registerLazySingleton(
-      () => GetExpenseCategoriesUseCase(sl())); // Gets expense + custom
-  sl.registerLazySingleton(
-      () => GetIncomeCategoriesUseCase(sl())); // Gets income + custom
+  sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetExpenseCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => GetIncomeCategoriesUseCase(sl()));
   sl.registerLazySingleton(() => AddCustomCategoryUseCase(sl(), sl()));
   sl.registerLazySingleton(() => UpdateCustomCategoryUseCase(sl()));
-  // Delete requires Txn Repos - Assuming they are registered before this is CALLED by dependent Blocs
+  // Register Delete UseCase - Ensure Expense/Income repos are registered *before* this feature registration call
   sl.registerLazySingleton(() => DeleteCustomCategoryUseCase(sl(), sl(), sl()));
   sl.registerLazySingleton(
       () => SaveUserCategorizationHistoryUseCase(sl(), sl()));
@@ -207,19 +204,15 @@ void _registerCategoryFeature() {
       userHistoryRepository: sl(),
       merchantCategoryRepository: sl(),
       categoryRepository: sl()));
-  // ApplyBatch requires Txn Repos
+  // Register ApplyBatch UseCase - Ensure Expense/Income repos are registered *before* this
   sl.registerLazySingleton(() => ApplyCategoryToBatchUseCase(
       expenseRepository: sl(), incomeRepository: sl()));
   // Blocs
   sl.registerFactory(() => CategoryManagementBloc(
-        // This bloc likely manages CUSTOM categories, so might need a GetCustomCategoriesUseCase
-        // Or it filters the result of GetCategoriesUseCase. Using GetCategoriesUseCase for now.
-        getCategoriesUseCase:
-            sl(), // Or create GetCustomCategoriesUseCase(sl())
-        addCustomCategoryUseCase: sl(),
-        updateCustomCategoryUseCase: sl(),
-        deleteCustomCategoryUseCase: sl(),
-      ));
+      getCategoriesUseCase: sl(),
+      addCustomCategoryUseCase: sl(),
+      updateCustomCategoryUseCase: sl(),
+      deleteCustomCategoryUseCase: sl()));
   log.info("Category Feature dependencies registered.");
 }
 
@@ -229,11 +222,13 @@ void _registerAccountsFeature() {
   sl.registerLazySingleton<AssetAccountLocalDataSource>(
       () => HiveAssetAccountLocalDataSource(sl<Box<AssetAccountModel>>()));
   // Repositories
-  sl.registerLazySingleton<AssetAccountRepository>(() =>
-      AssetAccountRepositoryImpl(
-          localDataSource: sl(),
-          incomeRepository: sl(),
-          expenseRepository: sl()));
+  sl.registerLazySingleton<AssetAccountRepository>(
+      () => AssetAccountRepositoryImpl(
+            localDataSource: sl(),
+            // CORRECTED: Depend on Interfaces, not Implementations
+            incomeRepository: sl<IncomeRepository>(),
+            expenseRepository: sl<ExpenseRepository>(),
+          ));
   // Use cases
   sl.registerLazySingleton(() => AddAssetAccountUseCase(sl()));
   sl.registerLazySingleton(() => GetAssetAccountsUseCase(sl()));

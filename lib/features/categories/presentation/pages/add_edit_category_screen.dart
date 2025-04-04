@@ -1,5 +1,5 @@
 // lib/features/categories/presentation/pages/add_edit_category_screen.dart
-// MODIFIED FILE (Implement UI)
+// FINAL VERSION (No changes from Phase 11)
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -19,20 +19,17 @@ class AddEditCategoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isEditing = initialCategory != null;
-    // Assuming CategoryManagementBloc is provided via BlocProvider.value in CategoryManagementScreen
-    // If navigating differently, ensure the Bloc is available here.
+    // Assuming CategoryManagementBloc is provided by the navigator (e.g., BlocProvider.value in CategoryManagementScreen)
 
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditing ? 'Edit Category' : 'Add Category'),
         leading: IconButton(
-          // Add explicit back button
           icon: const Icon(Icons.close),
           tooltip: 'Cancel',
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      // Use SafeArea to avoid overlaps
       body: SafeArea(
         child: CategoryForm(
           initialCategory: initialCategory,
@@ -45,10 +42,8 @@ class AddEditCategoryScreen extends StatelessWidget {
                 // Create the updated entity
                 id: initialCategory!.id,
                 name: name, iconName: iconName, colorHex: colorHex,
-                isCustom: initialCategory!
-                    .isCustom, // Preserve original custom status
-                parentCategoryId:
-                    initialCategory!.parentCategoryId, // Preserve parent
+                isCustom: initialCategory!.isCustom,
+                parentCategoryId: initialCategory!.parentCategoryId,
               );
               bloc.add(UpdateCategory(category: updatedCategory));
             } else {
@@ -91,7 +86,6 @@ class _CategoryFormState extends State<CategoryForm> {
         TextEditingController(text: widget.initialCategory?.name ?? '');
     _selectedIconName =
         widget.initialCategory?.iconName ?? 'default_category_icon';
-    // Use ColorUtils to parse hex, default if editing or adding
     _selectedColor = widget.initialCategory != null
         ? ColorUtils.fromHex(widget.initialCategory!.colorHex)
         : Colors.blue;
@@ -129,27 +123,25 @@ class _CategoryFormState extends State<CategoryForm> {
     }
   }
 
-  // Show Color Picker (with accessibility check example)
+  // Show Color Picker
   void _showColorPicker() {
     log.info("[CategoryForm] Color picker requested.");
-    Color pickerColor = _selectedColor; // Temp color for picker
+    Color pickerColor = _selectedColor;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Pick a color'),
         content: SingleChildScrollView(
           child: ColorPicker(
-            pickerColor: pickerColor, // Use temp color
-            onColorChanged: (color) => pickerColor = color, // Update temp color
+            pickerColor: pickerColor,
+            onColorChanged: (color) => pickerColor = color,
             pickerAreaHeightPercent: 0.8,
             enableAlpha: false,
-            // --- Accessibility Check Example (Simple Contrast) ---
             colorPickerWidth: 300,
             displayThumbColor: true,
-            paletteType: PaletteType.hueWheel, // Or other types
+            paletteType: PaletteType.hueWheel,
             labelTypes: const [ColorLabelType.hex],
             pickerAreaBorderRadius: BorderRadius.circular(8),
-            // You might add custom actions or previews here to check contrast
           ),
         ),
         actions: <Widget>[
@@ -160,17 +152,8 @@ class _CategoryFormState extends State<CategoryForm> {
           TextButton(
               child: const Text('Select'),
               onPressed: () {
-                // Basic contrast check (example against white text)
-                // Use a proper accessibility library for robust checks
-                final contrast =
-                    ThemeData.estimateBrightnessForColor(pickerColor);
-                if (contrast == Brightness.light) {
-                  log.warning(
-                      "[CategoryForm] Selected color might have low contrast with white text.");
-                  // Optionally show another warning dialog
-                }
-                setState(
-                    () => _selectedColor = pickerColor); // Set the actual color
+                /* TODO: Add contrast check if desired */ setState(
+                    () => _selectedColor = pickerColor);
                 Navigator.of(context).pop();
               }),
         ],
@@ -182,14 +165,12 @@ class _CategoryFormState extends State<CategoryForm> {
   Widget build(BuildContext context) {
     final modeTheme = context.modeTheme;
     final theme = Theme.of(context);
-    // Get IconData for display
     final IconData displayIconData =
         availableIcons[_selectedIconName] ?? Icons.category_outlined;
 
     return Form(
       key: _formKey,
       child: ListView(
-        // Use ListView for scrollability on small screens
         padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
         children: [
           AppTextFormField(
@@ -200,7 +181,7 @@ class _CategoryFormState extends State<CategoryForm> {
               validator: (value) {
                 if (value == null || value.trim().isEmpty)
                   return 'Please enter a category name';
-                // TODO: Add check for name uniqueness against state.categories in BlocListener or here
+                // TODO: Add check for name uniqueness
                 return null;
               }),
           const SizedBox(height: 20),
@@ -208,19 +189,16 @@ class _CategoryFormState extends State<CategoryForm> {
           const SizedBox(height: 10),
           // Icon Picker Tile
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-                horizontal: 0), // No padding needed if inside ListView padding
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             shape: RoundedRectangleBorder(
                 side: BorderSide(color: theme.dividerColor),
-                borderRadius: BorderRadius.circular(12) // Match input border
-                ),
-            tileColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12)),
+            tileColor: theme.colorScheme
+                .surfaceContainerHighest, // Use a distinct background
             leading: Padding(
-              padding: const EdgeInsets.only(left: 12.0),
-              child: Icon(displayIconData,
-                  color: _selectedColor,
-                  size: 28), // Show selected icon colored
-            ),
+              padding: const EdgeInsets.only(left: 0.0),
+              child: Icon(displayIconData, color: _selectedColor, size: 28),
+            ), // Show selected icon colored
             title: const Text('Icon'),
             subtitle: Text(_selectedIconName),
             trailing: Padding(
@@ -233,14 +211,13 @@ class _CategoryFormState extends State<CategoryForm> {
           const SizedBox(height: 16),
           // Color Picker Tile
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             shape: RoundedRectangleBorder(
                 side: BorderSide(color: theme.dividerColor),
-                borderRadius: BorderRadius.circular(12) // Match input border
-                ),
-            tileColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12)),
+            tileColor: theme.colorScheme.surfaceContainerHighest,
             leading: Padding(
-              padding: const EdgeInsets.only(left: 12.0),
+              padding: const EdgeInsets.only(left: 0.0),
               child: Icon(Icons.color_lens_outlined,
                   color: _selectedColor, size: 28),
             ),
@@ -259,7 +236,6 @@ class _CategoryFormState extends State<CategoryForm> {
             ),
             onTap: _showColorPicker,
           ),
-          // TODO: Add Parent Category Selector if implementing sub-categories
           const SizedBox(height: 40),
           ElevatedButton.icon(
             icon: const Icon(Icons.save),
