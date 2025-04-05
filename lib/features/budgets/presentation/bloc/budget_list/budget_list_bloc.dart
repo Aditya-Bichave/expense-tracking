@@ -29,7 +29,6 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     required BudgetRepository budgetRepository,
     required DeleteBudgetUseCase deleteBudgetUseCase, // Added requirement
     required Stream<DataChangedEvent> dataChangeStream,
-    required StreamController<dynamic> dataChangedStream,
   })  : _getBudgetsUseCase = getBudgetsUseCase,
         _budgetRepository = budgetRepository,
         _deleteBudgetUseCase = deleteBudgetUseCase, // Assign UseCase

@@ -1,3 +1,4 @@
+// lib/main_shell.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -28,10 +29,12 @@ class MainShell extends StatelessWidget {
         return isActive
             ? Icons.receipt_long_rounded
             : Icons.receipt_long_outlined;
-      case 2: // Budgets & Cats
+      case 2: // Budgets & Cats & Goals (Unified Icon)
         return isActive
-            ? Icons.pie_chart_rounded
-            : Icons.pie_chart_outline_rounded;
+            ? Icons.savings_rounded
+            : Icons.savings_outlined; // Example: Savings icon
+      // Or keep pie chart:
+      // return isActive ? Icons.pie_chart_rounded : Icons.pie_chart_outline_rounded;
       case 3: // Accounts
         return isActive
             ? Icons.account_balance_wallet_rounded
@@ -51,7 +54,7 @@ class MainShell extends StatelessWidget {
       case 1:
         return 'Transactions';
       case 2:
-        return 'Budgets';
+        return 'Plan'; // Unified name for Budgets/Goals/Cats tab
       case 3:
         return 'Accounts';
       case 4:
@@ -72,25 +75,41 @@ class MainShell extends StatelessWidget {
       case 1: // Transactions - Offer Add Transaction
         actions = [
           ListTile(
-            leading: const Icon(Icons.post_add_rounded), // Generic Add icon
+            leading: const Icon(Icons.post_add_rounded),
             title: const Text('Add Transaction'),
             onTap: () {
               Navigator.pop(context); // Close bottom sheet
-              // --- Use new unified route ---
               context.pushNamed(RouteNames.addTransaction);
               log.info("[MainShell] Navigating to Add Transaction.");
-              // --- End Use ---
             },
           ),
-          // Remove separate Expense/Income options
-          // ListTile(leading: ..., title: Text('Add Expense'), onTap: ...),
-          // ListTile(leading: ..., title: Text('Add Income'), onTap: ...),
         ];
         break;
-      case 2: // Budgets & Cats - Offer Add Category (Budget later)
+
+      // --- FIX: Updated actions for Tab Index 2 ---
+      case 2: // Plan Tab (Budgets/Goals/Cats)
         actions = [
           ListTile(
-            leading: const Icon(Icons.create_new_folder_outlined),
+            leading: const Icon(Icons.pie_chart_outline_rounded), // Budget icon
+            title: const Text('Add Budget'),
+            onTap: () {
+              Navigator.pop(context); // Close bottom sheet
+              context.pushNamed(RouteNames.addBudget); // Navigate to add budget
+              log.info("[MainShell] Navigating to Add Budget.");
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.savings_outlined), // Goal icon
+            title: const Text('Add Goal'),
+            onTap: () {
+              Navigator.pop(context); // Close bottom sheet
+              context.pushNamed(RouteNames.addGoal); // Navigate to add goal
+              log.info("[MainShell] Navigating to Add Goal.");
+            },
+          ),
+          ListTile(
+            leading:
+                const Icon(Icons.create_new_folder_outlined), // Category icon
             title: const Text('Add Category'),
             onTap: () {
               Navigator.pop(context); // Close bottom sheet
@@ -102,6 +121,8 @@ class MainShell extends StatelessWidget {
           ),
         ];
         break;
+      // --- END FIX ---
+
       case 3: // Accounts - Offer Add Account
         actions = [
           ListTile(
@@ -127,19 +148,26 @@ class MainShell extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Wrap(
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10)),
-          ),
-          ...actions,
-          const SizedBox(height: 16),
-        ],
+      builder: (ctx) => SafeArea(
+        // Add SafeArea
+        child: Wrap(
+          children: [
+            // Drag Handle
+            Center(
+              // Center the handle
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+            ...actions,
+            const SizedBox(height: 8), // Reduced bottom padding
+          ],
+        ),
       ),
     );
   }
@@ -149,6 +177,7 @@ class MainShell extends StatelessWidget {
     final theme = Theme.of(context);
     final navTheme = theme.bottomNavigationBarTheme;
     final currentTabIndex = navigationShell.currentIndex;
+    // Show FAB on all tabs except Settings (index 4)
     final bool showFab = currentTabIndex != 4;
 
     return Scaffold(
@@ -166,8 +195,10 @@ class MainShell extends StatelessWidget {
         unselectedLabelStyle: navTheme.unselectedLabelStyle,
         selectedIconTheme: navTheme.selectedIconTheme,
         unselectedIconTheme: navTheme.unselectedIconTheme,
-        showSelectedLabels: navTheme.showSelectedLabels,
-        showUnselectedLabels: navTheme.showUnselectedLabels,
+        showSelectedLabels:
+            navTheme.showSelectedLabels ?? true, // Default to true
+        showUnselectedLabels:
+            navTheme.showUnselectedLabels ?? true, // Default to true
         elevation: navTheme.elevation ?? 8.0,
         items: List.generate(5, (index) {
           final isActive = index == navigationShell.currentIndex;
@@ -178,6 +209,7 @@ class MainShell extends StatelessWidget {
           );
         }),
       ),
+      // --- FIX: FAB is now displayed based on `showFab` ---
       floatingActionButton: showFab
           ? FloatingActionButton(
               heroTag: 'main_shell_fab',
@@ -186,6 +218,7 @@ class MainShell extends StatelessWidget {
               child: const Icon(Icons.add),
             )
           : null,
+      // --- END FIX ---
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }

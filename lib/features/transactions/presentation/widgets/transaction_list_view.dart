@@ -1,23 +1,40 @@
 // lib/features/transactions/presentation/widgets/transaction_list_view.dart
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart'; // Updated path
+import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart'; // Keep this
+// --- Import Expense/Income Card Widgets ---
+import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
+import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
+// --- End Import ---
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
   final SettingsState settings;
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
+  // --- ADD Handlers ---
+  final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
+  final Function(BuildContext, TransactionEntity) confirmDeletion;
+  // --- END Handlers ---
 
   const TransactionListView({
     super.key,
     required this.state,
     required this.settings,
     required this.navigateToDetailOrEdit,
+    // --- Add to constructor ---
+    required this.handleChangeCategoryRequest,
+    required this.confirmDeletion,
+    // --- End Add ---
   });
 
   @override
@@ -53,15 +70,29 @@ class TransactionListView extends StatelessWidget {
                         state.filtersApplied
                             ? "No transactions match filters"
                             : "No transactions recorded yet",
-                        style: theme.textTheme.headlineSmall),
+                        style: theme.textTheme.headlineSmall
+                            ?.copyWith(color: theme.colorScheme.secondary)),
                     const SizedBox(height: 8),
                     Text(
                       state.filtersApplied
                           ? "Try adjusting or clearing the filters."
                           : "Tap the '+' button to add your first expense or income.",
-                      style: theme.textTheme.bodyMedium,
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 24),
+                    if (!state
+                        .filtersApplied) // Show add button only if no filters applied
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add First Transaction'),
+                        onPressed: () =>
+                            context.pushNamed(RouteNames.addTransaction),
+                        style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12)),
+                      )
                   ])));
     }
 
@@ -74,31 +105,86 @@ class TransactionListView extends StatelessWidget {
         final isSelected =
             state.selectedTransactionIds.contains(transaction.id);
 
-        return Container(
-          // Use Container for background color
-          key: ValueKey(
-              "${transaction.id}_list_item_${isSelected}"), // Unique key for item
-          color: isSelected
-              ? theme.colorScheme.primaryContainer.withOpacity(0.3)
-              : Colors.transparent,
-          child: TransactionListItem(
-            transaction: transaction,
-            currencySymbol: settings.currencySymbol,
-            onTap: () {
-              // Assign tap logic directly here
+        // --- USE ExpenseCard or IncomeCard based on type ---
+        Widget cardItem;
+        if (transaction.type == TransactionType.expense) {
+          cardItem = ExpenseCard(
+            expense: transaction.originalEntity as Expense, // Cast required
+            onCardTap: (exp) {
+              // Pass original Expense
               if (state.isInBatchEditMode) {
-                log.fine(
-                    "[TxnListView] Item tapped in batch mode. Toggling selection for ${transaction.id}.");
                 context
                     .read<TransactionListBloc>()
-                    .add(SelectTransaction(transaction.id));
+                    .add(SelectTransaction(exp.id));
               } else {
-                log.fine(
-                    "[TxnListView] Item tapped in normal mode. Navigating to edit for ${transaction.id}.");
                 navigateToDetailOrEdit(
-                    context, transaction); // Navigate on normal tap
+                    context, transaction); // Pass the TransactionEntity
               }
             },
+            onChangeCategoryRequest: (exp) =>
+                handleChangeCategoryRequest(context, transaction),
+            onUserCategorized: (exp, cat) {
+              final matchData = TransactionMatchData(
+                  description: exp.title, merchantId: null);
+              context.read<TransactionListBloc>().add(
+                  UserCategorizedTransaction(
+                      transactionId: exp.id,
+                      transactionType: TransactionType.expense,
+                      selectedCategory: cat,
+                      matchData: matchData));
+            },
+          );
+        } else {
+          // Income
+          cardItem = IncomeCard(
+            income: transaction.originalEntity as Income, // Cast required
+            onCardTap: (inc) {
+              // Pass original Income
+              if (state.isInBatchEditMode) {
+                context
+                    .read<TransactionListBloc>()
+                    .add(SelectTransaction(inc.id));
+              } else {
+                navigateToDetailOrEdit(
+                    context, transaction); // Pass the TransactionEntity
+              }
+            },
+            onChangeCategoryRequest: (inc) =>
+                handleChangeCategoryRequest(context, transaction),
+            onUserCategorized: (inc, cat) {
+              final matchData = TransactionMatchData(
+                  description: inc.title, merchantId: null);
+              context.read<TransactionListBloc>().add(
+                  UserCategorizedTransaction(
+                      transactionId: inc.id,
+                      transactionType: TransactionType.income,
+                      selectedCategory: cat,
+                      matchData: matchData));
+            },
+          );
+        }
+        // --- END USE ---
+
+        return Dismissible(
+          key: Key("${transaction.id}_dismissible"), // More specific key
+          direction: DismissDirection.endToStart,
+          background: Container(
+              color: theme.colorScheme.errorContainer,
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Icon(Icons.delete_sweep_outlined,
+                  color: theme.colorScheme.onErrorContainer)),
+          confirmDismiss: (_) async =>
+              await confirmDeletion(context, transaction),
+          onDismissed: (direction) {
+            // BLoC event is dispatched by confirmDismiss callback now
+            // context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
+          },
+          child: Container(
+            color: isSelected
+                ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                : Colors.transparent,
+            child: cardItem, // Use the determined ExpenseCard or IncomeCard
           ),
         ).animate().fadeIn(delay: (20 * index).ms).slideY(begin: 0.1);
       },

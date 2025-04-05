@@ -1,4 +1,6 @@
 // lib/router.dart
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -15,8 +17,13 @@ import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_ac
 import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
 import 'package:expense_tracker/features/categories/presentation/pages/add_edit_category_screen.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
+// --- Import Budget/Goal Pages ---
+import 'package:expense_tracker/features/budgets/presentation/pages/add_edit_budget_page.dart';
+import 'package:expense_tracker/features/budgets/presentation/pages/budget_detail_page.dart';
+import 'package:expense_tracker/features/goals/presentation/pages/add_edit_goal_page.dart';
+import 'package:expense_tracker/features/goals/presentation/pages/goal_detail_page.dart';
 
-// Import Placeholder Screen
+// Import Placeholder Screen (should not be used by budget/goal routes now)
 import 'package:expense_tracker/core/widgets/placeholder_screen.dart';
 
 // Import Shell Widget
@@ -29,6 +36,9 @@ import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+// --- Import Budget/Goal Entities ---
+import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 
 // --- Navigator Keys ---
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -72,10 +82,6 @@ class AppRouter {
                   name: RouteNames.dashboard,
                   pageBuilder: (context, state) =>
                       const NoTransitionPage(child: DashboardPage()),
-                  // Add dashboard sub-routes here if needed, opening in the root navigator
-                  // routes: [
-                  //   GoRoute(path: 'details', parentNavigatorKey: _rootNavigatorKey, ...),
-                  // ]
                 ),
               ],
             ),
@@ -90,7 +96,6 @@ class AppRouter {
                   pageBuilder: (context, state) =>
                       const NoTransitionPage(child: TransactionListPage()),
                   routes: [
-                    // Add/Edit routes pushed onto the root navigator (full screen)
                     GoRoute(
                         path: RouteNames
                             .addTransaction, // "add" -> /transactions/add
@@ -108,8 +113,7 @@ class AppRouter {
                       name: RouteNames.editTransaction,
                       parentNavigatorKey: _rootNavigatorKey,
                       builder: _buildEditTransactionPage, // Use helper
-                    ), // End of GoRoute for editTransaction
-                    // Detail route (if needed separately from edit)
+                    ),
                     GoRoute(
                       path:
                           '${RouteNames.transactionDetail}/:${RouteNames.paramTransactionId}', // "transaction_detail/:transactionId"
@@ -122,7 +126,7 @@ class AppRouter {
               ],
             ),
 
-            // --- Branch 2: Budgets & Categories ---
+            // --- Branch 2: Budgets & Categories & Goals ---
             StatefulShellBranch(
               navigatorKey: _shellNavigatorKeyBudgetsCats,
               routes: [
@@ -132,18 +136,15 @@ class AppRouter {
                   pageBuilder: (context, state) =>
                       const NoTransitionPage(child: BudgetsAndCatsTabPage()),
                   routes: [
-                    // Manage Categories route (within this shell branch)
+                    // -- Category Routes --
                     GoRoute(
-                      path: RouteNames
-                          .manageCategories, // "manage_categories" -> /budgets-cats/manage_categories
+                      path: RouteNames.manageCategories, // "manage_categories"
                       name: RouteNames.manageCategories,
                       builder: (context, state) =>
                           const CategoryManagementScreen(),
                       routes: [
-                        // Add/Edit Category routes pushed onto root navigator
                         GoRoute(
-                          path: RouteNames
-                              .addCategory, // "add_category" -> /budgets-cats/manage_categories/add_category
+                          path: RouteNames.addCategory, // "add_category"
                           name: RouteNames.addCategory,
                           parentNavigatorKey: _rootNavigatorKey,
                           builder: (context, state) =>
@@ -158,14 +159,50 @@ class AppRouter {
                         ),
                       ],
                     ),
-                    // Create Budget route pushed onto root navigator
+                    // -- Budget Routes --
                     GoRoute(
                       path: RouteNames
-                          .createBudget, // "create_budget" -> /budgets-cats/create_budget
-                      name: RouteNames.createBudget,
+                          .addBudget, // "add_budget" (replaces createBudget)
+                      name: RouteNames.addBudget,
                       parentNavigatorKey: _rootNavigatorKey,
-                      builder: (context, state) =>
-                          const PlaceholderScreen(featureName: 'Create Budget'),
+                      builder: (context, state) => const AddEditBudgetPage(
+                          initialBudget: null), // Always adding here
+                    ),
+                    GoRoute(
+                      path:
+                          '${RouteNames.editBudget}/:${RouteNames.paramId}', // "edit_budget/:id"
+                      name: RouteNames.editBudget,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: _buildEditBudgetPage, // Use helper
+                    ),
+                    GoRoute(
+                      path:
+                          '${RouteNames.budgetDetail}/:${RouteNames.paramId}', // "budget_detail/:id"
+                      name: RouteNames.budgetDetail,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: _buildBudgetDetailPage, // Use helper
+                    ),
+                    // -- Goal Routes --
+                    GoRoute(
+                      path: RouteNames.addGoal, // "add_goal"
+                      name: RouteNames.addGoal,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: (context, state) => const AddEditGoalPage(
+                          initialGoal: null), // Always adding here
+                    ),
+                    GoRoute(
+                      path:
+                          '${RouteNames.editGoal}/:${RouteNames.paramId}', // "edit_goal/:id"
+                      name: RouteNames.editGoal,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: _buildEditGoalPage, // Use helper
+                    ),
+                    GoRoute(
+                      path:
+                          '${RouteNames.goalDetail}/:${RouteNames.paramId}', // "goal_detail/:id"
+                      name: RouteNames.goalDetail,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: _buildGoalDetailPage, // Use helper
                     ),
                   ],
                 ),
@@ -182,10 +219,8 @@ class AppRouter {
                   pageBuilder: (context, state) =>
                       const NoTransitionPage(child: AccountsTabPage()),
                   routes: [
-                    // Add/Edit/Detail routes pushed onto root navigator
                     GoRoute(
-                      path: RouteNames
-                          .addAccount, // "add_account" -> /accounts/add_account
+                      path: RouteNames.addAccount, // "add_account"
                       name: RouteNames.addAccount,
                       parentNavigatorKey: _rootNavigatorKey,
                       builder: (context, state) => const AddEditAccountPage(),
@@ -213,6 +248,7 @@ class AppRouter {
                         builder: (context, state) {
                           final id =
                               state.pathParameters[RouteNames.paramAccountId];
+                          // TODO: Replace with actual Account Detail Page
                           return PlaceholderScreen(
                               featureName:
                                   'Account Details - ID: ${id ?? 'Unknown'}');
@@ -294,7 +330,7 @@ class AppRouter {
         ),
       ]);
 
-  // --- Helper Builder Functions (Keep as is) ---
+  // --- Helper Builder Functions (Transactions, Categories, Accounts - Keep as is) ---
   static Widget _buildTransactionDetailPage(
       BuildContext context, GoRouterState state) {
     final id = state.pathParameters[RouteNames.paramTransactionId];
@@ -320,26 +356,27 @@ class AppRouter {
       BuildContext context, GoRouterState state) {
     log.info("[AppRouter] Attempting to build Edit Transaction page.");
     final transactionId = state.pathParameters[RouteNames.paramTransactionId];
-    TransactionEntity? initialData; // Explicitly typed
+    dynamic initialData = state.extra; // Keep dynamic initially
 
-    if (state.extra is TransactionEntity) {
-      initialData = state.extra as TransactionEntity;
-    } else if (state.extra != null) {
+    // Check if initialData is Expense or Income
+    if (initialData != null &&
+        !(initialData is Expense || initialData is Income)) {
       log.warning(
           "[AppRouter] Edit Transaction route received 'extra' of unexpected type: ${state.extra?.runtimeType}. Ignoring extra data.");
+      initialData = null; // Reset if wrong type
     }
 
     if (transactionId == null) {
       log.severe(
           "[AppRouter] Edit Transaction route called without transaction ID!");
       return const Scaffold(
-          appBar: null, // Consistent with other error scaffolds
+          appBar: null,
           body: Center(child: Text("Error: Missing Transaction ID")));
     }
 
     log.info(
         "[AppRouter] Building edit_transaction: ID=$transactionId, Data provided=${initialData != null}");
-    // AddEditTransactionPage should handle fetching if initialData is null
+    // Pass the initial data (which is Expense or Income)
     return AddEditTransactionPage(initialTransactionData: initialData);
   }
 
@@ -350,7 +387,7 @@ class AppRouter {
     if (categoryId == null) {
       log.severe("[AppRouter] Edit Category route called without ID!");
       return const Scaffold(
-          appBar: null, // Consistent with other error scaffolds
+          appBar: null,
           body: Center(child: Text("Error: Missing Category ID")));
     }
     if (category == null) {
@@ -367,8 +404,7 @@ class AppRouter {
     if (accountId == null) {
       log.severe("[AppRouter] Edit Account route called without ID!");
       return const Scaffold(
-          appBar: null, // Consistent with other error scaffolds
-          body: Center(child: Text("Error: Missing Account ID")));
+          appBar: null, body: Center(child: Text("Error: Missing Account ID")));
     }
     if (account == null) {
       log.warning(
@@ -376,9 +412,66 @@ class AppRouter {
     }
     return AddEditAccountPage(accountId: accountId, account: account);
   }
+
+  // --- NEW Helper Builder Functions (Budgets, Goals) ---
+  static Widget _buildEditBudgetPage(
+      BuildContext context, GoRouterState state) {
+    final budgetId = state.pathParameters[RouteNames.paramId];
+    final budget = state.extra as Budget?;
+    if (budgetId == null) {
+      log.severe("[AppRouter] Edit Budget route called without ID!");
+      return const Scaffold(
+          appBar: null, body: Center(child: Text("Error: Missing Budget ID")));
+    }
+    if (budget == null) {
+      log.warning(
+          "[AppRouter] Edit Budget route called without valid Budget data in 'extra'.");
+    }
+    return AddEditBudgetPage(initialBudget: budget);
+  }
+
+  static Widget _buildBudgetDetailPage(
+      BuildContext context, GoRouterState state) {
+    final budgetId = state.pathParameters[RouteNames.paramId];
+    if (budgetId == null) {
+      log.severe("[AppRouter] Budget Detail route called without ID!");
+      return const Scaffold(
+          appBar: null, body: Center(child: Text("Error: Missing Budget ID")));
+    }
+    // BudgetDetailPage will fetch its own data using the ID
+    return BudgetDetailPage(budgetId: budgetId);
+  }
+
+  static Widget _buildEditGoalPage(BuildContext context, GoRouterState state) {
+    final goalId = state.pathParameters[RouteNames.paramId];
+    final goal = state.extra as Goal?;
+    if (goalId == null) {
+      log.severe("[AppRouter] Edit Goal route called without ID!");
+      return const Scaffold(
+          appBar: null, body: Center(child: Text("Error: Missing Goal ID")));
+    }
+    if (goal == null) {
+      log.warning(
+          "[AppRouter] Edit Goal route called without valid Goal data in 'extra'.");
+    }
+    return AddEditGoalPage(initialGoal: goal);
+  }
+
+  static Widget _buildGoalDetailPage(
+      BuildContext context, GoRouterState state) {
+    final goalId = state.pathParameters[RouteNames.paramId];
+    final goal =
+        state.extra as Goal?; // Pass goal if available for faster initial load
+    if (goalId == null) {
+      log.severe("[AppRouter] Goal Detail route called without ID!");
+      return const Scaffold(
+          appBar: null, body: Center(child: Text("Error: Missing Goal ID")));
+    }
+    return GoalDetailPage(goalId: goalId, initialGoal: goal);
+  }
 }
 
-// --- GoRouterObserver (Keep as is or enhance logging) ---
+// --- GoRouterObserver (Keep as is) ---
 class GoRouterObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
@@ -387,8 +480,7 @@ class GoRouterObserver extends NavigatorObserver {
         route.toString();
     final String? previousRouteName = previousRoute?.settings.name ??
         previousRoute?.settings.arguments?.toString();
-    log.fine(
-        'GoRouter Pushed: ${previousRouteName ?? 'null'} -> $pushedRoute'); // Improved order
+    log.fine('GoRouter Pushed: ${previousRouteName ?? 'null'} -> $pushedRoute');
   }
 
   @override
@@ -399,7 +491,7 @@ class GoRouterObserver extends NavigatorObserver {
     final String? previousRouteName = previousRoute?.settings.name ??
         previousRoute?.settings.arguments?.toString();
     log.fine(
-        'GoRouter Popped: $poppedRoute -> Returning to ${previousRouteName ?? 'null'}'); // Improved wording
+        'GoRouter Popped: $poppedRoute -> Returning to ${previousRouteName ?? 'null'}');
   }
 
   @override
@@ -410,7 +502,7 @@ class GoRouterObserver extends NavigatorObserver {
     final String? previousRouteName = previousRoute?.settings.name ??
         previousRoute?.settings.arguments?.toString();
     log.fine(
-        'GoRouter Removed: $removedRoute (Previous was: ${previousRouteName ?? 'null'})'); // Added context
+        'GoRouter Removed: $removedRoute (Previous was: ${previousRouteName ?? 'null'})');
   }
 
   @override

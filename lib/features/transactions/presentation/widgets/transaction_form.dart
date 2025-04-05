@@ -1,25 +1,30 @@
+// lib/features/transactions/presentation/widgets/transaction_form.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
+import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
-import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For icon lookup
+import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:toggle_switch/toggle_switch.dart'; // Ensure this dependency is added
+import 'package:toggle_switch/toggle_switch.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:collection/collection.dart'; // For firstWhereOrNull
 
-// Callback includes the selected type
 typedef TransactionSubmitCallback = void Function(
   TransactionType type,
   String title,
   double amount,
   DateTime date,
-  Category category, // Pass the selected Category object (or Uncategorized)
+  Category category,
   String accountId,
   String? notes,
 );
@@ -28,7 +33,7 @@ class TransactionForm extends StatefulWidget {
   final TransactionEntity? initialTransaction;
   final TransactionSubmitCallback onSubmit;
   final TransactionType initialType;
-  final Category? initialCategory; // Added to accept pre-filled category
+  final Category? initialCategory;
 
   const TransactionForm({
     super.key,
@@ -85,11 +90,8 @@ class _TransactionFormState extends State<TransactionForm> {
         _selectedCategory = widget.initialCategory;
       });
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        if (mounted)
           _categoryFormFieldKey.currentState?.didChange(_selectedCategory);
-          // Don't auto-validate here, let submit handle it
-          // _categoryFormFieldKey.currentState?.validate();
-        }
       });
     }
     if (widget.initialType != oldWidget.initialType &&
@@ -103,8 +105,7 @@ class _TransactionFormState extends State<TransactionForm> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           _categoryFormFieldKey.currentState?.didChange(null);
-          // Don't auto-validate here
-          // _categoryFormFieldKey.currentState?.validate();
+          _categoryFormFieldKey.currentState?.validate();
         }
       });
     }
@@ -130,14 +131,13 @@ class _TransactionFormState extends State<TransactionForm> {
       if (mounted) {
         setState(() {
           _selectedDate = DateTime(
-            pickedDate.year,
-            pickedDate.month,
-            pickedDate.day,
-            pickedTime?.hour ?? _selectedDate.hour,
-            pickedTime?.minute ?? _selectedDate.minute,
-          );
-          log.info("[TransactionForm] Date selected: $_selectedDate");
+              pickedDate.year,
+              pickedDate.month,
+              pickedDate.day,
+              pickedTime?.hour ?? _selectedDate.hour,
+              pickedTime?.minute ?? _selectedDate.minute);
         });
+        log.info("[TransactionForm] Date selected: $_selectedDate");
       }
     }
   }
@@ -148,79 +148,65 @@ class _TransactionFormState extends State<TransactionForm> {
         : CategoryTypeFilter.income;
     log.info(
         "[TransactionForm] Showing category picker for type: ${categoryFilter.name}");
-
     final Category? result = await showCategoryPicker(context, categoryFilter);
     if (result != null && mounted) {
       setState(() => _selectedCategory = result);
       log.info(
           "[TransactionForm] Category selected via picker: ${result.name} (ID: ${result.id})");
-      // Update FormField state AFTER setting state
       _categoryFormFieldKey.currentState?.didChange(_selectedCategory);
-      // Optionally validate only this field after selection
       _categoryFormFieldKey.currentState?.validate();
     }
   }
 
   void _submitForm() {
     log.info("[TransactionForm] Submit button pressed.");
-
-    // --- MODIFIED: Validate all fields EXCEPT category initially ---
-    // We manually validate category later if needed
-    bool otherFieldsValid = _formKey.currentState?.validate() ?? false;
-    // Find the category field state and temporarily clear its error if validation failed overall
-    final categoryFieldState = _categoryFormFieldKey.currentState;
-    bool categoryWasInvalid = categoryFieldState?.hasError ?? false;
-    if (!otherFieldsValid && categoryWasInvalid) {
-      // If the only error was the category field (which we initially allow to be null)
-      // consider the rest of the form valid for now.
-      // This is a bit heuristic, might need refinement.
-      final errorTextBefore = categoryFieldState?.errorText;
-      categoryFieldState?.validate(); // Re-validate category field
-      if (categoryFieldState?.isValid ?? false) {
-        // If category is actually valid now, or was just null
-        otherFieldsValid = true; // Assume other fields were okay
-      } else {
-        categoryFieldState?.setState(() {
-          // Manually clear error if needed for now
-          // This is hacky, BLoC should drive error display
-        });
-      }
-    }
-
-    if (otherFieldsValid) {
-      // Now check category specifically
+    if (_formKey.currentState!.validate()) {
       final categoryToSubmit = _selectedCategory ?? Category.uncategorized;
-      // Account ID validation still relies on AccountSelectorDropdown validator
       if (_selectedAccountId == null) {
         log.warning(
-            "[TransactionForm] Submit prevented: Account not selected (Validation Error).");
-        // Error snackbar shown by general validation fail below
+            "[TransactionForm] Submit prevented: Account not selected.");
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Please select an account.'),
+            backgroundColor: Colors.orange));
         return;
       }
-
-      // --- Call onSubmit, BLoC will handle the uncategorized case ---
       final title = _titleController.text.trim();
       final amount =
           double.tryParse(_amountController.text.replaceAll(',', '.')) ?? 0.0;
       final notes = _notesController.text.trim();
       final accountId = _selectedAccountId!;
-
       log.info(
-          "[TransactionForm] Form fields validated (excluding initial category check). Calling onSubmit callback.");
-      widget.onSubmit(
-        _transactionType, title, amount, _selectedDate,
-        categoryToSubmit, // Pass selected or Uncategorized
-        accountId,
-        notes.isEmpty ? null : notes,
-      );
+          "[TransactionForm] Form fields validated. Calling onSubmit callback with Category: ${categoryToSubmit.name}");
+      widget.onSubmit(_transactionType, title, amount, _selectedDate,
+          categoryToSubmit, accountId, notes.isEmpty ? null : notes);
     } else {
-      log.warning("[TransactionForm] Form validation failed (other fields).");
+      log.warning("[TransactionForm] Form validation failed.");
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(const SnackBar(
             content: Text('Please correct the errors in the form.'),
             backgroundColor: Colors.orange));
     }
+  }
+
+  Widget? _getPrefixIcon(
+      BuildContext context, String iconKey, IconData fallbackIcon) {
+    final modeTheme = context.modeTheme;
+    final theme = Theme.of(context);
+    if (modeTheme != null) {
+      String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
+      if (svgPath.isNotEmpty) {
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SvgPicture.asset(svgPath,
+              width: 20,
+              height: 20,
+              colorFilter: ColorFilter.mode(
+                  theme.colorScheme.onSurfaceVariant, BlendMode.srcIn)),
+        );
+      }
+    }
+    return Icon(fallbackIcon);
   }
 
   @override
@@ -234,41 +220,50 @@ class _TransactionFormState extends State<TransactionForm> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
+        padding: modeTheme?.pagePadding
+                .copyWith(left: 16, right: 16, bottom: 40, top: 16) ??
+            const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Transaction Type Toggle
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Center(
               child: ToggleSwitch(
-                minWidth: 130.0,
-                initialLabelIndex: _transactionType.index,
+                minWidth: 120.0,
                 cornerRadius: 20.0,
-                activeFgColor: Colors.white,
+                activeBgColor: [
+                  theme.colorScheme.errorContainer,
+                  theme.colorScheme.primaryContainer
+                ],
+                activeFgColor: isExpense
+                    ? theme.colorScheme.onErrorContainer
+                    : theme.colorScheme.onPrimaryContainer,
                 inactiveBgColor: theme.colorScheme.surfaceContainerHighest,
                 inactiveFgColor: theme.colorScheme.onSurfaceVariant,
+                initialLabelIndex: isExpense ? 0 : 1,
                 totalSwitches: 2,
                 labels: const ['Expense', 'Income'],
-                icons: const [Icons.remove, Icons.add],
-                iconSize: 20.0,
-                activeBgColors: [
-                  [theme.colorScheme.error],
-                  [Colors.green.shade600]
-                ],
-                animate: true,
-                curve: Curves.easeInOut,
+                radiusStyle: true,
                 onToggle: (index) {
-                  if (index != null && index != _transactionType.index) {
-                    final newType = TransactionType.values[index];
+                  if (index != null) {
                     log.info(
-                        "[TransactionForm] Toggled type to: ${newType.name}");
-                    setState(() {
-                      _transactionType = newType;
-                      _selectedCategory = null;
-                      _categoryFormFieldKey.currentState?.didChange(null);
-                      _categoryFormFieldKey.currentState
-                          ?.validate(); // Re-validate after type change
-                    });
+                        "[TransactionForm] Toggle switched to index: $index");
+                    final newType = index == 0
+                        ? TransactionType.expense
+                        : TransactionType.income;
+                    if (_transactionType != newType) {
+                      setState(() {
+                        _transactionType = newType;
+                        _selectedCategory = null;
+                      });
+                      context
+                          .read<AddEditTransactionBloc>()
+                          .add(TransactionTypeChanged(newType));
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _categoryFormFieldKey.currentState?.didChange(null);
+                        _categoryFormFieldKey.currentState?.validate();
+                      });
+                    }
                   }
                 },
               ),
@@ -280,8 +275,8 @@ class _TransactionFormState extends State<TransactionForm> {
           AppTextFormField(
             controller: _titleController,
             labelText: isExpense ? 'Title / Description' : 'Title / Source',
-            prefixIconData:
-                isExpense ? Icons.description_outlined : Icons.source_outlined,
+            prefixIcon: _getPrefixIcon(context, 'label',
+                isExpense ? Icons.description_outlined : Icons.source_outlined),
             textCapitalization: TextCapitalization.sentences,
             validator: (value) => (value == null || value.trim().isEmpty)
                 ? 'Please enter a title'
@@ -294,90 +289,101 @@ class _TransactionFormState extends State<TransactionForm> {
             controller: _amountController,
             labelText: 'Amount',
             prefixText: '$currencySymbol ',
-            prefixIconData: Icons.attach_money,
+            prefixIcon: _getPrefixIcon(context, 'amount', Icons.attach_money),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
             ],
             validator: (value) {
-              if (value == null || value.isEmpty)
-                return 'Please enter an amount';
+              if (value == null || value.isEmpty) return 'Enter amount';
               final number = double.tryParse(value.replaceAll(',', '.'));
-              if (number == null) return 'Please enter a valid number';
-              if (number <= 0) return 'Amount must be positive';
+              if (number == null) return 'Invalid number';
+              if (number <= 0) return 'Must be positive';
               return null;
             },
           ),
           const SizedBox(height: 16),
 
-          // --- Category Picker using FormField ---
+          // Category Picker using FormField
           FormField<Category>(
             key: _categoryFormFieldKey,
             initialValue: _selectedCategory,
-            // --- MODIFIED VALIDATOR: Always return null initially ---
-            validator: (value) {
-              // Let the _submitForm logic handle the check after suggestion flow
-              return null;
-            },
-            // --- END MODIFIED ---
+            validator: (value) => null,
             builder: (formFieldState) {
-              Category? displayCategory = _selectedCategory;
+              final Category? displayCategory =
+                  _selectedCategory; // Explicit type
               Color displayColor =
                   displayCategory?.displayColor ?? theme.disabledColor;
               IconData displayIcon = Icons.category_outlined;
+              Widget leadingWidget;
+
               if (displayCategory != null) {
-                displayIcon = availableIcons[displayCategory.iconName] ??
-                    Icons.help_outline;
+                String? svgPath;
+                if (modeTheme != null) {
+                  svgPath = modeTheme.assets.getCategoryIcon(
+                      displayCategory.iconName,
+                      defaultPath: '');
+                }
+                if (svgPath != null && svgPath.isNotEmpty) {
+                  leadingWidget = Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SvgPicture.asset(svgPath,
+                          width: 24,
+                          height: 24,
+                          colorFilter:
+                              ColorFilter.mode(displayColor, BlendMode.srcIn)));
+                } else {
+                  displayIcon = availableIcons[displayCategory.iconName] ??
+                      Icons.help_outline;
+                  leadingWidget = Icon(displayIcon, color: displayColor);
+                }
+              } else {
+                leadingWidget = _getPrefixIcon(
+                        context, 'category', Icons.category_outlined) ??
+                    Icon(Icons.category_outlined, color: theme.disabledColor);
               }
-              final BorderRadius defaultRadius = BorderRadius.circular(12.0);
-              BorderRadius inputBorderRadius = defaultRadius;
+
+              BorderRadius inputBorderRadius = BorderRadius.circular(8.0);
               final borderConfig = theme.inputDecorationTheme.enabledBorder;
-              if (borderConfig is OutlineInputBorder) {
+              InputBorder? errorBorderConfig =
+                  theme.inputDecorationTheme.errorBorder;
+              BorderSide errorSide =
+                  BorderSide(color: theme.colorScheme.error, width: 1.5);
+              if (borderConfig is OutlineInputBorder)
                 inputBorderRadius = borderConfig.borderRadius;
-              }
-              // --- Check error state from the field itself ---
+              if (errorBorderConfig is OutlineInputBorder)
+                errorSide = errorBorderConfig.borderSide;
               bool hasError = formFieldState.hasError;
-              // --- End Check ---
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  InputDecorator(
-                    decoration: InputDecoration(
-                      contentPadding: EdgeInsets.zero,
-                      // --- Show error text if validation failed ---
-                      errorText: hasError ? formFieldState.errorText : null,
-                      // --- End Show ---
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      errorBorder: InputBorder.none,
-                      isDense: true,
+                  ListTile(
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 12),
+                      shape: OutlineInputBorder(
+                          borderRadius: inputBorderRadius,
+                          borderSide: hasError
+                              ? errorSide
+                              : theme.inputDecorationTheme.enabledBorder
+                                      ?.borderSide ??
+                                  BorderSide(color: theme.dividerColor)),
+                      leading: leadingWidget,
+                      title: Text(displayCategory?.name ?? 'Select Category',
+                          style: TextStyle(
+                              color:
+                                  hasError ? theme.colorScheme.error : null)),
+                      trailing: const Icon(Icons.arrow_drop_down),
+                      onTap: () async {
+                        await _selectCategory(context);
+                      }),
+                  if (hasError)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12.0, top: 8.0),
+                      child: Text(formFieldState.errorText!,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.error)),
                     ),
-                    child: ListTile(
-                        contentPadding:
-                            const EdgeInsets.symmetric(horizontal: 12),
-                        shape: OutlineInputBorder(
-                            borderRadius: inputBorderRadius,
-                            borderSide: hasError
-                                ? BorderSide(
-                                    color: theme.colorScheme.error, width: 1.5)
-                                : theme.inputDecorationTheme.enabledBorder
-                                        ?.borderSide ??
-                                    BorderSide(color: theme.dividerColor)),
-                        leading: Icon(displayIcon,
-                            color: hasError
-                                ? theme.colorScheme.error
-                                : displayColor),
-                        title: Text(displayCategory?.name ?? 'Select Category',
-                            style: TextStyle(
-                                color:
-                                    hasError ? theme.colorScheme.error : null)),
-                        trailing: const Icon(Icons.arrow_drop_down),
-                        onTap: () async {
-                          await _selectCategory(context);
-                          // formFieldState.didChange(_selectedCategory); // Already happens in _selectCategory
-                        }),
-                  ),
                 ],
               );
             },
@@ -402,7 +408,7 @@ class _TransactionFormState extends State<TransactionForm> {
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             shape: theme.inputDecorationTheme.enabledBorder ??
                 const OutlineInputBorder(),
-            leading: const Icon(Icons.calendar_today),
+            leading: _getPrefixIcon(context, 'calendar', Icons.calendar_today),
             title: const Text('Date & Time'),
             subtitle: Text(DateFormatter.formatDateTime(_selectedDate)),
             trailing: IconButton(
@@ -419,7 +425,8 @@ class _TransactionFormState extends State<TransactionForm> {
             controller: _notesController,
             labelText: 'Notes (Optional)',
             hintText: 'Add any extra details',
-            prefixIconData: Icons.note_alt_outlined,
+            prefixIcon:
+                _getPrefixIcon(context, 'notes', Icons.note_alt_outlined),
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
           ),
@@ -427,15 +434,15 @@ class _TransactionFormState extends State<TransactionForm> {
 
           // Submit Button
           ElevatedButton.icon(
-            icon: Icon(
-                widget.initialTransaction == null ? Icons.add : Icons.save),
+            icon: Icon(widget.initialTransaction == null
+                ? Icons.add_circle_outline
+                : Icons.save_outlined),
             label: Text(widget.initialTransaction == null
                 ? 'Add Transaction'
                 : 'Update Transaction'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: theme.textTheme.titleMedium,
-            ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                textStyle: theme.textTheme.titleMedium),
             onPressed: _submitForm,
           ),
         ],

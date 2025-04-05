@@ -16,7 +16,6 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_dialog.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_sort_sheet.dart';
-// Import the new decomposed widgets
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_header.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_calendar_view.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
@@ -26,8 +25,8 @@ import 'package:flutter/material.dart'; // Hide the conflicting Category
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:table_calendar/table_calendar.dart'; // Needed for orElse fallback
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart'; // Needed for orElse fallback
+import 'package:table_calendar/table_calendar.dart';
 
 class TransactionListPage extends StatefulWidget {
   const TransactionListPage({super.key});
@@ -42,6 +41,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Timer? _debounce;
 
   // Calendar state
+  // --- FIX: Default to month ---
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -55,7 +55,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _searchController.addListener(_onSearchChanged);
     _selectedDay =
         DateTime(_focusedDay.year, _focusedDay.month, _focusedDay.day);
-
     _setupInitialCalendarData();
     _listenToBlocChanges();
   }
@@ -78,7 +77,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
               "[TxnListPage] BLoC state updated, refreshing calendar data cache.");
           setState(() {
             _currentTransactionsForCalendar = state.transactions;
-            _updateSelectedDayTransactions();
+            _updateSelectedDayTransactions(); // Refresh selected day's list too
           });
         }
       } else if (state.status != ListStatus.success &&
@@ -95,12 +94,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
   }
 
   void _setupInitialCalendarData() {
+    // Check initial BLoC state and populate calendar data if ready
     final bloc = context.read<TransactionListBloc>();
     if (bloc.state.status == ListStatus.initial) {
       bloc.add(const LoadTransactions()); // Trigger load if initial
     } else if (bloc.state.status == ListStatus.success) {
       _currentTransactionsForCalendar = bloc.state.transactions;
-      _updateSelectedDayTransactions();
+      _updateSelectedDayTransactions(); // Update list for initially selected day
     }
   }
 
@@ -119,16 +119,15 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   void _clearSearch() {
     _searchController.clear();
-    context
-        .read<TransactionListBloc>()
-        .add(const SearchChanged(searchTerm: null));
+    // Bloc listener will handle the reload via SearchChanged event
   }
 
   void _navigateToDetailOrEdit(
       BuildContext context, TransactionEntity transaction) {
     log.info(
         "[TxnListPage] _navigateToDetailOrEdit called for ${transaction.type.name} ID: ${transaction.id}");
-    const String routeName = RouteNames.editTransaction;
+    const String routeName =
+        RouteNames.editTransaction; // Navigate to Edit by default
     final Map<String, String> params = {
       RouteNames.paramTransactionId: transaction.id
     };
@@ -170,8 +169,12 @@ class _TransactionListPageState extends State<TransactionListPage> {
     if (selectedCategory != null && context.mounted) {
       log.info(
           "[TxnListPage] Category '${selectedCategory.name}' selected from picker.");
+      // Prepare data for learning user history
       final matchData = TransactionMatchData(
-          description: transaction.title, merchantId: null);
+          description: transaction.title,
+          merchantId:
+              null // TODO: Add merchant ID if available on transaction entity
+          );
       context.read<TransactionListBloc>().add(UserCategorizedTransaction(
           transactionId: transaction.id,
           transactionType: transaction.type,
@@ -192,13 +195,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
           confirmText: "Delete",
           confirmColor: Theme.of(context).colorScheme.error,
         ) ??
-        false;
+        false; // Default to false if dialog is dismissed
   }
 
   void _showFilterDialog(
       BuildContext context, TransactionListState currentState) async {
     log.info("[TxnListPage] Showing filter dialog.");
-    final getCategoriesUseCase = sl<GetCategoriesUseCase>();
+    final getCategoriesUseCase =
+        sl<GetCategoriesUseCase>(); // Assuming it's registered
     final categoriesResult = await getCategoriesUseCase(const NoParams());
     List<Category> categories = [];
     if (categoriesResult.isRight()) {
@@ -217,9 +221,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
       context: context,
       builder: (dialogContext) {
         return BlocProvider.value(
+          // Ensure AccountListBloc is available
           value: BlocProvider.of<AccountListBloc>(context),
           child: TransactionFilterDialog(
-            availableCategories: categories,
+            availableCategories: categories, // Pass fetched categories
             initialStartDate: currentState.startDate,
             initialEndDate: currentState.endDate,
             initialTransactionType: currentState.transactionType,
@@ -270,7 +275,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
     if (!isSameDay(_selectedDay, normalizedSelectedDay)) {
       setState(() {
         _selectedDay = normalizedSelectedDay;
-        _focusedDay = focusedDay;
+        _focusedDay = focusedDay; // Keep focusedDay in sync
         _updateSelectedDayTransactions();
       });
     }
@@ -287,12 +292,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   void _onPageChanged(DateTime focusedDay) {
     log.fine("[TxnListPage] Calendar page changed, focused day: $focusedDay");
-    setState(() {
-      _focusedDay = focusedDay;
-    });
+    // We don't need to update selectedDay here, just the focused month/week
+    _focusedDay = focusedDay; // Update focused day for calendar header
+    // No setState needed if only focusedDay changes, TableCalendar handles it internally
   }
 
   List<TransactionEntity> _getEventsForDay(DateTime day) {
+    // Normalize day to compare date part only
     final normalizedDay = DateTime(day.year, day.month, day.day);
     return _currentTransactionsForCalendar.where((txn) {
       final normalizedTxnDate =
@@ -353,6 +359,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                     context
                         .read<TransactionListBloc>()
                         .add(const LoadTransactions(forceReload: true));
+                    // Wait for the loading state to finish
                     await context.read<TransactionListBloc>().stream.firstWhere(
                         (s) =>
                             s.status != ListStatus.loading &&
@@ -377,7 +384,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                   _currentTransactionsForCalendar,
                               getEventsForDay: _getEventsForDay,
                               onDaySelected: _onDaySelected,
-                              onFormatChanged: _onFormatChanged,
+                              onFormatChanged:
+                                  _onFormatChanged, // Pass the handler
                               onPageChanged: _onPageChanged,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
                             ),
@@ -389,6 +397,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
                               state: state,
                               settings: settings,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
+                              // --- Pass required handlers ---
+                              handleChangeCategoryRequest:
+                                  _handleChangeCategoryRequest,
+                              confirmDeletion: _confirmDeletion,
+                              // --- End Pass ---
                             ),
                           ),
                   ),
@@ -413,8 +426,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   ? () async {
                       log.info(
                           "[TxnListPage] Batch categorize button pressed.");
+                      // Determine dominant type for picker
                       final type = _getDominantTransactionType(state) ??
-                          TransactionType.expense;
+                          TransactionType
+                              .expense; // Default to expense if mixed/none
                       final Category? selectedCategory =
                           await showCategoryPicker(
                               context,
@@ -436,7 +451,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                     "Please select a specific category.")));
                       }
                     }
-                  : null,
+                  : null, // Disable if count is 0
               label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
               icon: const Icon(Icons.category_rounded),
               backgroundColor: count > 0
@@ -457,23 +472,19 @@ class _TransactionListPageState extends State<TransactionListPage> {
     if (state.selectedTransactionIds.isEmpty) return null;
     TransactionType? type;
     for (final id in state.selectedTransactionIds) {
+      // Find the transaction in the current state's list
       final txn = state.transactions.firstWhere((t) => t.id == id, orElse: () {
         log.severe(
             "[TxnListPage] CRITICAL: Selected ID $id not found in state during dominant type check!");
-        return TransactionEntity.fromExpense(Expense(
-          id: 'error_$id', // Make ID unique for debugging
-          title: 'Error: Not Found',
-          amount: 0,
-          date: DateTime.now(),
-          accountId: 'error_account',
-        ));
+        // Return a dummy object or throw to indicate a serious state inconsistency
+        throw StateError(
+            "Selected transaction ID $id not found in BLoC state.");
       });
-      if (txn.accountId == 'error_account') continue;
 
       if (type == null) {
         type = txn.type;
       } else if (type != txn.type) {
-        return null;
+        return null; // Mixed types selected
       }
     }
     return type;

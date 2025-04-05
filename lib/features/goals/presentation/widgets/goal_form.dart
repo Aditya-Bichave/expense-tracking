@@ -9,6 +9,7 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 typedef GoalSubmitCallback = Function(
   String name,
@@ -38,7 +39,7 @@ class _GoalFormState extends State<GoalForm> {
   late TextEditingController _amountController;
   late TextEditingController _descriptionController;
   DateTime? _selectedTargetDate;
-  String? _selectedIconName; // Nullable
+  String? _selectedIconName;
 
   @override
   void initState() {
@@ -50,7 +51,8 @@ class _GoalFormState extends State<GoalForm> {
     _descriptionController =
         TextEditingController(text: initial?.description ?? '');
     _selectedTargetDate = initial?.targetDate;
-    _selectedIconName = initial?.iconName ?? 'savings'; // Default icon if null
+    _selectedIconName =
+        initial?.iconName ?? 'savings_outlined'; // Default icon if null
 
     log.info(
         "[GoalForm] initState. Icon: $_selectedIconName, Date: $_selectedTargetDate");
@@ -66,12 +68,11 @@ class _GoalFormState extends State<GoalForm> {
 
   Future<void> _selectTargetDate(BuildContext context) async {
     final DateTime initial =
-        _selectedTargetDate ?? DateTime.now().add(const Duration(days: 30));
+        _selectedTargetDate ?? DateTime.now().add(const Duration(days: 90));
     final DateTime? picked = await showDatePicker(
         context: context,
         initialDate: initial,
-        firstDate: DateTime.now()
-            .subtract(const Duration(days: 30)), // Allow slightly past dates
+        firstDate: DateTime(2000), // Allow past dates for flexibility
         lastDate: DateTime(2101));
     if (picked != null && mounted) {
       setState(() => _selectedTargetDate =
@@ -82,7 +83,7 @@ class _GoalFormState extends State<GoalForm> {
 
   void _showIconPicker(BuildContext context) async {
     final String? selectedIcon =
-        await showIconPicker(context, _selectedIconName ?? 'savings');
+        await showIconPicker(context, _selectedIconName ?? 'savings_outlined');
     if (selectedIcon != null && mounted) {
       setState(() => _selectedIconName = selectedIcon);
       log.info("[GoalForm] Icon selected: $_selectedIconName");
@@ -108,6 +109,28 @@ class _GoalFormState extends State<GoalForm> {
     }
   }
 
+  Widget? _getPrefixIcon(
+      BuildContext context, String iconKey, IconData fallbackIcon) {
+    final modeTheme = context.modeTheme;
+    final theme = Theme.of(context);
+    if (modeTheme != null) {
+      String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
+      if (svgPath.isNotEmpty) {
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: SvgPicture.asset(
+            svgPath,
+            width: 20,
+            height: 20,
+            colorFilter: ColorFilter.mode(
+                theme.colorScheme.onSurfaceVariant, BlendMode.srcIn),
+          ),
+        );
+      }
+    }
+    return Icon(fallbackIcon);
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
@@ -122,14 +145,16 @@ class _GoalFormState extends State<GoalForm> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding ?? const EdgeInsets.all(16.0),
+        padding: modeTheme?.pagePadding
+                .copyWith(left: 16, right: 16, bottom: 40, top: 16) ??
+            const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Goal Name
           AppTextFormField(
             controller: _nameController,
             labelText: 'Goal Name',
             hintText: 'e.g., New Car Down Payment, Emergency Fund',
-            prefixIconData: Icons.flag_outlined,
+            prefixIcon: _getPrefixIcon(context, 'flag', Icons.flag_outlined),
             textCapitalization: TextCapitalization.words,
             validator: (value) =>
                 (value == null || value.trim().isEmpty) ? 'Enter a name' : null,
@@ -141,7 +166,8 @@ class _GoalFormState extends State<GoalForm> {
             controller: _amountController,
             labelText: 'Target Amount',
             prefixText: '$currencySymbol ',
-            prefixIconData: Icons.track_changes_outlined,
+            prefixIcon:
+                _getPrefixIcon(context, 'target', Icons.track_changes_outlined),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
@@ -156,33 +182,30 @@ class _GoalFormState extends State<GoalForm> {
           ),
           const SizedBox(height: 16),
 
-          // Target Date (Optional)
+          // --- FIX: Target Date ListTile Trailing ---
           ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
             shape: theme.inputDecorationTheme.enabledBorder ??
                 const OutlineInputBorder(),
-            leading: const Icon(Icons.calendar_today_outlined),
+            leading: _getPrefixIcon(
+                context, 'calendar', Icons.calendar_today_outlined),
             title: const Text('Target Date (Optional)'),
             subtitle: Text(_selectedTargetDate == null
                 ? 'No target date set'
                 : DateFormatter.formatDate(_selectedTargetDate!)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_selectedTargetDate != null)
-                  IconButton(
+            // Only show Clear button if date is selected
+            trailing: _selectedTargetDate != null
+                ? IconButton(
                     icon: const Icon(Icons.clear, size: 18),
                     onPressed: () => setState(() => _selectedTargetDate = null),
                     tooltip: "Clear Target Date",
                     visualDensity: VisualDensity.compact,
                   )
-                else
-                  const SizedBox(width: 40), // Placeholder to keep alignment
-                const Icon(Icons.edit_calendar_outlined),
-              ],
-            ),
+                : const Icon(Icons.edit_calendar_outlined,
+                    size: 18), // Show edit icon if no date
             onTap: () => _selectTargetDate(context),
           ),
+          // --- END FIX ---
           const SizedBox(height: 16),
 
           // Icon Picker
@@ -204,7 +227,8 @@ class _GoalFormState extends State<GoalForm> {
             controller: _descriptionController,
             labelText: 'Description / Notes (Optional)',
             hintText: 'Add details about your goal',
-            prefixIconData: Icons.note_alt_outlined,
+            prefixIcon:
+                _getPrefixIcon(context, 'notes', Icons.note_alt_outlined),
             maxLines: 4,
             textCapitalization: TextCapitalization.sentences,
           ),
@@ -212,7 +236,8 @@ class _GoalFormState extends State<GoalForm> {
 
           // Submit Button
           ElevatedButton.icon(
-            icon: Icon(isEditing ? Icons.save : Icons.add_circle_outline),
+            icon: Icon(
+                isEditing ? Icons.save_outlined : Icons.add_circle_outline),
             label: Text(isEditing ? 'Update Goal' : 'Add Goal'),
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),

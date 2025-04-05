@@ -18,14 +18,19 @@ class _GoalsDataChanged extends GoalListEvent {
   const _GoalsDataChanged();
 }
 
-// --- ADDED Archive Event ---
 class ArchiveGoal extends GoalListEvent {
   final String goalId;
   const ArchiveGoal({required this.goalId});
   @override
   List<Object> get props => [goalId];
 }
-// --- END Archive Event ---
 
-// Delete event if implementing permanent delete
-// class DeleteGoal extends GoalListEvent { ... }
+// --- ADDED DeleteGoal Event ---
+class DeleteGoal extends GoalListEvent {
+  // <<< ADD THIS CLASS
+  final String goalId;
+  const DeleteGoal({required this.goalId});
+  @override
+  List<Object> get props => [goalId];
+}
+// --- END DeleteGoal Event ---

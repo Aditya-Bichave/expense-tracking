@@ -1,25 +1,30 @@
 // lib/features/budgets_cats/presentation/pages/budgets_cats_tab_page.dart
-import 'package:expense_tracker/core/di/service_locator.dart'; // To be created
-import 'package:expense_tracker/features/budgets/presentation/pages/budgets_sub_tab.dart'; // ADDED
+import 'package:expense_tracker/features/budgets/presentation/pages/budgets_sub_tab.dart'; // Import the actual BudgetsSubTab
 import 'package:expense_tracker/features/budgets_cats/presentation/pages/budgets_sub_tab.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/pages/categories_sub_tab.dart';
-import 'package:expense_tracker/features/goals/presentation/pages/goals_sub_tab.dart'; // ADDED (Placeholder)
+import 'package:expense_tracker/features/goals/presentation/pages/goals_sub_tab.dart'; // Import the implemented GoalsSubTab
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+// Bloc imports are assumed to be global via main.dart MultiBlocProvider
 
 class BudgetsAndCatsTabPage extends StatelessWidget {
   const BudgetsAndCatsTabPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Assuming CategoryManagementBloc & BudgetListBloc are provided globally
-    return _buildTabs(context);
-  }
+    // Determine initial index based on extra data if provided (e.g., from GoalSummaryWidget)
+    int initialIndex = 0;
+    final extraData = GoRouterState.of(context).extra;
+    if (extraData is Map && extraData.containsKey('initialTabIndex')) {
+      final index = extraData['initialTabIndex'];
+      if (index is int && index >= 0 && index < 3) {
+        initialIndex = index;
+      }
+    }
 
-  Widget _buildTabs(BuildContext context) {
     return DefaultTabController(
       length: 3, // Budgets, Categories, Goals
+      initialIndex: initialIndex, // Set initial tab index
       child: Scaffold(
         // Use a nested AppBar for the tabs
         appBar: AppBar(
@@ -28,9 +33,9 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
           toolbarHeight: 0,
           bottom: TabBar(
             tabs: const [
-              Tab(text: 'Budgets'), // Changed order
+              Tab(text: 'Budgets'), // Order: Budgets, Categories, Goals
               Tab(text: 'Categories'),
-              Tab(text: 'Goals'), // Added Goals
+              Tab(text: 'Goals'),
             ],
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
@@ -40,24 +45,12 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            BudgetsSubTab(), // Budgets Screen
-            CategoriesSubTab(), // Categories Screen
-            GoalsSubTab(), // Goals Screen (Placeholder for Phase 2)
+            BudgetsSubTab(), // Budgets Screen (Implemented)
+            CategoriesSubTab(), // Categories Screen (Existing)
+            GoalsSubTab(), // Goals Screen (Now Implemented)
           ],
         ),
       ),
     );
-  }
-}
-
-// Create placeholder GoalsSubTab
-// lib/features/goals/presentation/pages/goals_sub_tab.dart
-
-class GoalsSubTab extends StatelessWidget {
-  const GoalsSubTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text("Goals Feature - Coming Soon!"));
   }
 }

@@ -2,12 +2,11 @@
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
-import 'package:expense_tracker/features/goals/presentation/widgets/goal_card.dart'; // Create this next
+import 'package:expense_tracker/features/goals/presentation/widgets/goal_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:expense_tracker/router.dart'; // Import AppRouter for route names
 
 class GoalsSubTab extends StatelessWidget {
   const GoalsSubTab({super.key});
@@ -18,6 +17,7 @@ class GoalsSubTab extends StatelessWidget {
     final modeTheme = context.modeTheme;
 
     return Scaffold(
+      // Ensure Scaffold is present
       body: BlocBuilder<GoalListBloc, GoalListState>(
         builder: (context, state) {
           Widget content;
@@ -32,7 +32,9 @@ class GoalsSubTab extends StatelessWidget {
                         "Error loading goals: ${state.errorMessage ?? 'Unknown error'}",
                         style: TextStyle(color: theme.colorScheme.error),
                         textAlign: TextAlign.center)));
-          } else if (state.goals.isEmpty) {
+          } else if (state.goals.isEmpty &&
+              state.status != GoalListStatus.loading) {
+            // Don't show empty state during initial load
             content = Center(
                 child: Padding(
                     padding: const EdgeInsets.all(30.0),
@@ -45,35 +47,47 @@ class GoalsSubTab extends StatelessWidget {
                                   theme.colorScheme.secondary.withOpacity(0.7)),
                           const SizedBox(height: 16),
                           Text("No Savings Goals Yet",
-                              style: theme.textTheme.headlineSmall),
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                  color: theme.colorScheme.secondary)),
                           const SizedBox(height: 8),
                           Text(
-                            "Tap the '+' button to create your first savings goal.",
-                            style: theme.textTheme.bodyMedium,
+                            "Tap the '+' button below to create your first savings goal.",
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant),
                             textAlign: TextAlign.center,
                           ),
+                          const SizedBox(height: 24),
+                          // --- VERIFIED: Button navigates to addGoal ---
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add First Goal'),
+                            onPressed: () => context
+                                .pushNamed(RouteNames.addGoal), // Correct route
+                            style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12)),
+                          )
+                          // --- END VERIFIED ---
                         ])));
           } else {
             // Display the list of goals
             content = ListView.builder(
               padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
-                  const EdgeInsets.only(top: 8.0, bottom: 90.0),
+                  const EdgeInsets.only(
+                      top: 8.0, bottom: 90.0), // Padding for FAB
               itemCount: state.goals.length,
               itemBuilder: (ctx, index) {
                 final goal = state.goals[index];
                 return GoalCard(
-                  // Create this widget next
                   goal: goal,
                   onTap: () {
-                    // Navigate to detail view (Phase 3)
-                    // Use AppRouter constants
+                    // Navigate to detail view
                     context.pushNamed(RouteNames.goalDetail,
                         pathParameters: {'id': goal.id}, extra: goal);
-                    // ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Detail view coming soon for ${goal.name}")));
                   },
                 )
                     .animate()
-                    .fadeIn(delay: (50 * index).ms)
+                    .fadeIn(delay: (50 * index).ms, duration: 300.ms)
                     .slideY(begin: 0.2, curve: Curves.easeOut);
               },
             );
@@ -97,8 +111,7 @@ class GoalsSubTab extends StatelessWidget {
         heroTag: 'add_goal_fab', // Unique tag
         child: const Icon(Icons.add),
         tooltip: 'Create New Goal',
-        onPressed: () =>
-            context.pushNamed(RouteNames.addGoal), // Use AppRouter constant
+        onPressed: () => context.pushNamed(RouteNames.addGoal),
       ),
     );
   }
