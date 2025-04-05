@@ -1,29 +1,38 @@
 // lib/core/constants/route_names.dart
-
 abstract class RouteNames {
   // --- Shell Root Paths ---
   static const String dashboard = '/dashboard';
   static const String transactionsList = '/transactions';
-  static const String budgetsAndCats = '/budgets-cats';
+  static const String budgetsAndCats =
+      '/budgets-cats'; // Entry point for the tab
   static const String accounts = '/accounts';
   static const String settings = '/settings';
 
   // --- Transaction Sub-Routes ---
-  static const String addTransaction = 'add'; // Unified add
-  static const String editTransaction = 'edit'; // Unified edit prefix
+  static const String addTransaction = 'add';
+  static const String editTransaction = 'edit';
   static const String transactionDetail = 'transaction_detail';
 
-  // --- REMOVED Specific Expense/Income Routes ---
-  // static const String addExpense = 'add_expense';
-  // static const String editExpense = 'edit_expense';
-  // static const String addIncome = 'add_income';
-  // static const String editIncome = 'edit_income';
-
   // --- Budgets & Cats Sub-Routes ---
+
+  // --- Budget Routes (Directly under budgetsAndCats for simplicity in GoRouter setup) ---
+  static const String createBudget = 'creat_budget';
+  static const String addBudget = 'add_budget';
+  static const String editBudget = 'edit_budget'; // <<< DEFINED HERE
+  static const String budgetDetail = 'budget_detail'; // <<< DEFINED HERE
+
+  // --- Category Routes (Nested under budgetsAndCats logically, but path structure matters) ---
+  // Path: /budgets-cats/manage_categories
   static const String manageCategories = 'manage_categories';
+  // Path: /budgets-cats/manage_categories/add_category
   static const String addCategory = 'add_category';
+  // Path: /budgets-cats/manage_categories/edit_category/:id
   static const String editCategory = 'edit_category';
-  static const String createBudget = 'create_budget';
+
+  // --- Goal Routes (Directly under budgetsAndCats for simplicity) ---
+  static const String addGoal = 'add_goal'; // <<< DEFINED HERE
+  static const String editGoal = 'edit_goal'; // <<< DEFINED HERE
+  static const String goalDetail = 'goal_detail'; // <<< DEFINED HERE
 
   // --- Accounts Sub-Routes ---
   static const String addAccount = 'add_account';
@@ -43,8 +52,8 @@ abstract class RouteNames {
   static const String settingsAbout = 'settings_about';
 
   // --- Parameter Names ---
-  static const String paramId = 'id';
+  static const String paramId =
+      'id'; // Used by editBudget, editCategory, editGoal, goalDetail, budgetDetail
   static const String paramAccountId = 'accountId';
-  static const String paramTransactionId =
-      'transactionId'; // Used by editTransaction
+  static const String paramTransactionId = 'transactionId';
 }

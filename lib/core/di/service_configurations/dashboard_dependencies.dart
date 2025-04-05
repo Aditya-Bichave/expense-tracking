@@ -11,6 +11,8 @@ class DashboardDependencies {
           accountRepository: sl(),
           incomeRepository: sl(),
           expenseRepository: sl(),
+          budgetRepository: sl(),
+          goalRepository: sl(),
         ));
     // Bloc
     sl.registerFactory(() => DashboardBloc(

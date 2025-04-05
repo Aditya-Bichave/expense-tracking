@@ -1,7 +1,10 @@
+// lib/features/budgets_cats/presentation/pages/budgets_cats_tab_page.dart
 import 'package:expense_tracker/core/di/service_locator.dart'; // To be created
+import 'package:expense_tracker/features/budgets/presentation/pages/budgets_sub_tab.dart'; // ADDED
 import 'package:expense_tracker/features/budgets_cats/presentation/pages/budgets_sub_tab.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
-import 'package:expense_tracker/features/categories/presentation/pages/categories_sub_tab.dart'; // To be created
+import 'package:expense_tracker/features/categories/presentation/pages/categories_sub_tab.dart';
+import 'package:expense_tracker/features/goals/presentation/pages/goals_sub_tab.dart'; // ADDED (Placeholder)
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -10,32 +13,25 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Provide CategoryManagementBloc if not already global
-    // It's needed by CategoriesSubTab and potentially Manage Categories screen
-    // return BlocProvider<CategoryManagementBloc>(
-    //   create: (context) => sl<CategoryManagementBloc>()..add(const LoadCategories()), // Load if needed
-    //   child: _buildTabs(context),
-    // );
-    return _buildTabs(context); // Assuming Bloc is provided globally
+    // Assuming CategoryManagementBloc & BudgetListBloc are provided globally
+    return _buildTabs(context);
   }
 
   Widget _buildTabs(BuildContext context) {
     return DefaultTabController(
-      length: 2, // Budgets and Categories
+      length: 3, // Budgets, Categories, Goals
       child: Scaffold(
         // Use a nested AppBar for the tabs
         appBar: AppBar(
-          // Remove elevation or background if it clashes with MainShell AppBar style
           elevation: 0,
-          backgroundColor:
-              Theme.of(context).colorScheme.surface, // Or transparent
-          toolbarHeight: 0, // Hide the default AppBar height
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          toolbarHeight: 0,
           bottom: TabBar(
             tabs: const [
-              Tab(text: 'Budgets'),
+              Tab(text: 'Budgets'), // Changed order
               Tab(text: 'Categories'),
+              Tab(text: 'Goals'), // Added Goals
             ],
-            // Customize indicator/label colors if needed
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
             unselectedLabelColor:
@@ -44,11 +40,24 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
         ),
         body: const TabBarView(
           children: [
-            BudgetsSubTab(), // Placeholder content
-            CategoriesSubTab(), // List of categories
+            BudgetsSubTab(), // Budgets Screen
+            CategoriesSubTab(), // Categories Screen
+            GoalsSubTab(), // Goals Screen (Placeholder for Phase 2)
           ],
         ),
       ),
     );
+  }
+}
+
+// Create placeholder GoalsSubTab
+// lib/features/goals/presentation/pages/goals_sub_tab.dart
+
+class GoalsSubTab extends StatelessWidget {
+  const GoalsSubTab({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(child: Text("Goals Feature - Coming Soon!"));
   }
 }

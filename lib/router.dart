@@ -103,29 +103,12 @@ class AppRouter {
                               initialTransactionData: null);
                         }),
                     GoRoute(
-                        path:
-                            '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}', // "edit/:transactionId" -> /transactions/edit/:id
-                        name: RouteNames.editTransaction,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) {
-                          log.info(
-                              "[AppRouter] Attempting to build Edit Transaction page.");
-                          final transactionId = state
-                              .pathParameters[RouteNames.paramTransactionId];
-                          final initialData = state.extra; // Keep it dynamic
-                          if (transactionId == null) {
-                            log.severe(
-                                "[AppRouter] Edit Transaction route called without transaction ID!");
-                            return const Scaffold(
-                                body: Center(
-                                    child:
-                                        Text("Error: Missing Transaction ID")));
-                          }
-                          log.info(
-                              "[AppRouter] Building edit_transaction: ID=$transactionId, Data provided=${initialData != null}");
-                          return AddEditTransactionPage(
-                              initialTransactionData: initialData);
-                        }),
+                      path:
+                          '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}', // "edit/:transactionId" -> /transactions/edit/:id
+                      name: RouteNames.editTransaction,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: _buildEditTransactionPage, // Use helper
+                    ), // End of GoRoute for editTransaction
                     // Detail route (if needed separately from edit)
                     GoRoute(
                       path:
@@ -333,6 +316,33 @@ class AppRouter {
     return TransactionDetailPage(transaction: transaction);
   }
 
+  static Widget _buildEditTransactionPage(
+      BuildContext context, GoRouterState state) {
+    log.info("[AppRouter] Attempting to build Edit Transaction page.");
+    final transactionId = state.pathParameters[RouteNames.paramTransactionId];
+    TransactionEntity? initialData; // Explicitly typed
+
+    if (state.extra is TransactionEntity) {
+      initialData = state.extra as TransactionEntity;
+    } else if (state.extra != null) {
+      log.warning(
+          "[AppRouter] Edit Transaction route received 'extra' of unexpected type: ${state.extra?.runtimeType}. Ignoring extra data.");
+    }
+
+    if (transactionId == null) {
+      log.severe(
+          "[AppRouter] Edit Transaction route called without transaction ID!");
+      return const Scaffold(
+          appBar: null, // Consistent with other error scaffolds
+          body: Center(child: Text("Error: Missing Transaction ID")));
+    }
+
+    log.info(
+        "[AppRouter] Building edit_transaction: ID=$transactionId, Data provided=${initialData != null}");
+    // AddEditTransactionPage should handle fetching if initialData is null
+    return AddEditTransactionPage(initialTransactionData: initialData);
+  }
+
   static Widget _buildEditCategoryPage(
       BuildContext context, GoRouterState state) {
     final categoryId = state.pathParameters[RouteNames.paramId];
@@ -340,6 +350,7 @@ class AppRouter {
     if (categoryId == null) {
       log.severe("[AppRouter] Edit Category route called without ID!");
       return const Scaffold(
+          appBar: null, // Consistent with other error scaffolds
           body: Center(child: Text("Error: Missing Category ID")));
     }
     if (category == null) {
@@ -356,6 +367,7 @@ class AppRouter {
     if (accountId == null) {
       log.severe("[AppRouter] Edit Account route called without ID!");
       return const Scaffold(
+          appBar: null, // Consistent with other error scaffolds
           body: Center(child: Text("Error: Missing Account ID")));
     }
     if (account == null) {

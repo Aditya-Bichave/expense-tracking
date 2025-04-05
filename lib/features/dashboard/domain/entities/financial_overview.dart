@@ -1,14 +1,20 @@
+// lib/features/dashboard/domain/entities/financial_overview.dart
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart'; // ADDED
+import 'package:expense_tracker/features/goals/domain/entities/goal.dart'; // ADDED
 
 class FinancialOverview extends Equatable {
-  final double totalIncome; // For selected period
-  final double totalExpenses; // For selected period
-  final double netFlow; // income - expenses
-  final double overallBalance; // Sum of all account current balances
-  final List<AssetAccount> accounts; // List of full account objects
-  // Map<AccountName, Balance> - Ensure only positive balances are included for the pie chart here? Or filter later.
+  final double totalIncome;
+  final double totalExpenses;
+  final double netFlow;
+  final double overallBalance;
+  final List<AssetAccount> accounts;
   final Map<String, double> accountBalances;
+  final List<BudgetWithStatus>
+      activeBudgetsSummary; // ADDED (e.g., top 3 nearing limit)
+  final List<Goal>
+      activeGoalsSummary; // ADDED (e.g., top 3 closest to completion)
 
   const FinancialOverview({
     required this.totalIncome,
@@ -17,15 +23,13 @@ class FinancialOverview extends Equatable {
     required this.overallBalance,
     required this.accounts,
     required this.accountBalances,
+    required this.activeBudgetsSummary, // ADDED
+    required this.activeGoalsSummary, // ADDED
   });
 
   @override
   List<Object?> get props => [
-        totalIncome,
-        totalExpenses,
-        netFlow,
-        overallBalance,
-        accounts,
-        accountBalances,
+        totalIncome, totalExpenses, netFlow, overallBalance, accounts,
+        accountBalances, activeBudgetsSummary, activeGoalsSummary, // ADDED
       ];
 }

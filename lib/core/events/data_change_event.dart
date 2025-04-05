@@ -9,7 +9,10 @@ enum DataChangeType {
   income,
   expense,
   settings,
-  category
+  category,
+  goal,
+  goalContribution,
+  budget
 } // Added settings
 
 class DataChangedEvent {

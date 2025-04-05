@@ -16,41 +16,51 @@ import 'package:expense_tracker/router.dart';
 import 'package:expense_tracker/core/constants/hive_constants.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 
-// Import Models for Hive registration
+// Import Models & Adapters for Hive registration
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
+import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
+import 'package:expense_tracker/features/goals/data/models/goal_model.dart'; // ADDED
+import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart'; // ADDED
 
 // Import Blocs needed globally
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-// --- ADDED Data Management Bloc Import ---
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
+import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart'; // ADDED
 
 final log = SimpleLogger();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  log.setLevel(Level.WARNING, includeCallerInfo: false);
+  log.setLevel(Level.INFO, includeCallerInfo: false); // Adjusted default level
   log.info("==========================================");
   log.info(" Spend Savvy Application Starting...");
   log.info("==========================================");
 
   try {
     await Hive.initFlutter();
+    // Register All Adapters BEFORE opening boxes
     Hive.registerAdapter(ExpenseModelAdapter());
     Hive.registerAdapter(AssetAccountModelAdapter());
     Hive.registerAdapter(IncomeModelAdapter());
     Hive.registerAdapter(CategoryModelAdapter());
     Hive.registerAdapter(UserHistoryRuleModelAdapter());
+    Hive.registerAdapter(BudgetModelAdapter());
+    Hive.registerAdapter(GoalModelAdapter()); // --- ADDED GOAL ADAPTER ---
+    Hive.registerAdapter(
+        GoalContributionModelAdapter()); // --- ADDED CONTRIBUTION ADAPTER ---
 
+    log.info("Opening Hive boxes...");
     final expenseBox =
         await Hive.openBox<ExpenseModel>(HiveConstants.expenseBoxName);
     final accountBox =
@@ -61,7 +71,17 @@ Future<void> main() async {
         await Hive.openBox<CategoryModel>(HiveConstants.categoryBoxName);
     final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
         HiveConstants.userHistoryRuleBoxName);
+    final budgetBox =
+        await Hive.openBox<BudgetModel>(HiveConstants.budgetBoxName);
+    final goalBox = await Hive.openBox<GoalModel>(
+        HiveConstants.goalBoxName); // --- ADDED OPEN GOAL BOX ---
+    final contributionBox = await Hive.openBox<GoalContributionModel>(
+        HiveConstants
+            .goalContributionBoxName); // --- ADDED OPEN CONTRIBUTION BOX ---
+    log.info("All Hive boxes opened.");
+
     final prefs = await SharedPreferences.getInstance();
+    log.info("SharedPreferences instance obtained.");
 
     await initLocator(
       prefs: prefs,
@@ -70,6 +90,9 @@ Future<void> main() async {
       incomeBox: incomeBox,
       categoryBox: categoryBox,
       userHistoryBox: userHistoryBox,
+      budgetBox: budgetBox,
+      goalBox: goalBox, // --- PASSED GOAL BOX ---
+      contributionBox: contributionBox, // --- PASSED CONTRIBUTION BOX ---
     );
     log.info("Hive, SharedPreferences, and Service Locator initialized.");
   } catch (e, s) {
@@ -88,10 +111,9 @@ Future<void> main() async {
         create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
         lazy: false,
       ),
-      // --- ADDED DataManagementBloc Provider ---
       BlocProvider<DataManagementBloc>(
         create: (context) => sl<DataManagementBloc>(),
-        lazy: true, // Can be lazy as it's mostly user-triggered
+        lazy: true,
       ),
       BlocProvider<AccountListBloc>(
         create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
@@ -107,6 +129,15 @@ Future<void> main() async {
             sl<CategoryManagementBloc>()..add(const LoadCategories()),
         lazy: false,
       ),
+      BlocProvider<BudgetListBloc>(
+        create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
+        lazy: false,
+      ),
+      BlocProvider<GoalListBloc>(
+        // --- ADDED GOAL LIST BLOC ---
+        create: (context) => sl<GoalListBloc>()..add(const LoadGoals()),
+        lazy: false,
+      ),
       BlocProvider<DashboardBloc>(
         create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
         lazy: false,
@@ -115,19 +146,19 @@ Future<void> main() async {
         create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
         lazy: false,
       ),
+      // AddEdit Blocs are typically provided closer to where they are needed (e.g., via BlocProvider.value or on the specific route/page)
     ],
-    child: const AuthWrapper(), // AuthWrapper handles auth and then loads MyApp
+    child: const AuthWrapper(),
   ));
 }
 
-// ... (Rest of main.dart - InitializationErrorApp, AuthWrapper, MyApp - remains the same) ...
+// ... (InitializationErrorApp class remains the same) ...
 class InitializationErrorApp extends StatelessWidget {
   final Object error;
   const InitializationErrorApp({super.key, required this.error});
 
   @override
   Widget build(BuildContext context) {
-    // Use default theme values as SettingsBloc might not be available
     final defaultTheme = AppTheme.buildTheme(
       SettingsState.defaultUIMode,
       SettingsState.defaultPaletteIdentifier,
@@ -168,7 +199,7 @@ class InitializationErrorApp extends StatelessWidget {
   }
 }
 
-// Handles Authentication check before showing the main app
+// ... (AuthWrapper class remains the same) ...
 class AuthWrapper extends StatefulWidget {
   const AuthWrapper({super.key});
   @override
@@ -188,7 +219,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Use addPostFrameCallback to ensure context is ready for Bloc access
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _listenForSettingsAndCheckAuth();
@@ -198,7 +228,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   }
 
   void _listenForSettingsAndCheckAuth() {
-    // Ensure SettingsBloc is accessed safely
     try {
       final settingsBloc = BlocProvider.of<SettingsBloc>(context);
       if (settingsBloc.state.status == SettingsStatus.loaded ||
@@ -209,7 +238,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       } else {
         log.info(
             "[AuthWrapper] Settings not loaded yet (state: ${settingsBloc.state.status}). Listening to stream.");
-        _settingsSubscription?.cancel(); // Cancel previous if any
+        _settingsSubscription?.cancel();
         _settingsSubscription = settingsBloc.stream.listen((state) {
           if (state.status == SettingsStatus.loaded ||
               state.status == SettingsStatus.error) {
@@ -226,7 +255,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     } catch (e) {
       log.severe(
           "[AuthWrapper] Error accessing SettingsBloc during initial listener setup: $e. Retrying shortly.");
-      // Retry after a short delay if BlocProvider wasn't ready
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) _listenForSettingsAndCheckAuth();
       });
@@ -248,18 +276,16 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     log.info("[AuthWrapper] AppLifecycleState changed: $state");
     if (!mounted) return;
 
-    // Use context.read safely, assuming context is valid here
     bool lockEnabledNow = false;
     try {
       lockEnabledNow = context.read<SettingsBloc>().state.isAppLockEnabled;
     } catch (e) {
       log.warning(
           "[AuthWrapper] Could not read SettingsBloc in didChangeAppLifecycleState: $e");
-      // Assume lock disabled if state is inaccessible? Or re-check later?
     }
 
     if (state == AppLifecycleState.resumed) {
-      _needsAuth = lockEnabledNow; // Re-evaluate need for auth
+      _needsAuth = lockEnabledNow;
       if (lockEnabledNow && !_isAuthenticated && !_justAuthenticated) {
         log.info(
             "[AuthWrapper] App resumed, needs auth and not recently authenticated. Triggering authenticate.");
@@ -271,10 +297,9 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       } else if (!lockEnabledNow && !_isAuthenticated) {
         log.info(
             "[AuthWrapper] App resumed, lock not enabled. Granting access.");
-        // If lock was turned off while app was paused, grant access now
         setState(() {
           _isAuthenticated = true;
-          _isCheckingAuth = false; // Ensure checking state is false
+          _isCheckingAuth = false;
         });
       } else {
         log.info(
@@ -282,12 +307,11 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       }
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
-      _authCooldownTimer?.cancel(); // Cancel cooldown if app is paused
+      _authCooldownTimer?.cancel();
       if (lockEnabledNow) {
         log.info(
             "[AuthWrapper] App paused/inactive, lock enabled. Resetting auth state if currently authenticated.");
         if (_isAuthenticated || _justAuthenticated) {
-          // Only update state if needed to avoid unnecessary rebuilds
           setState(() {
             _isAuthenticated = false;
             _justAuthenticated = false;
@@ -307,22 +331,20 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
     log.info("[AuthWrapper] Initial check: App Lock Enabled = $appLockEnabled");
 
     if (appLockEnabled) {
-      // Only authenticate if not already authenticated (e.g., from a previous session)
       if (!_isAuthenticated) {
         log.info(
             "[AuthWrapper] App lock enabled, attempting initial authentication.");
-        _authenticate(); // Trigger authentication flow
+        _authenticate();
       } else {
         log.info(
             "[AuthWrapper] App lock enabled, but already authenticated. Skipping initial auth prompt.");
         setState(() {
           _isCheckingAuth = false;
-        }); // Ensure loading state is off
+        });
       }
     } else {
       log.info("[AuthWrapper] App lock disabled, granting access.");
       if (!_isAuthenticated) {
-        // Only update state if not already authenticated
         setState(() {
           _isAuthenticated = true;
           _isCheckingAuth = false;
@@ -330,32 +352,30 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       } else {
         setState(() {
           _isCheckingAuth = false;
-        }); // Ensure loading state is off
+        });
       }
     }
   }
 
   Future<void> _authenticate({bool isRetry = false}) async {
     if (!mounted) return;
-    // Prevent multiple simultaneous auth attempts
     if (_isCheckingAuth && !isRetry) {
       log.warning(
           "[AuthWrapper] Authentication already in progress. Ignoring duplicate request.");
       return;
     }
-    // Don't prompt if already authenticated unless it's an explicit retry
     if (_isAuthenticated && !isRetry) {
       log.info(
           "[AuthWrapper] Already authenticated. Skipping authentication prompt.");
       setState(() {
         _isCheckingAuth = false;
-      }); // Ensure loading state is correct
+      });
       return;
     }
 
     setState(() {
       _isCheckingAuth = true;
-    }); // Show loading/locked state
+    });
     log.info(
         "[AuthWrapper] Starting authentication process... (Is Retry: $isRetry)");
 
@@ -370,7 +390,6 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
         log.warning(
             "[AuthWrapper] Authentication check failed: Device not supported or auth not set up.");
         if (mounted) _showAuthErrorSnackbar(errorMsg);
-        // If auth isn't possible, maybe grant access? Or stay locked? Staying locked for now.
       } else {
         log.info(
             "[AuthWrapper] Device supports auth. Calling local_auth.authenticate...");
@@ -378,9 +397,9 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
           localizedReason:
               'Please authenticate to access ${AppConstants.appName}',
           options: const AuthenticationOptions(
-            stickyAuth: true, // Keep prompt visible
-            useErrorDialogs: true, // Use system dialogs for common errors
-            biometricOnly: false, // Allow device passcode as well
+            stickyAuth: true,
+            useErrorDialogs: true,
+            biometricOnly: false,
           ),
         );
         log.info("[AuthWrapper] Authentication result: $didAuthenticate");
@@ -389,10 +408,8 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
       errorMsg = "Authentication Error: ${e.message ?? e.code}";
       log.severe("[AuthWrapper] PlatformException during authenticate: $e\n$s");
       if (mounted && e.code != 'auth_in_progress' && e.code != 'user_cancel') {
-        // Don't show snackbar for cancellation or overlap
         _showAuthErrorSnackbar(errorMsg);
       }
-      // Handle specific errors like 'NotEnrolled', 'LockedOut', etc. if needed
     } catch (e, s) {
       errorMsg = "An unexpected error occurred during authentication.";
       log.severe("[AuthWrapper] Exception during authenticate: $e\n$s");
@@ -403,7 +420,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
             "[AuthWrapper] Authentication attempt finished. Updating state: Authenticated=$didAuthenticate");
         setState(() {
           _isAuthenticated = didAuthenticate;
-          _isCheckingAuth = false; // Done checking
+          _isCheckingAuth = false;
           if (didAuthenticate) {
             _justAuthenticated = true;
             _startAuthCooldown();
@@ -523,7 +540,7 @@ class _AuthWrapperState extends State<AuthWrapper> with WidgetsBindingObserver {
   }
 }
 
-// Main Application Widget (Stateless now)
+// ... (MyApp class remains the same) ...
 class MyApp extends StatelessWidget {
   final ThemeData lightTheme;
   final ThemeData darkTheme;

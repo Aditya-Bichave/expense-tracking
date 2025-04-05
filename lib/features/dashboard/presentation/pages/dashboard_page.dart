@@ -10,6 +10,8 @@ import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_b
 import 'package:expense_tracker/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_section.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart'; // ADDED
+import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart'; // ADDED
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -119,7 +121,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
           // Use the decomposed asset distribution widget
           AssetDistributionSection(accountBalances: overview.accountBalances),
-          const SizedBox(height: 8), // Spacing after asset section
+          const SizedBox(height: 16), // Increase spacing
+          // --- ADDED Budget & Goal Summaries ---
+          BudgetSummaryWidget(budgets: overview.activeBudgetsSummary),
+          const SizedBox(height: 16),
+          GoalSummaryWidget(goals: overview.activeGoalsSummary),
+          const SizedBox(height: 16),
+          // --- END Summaries ---
 
           // Use the decomposed recent transactions widget
           RecentTransactionsSection(
@@ -162,6 +170,12 @@ class _DashboardPageState extends State<DashboardPage> {
               // Use the decomposed header widget
               DashboardHeader(overview: overview),
               const SizedBox(height: 16),
+              // --- ADDED Budget & Goal Summaries ---
+              BudgetSummaryWidget(budgets: overview.activeBudgetsSummary),
+              const SizedBox(height: 16),
+              GoalSummaryWidget(goals: overview.activeGoalsSummary),
+              const SizedBox(height: 16),
+              // --- END Summaries ---
               // Use the decomposed recent transactions widget
               RecentTransactionsSection(
                   navigateToDetailOrEdit: _navigateToDetailOrEdit),
