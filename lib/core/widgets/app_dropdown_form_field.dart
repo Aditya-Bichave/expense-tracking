@@ -1,3 +1,4 @@
+// lib/core/widgets/app_dropdown_form_field.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,9 @@ class AppDropdownFormField<T> extends StatelessWidget {
   final String? Function(T?)? validator;
   final String labelText;
   final String? hintText;
-  final IconData? prefixIconData;
+  // --- Ensure this parameter exists and accepts Widget? ---
+  final Widget? prefixIcon;
+  // --- End Ensure ---
   final bool isExpanded;
   final EdgeInsets? contentPadding; // Allow overriding padding
 
@@ -20,7 +23,9 @@ class AppDropdownFormField<T> extends StatelessWidget {
     this.validator,
     required this.labelText,
     this.hintText,
-    this.prefixIconData,
+    // --- Ensure this parameter exists ---
+    this.prefixIcon,
+    // --- End Ensure ---
     this.isExpanded = true,
     this.contentPadding,
   });
@@ -43,13 +48,14 @@ class AppDropdownFormField<T> extends StatelessWidget {
         focusedErrorBorder: inputTheme.focusedErrorBorder,
         filled: inputTheme.filled,
         fillColor: inputTheme.fillColor,
-        // Use override, then theme, then modeTheme, then fallback
         contentPadding: contentPadding ??
             inputTheme.contentPadding ??
             modeTheme?.listItemPadding?.copyWith(top: 14, bottom: 14),
         isDense: inputTheme.isDense,
         floatingLabelBehavior: inputTheme.floatingLabelBehavior,
-        prefixIcon: prefixIconData != null ? Icon(prefixIconData) : null,
+        // --- Use the prefixIcon parameter ---
+        prefixIcon: prefixIcon,
+        // --- End Use ---
       ),
       items: items,
       onChanged: onChanged,

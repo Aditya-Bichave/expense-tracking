@@ -4,20 +4,31 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
+
+import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart'; // ADDED
+import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart'; // ADDED
+import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart'; // ADDED
+
+import 'package:expense_tracker/main.dart';
+import 'package:flutter/material.dart'; // Import logger
 
 class GetFinancialOverviewUseCase
     implements UseCase<FinancialOverview, GetFinancialOverviewParams> {
   final AssetAccountRepository accountRepository;
   final IncomeRepository incomeRepository;
   final ExpenseRepository expenseRepository;
+  final BudgetRepository budgetRepository; // ADDED
+  final GoalRepository goalRepository; // ADDED
 
   GetFinancialOverviewUseCase({
     required this.accountRepository,
     required this.incomeRepository,
     required this.expenseRepository,
+    required this.budgetRepository, // ADDED
+    required this.goalRepository, // ADDED
   });
 
   @override
@@ -83,6 +94,78 @@ class GetFinancialOverviewUseCase
       log.info(
           "[GetFinancialOverviewUseCase] Income: $totalIncome, Expenses: $totalExpenses, Net Flow: $netFlow");
 
+      // --- Fetch Budget Statuses ---
+      log.info(
+          "[GetFinancialOverviewUseCase] Fetching budgets and calculating statuses...");
+      List<BudgetWithStatus> budgetStatuses = [];
+      Failure? budgetError;
+      final budgetsResult = await budgetRepository.getBudgets();
+      await budgetsResult
+          .fold((failure) async => budgetError = failure, // Store error
+              (budgets) async {
+        // Define colors needed for status calculation
+        const thrivingColor = Colors.green;
+        const nearingLimitColor = Colors.orange;
+        const overLimitColor = Colors.red;
+        List<Future<void>> calcFutures = [];
+
+        for (final budget in budgets) {
+          // Calculate status for each budget
+          final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
+          final spentResult = await budgetRepository.calculateAmountSpent(
+              budget: budget, periodStart: periodStart, periodEnd: periodEnd);
+          spentResult.fold((f) {
+            log.warning(
+                "[GetFinancialOverviewUseCase] Failed calc for budget ${budget.id}: ${f.message}");
+            budgetError ??= f; // Store first error
+          }, (spent) {
+            budgetStatuses.add(BudgetWithStatus.calculate(
+                budget: budget,
+                amountSpent: spent,
+                thrivingColor: thrivingColor,
+                nearingLimitColor: nearingLimitColor,
+                overLimitColor: overLimitColor));
+          });
+          // If critical error, maybe break early?
+          if (budgetError != null &&
+              !budgetError!.message.contains("Validation")) break;
+        }
+      });
+      if (budgetError != null) {
+        log.warning(
+            "[GetFinancialOverviewUseCase] Error occurred during budget status calculation: ${budgetError!.message}");
+        // Proceed with potentially incomplete budget list or return error? Proceeding for now.
+      }
+      // Sort budgets for summary (e.g., most spent % first)
+      budgetStatuses
+          .sort((a, b) => b.percentageUsed.compareTo(a.percentageUsed));
+      final budgetSummary = budgetStatuses.take(3).toList(); // Take top 3
+      log.info(
+          "[GetFinancialOverviewUseCase] Prepared budget summary with ${budgetSummary.length} items.");
+      // --- End Fetch Budget ---
+
+      // --- Fetch Goal Summary ---
+      log.info(
+          "[GetFinancialOverviewUseCase] Fetching active goals summary...");
+      Failure? goalError;
+      List<Goal> goalSummary = [];
+      final goalsResult = await goalRepository.getGoals(
+          includeArchived: false); // Fetch active goals
+      goalsResult.fold((failure) => goalError = failure, (activeGoals) {
+        // Sort by percentage complete descending
+        activeGoals.sort(
+            (a, b) => b.percentageComplete.compareTo(a.percentageComplete));
+        goalSummary = activeGoals.take(3).toList(); // Take top 3
+      });
+      if (goalError != null) {
+        log.warning(
+            "[GetFinancialOverviewUseCase] Error fetching goals: ${goalError!.message}");
+        // Proceed with empty goal summary
+      }
+      log.info(
+          "[GetFinancialOverviewUseCase] Prepared goal summary with ${goalSummary.length} items.");
+      // --- End Fetch Goal ---
+
       // 5. Construct the overview object
       final overview = FinancialOverview(
         totalIncome: totalIncome,
@@ -91,6 +174,8 @@ class GetFinancialOverviewUseCase
         overallBalance: overallBalance,
         accounts: accounts,
         accountBalances: accountBalancesMap,
+        activeBudgetsSummary: budgetSummary, // ADDED
+        activeGoalsSummary: goalSummary, // ADDED
       );
       log.info(
           "[GetFinancialOverviewUseCase] Successfully created FinancialOverview. Returning Right.");

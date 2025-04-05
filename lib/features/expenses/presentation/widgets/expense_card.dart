@@ -1,7 +1,9 @@
 // lib/features/expenses/presentation/widgets/expense_card.dart
-// FINAL VERSION (with conceptual UI changes for categorization)
+// MODIFIED FILE (Implement interactive prompts)
+
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:flutter/material.dart';
@@ -14,17 +16,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/main.dart';
-// Need TransactionMatchData for user categorization event
 import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
-  // Callbacks for interaction
-  final Function(Expense expense)? onCardTap; // For navigating to details
-  final Function(Expense expense, Category selectedCategory)?
-      onUserCategorized; // When user confirms/sets category
-  final Function(Expense expense)?
-      onChangeCategoryRequest; // Request to open MCI
+  final Function(Expense expense)? onCardTap;
+  final Function(Expense expense, Category selectedCategory)? onUserCategorized;
+  final Function(Expense expense)? onChangeCategoryRequest;
 
   const ExpenseCard({
     super.key,
@@ -34,18 +32,16 @@ class ExpenseCard extends StatelessWidget {
     this.onChangeCategoryRequest,
   });
 
-  // Helper to get icon data or path based on category and theme
   Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
+    /* ... Same as before ... */
     final theme = Theme.of(context);
     final category = expense.category ?? Category.uncategorized;
     IconData fallbackIcon = Icons.label_outline;
     try {
       fallbackIcon = _getElementalCategoryIcon(category.name);
-    } catch (_) {/* ignore */}
-
+    } catch (_) {}
     log.info(
         "[ExpenseCard] Building icon for category '${category.name}' (IconName: ${category.iconName})");
-
     if (modeTheme != null) {
       String svgPath =
           modeTheme.assets.getCategoryIcon(category.iconName, defaultPath: '');
@@ -63,8 +59,8 @@ class ExpenseCard extends StatelessWidget {
     return Icon(fallbackIcon, size: 22, color: category.displayColor);
   }
 
-  // Fallback IconData mapping
   IconData _getElementalCategoryIcon(String categoryName) {
+    /* ... Same as before ... */
     switch (categoryName.toLowerCase()) {
       case 'food':
         return Icons.restaurant;
@@ -102,98 +98,131 @@ class ExpenseCard extends StatelessWidget {
     final Color errorColor = theme.colorScheme.error;
     final Color successColor = Colors.green.shade600;
     final Color warningColor = Colors.orange.shade800;
+    final EdgeInsets buttonPadding = const EdgeInsets.symmetric(
+        horizontal: 6.0, vertical: 2.0); // Padding for buttons
+    final Size buttonMinSize =
+        const Size(28, 28); // Minimum size for tap targets
 
     switch (expense.status) {
       case CategorizationStatus.needsReview:
-        // --- Suggestion Prompt UI ---
+        // --- Interactive Suggestion Prompt UI ---
         return Wrap(
-          // Use Wrap for responsiveness
           crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 4.0, // Spacing between elements
-          runSpacing: 2.0, // Spacing if it wraps
+          spacing: 6.0, // Increased spacing
+          runSpacing: 4.0,
           children: [
             Icon(Icons.help_outline_rounded, size: 16, color: warningColor),
             Text('Suggest: ${expense.category?.name ?? "?"}',
                 style: textStyleSmall.copyWith(
                     color: warningColor, fontStyle: FontStyle.italic)),
-            // Using Tooltip for accessibility on InkWell/IconButton
-            Tooltip(
-              message: "Confirm Category",
-              child: InkWell(
-                onTap: () {
+            // Confirm Button (using OutlinedButton for clearer boundary)
+            SizedBox(
+              // Constrain button size
+              height: 28,
+              child: OutlinedButton.icon(
+                icon: Icon(Icons.check, size: 16, color: successColor),
+                label: Text("Confirm",
+                    style: textStyleSmall.copyWith(color: successColor)),
+                style: OutlinedButton.styleFrom(
+                  padding: buttonPadding,
+                  minimumSize: buttonMinSize,
+                  visualDensity: VisualDensity.compact,
+                  side: BorderSide(color: successColor.withOpacity(0.5)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () {
                   log.info(
                       "[ExpenseCard] Suggestion confirmed for ${expense.id}");
                   if (expense.category != null && onUserCategorized != null) {
-                    // TODO: Get actual merchant ID if available
                     final matchData = TransactionMatchData(
-                        description: expense.title, merchantId: null);
+                        description: expense.title,
+                        merchantId: null); // TODO: merchantId
                     onUserCategorized!(expense, expense.category!);
                   }
                 },
-                child: Padding(
-                  // Add padding for easier tapping
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 2.0, vertical: 1.0),
-                  child: Icon(Icons.check_circle_outline,
-                      size: 20, color: successColor),
-                ),
               ),
             ),
-            Tooltip(
-              message: "Change Category",
-              child: InkWell(
-                  onTap: () {
-                    log.info(
-                        "[ExpenseCard] Change requested for suggested ${expense.id}");
-                    onChangeCategoryRequest?.call(expense);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 2.0, vertical: 1.0),
-                    child: Icon(Icons.edit_outlined,
-                        size: 18, color: primaryColor),
-                  )),
+            // Change Button (using TextButton for less emphasis)
+            SizedBox(
+              height: 28,
+              child: TextButton.icon(
+                icon: Icon(Icons.edit_outlined, size: 16, color: primaryColor),
+                label: Text("Change",
+                    style: textStyleSmall.copyWith(color: primaryColor)),
+                style: TextButton.styleFrom(
+                  padding: buttonPadding,
+                  minimumSize: buttonMinSize,
+                  visualDensity: VisualDensity.compact,
+                ),
+                onPressed: () {
+                  log.info(
+                      "[ExpenseCard] Change requested for suggested ${expense.id}");
+                  onChangeCategoryRequest?.call(expense);
+                },
+              ),
             ),
           ],
         );
       // --- End Prompt ---
       case CategorizationStatus.uncategorized:
-        return InkWell(
-            onTap: () {
-              log.info(
-                  "[ExpenseCard] Change requested for uncategorized ${expense.id}");
-              onChangeCategoryRequest?.call(expense);
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.label_off_outlined, size: 16, color: errorColor),
-                const SizedBox(width: 4),
-                Text('Categorize',
-                    style: textStyleSmall.copyWith(color: errorColor)),
-              ],
-            ));
+        // --- Interactive Uncategorized Button ---
+        return TextButton.icon(
+          icon: Icon(Icons.label_off_outlined, size: 16, color: errorColor),
+          label: Text('Categorize',
+              style: textStyleSmall.copyWith(color: errorColor)),
+          style: TextButton.styleFrom(
+            padding: buttonPadding, minimumSize: buttonMinSize,
+            visualDensity: VisualDensity.compact,
+            // Add a subtle border maybe?
+            // side: BorderSide(color: errorColor.withOpacity(0.3))
+          ),
+          onPressed: () {
+            log.info(
+                "[ExpenseCard] Change requested for uncategorized ${expense.id}");
+            onChangeCategoryRequest?.call(expense);
+          },
+        );
+      // --- End Button ---
       case CategorizationStatus.categorized:
       default:
-        return Text(
-          // Display category name, tappable to change
-          expense.category?.name ?? Category.uncategorized.name,
-          style: textStyleSmall.copyWith(
-              color: theme.colorScheme.onSurfaceVariant),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+        // Tappable Category Name
+        return InkWell(
+          onTap: () {
+            log.info(
+                "[ExpenseCard] Change requested for categorized ${expense.id}");
+            onChangeCategoryRequest?.call(expense);
+          },
+          child: Row(
+            // Wrap in row to allow potential future edit icon next to text
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                // Allow text to wrap/ellipsis if needed
+                child: Text(
+                  expense.category?.name ?? Category.uncategorized.name,
+                  style: textStyleSmall.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              // Optional: Add small edit icon here
+              // Icon(Icons.edit, size: 12, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7))
+            ],
+          ),
         );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // ... (Rest of build method remains the same, calling _buildStatusUI) ...
     final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
     final modeTheme = context.modeTheme;
     final category = expense.category ?? Category.uncategorized;
-
     final accountState = context.watch<AccountListBloc>().state;
     String accountName = '...';
     if (accountState is AccountListLoaded) {
@@ -207,8 +236,6 @@ class ExpenseCard extends StatelessWidget {
     } else if (accountState is AccountListError) {
       accountName = 'Error';
     }
-
-    // Use AppCard tap for main action (details), InkWell inside for category changes
     return AppCard(
       onTap: () => onCardTap?.call(expense),
       child: Row(
@@ -227,20 +254,8 @@ class ExpenseCard extends StatelessWidget {
                     style: theme.textTheme.titleMedium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
-                const SizedBox(height: 4), // Increase spacing slightly
-                // --- Status/Category Interaction Area ---
-                InkWell(
-                  // Allow tapping categorized text to trigger change request
-                  onTap: (expense.status == CategorizationStatus.categorized)
-                      ? () {
-                          log.info(
-                              "[ExpenseCard] Change requested for categorized ${expense.id}");
-                          onChangeCategoryRequest?.call(expense);
-                        }
-                      : null, // onTap handled by nested InkWells for prompt/uncategorized
-                  child: _buildStatusUI(context),
-                ),
-                // --- End Status/Category ---
+                const SizedBox(height: 4),
+                _buildStatusUI(context),
                 const SizedBox(height: 2),
                 Text('Acc: $accountName',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -255,10 +270,7 @@ class ExpenseCard extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(
-              width: modeTheme?.listItemPadding.right ??
-                  8), // Reduce spacing before amount
-          // Amount column for alignment
+          SizedBox(width: modeTheme?.listItemPadding.right ?? 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -273,9 +285,6 @@ class ExpenseCard extends StatelessWidget {
                 child: Text(
                     CurrencyFormatter.format(expense.amount, currencySymbol)),
               ),
-              // Add confidence score for debugging/info if needed
-              // if (expense.confidenceScore != null)
-              //    Text('Conf: ${expense.confidenceScore!.toStringAsFixed(2)}', style: theme.textTheme.labelSmall?.copyWith(color: Colors.grey))
             ],
           ),
         ],

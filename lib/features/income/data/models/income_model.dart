@@ -1,5 +1,6 @@
 // lib/features/income/data/models/income_model.dart
 // MODIFIED FILE
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 // REMOVED: import 'package:expense_tracker/features/income/domain/entities/income_category.dart';

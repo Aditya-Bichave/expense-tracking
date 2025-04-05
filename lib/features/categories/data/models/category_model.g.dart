@@ -23,13 +23,14 @@ class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
       colorHex: fields[3] as String,
       isCustom: fields[4] as bool,
       parentCategoryId: fields[5] as String?,
+      typeIndex: fields[6] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, CategoryModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
       ..writeByte(4)
       ..write(obj.isCustom)
       ..writeByte(5)
-      ..write(obj.parentCategoryId);
+      ..write(obj.parentCategoryId)
+      ..writeByte(6)
+      ..write(obj.typeIndex);
   }
 
   @override
@@ -62,7 +65,14 @@ class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
 CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) {
   $checkKeys(
     json,
-    requiredKeys: const ['id', 'name', 'iconName', 'colorHex', 'isCustom'],
+    requiredKeys: const [
+      'id',
+      'name',
+      'iconName',
+      'colorHex',
+      'isCustom',
+      'typeIndex'
+    ],
   );
   return CategoryModel(
     id: json['id'] as String,
@@ -71,6 +81,7 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) {
     colorHex: json['colorHex'] as String,
     isCustom: json['isCustom'] as bool,
     parentCategoryId: json['parentCategoryId'] as String?,
+    typeIndex: (json['typeIndex'] as num?)?.toInt() ?? 0,
   );
 }
 
@@ -83,4 +94,5 @@ Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
       'isCustom': instance.isCustom,
       if (instance.parentCategoryId case final value?)
         'parentCategoryId': value,
+      'typeIndex': instance.typeIndex,
     };

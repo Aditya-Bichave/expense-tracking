@@ -1,24 +1,27 @@
 // lib/features/dashboard/presentation/pages/dashboard_page.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/financial_garden_widget.dart';
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/personal_constellation_widget.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
+import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+// Import decomposed widgets
+import 'package:expense_tracker/features/dashboard/presentation/widgets/dashboard_header.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_section.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart'; // ADDED
+import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart'; // ADDED
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/overall_balance_card.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/income_expense_summary_card.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_pie_chart.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/expenses/presentation/bloc/expense_list/expense_list_bloc.dart';
-import 'package:expense_tracker/features/income/presentation/bloc/income_list/income_list_bloc.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
-import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:expense_tracker/core/assets/app_assets.dart'; // Import asset catalog
+import 'package:go_router/go_router.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -29,53 +32,50 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   late DashboardBloc _dashboardBloc;
+  late SettingsBloc _settingsBloc;
 
   @override
   void initState() {
     super.initState();
     log.info("[DashboardPage] initState called.");
-    _dashboardBloc = sl<DashboardBloc>();
-    if (_dashboardBloc.state is DashboardInitial) {
-      log.info(
-          "[DashboardPage] Initial state detected, dispatching LoadDashboard.");
-      _dashboardBloc.add(const LoadDashboard());
-    }
-    // Ensure dependent Blocs are loaded if necessary (e.g., AccountListBloc)
-    final accountBloc = sl<AccountListBloc>();
-    if (accountBloc.state is AccountListInitial) {
-      log.info(
-          "[DashboardPage] AccountListBloc is initial, dispatching LoadAccounts.");
-      accountBloc.add(const LoadAccounts());
-    }
-    final expenseBloc = sl<ExpenseListBloc>();
-    if (expenseBloc.state is ExpenseListInitial) {
-      expenseBloc.add(const LoadExpenses());
-    }
-    final incomeBloc = sl<IncomeListBloc>();
-    if (incomeBloc.state is IncomeListInitial) {
-      incomeBloc.add(const LoadIncomes());
+    _dashboardBloc = BlocProvider.of<DashboardBloc>(context);
+    _settingsBloc = BlocProvider.of<SettingsBloc>(context);
+    _ensureBlocLoaded<AccountListBloc>(() => const LoadAccounts());
+    _ensureBlocLoaded<TransactionListBloc>(() => const LoadTransactions());
+  }
+
+  void _ensureBlocLoaded<T extends Bloc>(Function eventCreator) {
+    try {
+      final bloc = BlocProvider.of<T>(context);
+      if (bloc.state.runtimeType.toString().contains('Initial')) {
+        log.info(
+            "[DashboardPage] ${T.toString()} is initial, dispatching load.");
+        bloc.add(eventCreator());
+      }
+    } catch (e) {
+      log.severe(
+          "[DashboardPage] Error ensuring ${T.toString()} is loaded: $e");
     }
   }
 
   Future<void> _refreshDashboard() async {
     log.info("[DashboardPage] Pull-to-refresh triggered.");
     _dashboardBloc.add(const LoadDashboard(forceReload: true));
-    // Also refresh dependent lists if needed, might already be handled by DataChangedEvent
     try {
-      // Use context.read ONLY if you are sure the context is still valid in async gap
-      // Using sl might be safer here if context validity is uncertain
-      sl<AccountListBloc>().add(const LoadAccounts(forceReload: true));
-      sl<ExpenseListBloc>().add(const LoadExpenses(forceReload: true));
-      sl<IncomeListBloc>().add(const LoadIncomes(forceReload: true));
+      context
+          .read<AccountListBloc>()
+          .add(const LoadAccounts(forceReload: true));
+      context
+          .read<TransactionListBloc>()
+          .add(const LoadTransactions(forceReload: true));
     } catch (e) {
-      log.warning("Error triggering dependent Blocs refresh: $e");
+      log.warning("Error triggering dependent Blocs refresh during pull: $e");
     }
-
     try {
       await _dashboardBloc.stream
           .firstWhere(
               (state) => state is DashboardLoaded || state is DashboardError)
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 7));
       log.info("[DashboardPage] Refresh stream finished or timed out.");
     } catch (e) {
       log.warning(
@@ -83,168 +83,102 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
-  // Builder for Elemental/Quantum modes
-  Widget _buildElementalQuantumDashboard(
-      BuildContext context, FinancialOverview overview) {
-    final theme = Theme.of(context);
-    final uiMode = context.read<SettingsBloc>().state.uiMode; // Read once
-    final modeTheme = context.modeTheme; // Read theme extension
-    final bool isQuantum = uiMode == UIMode.quantum;
-    final bool useTables = modeTheme?.preferDataTableForLists ?? false;
+  void _navigateToDetailOrEdit(
+      BuildContext context, TransactionEntity transaction) {
+    log.info(
+        "[DashboardPage] Navigate to Edit requested for TXN ID: ${transaction.id}");
+    const String routeName = RouteNames.editTransaction;
+    final Map<String, String> params = {
+      RouteNames.paramTransactionId: transaction.id
+    };
+    final dynamic extraData = transaction.originalEntity;
+    if (extraData == null) {
+      log.severe(
+          "[DashboardPage] CRITICAL: originalEntity is null for transaction ID ${transaction.id}. Cannot navigate.");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("Error preparing edit data."),
+          backgroundColor: Colors.red));
+      return;
+    }
+    context.pushNamed(routeName, pathParameters: params, extra: extraData);
+  }
 
+  // --- Dashboard Build Logic ---
+
+  Widget _buildElementalQuantumDashboard(BuildContext context,
+      FinancialOverview overview, SettingsState settings) {
+    final modeTheme = context.modeTheme;
     return RefreshIndicator(
       onRefresh: _refreshDashboard,
       child: ListView(
-        physics:
-            const AlwaysScrollableScrollPhysics(), // Ensure scrollable for refresh
-        padding: const EdgeInsets.all(16.0),
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+            const EdgeInsets.only(top: 8.0, bottom: 80.0),
         children: [
-          OverallBalanceCard(overview: overview),
+          // Use the decomposed header widget
+          DashboardHeader(overview: overview),
+          const SizedBox(height: 8), // Spacing after header
+
+          // Use the decomposed asset distribution widget
+          AssetDistributionSection(accountBalances: overview.accountBalances),
+          const SizedBox(height: 16), // Increase spacing
+          // --- ADDED Budget & Goal Summaries ---
+          BudgetSummaryWidget(budgets: overview.activeBudgetsSummary),
           const SizedBox(height: 16),
-          IncomeExpenseSummaryCard(overview: overview),
+          GoalSummaryWidget(goals: overview.activeGoalsSummary),
           const SizedBox(height: 16),
-          // Conditional asset display
-          if (isQuantum && useTables)
-            _buildQuantumAssetTable(context, overview.accountBalances)
-          else if (!isQuantum) // Only show pie chart for Elemental
-            AssetDistributionPieChart(accountBalances: overview.accountBalances)
-          else // Quantum but useTables is false (shouldn't happen with current config)
-            const SizedBox.shrink(),
-          const SizedBox(height: 24),
-          Center(
-              child: Text("More insights coming soon!",
-                  style: theme.textTheme.labelMedium)),
-          const SizedBox(height: 80), // Padding at bottom for FAB
+          // --- END Summaries ---
+
+          // Use the decomposed recent transactions widget
+          RecentTransactionsSection(
+              navigateToDetailOrEdit: _navigateToDetailOrEdit),
         ],
       ),
     );
   }
 
-  // Specific widget for Quantum Asset Table
-  Widget _buildQuantumAssetTable(
-      BuildContext context, Map<String, double> accountBalances) {
-    final theme = Theme.of(context);
-    final settingsState = context.watch<SettingsBloc>().state;
-    final currencySymbol = settingsState.currencySymbol;
-
-    final rows = accountBalances.entries.map((entry) {
-      return DataRow(cells: [
-        DataCell(
-            Text(entry.key, style: theme.textTheme.bodyMedium)), // Account Name
-        DataCell(Text(
-          CurrencyFormatter.format(entry.value, currencySymbol),
-          style: theme.textTheme.bodyMedium?.copyWith(
-              color: entry.value >= 0
-                  ? theme.colorScheme.tertiary // Use quantum colors
-                  : theme.colorScheme.error,
-              fontWeight: FontWeight.w500),
-          textAlign: TextAlign.end,
-        )), // Balance
-      ]);
-    }).toList();
-
-    if (rows.isEmpty) {
-      return Card(
-        // Use Card consistent with Quantum theme
-        margin: theme.cardTheme.margin,
-        shape: theme.cardTheme.shape,
-        elevation: theme.cardTheme.elevation,
-        color: theme.cardTheme.color,
-        child: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Center(
-              child: Text('No accounts added yet.',
-                  style: TextStyle(fontStyle: FontStyle.italic))),
-        ),
-      );
-    }
-
-    return Card(
-      // Wrap table in a card for consistency
-      margin: theme.cardTheme.margin,
-      shape: theme.cardTheme.shape,
-      elevation: theme.cardTheme.elevation,
-      color: theme.cardTheme.color,
-      clipBehavior: theme.cardTheme.clipBehavior ?? Clip.none,
-      child: Padding(
-        padding:
-            const EdgeInsets.only(top: 12.0, bottom: 4.0), // Adjust padding
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text('Asset Balances', style: theme.textTheme.titleMedium),
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              // Make table horizontally scrollable if needed
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columnSpacing: theme.dataTableTheme.columnSpacing ?? 12,
-                headingRowHeight: theme.dataTableTheme.headingRowHeight ?? 36,
-                dataRowMinHeight: theme.dataTableTheme.dataRowMinHeight ?? 36,
-                dataRowMaxHeight: theme.dataTableTheme.dataRowMaxHeight ?? 40,
-                headingTextStyle: theme.dataTableTheme.headingTextStyle ??
-                    theme.textTheme.labelSmall
-                        ?.copyWith(fontWeight: FontWeight.w600),
-                dataTextStyle: theme.dataTableTheme.dataTextStyle ??
-                    theme.textTheme.bodySmall,
-                dividerThickness: theme.dataTableTheme.dividerThickness,
-                dataRowColor: theme.dataTableTheme.dataRowColor,
-                columns: const [
-                  DataColumn(label: Text('Account')),
-                  DataColumn(label: Text('Balance'), numeric: true),
-                ],
-                rows: rows,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Specific Widget Builder for Aether Dashboard Body
-  Widget _buildAetherDashboardBody(
-      BuildContext context, FinancialOverview overview) {
-    final theme = Theme.of(context);
+  Widget _buildAetherDashboardBody(BuildContext context,
+      FinancialOverview overview, SettingsState settings) {
     final modeTheme = context.modeTheme;
-    final paletteId = context.watch<SettingsBloc>().state.paletteIdentifier;
-
-    // Choose Aether widget based on palette ID convention
+    final paletteId = settings.paletteIdentifier;
     Widget aetherContent;
     if (paletteId == AppTheme.aetherPalette2) {
-      // Garden
-      aetherContent = const FinancialGardenWidget(); // Placeholder
+      aetherContent = const FinancialGardenWidget();
     } else {
-      // Starfield, Mystic, CalmSky or Default Aether
-      aetherContent = const PersonalConstellationWidget(); // Placeholder
+      aetherContent = const PersonalConstellationWidget();
     }
 
-    // Example structure: Background + Content + Refresh
     return RefreshIndicator(
       onRefresh: _refreshDashboard,
       child: Stack(
-        // Use stack for background
         children: [
-          // Background based on theme extension
-          if (modeTheme?.assets.mainBackgroundDark != null) // Check if defined
+          if (modeTheme?.assets.mainBackgroundDark != null &&
+              modeTheme!.assets.mainBackgroundDark!.isNotEmpty)
             Positioned.fill(
-              child: SvgPicture.asset(
-                modeTheme!
-                    .assets.mainBackgroundDark!, // Use ! because we checked
-                fit: BoxFit.cover,
-              ),
-            ),
-          // Actual content on top
+                child: SvgPicture.asset(modeTheme.assets.mainBackgroundDark!,
+                    fit: BoxFit.cover)),
           ListView(
-            // Make content scrollable for refresh
             physics: const AlwaysScrollableScrollPhysics(),
+            padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+                const EdgeInsets.only(top: 8.0, bottom: 80.0), // Themed padding
             children: [
-              aetherContent,
-              // Add other common Aether elements if needed
-              const SizedBox(height: 80), // Padding for FAB if applicable
+              Container(
+                  height: 300,
+                  alignment: Alignment.center,
+                  child: aetherContent),
+              const SizedBox(height: 16),
+              // Use the decomposed header widget
+              DashboardHeader(overview: overview),
+              const SizedBox(height: 16),
+              // --- ADDED Budget & Goal Summaries ---
+              BudgetSummaryWidget(budgets: overview.activeBudgetsSummary),
+              const SizedBox(height: 16),
+              GoalSummaryWidget(goals: overview.activeGoalsSummary),
+              const SizedBox(height: 16),
+              // --- END Summaries ---
+              // Use the decomposed recent transactions widget
+              RecentTransactionsSection(
+                  navigateToDetailOrEdit: _navigateToDetailOrEdit),
             ],
           ),
         ],
@@ -256,44 +190,27 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     log.info("[DashboardPage] Build method called.");
     final theme = Theme.of(context);
-    final uiMode = context.watch<SettingsBloc>().state.uiMode; // Watch UI mode
-    // final modeTheme = context.modeTheme; // Get theme extension
+    final settingsState = context.watch<SettingsBloc>().state;
+    final uiMode = settingsState.uiMode;
 
     return Scaffold(
-      // Aether might have a transparent AppBar or none
       appBar: uiMode == UIMode.aether
-          ? null // Aether themes might handle app bar internally or not have one
-          : AppBar(
-              title: const Text('Dashboard'),
-              actions: [
-                IconButton(
-                    icon: const Icon(Icons.refresh),
-                    onPressed: _refreshDashboard,
-                    tooltip: 'Refresh')
-              ],
-              backgroundColor: theme.appBarTheme.backgroundColor,
-              foregroundColor: theme.appBarTheme.foregroundColor,
-              elevation: theme.appBarTheme.elevation,
-            ),
-      // Body depends on UI Mode
+          ? null
+          : AppBar(title: const Text("Dashboard")),
       body: BlocConsumer<DashboardBloc, DashboardState>(
         listener: (context, state) {
-          log.info(
-              "[DashboardPage] BlocListener received state: ${state.runtimeType}");
           if (state is DashboardError) {
-            log.warning(
-                "[DashboardPage] Error state detected: ${state.message}");
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(SnackBar(
-                  content: Text('Error loading dashboard: ${state.message}'),
+                  content: Text("Dashboard Error: ${state.message}"),
                   backgroundColor: theme.colorScheme.error));
           }
         },
         builder: (context, state) {
-          log.info(
+          log.fine(
               "[DashboardPage] BlocBuilder building for state: ${state.runtimeType}");
-          Widget bodyContent; // Use a variable for the main body content
+          Widget bodyContent;
 
           if (state is DashboardLoading && !state.isReloading) {
             bodyContent = const Center(child: CircularProgressIndicator());
@@ -303,88 +220,42 @@ class _DashboardPageState extends State<DashboardPage> {
                 ? state.overview
                 : (context.read<DashboardBloc>().state as DashboardLoaded?)
                     ?.overview;
-
             if (overview == null) {
-              // This might happen briefly during a forced reload before data is ready
-              bodyContent = const Center(child: Text("Loading data..."));
+              bodyContent =
+                  const Center(child: Text("Loading overview data..."));
             } else {
-              // --- UI Mode Specific Body ---
               switch (uiMode) {
                 case UIMode.aether:
-                  bodyContent = _buildAetherDashboardBody(context, overview);
+                  bodyContent = _buildAetherDashboardBody(
+                      context, overview, settingsState);
                   break;
                 case UIMode.quantum:
                 case UIMode.elemental:
-                default: // Fallback to elemental/quantum style
-                  bodyContent =
-                      _buildElementalQuantumDashboard(context, overview);
+                default:
+                  bodyContent = _buildElementalQuantumDashboard(
+                      context, overview, settingsState);
                   break;
               }
-              // --- End UI Mode Specific Body ---
             }
           } else if (state is DashboardError) {
             bodyContent = Center(
-              // Error UI
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline,
-                        color: theme.colorScheme.error, size: 50),
-                    const SizedBox(height: 16),
-                    Text('Failed to load dashboard',
-                        style: theme.textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    Text(state.message,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: theme.colorScheme.error)),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                        onPressed: _refreshDashboard)
-                  ],
-                ),
-              ),
-            );
+                child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text('Error loading dashboard: ${state.message}',
+                        style: TextStyle(color: theme.colorScheme.error),
+                        textAlign: TextAlign.center)));
           } else {
-            // Initial state
             bodyContent = const Center(child: CircularProgressIndicator());
           }
 
-          // Apply background *outside* the switch, only if not Aether (Aether handles its own bg)
-          // This assumes Elemental/Quantum might have a global background set via scaffold
-          // If Elemental/Quantum also use Stack+SvgPicture, adjust accordingly.
-          if (uiMode != UIMode.aether) {
-            // Example: Apply a generic background for non-Aether modes if needed
-            // final modeTheme = context.modeTheme;
-            // String? bgPath = theme.brightness == Brightness.dark
-            //     ? modeTheme?.assets.mainBackgroundDark
-            //     : modeTheme?.assets.mainBackgroundLight;
-            // if (bgPath != null && bgPath.isNotEmpty) {
-            //      return Stack(children: [ Positioned.fill(child: SvgPicture.asset(bgPath, fit: BoxFit.cover)), bodyContent ]);
-            // }
-          }
-
-          // Return the constructed body content (Aether includes its background, others might not)
           return AnimatedSwitcher(
               duration: const Duration(milliseconds: 400),
-              child:
-                  bodyContent // Key ensures animation triggers on state change
-              );
+              child: KeyedSubtree(
+                  key: ValueKey(
+                      state.runtimeType.toString() + uiMode.toString()),
+                  child: bodyContent));
         },
       ),
-      // FAB might be needed for some modes but not others? Add conditionally.
-      // floatingActionButton: uiMode != UIMode.aether ? FloatingActionButton(...) : null,
     );
-  }
-}
-
-// Keep Capitalize extension or move to utils
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

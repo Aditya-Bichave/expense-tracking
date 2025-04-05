@@ -1,35 +1,67 @@
+// lib/features/categories/presentation/widgets/icon_picker_dialog.dart
 import 'package:flutter/material.dart';
 
-// Simple map of representative Material Icons for categories
-// TODO: Expand this significantly, potentially load from assets/config
-const Map<String, IconData> availableIcons = {
+// --- Populate this map extensively! ---
+Map<String, IconData> availableIcons = {
   'default_category_icon': Icons.category_outlined,
-  'food': Icons.restaurant_menu,
+  'category': Icons.category_outlined, // Alias
+  'label': Icons.label_outline, // Alias
+  'question': Icons.help_outline_rounded,
+  // Expenses
+  'food': Icons.restaurant_menu_outlined,
+  'restaurant': Icons.restaurant_outlined,
   'groceries': Icons.shopping_cart_outlined,
+  'shopping': Icons.shopping_bag_outlined,
+  'clothing': Icons.checkroom_outlined,
   'transport': Icons.directions_bus_filled_outlined,
   'car': Icons.directions_car_filled_outlined,
+  'fuel': Icons.local_gas_station_outlined,
+  'parking': Icons.local_parking_outlined,
   'utilities': Icons.lightbulb_outline_rounded,
-  'internet': Icons.wifi,
-  'phone': Icons.phone_android_outlined,
+  'internet': Icons.wifi_outlined,
+  'phone': Icons.phone_iphone_outlined,
+  'water': Icons.water_drop_outlined,
+  'electricity': Icons.electrical_services_outlined,
   'rent': Icons.house_outlined,
   'mortgage': Icons.home_work_outlined,
-  'shopping': Icons.shopping_bag_outlined,
-  'clothing': Icons.checkroom,
+  'housing': Icons.real_estate_agent_outlined,
   'entertainment': Icons.theaters_outlined,
   'movies': Icons.movie_creation_outlined,
   'music': Icons.music_note_outlined,
+  'games': Icons.sports_esports_outlined,
   'subscriptions': Icons.subscriptions_outlined,
   'health': Icons.health_and_safety_outlined,
   'medical': Icons.medical_services_outlined,
+  'pharmacy': Icons.local_pharmacy_outlined,
   'fitness': Icons.fitness_center_rounded,
+  'education': Icons.school_outlined,
+  'books': Icons.book_outlined,
+  'personal_care': Icons.spa_outlined,
+  'pets': Icons.pets_outlined,
+  'travel': Icons.flight_takeoff_rounded,
+  'vacation': Icons.beach_access_outlined,
+  'hotel': Icons.hotel_outlined,
+  // Income
   'salary': Icons.work_outline_rounded,
-  'freelance': Icons.computer,
+  'freelance': Icons.computer_outlined,
+  'bonus': Icons.emoji_events_outlined,
   'gift': Icons.card_giftcard_rounded,
   'investment': Icons.trending_up_rounded,
   'interest': Icons.percent_rounded,
-  'question': Icons.help_outline_rounded, // For Uncategorized fallback
+  'refund': Icons.replay_outlined,
+  // Other General
+  'bank': Icons.account_balance_outlined,
+  'cash': Icons.wallet_outlined,
+  'credit_card': Icons.credit_card_outlined,
+  'savings': Icons.savings_outlined,
+  'business': Icons.business_center_outlined,
+  'childcare': Icons.child_care_outlined,
+  'charity': Icons.volunteer_activism_outlined,
+  'taxes': Icons.receipt_long_outlined,
+  'other': Icons.more_horiz,
   // Add many more...
 };
+// --- End populated map ---
 
 // Function to show the icon picker dialog
 Future<String?> showIconPicker(
@@ -72,15 +104,18 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
   }
 
   void _filterIcons() {
-    final query = _searchController.text.toLowerCase();
+    final query = _searchController.text.toLowerCase().trim();
     setState(() {
       if (query.isEmpty) {
         _filteredIcons = availableIcons.entries.toList();
       } else {
         _filteredIcons = availableIcons.entries.where((entry) {
-          return entry.key.toLowerCase().contains(query); // Search by name key
+          // Search by key (name)
+          return entry.key.toLowerCase().contains(query);
         }).toList();
       }
+      // Optional: Sort filtered results alphabetically by key
+      _filteredIcons.sort((a, b) => a.key.compareTo(b.key));
     });
   }
 
@@ -89,19 +124,17 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
     final theme = Theme.of(context);
     return AlertDialog(
       title: const Text('Select Icon'),
-      contentPadding:
-          const EdgeInsets.fromLTRB(16, 20, 16, 0), // Adjust padding
+      contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       content: SizedBox(
-        // Constrain height
-        width: double.maxFinite, // Take available width
-        height: MediaQuery.of(context).size.height * 0.5, // Limit height
+        width: double.maxFinite,
+        height: MediaQuery.of(context).size.height * 0.5,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: "Search icons...",
+                hintText: "Search icons by name...",
                 prefixIcon: const Icon(Icons.search),
                 border:
                     OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
@@ -121,19 +154,22 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                   : GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 60.0, // Adjust size of items
+                        maxCrossAxisExtent: 60.0,
                         mainAxisSpacing: 8.0,
                         crossAxisSpacing: 8.0,
+                        childAspectRatio: 1.0, // Make items square
                       ),
                       itemCount: _filteredIcons.length,
                       itemBuilder: (context, index) {
                         final entry = _filteredIcons[index];
                         final isSelected = entry.key == _selectedIconName;
                         return Tooltip(
-                          message: entry.key, // Show name on hover/long-press
+                          message: entry.key,
                           child: InkWell(
                             onTap: () {
                               setState(() => _selectedIconName = entry.key);
+                              // Optionally pop immediately on selection:
+                              // Navigator.of(context).pop(_selectedIconName);
                             },
                             borderRadius: BorderRadius.circular(8),
                             child: Container(
@@ -147,12 +183,15 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                                 color: isSelected
                                     ? theme.colorScheme.primaryContainer
                                         .withOpacity(0.3)
-                                    : theme.colorScheme.surfaceVariant
-                                        .withOpacity(0.5),
+                                    : theme.colorScheme
+                                        .surfaceContainerHighest, // Use a background color
                                 borderRadius: BorderRadius.circular(8),
                               ),
+                              padding: const EdgeInsets.all(
+                                  4), // Add padding around icon
                               child: Icon(entry.value,
-                                  color: theme.colorScheme.onSurfaceVariant),
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  size: 28), // Slightly larger icon
                             ),
                           ),
                         );

@@ -5,50 +5,38 @@ part of 'settings_bloc.dart';
 enum SettingsStatus { initial, loading, loaded, error }
 
 enum PackageInfoStatus { initial, loading, loaded, error }
-
-enum DataManagementStatus { initial, loading, success, error }
+// REMOVED DataManagementStatus enum
 
 // --- UI Mode Enum ---
 enum UIMode { elemental, quantum, aether }
-
-// --- Country Info Helper ---
-// REMOVED CountryInfo definition (moved to core/data/countries.dart)
-// Use AppCountry from core/data/countries.dart instead
 
 class SettingsState extends Equatable {
   // --- Main settings ---
   final SettingsStatus status;
   final ThemeMode themeMode;
-  final String paletteIdentifier; // Name remains the same
+  final String paletteIdentifier;
   final UIMode uiMode;
-  final String selectedCountryCode; // Keep the code
+  final String selectedCountryCode;
   final bool isAppLockEnabled;
-  final String? errorMessage;
+  final String? errorMessage; // Error for main settings loading/saving
 
   // --- Package info ---
   final PackageInfoStatus packageInfoStatus;
   final String? appVersion;
   final String? packageInfoError;
 
-  // --- Data Management ---
-  final DataManagementStatus dataManagementStatus;
-  final String? dataManagementMessage;
+  // REMOVED Data Management properties
+  // final DataManagementStatus dataManagementStatus;
+  // final String? dataManagementMessage;
 
   // --- Static Defaults & Data ---
   static const defaultThemeMode = ThemeMode.system;
-  // Use a default palette identifier from AppTheme
   static const defaultPaletteIdentifier = AppTheme.elementalPalette1;
   static const defaultUIMode = UIMode.elemental;
-  // Use default country code from AppCountries
   static const String defaultCountryCode = AppCountries.defaultCountryCode;
-  // Use default from AppConstants
   static const bool defaultAppLockEnabled = AppConstants.defaultAppLockEnabled;
 
-  // REMOVED availableCountries (moved to core/data/countries.dart)
-  // REMOVED getCurrencyForCountry (moved to core/data/countries.dart)
-
   // --- Computed Property ---
-  // Use the helper from AppCountries
   String get currencySymbol =>
       AppCountries.getCurrencyForCountry(selectedCountryCode);
 
@@ -58,19 +46,16 @@ class SettingsState extends Equatable {
     this.themeMode = defaultThemeMode,
     this.paletteIdentifier = defaultPaletteIdentifier,
     this.uiMode = defaultUIMode,
-    this.selectedCountryCode =
-        defaultCountryCode, // Use default from AppCountries
-    this.isAppLockEnabled =
-        defaultAppLockEnabled, // Use default from AppConstants
+    this.selectedCountryCode = defaultCountryCode,
+    this.isAppLockEnabled = defaultAppLockEnabled,
     this.errorMessage,
     this.packageInfoStatus = PackageInfoStatus.initial,
     this.appVersion,
     this.packageInfoError,
-    this.dataManagementStatus = DataManagementStatus.initial,
-    this.dataManagementMessage,
+    // REMOVED dataManagementStatus and dataManagementMessage from constructor
   });
 
-  // --- copyWith (no changes needed here for extraction) ---
+  // --- copyWith (Removed Data Management properties) ---
   SettingsState copyWith({
     SettingsStatus? status,
     ThemeMode? themeMode,
@@ -82,12 +67,12 @@ class SettingsState extends Equatable {
     PackageInfoStatus? packageInfoStatus,
     String? appVersion,
     String? packageInfoError,
-    DataManagementStatus? dataManagementStatus,
-    String? dataManagementMessage,
-    bool clearMainError = false,
+    // REMOVED dataManagementStatus and dataManagementMessage params
+    bool clearErrorMessage = false, // Renamed from clearMainError
     bool clearPackageInfoError = false,
-    bool clearDataManagementMessage = false,
-    bool clearAllMessages = false,
+    // REMOVED clearDataManagementMessage
+    bool clearAllMessages =
+        false, // Clears both settings and package info errors
   }) {
     return SettingsState(
       status: status ?? this.status,
@@ -96,7 +81,7 @@ class SettingsState extends Equatable {
       uiMode: uiMode ?? this.uiMode,
       selectedCountryCode: selectedCountryCode ?? this.selectedCountryCode,
       isAppLockEnabled: isAppLockEnabled ?? this.isAppLockEnabled,
-      errorMessage: clearAllMessages || clearMainError
+      errorMessage: clearAllMessages || clearErrorMessage
           ? null
           : errorMessage ?? this.errorMessage,
       packageInfoStatus: packageInfoStatus ?? this.packageInfoStatus,
@@ -104,14 +89,11 @@ class SettingsState extends Equatable {
       packageInfoError: clearAllMessages || clearPackageInfoError
           ? null
           : packageInfoError ?? this.packageInfoError,
-      dataManagementStatus: dataManagementStatus ?? this.dataManagementStatus,
-      dataManagementMessage: clearAllMessages || clearDataManagementMessage
-          ? null
-          : dataManagementMessage ?? this.dataManagementMessage,
+      // REMOVED dataManagementStatus and dataManagementMessage assignments
     );
   }
 
-  // --- props (ensure currencySymbol is included) ---
+  // --- props (Removed Data Management properties) ---
   @override
   List<Object?> get props => [
         status,
@@ -119,13 +101,12 @@ class SettingsState extends Equatable {
         paletteIdentifier,
         uiMode,
         selectedCountryCode,
-        currencySymbol, // Make sure this computed property is in props
+        currencySymbol,
         isAppLockEnabled,
         errorMessage,
         packageInfoStatus,
         appVersion,
         packageInfoError,
-        dataManagementStatus,
-        dataManagementMessage,
+        // REMOVED dataManagementStatus and dataManagementMessage
       ];
 }

@@ -1,38 +1,40 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/categories/data/datasources/category_local_data_source.dart';
-import 'package:expense_tracker/features/categories/data/datasources/category_predefined_data_source.dart'; // Keep abstract import
+import 'package:expense_tracker/features/categories/data/datasources/category_predefined_data_source.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import enum
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
-import 'package:expense_tracker/main.dart'; // logger
-import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl
+import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/di/service_locator.dart'; // Keep for potential future use
+import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 
 class CategoryRepositoryImpl implements CategoryRepository {
   final CategoryLocalDataSource localDataSource;
-  // Inject specific predefined sources via DI (using named instances)
   final CategoryPredefinedDataSource expensePredefinedDataSource;
   final CategoryPredefinedDataSource incomePredefinedDataSource;
 
-  // Cache for combined lists to avoid redundant fetching
   List<Category>? _cachedAllCategories;
-  List<Category>? _cachedExpenseCategories;
-  List<Category>? _cachedIncomeCategories;
+  Map<CategoryType, List<Category>> _cachedSpecificCategories = {};
+  List<Category>? _cachedCustomCategories;
 
   CategoryRepositoryImpl({
     required this.localDataSource,
-    required this.expensePredefinedDataSource, // Inject specific instance
-    required this.incomePredefinedDataSource, // Inject specific instance
+    required this.expensePredefinedDataSource,
+    required this.incomePredefinedDataSource,
   });
 
-  // Helper to clear all caches
-  void _invalidateCaches() {
+  // --- Make Invalidation Public ---
+  @override // Implement method from interface if added there
+  void invalidateCache() {
     _cachedAllCategories = null;
-    _cachedExpenseCategories = null;
-    _cachedIncomeCategories = null;
+    _cachedSpecificCategories.clear();
+    _cachedCustomCategories = null;
+    log.info("[CategoryRepo] Cache invalidated explicitly.");
   }
+  // --- End ---
 
-  // Helper to convert models and sort
   List<Category> _processAndSort(List<CategoryModel> models) {
     final entities = models.map((model) => model.toEntity()).toList();
     entities
@@ -42,170 +44,140 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   @override
   Future<Either<Failure, List<Category>>> getAllCategories() async {
-    log.info("[CategoryRepo] getAllCategories called.");
+    log.fine("[CategoryRepo] getAllCategories called.");
     if (_cachedAllCategories != null) {
-      log.info(
+      log.fine(
           "[CategoryRepo] Returning cached ALL categories (${_cachedAllCategories!.length}).");
       return Right(_cachedAllCategories!);
     }
     try {
-      log.info(
-          "[CategoryRepo] Fetching all predefined (expense/income) and custom categories...");
+      log.fine(
+          "[CategoryRepo] Fetching all predefined and custom categories...");
       final results = await Future.wait([
         expensePredefinedDataSource.getPredefinedCategories(),
         incomePredefinedDataSource.getPredefinedCategories(),
         localDataSource.getCustomCategories(),
       ]);
-      final predefinedExpense = results[0];
-      final predefinedIncome = results[1];
-      final custom = results[2];
-      log.info(
+      // Error handling if any future fails - return Left immediately
+      for (var result in results) {
+        if (result == null) {
+          // Or check specific error type if needed
+          log.severe(
+              "[CategoryRepo] Failed to fetch one or more category sources.");
+          return Left(CacheFailure("Failed to load categories from a source."));
+        }
+      }
+
+      final predefinedExpense =
+          results[0] as List<CategoryModel>; // Cast after check
+      final predefinedIncome = results[1] as List<CategoryModel>;
+      final custom = results[2] as List<CategoryModel>;
+
+      log.fine(
           "[CategoryRepo] Fetched ${predefinedExpense.length} exp, ${predefinedIncome.length} inc, ${custom.length} custom.");
 
-      // Combine, ensuring no duplicates from predefined lists if any overlap (unlikely with separate files)
-      final allModels = {...predefinedExpense, ...predefinedIncome, ...custom}
-          .toList(); // Use set first to remove duplicates by chance
-      _cachedAllCategories = _processAndSort(allModels);
-      log.info(
+      final allModelsMap = <String, CategoryModel>{};
+      // Add predefined first, then custom (custom potentially overrides predefined ID if collision, though unlikely)
+      for (var model in predefinedExpense) {
+        allModelsMap[model.id] = model;
+      }
+      for (var model in predefinedIncome) {
+        allModelsMap[model.id] = model;
+      }
+      for (var model in custom) {
+        allModelsMap[model.id] = model;
+      }
+
+      _cachedAllCategories = _processAndSort(allModelsMap.values.toList());
+      log.fine(
           "[CategoryRepo] Combined and cached ${_cachedAllCategories!.length} total categories.");
       return Right(_cachedAllCategories!);
-    } on CacheFailure catch (e) {
-      log.warning(
-          "[CategoryRepo] CacheFailure during getAllCategories: ${e.message}");
-      _invalidateCaches();
-      return Left(e);
     } catch (e, s) {
-      log.severe("[CategoryRepo] Unexpected error in getAllCategories$e$s");
-      _invalidateCaches();
+      log.severe("[CategoryRepo] Error during getAllCategories: $e\n$s");
+      invalidateCache(); // Use public method
       return Left(
           CacheFailure("Failed to load all categories: ${e.toString()}"));
     }
   }
 
   @override
-  Future<Either<Failure, List<Category>>> getExpenseCategories() async {
-    log.info("[CategoryRepo] getExpenseCategories called.");
-    if (_cachedExpenseCategories != null) {
-      log.info(
-          "[CategoryRepo] Returning cached EXPENSE categories (${_cachedExpenseCategories!.length}).");
-      return Right(_cachedExpenseCategories!);
-    }
-    try {
-      log.info(
-          "[CategoryRepo] Fetching predefined expense and custom categories...");
-      final results = await Future.wait([
-        expensePredefinedDataSource.getPredefinedCategories(),
-        localDataSource.getCustomCategories(),
-      ]);
-      final allModels = [...results[0], ...results[1]];
-      _cachedExpenseCategories = _processAndSort(allModels);
-      log.info(
-          "[CategoryRepo] Combined and cached ${_cachedExpenseCategories!.length} expense-relevant categories.");
-      return Right(_cachedExpenseCategories!);
-    } on CacheFailure catch (e) {
-      log.warning(
-          "[CategoryRepo] CacheFailure during getExpenseCategories: ${e.message}");
-      _cachedExpenseCategories = null;
-      return Left(e);
-    } catch (e, s) {
-      log.severe("[CategoryRepo] Unexpected error in getExpenseCategories$e$s");
-      _cachedExpenseCategories = null;
-      return Left(
-          CacheFailure("Failed to load expense categories: ${e.toString()}"));
-    }
+  Future<Either<Failure, List<Category>>> getSpecificCategories(
+      {CategoryType? type, bool includeCustom = true}) async {
+    // --- Use getAllCategories as the source of truth to simplify caching ---
+    log.fine(
+        "[CategoryRepo] getSpecificCategories called. Type: ${type?.name ?? 'All Custom'}, IncludeCustom: $includeCustom");
+    final allResult = await getAllCategories(); // This uses the main cache
+
+    return allResult.fold((failure) => Left(failure), (allCategories) {
+      final filtered = allCategories.where((cat) {
+        bool typeMatch = (type == null) || (cat.type == type);
+        bool customMatch = includeCustom || !cat.isCustom;
+        return typeMatch && customMatch;
+      }).toList();
+      log.fine(
+          "[CategoryRepo] Filtered specific categories. Count: ${filtered.length}");
+      return Right(filtered);
+    });
+    // --- End Simplification ---
   }
 
   @override
-  Future<Either<Failure, List<Category>>> getIncomeCategories() async {
-    log.info("[CategoryRepo] getIncomeCategories called.");
-    if (_cachedIncomeCategories != null) {
-      log.info(
-          "[CategoryRepo] Returning cached INCOME categories (${_cachedIncomeCategories!.length}).");
-      return Right(_cachedIncomeCategories!);
-    }
-    try {
-      log.info(
-          "[CategoryRepo] Fetching predefined income and custom categories...");
-      final results = await Future.wait([
-        incomePredefinedDataSource.getPredefinedCategories(),
-        localDataSource.getCustomCategories(),
-      ]);
-      final allModels = [...results[0], ...results[1]];
-      _cachedIncomeCategories = _processAndSort(allModels);
-      log.info(
-          "[CategoryRepo] Combined and cached ${_cachedIncomeCategories!.length} income-relevant categories.");
-      return Right(_cachedIncomeCategories!);
-    } on CacheFailure catch (e) {
-      log.warning(
-          "[CategoryRepo] CacheFailure during getIncomeCategories: ${e.message}");
-      _cachedIncomeCategories = null;
-      return Left(e);
-    } catch (e, s) {
-      log.severe("[CategoryRepo] Unexpected error in getIncomeCategories$e$s");
-      _cachedIncomeCategories = null;
-      return Left(
-          CacheFailure("Failed to load income categories: ${e.toString()}"));
-    }
-  }
-
-  @override
-  Future<Either<Failure, List<Category>>> getCustomCategories() async {
-    log.info("[CategoryRepo] getCustomCategories called.");
-    try {
-      final customModels = await localDataSource.getCustomCategories();
-      final customEntities = _processAndSort(customModels); // Use helper
-      log.info(
-          "[CategoryRepo] Fetched ${customEntities.length} custom categories.");
-      return Right(customEntities);
-    } on CacheFailure catch (e) {
-      log.warning(
-          "[CategoryRepo] CacheFailure during getCustomCategories: ${e.message}");
-      return Left(e);
-    } catch (e, s) {
-      log.severe("[CategoryRepo] Unexpected error in getCustomCategories$e$s");
-      return Left(
-          CacheFailure("Failed to load custom categories: ${e.toString()}"));
-    }
+  Future<Either<Failure, List<Category>>> getCustomCategories(
+      {CategoryType? type}) async {
+    log.fine(
+        "[CategoryRepo] getCustomCategories called. Type filter: ${type?.name ?? 'None'}");
+    // --- Use getAllCategories as the source of truth ---
+    final allResult = await getAllCategories();
+    return allResult.fold((failure) => Left(failure), (allCategories) {
+      final filtered = allCategories.where((cat) {
+        bool customMatch = cat.isCustom;
+        bool typeMatch = (type == null) || (cat.type == type);
+        return customMatch && typeMatch;
+      }).toList();
+      log.fine(
+          "[CategoryRepo] Filtered custom categories. Count: ${filtered.length}");
+      return Right(filtered);
+    });
+    // --- End Use ---
   }
 
   @override
   Future<Either<Failure, Category?>> getCategoryById(String categoryId) async {
     log.fine("[CategoryRepo] getCategoryById called for ID: $categoryId");
-    // Use getAllCategories which leverages cache
     final allCategoriesResult = await getAllCategories();
     return allCategoriesResult.fold((failure) => Left(failure), (categories) {
-      try {
-        final category = categories.firstWhere((cat) => cat.id == categoryId);
+      // Use firstWhereOrNull from collection package for safety
+      final category =
+          categories.firstWhereOrNull((cat) => cat.id == categoryId);
+      if (category != null) {
         log.fine("[CategoryRepo] Found category by ID: ${category.name}");
-        return Right(category);
-      } catch (e) {
+      } else {
         log.warning("[CategoryRepo] Category with ID '$categoryId' not found.");
-        return const Right(null);
       }
+      return Right(category); // Return Right(null) if not found
     });
   }
 
   @override
   Future<Either<Failure, void>> addCustomCategory(Category category) async {
-    log.info("[CategoryRepo] addCustomCategory called for '${category.name}'.");
+    log.info(
+        "[CategoryRepo] addCustomCategory called for '${category.name}', Type: ${category.type.name}.");
     if (!category.isCustom) {
       log.warning("[CategoryRepo] Attempted to add a non-custom category.");
       return const Left(
           ValidationFailure("Only custom categories can be added."));
     }
     try {
-      _invalidateCaches(); // Invalidate all caches
       final model = CategoryModel.fromEntity(category);
       await localDataSource.saveCustomCategory(model);
+      invalidateCache(); // Invalidate cache after successful add
       log.info(
           "[CategoryRepo] Custom category '${category.name}' added successfully.");
       return const Right(null);
-    } on CacheFailure catch (e) {
+    } catch (e) {
+      invalidateCache(); // Also invalidate on error? Maybe not.
       log.warning(
-          "[CategoryRepo] CacheFailure during addCustomCategory: ${e.message}");
-      return Left(e);
-    } catch (e, s) {
-      log.severe("[CategoryRepo] Unexpected error in addCustomCategory$e$s");
+          "[CategoryRepo] Error during addCustomCategory: ${e.toString()}");
       return Left(CacheFailure("Failed to add category: ${e.toString()}"));
     }
   }
@@ -213,26 +185,25 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Either<Failure, void>> updateCategory(Category category) async {
     log.info(
-        "[CategoryRepo] updateCategory called for '${category.name}' (ID: ${category.id}). Custom: ${category.isCustom}");
+        "[CategoryRepo] updateCategory called for '${category.name}' (ID: ${category.id}), Type: ${category.type.name}. Custom: ${category.isCustom}");
     try {
-      _invalidateCaches(); // Invalidate all caches
       final model = CategoryModel.fromEntity(category);
       if (!category.isCustom) {
-        log.info(
-            "[CategoryRepo] Updating predefined category personalization NOT YET IMPLEMENTED. Ignoring.");
+        log.warning(
+            "[CategoryRepo] Updating predefined category personalization NOT YET IMPLEMENTED. Ignoring update.");
+        // TODO: Implement saving personalization
         return const Right(null);
       } else {
         await localDataSource.updateCustomCategory(model);
+        invalidateCache(); // Invalidate cache after successful update
         log.info(
             "[CategoryRepo] Custom category '${category.name}' updated successfully.");
         return const Right(null);
       }
-    } on CacheFailure catch (e) {
+    } catch (e) {
+      invalidateCache(); // Invalidate on error?
       log.warning(
-          "[CategoryRepo] CacheFailure during updateCategory: ${e.message}");
-      return Left(e);
-    } catch (e, s) {
-      log.severe("[CategoryRepo] Unexpected error in updateCategory$e$s");
+          "[CategoryRepo] Error during updateCategory: ${e.toString()}");
       return Left(CacheFailure("Failed to update category: ${e.toString()}"));
     }
   }
@@ -242,19 +213,17 @@ class CategoryRepositoryImpl implements CategoryRepository {
       String categoryId, String fallbackCategoryId) async {
     log.info(
         "[CategoryRepo] deleteCustomCategory called for ID: $categoryId. Fallback: $fallbackCategoryId");
-    // Transaction reassignment happens in UseCase/Bloc
+    // Transaction reassignment is handled in UseCase/Bloc
     try {
-      _invalidateCaches(); // Invalidate all caches
       await localDataSource.deleteCustomCategory(categoryId);
+      invalidateCache(); // Invalidate cache after successful delete
       log.info(
           "[CategoryRepo] Custom category (ID: $categoryId) deleted successfully from local source.");
       return const Right(null);
-    } on CacheFailure catch (e) {
+    } catch (e) {
+      invalidateCache(); // Invalidate on error?
       log.warning(
-          "[CategoryRepo] CacheFailure during deleteCustomCategory: ${e.message}");
-      return Left(e);
-    } catch (e, s) {
-      log.severe("[CategoryRepo] Unexpected error in deleteCustomCategory$e$s");
+          "[CategoryRepo] Error during deleteCustomCategory: ${e.toString()}");
       return Left(CacheFailure("Failed to delete category: ${e.toString()}"));
     }
   }

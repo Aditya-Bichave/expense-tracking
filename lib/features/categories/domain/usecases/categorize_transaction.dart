@@ -1,52 +1,41 @@
+// lib/features/categories/domain/usecases/categorize_transaction.dart
+// MODIFIED FILE (Load Keywords from Asset)
+import 'dart:convert'; // For jsonDecode
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/categorization_suggestion.dart'; // Make sure this exists
 import 'package:expense_tracker/features/categories/domain/entities/user_history_rule.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/user_history_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/merchant_category_repository.dart';
-import 'package:expense_tracker/core/utils/enums.dart'; // Import CategorizationStatus
-import 'package:expense_tracker/main.dart'; // logger
+import 'package:expense_tracker/core/utils/enums.dart';
+import 'package:expense_tracker/main.dart';
+import 'package:flutter/services.dart' show rootBundle; // For loading assets
 
-// Input parameters for the use case
+// Input parameters remain the same
 class CategorizeTransactionParams extends Equatable {
-  final String? merchantId; // Can be null
+  final String? merchantId;
   final String description;
-  // Add amount, date etc. if needed for more advanced rules
-
-  const CategorizeTransactionParams({
-    this.merchantId,
-    required this.description,
-  });
-
+  const CategorizeTransactionParams(
+      {this.merchantId, required this.description});
   @override
   List<Object?> get props => [merchantId, description];
 }
 
-// Output structure
+// Output structure remains the same
 class CategorizationResult extends Equatable {
   final CategorizationStatus status;
-  final Category? category; // Null if uncategorized
-  final double? confidence; // Null if uncategorized
-
-  const CategorizationResult({
-    required this.status,
-    this.category,
-    this.confidence,
-  });
-
-  // Helper factory for uncategorized result
+  final Category? category;
+  final double? confidence;
+  const CategorizationResult(
+      {required this.status, this.category, this.confidence});
   factory CategorizationResult.uncategorized() {
-    return CategorizationResult(
-      status: CategorizationStatus.uncategorized,
-      category: null,
-      confidence: null,
-    );
+    return const CategorizationResult(
+        status: CategorizationStatus.uncategorized);
   }
-
   @override
   List<Object?> get props => [status, category, confidence];
 }
@@ -55,94 +44,61 @@ class CategorizeTransactionUseCase
     implements UseCase<CategorizationResult, CategorizeTransactionParams> {
   final UserHistoryRepository userHistoryRepository;
   final MerchantCategoryRepository merchantCategoryRepository;
-  final CategoryRepository
-      categoryRepository; // Needed to get Category object from ID
+  final CategoryRepository categoryRepository;
 
-  // TODO: Inject keyword matching service/logic if it becomes complex
-  // final KeywordMatcherService keywordMatcher;
-
-  // --- Keyword Matching Data (Simple Example) ---
-  static const Map<String, List<String>> _keywordCategoryMap = {
-    // Use Category ID as key now for consistency
-    'transport': [
-      'uber',
-      'lyft',
-      'taxi',
-      'bus fare',
-      'train ticket',
-      'subway',
-      'transportation',
-      'gas',
-      'fuel',
-      'parking'
-    ],
-    'groceries': [
-      'grocery',
-      'supermarket',
-      'market',
-      'safeway',
-      'kroger',
-      'tesco',
-      'waitrose'
-    ],
-    'subscriptions': [
-      'netflix',
-      'spotify',
-      'hulu',
-      'disney+',
-      'prime video',
-      'subscription',
-      'membership',
-      'patreon'
-    ],
-    'food': [
-      'restaurant',
-      'cafe',
-      'coffee',
-      'lunch',
-      'dinner',
-      'meal',
-      'food',
-      'takeaway',
-      'delivery'
-    ],
-    'utilities': [
-      'utility',
-      'electric',
-      'water bill',
-      'gas bill',
-      'internet',
-      'phone bill',
-      'power'
-    ],
-    'housing': ['rent', 'mortgage', 'lease'],
-    'shopping': [
-      'amazon',
-      'target',
-      'walmart',
-      'clothes',
-      'shopping',
-      'purchase'
-    ],
-    'salary': ['salary', 'payroll', 'paycheck', 'direct deposit'],
-    'freelance': ['freelance', 'invoice', 'contract'],
-    'interest': ['interest payment', 'bank interest'],
-    'other': ['other'], // Ensure 'other' is defined as a predefined category ID
-    // Add more mappings... Ensure keys match predefined category IDs or names if needed
-  };
-  // --- End Keyword Data ---
+  // Keyword data - now loaded async
+  static Map<String, List<String>>?
+      _keywordCategoryMap; // Cache loaded keywords
+  static bool _keywordsLoading = false;
+  static const String _keywordAssetPath = 'assets/data/category_keywords.json';
 
   CategorizeTransactionUseCase({
     required this.userHistoryRepository,
     required this.merchantCategoryRepository,
     required this.categoryRepository,
-    // required this.keywordMatcher,
   });
 
   static const double confidenceHigh = 0.9;
   static const double confidenceMediumMerchant = 0.7;
   static const double confidenceMediumKeyword = 0.6;
   static const double confidenceMediumDescriptionHistory = 0.75;
+
+  // --- Load Keywords Helper ---
+  Future<Either<Failure, Map<String, List<String>>>> _loadKeywords() async {
+    if (_keywordCategoryMap != null) return Right(_keywordCategoryMap!);
+    if (_keywordsLoading) {
+      await Future.delayed(
+          const Duration(milliseconds: 100)); // Wait if already loading
+      return _loadKeywords(); // Retry
+    }
+    _keywordsLoading = true;
+    log.info(
+        "[CategorizeUseCase] Loading keywords from asset: $_keywordAssetPath");
+    try {
+      final jsonString = await rootBundle.loadString(_keywordAssetPath);
+      final Map<String, dynamic> jsonMap =
+          jsonDecode(jsonString) as Map<String, dynamic>;
+      // Convert dynamic list to List<String>
+      _keywordCategoryMap = jsonMap.map((key, value) {
+        final List<String> keywords = (value as List<dynamic>)
+            .map((e) => e.toString().toLowerCase())
+            .toList();
+        return MapEntry(key, keywords); // Assuming key is category ID
+      });
+      log.info(
+          "[CategorizeUseCase] Loaded and cached ${_keywordCategoryMap!.length} keyword categories.");
+      return Right(_keywordCategoryMap!);
+    } catch (e, s) {
+      log.severe(
+          "[CategorizeUseCase] Failed to load keywords from asset '$_keywordAssetPath'$e$s");
+      _keywordCategoryMap = {}; // Cache empty map on error
+      return Left(
+          CacheFailure("Could not load category keywords: ${e.toString()}"));
+    } finally {
+      _keywordsLoading = false;
+    }
+  }
+  // --- End Load Keywords ---
 
   @override
   Future<Either<Failure, CategorizationResult>> call(
@@ -151,10 +107,22 @@ class CategorizeTransactionUseCase
         "[CategorizeUseCase] Executing for Merchant: '${params.merchantId}', Desc: '${params.description}'");
 
     try {
+      // --- Ensure Keywords are Loaded ---
+      final keywordsEither = await _loadKeywords();
+      if (keywordsEither.isLeft()) {
+        // Propagate failure if keywords couldn't load
+        return keywordsEither.fold((l) => Left(l),
+            (_) => const Left(UnexpectedFailure("Keyword loading failed")));
+      }
+      final keywordMap = keywordsEither
+          .getOrElse(() => {}); // Should not be empty if load succeeded
+      // --- End Keyword Loading ---
+
       // --- Rule Cascade ---
 
       // 1. Check User History (Merchant)
       if (params.merchantId != null && params.merchantId!.isNotEmpty) {
+        /* ... Merchant History check ... */
         final historyResult = await userHistoryRepository.findRule(
             RuleType.merchant, params.merchantId!);
         if (historyResult.isRight()) {
@@ -181,6 +149,7 @@ class CategorizeTransactionUseCase
       final String descriptionMatcher =
           _simplifyDescription(params.description);
       if (descriptionMatcher.isNotEmpty) {
+        /* ... Description History check ... */
         final historyResult = await userHistoryRepository.findRule(
             RuleType.description, descriptionMatcher);
         if (historyResult.isRight()) {
@@ -205,6 +174,7 @@ class CategorizeTransactionUseCase
 
       // 3. Check Merchant Database (MCDB)
       if (params.merchantId != null && params.merchantId!.isNotEmpty) {
+        /* ... MCDB check ... */
         final mcdbResult = await merchantCategoryRepository
             .getDefaultCategoryId(params.merchantId!);
         if (mcdbResult.isRight()) {
@@ -227,8 +197,9 @@ class CategorizeTransactionUseCase
         }
       }
 
-      // 4. Check Keyword Matching
-      final String? keywordCategoryId = _matchKeywords(params.description);
+      // 4. Check Keyword Matching (Use loaded map)
+      final String? keywordCategoryId =
+          _matchKeywords(params.description, keywordMap); // Pass loaded map
       if (keywordCategoryId != null) {
         log.info(
             "[CategorizeUseCase] Found MEDIUM confidence match via Keyword: CatID $keywordCategoryId");
@@ -257,10 +228,9 @@ class CategorizeTransactionUseCase
     }
   }
 
-  // Uses the CORRECTED repository method signature
   Future<Category?> _getCategoryById(String? categoryId) async {
+    /* ... same as before ... */
     if (categoryId == null) return null;
-    // Call the method added to the CategoryRepository interface
     final result = await categoryRepository.getCategoryById(categoryId);
     return result.fold(
       (failure) {
@@ -268,23 +238,27 @@ class CategorizeTransactionUseCase
             "Failed to fetch category details for ID $categoryId: ${failure.message}");
         return null;
       },
-      (category) => category, // Returns the Category? from the Right side
+      (category) => category,
     );
   }
 
   String _simplifyDescription(String description) {
+    /* ... same as before ... */
     return description.trim().toLowerCase();
   }
 
-  String? _matchKeywords(String description) {
+  // --- Updated Keyword Matching Implementation ---
+  String? _matchKeywords(
+      String description, Map<String, List<String>> keywordMap) {
     final lowerDesc = description.toLowerCase();
     log.fine("[CategorizeUseCase] Keyword matching on: '$lowerDesc'");
-    for (final entry in _keywordCategoryMap.entries) {
-      final categoryId = entry.key; // Assumes key is category ID
-      final keywords = entry.value;
+    for (final entry in keywordMap.entries) {
+      final categoryId = entry.key;
+      final keywords = entry.value; // Already lowercase from loading
       for (final keyword in keywords) {
-        final regex = RegExp(r'\b' + keyword + r'\b',
-            caseSensitive: false); // Added case-insensitive
+        final regex = RegExp(r'\b' +
+            keyword +
+            r'\b'); // caseSensitive defaults to true, but keywords are lower
         if (regex.hasMatch(lowerDesc)) {
           log.fine(
               "[CategorizeUseCase] Keyword match found: '$keyword' -> Category ID '$categoryId'");
@@ -295,4 +269,5 @@ class CategorizeTransactionUseCase
     log.fine("[CategorizeUseCase] No keyword match found.");
     return null;
   }
+  // --- End Keyword Matching ---
 }

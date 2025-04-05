@@ -1,3 +1,4 @@
+// lib/core/widgets/app_text_form_field.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +7,9 @@ class AppTextFormField extends StatefulWidget {
   final TextEditingController controller;
   final String labelText;
   final String? hintText;
-  final IconData? prefixIconData;
+  // --- MODIFIED: Accept Widget? instead of IconData? ---
+  final Widget? prefixIcon;
+  // --- END MODIFIED ---
   final String? prefixText;
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
@@ -16,13 +19,16 @@ class AppTextFormField extends StatefulWidget {
   final VoidCallback? onTap;
   final TextCapitalization textCapitalization;
   final int? maxLines;
+  final ValueChanged<String>? onChanged; // Added onChanged callback
 
   const AppTextFormField({
     super.key,
     required this.controller,
     required this.labelText,
     this.hintText,
-    this.prefixIconData,
+    // --- MODIFIED ---
+    this.prefixIcon,
+    // --- END MODIFIED ---
     this.prefixText,
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
@@ -32,6 +38,7 @@ class AppTextFormField extends StatefulWidget {
     this.onTap,
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
+    this.onChanged, // Added onChanged
   });
 
   @override
@@ -44,7 +51,8 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   @override
   void initState() {
     super.initState();
-    _showClearButton = widget.controller.text.isNotEmpty;
+    _showClearButton = widget.controller.text.isNotEmpty &&
+        !widget.readOnly; // Also check readOnly
     widget.controller.addListener(_handleTextChange);
   }
 
@@ -56,17 +64,20 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
 
   void _handleTextChange() {
     if (mounted) {
-      final shouldShow = widget.controller.text.isNotEmpty;
+      final shouldShow = widget.controller.text.isNotEmpty &&
+          !widget.readOnly; // Check readOnly
       if (_showClearButton != shouldShow) {
         setState(() {
           _showClearButton = shouldShow;
         });
       }
+      widget.onChanged?.call(widget.controller.text); // Call onChanged callback
     }
   }
 
   void _clearText() {
     widget.controller.clear();
+    // Note: widget.onChanged is implicitly called via the listener
   }
 
   @override
@@ -88,15 +99,15 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
         filled: inputTheme.filled,
         fillColor: inputTheme.fillColor,
         contentPadding: inputTheme.contentPadding ??
-            modeTheme?.listItemPadding
-                ?.copyWith(top: 14, bottom: 14), // Adjust padding slightly
+            modeTheme?.listItemPadding?.copyWith(top: 14, bottom: 14),
         isDense: inputTheme.isDense,
         floatingLabelBehavior: inputTheme.floatingLabelBehavior,
         floatingLabelStyle: inputTheme.floatingLabelStyle,
-        prefixIcon:
-            widget.prefixIconData != null ? Icon(widget.prefixIconData) : null,
+        // --- MODIFIED: Use prefixIcon widget directly ---
+        prefixIcon: widget.prefixIcon,
+        // --- END MODIFIED ---
         prefixText: widget.prefixText,
-        suffixIcon: _showClearButton && !widget.readOnly
+        suffixIcon: _showClearButton
             ? IconButton(
                 icon: const Icon(Icons.clear, size: 20),
                 tooltip: 'Clear',
@@ -112,6 +123,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
       onTap: widget.onTap,
       textCapitalization: widget.textCapitalization,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
+      onChanged: widget.onChanged, // Pass onChanged to TextFormField
     );
   }
 }

@@ -1,37 +1,35 @@
-// lib/features/categories/data/models/category_model.dart
-// MODIFIED FILE
 import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import enum
 
-part 'category_model.g.dart'; // CORRECTED: Relative path
+part 'category_model.g.dart';
 
 @JsonSerializable()
-@HiveType(typeId: 3)
+@HiveType(typeId: 3) // Keep existing typeId
 class CategoryModel extends HiveObject {
   @HiveField(0)
   @JsonKey(required: true)
   final String id;
-
   @HiveField(1)
   @JsonKey(required: true)
   final String name;
-
   @HiveField(2)
   @JsonKey(required: true)
   final String iconName;
-
   @HiveField(3)
   @JsonKey(required: true)
   final String colorHex;
-
   @HiveField(4)
   @JsonKey(required: true)
   final bool isCustom;
-
   @HiveField(5)
   @JsonKey(includeIfNull: false)
   final String? parentCategoryId;
+  // --- ADDED Field for Type ---
+  @HiveField(6) // New field index
+  @JsonKey(required: true, defaultValue: 0) // Default to expense (index 0)
+  final int typeIndex; // Store enum index
 
   CategoryModel({
     required this.id,
@@ -40,6 +38,7 @@ class CategoryModel extends HiveObject {
     required this.colorHex,
     required this.isCustom,
     this.parentCategoryId,
+    required this.typeIndex, // Added to constructor
   });
 
   factory CategoryModel.fromEntity(Category entity) {
@@ -50,6 +49,7 @@ class CategoryModel extends HiveObject {
       colorHex: entity.colorHex,
       isCustom: entity.isCustom,
       parentCategoryId: entity.parentCategoryId,
+      typeIndex: entity.type.index, // Get index from entity type
     );
   }
 
@@ -61,6 +61,10 @@ class CategoryModel extends HiveObject {
       colorHex: colorHex,
       isCustom: isCustom,
       parentCategoryId: parentCategoryId,
+      // Convert index back to enum, handle potential invalid index
+      type: typeIndex >= 0 && typeIndex < CategoryType.values.length
+          ? CategoryType.values[typeIndex]
+          : CategoryType.expense, // Default to expense if index is invalid
     );
   }
 
