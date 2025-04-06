@@ -50,7 +50,7 @@ class AppDropdownFormField<T> extends StatelessWidget {
         fillColor: inputTheme.fillColor,
         contentPadding: contentPadding ??
             inputTheme.contentPadding ??
-            modeTheme?.listItemPadding?.copyWith(top: 14, bottom: 14),
+            modeTheme?.listItemPadding.copyWith(top: 14, bottom: 14),
         isDense: inputTheme.isDense,
         floatingLabelBehavior: inputTheme.floatingLabelBehavior,
         // --- Use the prefixIcon parameter ---

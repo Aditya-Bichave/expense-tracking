@@ -17,7 +17,6 @@ class GoalsSubTab extends StatelessWidget {
     final modeTheme = context.modeTheme;
 
     return Scaffold(
-      // Ensure Scaffold is present
       body: BlocBuilder<GoalListBloc, GoalListState>(
         builder: (context, state) {
           Widget content;
@@ -34,7 +33,6 @@ class GoalsSubTab extends StatelessWidget {
                         textAlign: TextAlign.center)));
           } else if (state.goals.isEmpty &&
               state.status != GoalListStatus.loading) {
-            // Don't show empty state during initial load
             content = Center(
                 child: Padding(
                     padding: const EdgeInsets.all(30.0),
@@ -57,42 +55,33 @@ class GoalsSubTab extends StatelessWidget {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 24),
-                          // --- VERIFIED: Button navigates to addGoal ---
+                          // --- FIX: Added back Empty State Button ---
                           ElevatedButton.icon(
                             icon: const Icon(Icons.add),
                             label: const Text('Add First Goal'),
-                            onPressed: () => context
-                                .pushNamed(RouteNames.addGoal), // Correct route
+                            onPressed: () =>
+                                context.pushNamed(RouteNames.addGoal),
                             style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 24, vertical: 12)),
                           )
-                          // --- END VERIFIED ---
+                          // --- END FIX ---
                         ])));
           } else {
-            // Display the list of goals
             content = ListView.builder(
               padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
-                  const EdgeInsets.only(
-                      top: 8.0, bottom: 90.0), // Padding for FAB
+                  const EdgeInsets.only(top: 8.0, bottom: 90.0),
               itemCount: state.goals.length,
               itemBuilder: (ctx, index) {
                 final goal = state.goals[index];
                 return GoalCard(
                   goal: goal,
-                  onTap: () {
-                    // Navigate to detail view
-                    context.pushNamed(RouteNames.goalDetail,
-                        pathParameters: {'id': goal.id}, extra: goal);
-                  },
-                )
-                    .animate()
-                    .fadeIn(delay: (50 * index).ms, duration: 300.ms)
-                    .slideY(begin: 0.2, curve: Curves.easeOut);
+                  onTap: () => context.pushNamed(RouteNames.goalDetail,
+                      pathParameters: {'id': goal.id}, extra: goal),
+                ).animate().fadeIn(delay: (50 * index).ms).slideY(begin: 0.2);
               },
             );
           }
-          // Add RefreshIndicator
           return RefreshIndicator(
             onRefresh: () async {
               context
@@ -108,7 +97,7 @@ class GoalsSubTab extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        heroTag: 'add_goal_fab', // Unique tag
+        heroTag: 'add_goal_fab_sub',
         child: const Icon(Icons.add),
         tooltip: 'Create New Goal',
         onPressed: () => context.pushNamed(RouteNames.addGoal),

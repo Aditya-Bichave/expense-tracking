@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
-import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart'; // Correct import
+import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
+import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // Import for SVG icons
-import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:expense_tracker/main.dart';
 
 class AccountForm extends StatefulWidget {
   final AssetAccount? initialAccount;
@@ -35,7 +36,7 @@ class _AccountFormState extends State<AccountForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _initialBalanceController;
-  AssetType _selectedType = AssetType.bank; // Default
+  AssetType _selectedType = AssetType.bank;
 
   @override
   void initState() {
@@ -67,25 +68,7 @@ class _AccountFormState extends State<AccountForm> {
     }
   }
 
-  Widget? _getPrefixIcon(
-      BuildContext context, String iconKey, IconData fallbackIcon) {
-    final modeTheme = context.modeTheme;
-    final theme = Theme.of(context);
-    if (modeTheme != null) {
-      String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
-      if (svgPath.isNotEmpty) {
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(svgPath,
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(
-                  theme.colorScheme.onSurfaceVariant, BlendMode.srcIn)),
-        );
-      }
-    }
-    return Icon(fallbackIcon);
-  }
+  // getPrefixIcon is now in CommonFormFields
 
   @override
   Widget build(BuildContext context) {
@@ -102,23 +85,21 @@ class _AccountFormState extends State<AccountForm> {
             const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Name
-          AppTextFormField(
+          CommonFormFields.buildNameField(
+            context: context,
             controller: _nameController,
             labelText: 'Account Name',
-            prefixIcon: _getPrefixIcon(context, 'edit', Icons.edit),
-            textCapitalization: TextCapitalization.words,
-            validator: (value) => (value == null || value.trim().isEmpty)
-                ? 'Please enter an account name'
-                : null,
+            iconKey: 'edit',
+            fallbackIcon: Icons.edit,
           ),
           const SizedBox(height: 16),
 
           // Type Dropdown
           AppDropdownFormField<AssetType>(
             value: _selectedType, labelText: 'Account Type',
-            // --- FIX: Use prefixIcon, not prefixIconData ---
-            prefixIcon:
-                _getPrefixIcon(context, 'category', Icons.category_outlined),
+            // --- FIX: Use CommonFormFields.getPrefixIcon ---
+            prefixIcon: CommonFormFields.getPrefixIcon(
+                context, 'category', Icons.category_outlined),
             // --- END FIX ---
             items: AssetType.values.map((AssetType type) {
               final iconData =
@@ -147,18 +128,15 @@ class _AccountFormState extends State<AccountForm> {
           const SizedBox(height: 16),
 
           // Initial Balance
-          AppTextFormField(
+          CommonFormFields.buildAmountField(
+            context: context,
             controller: _initialBalanceController,
             labelText: 'Initial Balance',
-            prefixText: '$currencySymbol ',
-            prefixIcon: _getPrefixIcon(
-                context, 'wallet', Icons.account_balance_wallet_outlined),
-            keyboardType: const TextInputType.numberWithOptions(
-                signed: true, decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^-?\d*[,.]?\d{0,2}')),
-            ],
+            currencySymbol: currencySymbol,
+            iconKey: 'wallet',
+            fallbackIcon: Icons.account_balance_wallet_outlined,
             validator: (value) {
+              // Allow negative balance
               if (value == null || value.isEmpty)
                 return 'Enter balance (0 is valid)';
               if (double.tryParse(value.replaceAll(',', '.')) == null)
