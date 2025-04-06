@@ -1,8 +1,10 @@
 // lib/features/transactions/presentation/widgets/transaction_form.dart
+// ignore_for_file: deprecated_member_use
+
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
-import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
+import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
@@ -17,7 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:collection/collection.dart'; // For firstWhereOrNull
+import 'package:collection/collection.dart';
 
 typedef TransactionSubmitCallback = void Function(
   TransactionType type,
@@ -57,8 +59,7 @@ class _TransactionFormState extends State<TransactionForm> {
   String? _selectedAccountId;
   late TransactionType _transactionType;
 
-  final GlobalKey<FormFieldState<Category>> _categoryFormFieldKey =
-      GlobalKey<FormFieldState<Category>>();
+  // Removed _categoryFormFieldKey
 
   @override
   void initState() {
@@ -89,10 +90,6 @@ class _TransactionFormState extends State<TransactionForm> {
       setState(() {
         _selectedCategory = widget.initialCategory;
       });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted)
-          _categoryFormFieldKey.currentState?.didChange(_selectedCategory);
-      });
     }
     if (widget.initialType != oldWidget.initialType &&
         widget.initialTransaction == null) {
@@ -102,12 +99,9 @@ class _TransactionFormState extends State<TransactionForm> {
         _transactionType = widget.initialType;
         _selectedCategory = null;
       });
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _categoryFormFieldKey.currentState?.didChange(null);
-          _categoryFormFieldKey.currentState?.validate();
-        }
-      });
+      context
+          .read<AddEditTransactionBloc>()
+          .add(TransactionTypeChanged(_transactionType));
     }
   }
 
@@ -153,8 +147,6 @@ class _TransactionFormState extends State<TransactionForm> {
       setState(() => _selectedCategory = result);
       log.info(
           "[TransactionForm] Category selected via picker: ${result.name} (ID: ${result.id})");
-      _categoryFormFieldKey.currentState?.didChange(_selectedCategory);
-      _categoryFormFieldKey.currentState?.validate();
     }
   }
 
@@ -189,25 +181,7 @@ class _TransactionFormState extends State<TransactionForm> {
     }
   }
 
-  Widget? _getPrefixIcon(
-      BuildContext context, String iconKey, IconData fallbackIcon) {
-    final modeTheme = context.modeTheme;
-    final theme = Theme.of(context);
-    if (modeTheme != null) {
-      String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
-      if (svgPath.isNotEmpty) {
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(svgPath,
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(
-                  theme.colorScheme.onSurfaceVariant, BlendMode.srcIn)),
-        );
-      }
-    }
-    return Icon(fallbackIcon);
-  }
+  // Removed _getPrefixIcon
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +191,15 @@ class _TransactionFormState extends State<TransactionForm> {
     final modeTheme = context.modeTheme;
     final isExpense = _transactionType == TransactionType.expense;
 
+    final List<Color> expenseColors = [
+      theme.colorScheme.errorContainer.withOpacity(0.7),
+      theme.colorScheme.errorContainer
+    ];
+    final List<Color> incomeColors = [
+      theme.colorScheme.primaryContainer,
+      theme.colorScheme.primaryContainer.withOpacity(0.7)
+    ];
+
     return Form(
       key: _formKey,
       child: ListView(
@@ -225,211 +208,88 @@ class _TransactionFormState extends State<TransactionForm> {
             const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Transaction Type Toggle
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Center(
-              child: ToggleSwitch(
-                minWidth: 120.0,
-                cornerRadius: 20.0,
-                activeBgColor: [
-                  theme.colorScheme.errorContainer,
-                  theme.colorScheme.primaryContainer
-                ],
-                activeFgColor: isExpense
-                    ? theme.colorScheme.onErrorContainer
-                    : theme.colorScheme.onPrimaryContainer,
-                inactiveBgColor: theme.colorScheme.surfaceContainerHighest,
-                inactiveFgColor: theme.colorScheme.onSurfaceVariant,
-                initialLabelIndex: isExpense ? 0 : 1,
-                totalSwitches: 2,
-                labels: const ['Expense', 'Income'],
-                radiusStyle: true,
-                onToggle: (index) {
-                  if (index != null) {
-                    log.info(
-                        "[TransactionForm] Toggle switched to index: $index");
-                    final newType = index == 0
-                        ? TransactionType.expense
-                        : TransactionType.income;
-                    if (_transactionType != newType) {
-                      setState(() {
-                        _transactionType = newType;
-                        _selectedCategory = null;
-                      });
-                      context
-                          .read<AddEditTransactionBloc>()
-                          .add(TransactionTypeChanged(newType));
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        _categoryFormFieldKey.currentState?.didChange(null);
-                        _categoryFormFieldKey.currentState?.validate();
-                      });
-                    }
-                  }
-                },
-              ),
-            ),
+          CommonFormFields.buildTypeToggle(
+            context: context,
+            initialIndex: isExpense ? 0 : 1,
+            labels: const ['Expense', 'Income'],
+            activeBgColors: [expenseColors, incomeColors],
+            onToggle: (index) {
+              if (index != null) {
+                log.info("[TransactionForm] Toggle switched to index: $index");
+                final newType = index == 0
+                    ? TransactionType.expense
+                    : TransactionType.income;
+                if (_transactionType != newType) {
+                  setState(() {
+                    _transactionType = newType;
+                    _selectedCategory = null;
+                  });
+                  context
+                      .read<AddEditTransactionBloc>()
+                      .add(TransactionTypeChanged(newType));
+                }
+              }
+            },
           ),
           const SizedBox(height: 16),
 
           // Title / Source
-          AppTextFormField(
+          CommonFormFields.buildNameField(
+            context: context,
             controller: _titleController,
             labelText: isExpense ? 'Title / Description' : 'Title / Source',
-            prefixIcon: _getPrefixIcon(context, 'label',
-                isExpense ? Icons.description_outlined : Icons.source_outlined),
+            fallbackIcon:
+                isExpense ? Icons.description_outlined : Icons.source_outlined,
             textCapitalization: TextCapitalization.sentences,
-            validator: (value) => (value == null || value.trim().isEmpty)
-                ? 'Please enter a title'
-                : null,
           ),
           const SizedBox(height: 16),
 
           // Amount
-          AppTextFormField(
+          CommonFormFields.buildAmountField(
+            context: context,
             controller: _amountController,
             labelText: 'Amount',
-            prefixText: '$currencySymbol ',
-            prefixIcon: _getPrefixIcon(context, 'amount', Icons.attach_money),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
-            ],
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Enter amount';
-              final number = double.tryParse(value.replaceAll(',', '.'));
-              if (number == null) return 'Invalid number';
-              if (number <= 0) return 'Must be positive';
-              return null;
-            },
+            currencySymbol: currencySymbol,
           ),
           const SizedBox(height: 16),
 
-          // Category Picker using FormField
-          FormField<Category>(
-            key: _categoryFormFieldKey,
-            initialValue: _selectedCategory,
-            validator: (value) => null,
-            builder: (formFieldState) {
-              final Category? displayCategory =
-                  _selectedCategory; // Explicit type
-              Color displayColor =
-                  displayCategory?.displayColor ?? theme.disabledColor;
-              IconData displayIcon = Icons.category_outlined;
-              Widget leadingWidget;
-
-              if (displayCategory != null) {
-                String? svgPath;
-                if (modeTheme != null) {
-                  svgPath = modeTheme.assets.getCategoryIcon(
-                      displayCategory.iconName,
-                      defaultPath: '');
-                }
-                if (svgPath != null && svgPath.isNotEmpty) {
-                  leadingWidget = Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SvgPicture.asset(svgPath,
-                          width: 24,
-                          height: 24,
-                          colorFilter:
-                              ColorFilter.mode(displayColor, BlendMode.srcIn)));
-                } else {
-                  displayIcon = availableIcons[displayCategory.iconName] ??
-                      Icons.help_outline;
-                  leadingWidget = Icon(displayIcon, color: displayColor);
-                }
-              } else {
-                leadingWidget = _getPrefixIcon(
-                        context, 'category', Icons.category_outlined) ??
-                    Icon(Icons.category_outlined, color: theme.disabledColor);
-              }
-
-              BorderRadius inputBorderRadius = BorderRadius.circular(8.0);
-              final borderConfig = theme.inputDecorationTheme.enabledBorder;
-              InputBorder? errorBorderConfig =
-                  theme.inputDecorationTheme.errorBorder;
-              BorderSide errorSide =
-                  BorderSide(color: theme.colorScheme.error, width: 1.5);
-              if (borderConfig is OutlineInputBorder)
-                inputBorderRadius = borderConfig.borderRadius;
-              if (errorBorderConfig is OutlineInputBorder)
-                errorSide = errorBorderConfig.borderSide;
-              bool hasError = formFieldState.hasError;
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12),
-                      shape: OutlineInputBorder(
-                          borderRadius: inputBorderRadius,
-                          borderSide: hasError
-                              ? errorSide
-                              : theme.inputDecorationTheme.enabledBorder
-                                      ?.borderSide ??
-                                  BorderSide(color: theme.dividerColor)),
-                      leading: leadingWidget,
-                      title: Text(displayCategory?.name ?? 'Select Category',
-                          style: TextStyle(
-                              color:
-                                  hasError ? theme.colorScheme.error : null)),
-                      trailing: const Icon(Icons.arrow_drop_down),
-                      onTap: () async {
-                        await _selectCategory(context);
-                      }),
-                  if (hasError)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 12.0, top: 8.0),
-                      child: Text(formFieldState.errorText!,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.error)),
-                    ),
-                ],
-              );
+          // Category Picker
+          CommonFormFields.buildCategorySelector(
+            context: context,
+            selectedCategory: _selectedCategory,
+            onTap: () async {
+              await _selectCategory(context);
             },
+            transactionType: _transactionType,
           ),
           const SizedBox(height: 16),
 
           // Account Selector
-          AccountSelectorDropdown(
+          CommonFormFields.buildAccountSelector(
+            context: context,
             selectedAccountId: _selectedAccountId,
             onChanged: (String? newValue) {
               setState(() => _selectedAccountId = newValue);
               log.info(
                   "[TransactionForm] Account selected: $_selectedAccountId");
             },
-            validator: (value) =>
-                value == null ? 'Please select an account' : null,
           ),
           const SizedBox(height: 16),
 
           // Date Picker
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: theme.inputDecorationTheme.enabledBorder ??
-                const OutlineInputBorder(),
-            leading: _getPrefixIcon(context, 'calendar', Icons.calendar_today),
-            title: const Text('Date & Time'),
-            subtitle: Text(DateFormatter.formatDateTime(_selectedDate)),
-            trailing: IconButton(
-              icon: const Icon(Icons.edit_calendar_outlined),
-              onPressed: () => _selectDate(context),
-              tooltip: 'Change Date/Time',
-            ),
-            onTap: () => _selectDate(context),
+          CommonFormFields.buildDatePickerTile(
+            context: context,
+            selectedDate: _selectedDate,
+            label: 'Date & Time',
+            onTap: () async {
+              await _selectDate(context);
+            },
           ),
           const SizedBox(height: 16),
 
           // Notes (Optional)
-          AppTextFormField(
-            controller: _notesController,
-            labelText: 'Notes (Optional)',
-            hintText: 'Add any extra details',
-            prefixIcon:
-                _getPrefixIcon(context, 'notes', Icons.note_alt_outlined),
-            maxLines: 3,
-            textCapitalization: TextCapitalization.sentences,
-          ),
+          CommonFormFields.buildNotesField(
+              context: context, controller: _notesController),
           const SizedBox(height: 32),
 
           // Submit Button
