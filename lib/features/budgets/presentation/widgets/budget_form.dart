@@ -4,6 +4,8 @@ import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
+import 'package:expense_tracker/core/widgets/common_form_fields.dart';
+import 'package:expense_tracker/core/widgets/category_selector_multi_tile.dart'; // Import the multi-select tile
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -62,9 +64,7 @@ class _BudgetFormState extends State<BudgetForm> {
   DateTime? _selectedStartDate;
   DateTime? _selectedEndDate;
   List<String> _selectedCategoryIds = [];
-
-  final GlobalKey<FormFieldState<List<String>>> _categoryFieldKey =
-      GlobalKey<FormFieldState<List<String>>>();
+  String? _categoryErrorText;
 
   @override
   void initState() {
@@ -165,12 +165,14 @@ class _BudgetFormState extends State<BudgetForm> {
               final newSelection = values.map((e) => e.toString()).toList();
               setState(() {
                 _selectedCategoryIds = newSelection;
+                if (_selectedCategoryIds.isNotEmpty) {
+                  _categoryErrorText = null;
+                }
               });
-              _categoryFieldKey.currentState?.didChange(newSelection);
               log.info(
                   "[BudgetForm] Selected Category IDs: $_selectedCategoryIds");
               WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => _categoryFieldKey.currentState?.validate());
+                  (_) => _formKey.currentState?.validate());
             },
             maxChildSize: 0.7,
           );
@@ -179,14 +181,22 @@ class _BudgetFormState extends State<BudgetForm> {
 
   void _submitForm() {
     log.info("[BudgetForm] Submit button pressed.");
+    setState(() {
+      _categoryErrorText = null;
+    });
+
     bool isCategoryValid = true;
     if (_selectedType == BudgetType.categorySpecific &&
         _selectedCategoryIds.isEmpty) {
       isCategoryValid = false;
-      _categoryFieldKey.currentState?.validate();
+      setState(() {
+        _categoryErrorText = 'Please select at least one category.';
+      });
     }
 
-    if (_formKey.currentState!.validate() && isCategoryValid) {
+    bool isFormValid = _formKey.currentState!.validate();
+
+    if (isFormValid && isCategoryValid) {
       log.info("[BudgetForm] Form validated, calling onSubmit.");
       widget.onSubmit(
         _nameController.text.trim(),
@@ -204,30 +214,12 @@ class _BudgetFormState extends State<BudgetForm> {
       );
     } else {
       log.warning(
-          "[BudgetForm] Form validation failed (Form valid: ${_formKey.currentState!.validate()}, Category valid: $isCategoryValid).");
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please correct the errors.")));
-    }
-  }
-
-  Widget? _getPrefixIcon(
-      BuildContext context, String iconKey, IconData fallbackIcon) {
-    final modeTheme = context.modeTheme;
-    final theme = Theme.of(context);
-    if (modeTheme != null) {
-      String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
-      if (svgPath.isNotEmpty) {
-        return Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(svgPath,
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(
-                  theme.colorScheme.onSurfaceVariant, BlendMode.srcIn)),
-        );
+          "[BudgetForm] Form validation failed (Form valid: $isFormValid, Category valid: $isCategoryValid).");
+      if (!isFormValid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Please correct the errors.")));
       }
     }
-    return Icon(fallbackIcon);
   }
 
   @override
@@ -245,61 +237,46 @@ class _BudgetFormState extends State<BudgetForm> {
             const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Name
-          AppTextFormField(
+          CommonFormFields.buildNameField(
+            context: context,
             controller: _nameController,
             labelText: 'Budget Name',
             hintText: 'e.g., Monthly Groceries, Vacation Fund',
-            prefixIcon: _getPrefixIcon(context, 'label', Icons.label_outline),
-            textCapitalization: TextCapitalization.words,
-            validator: (value) =>
-                (value == null || value.trim().isEmpty) ? 'Enter a name' : null,
+            iconKey: 'label',
+            fallbackIcon: Icons.label_outline,
           ),
           const SizedBox(height: 16),
 
           // Amount
-          AppTextFormField(
+          CommonFormFields.buildAmountField(
+            context: context,
             controller: _amountController,
             labelText: 'Target Amount',
-            prefixText: '$currencySymbol ',
-            prefixIcon:
-                _getPrefixIcon(context, 'target', Icons.track_changes_outlined),
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
-            ],
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Enter amount';
-              final number = double.tryParse(value.replaceAll(',', '.'));
-              if (number == null) return 'Invalid number';
-              if (number <= 0) return 'Must be positive';
-              return null;
-            },
+            currencySymbol: currencySymbol,
+            iconKey: 'target',
+            fallbackIcon: Icons.track_changes_outlined,
           ),
           const SizedBox(height: 20),
 
           // Budget Type Dropdown
           AppDropdownFormField<BudgetType>(
-            // Use AppDropdownFormField
             value: _selectedType,
             labelText: 'Budget Type',
-            // --- FIX: Use prefixIcon ---
-            prefixIcon:
-                _getPrefixIcon(context, 'type', Icons.merge_type_outlined),
-            // --- END FIX ---
-            items: BudgetType.values.map((BudgetType type) {
-              return DropdownMenuItem<BudgetType>(
-                  value: type, child: Text(type.displayName));
-            }).toList(),
+            prefixIcon: CommonFormFields.getPrefixIcon(
+                context, 'type', Icons.merge_type_outlined),
+            items: BudgetType.values
+                .map((BudgetType type) => DropdownMenuItem<BudgetType>(
+                    value: type, child: Text(type.displayName)))
+                .toList(),
             onChanged: (BudgetType? newValue) {
               if (newValue != null) {
                 setState(() {
                   _selectedType = newValue;
                   if (newValue == BudgetType.overall) {
                     _selectedCategoryIds = [];
-                    _categoryFieldKey.currentState?.didChange([]);
+                    _categoryErrorText = null;
                   }
-                  WidgetsBinding.instance.addPostFrameCallback(
-                      (_) => _categoryFieldKey.currentState?.validate());
+                  _formKey.currentState?.validate();
                 });
               }
             },
@@ -307,92 +284,47 @@ class _BudgetFormState extends State<BudgetForm> {
           ),
           const SizedBox(height: 16),
 
-          // Category MultiSelect (Conditional)
+          // Category MultiSelect Tile (Conditional)
           if (_selectedType == BudgetType.categorySpecific) ...[
-            FormField<List<String>>(
-              key: _categoryFieldKey,
-              initialValue: _selectedCategoryIds,
-              validator: (value) {
-                if (_selectedType == BudgetType.categorySpecific &&
-                    (value == null || value.isEmpty)) {
-                  return 'Please select at least one category.';
-                }
-                return null;
-              },
-              builder: (formFieldState) {
-                final selectedNames = _selectedCategoryIds.map((id) {
-                  final category = widget.availableCategories
-                      .firstWhereOrNull((c) => c.id == id);
-                  return category?.name ?? '?';
-                }).toList();
-                BorderRadius inputBorderRadius = BorderRadius.circular(8.0);
-                final borderConfig = theme.inputDecorationTheme.enabledBorder;
-                InputBorder? errorBorderConfig =
-                    theme.inputDecorationTheme.errorBorder;
-                BorderSide errorSide =
-                    BorderSide(color: theme.colorScheme.error, width: 1.5);
-                if (borderConfig is OutlineInputBorder)
-                  inputBorderRadius = borderConfig.borderRadius;
-                if (errorBorderConfig is OutlineInputBorder)
-                  errorSide = errorBorderConfig.borderSide;
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12),
-                      shape: OutlineInputBorder(
-                          borderRadius: inputBorderRadius,
-                          borderSide: formFieldState.hasError
-                              ? errorSide
-                              : theme.inputDecorationTheme.enabledBorder
-                                      ?.borderSide ??
-                                  BorderSide(color: theme.dividerColor)),
-                      leading: _getPrefixIcon(
-                          context, 'category', Icons.category_outlined),
-                      title: Text(
-                          _selectedCategoryIds.isEmpty
-                              ? 'Select Expense Categories *'
-                              : '${_selectedCategoryIds.length} Categories Selected',
-                          style: TextStyle(
-                              color: formFieldState.hasError
-                                  ? theme.colorScheme.error
-                                  : null)),
-                      subtitle: _selectedCategoryIds.isNotEmpty
-                          ? Text(selectedNames.join(', '),
-                              maxLines: 1, overflow: TextOverflow.ellipsis)
-                          : null,
-                      trailing: const Icon(Icons.arrow_drop_down),
-                      onTap: () => _showCategoryMultiSelect(context),
-                    ),
-                    if (formFieldState.hasError)
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12.0, top: 8.0),
-                        child: Text(formFieldState.errorText!,
-                            style: theme.textTheme.bodySmall
-                                ?.copyWith(color: theme.colorScheme.error)),
-                      ),
-                  ],
-                );
-              },
+            CategorySelectorMultiTile(
+              selectedCategoryIds: _selectedCategoryIds,
+              availableCategories: widget.availableCategories,
+              onTap: () => _showCategoryMultiSelect(context),
+              label: 'Categories',
+              hint: 'Select Categories *',
+              errorText: _categoryErrorText,
             ),
+            if (_selectedCategoryIds.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0, top: 4.0),
+                child: Text(
+                  _selectedCategoryIds
+                      .map((id) =>
+                          widget.availableCategories
+                              .firstWhereOrNull((c) => c.id == id)
+                              ?.name ??
+                          '?')
+                      .join(', '),
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             const SizedBox(height: 20),
           ],
 
           // Period Type Dropdown
           AppDropdownFormField<BudgetPeriodType>(
-            // Use AppDropdownFormField
             value: _selectedPeriod,
             labelText: 'Period',
-            // --- FIX: Use prefixIcon ---
-            prefixIcon:
-                _getPrefixIcon(context, 'repeat', Icons.repeat_outlined),
-            // --- END FIX ---
-            items: BudgetPeriodType.values.map((BudgetPeriodType type) {
-              return DropdownMenuItem<BudgetPeriodType>(
-                  value: type, child: Text(type.displayName));
-            }).toList(),
+            prefixIcon: CommonFormFields.getPrefixIcon(
+                context, 'repeat', Icons.repeat_outlined),
+            items: BudgetPeriodType.values
+                .map((BudgetPeriodType type) =>
+                    DropdownMenuItem<BudgetPeriodType>(
+                        value: type, child: Text(type.displayName)))
+                .toList(),
             onChanged: (BudgetPeriodType? newValue) {
               if (newValue != null) {
                 setState(() {
@@ -413,7 +345,10 @@ class _BudgetFormState extends State<BudgetForm> {
           // Date Pickers (Conditional)
           if (_selectedPeriod == BudgetPeriodType.oneTime) ...[
             FormField<bool>(
-              key: ValueKey('date_picker_$_selectedPeriod'),
+              key: ValueKey('date_picker_validator_$_selectedPeriod'),
+              initialValue: _selectedStartDate != null &&
+                  _selectedEndDate != null &&
+                  !_selectedEndDate!.isBefore(_selectedStartDate!),
               validator: (value) {
                 if (_selectedPeriod == BudgetPeriodType.oneTime) {
                   if (_selectedStartDate == null || _selectedEndDate == null)
@@ -428,68 +363,42 @@ class _BudgetFormState extends State<BudgetForm> {
                 children: [
                   Row(children: [
                     Expanded(
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: _getPrefixIcon(
-                            context, 'calendar', Icons.date_range_outlined),
-                        title: Text(
-                            _selectedStartDate == null
-                                ? 'Start Date *'
-                                : DateFormatter.formatDate(_selectedStartDate!),
-                            style: theme.textTheme.bodyMedium),
-                        trailing: _selectedStartDate != null
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () => setState(() {
-                                  _selectedStartDate = null;
-                                  formFieldState.didChange(false);
-                                }),
-                                tooltip: "Clear Start Date",
-                                visualDensity: VisualDensity.compact,
-                              )
-                            : null,
+                      child: CommonFormFields.buildDatePickerTile(
+                        context: context,
+                        selectedDate: _selectedStartDate,
+                        label: 'Start Date *',
                         onTap: () => _selectDate(context, true)
                             .then((_) => formFieldState.didChange(true)),
-                        dense: true,
+                        onClear: () => setState(() {
+                          _selectedStartDate = null;
+                          formFieldState.didChange(false);
+                        }),
                       ),
                     ),
                     const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),
                         child: Text('-', style: TextStyle(fontSize: 16))),
                     Expanded(
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: _getPrefixIcon(
-                            context, 'calendar', Icons.date_range),
-                        title: Text(
-                            _selectedEndDate == null
-                                ? 'End Date *'
-                                : DateFormatter.formatDate(_selectedEndDate!),
-                            style: theme.textTheme.bodyMedium),
-                        trailing: _selectedEndDate != null
-                            ? IconButton(
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () => setState(() {
-                                      _selectedEndDate = null;
-                                      formFieldState.didChange(false);
-                                    }),
-                                tooltip: "Clear End Date",
-                                visualDensity: VisualDensity.compact)
-                            : null,
+                      child: CommonFormFields.buildDatePickerTile(
+                        context: context,
+                        selectedDate: _selectedEndDate,
+                        label: 'End Date *',
                         onTap: () => _selectDate(context, false)
                             .then((_) => formFieldState.didChange(true)),
-                        dense: true,
+                        onClear: () => setState(() {
+                          _selectedEndDate = null;
+                          formFieldState.didChange(false);
+                        }),
                       ),
                     ),
                   ]),
+                  // Error Text display for Date Range FormField
                   if (formFieldState.hasError)
                     Padding(
                       padding: const EdgeInsets.only(left: 12.0, top: 8.0),
-                      child: Text(
-                        formFieldState.errorText!,
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.error),
-                      ),
+                      child: Text(formFieldState.errorText!,
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.error)),
                     ),
                 ],
               ),
@@ -498,14 +407,8 @@ class _BudgetFormState extends State<BudgetForm> {
           ],
 
           // Notes
-          AppTextFormField(
-            controller: _notesController,
-            labelText: 'Notes (Optional)',
-            prefixIcon:
-                _getPrefixIcon(context, 'notes', Icons.note_alt_outlined),
-            maxLines: 3,
-            textCapitalization: TextCapitalization.sentences,
-          ),
+          CommonFormFields.buildNotesField(
+              context: context, controller: _notesController),
           const SizedBox(height: 32),
 
           // Submit Button

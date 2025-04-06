@@ -1,41 +1,36 @@
-import 'package:expense_tracker/core/constants/route_names.dart'; // For navigation
+// lib/features/categories/presentation/widgets/category_picker_dialog.dart
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import type
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_expense_categories.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_income_categories.dart';
-import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For icon lookup
+import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // Import GoRouter for push
+import 'package:go_router/go_router.dart';
 
-// Enum Definition
 enum CategoryTypeFilter { expense, income }
 
-// Function to show the category picker modal bottom sheet
 Future<Category?> showCategoryPicker(
-  BuildContext context,
-  CategoryTypeFilter categoryType,
-) async {
+    BuildContext context, CategoryTypeFilter categoryType) async {
   return await showModalBottomSheet<Category?>(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
     builder: (builderContext) {
       return CategoryPickerDialogContent(categoryType: categoryType);
     },
   );
 }
 
-// Content widget for the bottom sheet
 class CategoryPickerDialogContent extends StatefulWidget {
   final CategoryTypeFilter categoryType;
   const CategoryPickerDialogContent({super.key, required this.categoryType});
-
   @override
   State<CategoryPickerDialogContent> createState() =>
       _CategoryPickerDialogContentState();
@@ -89,10 +84,9 @@ class _CategoryPickerDialogContentState
     }, (categories) {
       log.info(
           "[CategoryPicker] Loaded ${categories.length} ${widget.categoryType.name} categories.");
-      // Exclude 'Uncategorized' from the picker list
-      _allCategories = categories
-          .where((cat) => cat.id != Category.uncategorized.id)
-          .toList();
+      final uncategorizedId = Category.uncategorized.id;
+      _allCategories =
+          categories.where((cat) => cat.id != uncategorizedId).toList();
       _allCategories
           .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
       _filterCategories();
@@ -111,22 +105,15 @@ class _CategoryPickerDialogContentState
     });
   }
 
-  // --- Navigate to Add Category ---
   void _navigateToAddCategory() {
-    Navigator.pop(context); // Close the picker first
-
-    // Determine the type to pass to the Add Category screen
+    Navigator.pop(context);
     final categoryType = widget.categoryType == CategoryTypeFilter.expense
         ? CategoryType.expense
         : CategoryType.income;
-
-    // Navigate using the defined route structure
-    // This assumes AddEditCategoryScreen can handle the initialType parameter
+    // Pass initialType via extra when pushing the route
     context.push(
-      '${RouteNames.budgetsAndCats}/${RouteNames.manageCategories}/${RouteNames.addCategory}',
-      // Optionally pass the type as extra data if AddEditCategoryScreen doesn't take constructor params for this
-      // extra: {'initialType': categoryType} // Example if using extra
-    );
+        '${RouteNames.budgetsAndCats}/${RouteNames.manageCategories}/${RouteNames.addCategory}',
+        extra: {'initialType': categoryType});
     log.info(
         "[CategoryPicker] Navigating to Add Category screen for type: ${categoryType.name}.");
   }
@@ -135,7 +122,7 @@ class _CategoryPickerDialogContentState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
-    final sheetHeight = screenHeight * 0.7; // Adjusted height
+    final sheetHeight = screenHeight * 0.7;
 
     return Container(
       height: sheetHeight,
@@ -144,14 +131,14 @@ class _CategoryPickerDialogContentState
       child: Column(
         children: [
           // Drag Handle
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10)),
-          ),
+          Center(
+              child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 10),
+                  decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10)))),
           // Title
           Text(
               "Select ${widget.categoryType == CategoryTypeFilter.expense ? 'Expense' : 'Income'} Category",
@@ -192,7 +179,8 @@ class _CategoryPickerDialogContentState
                         : ListView.builder(
                             itemCount: _filteredCategories.length,
                             itemBuilder: (context, index) {
-                              final category = _filteredCategories[index];
+                              final Category category =
+                                  _filteredCategories[index];
                               final iconData =
                                   availableIcons[category.iconName] ??
                                       Icons.category_outlined;
@@ -207,28 +195,33 @@ class _CategoryPickerDialogContentState
                                 onTap: () {
                                   log.info(
                                       "[CategoryPicker] Selected: ${category.name}");
-                                  Navigator.of(context)
-                                      .pop(category); // Return selected
+                                  Navigator.of(context).pop(category);
                                 },
                               );
                             },
                           ),
           ),
           const Divider(height: 1),
-          // --- ADDED: Add New Category Button ---
-          ListTile(
-            leading: Icon(Icons.add_circle_outline,
-                color: theme.colorScheme.primary),
-            title: Text("Add New Category",
-                style: TextStyle(color: theme.colorScheme.primary)),
-            onTap: _navigateToAddCategory, // Call the navigation function
-            contentPadding:
-                const EdgeInsets.symmetric(vertical: 4.0), // Adjust padding
+          // --- FIX: Enhanced "Add New Category" Button ---
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12.0), // Add padding
+            child: Center(
+              // Center the button
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.add_circle_outline, size: 18),
+                label: const Text("Add New Category"),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 12), // Adjust padding
+                  textStyle:
+                      theme.textTheme.labelLarge, // Make text slightly larger
+                ),
+                onPressed: _navigateToAddCategory,
+              ),
+            ),
           ),
-          SizedBox(
-              height: MediaQuery.of(context).padding.bottom /
-                  2), // SafeArea padding
-          // --- END ADDED ---
+          // --- END FIX ---
+          SizedBox(height: MediaQuery.of(context).padding.bottom / 2),
         ],
       ),
     );
