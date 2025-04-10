@@ -92,7 +92,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
           emit(AccountListLoaded(accounts: accounts));
         },
       );
-    } catch (e, s) {
+    } catch (e) {
       log.severe("[AccountListBloc] Unexpected error in _onLoadAccounts");
       // --- CHANGE: Emit new Error state ---
       emit(AccountListError(
@@ -141,7 +141,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
                 type: DataChangeType.account, reason: DataChangeReason.deleted);
           },
         );
-      } catch (e, s) {
+      } catch (e) {
         log.severe(
             "[AccountListBloc] Unexpected error in _onDeleteAccountRequested for ID ${event.accountId}");
         emit(currentState); // Revert optimistic update

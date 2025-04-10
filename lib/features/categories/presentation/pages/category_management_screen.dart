@@ -1,6 +1,5 @@
 // lib/features/categories/presentation/pages/category_management_screen.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';

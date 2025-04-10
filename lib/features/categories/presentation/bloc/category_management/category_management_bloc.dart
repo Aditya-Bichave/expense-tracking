@@ -12,7 +12,6 @@ import 'package:expense_tracker/features/categories/domain/usecases/update_custo
 import 'package:expense_tracker/features/categories/domain/usecases/delete_custom_category.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/main.dart'; // logger
 
 part 'category_management_event.dart';
@@ -176,12 +175,10 @@ class CategoryManagementBloc
 
     // --- FIX: Call the uncategorized method ---
     // Determine fallback type based on the category being deleted (important!)
-    final categoryToDelete = state.allExpenseCategories.firstWhere(
-        (c) => c.id == event.categoryId,
+    state.allExpenseCategories.firstWhere((c) => c.id == event.categoryId,
         orElse: () => state.allIncomeCategories.firstWhere(
             (c) => c.id == event.categoryId,
             orElse: () => Category.uncategorized));
-    final fallbackType = categoryToDelete.type;
     final fallbackId = Category.uncategorized.id;
     // --- END FIX ---
 

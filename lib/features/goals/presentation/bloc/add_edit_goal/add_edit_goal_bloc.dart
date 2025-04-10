@@ -2,7 +2,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart'; // Import Status
 import 'package:expense_tracker/features/goals/domain/usecases/add_goal.dart';

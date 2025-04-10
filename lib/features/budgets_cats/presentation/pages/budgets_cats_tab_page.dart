@@ -1,4 +1,6 @@
 // lib/features/budgets_cats/presentation/pages/budgets_cats_tab_page.dart
+// ignore_for_file: unused_import
+
 import 'package:expense_tracker/features/budgets/presentation/pages/budgets_sub_tab.dart';
 import 'package:expense_tracker/features/budgets_cats/presentation/pages/budgets_sub_tab.dart'
     hide BudgetsSubTab;
@@ -52,11 +54,11 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
                 Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
-        body: TabBarView(
+        body: const TabBarView(
           // --- FIX: Remove CategoriesSubTab ---
           children: [
             BudgetsSubTab(),
-            const GoalsSubTab(),
+            GoalsSubTab(),
           ],
           // --- END FIX ---
         ),

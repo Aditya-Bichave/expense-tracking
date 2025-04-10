@@ -5,8 +5,6 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
-import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/features/budgets/domain/usecases/get_budgets.dart';
@@ -105,7 +103,7 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
             periodEnd: periodEnd,
           );
 
-          await spentResult.fold((failure) {
+          spentResult.fold((failure) {
             log.warning(
                 "[BudgetListBloc] Failed to calculate spent for '${budget.name}': ${failure.message}");
             calculationErrorOccurred = true;

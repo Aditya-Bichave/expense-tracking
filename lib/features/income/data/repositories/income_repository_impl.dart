@@ -1,3 +1,4 @@
+// lib/features/income/data/repositories/income_repository_impl.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/main.dart';
@@ -6,18 +7,15 @@ import 'package:expense_tracker/features/income/data/datasources/income_local_da
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
-import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // For Uncategorized
 
 class IncomeRepositoryImpl implements IncomeRepository {
   final IncomeLocalDataSource localDataSource;
   CategoryRepository get categoryRepository => sl<CategoryRepository>();
 
   IncomeRepositoryImpl({required this.localDataSource});
-
-  // --- REMOVED _hydrateCategories helper ---
 
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Income>> _hydrateSingleModel(IncomeModel model) async {
@@ -74,7 +72,6 @@ class IncomeRepositoryImpl implements IncomeRepository {
     }
   }
 
-  // --- MODIFIED getIncomes ---
   @override
   Future<Either<Failure, List<IncomeModel>>> getIncomes({
     DateTime? startDate,
@@ -104,15 +101,19 @@ class IncomeRepositoryImpl implements IncomeRepository {
         if (endDate != null && dateMatch) {
           final incDateOnly =
               DateTime(model.date.year, model.date.month, model.date.day);
-          final endDateOnly =
-              DateTime(endDate.year, endDate.month, endDate.day);
-          dateMatch = !incDateOnly.isAfter(endDateOnly);
+          final endDateInclusive =
+              DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+          dateMatch = !model.date.isAfter(endDateInclusive);
         }
         if (accountId != null && accountId.isNotEmpty) {
-          accountMatch = model.accountId == accountId;
+          // Handle multiple account IDs if passed comma-separated
+          final ids = accountId.split(',');
+          accountMatch = ids.contains(model.accountId);
         }
         if (category != null && category.isNotEmpty) {
-          categoryMatch = model.categoryId == category; // Filter by ID
+          // Handle multiple category IDs if passed comma-separated
+          final ids = category.split(',');
+          categoryMatch = ids.contains(model.categoryId);
         }
         return dateMatch && categoryMatch && accountMatch;
       }).toList();
@@ -132,10 +133,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
           'Unexpected error getting income models: ${e.toString()}'));
     }
   }
-  // --- END MODIFIED ---
 
-  // --- Keep deleteIncome, getTotalIncomeForAccount ---
-  // --- updateIncomeCategorization, reassignIncomesCategory AS IS ---
   @override
   Future<Either<Failure, void>> deleteIncome(String id) async {
     log.info("[IncomeRepo] Deleting income (ID: $id).");
@@ -160,7 +158,6 @@ class IncomeRepositoryImpl implements IncomeRepository {
     log.info(
         "[IncomeRepo] Getting total income for account: $accountId, Start=$startDate, End=$endDate");
     try {
-      // Use the modified getIncomes which returns models
       final allModelsResult = await getIncomes(
           accountId: accountId.isEmpty ? null : accountId,
           startDate: startDate,
@@ -209,9 +206,9 @@ class IncomeRepositoryImpl implements IncomeRepository {
           date: existingModel.date,
           accountId: existingModel.accountId,
           notes: existingModel.notes,
-          categoryId: categoryId, // Assign new ID
-          categorizationStatusValue: status.value, // Assign new status
-          confidenceScoreValue: confidenceScore); // Assign new score
+          categoryId: categoryId,
+          categorizationStatusValue: status.value,
+          confidenceScoreValue: confidenceScore);
       await localDataSource.updateIncome(updatedModel);
       log.info(
           "[IncomeRepo] Income categorization updated successfully for ID: $incomeId");

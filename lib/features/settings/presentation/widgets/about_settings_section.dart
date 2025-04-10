@@ -5,7 +5,6 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart'; // Updated import
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class AboutSettingsSection extends StatelessWidget {

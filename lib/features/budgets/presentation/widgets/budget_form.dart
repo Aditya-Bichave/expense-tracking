@@ -1,8 +1,6 @@
 // lib/features/budgets/presentation/widgets/budget_form.dart
 import 'package:collection/collection.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart';
 import 'package:expense_tracker/core/widgets/category_selector_multi_tile.dart'; // Import the multi-select tile
@@ -10,14 +8,11 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 typedef BudgetSubmitCallback = Function(
   String name,
@@ -351,10 +346,12 @@ class _BudgetFormState extends State<BudgetForm> {
                   !_selectedEndDate!.isBefore(_selectedStartDate!),
               validator: (value) {
                 if (_selectedPeriod == BudgetPeriodType.oneTime) {
-                  if (_selectedStartDate == null || _selectedEndDate == null)
+                  if (_selectedStartDate == null || _selectedEndDate == null) {
                     return 'Please select start and end dates.';
-                  if (_selectedEndDate!.isBefore(_selectedStartDate!))
+                  }
+                  if (_selectedEndDate!.isBefore(_selectedStartDate!)) {
                     return 'End date must be on or after start date.';
+                  }
                 }
                 return null;
               },

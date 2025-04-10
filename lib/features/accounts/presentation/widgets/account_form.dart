@@ -2,14 +2,10 @@
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:expense_tracker/main.dart';
 
 class AccountForm extends StatefulWidget {
   final AssetAccount? initialAccount;
@@ -137,10 +133,12 @@ class _AccountFormState extends State<AccountForm> {
             fallbackIcon: Icons.account_balance_wallet_outlined,
             validator: (value) {
               // Allow negative balance
-              if (value == null || value.isEmpty)
+              if (value == null || value.isEmpty) {
                 return 'Enter balance (0 is valid)';
-              if (double.tryParse(value.replaceAll(',', '.')) == null)
+              }
+              if (double.tryParse(value.replaceAll(',', '.')) == null) {
                 return 'Invalid number';
+              }
               return null;
             },
           ),

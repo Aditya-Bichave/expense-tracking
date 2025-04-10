@@ -5,7 +5,6 @@ import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
@@ -15,7 +14,6 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 
 class IncomeCard extends StatelessWidget {
   final Income income;
@@ -33,7 +31,7 @@ class IncomeCard extends StatelessWidget {
 
   Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
     /* ... Same as before ... */
-    final theme = Theme.of(context);
+    Theme.of(context);
     final category = income.category ?? Category.uncategorized;
     IconData fallbackIcon = Icons.attach_money;
     try {
@@ -87,9 +85,9 @@ class IncomeCard extends StatelessWidget {
     final Color errorColor = theme.colorScheme.error;
     final Color successColor = Colors.green.shade600;
     final Color warningColor = Colors.orange.shade800;
-    final EdgeInsets buttonPadding =
-        const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0);
-    final Size buttonMinSize = const Size(28, 28);
+    const EdgeInsets buttonPadding =
+        EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0);
+    const Size buttonMinSize = Size(28, 28);
 
     switch (income.status) {
       case CategorizationStatus.needsReview:
@@ -120,8 +118,6 @@ class IncomeCard extends StatelessWidget {
                   log.info(
                       "[IncomeCard] Suggestion confirmed for ${income.id}");
                   if (income.category != null && onUserCategorized != null) {
-                    final matchData = TransactionMatchData(
-                        description: income.title, merchantId: null);
                     onUserCategorized!(income, income.category!);
                   }
                 },
@@ -164,7 +160,6 @@ class IncomeCard extends StatelessWidget {
           },
         );
       case CategorizationStatus.categorized:
-      default:
         return InkWell(
           onTap: () {
             log.info(

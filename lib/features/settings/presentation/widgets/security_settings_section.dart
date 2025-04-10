@@ -4,7 +4,6 @@ import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart'; // Updated import
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class SecuritySettingsSection extends StatelessWidget {

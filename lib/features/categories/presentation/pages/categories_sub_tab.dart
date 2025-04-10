@@ -1,7 +1,6 @@
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import type
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +14,7 @@ class CategoriesSubTab extends StatelessWidget {
 
   // Reusable list item builder (no actions needed here)
   Widget _buildCategoryItem(BuildContext context, Category category) {
-    final theme = Theme.of(context);
+    Theme.of(context);
     final IconData displayIconData =
         availableIcons[category.iconName] ?? Icons.category_outlined;
 
@@ -25,11 +24,11 @@ class CategoriesSubTab extends StatelessWidget {
       child: ListTile(
           leading: CircleAvatar(
             backgroundColor: category.displayColor.withOpacity(0.15),
-            child:
-                Icon(displayIconData, color: category.displayColor, size: 20),
             foregroundColor: category.displayColor.computeLuminance() > 0.5
                 ? Colors.black
                 : null,
+            child:
+                Icon(displayIconData, color: category.displayColor, size: 20),
           ),
           title: Text(category.name)),
     );

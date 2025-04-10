@@ -9,7 +9,6 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // For SVG icons
 
 class GoalCard extends StatelessWidget {
   final Goal goal;
@@ -34,7 +33,7 @@ class GoalCard extends StatelessWidget {
     final amountNeeded =
         (goal.targetAmount - goal.totalSaved).clamp(0.0, double.infinity);
     if (daysRemaining <= 0 || amountNeeded <= 0) return '';
-    final daysPerMonthApprox = 30.44;
+    const daysPerMonthApprox = 30.44;
     final monthsRemaining = daysRemaining / daysPerMonthApprox;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
     final neededPerMonth =

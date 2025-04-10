@@ -3,16 +3,13 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/get_contributions_for_goal.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
@@ -21,12 +18,10 @@ import 'package:expense_tracker/features/goals/presentation/widgets/contribution
 import 'package:expense_tracker/features/goals/presentation/widgets/log_contribution_sheet.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:confetti/confetti.dart';
-import 'dart:math';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -104,26 +99,26 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     await goalResult.fold((failure) async {
       log.severe(
           "[GoalDetail] Failed to load goal details: ${failure.message}");
-      if (mounted)
+      if (mounted) {
         setState(() {
           _error = "Failed to load goal details.";
           _isLoadingGoal = false;
           _isLoadingContributions = false;
         });
+      }
     }, (goal) async {
       if (goal == null) {
         log.severe("[GoalDetail] Goal ${widget.goalId} not found.");
-        if (mounted)
+        if (mounted) {
           setState(() {
             _error = "Goal not found.";
             _isLoadingGoal = false;
             _isLoadingContributions = false;
           });
+        }
       } else {
         loadedGoal = goal;
         if (mounted) {
-          bool goalStateChanged =
-              !const DeepCollectionEquality().equals(_currentGoal, loadedGoal);
           setState(() {
             _currentGoal = loadedGoal;
             _isLoadingGoal = false;
@@ -144,8 +139,9 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       }
     });
 
-    if (_error != null || _currentGoal == null)
+    if (_error != null || _currentGoal == null) {
       return; // Stop if goal loading failed
+    }
 
     // Fetch Contributions
     final contributionsResult = await _getContributionsUseCase(
@@ -156,7 +152,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       log.warning(
           "[GoalDetail] Failed to load contributions: ${failure.message}");
       setState(() {
-        _error = (_error ?? "") + "\nFailed to load contribution history.";
+        _error = "${_error ?? ""}\nFailed to load contribution history.";
         _isLoadingContributions = false;
       });
     }, (contributions) {
@@ -190,10 +186,11 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         confirmColor: Colors.orange[700]);
     if (confirmed == true && context.mounted) {
       context.read<GoalListBloc>().add(ArchiveGoal(goalId: _currentGoal!.id));
-      if (context.canPop())
+      if (context.canPop()) {
         context.pop();
-      else
+      } else {
         context.go(RouteNames.budgetsAndCats, extra: {'initialTabIndex': 2});
+      }
     }
   }
 
@@ -357,11 +354,12 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     final uiMode = settings.uiMode;
     final modeTheme = context.modeTheme;
 
-    if (_isLoadingGoal)
+    if (_isLoadingGoal) {
       return Scaffold(
           appBar: AppBar(),
           body: const Center(child: CircularProgressIndicator()));
-    if (_error != null || _currentGoal == null)
+    }
+    if (_error != null || _currentGoal == null) {
       return Scaffold(
           appBar: AppBar(title: const Text("Error")),
           body: Center(
@@ -369,6 +367,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(_error ?? "Goal could not be loaded.",
                       style: TextStyle(color: theme.colorScheme.error)))));
+    }
 
     final goal = _currentGoal!;
     final isAether = uiMode == UIMode.aether;

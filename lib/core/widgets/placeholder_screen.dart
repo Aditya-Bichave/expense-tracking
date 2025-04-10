@@ -31,7 +31,7 @@ class PlaceholderScreen extends StatelessWidget {
                   color: theme.colorScheme.secondary.withOpacity(0.7)),
               const SizedBox(height: 24),
               Text(
-                '$featureName',
+                featureName,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   color: theme.colorScheme.secondary,
                 ),

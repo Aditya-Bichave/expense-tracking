@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import for SVG
-import 'package:expense_tracker/core/assets/app_assets.dart'; // Import asset catalog
+// Import asset catalog
 import 'package:expense_tracker/core/widgets/app_card.dart'; // Import AppCard
 
 class AccountCard extends StatelessWidget {

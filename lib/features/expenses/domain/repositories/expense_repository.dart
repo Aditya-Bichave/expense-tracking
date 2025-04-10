@@ -5,7 +5,6 @@ import 'package:expense_tracker/features/categories/domain/entities/categorizati
 // --- Import Model instead of Entity ---
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
-import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 
 abstract class ExpenseRepository {

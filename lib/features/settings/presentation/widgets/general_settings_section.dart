@@ -1,5 +1,4 @@
 // lib/features/settings/presentation/widgets/general_settings_section.dart
-import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
@@ -72,8 +71,9 @@ class GeneralSettingsSection extends StatelessWidget {
             onChanged: isLoading
                 ? null
                 : (String? newValue) {
-                    if (newValue != null)
+                    if (newValue != null) {
                       context.read<SettingsBloc>().add(UpdateCountry(newValue));
+                    }
                   },
           ),
         ),

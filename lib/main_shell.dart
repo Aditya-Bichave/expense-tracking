@@ -90,7 +90,6 @@ class MainShell extends StatelessWidget {
         showUnselectedLabels: navTheme.showUnselectedLabels ?? true,
         elevation: navTheme.elevation ?? 8.0,
         items: List.generate(5, (index) {
-          final isActive = index == navigationShell.currentIndex;
           return BottomNavigationBarItem(
             icon: Icon(_getIconForIndex(index, false)),
             activeIcon: Icon(_getIconForIndex(index, true)),

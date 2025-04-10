@@ -1,16 +1,13 @@
 // lib/features/goals/presentation/widgets/goal_form.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/core/widgets/app_text_form_field.dart'; // Keep for direct use if needed
+// Keep for direct use if needed
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // Keep for icon picker
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 typedef GoalSubmitCallback = Function(
   String name,

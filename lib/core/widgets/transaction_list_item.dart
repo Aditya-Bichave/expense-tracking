@@ -1,12 +1,10 @@
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For availableIcons map
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/main.dart'; // logger
+// logger
 
 // Common widget to display either an Expense or Income in a ListTile format
 class TransactionListItem extends StatelessWidget {
