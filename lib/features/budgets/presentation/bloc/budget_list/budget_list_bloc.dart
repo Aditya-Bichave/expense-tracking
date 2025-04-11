@@ -8,10 +8,10 @@ import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/features/budgets/domain/usecases/get_budgets.dart';
-import 'package:expense_tracker/features/budgets/domain/usecases/delete_budget.dart'; // Import Delete UseCase
-import 'package:expense_tracker/core/di/service_locator.dart'; // Import publishDataChangedEvent
+import 'package:expense_tracker/features/budgets/domain/usecases/delete_budget.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:flutter/material.dart'; // For colors
+import 'package:flutter/material.dart';
 
 part 'budget_list_event.dart';
 part 'budget_list_state.dart';
@@ -19,34 +19,50 @@ part 'budget_list_state.dart';
 class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
   final GetBudgetsUseCase _getBudgetsUseCase;
   final BudgetRepository _budgetRepository;
-  final DeleteBudgetUseCase _deleteBudgetUseCase; // Added Delete UseCase
+  final DeleteBudgetUseCase _deleteBudgetUseCase;
   late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
   BudgetListBloc({
     required GetBudgetsUseCase getBudgetsUseCase,
     required BudgetRepository budgetRepository,
-    required DeleteBudgetUseCase deleteBudgetUseCase, // Added requirement
+    required DeleteBudgetUseCase deleteBudgetUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
   })  : _getBudgetsUseCase = getBudgetsUseCase,
         _budgetRepository = budgetRepository,
-        _deleteBudgetUseCase = deleteBudgetUseCase, // Assign UseCase
+        _deleteBudgetUseCase = deleteBudgetUseCase,
         super(const BudgetListState()) {
     on<LoadBudgets>(_onLoadBudgets);
     on<_BudgetsDataChanged>(_onDataChanged);
-    on<DeleteBudget>(_onDeleteBudget); // Register handler
+    on<DeleteBudget>(_onDeleteBudget);
+    on<ResetState>(_onResetState); // Add handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Reload budgets if Budgets change OR if Expenses change (affects calculation)
-      if (event.type == DataChangeType.budget ||
+      // --- MODIFIED Listener ---
+      if (event.type == DataChangeType.system &&
+          event.reason == DataChangeReason.reset) {
+        log.info(
+            "[BudgetListBloc] System Reset event received. Adding ResetState.");
+        add(const ResetState());
+      } else if (event.type == DataChangeType.budget ||
           event.type == DataChangeType.expense) {
         log.info(
             "[BudgetListBloc] Relevant DataChangedEvent ($event). Triggering reload.");
         add(const _BudgetsDataChanged());
       }
+      // --- END MODIFIED ---
     });
     log.info("[BudgetListBloc] Initialized.");
   }
 
+  // --- ADDED: Reset State Handler ---
+  void _onResetState(ResetState event, Emitter<BudgetListState> emit) {
+    log.info("[BudgetListBloc] Resetting state to initial.");
+    emit(const BudgetListState());
+    add(const LoadBudgets()); // Trigger initial load after reset
+  }
+  // --- END ADDED ---
+
+  // ... (rest of handlers remain the same) ...
   Future<void> _onDataChanged(
       _BudgetsDataChanged event, Emitter<BudgetListState> emit) async {
     // Avoid triggering reload if already loading/reloading
@@ -89,7 +105,6 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
         String? firstCalcErrorMsg;
 
         // Define colors (could be moved to theme later)
-        // Consider getting these from Theme.of(context) if possible in BLoC, but safer here.
         const thrivingColor = Colors.green; // Example
         const nearingLimitColor = Colors.orange; // Example
         const overLimitColor = Colors.red; // Example

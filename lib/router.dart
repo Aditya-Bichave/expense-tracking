@@ -1,51 +1,47 @@
 // lib/router.dart
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:flutter/foundation.dart' hide Category;
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // Import BlocProvider
-import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
-
-// --- Import Pages/Screens ---
-import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
-import 'package:expense_tracker/features/budgets_cats/presentation/pages/budgets_cats_tab_page.dart';
-import 'package:expense_tracker/features/accounts/presentation/pages/accounts_tab_page.dart';
-import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
-import 'package:expense_tracker/features/transactions/presentation/pages/add_edit_transaction_page.dart';
+import 'package:expense_tracker/core/screens/initial_setup_screen.dart';
+import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_account_page.dart';
-import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
-import 'package:expense_tracker/features/categories/presentation/pages/add_edit_category_screen.dart';
-import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
+import 'package:expense_tracker/features/accounts/presentation/pages/accounts_tab_page.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/presentation/pages/add_edit_budget_page.dart';
 import 'package:expense_tracker/features/budgets/presentation/pages/budget_detail_page.dart';
+import 'package:expense_tracker/features/budgets_cats/presentation/pages/budgets_cats_tab_page.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
+import 'package:expense_tracker/features/categories/presentation/pages/add_edit_category_screen.dart';
+import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
+import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/add_edit_goal_page.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/goal_detail_page.dart';
-// --- Import Report Pages ---
-import 'package:expense_tracker/features/reports/presentation/pages/spending_by_category_page.dart';
-import 'package:expense_tracker/features/reports/presentation/pages/spending_over_time_page.dart';
-import 'package:expense_tracker/features/reports/presentation/pages/income_vs_expense_page.dart';
-import 'package:expense_tracker/features/reports/presentation/pages/budget_performance_page.dart';
-import 'package:expense_tracker/features/reports/presentation/pages/goal_progress_page.dart';
-// --- Import Report Blocs ---
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/features/reports/presentation/bloc/budget_performance_report/budget_performance_report_bloc.dart';
+import 'package:expense_tracker/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_bloc.dart';
+import 'package:expense_tracker/features/reports/presentation/bloc/income_expense_report/income_expense_report_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/spending_category_report/spending_category_report_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_bloc.dart';
-import 'package:expense_tracker/features/reports/presentation/bloc/income_expense_report/income_expense_report_bloc.dart';
-import 'package:expense_tracker/features/reports/presentation/bloc/budget_performance_report/budget_performance_report_bloc.dart';
-import 'package:expense_tracker/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_bloc.dart';
-
-import 'package:expense_tracker/core/widgets/placeholder_screen.dart';
-import 'main_shell.dart';
-import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/reports/presentation/pages/budget_performance_page.dart';
+import 'package:expense_tracker/features/reports/presentation/pages/goal_progress_page.dart';
+import 'package:expense_tracker/features/reports/presentation/pages/income_vs_expense_page.dart';
+import 'package:expense_tracker/features/reports/presentation/pages/spending_by_category_page.dart';
+import 'package:expense_tracker/features/reports/presentation/pages/spending_over_time_page.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
+import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
-import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
+import 'package:expense_tracker/features/transactions/presentation/pages/add_edit_transaction_page.dart';
+import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
+import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
+import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/main_shell.dart';
+import 'package:flutter/foundation.dart' hide Category;
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 // --- Navigator Keys ---
 final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -64,21 +60,100 @@ final GlobalKey<NavigatorState> _shellNavigatorKeySettings =
 // --- Router Configuration ---
 class AppRouter {
   static final GoRouter router = GoRouter(
-      initialLocation: RouteNames.dashboard,
+      // --- FIXED: Set initialLocation to /setup ---
+      initialLocation: RouteNames.initialSetup,
+      // --- END FIXED ---
       navigatorKey: _rootNavigatorKey,
       debugLogDiagnostics: kDebugMode,
-      observers: [
-        GoRouterObserver()
-      ],
+      observers: [GoRouterObserver()],
+      redirect: (BuildContext context, GoRouterState state) {
+        final settingsBloc = context.read<SettingsBloc>();
+        final settingsState = settingsBloc.state;
+        final bool isInDemo = settingsState.isInDemoMode;
+        final bool isInitialized =
+            settingsState.status == SettingsStatus.loaded ||
+                settingsState.status == SettingsStatus.error;
+        final bool setupSkipped = settingsState.setupSkipped;
+
+        final bool isAuthenticated = false; // MOCK
+
+        final String currentRoute = state.matchedLocation;
+        final bool isGoingToInitialSetup =
+            currentRoute == RouteNames.initialSetup;
+        final bool isGoingToAuth = false;
+        final bool isGoingToShellRoute = currentRoute == RouteNames.dashboard ||
+            currentRoute == RouteNames.transactionsList ||
+            currentRoute == RouteNames.budgetsAndCats ||
+            currentRoute == RouteNames.accounts ||
+            currentRoute == RouteNames.settings;
+
+        log.info(
+            "[RouterRedirect] To: $currentRoute, IsInDemo: $isInDemo, IsAuth: $isAuthenticated, IsInit: $isInitialized, SetupSkipped: $setupSkipped");
+
+        // Don't redirect if settings aren't initialized unless going to setup
+        if (!isInitialized && !isGoingToInitialSetup) {
+          log.info(
+              "[RouterRedirect] Settings not initialized, staying put (or default).");
+          return null;
+        }
+
+        // If in demo mode, allow access to shell routes, redirect away from setup
+        if (isInDemo) {
+          if (isGoingToInitialSetup) {
+            log.info(
+                "[RouterRedirect] In Demo Mode, redirecting from InitialSetup to Dashboard.");
+            return RouteNames.dashboard;
+          }
+          log.info(
+              "[RouterRedirect] In Demo Mode, allowing access to $currentRoute.");
+          return null; // No redirection needed
+        }
+
+        // If NOT authenticated AND NOT in demo mode
+        if (!isAuthenticated && !isInDemo) {
+          // If already on the setup page, allow it
+          if (isGoingToInitialSetup) {
+            log.info(
+                "[RouterRedirect] Not authenticated, already on InitialSetup. Allowing.");
+            return null;
+          }
+          // If setup was skipped AND trying to access a shell route, allow it
+          else if (setupSkipped && isGoingToShellRoute) {
+            log.info(
+                "[RouterRedirect] Not authenticated, but setup was skipped. Allowing navigation to $currentRoute.");
+            return null; // Allow navigation
+          }
+          // Otherwise, redirect to InitialSetup
+          else {
+            log.info(
+                "[RouterRedirect] Not authenticated & setup not skipped/not going to setup, redirecting to InitialSetup.");
+            return RouteNames.initialSetup;
+          }
+        }
+
+        // If authenticated (or potentially simulated by skipping) and NOT in demo mode
+        // If trying to access initial setup, redirect to dashboard
+        if (isAuthenticated && isGoingToInitialSetup) {}
+
+        // Default: Allow navigation to the intended route (if reached here, conditions are met)
+        log.info("[RouterRedirect] Allowing access to $currentRoute.");
+        return null;
+      },
       routes: [
+        // Initial Setup Route - This is the route for the initial screen
+        GoRoute(
+          path: RouteNames.initialSetup,
+          name: RouteNames.initialSetup,
+          builder: (context, state) => const InitialSetupScreen(),
+        ),
+
+        // Main App Shell Routes - These are the main screens accessible after setup/login
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
-            // --- Provide ReportFilterBloc here for all shell branches ---
             return BlocProvider.value(
-              value: sl<ReportFilterBloc>(), // Use the singleton instance
+              value: sl<ReportFilterBloc>(),
               child: MainShell(navigationShell: navigationShell),
             );
-            // --- End Provide ---
           },
           branches: [
             // --- Branch 0: Dashboard ---
@@ -90,12 +165,11 @@ class AppRouter {
                   name: RouteNames.dashboard,
                   pageBuilder: (context, state) =>
                       const NoTransitionPage(child: DashboardPage()),
-                  routes: _buildReportSubRoutes(
-                      _rootNavigatorKey), // Keep reports nested here
+                  routes: _buildReportSubRoutes(_rootNavigatorKey),
                 ),
               ],
             ),
-            // --- Other Branches (Unchanged) ---
+            // --- Branch 1: Transactions ---
             StatefulShellBranch(
               navigatorKey: _shellNavigatorKeyTransactions,
               routes: [
@@ -140,6 +214,7 @@ class AppRouter {
                 ),
               ],
             ),
+            // --- Branch 2: Budgets/Goals ---
             StatefulShellBranch(
               navigatorKey: _shellNavigatorKeyBudgetsCats,
               routes: [
@@ -160,10 +235,14 @@ class AppRouter {
                             path: RouteNames.addCategory,
                             name: RouteNames.addCategory,
                             parentNavigatorKey: _rootNavigatorKey,
-                            builder: (context, state) => AddEditCategoryScreen(
-                                initialType:
-                                    (state.extra as Map<String, dynamic>?)?[
-                                        'initialType'] as CategoryType?)),
+                            builder: (context, state) {
+                              final Map<String, dynamic>? extra =
+                                  state.extra as Map<String, dynamic>?;
+                              final CategoryType? initialType =
+                                  extra?['initialType'] as CategoryType?;
+                              return AddEditCategoryScreen(
+                                  initialType: initialType);
+                            }),
                         GoRoute(
                             path:
                                 '${RouteNames.editCategory}/:${RouteNames.paramId}',
@@ -209,6 +288,7 @@ class AppRouter {
                 ),
               ],
             ),
+            // --- Branch 3: Accounts ---
             StatefulShellBranch(
               navigatorKey: _shellNavigatorKeyAccounts,
               routes: [
@@ -230,126 +310,49 @@ class AppRouter {
                         name: RouteNames.editAccount,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildEditAccountPage),
-                    GoRoute(
-                        path: RouteNames.addLiabilityAccount,
-                        name: RouteNames.addLiabilityAccount,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) => const PlaceholderScreen(
-                            featureName: 'Add Liability Account')),
-                    GoRoute(
-                        path:
-                            '${RouteNames.accountDetail}/:${RouteNames.paramAccountId}',
-                        name: RouteNames.accountDetail,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) {
-                          final id =
-                              state.pathParameters[RouteNames.paramAccountId];
-                          return PlaceholderScreen(
-                              featureName:
-                                  'Account Details - ID: ${id ?? 'Unknown'}');
-                        }),
                   ],
                 ),
               ],
             ),
+            // --- Branch 4: Settings ---
             StatefulShellBranch(
               navigatorKey: _shellNavigatorKeySettings,
               routes: [
                 GoRoute(
-                    path: RouteNames.settings,
-                    name: RouteNames.settings,
-                    pageBuilder: (context, state) =>
-                        const NoTransitionPage(child: SettingsPage()),
-                    routes: [
-                      GoRoute(
-                          path: RouteNames.settingsProfile,
-                          name: RouteNames.settingsProfile,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Profile Settings')),
-                      GoRoute(
-                          path: RouteNames.settingsSecurity,
-                          name: RouteNames.settingsSecurity,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Security Settings')),
-                      GoRoute(
-                          path: RouteNames.settingsAppearance,
-                          name: RouteNames.settingsAppearance,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Appearance Settings')),
-                      GoRoute(
-                          path: RouteNames.settingsNotifications,
-                          name: RouteNames.settingsNotifications,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Notification Settings')),
-                      GoRoute(
-                          path: RouteNames.settingsConnections,
-                          name: RouteNames.settingsConnections,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Connections / Shared Space')),
-                      GoRoute(
-                          path: RouteNames.settingsExport,
-                          name: RouteNames.settingsExport,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Export Data')),
-                      GoRoute(
-                          path: RouteNames.settingsTrash,
-                          name: RouteNames.settingsTrash,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Trash Bin')),
-                      GoRoute(
-                          path: RouteNames.settingsFeedback,
-                          name: RouteNames.settingsFeedback,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'Send Feedback')),
-                      GoRoute(
-                          path: RouteNames.settingsAbout,
-                          name: RouteNames.settingsAbout,
-                          parentNavigatorKey: _rootNavigatorKey,
-                          builder: (c, s) => const PlaceholderScreen(
-                              featureName: 'About App')),
-                    ]),
+                  path: RouteNames.settings,
+                  name: RouteNames.settings,
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: SettingsPage()),
+                ),
               ],
             ),
           ],
         ),
       ]);
 
-  // --- Report Sub-Routes Builder (Provide Blocs here) ---
+  // --- Report Sub-Routes Builder (Unchanged) ---
   static List<RouteBase> _buildReportSubRoutes(
       GlobalKey<NavigatorState> parentKey) {
     return [
       GoRoute(
-        path: RouteNames.reportSpendingCategory,
+        path: RouteNames.reportSpendingCategory, // Relative path
         name: RouteNames.reportSpendingCategory,
-        parentNavigatorKey: parentKey,
-        // --- FIXED: Provide Bloc ---
+        parentNavigatorKey: parentKey, // Ensure it pushes onto root
         pageBuilder: (context, state) => MaterialPage(
-          // Use MaterialPage for transitions
           key: state.pageKey,
           child: BlocProvider(
             create: (_) => sl<SpendingCategoryReportBloc>(),
-            // Provide the singleton ReportFilterBloc to the page
             child: BlocProvider.value(
               value: sl<ReportFilterBloc>(),
               child: const SpendingByCategoryPage(),
             ),
           ),
         ),
-        // --- END FIX ---
       ),
       GoRoute(
         path: RouteNames.reportSpendingTime,
         name: RouteNames.reportSpendingTime,
         parentNavigatorKey: parentKey,
-        // --- FIXED: Provide Bloc ---
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: BlocProvider(
@@ -360,13 +363,11 @@ class AppRouter {
             ),
           ),
         ),
-        // --- END FIX ---
       ),
       GoRoute(
         path: RouteNames.reportIncomeExpense,
         name: RouteNames.reportIncomeExpense,
         parentNavigatorKey: parentKey,
-        // --- FIXED: Provide Bloc ---
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: BlocProvider(
@@ -377,13 +378,11 @@ class AppRouter {
             ),
           ),
         ),
-        // --- END FIX ---
       ),
       GoRoute(
-        path: RouteNames.reportBudgetPerformance, // Added
+        path: RouteNames.reportBudgetPerformance,
         name: RouteNames.reportBudgetPerformance,
         parentNavigatorKey: parentKey,
-        // --- FIXED: Provide Bloc ---
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: BlocProvider(
@@ -394,13 +393,11 @@ class AppRouter {
             ),
           ),
         ),
-        // --- END FIX ---
       ),
       GoRoute(
-        path: RouteNames.reportGoalProgress, // Added
+        path: RouteNames.reportGoalProgress,
         name: RouteNames.reportGoalProgress,
         parentNavigatorKey: parentKey,
-        // --- FIXED: Provide Bloc ---
         pageBuilder: (context, state) => MaterialPage(
           key: state.pageKey,
           child: BlocProvider(
@@ -411,7 +408,6 @@ class AppRouter {
             ),
           ),
         ),
-        // --- END FIX ---
       ),
     ];
   }
@@ -419,7 +415,6 @@ class AppRouter {
   // --- Helper Builder Functions (Unchanged) ---
   static Widget _buildTransactionDetailPage(
       BuildContext context, GoRouterState state) {
-    /* ... */
     final id = state.pathParameters[RouteNames.paramTransactionId];
     TransactionEntity? transaction;
     if (state.extra is TransactionEntity) {
@@ -441,7 +436,6 @@ class AppRouter {
 
   static Widget _buildEditTransactionPage(
       BuildContext context, GoRouterState state) {
-    /* ... */
     final transactionId = state.pathParameters[RouteNames.paramTransactionId];
     dynamic initialData = state.extra;
     if (initialData != null &&
@@ -452,22 +446,26 @@ class AppRouter {
           "[AppRouter] Edit Txn route received 'extra' of unexpected type: ${state.extra?.runtimeType}. Ignoring.");
       initialData = null;
     }
-    if (transactionId == null) {
-      log.severe("[AppRouter] Edit Txn route called without transaction ID!");
+    if (transactionId == null && initialData == null) {
+      log.severe(
+          "[AppRouter] Edit Txn route called without transaction ID or initial data!");
       return const Scaffold(
           appBar: null,
-          body: Center(child: Text("Error: Missing Transaction ID")));
+          body: Center(child: Text("Error: Missing Transaction Data")));
     }
     return AddEditTransactionPage(initialTransactionData: initialData);
   }
 
   static Widget _buildEditCategoryPage(
       BuildContext context, GoRouterState state) {
-    /* ... */
     final categoryId = state.pathParameters[RouteNames.paramId];
-    final category = state.extra as Category?;
-    final initialType =
-        (state.extra as Map<String, dynamic>?)?['initialType'] as CategoryType?;
+    final Category? category =
+        state.extra is Category ? state.extra as Category : null;
+    final Map<String, dynamic>? extraMap = state.extra is Map<String, dynamic>
+        ? state.extra as Map<String, dynamic>
+        : null;
+    final CategoryType? initialType = extraMap?['initialType'] as CategoryType?;
+
     if (categoryId == null) {
       log.severe("[AppRouter] Edit Category route called without ID!");
       return const Scaffold(
@@ -480,9 +478,9 @@ class AppRouter {
 
   static Widget _buildEditAccountPage(
       BuildContext context, GoRouterState state) {
-    /* ... */
     final accountId = state.pathParameters[RouteNames.paramAccountId];
-    final account = state.extra as AssetAccount?;
+    final AssetAccount? account =
+        state.extra is AssetAccount ? state.extra as AssetAccount : null;
     if (accountId == null) {
       log.severe("[AppRouter] Edit Account route called without ID!");
       return const Scaffold(
@@ -493,9 +491,8 @@ class AppRouter {
 
   static Widget _buildEditBudgetPage(
       BuildContext context, GoRouterState state) {
-    /* ... */
     final budgetId = state.pathParameters[RouteNames.paramId];
-    final budget = state.extra as Budget?;
+    final Budget? budget = state.extra is Budget ? state.extra as Budget : null;
     if (budgetId == null) {
       log.severe("[AppRouter] Edit Budget route called without ID!");
       return const Scaffold(
@@ -506,7 +503,6 @@ class AppRouter {
 
   static Widget _buildBudgetDetailPage(
       BuildContext context, GoRouterState state) {
-    /* ... */
     final budgetId = state.pathParameters[RouteNames.paramId];
     if (budgetId == null) {
       log.severe("[AppRouter] Budget Detail route called without ID!");
@@ -517,9 +513,8 @@ class AppRouter {
   }
 
   static Widget _buildEditGoalPage(BuildContext context, GoRouterState state) {
-    /* ... */
     final goalId = state.pathParameters[RouteNames.paramId];
-    final goal = state.extra as Goal?;
+    final Goal? goal = state.extra is Goal ? state.extra as Goal : null;
     if (goalId == null) {
       log.severe("[AppRouter] Edit Goal route called without ID!");
       return const Scaffold(
@@ -530,9 +525,8 @@ class AppRouter {
 
   static Widget _buildGoalDetailPage(
       BuildContext context, GoRouterState state) {
-    /* ... */
     final goalId = state.pathParameters[RouteNames.paramId];
-    final goal = state.extra as Goal?;
+    final Goal? goal = state.extra is Goal ? state.extra as Goal : null;
     if (goalId == null) {
       log.severe("[AppRouter] Goal Detail route called without ID!");
       return const Scaffold(
@@ -542,9 +536,9 @@ class AppRouter {
   }
 }
 
-// --- GoRouterObserver ---
+// --- GoRouterObserver (Unchanged) ---
 class GoRouterObserver extends NavigatorObserver {
-  /* ... Unchanged ... */
+  // ... (Implementation unchanged) ...
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     final String pushedRoute = route.settings.name ??
@@ -591,7 +585,6 @@ class GoRouterObserver extends NavigatorObserver {
 
 // Keep StringExtension
 extension StringExtension on String {
-  /* ... Unchanged ... */
   String capitalize() {
     if (isEmpty) return this;
     return "${this[0].toUpperCase()}${substring(1)}";

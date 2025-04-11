@@ -111,3 +111,9 @@ class UserCategorizedTransaction extends TransactionListEvent {
 class _DataChanged extends TransactionListEvent {
   const _DataChanged();
 }
+
+// --- ADDED: Reset State Event ---
+class ResetState extends TransactionListEvent {
+  const ResetState();
+}
+// --- END ADDED ---

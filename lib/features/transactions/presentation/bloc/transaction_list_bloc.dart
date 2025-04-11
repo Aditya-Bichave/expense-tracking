@@ -66,19 +66,26 @@ class TransactionListBloc
     on<DeleteTransaction>(_onDeleteTransaction);
     on<UserCategorizedTransaction>(_onUserCategorizedTransaction);
     on<_DataChanged>(_onDataChanged);
+    on<ResetState>(_onResetState); // Add Reset Handler
 
     // Subscribe to Data Change Stream
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Reload if relevant data changes
-      if (event.type == DataChangeType.expense ||
+      // --- MODIFIED Listener ---
+      if (event.type == DataChangeType.system &&
+          event.reason == DataChangeReason.reset) {
+        log.info(
+            "[TransactionListBloc] System Reset event received. Adding ResetState.");
+        add(const ResetState()); // Dispatch ResetState internally
+      } else if (event.type == DataChangeType.expense ||
           event.type == DataChangeType.income ||
           event.type == DataChangeType.category ||
           event.type == DataChangeType.account ||
           event.type == DataChangeType.settings) {
         log.info(
             "[TransactionListBloc] Relevant DataChangedEvent: $event. Triggering reload.");
-        add(const _DataChanged()); // Use internal event to trigger reload
+        add(const _DataChanged());
       }
+      // --- END MODIFIED ---
     }, onError: (error, stackTrace) {
       log.severe(
           "[TransactionListBloc] Error in dataChangeStream listener: $error");
@@ -87,8 +94,16 @@ class TransactionListBloc
         "[TransactionListBloc] Initialized and subscribed to data changes.");
   }
 
-  // --- Event Handlers ---
+  // --- Add Reset State Handler ---
+  void _onResetState(ResetState event, Emitter<TransactionListState> emit) {
+    log.info("[TransactionListBloc] Resetting state to initial.");
+    emit(const TransactionListState()); // Emit the initial state
+    // Optionally, trigger an initial load after resetting
+    // add(const LoadTransactions());
+  }
+  // --- End Reset Handler ---
 
+  // --- Event Handlers (Rest remain the same) ---
   Future<void> _onLoadTransactions(
       LoadTransactions event, Emitter<TransactionListState> emit) async {
     log.info(

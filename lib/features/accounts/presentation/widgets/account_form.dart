@@ -7,13 +7,21 @@ import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 
+// Callback remains the same, still submitting the value from the field as 'initialBalance'
+typedef AccountSubmitCallback = Function(
+    String name, AssetType type, double initialBalance);
+
 class AccountForm extends StatefulWidget {
   final AssetAccount? initialAccount;
-  final Function(String name, AssetType type, double initialBalance) onSubmit;
+  // --- ADDED: Pass current balance for display during edit ---
+  final double? currentBalanceForDisplay;
+  // --- END ADDED ---
+  final AccountSubmitCallback onSubmit;
 
   const AccountForm({
     super.key,
     this.initialAccount,
+    this.currentBalanceForDisplay, // Added
     required this.onSubmit,
   });
 
@@ -31,40 +39,52 @@ extension StringExtensionCapitalize on String {
 class _AccountFormState extends State<AccountForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _initialBalanceController;
+  late TextEditingController _balanceController; // Renamed for clarity
   AssetType _selectedType = AssetType.bank;
+  late bool _isEditing; // Track edit mode locally
 
   @override
   void initState() {
     super.initState();
     final initial = widget.initialAccount;
+    _isEditing = initial != null; // Determine if editing
+
     _nameController = TextEditingController(text: initial?.name ?? '');
-    _initialBalanceController = TextEditingController(
-        text: initial?.initialBalance.toStringAsFixed(2) ?? '0.00');
+    // --- MODIFIED: Use currentBalanceForDisplay if editing, otherwise initialBalance or default ---
+    _balanceController = TextEditingController(
+      text: _isEditing
+          ? widget.currentBalanceForDisplay?.toStringAsFixed(2) ??
+              '0.00' // Use current balance if editing
+          : initial?.initialBalance.toStringAsFixed(2) ??
+              '0.00', // Use initial or default if adding
+    );
+    // --- END MODIFIED ---
     _selectedType = initial?.type ?? AssetType.bank;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _initialBalanceController.dispose();
+    _balanceController.dispose(); // Dispose renamed controller
     super.dispose();
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       final name = _nameController.text.trim();
-      final initialBalance = double.tryParse(
-              _initialBalanceController.text.replaceAll(',', '.')) ??
-          0.0;
-      widget.onSubmit(name, _selectedType, initialBalance);
+      // --- Parse the value from the form field, treat it as the new initial balance ---
+      // This allows users to potentially correct the initial balance if needed,
+      // although the UI now displays the current balance initially during edit.
+      final balanceFromField =
+          double.tryParse(_balanceController.text.replaceAll(',', '.')) ?? 0.0;
+      // --- END ---
+      widget.onSubmit(name, _selectedType,
+          balanceFromField); // Pass the value from the field
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Please correct the errors in the form.')));
     }
   }
-
-  // getPrefixIcon is now in CommonFormFields
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +92,11 @@ class _AccountFormState extends State<AccountForm> {
     final currencySymbol = settingsState.currencySymbol;
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
+
+    // --- Determine Label Text Dynamically ---
+    final String balanceLabel =
+        _isEditing ? 'Current Balance' : 'Initial Balance';
+    // --- End ---
 
     return Form(
       key: _formKey,
@@ -92,11 +117,10 @@ class _AccountFormState extends State<AccountForm> {
 
           // Type Dropdown
           AppDropdownFormField<AssetType>(
-            value: _selectedType, labelText: 'Account Type',
-            // --- FIX: Use CommonFormFields.getPrefixIcon ---
+            value: _selectedType,
+            labelText: 'Account Type',
             prefixIcon: CommonFormFields.getPrefixIcon(
                 context, 'category', Icons.category_outlined),
-            // --- END FIX ---
             items: AssetType.values.map((AssetType type) {
               final iconData =
                   AssetAccount(id: '', name: '', type: type, currentBalance: 0)
@@ -123,11 +147,12 @@ class _AccountFormState extends State<AccountForm> {
           ),
           const SizedBox(height: 16),
 
-          // Initial Balance
+          // --- MODIFIED: Use dynamic label and renamed controller ---
+          // Balance (Displayed as Current when editing, Initial when adding)
           CommonFormFields.buildAmountField(
             context: context,
-            controller: _initialBalanceController,
-            labelText: 'Initial Balance',
+            controller: _balanceController, // Use renamed controller
+            labelText: balanceLabel, // Use dynamic label
             currencySymbol: currencySymbol,
             iconKey: 'wallet',
             fallbackIcon: Icons.account_balance_wallet_outlined,
@@ -142,6 +167,16 @@ class _AccountFormState extends State<AccountForm> {
               return null;
             },
           ),
+          if (_isEditing) // Add helper text when editing
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+              child: Text(
+                'Editing this updates the initial balance setting.',
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.disabledColor),
+              ),
+            ),
+          // --- END MODIFIED ---
           const SizedBox(height: 32),
 
           // Submit Button

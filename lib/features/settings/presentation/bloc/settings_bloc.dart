@@ -5,7 +5,6 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
-// REMOVED Data Management Use Case Imports
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
@@ -14,32 +13,54 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 part 'settings_event.dart';
-part 'settings_state.dart'; // State file needs adjustment too
+part 'settings_state.dart';
 
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository _settingsRepository;
-  // REMOVED Data Management Use Cases
+  final DemoModeService _demoModeService;
 
   SettingsBloc({
     required SettingsRepository settingsRepository,
-    // REMOVED Data Management Use Cases from constructor
+    required DemoModeService demoModeService,
   })  : _settingsRepository = settingsRepository,
-        // REMOVED Use Case assignments
-        super(const SettingsState()) {
-    // Initialize with defaults
+        _demoModeService = demoModeService,
+        super(SettingsState(
+          isInDemoMode: demoModeService.isDemoActive,
+          setupSkipped: false, // Ensure skip starts false
+        )) {
     on<LoadSettings>(_onLoadSettings);
     on<UpdateTheme>(_onUpdateTheme);
     on<UpdatePaletteIdentifier>(_onUpdatePaletteIdentifier);
     on<UpdateUIMode>(_onUpdateUIMode);
     on<UpdateCountry>(_onUpdateCountry);
     on<UpdateAppLock>(_onUpdateAppLock);
-    // REMOVED Data Management Event Handlers
-    on<ClearSettingsMessage>(_onClearMessage); // Added event to clear messages
+    on<EnterDemoMode>(_onEnterDemoMode);
+    on<ExitDemoMode>(_onExitDemoMode);
+    on<SkipSetup>(_onSkipSetup); // ADDED Handler
+    on<ResetSkipSetupFlag>(_onResetSkipSetupFlag); // ADDED Handler
+    on<ClearSettingsMessage>(_onClearMessage);
 
     log.info("[SettingsBloc] Initialized.");
   }
+
+  // --- Skip Setup Handlers --- ADDED
+  void _onSkipSetup(SkipSetup event, Emitter<SettingsState> emit) {
+    log.info("[SettingsBloc] Setup skipped flag set.");
+    emit(state.copyWith(setupSkipped: true));
+  }
+
+  void _onResetSkipSetupFlag(
+      ResetSkipSetupFlag event, Emitter<SettingsState> emit) {
+    if (state.setupSkipped) {
+      log.info("[SettingsBloc] Resetting setup skipped flag.");
+      emit(state.copyWith(setupSkipped: false));
+    }
+  }
+  // --- END ADDED ---
 
   Future<void> _onLoadSettings(
       LoadSettings event, Emitter<SettingsState> emit) async {
@@ -47,10 +68,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(state.copyWith(
       status: SettingsStatus.loading,
       packageInfoStatus: PackageInfoStatus.loading,
-      // REMOVED dataManagementStatus
       clearAllMessages: true,
+      // Ensure flags are reset on a full load (e.g., app start)
+      isInDemoMode: false,
+      setupSkipped: false,
     ));
-
+    // ... (rest of loading logic unchanged) ...
     PackageInfo? packageInfo;
     String? packageInfoLoadError;
     try {
@@ -116,6 +139,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         appVersion: packageInfo != null
             ? '${packageInfo.version}+${packageInfo.buildNumber}'
             : null,
+        // Ensure isInDemoMode stays false after loading real settings
+        isInDemoMode: false,
+        setupSkipped: false, // Ensure skip flag is reset on full load
       ));
       log.info("[SettingsBloc] Emitted final loaded/error state.");
     } catch (e, s) {
@@ -129,6 +155,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         packageInfoError: state.packageInfoStatus == PackageInfoStatus.loading
             ? 'Failed due to main settings error'
             : state.packageInfoError,
+        isInDemoMode: false, // Ensure demo mode is off on error too
+        setupSkipped: false, // Ensure skip flag is reset on error too
       ));
     }
   }
@@ -139,8 +167,14 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         : '$currentError\n$newMessage';
   }
 
+  // --- Other Event Handlers (Unchanged but added demo checks) ---
   Future<void> _onUpdateTheme(
       UpdateTheme event, Emitter<SettingsState> emit) async {
+    if (_demoModeService.isDemoActive) {
+      log.warning("[SettingsBloc] Ignoring UpdateTheme in Demo Mode.");
+      return;
+    }
+    // ... rest of handler
     log.info(
         "[SettingsBloc] Received UpdateTheme event: ${event.newMode.name}");
     final result = await _settingsRepository.saveThemeMode(event.newMode);
@@ -157,13 +191,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           themeMode: event.newMode,
           status: SettingsStatus.loaded,
           clearAllMessages: true));
-      // Publish if needed (though theme mode alone might not require it)
-      // publishDataChangedEvent(type: DataChangeType.settings, reason: DataChangeReason.updated);
     });
   }
 
   Future<void> _onUpdatePaletteIdentifier(
       UpdatePaletteIdentifier event, Emitter<SettingsState> emit) async {
+    if (_demoModeService.isDemoActive) {
+      log.warning(
+          "[SettingsBloc] Ignoring UpdatePaletteIdentifier in Demo Mode.");
+      return;
+    }
+    // ... rest of handler
     log.info(
         "[SettingsBloc] Received UpdatePaletteIdentifier event: ${event.newIdentifier}");
     final result =
@@ -188,6 +226,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onUpdateUIMode(
       UpdateUIMode event, Emitter<SettingsState> emit) async {
+    if (_demoModeService.isDemoActive) {
+      log.warning("[SettingsBloc] Ignoring UpdateUIMode in Demo Mode.");
+      return;
+    }
+    // ... rest of handler
     log.info(
         "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}");
     final result = await _settingsRepository.saveUIMode(event.newMode);
@@ -228,6 +271,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onUpdateCountry(
       UpdateCountry event, Emitter<SettingsState> emit) async {
+    // Currency *can* be changed before entering demo
+    // if (_demoModeService.isDemoActive) {
+    //   log.warning("[SettingsBloc] Ignoring UpdateCountry in Demo Mode.");
+    //   return;
+    // }
+    // ... rest of handler
     log.info(
         "[SettingsBloc] Received UpdateCountry event: ${event.newCountryCode}");
     final result =
@@ -252,6 +301,11 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   Future<void> _onUpdateAppLock(
       UpdateAppLock event, Emitter<SettingsState> emit) async {
+    if (_demoModeService.isDemoActive) {
+      log.warning("[SettingsBloc] Ignoring UpdateAppLock in Demo Mode.");
+      return;
+    }
+    // ... rest of handler
     log.info("[SettingsBloc] Received UpdateAppLock event: ${event.isEnabled}");
     final result =
         await _settingsRepository.saveAppLockEnabled(event.isEnabled);
@@ -268,16 +322,33 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           isAppLockEnabled: event.isEnabled,
           status: SettingsStatus.loaded,
           clearAllMessages: true));
-      // No need to publish DataChangedEvent for app lock
     });
+  }
+
+  // --- Demo Mode Handlers ---
+  void _onEnterDemoMode(EnterDemoMode event, Emitter<SettingsState> emit) {
+    log.info("[SettingsBloc] Entering Demo Mode.");
+    _demoModeService.enterDemoMode();
+    emit(state.copyWith(
+        isInDemoMode: true,
+        setupSkipped: false)); // Entering demo clears skip flag
+    publishDataChangedEvent(
+        type: DataChangeType.system, reason: DataChangeReason.updated);
+  }
+
+  void _onExitDemoMode(ExitDemoMode event, Emitter<SettingsState> emit) {
+    log.info("[SettingsBloc] Exiting Demo Mode.");
+    _demoModeService.exitDemoMode();
+    emit(state.copyWith(
+        isInDemoMode: false,
+        setupSkipped: false)); // Exiting demo clears skip flag
+    publishDataChangedEvent(
+        type: DataChangeType.system, reason: DataChangeReason.reset);
   }
 
   void _onClearMessage(
       ClearSettingsMessage event, Emitter<SettingsState> emit) {
     log.info("[SettingsBloc] Clearing settings message.");
-    // Only clear error messages, keep status as loaded/error
     emit(state.copyWith(clearErrorMessage: true));
   }
-
-  // REMOVED Data Management Handlers (_onBackupRequested, _onRestoreRequested, _onClearDataRequested)
 }

@@ -31,3 +31,9 @@ class LoadSummary extends SummaryEvent {
 class _DataChanged extends SummaryEvent {
   const _DataChanged();
 }
+
+// --- ADDED: Reset State Event ---
+class ResetState extends SummaryEvent {
+  const ResetState();
+}
+// --- END ADDED ---

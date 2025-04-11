@@ -1,5 +1,8 @@
 // lib/core/di/service_locator.dart
 import 'dart:async';
+import 'package:expense_tracker/core/services/demo_mode_service.dart'; // Added
+import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:get_it/get_it.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -20,7 +23,7 @@ import 'package:expense_tracker/core/di/service_configurations/dashboard_depende
 import 'package:expense_tracker/core/di/service_configurations/analytics_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/budget_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/goal_dependencies.dart';
-import 'package:expense_tracker/core/di/service_configurations/report_dependencies.dart'; // Updated import
+import 'package:expense_tracker/core/di/service_configurations/report_dependencies.dart';
 
 // Import models only needed for Box types here
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
@@ -31,6 +34,15 @@ import 'package:expense_tracker/features/categories/data/models/user_history_rul
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
+
+// --- MODIFIED: Import Hive DataSources ---
+import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
+import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
+import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source.dart';
+import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
+// --- END MODIFIED ---
 
 final sl = GetIt.instance;
 
@@ -46,6 +58,12 @@ Future<void> initLocator({
   required Box<GoalContributionModel> contributionBox,
 }) async {
   log.info("Initializing Service Locator...");
+
+  // *** Register Demo Mode Service (Singleton) ***
+  if (!sl.isRegistered<DemoModeService>()) {
+    sl.registerLazySingleton<DemoModeService>(() => DemoModeService());
+    log.info("Registered DemoModeService.");
+  }
 
   // *** Data Change Event Stream ***
   if (!sl.isRegistered<StreamController<DataChangedEvent>>()) {
@@ -90,6 +108,24 @@ Future<void> initLocator({
   log.info(
       "Registered SharedPreferences and Hive Boxes (incl. Budgets, Goals, Contributions).");
 
+  // --- Register REAL Hive DataSources (needed by Proxies) ---
+  sl.registerLazySingleton<HiveExpenseLocalDataSource>(
+      () => HiveExpenseLocalDataSource(sl()));
+  sl.registerLazySingleton<HiveIncomeLocalDataSource>(
+      () => HiveIncomeLocalDataSource(sl()));
+  sl.registerLazySingleton<HiveAssetAccountLocalDataSource>(
+      () => HiveAssetAccountLocalDataSource(sl()));
+  sl.registerLazySingleton<HiveBudgetLocalDataSource>(
+      () => HiveBudgetLocalDataSource(sl()));
+  sl.registerLazySingleton<HiveGoalLocalDataSource>(
+      () => HiveGoalLocalDataSource(sl()));
+  sl.registerLazySingleton<HiveContributionLocalDataSource>(
+      () => HiveContributionLocalDataSource(sl()));
+  // Keep HiveCategoryLocalDataSource and HiveUserHistoryLocalDataSource registrations
+  // (if they exist in categories_dependencies.dart, ensure they are registered there)
+  log.info("Registered REAL Hive DataSources.");
+  // --- END ---
+
   // *** Other External Dependencies (LazySingleton) ***
   if (!sl.isRegistered<Uuid>()) {
     sl.registerLazySingleton(() => const Uuid());
@@ -99,6 +135,7 @@ Future<void> initLocator({
   // *** Call Feature Dependency Initializers ***
   log.info("Registering feature dependencies...");
   if (!sl.isRegistered<SettingsRepository>()) {
+    // These will now register the PROXY datasources where applicable
     SettingsDependencies.register();
     DataManagementDependencies.register();
     IncomeDependencies.register();
@@ -110,7 +147,7 @@ Future<void> initLocator({
     TransactionsDependencies.register();
     DashboardDependencies.register();
     AnalyticsDependencies.register();
-    ReportDependencies.register(); // Updated: Now calling register here
+    ReportDependencies.register();
     log.info("Feature dependencies registered.");
   } else {
     log.warning(

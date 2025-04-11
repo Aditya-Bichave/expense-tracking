@@ -25,3 +25,9 @@ class DeleteAccountRequested extends AccountListEvent {
 class _DataChanged extends AccountListEvent {
   const _DataChanged();
 }
+
+// --- ADDED: Reset State Event ---
+class ResetState extends AccountListEvent {
+  const ResetState();
+}
+// --- END ADDED ---

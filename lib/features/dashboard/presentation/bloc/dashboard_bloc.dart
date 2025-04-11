@@ -27,29 +27,42 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         super(DashboardInitial()) {
     on<LoadDashboard>(_onLoadDashboard);
     on<_DataChanged>(_onDataChanged);
+    on<ResetState>(_onResetState); // Add Handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Refresh on almost any change affecting balances or summaries
-      if (event.type == DataChangeType.account ||
-              event.type == DataChangeType.expense ||
-              event.type == DataChangeType.income ||
-              event.type == DataChangeType.budget || // Added Budgets
-              event.type == DataChangeType.goal || // Added Goals
-              event.type ==
-                  DataChangeType.goalContribution || // Added Contributions
-              event.type ==
-                  DataChangeType.settings // Added Settings (e.g., currency)
-          ) {
+      // --- MODIFIED Listener ---
+      if (event.type == DataChangeType.system &&
+          event.reason == DataChangeReason.reset) {
         log.info(
-            "[DashboardBloc] Received relevant DataChangedEvent: $event. Triggering reload.");
+            "[DashboardBloc] System Reset event received. Adding ResetState.");
+        add(const ResetState());
+      } else if (event.type == DataChangeType.account ||
+          event.type == DataChangeType.expense ||
+          event.type == DataChangeType.income ||
+          event.type == DataChangeType.budget ||
+          event.type == DataChangeType.goal ||
+          event.type == DataChangeType.goalContribution ||
+          event.type == DataChangeType.settings) {
+        log.info(
+            "[DashboardBloc] Relevant DataChangedEvent: $event. Triggering reload.");
         add(const _DataChanged());
       }
+      // --- END MODIFIED ---
     }, onError: (error, stackTrace) {
       log.severe("[DashboardBloc] Error in dataChangeStream listener: $error");
     });
     log.info("[DashboardBloc] Initialized and subscribed to data changes.");
   }
 
+  // --- ADDED: Reset State Handler ---
+  void _onResetState(ResetState event, Emitter<DashboardState> emit) {
+    log.info("[DashboardBloc] Resetting state to initial.");
+    emit(DashboardInitial());
+    add(const LoadDashboard()); // Trigger initial load after reset
+  }
+  // --- END ADDED ---
+
+  // ... (rest of handlers remain the same) ...
   Future<void> _onDataChanged(
       _DataChanged event, Emitter<DashboardState> emit) async {
     if (state is! DashboardLoading) {

@@ -2,7 +2,7 @@
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart'; // Updated import
+import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -21,38 +21,45 @@ class SecuritySettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // --- Check Demo Mode ---
+    final bool isEnabled = !isLoading && !state.isInDemoMode;
+    // --- End Check ---
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(title: 'Security'),
         SwitchListTile(
           secondary: Icon(Icons.security_outlined,
-              color: isLoading
+              color: !isEnabled // Use combined state
                   ? theme.disabledColor
                   : theme.listTileTheme.iconColor),
           title: Text('App Lock',
-              style: TextStyle(color: isLoading ? theme.disabledColor : null)),
+              style: TextStyle(
+                  color: !isEnabled
+                      ? theme.disabledColor
+                      : null)), // Use combined state
           subtitle: Text('Require authentication on launch/resume',
-              style: TextStyle(color: isLoading ? theme.disabledColor : null)),
+              style: TextStyle(
+                  color: !isEnabled
+                      ? theme.disabledColor
+                      : null)), // Use combined state
           value: state.isAppLockEnabled,
-          onChanged: isLoading
+          onChanged: !isEnabled // Use combined state
               ? null
               : (bool value) => onAppLockToggle(context, value),
           activeColor: theme.colorScheme.primary,
         ),
         SettingsListTile(
-          enabled:
-              !isLoading, // TODO: Enable based on actual auth implementation
+          enabled: false, // Disabled always for now (and in demo)
           leadingIcon: Icons.password_outlined,
           title: 'Change Password',
-          subtitle: 'Feature coming soon',
+          subtitle: state.isInDemoMode
+              ? 'Disabled in Demo Mode'
+              : 'Feature coming soon',
           trailing: Icon(Icons.chevron_right,
-              color: isLoading
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
-          onTap: isLoading
-              ? null
-              : () => context.pushNamed(RouteNames.settingsSecurity),
+              color: theme.disabledColor), // Always disabled color
+          onTap: null, // Always disabled
         ),
       ],
     );
