@@ -10,17 +10,25 @@ abstract class SpendingTimeReportState extends Equatable {
 class SpendingTimeReportInitial extends SpendingTimeReportState {}
 
 class SpendingTimeReportLoading extends SpendingTimeReportState {
-  final TimeSeriesGranularity granularity; // Track granularity during load
-  const SpendingTimeReportLoading({required this.granularity});
+  final TimeSeriesGranularity granularity;
+  // --- ADDED compareToPrevious flag ---
+  final bool compareToPrevious;
+  const SpendingTimeReportLoading(
+      {required this.granularity, required this.compareToPrevious});
   @override
-  List<Object?> get props => [granularity];
+  List<Object?> get props => [granularity, compareToPrevious];
+  // --- END ADD ---
 }
 
 class SpendingTimeReportLoaded extends SpendingTimeReportState {
   final SpendingTimeReportData reportData;
-  const SpendingTimeReportLoaded(this.reportData);
+  // --- ADDED showComparison flag ---
+  final bool showComparison;
+  const SpendingTimeReportLoaded(this.reportData,
+      {required this.showComparison});
   @override
-  List<Object?> get props => [reportData];
+  List<Object?> get props => [reportData, showComparison];
+  // --- END ADD ---
 }
 
 class SpendingTimeReportError extends SpendingTimeReportState {

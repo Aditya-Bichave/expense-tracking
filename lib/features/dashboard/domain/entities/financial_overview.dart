@@ -14,9 +14,9 @@ class FinancialOverview extends Equatable {
   final Map<String, double> accountBalances;
   final List<BudgetWithStatus> activeBudgetsSummary;
   final List<Goal> activeGoalsSummary;
-  // --- ADDED ---
   final List<TimeSeriesDataPoint>
-      recentSpendingSparkline; // Data for mini-chart
+      recentSpendingSparkline; // Renamed for clarity
+  final List<TimeSeriesDataPoint> recentContributionSparkline; // Added
 
   const FinancialOverview({
     required this.totalIncome,
@@ -27,13 +27,21 @@ class FinancialOverview extends Equatable {
     required this.accountBalances,
     required this.activeBudgetsSummary,
     required this.activeGoalsSummary,
-    required this.recentSpendingSparkline, // Added
+    required this.recentSpendingSparkline,
+    required this.recentContributionSparkline, // Added
   });
 
   @override
   List<Object?> get props => [
-        totalIncome, totalExpenses, netFlow, overallBalance, accounts,
-        accountBalances, activeBudgetsSummary, activeGoalsSummary,
-        recentSpendingSparkline, // Added
+        totalIncome,
+        totalExpenses,
+        netFlow,
+        overallBalance,
+        accounts,
+        accountBalances,
+        activeBudgetsSummary,
+        activeGoalsSummary,
+        recentSpendingSparkline,
+        recentContributionSparkline, // Added
       ];
 }

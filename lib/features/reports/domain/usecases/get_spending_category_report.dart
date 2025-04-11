@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/main.dart';
 
 class GetSpendingCategoryReportUseCase
@@ -36,6 +37,9 @@ class GetSpendingCategoryReportParams extends Equatable {
     required this.startDate,
     required this.endDate,
     this.accountIds,
+    TransactionType? transactionType,
+    required bool compareToPrevious,
+    List<String>? categoryIds,
   });
 
   @override

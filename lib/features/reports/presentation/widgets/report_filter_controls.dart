@@ -18,6 +18,13 @@ class ReportFilterControls extends StatelessWidget {
     final filterBloc = BlocProvider.of<ReportFilterBloc>(context);
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
+      // Consider showing a loading indicator briefly or disabling button until loaded
+      await filterBloc.stream.firstWhere((state) =>
+          state.optionsStatus == FilterOptionsStatus.loaded ||
+          state.optionsStatus == FilterOptionsStatus.error);
+      if (!context.mounted ||
+          filterBloc.state.optionsStatus == FilterOptionsStatus.error)
+        return; // Don't show sheet if loading failed
     }
 
     await showModalBottomSheet<void>(
@@ -26,6 +33,7 @@ class ReportFilterControls extends StatelessWidget {
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (sheetContext) {
+        // Provide the SAME Filter Bloc instance down to the sheet content
         return BlocProvider.value(
             value: filterBloc, child: const ReportFilterSheetContent());
       },
@@ -58,16 +66,15 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
   @override
   void initState() {
     super.initState();
+    // Initialize local state from BLoC state WHEN the sheet is built
     final currentState = context.read<ReportFilterBloc>().state;
     _tempStartDate = currentState.startDate;
     _tempEndDate = currentState.endDate;
     _tempSelectedCategoryIds = List.from(currentState.selectedCategoryIds);
     _tempSelectedAccountIds = List.from(currentState.selectedAccountIds);
-    // --- FIXED: Access correct fields ---
     _tempSelectedBudgetIds = List.from(currentState.selectedBudgetIds);
     _tempSelectedGoalIds = List.from(currentState.selectedGoalIds);
     _tempSelectedTransactionType = currentState.selectedTransactionType;
-    // --- END FIX ---
   }
 
   Future<void> _selectDateRange(BuildContext context) async {
@@ -92,9 +99,8 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
           startDate: _tempStartDate, endDate: _tempEndDate,
           categoryIds: _tempSelectedCategoryIds,
           accountIds: _tempSelectedAccountIds,
-          budgetIds: _tempSelectedBudgetIds,
-          goalIds: _tempSelectedGoalIds, // Added
-          transactionType: _tempSelectedTransactionType, // Added
+          budgetIds: _tempSelectedBudgetIds, goalIds: _tempSelectedGoalIds,
+          transactionType: _tempSelectedTransactionType, // Pass the value
         ));
     Navigator.pop(context);
   }
@@ -110,7 +116,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
 
     return BlocBuilder<ReportFilterBloc, ReportFilterState>(
       builder: (context, state) {
-        // Prepare items
+        // Prepare items based on LATEST state
         final categoryItems = state.availableCategories
             .where((c) => c.id != Category.uncategorized.id)
             .map((c) => MultiSelectItem<String>(c.id, c.name))
@@ -118,14 +124,27 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
         final accountItems = state.availableAccounts
             .map((a) => MultiSelectItem<String>(a.id, a.name))
             .toList();
-        // --- FIXED: Access correct fields ---
         final budgetItems = state.availableBudgets
             .map((b) => MultiSelectItem<String>(b.id, b.name))
             .toList();
         final goalItems = state.availableGoals
             .map((g) => MultiSelectItem<String>(g.id, g.name))
             .toList();
-        // --- END FIX ---
+
+        // Ensure local temp state reflects latest BLoC state if options just loaded
+        if (state.optionsStatus == FilterOptionsStatus.loaded &&
+            _tempSelectedCategoryIds.isEmpty &&
+            _tempSelectedAccountIds.isEmpty &&
+            _tempSelectedBudgetIds.isEmpty &&
+            _tempSelectedGoalIds.isEmpty) {
+          _tempStartDate = state.startDate;
+          _tempEndDate = state.endDate;
+          _tempSelectedCategoryIds = List.from(state.selectedCategoryIds);
+          _tempSelectedAccountIds = List.from(state.selectedAccountIds);
+          _tempSelectedBudgetIds = List.from(state.selectedBudgetIds);
+          _tempSelectedGoalIds = List.from(state.selectedGoalIds);
+          _tempSelectedTransactionType = state.selectedTransactionType;
+        }
 
         return Padding(
           padding: EdgeInsets.only(
@@ -159,8 +178,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
 
                 // Transaction Type Filter
                 DropdownButtonFormField<TransactionType?>(
-                  value:
-                      _tempSelectedTransactionType, // Fixed: Use correct state variable
+                  value: _tempSelectedTransactionType, // Use local temp state
                   decoration: InputDecoration(
                     labelText: 'Transaction Type',
                     prefixIcon: Icon(
@@ -189,7 +207,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                   ],
                   onChanged: (TransactionType? newValue) => setState(() =>
                       _tempSelectedTransactionType =
-                          newValue), // Fixed: Use correct state variable
+                          newValue), // Update local temp state
                 ),
                 const SizedBox(height: 16),
 
@@ -254,14 +272,13 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 if (state.optionsStatus == FilterOptionsStatus.loaded)
                   MultiSelectDialogField<String>(
                     items: budgetItems,
-                    initialValue:
-                        _tempSelectedBudgetIds, // Fixed: Use correct state variable
+                    initialValue: _tempSelectedBudgetIds,
                     title: const Text("Select Budgets (For Budget Report)"),
                     buttonText: Text(
                         _tempSelectedBudgetIds.isEmpty
                             ? "All Budgets"
                             : "${_tempSelectedBudgetIds.length} Budgets Selected",
-                        overflow: TextOverflow.ellipsis), // Fixed
+                        overflow: TextOverflow.ellipsis),
                     buttonIcon: const Icon(Icons.pie_chart_outline),
                     decoration: BoxDecoration(
                         border: Border.all(color: theme.dividerColor),
@@ -270,7 +287,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     onConfirm: (values) =>
                         setState(() => _tempSelectedBudgetIds = values),
                     searchable: true,
-                    searchHint: "Search Budgets", // Fixed
+                    searchHint: "Search Budgets",
                   )
                 else if (state.optionsStatus == FilterOptionsStatus.loading)
                   const SizedBox.shrink()
@@ -283,14 +300,13 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 if (state.optionsStatus == FilterOptionsStatus.loaded)
                   MultiSelectDialogField<String>(
                     items: goalItems,
-                    initialValue:
-                        _tempSelectedGoalIds, // Fixed: Use correct state variable
+                    initialValue: _tempSelectedGoalIds,
                     title: const Text("Select Goals (For Goal Report)"),
                     buttonText: Text(
                         _tempSelectedGoalIds.isEmpty
                             ? "All Goals"
                             : "${_tempSelectedGoalIds.length} Goals Selected",
-                        overflow: TextOverflow.ellipsis), // Fixed
+                        overflow: TextOverflow.ellipsis),
                     buttonIcon: const Icon(Icons.savings_outlined),
                     decoration: BoxDecoration(
                         border: Border.all(color: theme.dividerColor),
@@ -299,7 +315,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     onConfirm: (values) =>
                         setState(() => _tempSelectedGoalIds = values),
                     searchable: true,
-                    searchHint: "Search Goals", // Fixed
+                    searchHint: "Search Goals",
                   )
                 else if (state.optionsStatus == FilterOptionsStatus.loading)
                   const SizedBox.shrink()

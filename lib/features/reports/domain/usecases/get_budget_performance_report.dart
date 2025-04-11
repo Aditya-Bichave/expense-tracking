@@ -23,6 +23,7 @@ class GetBudgetPerformanceReportUseCase
       startDate: params.startDate,
       endDate: params.endDate,
       budgetIds: params.budgetIds,
+      accountIds: params.accountIds, // Pass accountIds
       compareToPrevious: params.compareToPrevious,
     );
   }
@@ -31,16 +32,19 @@ class GetBudgetPerformanceReportUseCase
 class GetBudgetPerformanceReportParams extends Equatable {
   final DateTime startDate;
   final DateTime endDate;
-  final List<String>? budgetIds; // Optional: Filter for specific budgets
+  final List<String>? budgetIds;
+  final List<String>? accountIds; // Added accountIds
   final bool compareToPrevious;
 
   const GetBudgetPerformanceReportParams({
     required this.startDate,
     required this.endDate,
     this.budgetIds,
+    this.accountIds, // Added
     this.compareToPrevious = false,
   });
 
   @override
-  List<Object?> get props => [startDate, endDate, budgetIds, compareToPrevious];
+  List<Object?> get props =>
+      [startDate, endDate, budgetIds, accountIds, compareToPrevious];
 }

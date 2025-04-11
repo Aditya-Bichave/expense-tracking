@@ -10,17 +10,25 @@ abstract class IncomeExpenseReportState extends Equatable {
 class IncomeExpenseReportInitial extends IncomeExpenseReportState {}
 
 class IncomeExpenseReportLoading extends IncomeExpenseReportState {
-  final IncomeExpensePeriodType periodType; // Track period during load
-  const IncomeExpenseReportLoading({required this.periodType});
+  final IncomeExpensePeriodType periodType;
+  // --- ADDED compareToPrevious flag ---
+  final bool compareToPrevious;
+  const IncomeExpenseReportLoading(
+      {required this.periodType, required this.compareToPrevious});
   @override
-  List<Object?> get props => [periodType];
+  List<Object?> get props => [periodType, compareToPrevious];
+  // --- END ADD ---
 }
 
 class IncomeExpenseReportLoaded extends IncomeExpenseReportState {
   final IncomeExpenseReportData reportData;
-  const IncomeExpenseReportLoaded(this.reportData);
+  // --- ADDED showComparison flag ---
+  final bool showComparison;
+  const IncomeExpenseReportLoaded(this.reportData,
+      {required this.showComparison});
   @override
-  List<Object?> get props => [reportData];
+  List<Object?> get props => [reportData, showComparison];
+  // --- END ADD ---
 }
 
 class IncomeExpenseReportError extends IncomeExpenseReportState {

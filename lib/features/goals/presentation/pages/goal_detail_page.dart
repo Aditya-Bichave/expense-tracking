@@ -16,8 +16,10 @@ import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
 import 'package:expense_tracker/features/goals/presentation/widgets/contribution_list_item.dart';
 import 'package:expense_tracker/features/goals/presentation/widgets/log_contribution_sheet.dart';
+import 'package:expense_tracker/features/reports/presentation/widgets/charts/goal_contribution_chart.dart'; // Import chart
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -51,6 +53,9 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
   String? _error;
   late ConfettiController _confettiController;
   StreamSubscription? _goalListSubscription;
+  // --- ADDED State for chart/list view ---
+  bool _showContributionChart = true;
+  // --- END ADD ---
 
   @override
   void initState() {
@@ -78,6 +83,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
   }
 
   Future<void> _loadData() async {
+    // ... (goal loading logic remains the same) ...
     if (!mounted) return;
     bool wasLoadingBefore = _isLoadingGoal || _isLoadingContributions;
     if (!wasLoadingBefore) {
@@ -157,6 +163,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       });
     }, (contributions) {
       log.info("[GoalDetail] Loaded ${contributions.length} contributions.");
+      // Optimization: Only update state if the list content actually changed
       if (!const DeepCollectionEquality()
           .equals(_contributions, contributions)) {
         setState(() {
@@ -170,13 +177,14 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
   }
 
   void _navigateToEdit(BuildContext context) {
+    // ... (no change needed) ...
     if (_currentGoal == null) return;
-    // Navigate using the correct route name
     context.pushNamed(RouteNames.editGoal,
         pathParameters: {'id': _currentGoal!.id}, extra: _currentGoal);
   }
 
   void _handleArchive(BuildContext context) async {
+    // ... (no change needed) ...
     if (_currentGoal == null) return;
     final confirmed = await AppDialogs.showConfirmation(context,
         title: "Confirm Archive",
@@ -189,13 +197,15 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       if (context.canPop()) {
         context.pop();
       } else {
-        context.go(RouteNames.budgetsAndCats, extra: {'initialTabIndex': 2});
+        context.go(RouteNames.budgetsAndCats,
+            extra: {'initialTabIndex': 1}); // Navigate to goals tab
       }
     }
   }
 
   Future<bool?> _handleDeleteContribution(
       BuildContext context, GoalContribution contribution) async {
+    // ... (no change needed) ...
     final settings = context.read<SettingsBloc>().state;
     final confirmed = await AppDialogs.showConfirmation(context,
         title: "Delete Contribution?",
@@ -204,7 +214,9 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         confirmText: "Delete",
         confirmColor: Theme.of(context).colorScheme.error);
     if (confirmed == true && context.mounted) {
+      // Use sl directly if context is problematic across async gaps
       final logContribBloc = sl<LogContributionBloc>();
+      // Initialize the bloc with the contribution to be deleted
       logContribBloc.add(InitializeContribution(
           goalId: contribution.goalId, initialContribution: contribution));
       logContribBloc.add(const DeleteContribution());
@@ -213,9 +225,9 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     return false; // Indicate dialog should not close
   }
 
-  // Helper for Progress Indicator (REMOVED AETHER TBD)
   Widget _buildProgressIndicatorWidget(
       BuildContext context, AppModeTheme? modeTheme, UIMode uiMode) {
+    // ... (no change needed) ...
     final theme = Theme.of(context);
     if (_currentGoal == null) return const SizedBox(height: 90);
     final goal = _currentGoal!;
@@ -225,11 +237,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     final backgroundColor =
         theme.colorScheme.surfaceContainerHighest.withOpacity(0.5);
     final bool isQuantum = uiMode == UIMode.quantum;
-    // final bool isAether = uiMode == UIMode.aether; // No Aether specific impl
 
-    // Aether specific asset check (Removed)
-
-    // Elemental or Quantum
     final double radius = isQuantum ? 60.0 : 70.0;
     final double lineWidth = isQuantum ? 8.0 : 12.0;
     final TextStyle centerTextStyle = (isQuantum
@@ -251,14 +259,11 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         backgroundColor: backgroundColor);
   }
 
-  // Helper for Contribution List
-  Widget _buildContributionListWidget(
+  // REFINED: Contribution List/Chart Widget
+  Widget _buildContributionWidget(
       BuildContext context, AppModeTheme? modeTheme, UIMode uiMode) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
-    final currency = settings.currencySymbol;
-    final useTable =
-        uiMode == UIMode.quantum && modeTheme?.preferDataTableForLists == true;
 
     if (_isLoadingContributions) {
       return const Padding(
@@ -271,84 +276,109 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           child: Center(child: Text("No contributions logged yet.")));
     }
 
-    if (useTable) {
-      return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            headingRowHeight: theme.dataTableTheme.headingRowHeight,
-            dataRowMinHeight: theme.dataTableTheme.dataRowMinHeight,
-            dataRowMaxHeight: theme.dataTableTheme.dataRowMaxHeight,
-            columnSpacing: theme.dataTableTheme.columnSpacing,
-            headingTextStyle: theme.dataTableTheme.headingTextStyle,
-            dataTextStyle: theme.dataTableTheme.dataTextStyle,
-            columns: const [
-              DataColumn(label: Text('Date')),
-              DataColumn(label: Text('Amount'), numeric: true),
-              DataColumn(label: Text('Note'))
-            ],
-            rows: _contributions
-                .map((c) => DataRow(
-                        onSelectChanged: (selected) {
-                          if (selected == true) {
-                            showLogContributionSheet(context, c.goalId,
-                                initialContribution: c);
-                          }
-                        },
-                        cells: [
-                          DataCell(Text(DateFormatter.formatDate(c.date))),
-                          DataCell(Text(
-                              CurrencyFormatter.format(c.amount, currency),
-                              textAlign: TextAlign.end)),
-                          DataCell(Text(c.note ?? '',
-                              overflow: TextOverflow.ellipsis))
-                        ]))
-                .toList(),
-          ));
-    } else {
-      final bool isAether = uiMode == UIMode.aether;
-      final Duration itemDelay =
-          isAether ? (modeTheme?.listAnimationDelay ?? 80.ms) : 50.ms;
-      final Duration itemDuration =
-          isAether ? (modeTheme?.listAnimationDuration ?? 450.ms) : 300.ms;
-
-      return ListView.separated(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _contributions.length,
-        itemBuilder: (ctx, index) {
-          final contribution = _contributions[index];
-          Widget item = ContributionListItem(
-              contribution: contribution, goalId: widget.goalId);
-          if (isAether) {
-            item = item
-                .animate(delay: itemDelay * index)
-                .fadeIn(duration: itemDuration)
-                .slideY(begin: 0.2, curve: Curves.easeOut);
-          } else {
-            item = item
-                .animate()
-                .fadeIn(delay: (itemDelay.inMilliseconds * 0.5 * index).ms);
-          }
-          return Dismissible(
-              key: Key('contrib_dismiss_detail_${contribution.id}'),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                  color: theme.colorScheme.errorContainer,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Icon(Icons.delete_sweep_outlined,
-                      color: theme.colorScheme.onErrorContainer)),
-              confirmDismiss: (_) =>
-                  _handleDeleteContribution(context, contribution),
-              child: item);
-        },
-        separatorBuilder: (_, __) => const Divider(height: 1, thickness: 0.5),
-      );
-    }
+    return Column(
+      children: [
+        // --- Toggle Button ---
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: CupertinoSlidingSegmentedControl<bool>(
+            children: const {
+              true: Padding(padding: EdgeInsets.all(8), child: Text('Chart')),
+              false: Padding(padding: EdgeInsets.all(8), child: Text('List')),
+            },
+            groupValue: _showContributionChart,
+            onValueChanged: (bool? value) {
+              if (value != null) {
+                setState(() => _showContributionChart = value);
+              }
+            },
+          ),
+        ),
+        // --- END Toggle Button ---
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          child: _showContributionChart
+              ? KeyedSubtree(
+                  // Use key to help AnimatedSwitcher
+                  key: const ValueKey('contrib_chart'),
+                  child: SizedBox(
+                    height: 200, // Fixed height for chart
+                    child: GoalContributionChart(contributions: _contributions),
+                  ),
+                )
+              : KeyedSubtree(
+                  key: const ValueKey('contrib_list'),
+                  child: _buildContributionList(context, settings),
+                ),
+        ),
+      ],
+    );
   }
+
+  // Helper for Contribution List Items (with Drill-Down)
+  Widget _buildContributionList(BuildContext context, SettingsState settings) {
+    final bool isAether = settings.uiMode == UIMode.aether;
+    final modeTheme = context.modeTheme;
+    final itemDelay =
+        isAether ? (modeTheme?.listAnimationDelay ?? 80.ms) : 50.ms;
+    final itemDuration =
+        isAether ? (modeTheme?.listAnimationDuration ?? 450.ms) : 300.ms;
+    final theme = Theme.of(context);
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _contributions.length,
+      itemBuilder: (ctx, index) {
+        final contribution = _contributions[index];
+        Widget item = ContributionListItem(
+            contribution: contribution, goalId: widget.goalId);
+
+        // --- ADDED: InkWell for Drill Down ---
+        item = InkWell(
+          onTap: () {
+            log.info(
+                "[GoalDetail] Tapped contribution item ID: ${contribution.id}");
+            showLogContributionSheet(
+              context,
+              contribution.goalId,
+              initialContribution: contribution,
+            );
+          },
+          child: item,
+        );
+        // --- END ADDED ---
+
+        // Apply animation
+        item = item
+            .animate(delay: itemDelay * index)
+            .fadeIn(duration: itemDuration)
+            .slideY(begin: 0.1, curve: Curves.easeOut);
+
+        return Dismissible(
+            key: Key('contrib_dismiss_detail_${contribution.id}'),
+            direction: DismissDirection.endToStart,
+            background: Container(
+                color: theme.colorScheme.errorContainer,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Icon(Icons.delete_sweep_outlined,
+                    color: theme.colorScheme.onErrorContainer)),
+            confirmDismiss: (_) =>
+                _handleDeleteContribution(context, contribution),
+            child: item);
+      },
+      separatorBuilder: (_, __) => const Divider(height: 1, thickness: 0.5),
+    );
+  }
+  // --- End Contribution Widget ---
 
   @override
   Widget build(BuildContext context) {
+    // ... (rest of build method including loading/error checks remains the same) ...
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
     final uiMode = settings.uiMode;
@@ -442,8 +472,10 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
             child: Text(goal.description!,
                 style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
           ),
-        SectionHeader(title: "Contribution History (${_contributions.length})"),
-        _buildContributionListWidget(context, modeTheme, uiMode),
+        const SectionHeader(title: "Contribution History"),
+        // --- REPLACED List with conditional Chart/List ---
+        _buildContributionWidget(context, modeTheme, uiMode),
+        // --- END REPLACED ---
       ],
     );
 
@@ -453,12 +485,12 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         backgroundColor: isAether ? Colors.transparent : null,
         elevation: isAether ? 0 : null,
         actions: [
-          if (!goal.isArchived) // Allow editing only if not archived
+          if (!goal.isArchived)
             IconButton(
                 icon: const Icon(Icons.edit_outlined),
                 onPressed: () => _navigateToEdit(context),
                 tooltip: "Edit Goal"),
-          if (!goal.isArchived) // Allow archiving only if not archived
+          if (!goal.isArchived)
             IconButton(
                 icon: const Icon(Icons.archive_outlined),
                 onPressed: () => _handleArchive(context),
@@ -492,13 +524,12 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           ),
         ),
       ]),
-      floatingActionButton: goal.isAchieved ||
-              goal.isArchived // Disable FAB if achieved or archived
+      floatingActionButton: goal.isAchieved || goal.isArchived
           ? null
           : FloatingActionButton.extended(
               heroTag: 'add_contribution_fab',
               icon: const Icon(Icons.add),
-              label: const Text("Add Contribution"),
+              label: const Text("Log Contribution"),
               onPressed: () {
                 showLogContributionSheet(context, goal.id);
               },

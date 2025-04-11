@@ -38,6 +38,7 @@ class GetIncomeExpenseReportParams extends Equatable {
     required this.endDate,
     required this.periodType,
     this.accountIds,
+    required bool compareToPrevious,
   });
 
   @override

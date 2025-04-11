@@ -7,21 +7,29 @@ abstract class SpendingTimeReportEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-// Trigger load/reload, optionally specifying granularity
 class LoadSpendingTimeReport extends SpendingTimeReportEvent {
   final TimeSeriesGranularity? granularity;
-  const LoadSpendingTimeReport({this.granularity});
+  // --- ADDED compareToPrevious flag ---
+  final bool compareToPrevious;
+  const LoadSpendingTimeReport(
+      {this.granularity, this.compareToPrevious = false});
   @override
-  List<Object?> get props => [granularity];
+  List<Object?> get props => [granularity, compareToPrevious];
+  // --- END ADD ---
 }
 
-// Change granularity and trigger reload
 class ChangeGranularity extends SpendingTimeReportEvent {
   final TimeSeriesGranularity granularity;
   const ChangeGranularity(this.granularity);
   @override
   List<Object?> get props => [granularity];
 }
+
+// --- ADDED Toggle Event ---
+class ToggleTimeComparison extends SpendingTimeReportEvent {
+  const ToggleTimeComparison();
+}
+// --- END ADD ---
 
 // Internal event for filter changes
 class _FilterChanged extends SpendingTimeReportEvent {

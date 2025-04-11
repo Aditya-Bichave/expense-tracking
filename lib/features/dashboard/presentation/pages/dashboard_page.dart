@@ -11,9 +11,8 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_di
 import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+// Removed Expense/Income entity imports as they are handled by TransactionEntity
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -78,6 +77,7 @@ class _DashboardPageState extends State<DashboardPage> {
     context.read<GoalListBloc>().add(const LoadGoals(forceReload: true));
 
     try {
+      // Wait for dashboard bloc to finish loading/erroring
       await _dashboardBloc.stream
           .firstWhere(
               (state) => state is DashboardLoaded || state is DashboardError)
@@ -123,20 +123,19 @@ class _DashboardPageState extends State<DashboardPage> {
           const SizedBox(height: 8),
           AssetDistributionSection(accountBalances: overview.accountBalances),
           const SizedBox(height: 16),
-          // --- FIXED: Pass required sparkline data ---
           BudgetSummaryWidget(
             budgets: overview.activeBudgetsSummary,
-            recentSpendingData: overview.recentSpendingSparkline,
+            recentSpendingData:
+                overview.recentSpendingSparkline, // Pass correct data
           ),
           const SizedBox(height: 16),
           GoalSummaryWidget(
             goals: overview.activeGoalsSummary,
-            recentContributionDataPlaceholder:
-                overview.recentSpendingSparkline, // Use spending as placeholder
+            // Pass correct data to the correct parameter
+            recentContributionData: overview.recentContributionSparkline,
           ),
-          // --- END FIX ---
           const SizedBox(height: 16),
-          _buildReportNavigationButtons(context), // Add report buttons
+          _buildReportNavigationButtons(context),
           const SizedBox(height: 16),
           RecentTransactionsSection(
               navigateToDetailOrEdit: _navigateToDetailOrEdit),
@@ -182,20 +181,19 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 16),
               DashboardHeader(overview: overview),
               const SizedBox(height: 16),
-              // --- FIXED: Pass required sparkline data ---
               BudgetSummaryWidget(
                 budgets: overview.activeBudgetsSummary,
-                recentSpendingData: overview.recentSpendingSparkline,
+                recentSpendingData:
+                    overview.recentSpendingSparkline, // Pass correct data
               ),
               const SizedBox(height: 16),
               GoalSummaryWidget(
                 goals: overview.activeGoalsSummary,
-                recentContributionDataPlaceholder:
-                    overview.recentSpendingSparkline, // Placeholder
+                recentContributionData:
+                    overview.recentContributionSparkline, // Pass correct data
               ),
-              // --- END FIX ---
               const SizedBox(height: 16),
-              _buildReportNavigationButtons(context), // Add report buttons
+              _buildReportNavigationButtons(context),
               const SizedBox(height: 16),
               RecentTransactionsSection(
                   navigateToDetailOrEdit: _navigateToDetailOrEdit),
@@ -207,6 +205,7 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildReportNavigationButtons(BuildContext context) {
+    // ... (implementation unchanged) ...
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -291,12 +290,15 @@ class _DashboardPageState extends State<DashboardPage> {
             final overview = (state is DashboardLoaded)
                 ? state.overview
                 : (context.read<DashboardBloc>().state as DashboardLoaded?)
-                    ?.overview;
+                    ?.overview; // Use previous data if reloading
             if (overview == null && state is DashboardLoading) {
-              bodyContent = const Center(child: CircularProgressIndicator());
+              bodyContent = const Center(
+                  child:
+                      CircularProgressIndicator()); // Still loading initial data
             } else if (overview == null) {
-              bodyContent =
-                  const Center(child: Text("Failed to load overview data."));
+              bodyContent = const Center(
+                  child: Text(
+                      "Failed to load overview data.")); // Error case if overview somehow null after loading
             } else {
               switch (uiMode) {
                 case UIMode.aether:
@@ -327,6 +329,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               label: const Text("Retry"))
                         ])));
           } else {
+            // Initial state
             bodyContent = const Center(child: CircularProgressIndicator());
           }
 

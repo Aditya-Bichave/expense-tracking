@@ -1,87 +1,54 @@
 // lib/features/reports/presentation/widgets/charts/income_expense_bar_chart.dart
-import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
-import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/chart_utils.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:expense_tracker/main.dart'; // Logger
 
 class IncomeExpenseBarChart extends StatelessWidget {
   final List<IncomeExpensePeriodData> data;
+  final bool showComparison;
+  final Function(int groupIndex, int rodIndex)? onTapBar;
 
-  const IncomeExpenseBarChart({super.key, required this.data});
-
-  // --- ADDED Drill Down Handler ---
-  void _handleTap(BuildContext context, int groupIndex, int rodIndex) {
-    if (groupIndex < 0 || groupIndex >= data.length) return;
-
-    final tappedPeriod = data[groupIndex];
-    final filterBlocState = context.read<ReportFilterBloc>().state;
-
-    // Determine period start/end based on chart granularity
-    DateTime periodStart = tappedPeriod.periodStart;
-    DateTime periodEnd;
-    final isMonthly = data.length > 1 &&
-        data[1].periodStart.month != data[0].periodStart.month;
-    final periodType = isMonthly
-        ? IncomeExpensePeriodType.monthly
-        : IncomeExpensePeriodType.yearly;
-
-    if (periodType == IncomeExpensePeriodType.monthly) {
-      periodEnd =
-          DateTime(periodStart.year, periodStart.month + 1, 0, 23, 59, 59);
-    } else {
-      // Yearly
-      periodEnd = DateTime(periodStart.year, 12, 31, 23, 59, 59);
-    }
-
-    // Determine type based on which bar was tapped (rodIndex 0=Income, 1=Expense)
-    final transactionType =
-        rodIndex == 0 ? TransactionType.income : TransactionType.expense;
-
-    // Construct filter map compatible with TransactionListPage
-    final Map<String, String> filters = {
-      'startDate': periodStart.toIso8601String(),
-      'endDate': periodEnd.toIso8601String(),
-      'type': transactionType.name, // Filter by tapped type
-    };
-    // Include account filters if they were applied in the report filter
-    if (filterBlocState.selectedAccountIds.isNotEmpty) {
-      filters['accountId'] = filterBlocState.selectedAccountIds.join(',');
-    }
-    // Category filter usually doesn't apply to this report, but could be added if needed
-
-    log.info(
-        "[IncomeExpenseBarChart] Navigating to transactions with filters: $filters");
-    context.push(RouteNames.transactionsList, extra: {'filters': filters});
-  }
-  // --- END ADD ---
+  const IncomeExpenseBarChart({
+    super.key,
+    required this.data,
+    this.showComparison = false,
+    this.onTapBar,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
     final currencySymbol = settings.currencySymbol;
-    final incomeColor = Colors.green.shade600;
+    final incomeColor = Colors.green.shade600; // Consistent Income color
     final expenseColor = theme.colorScheme.error;
+    final prevIncomeColor =
+        incomeColor.withOpacity(0.4); // Lighter for previous
+    final prevExpenseColor =
+        expenseColor.withOpacity(0.4); // Lighter for previous
 
-    if (data.isEmpty) {
-      return const Center(child: Text("No data to display"));
-    }
+    if (data.isEmpty) return const Center(child: Text("No data to display"));
 
     double maxY = 0;
     for (var item in data) {
-      if (item.totalIncome > maxY) maxY = item.totalIncome;
-      if (item.totalExpense > maxY) maxY = item.totalExpense;
+      if (item.currentTotalIncome > maxY) maxY = item.currentTotalIncome;
+      if (item.currentTotalExpense > maxY) maxY = item.currentTotalExpense;
+      if (showComparison) {
+        if (item.totalIncome.previousValue != null &&
+            item.totalIncome.previousValue! > maxY)
+          maxY = item.totalIncome.previousValue!;
+        if (item.totalExpense.previousValue != null &&
+            item.totalExpense.previousValue! > maxY)
+          maxY = item.totalExpense.previousValue!;
+      }
     }
     maxY = (maxY * 1.15).ceilToDouble();
+    if (maxY <= 0) maxY = 10; // Ensure some height
 
     final isMonthly = data.length > 1 &&
         data[1].periodStart.month != data[0].periodStart.month;
@@ -98,32 +65,80 @@ class IncomeExpenseBarChart extends StatelessWidget {
               final item = data[groupIndex];
               final periodStr =
                   _formatPeriodHeader(item.periodStart, periodType);
-              final rodColor = rod.color;
-              final value = rod.toY;
-              String type = rodColor == incomeColor ? "Income" : "Expense";
+              bool isIncome;
+              bool isPrevious;
+              double value;
+              Color color;
+
+              // Determine which bar was touched based on rodIndex and showComparison
+              if (showComparison) {
+                // Order: PrevIncome, CurrIncome, PrevExpense, CurrExpense
+                if (rodIndex == 0) {
+                  isIncome = true;
+                  isPrevious = true;
+                  value = item.totalIncome.previousValue ?? 0;
+                  color = prevIncomeColor;
+                } else if (rodIndex == 1) {
+                  isIncome = true;
+                  isPrevious = false;
+                  value = item.currentTotalIncome;
+                  color = incomeColor;
+                } else if (rodIndex == 2) {
+                  isIncome = false;
+                  isPrevious = true;
+                  value = item.totalExpense.previousValue ?? 0;
+                  color = prevExpenseColor;
+                } else /* rodIndex == 3 */ {
+                  isIncome = false;
+                  isPrevious = false;
+                  value = item.currentTotalExpense;
+                  color = expenseColor;
+                }
+              } else {
+                // Order: CurrIncome, CurrExpense
+                if (rodIndex == 0) {
+                  isIncome = true;
+                  isPrevious = false;
+                  value = item.currentTotalIncome;
+                  color = incomeColor;
+                } else /* rodIndex == 1 */ {
+                  isIncome = false;
+                  isPrevious = false;
+                  value = item.currentTotalExpense;
+                  color = expenseColor;
+                }
+              }
+
+              final prefix = isPrevious ? "Prev " : "";
+              final typeStr = isIncome ? "Income" : "Expense";
 
               return BarTooltipItem(
-                  '$periodStr\n', ChartUtils.tooltipTitleStyle(context),
-                  children: <TextSpan>[
-                    TextSpan(
-                        text:
-                            '$type: ${CurrencyFormatter.format(value, currencySymbol)}',
-                        style: ChartUtils.tooltipContentStyle(context,
-                            color: rodColor))
-                  ]);
+                '$periodStr\n',
+                ChartUtils.tooltipTitleStyle(context),
+                children: <TextSpan>[
+                  TextSpan(
+                    text:
+                        '$prefix$typeStr: ${CurrencyFormatter.format(value, currencySymbol)}',
+                    style:
+                        ChartUtils.tooltipContentStyle(context, color: color),
+                  ),
+                  // Optionally show net flow for the group in tooltip
+                  // TextSpan(text: '\nNet: ${CurrencyFormatter.format(item.currentNetFlow, currencySymbol)}', style: TextStyle(...))
+                ],
+                textAlign: TextAlign.left,
+              );
             },
           ),
-          // --- ADDED Touch Callback ---
           touchCallback: (FlTouchEvent event, barTouchResponse) {
-            if (event is FlTapUpEvent &&
+            if (onTapBar != null &&
+                event is FlTapUpEvent &&
                 barTouchResponse != null &&
                 barTouchResponse.spot != null) {
               final groupIndex = barTouchResponse.spot!.touchedBarGroupIndex;
               final rodIndex = barTouchResponse.spot!.touchedRodDataIndex;
-              _handleTap(context, groupIndex, rodIndex);
+              onTapBar!(groupIndex, rodIndex);
             }
           },
-          // --- END ADD ---
         ),
         titlesData: FlTitlesData(
           show: true,
@@ -141,15 +156,25 @@ class IncomeExpenseBarChart extends StatelessWidget {
           ),
           leftTitles: AxisTitles(
             sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 45,
-                getTitlesWidget: (value, meta) =>
-                    ChartUtils.leftTitleWidgets(context, value, meta, maxY)),
+              showTitles: true,
+              reservedSize: 45,
+              interval: maxY / 5, // Match grid interval if shown
+              getTitlesWidget: (value, meta) =>
+                  ChartUtils.leftTitleWidgets(context, value, meta, maxY),
+            ),
           ),
         ),
         borderData: FlBorderData(show: false),
-        barGroups: showingGroups(context, data, incomeColor, expenseColor),
-        gridData: const FlGridData(show: false),
+        barGroups: showingGroups(context, data, incomeColor, expenseColor,
+            prevIncomeColor, prevExpenseColor, showComparison),
+        gridData: FlGridData(
+          // Subtle grid lines
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: maxY / 5,
+          getDrawingHorizontalLine: (value) => FlLine(
+              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+        ),
         alignment: BarChartAlignment.spaceAround,
       ),
     );
@@ -159,9 +184,13 @@ class IncomeExpenseBarChart extends StatelessWidget {
       BuildContext context,
       List<IncomeExpensePeriodData> data,
       Color incomeColor,
-      Color expenseColor) {
-    final double groupSpace = 4; // Space between income/expense bars
-    final double barWidth = 10; // Adjust width
+      Color expenseColor,
+      Color prevIncomeColor,
+      Color prevExpenseColor,
+      bool showComparison) {
+    final double barWidth = showComparison ? 6 : 12;
+    final double groupSpace =
+        showComparison ? 2 : 4; // Space between rods within a group
 
     return List.generate(data.length, (i) {
       final item = data[i];
@@ -169,24 +198,38 @@ class IncomeExpenseBarChart extends StatelessWidget {
         x: i,
         barsSpace: groupSpace,
         barRods: [
+          // Previous Income (if comparing)
+          if (showComparison)
+            BarChartRodData(
+                toY: item.totalIncome.previousValue ?? 0,
+                color: prevIncomeColor,
+                width: barWidth,
+                borderRadius: BorderRadius.zero),
+          // Current Income
           BarChartRodData(
-            toY: item.totalIncome,
-            color: incomeColor,
-            width: barWidth,
-            borderRadius: BorderRadius.zero,
-          ),
+              toY: item.currentTotalIncome,
+              color: incomeColor,
+              width: barWidth,
+              borderRadius: BorderRadius.zero),
+          // Previous Expense (if comparing)
+          if (showComparison)
+            BarChartRodData(
+                toY: item.totalExpense.previousValue ?? 0,
+                color: prevExpenseColor,
+                width: barWidth,
+                borderRadius: BorderRadius.zero),
+          // Current Expense
           BarChartRodData(
-            toY: item.totalExpense,
-            color: expenseColor,
-            width: barWidth,
-            borderRadius: BorderRadius.zero,
-          ),
+              toY: item.currentTotalExpense,
+              color: expenseColor,
+              width: barWidth,
+              borderRadius: BorderRadius.zero),
         ],
       );
     });
   }
 
-  // --- Helper Methods (_formatPeriodHeader, _bottomTitleWidgets) unchanged ---
+  // Helper methods remain unchanged
   String _formatPeriodHeader(
       DateTime date, IncomeExpensePeriodType periodType) {
     switch (periodType) {
@@ -202,13 +245,20 @@ class IncomeExpenseBarChart extends StatelessWidget {
     final theme = Theme.of(context);
     final style = theme.textTheme.labelSmall?.copyWith(fontSize: 10);
     final index = value.toInt();
-    if (index < 0 || index >= data.length) return const SizedBox.shrink();
+
+    if (index < 0 || index >= data.length) {
+      return const SizedBox.shrink(); // Avoid errors for invalid indices
+    }
     final date = data[index].periodStart;
+
     String text;
     switch (periodType) {
       case IncomeExpensePeriodType.monthly:
         text = DateFormat('MMM').format(date);
-        if (date.month == 1 || index == 0) {
+        // Add year label conditionally to avoid clutter
+        if (date.month == 1 ||
+            index == 0 ||
+            (index > 0 && data[index - 1].periodStart.year != date.year)) {
           text = '${DateFormat('yy').format(date)}\n$text';
         }
         break;
@@ -216,6 +266,7 @@ class IncomeExpenseBarChart extends StatelessWidget {
         text = DateFormat('yyyy').format(date);
         break;
     }
+
     return SideTitleWidget(
         axisSide: meta.axisSide,
         space: 4,

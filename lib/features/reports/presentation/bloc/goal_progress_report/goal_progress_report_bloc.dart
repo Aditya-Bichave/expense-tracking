@@ -27,10 +27,9 @@ class GoalProgressReportBloc
     on<_FilterChanged>(_onFilterChanged);
 
     _filterSubscription = _reportFilterBloc.stream.listen((filterState) {
-      // Reload if the selected goal IDs change
-      // We need to compare the current bloc state's filter IDs with the new ones
-      // This simple listener might trigger too often if other filters change.
-      // A more robust solution would check if specifically selectedGoalIds changed.
+      // Only reload if the selected goal IDs potentially changed
+      // This requires comparing previous state's selectedGoalIds with new state's.
+      // A simpler approach for now: reload on any filter change.
       add(const _FilterChanged());
     });
 
@@ -52,15 +51,12 @@ class GoalProgressReportBloc
     emit(GoalProgressReportLoading());
     log.info("[GoalProgressReportBloc] Loading goal progress report...");
 
-    // Get selected goals from filter state
     final filterState = _reportFilterBloc.state;
     final params = GetGoalProgressReportParams(
-      // --- FIXED: Access selectedGoalIds correctly ---
       goalIds: filterState.selectedGoalIds.isEmpty
           ? null
-          : filterState.selectedGoalIds,
-      // --- END FIX ---
-      // calculateComparisonRate: // Add flag if comparison is implemented
+          : filterState.selectedGoalIds, // Use filtered IDs
+      // calculateComparisonRate: // Add comparison flag later
     );
 
     final result = await _getReportUseCase(params);

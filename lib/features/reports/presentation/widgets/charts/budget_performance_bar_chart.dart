@@ -8,42 +8,49 @@ import 'package:intl/intl.dart'; // For NumberFormat
 
 class BudgetPerformanceBarChart extends StatelessWidget {
   final List<BudgetPerformanceData> data;
-  final List<BudgetPerformanceData>? previousData; // For comparison
+  final List<BudgetPerformanceData>? previousData; // Null if not comparing
   final String currencySymbol;
+  final Function(int index)? onTapBar;
+  final int maxBarsToShow; // Limit bars
 
   const BudgetPerformanceBarChart({
     super.key,
     required this.data,
     this.previousData,
     required this.currencySymbol,
+    this.onTapBar,
+    this.maxBarsToShow = 7, // Default limit
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bool showComparison = previousData != null;
+    final bool showComparison =
+        previousData != null && previousData!.isNotEmpty;
 
-    if (data.isEmpty) {
+    if (data.isEmpty)
       return const Center(child: Text("No budget data to display"));
-    }
 
-    // Find max Y value for scaling across both current and previous data
-    double maxY = 0;
+    // Take limited data for display, but need full previous data for lookup
+    final chartData = data.take(maxBarsToShow).toList();
     final Map<String, BudgetPerformanceData> previousDataMap = showComparison
         ? {for (var item in previousData!) item.budget.id: item}
         : {};
 
-    for (var item in data) {
+    double maxY = 0;
+    for (var item in chartData) {
       if (item.budget.targetAmount > maxY) maxY = item.budget.targetAmount;
-      if (item.actualSpending > maxY) maxY = item.actualSpending;
+      if (item.currentActualSpending > maxY) maxY = item.currentActualSpending;
       if (showComparison && previousDataMap.containsKey(item.budget.id)) {
         final prevItem = previousDataMap[item.budget.id]!;
         if (prevItem.budget.targetAmount > maxY)
           maxY = prevItem.budget.targetAmount;
-        if (prevItem.actualSpending > maxY) maxY = prevItem.actualSpending;
+        if (prevItem.currentActualSpending > maxY)
+          maxY = prevItem.currentActualSpending;
       }
     }
-    maxY = (maxY * 1.15).ceilToDouble(); // Add padding
+    maxY = (maxY * 1.15).ceilToDouble();
+    if (maxY <= 0) maxY = 10; // Ensure some height
 
     return BarChart(
       BarChartData(
@@ -51,189 +58,184 @@ class BudgetPerformanceBarChart extends StatelessWidget {
         barTouchData: BarTouchData(
           touchTooltipData: BarTouchTooltipData(
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              final item = data[groupIndex];
-              final budget = item.budget;
-              String title = '${budget.name}\n';
+              final currentItem = chartData[groupIndex];
+              final budget = currentItem.budget;
               final BudgetPerformanceData? prevItem =
                   showComparison ? previousDataMap[budget.id] : null;
+              bool isTargetBar;
+              bool isPreviousBar;
+              double value;
+              Color color;
 
-              // Determine which bar was touched based on rodIndex and showComparison
-              bool isTargetBar = false;
-              bool isPreviousBar = false;
+              // Determine which bar was touched
               if (showComparison) {
+                // Order: PrevTarget, CurrTarget, PrevActual, CurrActual
                 if (rodIndex == 0) {
                   isTargetBar = true;
                   isPreviousBar = true;
+                  value = prevItem?.budget.targetAmount ?? 0;
+                  color = rod.color ?? Colors.grey;
                 } else if (rodIndex == 1) {
                   isTargetBar = true;
                   isPreviousBar = false;
+                  value = budget.targetAmount;
+                  color = rod.color ?? Colors.grey;
                 } else if (rodIndex == 2) {
                   isTargetBar = false;
                   isPreviousBar = true;
-                } else {
+                  value = prevItem?.currentActualSpending ?? 0;
+                  color = rod.color ?? Colors.grey;
+                } else /* rodIndex == 3 */ {
                   isTargetBar = false;
                   isPreviousBar = false;
+                  value = currentItem.currentActualSpending;
+                  color = rod.color ?? Colors.grey;
                 }
               } else {
+                // Order: CurrTarget, CurrActual
                 if (rodIndex == 0) {
                   isTargetBar = true;
-                } else {
+                  isPreviousBar = false;
+                  value = budget.targetAmount;
+                  color = rod.color ?? Colors.grey;
+                } else /* rodIndex == 1 */ {
                   isTargetBar = false;
+                  isPreviousBar = false;
+                  value = currentItem.currentActualSpending;
+                  color = rod.color ?? Colors.grey;
                 }
               }
-
-              final displayValue = isPreviousBar
-                  ? (isTargetBar
-                          ? prevItem?.budget.targetAmount
-                          : prevItem?.actualSpending) ??
-                      0.0
-                  : (isTargetBar ? budget.targetAmount : item.actualSpending);
-              final displayColor = isPreviousBar
-                  ? (isTargetBar
-                      ? theme.colorScheme.secondary.withOpacity(0.3)
-                      : item.statusColor.withOpacity(0.4))
-                  : (isTargetBar
-                      ? theme.colorScheme.secondary.withOpacity(0.8)
-                      : item.statusColor);
 
               final tooltipMainText = isTargetBar ? 'Target' : 'Actual';
               final tooltipPrefix = isPreviousBar ? 'Prev ' : '';
 
-              List<TextSpan> children = [
-                TextSpan(
-                    text:
-                        '$tooltipPrefix$tooltipMainText: ${CurrencyFormatter.format(displayValue, currencySymbol)}',
-                    style: ChartUtils.tooltipContentStyle(context,
-                        color: displayColor))
-              ];
-
-              // Add the other value (current/previous) for comparison if showing comparison
-              if (showComparison && prevItem != null) {
-                final otherValue = !isPreviousBar
-                    ? (isTargetBar
-                        ? prevItem.budget.targetAmount
-                        : prevItem.actualSpending)
-                    : (isTargetBar ? budget.targetAmount : item.actualSpending);
-                final otherColor = !isPreviousBar
-                    ? (isTargetBar
-                        ? theme.colorScheme.secondary.withOpacity(0.3)
-                        : item.statusColor.withOpacity(0.4))
-                    : (isTargetBar
-                        ? theme.colorScheme.secondary.withOpacity(0.8)
-                        : item.statusColor);
-                final otherPrefix = !isPreviousBar ? 'Prev ' : '';
-
-                children.add(const TextSpan(text: '\n'));
-                children.add(TextSpan(
-                    text:
-                        '$otherPrefix$tooltipMainText: ${CurrencyFormatter.format(otherValue, currencySymbol)}',
-                    style: ChartUtils.tooltipContentStyle(context,
-                        color:
-                            otherColor?.withOpacity(0.7)) // Dim the other value
-                    ));
-              }
-
               return BarTooltipItem(
-                  title, ChartUtils.tooltipTitleStyle(context),
-                  children: children, textAlign: TextAlign.left);
+                '${budget.name}\n',
+                ChartUtils.tooltipTitleStyle(context),
+                children: <TextSpan>[
+                  TextSpan(
+                    text:
+                        '$tooltipPrefix$tooltipMainText: ${CurrencyFormatter.format(value, currencySymbol)}',
+                    style:
+                        ChartUtils.tooltipContentStyle(context, color: color),
+                  ),
+                  // Optionally add variance info
+                  if (!isTargetBar) // Show variance only for Actual bars
+                    TextSpan(
+                        text:
+                            '\nVar: ${CurrencyFormatter.format(currentItem.currentVarianceAmount, currencySymbol)} (${currentItem.currentVariancePercent.toStringAsFixed(0)}%)',
+                        style: ChartUtils.tooltipContentStyle(context,
+                                color: currentItem.statusColor)
+                            .copyWith(fontSize: 11))
+                ],
+                textAlign: TextAlign.left,
+              );
             },
           ),
-          // TODO: Add touch callback for drill-down if needed
-          // touchCallback: ...
+          touchCallback: (FlTouchEvent event, barTouchResponse) {
+            if (onTapBar != null &&
+                event is FlTapUpEvent &&
+                barTouchResponse != null &&
+                barTouchResponse.spot != null) {
+              final index = barTouchResponse.spot!.touchedBarGroupIndex;
+              onTapBar!(index);
+            }
+          },
         ),
         titlesData: FlTitlesData(
-          show: true,
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) => ChartUtils.bottomTitleWidgets(
-                  context,
-                  value,
-                  meta,
-                  data.length,
-                  (index) => data[index].budget.name), // Show budget name
-              reservedSize: 38,
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-                showTitles: true,
-                reservedSize: 45,
-                getTitlesWidget: (value, meta) =>
-                    ChartUtils.leftTitleWidgets(context, value, meta, maxY)),
-          ),
-        ),
+            show: true,
+            rightTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles:
+                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) =>
+                        ChartUtils.bottomTitleWidgets(
+                            context,
+                            value,
+                            meta,
+                            chartData.length,
+                            (index) => chartData[index].budget.name),
+                    reservedSize: 38)),
+            leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: 45,
+                    interval: maxY / 5, // Match grid
+                    getTitlesWidget: (value, meta) =>
+                        ChartUtils.leftTitleWidgets(
+                            context, value, meta, maxY)))),
         borderData: FlBorderData(show: false),
         barGroups:
-            showingGroups(context, data, previousDataMap, showComparison),
-        gridData: const FlGridData(show: false),
-        alignment: BarChartAlignment.spaceAround, // Space between budget groups
+            showingGroups(context, chartData, previousDataMap, showComparison),
+        gridData: FlGridData(
+          // Subtle grid
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: maxY / 5,
+          getDrawingHorizontalLine: (value) => FlLine(
+              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+        ),
+        alignment: BarChartAlignment.spaceAround,
       ),
     );
   }
 
   List<BarChartGroupData> showingGroups(
       BuildContext context,
-      List<BudgetPerformanceData> data,
+      List<BudgetPerformanceData> chartData,
       Map<String, BudgetPerformanceData> previousDataMap,
       bool showComparison) {
     final theme = Theme.of(context);
-    final double barWidth =
-        showComparison ? 8 : 16; // Narrower bars for comparison
-    final double spaceBetweenRods =
-        showComparison ? 1 : 0; // Small space when comparing
+    final double barWidth = showComparison ? 6 : 12; // Narrower bars
+    final double groupSpace = showComparison ? 1 : 4; // Space between rods
 
-    return List.generate(data.length, (i) {
-      final currentItem = data[i];
+    return List.generate(chartData.length, (i) {
+      final currentItem = chartData[i];
       final budget = currentItem.budget;
       final BudgetPerformanceData? prevItem =
           showComparison ? previousDataMap[budget.id] : null;
-
-      final targetColor = theme.colorScheme.secondary.withOpacity(0.8);
+      final targetColor =
+          theme.colorScheme.secondary; // Use secondary for target
       final actualColor = currentItem.statusColor;
-      final prevTargetColor = targetColor.withOpacity(0.3);
+      final prevTargetColor = targetColor.withOpacity(0.4);
       final prevActualColor = actualColor.withOpacity(0.4);
 
       return BarChartGroupData(
         x: i,
-        barsSpace: spaceBetweenRods,
+        barsSpace: groupSpace,
         barRods: [
-          // Order: PrevTarget, CurrTarget, PrevActual, CurrActual (if comparing)
-          // Order: CurrTarget, CurrActual (if not comparing)
-
+          // Previous Target (if comparing)
           if (showComparison)
             BarChartRodData(
               toY: prevItem?.budget.targetAmount ?? 0,
               color: prevTargetColor,
               width: barWidth,
-              borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+              borderRadius: BorderRadius.zero,
             ),
+          // Current Target
           BarChartRodData(
             toY: budget.targetAmount,
             color: targetColor,
             width: barWidth,
-            borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+            borderRadius: BorderRadius.zero,
           ),
+          // Previous Actual (if comparing)
           if (showComparison)
             BarChartRodData(
-              toY: prevItem?.actualSpending ?? 0,
+              toY: prevItem?.currentActualSpending ?? 0,
               color: prevActualColor,
               width: barWidth,
-              borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+              borderRadius: BorderRadius.zero,
             ),
+          // Current Actual
           BarChartRodData(
-            toY: currentItem.actualSpending,
+            toY: currentItem.currentActualSpending,
             color: actualColor,
             width: barWidth,
-            borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+            borderRadius: BorderRadius.zero,
           ),
         ],
       );

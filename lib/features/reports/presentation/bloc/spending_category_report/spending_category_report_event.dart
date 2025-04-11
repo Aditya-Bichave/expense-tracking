@@ -7,10 +7,20 @@ abstract class SpendingCategoryReportEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-// Event to trigger loading/reloading the report
 class LoadSpendingCategoryReport extends SpendingCategoryReportEvent {
-  const LoadSpendingCategoryReport();
+  // --- ADDED compareToPrevious flag ---
+  final bool compareToPrevious;
+  const LoadSpendingCategoryReport({this.compareToPrevious = false});
+  @override
+  List<Object?> get props => [compareToPrevious];
+  // --- END ADD ---
 }
+
+// --- ADDED Toggle Event ---
+class ToggleSpendingComparison extends SpendingCategoryReportEvent {
+  const ToggleSpendingComparison();
+}
+// --- END ADD ---
 
 // Internal event triggered by filter changes
 class _FilterChanged extends SpendingCategoryReportEvent {

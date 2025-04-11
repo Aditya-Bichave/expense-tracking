@@ -7,21 +7,29 @@ abstract class IncomeExpenseReportEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-// Trigger load/reload, optionally specifying period type
 class LoadIncomeExpenseReport extends IncomeExpenseReportEvent {
   final IncomeExpensePeriodType? periodType;
-  const LoadIncomeExpenseReport({this.periodType});
+  // --- ADDED compareToPrevious flag ---
+  final bool compareToPrevious;
+  const LoadIncomeExpenseReport(
+      {this.periodType, this.compareToPrevious = false});
   @override
-  List<Object?> get props => [periodType];
+  List<Object?> get props => [periodType, compareToPrevious];
+  // --- END ADD ---
 }
 
-// Change period type (monthly/yearly) and trigger reload
 class ChangeIncomeExpensePeriod extends IncomeExpenseReportEvent {
   final IncomeExpensePeriodType periodType;
   const ChangeIncomeExpensePeriod(this.periodType);
   @override
   List<Object?> get props => [periodType];
 }
+
+// --- ADDED Toggle Event ---
+class ToggleIncomeExpenseComparison extends IncomeExpenseReportEvent {
+  const ToggleIncomeExpenseComparison();
+}
+// --- END ADD ---
 
 // Internal event for filter changes
 class _FilterChanged extends IncomeExpenseReportEvent {

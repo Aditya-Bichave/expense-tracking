@@ -32,25 +32,37 @@ class IncomeExpenseReportBloc
     });
 
     log.info("[IncomeExpenseReportBloc] Initialized.");
-    add(const LoadIncomeExpenseReport()); // Initial load
+    add(const LoadIncomeExpenseReport()); // Initial load with default period & no comparison
   }
 
   void _onFilterChanged(
       _FilterChanged event, Emitter<IncomeExpenseReportState> emit) {
     log.info(
         "[IncomeExpenseReportBloc] Filter changed detected, reloading report.");
+    // Get current period and comparison state before reloading
+    final currentPeriod = state is IncomeExpenseReportLoaded
+        ? (state as IncomeExpenseReportLoaded).reportData.periodType
+        : (state is IncomeExpenseReportLoading)
+            ? (state as IncomeExpenseReportLoading).periodType
+            : IncomeExpensePeriodType.monthly;
+    final compare = state is IncomeExpenseReportLoaded
+        ? (state as IncomeExpenseReportLoaded).showComparison
+        : false;
+
     add(LoadIncomeExpenseReport(
-        periodType: state is IncomeExpenseReportLoaded
-            ? (state as IncomeExpenseReportLoaded).reportData.periodType
-            : IncomeExpensePeriodType.monthly // Default if not loaded yet
-        ));
+        periodType: currentPeriod, compareToPrevious: compare));
   }
 
   void _onChangePeriod(
       ChangeIncomeExpensePeriod event, Emitter<IncomeExpenseReportState> emit) {
     log.info(
         "[IncomeExpenseReportBloc] Period changed to ${event.periodType}. Reloading.");
-    add(LoadIncomeExpenseReport(periodType: event.periodType));
+    // Get current comparison state before reloading
+    final compare = state is IncomeExpenseReportLoaded
+        ? (state as IncomeExpenseReportLoaded).showComparison
+        : false;
+    add(LoadIncomeExpenseReport(
+        periodType: event.periodType, compareToPrevious: compare));
   }
 
   Future<void> _onLoadReport(LoadIncomeExpenseReport event,
@@ -58,18 +70,27 @@ class IncomeExpenseReportBloc
     final currentPeriodType = event.periodType ??
         (state is IncomeExpenseReportLoaded
             ? (state as IncomeExpenseReportLoaded).reportData.periodType
-            : IncomeExpensePeriodType.monthly);
+            : (state is IncomeExpenseReportLoading)
+                ? (state as IncomeExpenseReportLoading).periodType
+                : IncomeExpensePeriodType.monthly); // Default if not set
 
+    // Use comparison flag from the event, default to false if not provided
+    final bool compare = event.compareToPrevious;
+
+    // Avoid duplicate loads for the exact same state (period AND comparison)
     if (state is IncomeExpenseReportLoading &&
-        (state as IncomeExpenseReportLoading).periodType == currentPeriodType) {
+        (state as IncomeExpenseReportLoading).periodType == currentPeriodType &&
+        (state as IncomeExpenseReportLoading).compareToPrevious == compare) {
       log.fine(
-          "[IncomeExpenseReportBloc] Already loading with same period type.");
+          "[IncomeExpenseReportBloc] Already loading with same period type and comparison state.");
       return;
     }
 
-    emit(IncomeExpenseReportLoading(periodType: currentPeriodType));
+    emit(IncomeExpenseReportLoading(
+        periodType: currentPeriodType,
+        compareToPrevious: compare)); // Pass compare flag
     log.info(
-        "[IncomeExpenseReportBloc] Loading Income vs Expense report (Period: $currentPeriodType)...");
+        "[IncomeExpenseReportBloc] Loading Income vs Expense report (Period: $currentPeriodType, Compare: $compare)...");
 
     final filterState = _reportFilterBloc.state;
     final params = GetIncomeExpenseReportParams(
@@ -79,6 +100,7 @@ class IncomeExpenseReportBloc
       accountIds: filterState.selectedAccountIds.isEmpty
           ? null
           : filterState.selectedAccountIds,
+      compareToPrevious: compare, // Pass flag to use case
     );
 
     final result = await _getReportUseCase(params);
@@ -91,8 +113,9 @@ class IncomeExpenseReportBloc
       },
       (reportData) {
         log.info(
-            "[IncomeExpenseReportBloc] Load successful. Period: ${reportData.periodType}, Points: ${reportData.periodData.length}");
-        emit(IncomeExpenseReportLoaded(reportData));
+            "[IncomeExpenseReportBloc] Load successful. Period: ${reportData.periodType}, Points: ${reportData.periodData.length}, Comparison: $compare");
+        // Pass the comparison flag used for this load to the loaded state
+        emit(IncomeExpenseReportLoaded(reportData, showComparison: compare));
       },
     );
   }

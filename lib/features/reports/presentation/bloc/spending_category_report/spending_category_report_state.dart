@@ -9,13 +9,24 @@ abstract class SpendingCategoryReportState extends Equatable {
 
 class SpendingCategoryReportInitial extends SpendingCategoryReportState {}
 
-class SpendingCategoryReportLoading extends SpendingCategoryReportState {}
+class SpendingCategoryReportLoading extends SpendingCategoryReportState {
+  // --- ADDED compareToPrevious flag ---
+  final bool compareToPrevious;
+  const SpendingCategoryReportLoading({required this.compareToPrevious});
+  @override
+  List<Object?> get props => [compareToPrevious];
+  // --- END ADD ---
+}
 
 class SpendingCategoryReportLoaded extends SpendingCategoryReportState {
   final SpendingCategoryReportData reportData;
-  const SpendingCategoryReportLoaded(this.reportData);
+  // --- ADDED showComparison flag ---
+  final bool showComparison;
+  const SpendingCategoryReportLoaded(this.reportData,
+      {required this.showComparison});
   @override
-  List<Object?> get props => [reportData];
+  List<Object?> get props => [reportData, showComparison];
+  // --- END ADD ---
 }
 
 class SpendingCategoryReportError extends SpendingCategoryReportState {

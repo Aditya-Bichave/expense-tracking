@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/main.dart';
 
 class GetSpendingTimeReportUseCase
@@ -41,6 +42,8 @@ class GetSpendingTimeReportParams extends Equatable {
     required this.granularity,
     this.accountIds,
     this.categoryIds,
+    TransactionType? transactionType,
+    required bool compareToPrevious,
   });
 
   @override
