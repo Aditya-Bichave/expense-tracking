@@ -1,7 +1,8 @@
-// lib/core/di/service_configurations/budget_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/events/data_change_event.dart'; // Needed for Stream type
+import 'package:expense_tracker/core/events/data_change_event.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
+import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source_proxy.dart'; // Import proxy
 import 'package:expense_tracker/features/budgets/data/repositories/budget_repository_impl.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
@@ -18,9 +19,13 @@ import 'dart:async'; // Needed for Stream
 
 class BudgetDependencies {
   static void register() {
-    // Data Source
+    // --- MODIFIED: Register Proxy ---
     sl.registerLazySingleton<BudgetLocalDataSource>(
-        () => HiveBudgetLocalDataSource(sl()));
+        () => DemoAwareBudgetDataSource(
+              hiveDataSource: sl<HiveBudgetLocalDataSource>(), // Get real DS
+              demoModeService: sl<DemoModeService>(),
+            ));
+    // --- END MODIFIED ---
 
     // Repository (Depends on Expense Repo)
     sl.registerLazySingleton<BudgetRepository>(() => BudgetRepositoryImpl(
@@ -40,9 +45,7 @@ class BudgetDependencies {
             getBudgetsUseCase: sl(),
             budgetRepository: sl(),
             deleteBudgetUseCase: sl(),
-            // <<< CORRECTED: Pass the registered Stream instance >>>
             dataChangeStream: sl<Stream<DataChangedEvent>>(),
-            // <<< REMOVED duplicate StreamController parameter >>>
           ));
     }
     if (!sl.isRegistered<AddEditBudgetBloc>()) {

@@ -1,3 +1,4 @@
+// lib/features/expenses/data/repositories/expense_repository_impl.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
@@ -7,21 +8,17 @@ import 'package:expense_tracker/features/expenses/data/models/expense_model.dart
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:collection/collection.dart'; // For firstWhereOrNull
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseLocalDataSource localDataSource;
-  // Keep category repository for add/update hydration
   CategoryRepository get categoryRepository => sl<CategoryRepository>();
 
   ExpenseRepositoryImpl({required this.localDataSource});
 
-  // --- REMOVED _hydrateCategories helper ---
-
-  // --- Keep addExpense, updateExpense (they still need to hydrate for their return value) ---
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Expense>> _hydrateSingleModel(
       ExpenseModel model) async {
@@ -30,14 +27,12 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     return catResult.fold((failure) {
       log.warning(
           "[ExpenseRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}");
-      // Return entity with null category on lookup failure
       return Right(model.toEntity().copyWith(categoryOrNull: () => null));
     }, (category) {
       if (model.categoryId != null && category == null) {
         log.warning(
             "[ExpenseRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for expense ${model.id}.");
       }
-      // Return entity with the found category (or null if ID was null or not found)
       return Right(model.toEntity().copyWith(categoryOrNull: () => category));
     });
   }
@@ -50,8 +45,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       final addedModel = await localDataSource.addExpense(expenseModel);
       log.info(
           "[ExpenseRepo] Add successful (ID: ${addedModel.id}). Hydrating category for return.");
-      return await _hydrateSingleModel(
-          addedModel); // Hydrate only the added one
+      return await _hydrateSingleModel(addedModel);
     } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
@@ -70,8 +64,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       final updatedModel = await localDataSource.updateExpense(expenseModel);
       log.info(
           "[ExpenseRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.");
-      return await _hydrateSingleModel(
-          updatedModel); // Hydrate only the updated one
+      return await _hydrateSingleModel(updatedModel);
     } on CacheFailure catch (e) {
       log.warning("[ExpenseRepo] CacheFailure updating expense: ${e.message}");
       return Left(e);
@@ -82,7 +75,6 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     }
   }
 
-  // --- MODIFIED getExpenses ---
   @override
   Future<Either<Failure, List<ExpenseModel>>> getExpenses({
     DateTime? startDate,
@@ -112,24 +104,28 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         if (endDate != null && dateMatch) {
           final expDateOnly =
               DateTime(model.date.year, model.date.month, model.date.day);
-          final endDateOnly =
-              DateTime(endDate.year, endDate.month, endDate.day);
-          dateMatch = !expDateOnly.isAfter(endDateOnly);
+          // Ensure end date includes the full day
+          final endDateInclusive =
+              DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+          dateMatch = !model.date.isAfter(endDateInclusive);
         }
         if (accountId != null && accountId.isNotEmpty) {
-          accountMatch = model.accountId == accountId;
+          // Handle multiple account IDs if passed comma-separated
+          final ids = accountId.split(',');
+          accountMatch = ids.contains(model.accountId);
         }
         if (category != null && category.isNotEmpty) {
-          categoryMatch = model.categoryId == category;
+          // Handle multiple category IDs if passed comma-separated
+          final ids = category.split(',');
+          categoryMatch = ids.contains(model.categoryId);
         }
         return dateMatch && categoryMatch && accountMatch;
       }).toList();
 
       log.fine("[ExpenseRepo] Filtered to ${filteredModels.length} models.");
-      // Sort models if needed before returning
       filteredModels.sort((a, b) => b.date.compareTo(a.date));
 
-      return Right(filteredModels); // Return models directly
+      return Right(filteredModels);
     } on CacheFailure catch (e) {
       log.warning(
           "[ExpenseRepo] CacheFailure getting expense models: ${e.message}");
@@ -140,10 +136,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
           'Unexpected error getting expense models: ${e.toString()}'));
     }
   }
-  // --- END MODIFIED ---
 
-  // --- Keep deleteExpense, getTotalExpensesForAccount ---
-  // --- updateExpenseCategorization, reassignExpensesCategory AS IS ---
   @override
   Future<Either<Failure, void>> deleteExpense(String id) async {
     log.info("[ExpenseRepo] Deleting expense (ID: $id).");
@@ -167,7 +160,6 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       {DateTime? startDate, DateTime? endDate}) async {
     log.info(
         "[ExpenseRepo] Getting total expenses for account: $accountId, Start=$startDate, End=$endDate");
-    // This still needs to fetch models, but doesn't need hydration
     try {
       final allModelsResult = await getExpenses(
           accountId: accountId.isEmpty ? null : accountId,
@@ -199,7 +191,6 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       {DateTime? startDate, DateTime? endDate}) async {
     log.info(
         "[ExpenseRepo] Getting expense summary. Start=$startDate, End=$endDate");
-    // This needs models and then needs category data for the names in the summary
     try {
       final modelsResult =
           await getExpenses(startDate: startDate, endDate: endDate);
@@ -211,7 +202,6 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       }
       final expenseModels = modelsResult.getOrElse(() => []);
 
-      // Fetch categories for summary names
       final categoriesResult = await categoryRepository.getAllCategories();
       if (categoriesResult.isLeft()) {
         return categoriesResult.fold(
@@ -227,8 +217,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       Map<String, double> categoryTotals = {};
       for (var model in expenseModels) {
         total += model.amount;
-        final categoryName =
-            categoryMap[model.categoryId]?.name ?? Category.uncategorized.name;
+        final categoryName = categoryMap[model.categoryId]?.name ??
+            Category.uncategorized.name; // Use uncategorized name as fallback
         categoryTotals.update(categoryName, (value) => value + model.amount,
             ifAbsent: () => model.amount);
       }
@@ -267,9 +257,9 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
           amount: existingModel.amount,
           date: existingModel.date,
           accountId: existingModel.accountId,
-          categoryId: categoryId, // Assign new ID
-          categorizationStatusValue: status.value, // Assign new status
-          confidenceScoreValue: confidenceScore); // Assign new score
+          categoryId: categoryId,
+          categorizationStatusValue: status.value,
+          confidenceScoreValue: confidenceScore);
       await localDataSource.updateExpense(updatedModel);
       log.info(
           "[ExpenseRepo] Expense categorization updated successfully for ID: $expenseId");

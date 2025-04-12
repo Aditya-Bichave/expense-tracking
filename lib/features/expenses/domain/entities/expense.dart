@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // Use the new Category entity
-import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:flutter/material.dart'; // Import CategorizationStatus
 
 class Expense extends Equatable {

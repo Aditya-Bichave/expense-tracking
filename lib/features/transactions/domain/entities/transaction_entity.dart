@@ -3,7 +3,6 @@ import 'package:expense_tracker/features/categories/domain/entities/categorizati
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/core/utils/enums.dart';
 
 enum TransactionType { expense, income }
 

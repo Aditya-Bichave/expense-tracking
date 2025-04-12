@@ -101,8 +101,9 @@ class CategorySelectorMultiTile extends StatelessWidget {
         borderSide = BorderSide(color: theme.colorScheme.error, width: 1.5);
       }
     }
-    if (borderConfig is OutlineInputBorder)
+    if (borderConfig is OutlineInputBorder) {
       inputBorderRadius = borderConfig.borderRadius;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

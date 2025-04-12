@@ -1,21 +1,19 @@
 // lib/features/categories/presentation/pages/add_edit_category_screen.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/core/widgets/app_text_form_field.dart'; // Keep if needed elsewhere
+// Keep if needed elsewhere
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
-import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/category_appearance_form_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Keep for section if needed
+// Keep for section if needed
 import 'package:expense_tracker/core/utils/color_utils.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:toggle_switch/toggle_switch.dart'; // Keep for common builder
+// Keep for common builder
 
 class AddEditCategoryScreen extends StatelessWidget {
   final Category? initialCategory;

@@ -1,10 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/usecases/usecase.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+// Import logger
 
 class GetIncomesParams extends Equatable {
   final DateTime? startDate;

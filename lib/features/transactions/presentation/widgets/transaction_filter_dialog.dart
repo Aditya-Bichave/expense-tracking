@@ -1,6 +1,4 @@
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart'; // Re-use account selector
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -99,7 +97,6 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final modeTheme = context.modeTheme;
 
     // Prepare category dropdown items
     final categoryDropdownItems = [
@@ -239,13 +236,13 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
             // --- Category Selector ---
             DropdownButtonFormField<String?>(
               value: _selectedCategoryId,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Category',
-                prefixIcon: const Icon(Icons.category_outlined, size: 20),
-                border: const OutlineInputBorder(),
+                prefixIcon: Icon(Icons.category_outlined, size: 20),
+                border: OutlineInputBorder(),
                 isDense: true,
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 14),
               ),
               hint: const Text('All Categories'),
               isExpanded: true,

@@ -5,7 +5,7 @@ import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 // REMOVED: import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:expense_tracker/core/utils/enums.dart'; // Import CategorizationStatus
+// Import CategorizationStatus
 
 part 'income_model.g.dart';
 

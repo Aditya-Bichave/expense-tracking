@@ -25,3 +25,9 @@ class DeleteBudget extends BudgetListEvent {
   @override
   List<Object> get props => [budgetId];
 }
+
+// --- ADDED: Reset State Event ---
+class ResetState extends BudgetListEvent {
+  const ResetState();
+}
+// --- END ADDED ---

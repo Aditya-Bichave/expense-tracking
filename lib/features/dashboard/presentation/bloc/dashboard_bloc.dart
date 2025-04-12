@@ -1,3 +1,4 @@
+// lib/features/dashboard/presentation/bloc/dashboard_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -6,6 +7,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Import TransactionEntity for recent list
 
 part 'dashboard_event.dart';
 part 'dashboard_state.dart';
@@ -14,7 +16,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final GetFinancialOverviewUseCase _getFinancialOverviewUseCase;
   late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
-  // Store current filters for potential future use (though not currently used for refresh)
+  // Keep track of current filters (even if only monthly used currently)
   DateTime? _currentStartDate;
   DateTime? _currentEndDate;
 
@@ -25,25 +27,52 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         super(DashboardInitial()) {
     on<LoadDashboard>(_onLoadDashboard);
     on<_DataChanged>(_onDataChanged);
+    on<ResetState>(_onResetState); // Add Handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Dashboard needs refresh on ANY data change affecting calculations or settings (currency)
-      log.info(
-          "[DashboardBloc] Received DataChangedEvent: $event. Triggering reload.");
-      add(const _DataChanged());
+      // --- MODIFIED Listener ---
+      if (event.type == DataChangeType.system &&
+          event.reason == DataChangeReason.reset) {
+        log.info(
+            "[DashboardBloc] System Reset event received. Adding ResetState.");
+        add(const ResetState());
+      } else if (event.type == DataChangeType.account ||
+          event.type == DataChangeType.expense ||
+          event.type == DataChangeType.income ||
+          event.type == DataChangeType.budget ||
+          event.type == DataChangeType.goal ||
+          event.type == DataChangeType.goalContribution ||
+          event.type == DataChangeType.settings) {
+        log.info(
+            "[DashboardBloc] Relevant DataChangedEvent: $event. Triggering reload.");
+        add(const _DataChanged());
+      }
+      // --- END MODIFIED ---
     }, onError: (error, stackTrace) {
-      log.severe("[DashboardBloc] Error in dataChangeStream listener");
+      log.severe("[DashboardBloc] Error in dataChangeStream listener: $error");
     });
     log.info("[DashboardBloc] Initialized and subscribed to data changes.");
   }
 
-  // Internal event handler to trigger reload
+  // --- ADDED: Reset State Handler ---
+  void _onResetState(ResetState event, Emitter<DashboardState> emit) {
+    log.info("[DashboardBloc] Resetting state to initial.");
+    emit(DashboardInitial());
+    add(const LoadDashboard()); // Trigger initial load after reset
+  }
+  // --- END ADDED ---
+
+  // ... (rest of handlers remain the same) ...
   Future<void> _onDataChanged(
       _DataChanged event, Emitter<DashboardState> emit) async {
-    log.info(
-        "[DashboardBloc] Handling _DataChanged event. Dispatching LoadDashboard(forceReload: true).");
-    // Force reload to get fresh overview data
-    add(const LoadDashboard(forceReload: true));
+    if (state is! DashboardLoading) {
+      // Avoid triggering multiple loads
+      log.info("[DashboardBloc] Handling _DataChanged event.");
+      add(const LoadDashboard(forceReload: true));
+    } else {
+      log.fine(
+          "[DashboardBloc] _DataChanged received, but already loading. Skipping explicit reload.");
+    }
   }
 
   Future<void> _onLoadDashboard(
@@ -51,9 +80,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     log.info(
         "[DashboardBloc] Received LoadDashboard event (forceReload: ${event.forceReload}). Current state: ${state.runtimeType}");
 
-    // Update stored filters if provided in the event
-    _currentStartDate = event.startDate;
-    _currentEndDate = event.endDate;
+    // Set default date range to current month if not provided
+    final now = DateTime.now();
+    final startDate = event.startDate ?? DateTime(now.year, now.month, 1);
+    final endDate =
+        event.endDate ?? DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    // Update stored filters
+    _currentStartDate = startDate;
+    _currentEndDate = endDate;
 
     // Show loading state only if not already loaded or forced
     if (state is! DashboardLoaded || event.forceReload) {
@@ -64,6 +99,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       log.info("[DashboardBloc] State is Loaded, refreshing data silently.");
     }
 
+    // Use the determined (or defaulted) filters
     final params = GetFinancialOverviewParams(
       startDate: _currentStartDate,
       endDate: _currentEndDate,
@@ -93,7 +129,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         "[DashboardBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
     switch (failure.runtimeType) {
       case CacheFailure:
-      case SettingsFailure: // Settings failure might impact currency display
+      case SettingsFailure:
         return 'Database Error: Could not load dashboard data. ${failure.message}';
       case UnexpectedFailure:
         return 'An unexpected error occurred loading the dashboard.';

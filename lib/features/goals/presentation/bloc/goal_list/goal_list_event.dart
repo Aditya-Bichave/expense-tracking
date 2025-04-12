@@ -25,12 +25,15 @@ class ArchiveGoal extends GoalListEvent {
   List<Object> get props => [goalId];
 }
 
-// --- ADDED DeleteGoal Event ---
 class DeleteGoal extends GoalListEvent {
-  // <<< ADD THIS CLASS
   final String goalId;
   const DeleteGoal({required this.goalId});
   @override
   List<Object> get props => [goalId];
 }
-// --- END DeleteGoal Event ---
+
+// --- ADDED: Reset State Event ---
+class ResetState extends GoalListEvent {
+  const ResetState();
+}
+// --- END ADDED ---

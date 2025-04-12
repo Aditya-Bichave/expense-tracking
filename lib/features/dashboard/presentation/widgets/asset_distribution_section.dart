@@ -14,7 +14,7 @@ class AssetDistributionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
-    final theme = Theme.of(context);
+    Theme.of(context);
     final modeTheme = context.modeTheme;
     final isQuantum = settingsState.uiMode == UIMode.quantum;
     final useTables = modeTheme?.preferDataTableForLists ?? false;

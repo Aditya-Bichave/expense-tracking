@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import
+
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/categories/data/datasources/category_local_data_source.dart';
@@ -16,8 +18,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   final CategoryPredefinedDataSource incomePredefinedDataSource;
 
   List<Category>? _cachedAllCategories;
-  Map<CategoryType, List<Category>> _cachedSpecificCategories = {};
-  List<Category>? _cachedCustomCategories;
+  final Map<CategoryType, List<Category>> _cachedSpecificCategories = {};
 
   CategoryRepositoryImpl({
     required this.localDataSource,
@@ -30,7 +31,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
   void invalidateCache() {
     _cachedAllCategories = null;
     _cachedSpecificCategories.clear();
-    _cachedCustomCategories = null;
     log.info("[CategoryRepo] Cache invalidated explicitly.");
   }
   // --- End ---
@@ -59,19 +59,12 @@ class CategoryRepositoryImpl implements CategoryRepository {
         localDataSource.getCustomCategories(),
       ]);
       // Error handling if any future fails - return Left immediately
-      for (var result in results) {
-        if (result == null) {
-          // Or check specific error type if needed
-          log.severe(
-              "[CategoryRepo] Failed to fetch one or more category sources.");
-          return Left(CacheFailure("Failed to load categories from a source."));
-        }
-      }
+      // ignore: unused_local_variable
+      for (var result in results) {}
 
-      final predefinedExpense =
-          results[0] as List<CategoryModel>; // Cast after check
-      final predefinedIncome = results[1] as List<CategoryModel>;
-      final custom = results[2] as List<CategoryModel>;
+      final predefinedExpense = results[0]; // Cast after check
+      final predefinedIncome = results[1];
+      final custom = results[2];
 
       log.fine(
           "[CategoryRepo] Fetched ${predefinedExpense.length} exp, ${predefinedIncome.length} inc, ${custom.length} custom.");

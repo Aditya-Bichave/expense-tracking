@@ -5,7 +5,6 @@ import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
@@ -13,10 +12,8 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
@@ -34,7 +31,7 @@ class ExpenseCard extends StatelessWidget {
 
   Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
     /* ... Same as before ... */
-    final theme = Theme.of(context);
+    Theme.of(context);
     final category = expense.category ?? Category.uncategorized;
     IconData fallbackIcon = Icons.label_outline;
     try {
@@ -98,10 +95,9 @@ class ExpenseCard extends StatelessWidget {
     final Color errorColor = theme.colorScheme.error;
     final Color successColor = Colors.green.shade600;
     final Color warningColor = Colors.orange.shade800;
-    final EdgeInsets buttonPadding = const EdgeInsets.symmetric(
+    const EdgeInsets buttonPadding = EdgeInsets.symmetric(
         horizontal: 6.0, vertical: 2.0); // Padding for buttons
-    final Size buttonMinSize =
-        const Size(28, 28); // Minimum size for tap targets
+    const Size buttonMinSize = Size(28, 28); // Minimum size for tap targets
 
     switch (expense.status) {
       case CategorizationStatus.needsReview:
@@ -135,9 +131,7 @@ class ExpenseCard extends StatelessWidget {
                   log.info(
                       "[ExpenseCard] Suggestion confirmed for ${expense.id}");
                   if (expense.category != null && onUserCategorized != null) {
-                    final matchData = TransactionMatchData(
-                        description: expense.title,
-                        merchantId: null); // TODO: merchantId
+// TODO: merchantId
                     onUserCategorized!(expense, expense.category!);
                   }
                 },
@@ -185,7 +179,6 @@ class ExpenseCard extends StatelessWidget {
         );
       // --- End Button ---
       case CategorizationStatus.categorized:
-      default:
         // Tappable Category Name
         return InkWell(
           onTap: () {

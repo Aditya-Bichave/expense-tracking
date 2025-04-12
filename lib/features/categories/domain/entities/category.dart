@@ -36,7 +36,7 @@ class Category extends Equatable {
       ];
 
   // Update Uncategorized (make it expense type by default)
-  static final uncategorized = Category(
+  static const uncategorized = Category(
     id: 'uncategorized',
     name: 'Uncategorized',
     iconName: 'question', // Use a name from availableIcons map

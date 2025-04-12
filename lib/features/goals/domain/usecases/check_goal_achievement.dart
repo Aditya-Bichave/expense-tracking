@@ -3,7 +3,6 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/main.dart';

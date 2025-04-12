@@ -1,7 +1,9 @@
 // lib/core/di/service_configuration/accounts_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart'; // Import service
 import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source.dart';
+import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source_proxy.dart'; // Import Proxy
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/accounts/data/repositories/asset_account_repository_impl.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
@@ -14,13 +16,20 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_account/add_edit_account_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart'; // Dependency
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart'; // Dependency
-import 'package:hive/hive.dart';
+import 'package:hive/hive.dart'; // Needed for HiveAssetAccountLocalDataSource
 
 class AccountDependencies {
   static void register() {
-    // Data Source
+    // --- MODIFIED: Register Proxy ---
+    // Data Source (Register the Proxy)
     sl.registerLazySingleton<AssetAccountLocalDataSource>(
-        () => HiveAssetAccountLocalDataSource(sl<Box<AssetAccountModel>>()));
+        () => DemoAwareAccountDataSource(
+              hiveDataSource:
+                  sl<HiveAssetAccountLocalDataSource>(), // Pass the real one
+              demoModeService: sl<DemoModeService>(),
+            ));
+    // --- END MODIFIED ---
+
     // Repository (Depends on Income/Expense Repos)
     sl.registerLazySingleton<AssetAccountRepository>(() =>
         AssetAccountRepositoryImpl(

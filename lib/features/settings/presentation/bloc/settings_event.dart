@@ -14,46 +14,59 @@ class LoadSettings extends SettingsEvent {
 }
 
 class UpdateTheme extends SettingsEvent {
-  /* ... */ final ThemeMode newMode;
+  final ThemeMode newMode;
   const UpdateTheme(this.newMode);
   @override
   List<Object?> get props => [newMode];
 }
 
 class UpdatePaletteIdentifier extends SettingsEvent {
-  /* ... */ final String newIdentifier;
+  final String newIdentifier;
   const UpdatePaletteIdentifier(this.newIdentifier);
   @override
   List<Object?> get props => [newIdentifier];
 }
 
 class UpdateUIMode extends SettingsEvent {
-  /* ... */ final UIMode newMode;
+  final UIMode newMode;
   const UpdateUIMode(this.newMode);
   @override
   List<Object?> get props => [newMode];
 }
 
 class UpdateCountry extends SettingsEvent {
-  /* ... */ final String newCountryCode;
+  final String newCountryCode;
   const UpdateCountry(this.newCountryCode);
   @override
   List<Object?> get props => [newCountryCode];
 }
 
 class UpdateAppLock extends SettingsEvent {
-  /* ... */ final bool isEnabled;
+  final bool isEnabled;
   const UpdateAppLock(this.isEnabled);
   @override
   List<Object?> get props => [isEnabled];
 }
 
-// --- Data Management Events (REMOVED) ---
-// class BackupRequested extends SettingsEvent { const BackupRequested(); }
-// class RestoreRequested extends SettingsEvent { const RestoreRequested(); }
-// class ClearDataRequested extends SettingsEvent { const ClearDataRequested(); }
+// --- Demo Mode Events ---
+class EnterDemoMode extends SettingsEvent {
+  const EnterDemoMode();
+}
 
-// --- ADDED Event to clear settings/package info error messages ---
+class ExitDemoMode extends SettingsEvent {
+  const ExitDemoMode();
+}
+
+// --- Skip Setup Events --- ADDED
+class SkipSetup extends SettingsEvent {
+  const SkipSetup();
+}
+
+class ResetSkipSetupFlag extends SettingsEvent {
+  const ResetSkipSetupFlag();
+}
+// --- END ADDED ---
+
 class ClearSettingsMessage extends SettingsEvent {
   const ClearSettingsMessage();
 }

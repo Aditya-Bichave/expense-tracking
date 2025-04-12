@@ -1,7 +1,6 @@
 // lib/features/categories/presentation/widgets/category_selection_widget.dart
 // FINAL VERSION (Using specific Use Cases)
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_expense_categories.dart';

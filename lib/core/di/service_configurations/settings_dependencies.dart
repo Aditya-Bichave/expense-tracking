@@ -1,5 +1,6 @@
 // lib/core/di/service_configuration/settings_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart'; // Import Demo Service
 import 'package:expense_tracker/features/settings/data/datasources/settings_local_data_source.dart';
 import 'package:expense_tracker/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -14,6 +15,11 @@ class SettingsDependencies {
     sl.registerLazySingleton<SettingsRepository>(
         () => SettingsRepositoryImpl(localDataSource: sl()));
     // BLoC
-    sl.registerFactory(() => SettingsBloc(settingsRepository: sl()));
+    // --- MODIFIED: Pass DemoModeService ---
+    sl.registerFactory(() => SettingsBloc(
+          settingsRepository: sl<SettingsRepository>(),
+          demoModeService: sl<DemoModeService>(), // Provide the dependency
+        ));
+    // --- END MODIFIED ---
   }
 }

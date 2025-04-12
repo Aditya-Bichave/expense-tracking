@@ -2,7 +2,6 @@
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
-import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';

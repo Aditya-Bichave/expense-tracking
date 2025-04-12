@@ -5,8 +5,6 @@ import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
-import 'package:expense_tracker/core/utils/enums.dart'; // Import CategorizationStatus
-// --- Import the primary TransactionType enum ---
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 // --- END Import ---
 import 'package:expense_tracker/main.dart'; // logger
@@ -96,7 +94,7 @@ class ApplyCategoryToBatchUseCase
         results[i].fold(
           (failure) {
             // Record the first failure and the ID that failed
-            if (firstFailure == null) firstFailure = failure;
+            firstFailure ??= failure;
             // Guard against index out of bounds if transactionIds was modified unexpectedly
             if (i < params.transactionIds.length) {
               failedIds.add(params.transactionIds[i]);
@@ -119,7 +117,7 @@ class ApplyCategoryToBatchUseCase
       log.info(
           "[ApplyCategoryBatchUseCase] All ${updateFutures.length} batch updates successful.");
       return const Right(null); // Overall success
-    } catch (e, s) {
+    } catch (e) {
       log.severe(
           "[ApplyCategoryBatchUseCase] Unexpected error during batch update execution");
       return Left(UnexpectedFailure(

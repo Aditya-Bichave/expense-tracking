@@ -12,7 +12,7 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 // Import Entities
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // Import Category Entity
-import 'package:expense_tracker/core/utils/enums.dart'; // Import CategorizationStatus
+// Import CategorizationStatus
 import 'package:expense_tracker/main.dart';
 
 // Keep Sort Options and Params as they are
@@ -215,7 +215,6 @@ class GetTransactionsUseCase
             comparison = a.title.toLowerCase().compareTo(b.title.toLowerCase());
             break;
           case TransactionSortBy.date:
-          default:
             comparison = a.date.compareTo(b.date);
             break;
         }

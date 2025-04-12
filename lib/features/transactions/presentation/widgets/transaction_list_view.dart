@@ -6,12 +6,11 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart'; // Keep this
+// Keep this
 // --- Import Expense/Income Card Widgets ---
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
 // --- End Import ---
-import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

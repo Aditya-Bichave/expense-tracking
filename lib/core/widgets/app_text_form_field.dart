@@ -99,7 +99,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
         filled: inputTheme.filled,
         fillColor: inputTheme.fillColor,
         contentPadding: inputTheme.contentPadding ??
-            modeTheme?.listItemPadding?.copyWith(top: 14, bottom: 14),
+            modeTheme?.listItemPadding.copyWith(top: 14, bottom: 14),
         isDense: inputTheme.isDense,
         floatingLabelBehavior: inputTheme.floatingLabelBehavior,
         floatingLabelStyle: inputTheme.floatingLabelStyle,

@@ -20,3 +20,9 @@ class LoadDashboard extends DashboardEvent {
 class _DataChanged extends DashboardEvent {
   const _DataChanged();
 }
+
+// --- ADDED: Reset State Event ---
+class ResetState extends DashboardEvent {
+  const ResetState();
+}
+// --- END ADDED ---

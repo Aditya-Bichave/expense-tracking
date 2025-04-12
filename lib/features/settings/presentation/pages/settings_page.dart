@@ -43,7 +43,14 @@ class _SettingsViewState extends State<SettingsView> {
 
   // --- App Lock Handler (Remains in View State) ---
   Future<void> _handleAppLockToggle(BuildContext context, bool enable) async {
-    // ... (implementation remains the same)
+    final settingsState = context.read<SettingsBloc>().state;
+    if (settingsState.isInDemoMode) {
+      log.warning("[SettingsPage] App Lock toggle blocked in Demo Mode.");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text("App Lock cannot be changed in Demo Mode.")));
+      return;
+    }
+
     log.info("[SettingsPage] App Lock toggle requested. Enable: $enable");
     if (_isAuthenticating) return;
     setState(() => _isAuthenticating = true);
@@ -98,9 +105,13 @@ class _SettingsViewState extends State<SettingsView> {
       }
     } finally {
       if (mounted && _isAuthenticating) {
-        final settingsState = context.read<SettingsBloc>().state;
-        if (settingsState.status != SettingsStatus.loading) {
-          setState(() => _isAuthenticating = false);
+        // Re-check BLoC state before setting authenticating back to false
+        final finalSettingsState = context.read<SettingsBloc>().state;
+        if (finalSettingsState.status != SettingsStatus.loading) {
+          // Ensure loading is finished before resetting flag
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) setState(() => _isAuthenticating = false);
+          });
         }
       }
     }
@@ -108,7 +119,6 @@ class _SettingsViewState extends State<SettingsView> {
 
   // --- URL Launcher (Remains in View State) ---
   void _launchURL(BuildContext context, String urlString) async {
-    // ... (implementation remains the same)
     final Uri url = Uri.parse(urlString);
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
@@ -137,6 +147,7 @@ class _SettingsViewState extends State<SettingsView> {
       listeners: [
         BlocListener<SettingsBloc, SettingsState>(
           listener: (context, state) {
+            // Handle main settings errors
             final errorMsg = state.errorMessage;
             if (state.status == SettingsStatus.error && errorMsg != null) {
               ScaffoldMessenger.of(context)
@@ -146,6 +157,7 @@ class _SettingsViewState extends State<SettingsView> {
                     backgroundColor: theme.colorScheme.error));
               context.read<SettingsBloc>().add(const ClearSettingsMessage());
             }
+            // Handle package info errors
             final pkgErrorMsg = state.packageInfoError;
             if (state.packageInfoStatus == PackageInfoStatus.error &&
                 pkgErrorMsg != null) {
@@ -154,12 +166,14 @@ class _SettingsViewState extends State<SettingsView> {
                 ..showSnackBar(SnackBar(
                     content: Text("Version Info Error: $pkgErrorMsg"),
                     backgroundColor: theme.colorScheme.error));
-              // Consider adding a ClearPackageInfoError event if needed
+              // Optionally clear the error message if needed
+              // context.read<SettingsBloc>().add(const ClearPackageInfoErrorMessage());
             }
           },
         ),
         BlocListener<DataManagementBloc, DataManagementState>(
           listener: (context, state) {
+            // Handle Data Management success/error messages
             final dataMsg = state.message;
             if ((state.status == DataManagementStatus.success ||
                     state.status == DataManagementStatus.error) &&
@@ -179,10 +193,12 @@ class _SettingsViewState extends State<SettingsView> {
         ),
       ],
       child: Scaffold(
+        // --- AppBar is now provided by MainShell ---
+        // appBar: AppBar(title: const Text('Settings')),
         body: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, settingsState) {
             final dataManagementState =
-                context.watch<DataManagementBloc>().state; // Watch Data Bloc
+                context.watch<DataManagementBloc>().state;
 
             final isSettingsLoading = settingsState.status ==
                     SettingsStatus.loading ||
@@ -212,13 +228,10 @@ class _SettingsViewState extends State<SettingsView> {
                         state: settingsState,
                         isLoading: isOverallLoading,
                         onAppLockToggle: _handleAppLockToggle),
-
-                    // --- CORRECTED: Pass parameters to DataManagementSettingsSection ---
                     DataManagementSettingsSection(
                       isDataManagementLoading: isDataManagementLoading,
                       isSettingsLoading: isSettingsLoading,
                       onBackup: () {
-                        // Pass callback function
                         log.info(
                             "[SettingsPage] Backup requested via section.");
                         context
@@ -226,7 +239,6 @@ class _SettingsViewState extends State<SettingsView> {
                             .add(const BackupRequested());
                       },
                       onRestore: () async {
-                        // Pass async callback function
                         log.info(
                             "[SettingsPage] Restore requested via section.");
                         final confirmed = await AppDialogs.showConfirmation(
@@ -244,7 +256,6 @@ class _SettingsViewState extends State<SettingsView> {
                         }
                       },
                       onClearData: () async {
-                        // Pass async callback function
                         log.info(
                             "[SettingsPage] Clear data requested via section.");
                         final confirmed =
@@ -264,8 +275,6 @@ class _SettingsViewState extends State<SettingsView> {
                         }
                       },
                     ),
-                    // --- END CORRECTION ---
-
                     HelpSettingsSection(
                         isLoading: isOverallLoading,
                         launchUrlCallback: _launchURL),
@@ -281,7 +290,6 @@ class _SettingsViewState extends State<SettingsView> {
                 // Loading Overlay
                 if (isOverallLoading)
                   Positioned.fill(
-                    /* ... Loading Overlay ... */
                     child: Container(
                       color: Colors.black.withOpacity(0.5),
                       child: Center(

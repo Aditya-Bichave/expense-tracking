@@ -1,8 +1,11 @@
 // lib/main_shell.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/widgets/demo_indicator_widget.dart'; // Import Demo Indicator
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:flutter_bloc/flutter_bloc.dart'; // Import bloc
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -65,14 +68,31 @@ class MainShell extends StatelessWidget {
     final theme = Theme.of(context);
     final navTheme = theme.bottomNavigationBarTheme;
     final currentTabIndex = navigationShell.currentIndex;
+    // --- Check Demo Mode State ---
+    final isInDemoMode = context.watch<SettingsBloc>().state.isInDemoMode;
+    // --- End Check ---
 
-    // --- FIX: Show FAB only for specific tabs (0, 1, 3) ---
-    final bool showFab =
-        currentTabIndex == 0 || currentTabIndex == 1 || currentTabIndex == 3;
-    // --- END FIX ---
+    final bool showFab = (currentTabIndex == 0 ||
+            currentTabIndex == 1 ||
+            currentTabIndex == 3) &&
+        !isInDemoMode; // Hide FAB in demo mode
 
     return Scaffold(
-      body: navigationShell,
+      // --- Wrap body with DemoIndicatorWidget ---
+      body: Stack(
+        children: [
+          // Main Content
+          navigationShell,
+          // Demo Indicator Overlay
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: DemoIndicatorWidget(),
+          ),
+        ],
+      ),
+      // --- End Wrap ---
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentTabIndex,
         onTap: (index) => _onTap(context, index),
@@ -90,7 +110,6 @@ class MainShell extends StatelessWidget {
         showUnselectedLabels: navTheme.showUnselectedLabels ?? true,
         elevation: navTheme.elevation ?? 8.0,
         items: List.generate(5, (index) {
-          final isActive = index == navigationShell.currentIndex;
           return BottomNavigationBarItem(
             icon: Icon(_getIconForIndex(index, false)),
             activeIcon: Icon(_getIconForIndex(index, true)),
@@ -100,27 +119,35 @@ class MainShell extends StatelessWidget {
       ),
       floatingActionButton: showFab
           ? FloatingActionButton(
-              heroTag: 'main_shell_fab', // Keep a unique tag
+              heroTag: 'main_shell_fab',
               onPressed: () {
-                // Simplified navigation based on allowed tabs
+                // --- Adjusted FAB navigation based on tab ---
+                String routeName;
                 switch (currentTabIndex) {
                   case 0: // Dashboard -> Add Transaction
                   case 1: // Transactions -> Add Transaction
-                    context.pushNamed(RouteNames.addTransaction);
+                    routeName = RouteNames.addTransaction;
                     log.info(
                         "[MainShell FAB] Navigating to Add Transaction from tab $currentTabIndex.");
+                    context.push(
+                        '${RouteNames.transactionsList}/${RouteNames.addTransaction}'); // Use full path relative to shell
                     break;
                   case 3: // Accounts -> Add Account
-                    context.pushNamed(RouteNames.addAccount);
+                    routeName = RouteNames.addAccount;
                     log.info(
                         "[MainShell FAB] Navigating to Add Account from tab $currentTabIndex.");
+                    context.push(
+                        '${RouteNames.accounts}/${RouteNames.addAccount}'); // Use full path relative to shell
                     break;
+                  default:
+                    return; // Should not happen if showFab is false for other tabs
                 }
+                // context.pushNamed(routeName); // Pushing named routes within shell can be tricky, using full path is safer
               },
               tooltip: 'Add',
               child: const Icon(Icons.add),
             )
-          : null, // No FAB for Plan or Settings tab in the shell
+          : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
