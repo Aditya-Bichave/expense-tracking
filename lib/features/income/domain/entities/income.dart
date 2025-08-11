@@ -15,6 +15,8 @@ class Income extends Equatable {
   final CategorizationStatus status; // ADDED
   final double? confidenceScore; // ADDED
 
+  final bool isRecurring;
+
   const Income({
     required this.id,
     required this.title,
@@ -26,6 +28,7 @@ class Income extends Equatable {
     this.status =
         CategorizationStatus.uncategorized, // ADDED: Default to uncategorized
     this.confidenceScore, // ADDED
+    this.isRecurring = false,
   });
 
   // Optional: CopyWith method for easier updates
@@ -42,6 +45,7 @@ class Income extends Equatable {
     CategorizationStatus? status,
     double? confidenceScore,
     ValueGetter<double?>? confidenceScoreOrNull, // Allow setting to null
+    bool? isRecurring,
   }) {
     return Income(
       id: id ?? this.id,
@@ -57,6 +61,7 @@ class Income extends Equatable {
       confidenceScore: confidenceScoreOrNull != null
           ? confidenceScoreOrNull()
           : (confidenceScore ?? this.confidenceScore),
+      isRecurring: isRecurring ?? this.isRecurring,
     );
   }
 
@@ -71,5 +76,6 @@ class Income extends Equatable {
         notes,
         status, // Added
         confidenceScore, // Added
+        isRecurring,
       ];
 }

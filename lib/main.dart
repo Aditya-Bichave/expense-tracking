@@ -20,6 +20,8 @@ import 'package:expense_tracker/features/goals/data/models/goal_contribution_mod
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
+import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
+import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -55,6 +57,8 @@ Future<void> main() async {
     Hive.registerAdapter(BudgetModelAdapter());
     Hive.registerAdapter(GoalModelAdapter());
     Hive.registerAdapter(GoalContributionModelAdapter());
+    Hive.registerAdapter(RecurringRuleModelAdapter());
+    Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
 
     log.info("Opening Hive boxes...");
     final expenseBox =
@@ -72,6 +76,11 @@ Future<void> main() async {
     final goalBox = await Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
     final contributionBox = await Hive.openBox<GoalContributionModel>(
         HiveConstants.goalContributionBoxName);
+    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
+        HiveConstants.recurringRuleBoxName);
+    final recurringRuleAuditLogBox =
+        await Hive.openBox<RecurringRuleAuditLogModel>(
+            HiveConstants.recurringRuleAuditLogBoxName);
     log.info("All Hive boxes opened.");
 
     final prefs = await SharedPreferences.getInstance();
@@ -87,6 +96,8 @@ Future<void> main() async {
       budgetBox: budgetBox,
       goalBox: goalBox,
       contributionBox: contributionBox,
+      recurringRuleBox: recurringRuleBox,
+      recurringRuleAuditLogBox: recurringRuleAuditLogBox,
     );
     log.info("Hive, SharedPreferences, and Service Locator initialized.");
   } catch (e, s) {

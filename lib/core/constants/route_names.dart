@@ -10,7 +10,12 @@ abstract class RouteNames {
   static const String budgetsAndCats = '/plan'; // Renamed for clarity
   static const String accounts = '/accounts';
   static const String settings = '/settings';
+  static const String recurring = '/recurring';
   // static const String reports = '/reports'; // Reports are nested now
+
+  // --- Recurring Sub-Routes ---
+  static const String addRecurring = 'add_recurring';
+  static const String editRecurring = 'edit_recurring';
 
   // --- Transaction Sub-Routes ---
   static const String addTransaction = 'add';

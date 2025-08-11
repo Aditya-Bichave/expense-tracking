@@ -49,6 +49,10 @@ class IncomeModel extends HiveObject {
   @JsonKey(includeIfNull: false)
   final double? confidenceScoreValue; // NEW: Store confidence score
 
+  @HiveField(9) // NEW Index
+  @JsonKey(defaultValue: false)
+  final bool isRecurring;
+
   // Helper functions for JSON serialization of enum
   static String _categorizationStatusToJson(String statusValue) => statusValue;
   static String _categorizationStatusFromJson(String? value) =>
@@ -65,6 +69,7 @@ class IncomeModel extends HiveObject {
     required this.accountId,
     this.notes,
     this.confidenceScoreValue, // Added
+    this.isRecurring = false,
   });
 
   factory IncomeModel.fromEntity(Income entity) {
@@ -79,6 +84,7 @@ class IncomeModel extends HiveObject {
       accountId: entity.accountId,
       notes: entity.notes,
       confidenceScoreValue: entity.confidenceScore,
+      isRecurring: entity.isRecurring,
     );
   }
 
@@ -96,6 +102,7 @@ class IncomeModel extends HiveObject {
       status: CategorizationStatusExtension.fromValue(
           categorizationStatusValue), // Convert string back to enum
       confidenceScore: confidenceScoreValue,
+      isRecurring: isRecurring,
     );
   }
 

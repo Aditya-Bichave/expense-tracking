@@ -9,4 +9,8 @@ abstract class HiveConstants {
   // --- ADDED GOAL/CONTRIBUTION BOX NAMES ---
   static const String goalBoxName = 'goals_v1';
   static const String goalContributionBoxName = 'goal_contributions_v1';
+
+  // --- Recurring Transactions ---
+  static const String recurringRuleBoxName = 'recurring_rules_v1';
+  static const String recurringRuleAuditLogBoxName = 'recurring_rule_audit_logs_v1';
 }

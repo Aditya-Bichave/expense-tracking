@@ -1,8 +1,8 @@
-// lib/features/reports/domain/helpers/csv_export_helper.dart
 import 'dart:convert';
 import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:csv/csv.dart';
+import 'package:expense_tracker/core/services/downloader_service.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
@@ -12,15 +12,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:intl/intl.dart'; // For date/number formatting
-import 'package:expense_tracker/core/utils/date_formatter.dart'
-    as df; // Alias for our formatter
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
-import 'package:dartz/dartz.dart'; // For Either
-import 'package:expense_tracker/core/error/failure.dart'; // For Failure
+import 'package:intl/intl.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart' as df;
+import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 
 class CsvExportHelper {
+  final DownloaderService _downloaderService;
+
+  CsvExportHelper({required DownloaderService downloaderService})
+      : _downloaderService = downloaderService;
+
   Future<String> _generateCsv(
       List<List<dynamic>> dataRows, List<String> headers) async {
     try {
@@ -35,33 +37,27 @@ class CsvExportHelper {
   }
 
   Future<void> saveCsvFile(
-      BuildContext context, String csvData, String fileName) async {
+      {required BuildContext context,
+      required String csvData,
+      required String fileName}) async {
     if (kIsWeb) {
-      _saveCsvWeb(csvData, fileName); // Removed context dependency for web save
+      await _saveCsvWeb(csvData, fileName);
     } else {
       await _saveCsvMobileDesktop(context, csvData, fileName);
     }
   }
 
-  // Removed context dependency
-  void _saveCsvWeb(String csvData, String fileName) {
+  Future<void> _saveCsvWeb(String csvData, String fileName) async {
     try {
       final bytes = utf8.encode(csvData);
-      final blob = html.Blob([bytes], 'text/csv;charset=utf-8;');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.document.createElement('a') as html.AnchorElement
-        ..href = url
-        ..style.display = 'none'
-        ..download = fileName;
-      html.document.body!.children.add(anchor);
-      anchor.click();
-      html.document.body!.children.remove(anchor);
-      html.Url.revokeObjectUrl(url);
+      await _downloaderService.downloadFile(
+        bytes: Uint8List.fromList(bytes),
+        downloadName: fileName,
+        mimeType: 'text/csv;charset=utf-8;',
+      );
       log.info("[CsvExportHelper] Web CSV download initiated for '$fileName'.");
     } catch (e, s) {
       log.severe("[CsvExportHelper] Error saving CSV on Web: $e\n$s");
-      // Rethrow or handle as appropriate for web context
-      // Showing snackbar from here is not ideal for web. Rely on error propagation.
       throw Exception("Web Download Error: $e");
     }
   }
@@ -136,8 +132,6 @@ class CsvExportHelper {
     }
   }
 
-  // --- Specific Export Methods ---
-
   Future<Either<String, Failure>> exportSpendingCategoryReport(
       SpendingCategoryReportData data, String currencySymbol,
       {bool showComparison = false}) async {
@@ -147,8 +141,9 @@ class CsvExportHelper {
         'Amount ($currencySymbol)',
         'Percentage'
       ];
-      if (showComparison)
+      if (showComparison) {
         headers.addAll(['Previous Amount ($currencySymbol)', 'Change (%)']);
+      }
 
       final rows = data.spendingByCategory.map((item) {
         List<dynamic> rowData = [
@@ -165,7 +160,6 @@ class CsvExportHelper {
         return rowData;
       }).toList();
 
-      // Add Total Row
       List<dynamic> totalRow = [
         'TOTAL',
         data.currentTotalSpending.toStringAsFixed(2),
@@ -192,8 +186,9 @@ class CsvExportHelper {
       {bool showComparison = false}) async {
     try {
       List<String> headers = ['Period Start', 'Amount ($currencySymbol)'];
-      if (showComparison)
+      if (showComparison) {
         headers.addAll(['Previous Amount ($currencySymbol)', 'Change (%)']);
+      }
 
       final DateFormat dateFormat =
           data.granularity == TimeSeriesGranularity.daily
@@ -232,13 +227,14 @@ class CsvExportHelper {
         'Expense ($currencySymbol)',
         'Net Flow ($currencySymbol)'
       ];
-      if (showComparison)
+      if (showComparison) {
         headers.addAll([
           'Prev Income ($currencySymbol)',
           'Prev Expense ($currencySymbol)',
           'Prev Net Flow ($currencySymbol)',
           'Net Change (%)'
         ]);
+      }
 
       final DateFormat dateFormat =
           data.periodType == IncomeExpensePeriodType.monthly
@@ -282,7 +278,6 @@ class CsvExportHelper {
         'Variance ($currencySymbol)',
         'Variance (%)'
       ];
-      // Check if comparison is possible and requested before adding headers
       bool canCompare = showComparison &&
           data.previousPerformanceData != null &&
           data.previousPerformanceData!.isNotEmpty;
@@ -377,8 +372,9 @@ class CsvExportHelper {
 
   String _formatPercentageChange(double? percentageChange) {
     if (percentageChange == null) return 'N/A';
-    if (percentageChange.isInfinite)
+    if (percentageChange.isInfinite) {
       return percentageChange.isNegative ? '-∞' : '+∞';
+    }
     if (percentageChange.isNaN) return 'N/A';
     return '${percentageChange >= 0 ? '+' : ''}${percentageChange.toStringAsFixed(1)}%';
   }

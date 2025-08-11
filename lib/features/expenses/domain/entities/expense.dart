@@ -14,6 +14,8 @@ class Expense extends Equatable {
   final CategorizationStatus status; // ADDED
   final double? confidenceScore; // ADDED
 
+  final bool isRecurring;
+
   const Expense({
     required this.id,
     required this.title,
@@ -24,6 +26,7 @@ class Expense extends Equatable {
     this.status =
         CategorizationStatus.uncategorized, // ADDED: Default to uncategorized
     this.confidenceScore, // ADDED
+    this.isRecurring = false,
   });
 
   // Optional: CopyWith method for easier updates
@@ -38,6 +41,7 @@ class Expense extends Equatable {
     CategorizationStatus? status,
     double? confidenceScore,
     ValueGetter<double?>? confidenceScoreOrNull, // Allow setting to null
+    bool? isRecurring,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -52,6 +56,7 @@ class Expense extends Equatable {
       confidenceScore: confidenceScoreOrNull != null
           ? confidenceScoreOrNull()
           : (confidenceScore ?? this.confidenceScore),
+      isRecurring: isRecurring ?? this.isRecurring,
     );
   }
 
@@ -65,5 +70,6 @@ class Expense extends Equatable {
         accountId,
         status, // Added
         confidenceScore, // Added
+        isRecurring,
       ];
 }
