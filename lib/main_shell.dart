@@ -38,7 +38,9 @@ class MainShell extends StatelessWidget {
         return isActive
             ? Icons.account_balance_wallet_rounded
             : Icons.account_balance_wallet_outlined;
-      case 4: // Settings
+      case 4: // Recurring
+        return isActive ? Icons.autorenew_rounded : Icons.autorenew_outlined;
+      case 5: // Settings
         return isActive ? Icons.settings_rounded : Icons.settings_outlined;
       default:
         return Icons.help_outline; // Fallback
@@ -57,6 +59,8 @@ class MainShell extends StatelessWidget {
       case 3:
         return 'Accounts';
       case 4:
+        return 'Recurring';
+      case 5:
         return 'Settings';
       default:
         return '';
@@ -72,10 +76,10 @@ class MainShell extends StatelessWidget {
     final isInDemoMode = context.watch<SettingsBloc>().state.isInDemoMode;
     // --- End Check ---
 
-    final bool showFab = (currentTabIndex == 0 ||
-            currentTabIndex == 1 ||
-            currentTabIndex == 3) &&
-        !isInDemoMode; // Hide FAB in demo mode
+    final bool showFab = (currentTabIndex == 0 || // Dashboard
+        currentTabIndex == 1 || // Transactions
+        currentTabIndex == 3 || // Accounts
+        currentTabIndex == 4); // Recurring
 
     return Scaffold(
       // --- Wrap body with DemoIndicatorWidget ---
@@ -109,7 +113,7 @@ class MainShell extends StatelessWidget {
         showSelectedLabels: navTheme.showSelectedLabels ?? true,
         showUnselectedLabels: navTheme.showUnselectedLabels ?? true,
         elevation: navTheme.elevation ?? 8.0,
-        items: List.generate(5, (index) {
+        items: List.generate(6, (index) {
           return BottomNavigationBarItem(
             icon: Icon(_getIconForIndex(index, false)),
             activeIcon: Icon(_getIconForIndex(index, true)),
@@ -138,6 +142,13 @@ class MainShell extends StatelessWidget {
                         "[MainShell FAB] Navigating to Add Account from tab $currentTabIndex.");
                     context.push(
                         '${RouteNames.accounts}/${RouteNames.addAccount}'); // Use full path relative to shell
+                    break;
+                  case 4: // Recurring -> Add Recurring
+                    routeName = RouteNames.addRecurring;
+                    log.info(
+                        "[MainShell FAB] Navigating to Add Recurring from tab $currentTabIndex.");
+                    context.push(
+                        '${RouteNames.recurring}/${RouteNames.addRecurring}'); // Use full path relative to shell
                     break;
                   default:
                     return; // Should not happen if showFab is false for other tabs

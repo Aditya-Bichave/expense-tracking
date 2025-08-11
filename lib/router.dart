@@ -19,6 +19,9 @@ import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/add_edit_goal_page.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/goal_detail_page.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/features/recurring_transactions/presentation/pages/add_edit_recurring_rule_page.dart';
+import 'package:expense_tracker/features/recurring_transactions/presentation/pages/recurring_rule_list_page.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/budget_performance_report/budget_performance_report_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/income_expense_report/income_expense_report_bloc.dart';
@@ -54,6 +57,8 @@ final GlobalKey<NavigatorState> _shellNavigatorKeyBudgetsCats =
     GlobalKey<NavigatorState>(debugLabel: 'shellBudgetsCats');
 final GlobalKey<NavigatorState> _shellNavigatorKeyAccounts =
     GlobalKey<NavigatorState>(debugLabel: 'shellAccounts');
+final GlobalKey<NavigatorState> _shellNavigatorKeyRecurring =
+    GlobalKey<NavigatorState>(debugLabel: 'shellRecurring');
 final GlobalKey<NavigatorState> _shellNavigatorKeySettings =
     GlobalKey<NavigatorState>(debugLabel: 'shellSettings');
 
@@ -314,7 +319,37 @@ class AppRouter {
                 ),
               ],
             ),
-            // --- Branch 4: Settings ---
+            // --- Branch 4: Recurring ---
+            StatefulShellBranch(
+              navigatorKey: _shellNavigatorKeyRecurring,
+              routes: [
+                GoRoute(
+                  path: RouteNames.recurring,
+                  name: RouteNames.recurring,
+                  pageBuilder: (context, state) =>
+                      const NoTransitionPage(child: RecurringRuleListPage()),
+                  routes: [
+                    GoRoute(
+                      path: RouteNames.addRecurring,
+                      name: RouteNames.addRecurring,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: (context, state) =>
+                          const AddEditRecurringRulePage(),
+                    ),
+                    GoRoute(
+                      path: '${RouteNames.editRecurring}/:${RouteNames.paramId}',
+                      name: RouteNames.editRecurring,
+                      parentNavigatorKey: _rootNavigatorKey,
+                      builder: (context, state) {
+                        final rule = state.extra as RecurringRule?;
+                        return AddEditRecurringRulePage(initialRule: rule);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            // --- Branch 5: Settings ---
             StatefulShellBranch(
               navigatorKey: _shellNavigatorKeySettings,
               routes: [

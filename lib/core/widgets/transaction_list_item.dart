@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 // logger
 
 // Common widget to display either an Expense or Income in a ListTile format
@@ -55,11 +56,30 @@ class TransactionListItem extends StatelessWidget {
         backgroundColor: category.displayColor.withOpacity(0.15),
         child: _buildIcon(context, theme),
       ),
-      title: Text(
-        transaction.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyLarge,
+      title: Row(
+        children: [
+          if (transaction.isRecurring)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: SvgPicture.asset(
+                'assets/elemental/icons/common/ic_recurring.svg',
+                width: 16,
+                height: 16,
+                colorFilter: ColorFilter.mode(
+                  theme.colorScheme.onSurfaceVariant,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          Expanded(
+            child: Text(
+              transaction.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyLarge,
+            ),
+          ),
+        ],
       ),
       subtitle: Text(
           '${category.name} • ${DateFormatter.formatDate(transaction.date)}', // Show category name and formatted date

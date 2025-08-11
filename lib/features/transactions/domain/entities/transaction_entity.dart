@@ -18,6 +18,7 @@ class TransactionEntity extends Equatable {
   final String? notes; // Nullable for expenses
   final CategorizationStatus status;
   final double? confidenceScore;
+  final bool isRecurring;
 
   // Private constructor
   const TransactionEntity._({
@@ -31,6 +32,7 @@ class TransactionEntity extends Equatable {
     required this.notes,
     required this.status,
     required this.confidenceScore,
+    required this.isRecurring,
   });
 
   // Factory constructor from Expense
@@ -46,6 +48,7 @@ class TransactionEntity extends Equatable {
       notes: null, // Expenses don't have notes in current model
       status: expense.status,
       confidenceScore: expense.confidenceScore,
+      isRecurring: expense.isRecurring,
     );
   }
 
@@ -62,6 +65,7 @@ class TransactionEntity extends Equatable {
       notes: income.notes,
       status: income.status,
       confidenceScore: income.confidenceScore,
+      isRecurring: income.isRecurring,
     );
   }
 
@@ -77,7 +81,8 @@ class TransactionEntity extends Equatable {
           category: category,
           accountId: accountId,
           status: status,
-          confidenceScore: confidenceScore);
+          confidenceScore: confidenceScore,
+          isRecurring: isRecurring);
     } else {
       // Reconstruct Income
       return Income(
@@ -89,7 +94,8 @@ class TransactionEntity extends Equatable {
           accountId: accountId,
           notes: notes,
           status: status,
-          confidenceScore: confidenceScore);
+          confidenceScore: confidenceScore,
+          isRecurring: isRecurring);
     }
   }
 
@@ -105,5 +111,6 @@ class TransactionEntity extends Equatable {
         notes,
         status,
         confidenceScore,
+        isRecurring,
       ];
 }

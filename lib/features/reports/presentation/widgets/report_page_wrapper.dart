@@ -49,7 +49,8 @@ class ReportPageWrapper extends StatelessWidget {
         final exportHelper = sl<CsvExportHelper>(); // Get helper instance
         final fileName =
             '${title.toLowerCase().replaceAll(' ', '_')}_export_${DateTime.now().toIso8601String().split('T').first}.csv';
-        await exportHelper.saveCsvFile(context, csvData, fileName);
+        await exportHelper.saveCsvFile(
+            context: context, csvData: csvData, fileName: fileName);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("CSV export successful!"),
             backgroundColor: Colors.green));

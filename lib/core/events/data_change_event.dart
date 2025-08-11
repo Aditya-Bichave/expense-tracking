@@ -18,6 +18,7 @@ enum DataChangeType {
   goal,
   goalContribution,
   budget,
+  recurringRule,
   system // Added for global/system events like reset
 }
 

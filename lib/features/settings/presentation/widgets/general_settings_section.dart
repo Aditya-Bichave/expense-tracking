@@ -3,9 +3,14 @@ import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/widgets/section_header.dart';
+import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class GeneralSettingsSection extends StatelessWidget {
@@ -47,6 +52,22 @@ class GeneralSettingsSection extends StatelessWidget {
                   Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const CategoryManagementScreen(),
                   ));
+                },
+        ),
+        SettingsListTile(
+          enabled: isEnabled,
+          leadingIcon: Icons.autorenew_outlined,
+          title: 'Recurring Transactions',
+          subtitle: 'Manage automatic income and expenses',
+          trailing: Icon(Icons.chevron_right,
+              color: !isEnabled
+                  ? theme.disabledColor
+                  : theme.colorScheme.onSurfaceVariant),
+          onTap: !isEnabled
+              ? null
+              : () {
+                  log.info("[SettingsPage] Navigating to Recurring Transactions.");
+                  context.push(RouteNames.recurring);
                 },
         ),
         Padding(

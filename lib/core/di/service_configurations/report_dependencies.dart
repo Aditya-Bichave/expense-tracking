@@ -44,7 +44,8 @@ class ReportDependencies {
     sl.registerLazySingleton(() => GetGoalProgressReportUseCase(sl()));
 
     // --- Helpers ---
-    sl.registerLazySingleton<CsvExportHelper>(() => CsvExportHelper());
+    sl.registerLazySingleton<CsvExportHelper>(
+        () => CsvExportHelper(downloaderService: sl()));
 
     // --- Blocs ---
     // Shared filter bloc - Singleton

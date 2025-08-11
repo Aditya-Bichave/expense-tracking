@@ -23,7 +23,9 @@ import 'package:expense_tracker/core/di/service_configurations/dashboard_depende
 import 'package:expense_tracker/core/di/service_configurations/analytics_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/budget_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/goal_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/recurring_transactions_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/report_dependencies.dart';
+import 'package:expense_tracker/core/services/downloader_service_locator.dart';
 
 // Import models only needed for Box types here
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
@@ -34,6 +36,8 @@ import 'package:expense_tracker/features/categories/data/models/user_history_rul
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
+import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
+import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 
 // --- MODIFIED: Import Hive DataSources ---
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
@@ -56,6 +60,8 @@ Future<void> initLocator({
   required Box<BudgetModel> budgetBox,
   required Box<GoalModel> goalBox,
   required Box<GoalContributionModel> contributionBox,
+  required Box<RecurringRuleModel> recurringRuleBox,
+  required Box<RecurringRuleAuditLogModel> recurringRuleAuditLogBox,
 }) async {
   log.info("Initializing Service Locator...");
 
@@ -105,6 +111,13 @@ Future<void> initLocator({
   if (!sl.isRegistered<Box<GoalContributionModel>>()) {
     sl.registerLazySingleton<Box<GoalContributionModel>>(() => contributionBox);
   }
+  if (!sl.isRegistered<Box<RecurringRuleModel>>()) {
+    sl.registerLazySingleton<Box<RecurringRuleModel>>(() => recurringRuleBox);
+  }
+  if (!sl.isRegistered<Box<RecurringRuleAuditLogModel>>()) {
+    sl.registerLazySingleton<Box<RecurringRuleAuditLogModel>>(
+        () => recurringRuleAuditLogBox);
+  }
   log.info(
       "Registered SharedPreferences and Hive Boxes (incl. Budgets, Goals, Contributions).");
 
@@ -130,6 +143,7 @@ Future<void> initLocator({
   if (!sl.isRegistered<Uuid>()) {
     sl.registerLazySingleton(() => const Uuid());
   }
+  sl.registerLazySingleton(() => getDownloaderService());
   log.info("Registered Uuid generator.");
 
   // *** Call Feature Dependency Initializers ***
@@ -148,6 +162,7 @@ Future<void> initLocator({
     DashboardDependencies.register();
     AnalyticsDependencies.register();
     ReportDependencies.register();
+    RecurringTransactionsDependencies.register();
     log.info("Feature dependencies registered.");
   } else {
     log.warning(
