@@ -1,3 +1,4 @@
+// lib/features/accounts/presentation/pages/add_edit_account_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +11,7 @@ import 'package:expense_tracker/main.dart'; // Import logger
 
 class AddEditAccountPage extends StatelessWidget {
   final String? accountId;
-  final AssetAccount? account;
+  final AssetAccount? account; // Received via route 'extra'
 
   const AddEditAccountPage({
     super.key,
@@ -20,9 +21,9 @@ class AddEditAccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = account != null;
+    final bool isEditing = account != null;
     log.info(
-        "[AddEditAccountPage] Build called. Editing: $isEditing, AccountId: $accountId");
+        "[AddEditAccountPage] Build called. Editing: $isEditing, AccountId: $accountId, InitialCurrentBalance: ${account?.currentBalance}");
 
     return BlocProvider(
       create: (context) => sl<AddEditAccountBloc>(param1: account),
@@ -45,11 +46,9 @@ class AddEditAccountPage extends StatelessWidget {
             if (context.canPop()) {
               context.pop();
             } else {
-              // Handle case where page can't be popped (e.g., deep linking)
-              // Maybe navigate back to the list explicitly
               log.warning(
                   "[AddEditAccountPage] Cannot pop context after successful save.");
-              context.goNamed('accounts_list'); // Example fallback
+              context.goNamed('accounts'); // Navigate to accounts tab
             }
           } else if (state.status == FormStatus.error &&
               state.errorMessage != null) {
@@ -63,6 +62,8 @@ class AddEditAccountPage extends StatelessWidget {
                   backgroundColor: Theme.of(context).colorScheme.error,
                 ),
               );
+            // Optionally clear the error message in the BLoC state here
+            // context.read<AddEditAccountBloc>().add(ClearErrorMessageEvent());
           }
         },
         child: Scaffold(
@@ -73,7 +74,7 @@ class AddEditAccountPage extends StatelessWidget {
             builder: (context, state) {
               log.info(
                   "[AddEditAccountPage] BlocBuilder building for status: ${state.status}");
-              // Use AnimatedSwitcher for smooth transition during submission
+
               return AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: state.status == FormStatus.submitting
@@ -81,17 +82,22 @@ class AddEditAccountPage extends StatelessWidget {
                         key: ValueKey('loading'),
                         child: CircularProgressIndicator())
                     : AccountForm(
-                        key: const ValueKey('form'), // Key for AnimatedSwitcher
+                        key: const ValueKey('form'),
                         initialAccount:
                             state.initialAccount, // Use state's account
-                        onSubmit: (name, type, initialBalance) {
+                        // --- MODIFIED: Pass current balance ---
+                        currentBalanceForDisplay:
+                            state.initialAccount?.currentBalance,
+                        // --- END MODIFIED ---
+                        onSubmit: (name, type, initialBalanceFromForm) {
                           log.info(
-                              "[AddEditAccountPage] Form submitted. Dispatching SaveAccountRequested.");
+                              "[AddEditAccountPage] Form submitted. Dispatching SaveAccountRequested. Balance value from form: $initialBalanceFromForm");
                           context.read<AddEditAccountBloc>().add(
                                 SaveAccountRequested(
                                   name: name,
                                   type: type,
-                                  initialBalance: initialBalance,
+                                  // Pass the value from the form field as the 'initialBalance'
+                                  initialBalance: initialBalanceFromForm,
                                   existingAccountId:
                                       accountId, // Use accountId from route param
                                 ),

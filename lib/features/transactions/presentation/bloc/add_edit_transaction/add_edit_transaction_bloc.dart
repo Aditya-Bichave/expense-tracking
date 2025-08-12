@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart'; // Updated import
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
@@ -37,8 +36,6 @@ class AddEditTransactionBloc
   final AddIncomeUseCase _addIncomeUseCase;
   final UpdateIncomeUseCase _updateIncomeUseCase;
   final CategorizeTransactionUseCase _categorizeTransactionUseCase;
-  final ExpenseRepository _expenseRepository;
-  final IncomeRepository _incomeRepository;
   final CategoryRepository _categoryRepository;
   final Uuid _uuid;
 
@@ -56,8 +53,6 @@ class AddEditTransactionBloc
         _addIncomeUseCase = addIncomeUseCase,
         _updateIncomeUseCase = updateIncomeUseCase,
         _categorizeTransactionUseCase = categorizeTransactionUseCase,
-        _expenseRepository = expenseRepository,
-        _incomeRepository = incomeRepository,
         _categoryRepository = categoryRepository,
         _uuid = const Uuid(),
         super(const AddEditTransactionState()) {

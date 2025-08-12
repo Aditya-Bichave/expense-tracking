@@ -1,5 +1,5 @@
 // lib/features/budgets/data/repositories/budget_repository_impl.dart
-import 'package:collection/collection.dart'; // For List comparison
+// For List comparison
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
@@ -154,10 +154,12 @@ class BudgetRepositoryImpl implements BudgetRepository {
       final entities = models.map((m) => m.toEntity()).toList();
       // Default sort: Overall first, then by name
       entities.sort((a, b) {
-        if (a.type == BudgetType.overall && b.type != BudgetType.overall)
+        if (a.type == BudgetType.overall && b.type != BudgetType.overall) {
           return -1;
-        if (a.type != BudgetType.overall && b.type == BudgetType.overall)
+        }
+        if (a.type != BudgetType.overall && b.type == BudgetType.overall) {
           return 1;
+        }
         return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
       log.info("[BudgetRepo] Retrieved and sorted ${entities.length} budgets.");

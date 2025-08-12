@@ -1,10 +1,9 @@
 // lib/features/accounts/presentation/pages/accounts_tab_page.dart
-import 'package:expense_tracker/core/common/base_list_state.dart';
+// ignore_for_file: deprecated_member_use
+
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/core/widgets/placeholder_screen.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
@@ -136,8 +135,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        heroTag: 'add_account_fab_sub', // Unique tag
-        child: const Icon(Icons.add),
+        heroTag: 'add_account_fab_sub',
         tooltip: _selectedView == AccountViewType.assets
             ? 'Add Asset Account'
             : 'Add Liability Account',
@@ -148,7 +146,8 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             _showLiabilityComingSoon(
                 context); // Show coming soon if trying to add liability
           }
-        },
+        }, // Unique tag
+        child: const Icon(Icons.add),
       ),
     );
   }

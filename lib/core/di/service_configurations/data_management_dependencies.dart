@@ -17,7 +17,8 @@ class DataManagementDependencies {
               incomeBox: sl(),
             ));
     // Use Cases
-    sl.registerLazySingleton(() => BackupDataUseCase(sl()));
+    sl.registerLazySingleton(() => BackupDataUseCase(
+        dataManagementRepository: sl(), downloaderService: sl()));
     sl.registerLazySingleton(() => RestoreDataUseCase(sl()));
     sl.registerLazySingleton(() => ClearAllDataUseCase(sl()));
     // BLoC

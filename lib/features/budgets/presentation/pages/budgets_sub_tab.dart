@@ -99,9 +99,9 @@ class BudgetsSubTab extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_budget_fab_sub',
-        child: const Icon(Icons.add),
         tooltip: 'Add Budget',
         onPressed: () => context.pushNamed(RouteNames.addBudget),
+        child: const Icon(Icons.add),
       ),
     );
   }

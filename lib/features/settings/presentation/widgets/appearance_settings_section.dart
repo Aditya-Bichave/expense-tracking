@@ -1,9 +1,8 @@
 // lib/features/settings/presentation/widgets/appearance_settings_section.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart'; // Updated import
+import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -48,19 +47,24 @@ class AppearanceSettingsSection extends StatelessWidget {
     final theme = Theme.of(context);
     final relevantPaletteIdentifiers =
         _getRelevantPaletteIdentifiers(state.uiMode);
+    // --- Check Demo Mode ---
+    final bool isEnabled = !isLoading && !state.isInDemoMode;
+    // --- End Check ---
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(title: 'Appearance'),
         SettingsListTile(
-          enabled: !isLoading,
+          // --- Use combined enabled state ---
+          enabled: isEnabled,
+          // --- End Use ---
           leadingIcon: Icons.view_quilt_outlined,
           title: 'UI Mode',
           subtitle: AppTheme.uiModeNames[state.uiMode] ??
               StringExtension(state.uiMode.name).capitalize(),
           trailing: PopupMenuButton<UIMode>(
-            enabled: !isLoading,
+            enabled: isEnabled, // Use combined state
             icon: const Icon(Icons.arrow_drop_down),
             tooltip: "Select UI Mode",
             initialValue: state.uiMode,
@@ -78,7 +82,9 @@ class AppearanceSettingsSection extends StatelessWidget {
           ),
         ),
         SettingsListTile(
-          enabled: !isLoading && relevantPaletteIdentifiers.isNotEmpty,
+          // --- Use combined enabled state ---
+          enabled: isEnabled && relevantPaletteIdentifiers.isNotEmpty,
+          // --- End Use ---
           leadingIcon: Icons.palette_outlined,
           title: 'Palette / Variant',
           subtitle: AppTheme.paletteNames[state.paletteIdentifier] ??
@@ -86,7 +92,7 @@ class AppearanceSettingsSection extends StatelessWidget {
           trailing: relevantPaletteIdentifiers.isEmpty
               ? null
               : PopupMenuButton<String>(
-                  enabled: !isLoading,
+                  enabled: isEnabled, // Use combined state
                   icon: const Icon(Icons.arrow_drop_down),
                   tooltip: "Select Palette",
                   initialValue: state.paletteIdentifier,
@@ -103,12 +109,14 @@ class AppearanceSettingsSection extends StatelessWidget {
                 ),
         ),
         SettingsListTile(
-          enabled: !isLoading,
+          // --- Use combined enabled state ---
+          enabled: isEnabled,
+          // --- End Use ---
           leadingIcon: Icons.brightness_6_outlined,
           title: 'Brightness Mode',
           subtitle: StringExtension(state.themeMode.name).capitalize(),
           trailing: PopupMenuButton<ThemeMode>(
-            enabled: !isLoading,
+            enabled: isEnabled, // Use combined state
             icon: const Icon(Icons.arrow_drop_down),
             tooltip: "Select Brightness Mode",
             initialValue: state.themeMode,

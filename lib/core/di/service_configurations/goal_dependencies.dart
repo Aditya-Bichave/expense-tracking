@@ -1,11 +1,13 @@
-// lib/core/di/service_configurations/goal_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
 // Data Sources
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_proxy.dart'; // Proxy
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_impl.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_proxy.dart'; // Proxy
 // Repositories
 import 'package:expense_tracker/features/goals/data/repositories/goal_contribution_repository_impl.dart';
 import 'package:expense_tracker/features/goals/data/repositories/goal_repository_impl.dart';
@@ -34,14 +36,20 @@ import 'dart:async'; // For Stream
 
 class GoalDependencies {
   static void register() {
-    // --- Data Sources ---
+    // --- Data Sources (Proxies) ---
     if (!sl.isRegistered<GoalLocalDataSource>()) {
       sl.registerLazySingleton<GoalLocalDataSource>(
-          () => HiveGoalLocalDataSource(sl()));
+          () => DemoAwareGoalDataSource(
+                hiveDataSource: sl<HiveGoalLocalDataSource>(),
+                demoModeService: sl<DemoModeService>(),
+              ));
     }
     if (!sl.isRegistered<GoalContributionLocalDataSource>()) {
       sl.registerLazySingleton<GoalContributionLocalDataSource>(
-          () => HiveContributionLocalDataSource(sl()));
+          () => DemoAwareGoalContributionDataSource(
+                hiveDataSource: sl<HiveContributionLocalDataSource>(),
+                demoModeService: sl<DemoModeService>(),
+              ));
     }
 
     // --- Repositories ---
@@ -70,7 +78,6 @@ class GoalDependencies {
     if (!sl.isRegistered<ArchiveGoalUseCase>()) {
       sl.registerLazySingleton(() => ArchiveGoalUseCase(sl()));
     }
-    // Register DeleteGoalUseCase
     if (!sl.isRegistered<DeleteGoalUseCase>()) {
       sl.registerLazySingleton(() => DeleteGoalUseCase(sl()));
     }
@@ -91,17 +98,14 @@ class GoalDependencies {
     }
 
     // --- Blocs ---
-    // Register GoalListBloc
     if (!sl.isRegistered<GoalListBloc>()) {
       sl.registerFactory(() => GoalListBloc(
             getGoalsUseCase: sl<GetGoalsUseCase>(),
             archiveGoalUseCase: sl<ArchiveGoalUseCase>(),
             dataChangeStream: sl<Stream<DataChangedEvent>>(),
-            // Provide DeleteGoalUseCase explicitly
             deleteGoalUseCase: sl<DeleteGoalUseCase>(),
           ));
     }
-    // Register AddEditGoalBloc (Factory with parameter)
     if (!sl.isRegistered<AddEditGoalBloc>()) {
       sl.registerFactoryParam<AddEditGoalBloc, Goal?, void>(
           (initialGoal, _) => AddEditGoalBloc(
@@ -110,7 +114,6 @@ class GoalDependencies {
                 initialGoal: initialGoal,
               ));
     }
-    // Register LogContributionBloc
     if (!sl.isRegistered<LogContributionBloc>()) {
       sl.registerFactory(() => LogContributionBloc(
             addContributionUseCase: sl<AddContributionUseCase>(),

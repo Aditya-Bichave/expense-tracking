@@ -18,7 +18,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
     if (_isLoading) {
       // Avoid race conditions if called multiple times before completion
       await Future.delayed(
-          Duration(milliseconds: 100)); // Small delay and retry
+          const Duration(milliseconds: 100)); // Small delay and retry
       return _loadDb();
     }
 

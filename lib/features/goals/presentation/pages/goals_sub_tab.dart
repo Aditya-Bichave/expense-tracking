@@ -98,9 +98,9 @@ class GoalsSubTab extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'add_goal_fab_sub',
-        child: const Icon(Icons.add),
         tooltip: 'Create New Goal',
         onPressed: () => context.pushNamed(RouteNames.addGoal),
+        child: const Icon(Icons.add),
       ),
     );
   }

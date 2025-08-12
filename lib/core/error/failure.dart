@@ -57,3 +57,7 @@ class UnexpectedFailure extends Failure {
   const UnexpectedFailure([String message = "An unexpected error occurred."])
       : super(message);
 }
+
+class NotFoundFailure extends Failure {
+  const NotFoundFailure(String message) : super(message);
+}

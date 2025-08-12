@@ -1,4 +1,6 @@
 // lib/features/transactions/presentation/pages/add_edit_transaction_page.dart
+// ignore_for_file: invalid_use_of_visible_for_testing_member
+
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';

@@ -1,7 +1,7 @@
 // lib/core/theme/app_mode_theme.dart
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui; // Import dart:ui for lerpDouble
-import 'package:expense_tracker/core/assets/app_assets.dart'; // Import asset keys
+// Import asset keys
 
 // --- Enums ---
 enum LayoutDensity { compact, comfortable, spacious }
@@ -331,7 +331,6 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     );
   }
 
-  @override
   List<Object?> get props => [
         modeId, layoutDensity, cardStyle, assets, preferDataTableForLists,
         primaryAnimationDuration, listEntranceAnimation, incomeGlowColor,

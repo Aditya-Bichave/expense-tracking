@@ -2,7 +2,6 @@
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -172,7 +171,7 @@ class _LogContributionSheetContentState
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Drag Handle & Title
-              Row(/* ... Drag Handle ... */),
+              const Row(/* ... Drag Handle ... */),
               Text(_isEditing ? 'Edit Contribution' : 'Log Contribution',
                   style: theme.textTheme.titleLarge,
                   textAlign: TextAlign.center),
@@ -192,7 +191,9 @@ class _LogContributionSheetContentState
                   FilteringTextInputFormatter.allow(
                       RegExp(r'^\d*[,.]?\d{0,2}')),
                 ],
-                validator: (value) {/* ... validation ... */},
+                validator: (value) {
+                  return null; /* ... validation ... */
+                },
               ),
               const SizedBox(height: 16),
 

@@ -11,7 +11,6 @@ import 'package:expense_tracker/features/categories/domain/entities/user_history
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/user_history_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/merchant_category_repository.dart';
-import 'package:expense_tracker/core/utils/enums.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/services.dart' show rootBundle; // For loading assets
 

@@ -1,3 +1,4 @@
+// lib/features/analytics/presentation/bloc/summary_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -25,22 +26,37 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
         super(SummaryInitial()) {
     on<LoadSummary>(_onLoadSummary);
     on<_DataChanged>(_onDataChanged);
+    on<ResetState>(_onResetState); // Add handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // Summary needs refresh if Expenses or Settings (currency) change
-      if (event.type == DataChangeType.expense ||
+      // --- MODIFIED Listener ---
+      if (event.type == DataChangeType.system &&
+          event.reason == DataChangeReason.reset) {
+        log.info(
+            "[SummaryBloc] System Reset event received. Adding ResetState.");
+        add(const ResetState());
+      } else if (event.type == DataChangeType.expense ||
           event.type == DataChangeType.settings) {
         log.info(
-            "[SummaryBloc] Received relevant DataChangedEvent: $event. Triggering reload.");
+            "[SummaryBloc] Relevant DataChangedEvent: $event. Triggering reload.");
         add(const _DataChanged());
       }
+      // --- END MODIFIED ---
     }, onError: (error, stackTrace) {
       log.severe("[SummaryBloc] Error in dataChangeStream listener");
     });
     log.info("[SummaryBloc] Initialized and subscribed to data changes.");
   }
 
-  // Internal event handler to trigger reload
+  // --- ADDED: Reset State Handler ---
+  void _onResetState(ResetState event, Emitter<SummaryState> emit) {
+    log.info("[SummaryBloc] Resetting state to initial.");
+    emit(SummaryInitial());
+    add(const LoadSummary()); // Trigger initial load after reset
+  }
+  // --- END ADDED ---
+
+  // ... (rest of handlers remain the same) ...
   Future<void> _onDataChanged(
       _DataChanged event, Emitter<SummaryState> emit) async {
     log.info(
@@ -50,16 +66,16 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
       startDate: _currentStartDate,
       endDate: _currentEndDate,
       forceReload: true,
+      updateFilters: false, // Don't update filters during auto-refresh
     ));
   }
 
   Future<void> _onLoadSummary(
       LoadSummary event, Emitter<SummaryState> emit) async {
     log.info(
-        "[SummaryBloc] Received LoadSummary event (forceReload: ${event.forceReload}). Current state: ${state.runtimeType}");
+        "[SummaryBloc] Received LoadSummary event (forceReload: ${event.forceReload}, updateFilters: ${event.updateFilters}). Current state: ${state.runtimeType}");
 
-    // Update current filters only if they are explicitly passed in this event
-    // (avoids resetting filters during auto-refresh)
+    // Update current filters only if explicitly requested
     if (event.updateFilters) {
       _currentStartDate = event.startDate;
       _currentEndDate = event.endDate;

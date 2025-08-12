@@ -8,9 +8,7 @@ import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/archive_goal.dart';
-// --- Import Delete UseCase ---
-import 'package:expense_tracker/features/goals/domain/usecases/delete_goal.dart'; // <<< Correct Import
-// --- End Import ---
+import 'package:expense_tracker/features/goals/domain/usecases/delete_goal.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/main.dart';
 
@@ -20,7 +18,7 @@ part 'goal_list_state.dart';
 class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
   final GetGoalsUseCase _getGoalsUseCase;
   final ArchiveGoalUseCase _archiveGoalUseCase;
-  final DeleteGoalUseCase _deleteGoalUseCase; // <<< Correct Field Type
+  final DeleteGoalUseCase _deleteGoalUseCase;
 
   late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
@@ -28,31 +26,44 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
     required GetGoalsUseCase getGoalsUseCase,
     required ArchiveGoalUseCase archiveGoalUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
-    required DeleteGoalUseCase deleteGoalUseCase, // <<< Correct Parameter Type
+    required DeleteGoalUseCase deleteGoalUseCase,
   })  : _getGoalsUseCase = getGoalsUseCase,
         _archiveGoalUseCase = archiveGoalUseCase,
-        _deleteGoalUseCase = deleteGoalUseCase, // <<< Assign Field
+        _deleteGoalUseCase = deleteGoalUseCase,
         super(const GoalListState()) {
     on<LoadGoals>(_onLoadGoals);
-    on<_GoalsDataChanged>(
-        _onDataChanged); // <<< Ensure this handler method exists below
-    on<ArchiveGoal>(
-        _onArchiveGoal); // <<< Ensure this handler method exists below
-    on<DeleteGoal>(_onDeleteGoal); // Register handler for DeleteGoal
+    on<_GoalsDataChanged>(_onDataChanged);
+    on<ArchiveGoal>(_onArchiveGoal);
+    on<DeleteGoal>(_onDeleteGoal);
+    on<ResetState>(_onResetState); // Add handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      if (event.type == DataChangeType.goal ||
+      // --- MODIFIED Listener ---
+      if (event.type == DataChangeType.system &&
+          event.reason == DataChangeReason.reset) {
+        log.info(
+            "[GoalListBloc] System Reset event received. Adding ResetState.");
+        add(const ResetState());
+      } else if (event.type == DataChangeType.goal ||
           event.type == DataChangeType.goalContribution) {
         log.info(
             "[GoalListBloc] Relevant DataChangedEvent ($event). Triggering reload.");
         add(const _GoalsDataChanged());
       }
+      // --- END MODIFIED ---
     });
     log.info("[GoalListBloc] Initialized.");
   }
 
-  // --- VERIFY THESE HANDLER METHODS EXIST AND ARE SPELLED CORRECTLY ---
+  // --- ADDED: Reset State Handler ---
+  void _onResetState(ResetState event, Emitter<GoalListState> emit) {
+    log.info("[GoalListBloc] Resetting state to initial.");
+    emit(const GoalListState());
+    add(const LoadGoals()); // Trigger initial load after reset
+  }
+  // --- END ADDED ---
 
+  // ... (rest of handlers remain the same) ...
   Future<void> _onDataChanged(
       _GoalsDataChanged event, Emitter<GoalListState> emit) async {
     if (state.status != GoalListStatus.loading) {
@@ -148,8 +159,6 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
       },
     );
   }
-
-  // --- END VERIFY ---
 
   String _mapFailureToMessage(Failure failure,
       {String context = "An error occurred"}) {

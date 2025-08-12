@@ -1,19 +1,25 @@
-// lib/core/di/service_configuration/income_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
+import 'package:expense_tracker/features/income/data/datasources/income_local_data_source_proxy.dart'; // Import proxy
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/data/repositories/income_repository_impl.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/delete_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/update_income.dart';
-import 'package:hive/hive.dart';
+import 'package:hive/hive.dart'; // Keep for HiveIncomeLocalDataSource
 
 class IncomeDependencies {
   static void register() {
-    // Data
+    // --- MODIFIED: Register Proxy ---
     sl.registerLazySingleton<IncomeLocalDataSource>(
-        () => HiveIncomeLocalDataSource(sl<Box<IncomeModel>>()));
+        () => DemoAwareIncomeDataSource(
+              hiveDataSource: sl<HiveIncomeLocalDataSource>(), // Get real DS
+              demoModeService: sl<DemoModeService>(),
+            ));
+    // --- END MODIFIED ---
+
     sl.registerLazySingleton<IncomeRepository>(
         () => IncomeRepositoryImpl(localDataSource: sl()));
     // Domain

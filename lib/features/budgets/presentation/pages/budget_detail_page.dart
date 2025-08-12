@@ -1,19 +1,18 @@
 // lib/features/budgets/presentation/pages/budget_detail_page.dart
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
-import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -97,11 +96,12 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     if (foundBudgetStatus == null) {
       log.severe(
           "[BudgetDetail] Cannot load details: Budget ID ${widget.budgetId} not found in loaded state.");
-      if (mounted)
+      if (mounted) {
         setState(() {
           _isLoading = false;
           _error = "Budget not found.";
         });
+      }
       return;
     }
 
@@ -124,12 +124,16 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
         // Ensure date is on or after start AND on or before end
         if (txnDateOnly.isBefore(startDateOnly) ||
-            txn.date.isAfter(endDateOnly)) return false;
+            txn.date.isAfter(endDateOnly)) {
+          return false;
+        }
 
         if (budget.type == BudgetType.overall) return true;
         if (budget.type == BudgetType.categorySpecific &&
             budget.categoryIds != null &&
-            budget.categoryIds!.contains(txn.category?.id)) return true;
+            budget.categoryIds!.contains(txn.category?.id)) {
+          return true;
+        }
         return false;
       }).toList();
       foundTransactions.sort((a, b) => b.date.compareTo(a.date));
@@ -168,10 +172,11 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       context
           .read<BudgetListBloc>()
           .add(DeleteBudget(budgetId: _budgetWithStatus!.budget.id));
-      if (context.canPop())
+      if (context.canPop()) {
         context.pop();
-      else
+      } else {
         context.go(RouteNames.budgetsAndCats);
+      }
     }
   }
 
@@ -292,8 +297,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           rows: _relevantTransactions
               .map((txn) => DataRow(
                       onSelectChanged: (selected) {
-                        if (selected == true)
+                        if (selected == true) {
                           _navigateToTransactionDetail(context, txn);
+                        }
                       },
                       cells: [
                         DataCell(Text(DateFormatter.formatDate(txn.date))),
@@ -349,8 +355,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   Widget _buildCategoryChips(BuildContext context, List<String> categoryIds) {
     final categoryState = context.watch<CategoryManagementBloc>().state;
     final theme = Theme.of(context);
-    if (categoryState.status != CategoryManagementStatus.loaded)
+    if (categoryState.status != CategoryManagementStatus.loaded) {
       return const SizedBox.shrink();
+    }
     final allCategories = [
       ...categoryState.allExpenseCategories,
       ...categoryState.allIncomeCategories
@@ -396,10 +403,11 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         })
         .whereNotNull()
         .toList();
-    if (chips.isEmpty)
+    if (chips.isEmpty) {
       return Text("Applies to: All Categories",
           style:
               theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic));
+    }
     return Wrap(spacing: 6.0, runSpacing: 4.0, children: [
       Text("Applies to:", style: theme.textTheme.bodySmall),
       const SizedBox(width: 4),
@@ -414,11 +422,12 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final uiMode = settings.uiMode;
     final modeTheme = context.modeTheme;
 
-    if (_isLoading)
+    if (_isLoading) {
       return Scaffold(
           appBar: AppBar(),
           body: const Center(child: CircularProgressIndicator()));
-    if (_error != null || _budgetWithStatus == null)
+    }
+    if (_error != null || _budgetWithStatus == null) {
       return Scaffold(
           appBar: AppBar(title: const Text("Error")),
           body: Center(
@@ -426,6 +435,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(_error ?? "Budget could not be loaded.",
                       style: TextStyle(color: theme.colorScheme.error)))));
+    }
 
     final budget = _budgetWithStatus!.budget;
     final status = _budgetWithStatus!;

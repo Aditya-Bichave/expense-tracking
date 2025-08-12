@@ -1,12 +1,11 @@
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For availableIcons map
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/main.dart'; // logger
+import 'package:flutter_svg/flutter_svg.dart';
+// logger
 
 // Common widget to display either an Expense or Income in a ListTile format
 class TransactionListItem extends StatelessWidget {
@@ -57,11 +56,30 @@ class TransactionListItem extends StatelessWidget {
         backgroundColor: category.displayColor.withOpacity(0.15),
         child: _buildIcon(context, theme),
       ),
-      title: Text(
-        transaction.title,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodyLarge,
+      title: Row(
+        children: [
+          if (transaction.isRecurring)
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: SvgPicture.asset(
+                'assets/elemental/icons/common/ic_recurring.svg',
+                width: 16,
+                height: 16,
+                colorFilter: ColorFilter.mode(
+                  theme.colorScheme.onSurfaceVariant,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+          Expanded(
+            child: Text(
+              transaction.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyLarge,
+            ),
+          ),
+        ],
       ),
       subtitle: Text(
           '${category.name} • ${DateFormatter.formatDate(transaction.date)}', // Show category name and formatted date

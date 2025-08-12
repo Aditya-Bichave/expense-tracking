@@ -1,3 +1,4 @@
+// lib/features/transactions/presentation/bloc/transaction_list_event.dart
 part of 'transaction_list_bloc.dart';
 
 abstract class TransactionListEvent extends Equatable {
@@ -9,9 +10,12 @@ abstract class TransactionListEvent extends Equatable {
 // Load initial or refresh all transactions based on current filters/sort
 class LoadTransactions extends TransactionListEvent {
   final bool forceReload;
-  const LoadTransactions({this.forceReload = false});
+  // --- ADDED: Allow passing initial filters ---
+  final Map<String, dynamic>? incomingFilters;
+  // --- END ADD ---
+  const LoadTransactions({this.forceReload = false, this.incomingFilters});
   @override
-  List<Object?> get props => [forceReload];
+  List<Object?> get props => [forceReload, incomingFilters];
 }
 
 // Update filters and reload
@@ -107,3 +111,9 @@ class UserCategorizedTransaction extends TransactionListEvent {
 class _DataChanged extends TransactionListEvent {
   const _DataChanged();
 }
+
+// --- ADDED: Reset State Event ---
+class ResetState extends TransactionListEvent {
+  const ResetState();
+}
+// --- END ADDED ---

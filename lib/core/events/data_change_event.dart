@@ -1,7 +1,12 @@
 // lib/core/events/data_change_event.dart
 
 // Describes the type of data operation
-enum DataChangeReason { added, updated, deleted }
+enum DataChangeReason {
+  added,
+  updated,
+  deleted,
+  reset // Added for system reset
+}
 
 // Describes the type of data affected
 enum DataChangeType {
@@ -12,8 +17,10 @@ enum DataChangeType {
   category,
   goal,
   goalContribution,
-  budget
-} // Added settings
+  budget,
+  recurringRule,
+  system // Added for global/system events like reset
+}
 
 class DataChangedEvent {
   final DataChangeType type;

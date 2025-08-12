@@ -25,13 +25,14 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       categorizationStatusValue: fields[5] as String,
       accountId: fields[6] as String,
       confidenceScoreValue: fields[7] as double?,
+      isRecurring: fields[8] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +48,9 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(6)
       ..write(obj.accountId)
       ..writeByte(7)
-      ..write(obj.confidenceScoreValue);
+      ..write(obj.confidenceScoreValue)
+      ..writeByte(8)
+      ..write(obj.isRecurring);
   }
 
   @override
@@ -77,6 +80,7 @@ ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
               json['categorizationStatusValue'] as String?),
       accountId: json['accountId'] as String,
       confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
+      isRecurring: json['isRecurring'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
@@ -91,4 +95,5 @@ Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
       'accountId': instance.accountId,
       if (instance.confidenceScoreValue case final value?)
         'confidenceScoreValue': value,
+      'isRecurring': instance.isRecurring,
     };

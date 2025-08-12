@@ -1,6 +1,4 @@
 // lib/features/transactions/presentation/pages/transaction_list_page.dart
-// ignore_for_file: unused_element
-
 import 'dart:async'; // For Timer (debounce)
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -24,12 +22,15 @@ import 'package:flutter/foundation.dart' hide Category; // For listEquals
 import 'package:flutter/material.dart'; // Hide the conflicting Category
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart'; // Needed for orElse fallback
 import 'package:table_calendar/table_calendar.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart'; // For casting
+import 'package:expense_tracker/features/income/domain/entities/income.dart'; // For casting
 
 class TransactionListPage extends StatefulWidget {
-  const TransactionListPage({super.key});
+  // --- ADDED: Accept optional initial filters ---
+  final Map<String, dynamic>? initialFilters;
+  // --- END ADD ---
+  const TransactionListPage({super.key, this.initialFilters});
 
   @override
   State<TransactionListPage> createState() => _TransactionListPageState();
@@ -41,7 +42,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Timer? _debounce;
 
   // Calendar state
-  // --- FIX: Default to month ---
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -55,7 +55,22 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _searchController.addListener(_onSearchChanged);
     _selectedDay =
         DateTime(_focusedDay.year, _focusedDay.month, _focusedDay.day);
-    _setupInitialCalendarData();
+
+    // --- MODIFIED: Apply initial filters if provided ---
+    if (widget.initialFilters != null && widget.initialFilters!.isNotEmpty) {
+      log.info(
+          "[TxnListPage] Applying initial filters from route: ${widget.initialFilters}");
+      // Dispatch event to bloc to apply filters and load
+      context.read<TransactionListBloc>().add(LoadTransactions(
+            forceReload: true,
+            incomingFilters: widget.initialFilters,
+          ));
+    } else {
+      // Load normally if no initial filters
+      _setupInitialCalendarData();
+    }
+    // --- END MODIFICATION ---
+
     _listenToBlocChanges();
   }
 
@@ -99,12 +114,20 @@ class _TransactionListPageState extends State<TransactionListPage> {
     if (bloc.state.status == ListStatus.initial) {
       bloc.add(const LoadTransactions()); // Trigger load if initial
     } else if (bloc.state.status == ListStatus.success) {
-      _currentTransactionsForCalendar = bloc.state.transactions;
-      _updateSelectedDayTransactions(); // Update list for initially selected day
+      // Ensure calendar uses the current state's transactions
+      if (!listEquals(
+          _currentTransactionsForCalendar, bloc.state.transactions)) {
+        setState(() {
+          _currentTransactionsForCalendar = bloc.state.transactions;
+          _updateSelectedDayTransactions(); // Update list for initially selected day
+        });
+      } else {
+        _updateSelectedDayTransactions(); // Update list for initially selected day even if txns haven't changed
+      }
     }
   }
 
-  // --- Interaction Handlers ---
+  // --- Interaction Handlers (Keep as is) ---
   void _onSearchChanged() {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -191,7 +214,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
           context,
           title: "Confirm Deletion",
           content:
-              'Are you sure you want to delete this ${transaction.type.name}:\n"${transaction.title}"?',
+              'Are you sure you want to permanently delete this ${transaction.type.name}:\n"${transaction.title}"?',
           confirmText: "Delete",
           confirmColor: Theme.of(context).colorScheme.error,
         ) ??
@@ -267,7 +290,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         });
   }
 
-  // --- Calendar Specific Logic ---
+  // --- Calendar Specific Logic (Keep as is) ---
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     final normalizedSelectedDay =
         DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
@@ -292,13 +315,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   void _onPageChanged(DateTime focusedDay) {
     log.fine("[TxnListPage] Calendar page changed, focused day: $focusedDay");
-    // We don't need to update selectedDay here, just the focused month/week
-    _focusedDay = focusedDay; // Update focused day for calendar header
-    // No setState needed if only focusedDay changes, TableCalendar handles it internally
+    _focusedDay = focusedDay;
   }
 
   List<TransactionEntity> _getEventsForDay(DateTime day) {
-    // Normalize day to compare date part only
     final normalizedDay = DateTime(day.year, day.month, day.day);
     return _currentTransactionsForCalendar.where((txn) {
       final normalizedTxnDate =
@@ -321,7 +341,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
         "[TxnListPage] Updated selected day transactions for $_selectedDay. Count: ${_selectedDayTransactions.length}");
   }
 
-  // --- Main Build Method ---
+  // --- Main Build Method (Keep as is) ---
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -330,7 +350,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
     return Scaffold(
       body: Column(
         children: [
-          // Use the extracted header widget
           TransactionListHeader(
             searchController: _searchController,
             onClearSearch: _clearSearch,
@@ -372,7 +391,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
                     child: _showCalendarView
                         ? KeyedSubtree(
                             key: const ValueKey('calendar_view'),
-                            // Use the extracted calendar view widget
                             child: TransactionCalendarView(
                               state: state,
                               settings: settings,
@@ -384,24 +402,20 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                   _currentTransactionsForCalendar,
                               getEventsForDay: _getEventsForDay,
                               onDaySelected: _onDaySelected,
-                              onFormatChanged:
-                                  _onFormatChanged, // Pass the handler
+                              onFormatChanged: _onFormatChanged,
                               onPageChanged: _onPageChanged,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
                             ),
                           )
                         : KeyedSubtree(
                             key: const ValueKey('list_view'),
-                            // Use the extracted list view widget
                             child: TransactionListView(
                               state: state,
                               settings: settings,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
-                              // --- Pass required handlers ---
                               handleChangeCategoryRequest:
                                   _handleChangeCategoryRequest,
                               confirmDeletion: _confirmDeletion,
-                              // --- End Pass ---
                             ),
                           ),
                   ),
@@ -426,10 +440,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   ? () async {
                       log.info(
                           "[TxnListPage] Batch categorize button pressed.");
-                      // Determine dominant type for picker
                       final type = _getDominantTransactionType(state) ??
-                          TransactionType
-                              .expense; // Default to expense if mixed/none
+                          TransactionType.expense;
                       final Category? selectedCategory =
                           await showCategoryPicker(
                               context,
@@ -451,7 +463,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                     "Please select a specific category.")));
                       }
                     }
-                  : null, // Disable if count is 0
+                  : null,
               label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
               icon: const Icon(Icons.category_rounded),
               backgroundColor: count > 0
@@ -467,16 +479,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
     );
   }
 
-  // Helper to determine dominant type remains the same
   TransactionType? _getDominantTransactionType(TransactionListState state) {
     if (state.selectedTransactionIds.isEmpty) return null;
     TransactionType? type;
     for (final id in state.selectedTransactionIds) {
-      // Find the transaction in the current state's list
       final txn = state.transactions.firstWhere((t) => t.id == id, orElse: () {
         log.severe(
             "[TxnListPage] CRITICAL: Selected ID $id not found in state during dominant type check!");
-        // Return a dummy object or throw to indicate a serious state inconsistency
         throw StateError(
             "Selected transaction ID $id not found in BLoC state.");
       });
@@ -491,7 +500,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
   }
 }
 
-// String capitalization extension remains the same
 extension StringCapExtension on String {
   String capitalize() {
     if (isEmpty) return this;

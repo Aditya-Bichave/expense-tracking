@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import UIMode
 import 'app_mode_theme.dart'; // Import the ThemeExtension class
 import 'package:google_fonts/google_fonts.dart';
-import 'package:expense_tracker/core/constants/app_constants.dart'; // Import AppConstants
+// Import AppConstants
 
 // Import Theme Configs
 import 'config/theme_config_interface.dart';
