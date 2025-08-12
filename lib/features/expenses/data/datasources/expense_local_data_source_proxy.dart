@@ -40,14 +40,22 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
   }
 
   @override
-  Future<List<ExpenseModel>> getExpenses() async {
+  Future<List<ExpenseModel>> getExpenses({List<String>? categoryIds}) async {
     if (demoModeService.isDemoActive) {
-      log.fine("[DemoAwareExpenseDS] Getting demo expenses.");
-      // Return the cached demo data
-      return demoModeService.getDemoExpenses();
+      log.fine(
+          "[DemoAwareExpenseDS] Getting demo expenses (filtering not supported).");
+      // AWAIT the future to get the list
+      final allExpenses = await demoModeService.getDemoExpenses();
+      if (categoryIds == null || categoryIds.isEmpty) {
+        return allExpenses;
+      }
+      // Now filter the actual list
+      return allExpenses
+          .where((exp) => categoryIds.contains(exp.categoryId))
+          .toList();
     } else {
-      // Return live data from Hive
-      return hiveDataSource.getExpenses();
+      // Return live data from Hive, applying filter
+      return hiveDataSource.getExpenses(categoryIds: categoryIds);
     }
   }
 

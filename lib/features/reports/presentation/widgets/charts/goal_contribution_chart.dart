@@ -57,9 +57,9 @@ class GoalContributionChart extends StatelessWidget {
           verticalInterval: _calculateXInterval(minX, maxX,
               sortedContributions.length), // Calculate interval dynamically
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+              color: theme.dividerColor.withAlpha((255 * 0.1).round()), strokeWidth: 1),
           getDrawingVerticalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+              color: theme.dividerColor.withAlpha((255 * 0.1).round()), strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
           show: true,
@@ -100,7 +100,7 @@ class GoalContributionChart extends StatelessWidget {
             isCurved: true, // Smoother curve
             gradient: LinearGradient(
               // Add gradient
-              colors: [primaryColor.withOpacity(0.8), primaryColor],
+              colors: [primaryColor.withAlpha((255 * 0.8).round()), primaryColor],
             ),
             barWidth: 3, // Slightly thicker line
             isStrokeCapRound: true,
@@ -111,8 +111,8 @@ class GoalContributionChart extends StatelessWidget {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  primaryColor.withOpacity(0.3),
-                  primaryColor.withOpacity(0.0)
+                  primaryColor.withAlpha((255 * 0.3).round()),
+                  primaryColor.withAlpha((255 * 0.0).round())
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -141,7 +141,7 @@ class GoalContributionChart extends StatelessWidget {
                       text:
                           'Contrib: ${CurrencyFormatter.format(originalContribution.amount, currencySymbol)}',
                       style: ChartUtils.tooltipContentStyle(context,
-                          color: primaryColor.withOpacity(0.8)),
+                          color: primaryColor.withAlpha((255 * 0.8).round())),
                     ),
                     const TextSpan(text: '\n'), // New line
                     TextSpan(

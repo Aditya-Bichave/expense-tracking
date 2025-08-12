@@ -40,7 +40,6 @@ class UpdateRecurringRule implements UseCase<void, RecurringRule> {
   List<RecurringRuleAuditLog> _createAuditLogs(RecurringRule oldRule, RecurringRule newRule) {
     final List<RecurringRuleAuditLog> logs = [];
     final timestamp = DateTime.now();
-    const userId = 'user_id_placeholder'; // TODO: Get actual user ID
 
     void addLog(String field, dynamic oldValue, dynamic newValue) {
       if (oldValue != newValue) {
@@ -48,7 +47,6 @@ class UpdateRecurringRule implements UseCase<void, RecurringRule> {
           id: uuid.v4(),
           ruleId: oldRule.id,
           timestamp: timestamp,
-          userId: userId,
           fieldChanged: field,
           oldValue: oldValue.toString(),
           newValue: newValue.toString(),

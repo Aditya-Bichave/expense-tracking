@@ -72,8 +72,8 @@ class RecentTransactionsSection extends StatelessWidget {
               return TransactionListItem(
                 // Use the moved widget
                 transaction: item,
-                currencySymbol: currencySymbol,
                 onTap: () => navigateToDetailOrEdit(context, item),
+                currencySymbol: currencySymbol,
               );
             },
           ),

@@ -31,26 +31,37 @@ class AllData {
       };
 
   // Create from JSON structure during restore
-  factory AllData.fromJson(Map<String, dynamic> json) {
-    // Use constants for keys and add null checks/type checks
-    final accountsList =
-        json[AppConstants.backupAccountsKey] as List<dynamic>? ?? [];
-    final expensesList =
-        json[AppConstants.backupExpensesKey] as List<dynamic>? ?? [];
-    final incomesList =
-        json[AppConstants.backupIncomesKey] as List<dynamic>? ?? [];
+  static Either<Failure, AllData> fromJson(Map<String, dynamic> json) {
+    try {
+      final accountsList =
+          json[AppConstants.backupAccountsKey] as List<dynamic>? ?? [];
+      final expensesList =
+          json[AppConstants.backupExpensesKey] as List<dynamic>? ?? [];
+      final incomesList =
+          json[AppConstants.backupIncomesKey] as List<dynamic>? ?? [];
 
-    return AllData(
-      accounts: accountsList
+      final accounts = accountsList
           .map((a) => AssetAccountModel.fromJson(a as Map<String, dynamic>))
-          .toList(),
-      expenses: expensesList
+          .toList();
+      final expenses = expensesList
           .map((e) => ExpenseModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      incomes: incomesList
+          .toList();
+      final incomes = incomesList
           .map((i) => IncomeModel.fromJson(i as Map<String, dynamic>))
-          .toList(),
-    );
+          .toList();
+
+      return Right(AllData(
+        accounts: accounts,
+        expenses: expenses,
+        incomes: incomes,
+      ));
+    } on TypeError catch (e) {
+      return Left(ValidationFailure(
+          'Invalid backup file format. A field has the wrong type. Details: $e'));
+    } catch (e) {
+      return Left(ValidationFailure(
+          'Could not parse backup file. The file may be corrupt. Details: $e'));
+    }
   }
 }
 

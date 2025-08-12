@@ -26,6 +26,8 @@ class MockAddIncomeUseCase extends Mock implements AddIncomeUseCase {}
 
 class MockUuid extends Mock implements Uuid {}
 
+class FakeRecurringRule extends Fake implements RecurringRule {}
+
 void main() {
   late GenerateTransactionsOnLaunch usecase;
   late MockRecurringTransactionRepository mockRecurringTransactionRepository;
@@ -42,6 +44,7 @@ void main() {
       date: DateTime.now(),
       accountId: '',
     )));
+    registerFallbackValue(FakeRecurringRule());
   });
 
   setUp(() {

@@ -4,8 +4,8 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 
 abstract class IncomeLocalDataSource {
-  Future<List<IncomeModel>> getIncomes();
-  Future<IncomeModel?> getIncomeById(String id); // ADDED: Return nullable
+  Future<List<IncomeModel>> getIncomes({List<String>? categoryIds});
+  Future<IncomeModel?> getIncomeById(String id);
   Future<IncomeModel> addIncome(IncomeModel income);
   Future<IncomeModel> updateIncome(IncomeModel income);
   Future<void> deleteIncome(String id);
@@ -41,11 +41,20 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
   }
 
   @override
-  Future<List<IncomeModel>> getIncomes() async {
+  Future<List<IncomeModel>> getIncomes({List<String>? categoryIds}) async {
     try {
-      final incomes = incomeBox.values.toList();
-      log.info("Retrieved ${incomes.length} incomes from Hive.");
-      return incomes;
+      var allIncomes = incomeBox.values;
+      if (categoryIds == null || categoryIds.isEmpty) {
+        log.info("Retrieved ${allIncomes.length} incomes from Hive (no filter).");
+        return allIncomes.toList();
+      }
+
+      final filteredIncomes = allIncomes
+          .where((income) => categoryIds.contains(income.categoryId))
+          .toList();
+      log.info(
+          "Retrieved ${filteredIncomes.length} incomes from Hive with category filter.");
+      return filteredIncomes;
     } catch (e, s) {
       log.severe("Failed to get incomes from cache$e$s");
       throw CacheFailure('Failed to get incomes: ${e.toString()}');

@@ -46,19 +46,13 @@ class _TransactionFormState extends State<TransactionForm> {
   late TextEditingController _amountController;
   late TextEditingController _notesController;
   late DateTime _selectedDate;
-  Category? _selectedCategory;
   String? _selectedAccountId;
-  late TransactionType _transactionType;
-
-  // Removed _categoryFormFieldKey
 
   @override
   void initState() {
     super.initState();
     final initial = widget.initialTransaction;
-    _transactionType = initial?.type ?? widget.initialType;
-    log.info(
-        "[TransactionForm] initState. Initial Txn: ${initial != null}, Type: ${_transactionType.name}");
+    log.info("[TransactionForm] initState. Initial Txn: ${initial != null}");
 
     _titleController = TextEditingController(text: initial?.title ?? '');
     _amountController =
@@ -66,34 +60,6 @@ class _TransactionFormState extends State<TransactionForm> {
     _notesController = TextEditingController(text: initial?.notes ?? '');
     _selectedDate = initial?.date ?? DateTime.now();
     _selectedAccountId = initial?.accountId;
-    _selectedCategory = widget.initialCategory ?? initial?.category;
-
-    log.info(
-        "[TransactionForm] Initial Category set in form state: ${_selectedCategory?.name} (ID: ${_selectedCategory?.id})");
-  }
-
-  @override
-  void didUpdateWidget(covariant TransactionForm oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.initialCategory != oldWidget.initialCategory) {
-      log.info(
-          "[TransactionForm] didUpdateWidget: initialCategory changed to ${widget.initialCategory?.name}");
-      setState(() {
-        _selectedCategory = widget.initialCategory;
-      });
-    }
-    if (widget.initialType != oldWidget.initialType &&
-        widget.initialTransaction == null) {
-      log.info(
-          "[TransactionForm] didUpdateWidget: initialType changed to ${widget.initialType.name}");
-      setState(() {
-        _transactionType = widget.initialType;
-        _selectedCategory = null;
-      });
-      context
-          .read<AddEditTransactionBloc>()
-          .add(TransactionTypeChanged(_transactionType));
-    }
   }
 
   @override
@@ -128,14 +94,15 @@ class _TransactionFormState extends State<TransactionForm> {
   }
 
   Future<void> _selectCategory(BuildContext context) async {
-    final categoryFilter = _transactionType == TransactionType.expense
+    final bloc = context.read<AddEditTransactionBloc>();
+    final categoryFilter = bloc.state.transactionType == TransactionType.expense
         ? CategoryTypeFilter.expense
         : CategoryTypeFilter.income;
     log.info(
         "[TransactionForm] Showing category picker for type: ${categoryFilter.name}");
     final Category? result = await showCategoryPicker(context, categoryFilter);
     if (result != null && mounted) {
-      setState(() => _selectedCategory = result);
+      bloc.add(CategorySelected(result));
       log.info(
           "[TransactionForm] Category selected via picker: ${result.name} (ID: ${result.id})");
     }
@@ -144,7 +111,8 @@ class _TransactionFormState extends State<TransactionForm> {
   void _submitForm() {
     log.info("[TransactionForm] Submit button pressed.");
     if (_formKey.currentState!.validate()) {
-      final categoryToSubmit = _selectedCategory ?? Category.uncategorized;
+      final bloc = context.read<AddEditTransactionBloc>();
+      final categoryToSubmit = bloc.state.effectiveCategory ?? Category.uncategorized;
       if (_selectedAccountId == null) {
         log.warning(
             "[TransactionForm] Submit prevented: Account not selected.");
@@ -160,7 +128,7 @@ class _TransactionFormState extends State<TransactionForm> {
       final accountId = _selectedAccountId!;
       log.info(
           "[TransactionForm] Form fields validated. Calling onSubmit callback with Category: ${categoryToSubmit.name}");
-      widget.onSubmit(_transactionType, title, amount, _selectedDate,
+      widget.onSubmit(bloc.state.transactionType, title, amount, _selectedDate,
           categoryToSubmit, accountId, notes.isEmpty ? null : notes);
     } else {
       log.warning("[TransactionForm] Form validation failed.");
@@ -180,15 +148,16 @@ class _TransactionFormState extends State<TransactionForm> {
     final currencySymbol = settingsState.currencySymbol;
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
-    final isExpense = _transactionType == TransactionType.expense;
+    final blocState = context.watch<AddEditTransactionBloc>().state;
+    final isExpense = blocState.transactionType == TransactionType.expense;
 
     final List<Color> expenseColors = [
-      theme.colorScheme.errorContainer.withOpacity(0.7),
+      theme.colorScheme.errorContainer.withAlpha((255 * 0.7).round()),
       theme.colorScheme.errorContainer
     ];
     final List<Color> incomeColors = [
       theme.colorScheme.primaryContainer,
-      theme.colorScheme.primaryContainer.withOpacity(0.7)
+      theme.colorScheme.primaryContainer.withAlpha((255 * 0.7).round())
     ];
 
     return Form(
@@ -210,11 +179,7 @@ class _TransactionFormState extends State<TransactionForm> {
                 final newType = index == 0
                     ? TransactionType.expense
                     : TransactionType.income;
-                if (_transactionType != newType) {
-                  setState(() {
-                    _transactionType = newType;
-                    _selectedCategory = null;
-                  });
+                if (blocState.transactionType != newType) {
                   context
                       .read<AddEditTransactionBloc>()
                       .add(TransactionTypeChanged(newType));
@@ -247,11 +212,11 @@ class _TransactionFormState extends State<TransactionForm> {
           // Category Picker
           CommonFormFields.buildCategorySelector(
             context: context,
-            selectedCategory: _selectedCategory,
+            selectedCategory: blocState.effectiveCategory,
             onTap: () async {
               await _selectCategory(context);
             },
-            transactionType: _transactionType,
+            transactionType: blocState.transactionType,
           ),
           const SizedBox(height: 16),
 

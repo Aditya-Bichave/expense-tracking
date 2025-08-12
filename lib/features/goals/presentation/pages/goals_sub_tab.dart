@@ -42,7 +42,7 @@ class GoalsSubTab extends StatelessWidget {
                           Icon(Icons.savings_outlined,
                               size: 60,
                               color:
-                                  theme.colorScheme.secondary.withOpacity(0.7)),
+                                  theme.colorScheme.secondary.withAlpha((255 * 0.7).round())),
                           const SizedBox(height: 16),
                           Text("No Savings Goals Yet",
                               style: theme.textTheme.headlineSmall?.copyWith(

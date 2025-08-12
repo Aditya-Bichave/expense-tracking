@@ -232,7 +232,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           percent: percentage,
           barRadius: const Radius.circular(4),
           backgroundColor:
-              theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+              theme.colorScheme.surfaceContainerHighest.withAlpha((255 * 0.5).round()),
           progressColor: color,
           animation: false);
     } else {
@@ -328,9 +328,10 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         itemBuilder: (ctx, index) {
           final txn = _relevantTransactions[index];
           Widget item = TransactionListItem(
-              transaction: txn,
-              currencySymbol: currency,
-              onTap: () => _navigateToTransactionDetail(context, txn));
+            transaction: txn,
+            onTap: () => _navigateToTransactionDetail(context, txn),
+            currencySymbol: currency,
+          );
           if (isAether) {
             item = item
                 .animate(delay: itemDelay * index)
@@ -395,7 +396,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             label: Text(category.name),
             labelStyle: theme.textTheme.labelSmall
                 ?.copyWith(color: category.displayColor),
-            backgroundColor: category.displayColor.withOpacity(0.1),
+            backgroundColor: category.displayColor.withAlpha((255 * 0.1).round()),
             side: BorderSide.none,
             visualDensity: VisualDensity.compact,
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),

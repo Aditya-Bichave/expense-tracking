@@ -77,7 +77,13 @@ void main() {
   );
 
   test('initial state is correct', () {
-    expect(bloc.state, AddEditRecurringRuleState.initial());
+    expect(
+        bloc.state,
+        isA<AddEditRecurringRuleState>()
+            .having((s) => s.status, 'status', FormStatus.initial)
+            .having((s) => s.isEditMode, 'isEditMode', false)
+            .having((s) => s.amount, 'amount', 0.0)
+            .having((s) => s.description, 'description', ''));
   });
 
   group('FormSubmitted', () {

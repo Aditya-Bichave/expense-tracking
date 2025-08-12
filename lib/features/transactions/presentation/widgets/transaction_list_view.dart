@@ -63,7 +63,7 @@ class TransactionListView extends StatelessWidget {
                   children: [
                     Icon(Icons.receipt_long_outlined,
                         size: 60,
-                        color: theme.colorScheme.secondary.withOpacity(0.7)),
+                        color: theme.colorScheme.secondary.withAlpha((255 * 0.7).round())),
                     const SizedBox(height: 16),
                     Text(
                         state.filtersApplied
@@ -181,7 +181,7 @@ class TransactionListView extends StatelessWidget {
           },
           child: Container(
             color: isSelected
-                ? theme.colorScheme.primaryContainer.withOpacity(0.3)
+                ? theme.colorScheme.primaryContainer.withAlpha((255 * 0.3).round())
                 : Colors.transparent,
             child: cardItem, // Use the determined ExpenseCard or IncomeCard
           ),

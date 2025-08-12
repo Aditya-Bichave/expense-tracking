@@ -64,30 +64,45 @@ class GoalRepositoryImpl implements GoalRepository {
 
   @override
   Future<Either<Failure, void>> deleteGoal(String id) async {
-    // **Warning:** Permanent delete. Archiving is preferred.
-    log.warning(
-        "[GoalRepo] Attempting PERMANENT delete for goal ID: $id. Archive is preferred.");
-    try {
-      // --- Optional: Cascade delete contributions ---
-      log.info(
-          "[GoalRepo] Deleting associated contributions for Goal ID: $id...");
-      final contributions =
-          await _contributionDataSource.getContributionsForGoal(id);
-      List<Future<void>> deleteFutures = [];
-      for (var c in contributions) {
-        deleteFutures.add(_contributionDataSource.deleteContribution(c.id));
-      }
-      await Future.wait(deleteFutures);
-      log.info(
-          "[GoalRepo] Deleted ${contributions.length} associated contributions.");
-      // --- End Optional Cascade ---
+    log.warning("[GoalRepo] Attempting PERMANENT delete for goal ID: $id.");
 
+    // 1. Get the original goal and contributions to be able to restore them on failure.
+    final originalGoalModel = await localDataSource.getGoalById(id);
+    if (originalGoalModel == null) {
+      return const Left(CacheFailure("Goal to delete not found."));
+    }
+    final originalContributions = await _contributionDataSource.getContributionsForGoal(id);
+
+    try {
+      // 2. Delete contributions first.
+      log.info("[GoalRepo] Deleting ${originalContributions.length} contributions for goal $id.");
+      for (final contribution in originalContributions) {
+        await _contributionDataSource.deleteContribution(contribution.id);
+      }
+
+      // 3. Delete the goal itself.
+      log.info("[GoalRepo] Deleting goal $id.");
       await localDataSource.deleteGoal(id);
-      log.info("[GoalRepo] Goal permanently deleted: $id");
+
+      log.info("[GoalRepo] Goal and contributions permanently deleted: $id");
       return const Right(null);
     } catch (e, s) {
-      log.severe("[GoalRepo] Error deleting goal $id$e$s");
-      return Left(CacheFailure("Failed to delete goal: ${e.toString()}"));
+      log.severe("[GoalRepo] Error during transactional delete for goal $id: $e\n$s");
+
+      // 4. Rollback on failure
+      log.warning("[GoalRepo] Rolling back deletion for goal $id.");
+      try {
+        await localDataSource.saveGoal(originalGoalModel);
+        for (final contribution in originalContributions) {
+          await _contributionDataSource.saveContribution(contribution);
+        }
+        log.info("[GoalRepo] Rollback successful for goal $id.");
+      } catch (rollbackError, rs) {
+        log.severe("[GoalRepo] CRITICAL: Rollback FAILED for goal $id: $rollbackError\n$rs");
+        return Left(CacheFailure("Failed to delete goal and could not automatically recover. Data might be inconsistent. Error: ${e.toString()}"));
+      }
+
+      return Left(CacheFailure("Failed to delete goal. Operation was rolled back. Error: ${e.toString()}"));
     }
   }
 

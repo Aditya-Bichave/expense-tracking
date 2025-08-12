@@ -4,7 +4,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 
 abstract class ExpenseLocalDataSource {
-  Future<List<ExpenseModel>> getExpenses();
+  Future<List<ExpenseModel>> getExpenses({List<String>? categoryIds});
   Future<ExpenseModel?> getExpenseById(String id); // ADDED: Return nullable
   Future<ExpenseModel> addExpense(ExpenseModel expense);
   Future<ExpenseModel> updateExpense(ExpenseModel expense);
@@ -41,11 +41,15 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
   }
 
   @override
-  Future<List<ExpenseModel>> getExpenses() async {
+  Future<List<ExpenseModel>> getExpenses({List<String>? categoryIds}) async {
     try {
-      final expenses = expenseBox.values.toList();
-      log.info("Retrieved ${expenses.length} expenses from Hive.");
-      return expenses;
+      var expenses = expenseBox.values;
+      if (categoryIds != null && categoryIds.isNotEmpty) {
+        expenses = expenses.where((expense) => categoryIds.contains(expense.categoryId));
+      }
+      final expenseList = expenses.toList();
+      log.info("Retrieved ${expenseList.length} expenses from Hive.");
+      return expenseList;
     } catch (e, s) {
       log.severe("Failed to get expenses from cache$e$s");
       throw CacheFailure('Failed to get expenses: ${e.toString()}');

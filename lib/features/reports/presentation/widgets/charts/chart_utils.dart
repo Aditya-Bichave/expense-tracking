@@ -9,7 +9,7 @@ class ChartUtils {
     final theme = Theme.of(context);
     return theme.textTheme.bodySmall?.copyWith(
           fontWeight: FontWeight.bold,
-          color: theme.colorScheme.onSurface.withOpacity(0.8),
+          color: theme.colorScheme.onSurface.withAlpha((255 * 0.8).round()),
         ) ??
         const TextStyle(fontWeight: FontWeight.bold);
   }
@@ -92,7 +92,7 @@ class ChartUtils {
         LineChartBarData(
           spots: spots,
           isCurved: true,
-          color: color.withOpacity(0.8),
+          color: color.withAlpha((255 * 0.8).round()),
           barWidth: 1.5,
           isStrokeCapRound: true,
           dotData: const FlDotData(show: false),

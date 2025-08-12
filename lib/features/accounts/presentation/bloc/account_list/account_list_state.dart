@@ -30,6 +30,8 @@ class AccountListLoaded extends AccountListState
     implements BaseListState<AssetAccount> {
   @override
   final List<AssetAccount> items; // The list of accounts
+  final String? errorMessage;
+
   // Account list doesn't have filters yet, keep these null
   @override
   final DateTime? filterStartDate = null;
@@ -41,24 +43,21 @@ class AccountListLoaded extends AccountListState
   final String? filterAccountId = null;
 
   const AccountListLoaded({
-    required List<AssetAccount> accounts, // Keep param name
-  })  : items = accounts, // Assign to base 'items'
-        super();
+    required List<AssetAccount> accounts,
+    this.errorMessage,
+  }) : items = accounts;
 
-  // --- ADDED: Concrete implementation for filtersApplied ---
   @override
   bool get filtersApplied =>
       filterStartDate != null ||
       filterEndDate != null ||
       filterCategory != null ||
       filterAccountId != null;
-  // ---------------------------------------------------------
 
-  // Props are handled by the base class via its getter
   @override
   List<Object?> get props => [
-        // Need to explicitly list props here now
         items,
+        errorMessage,
         filterStartDate,
         filterEndDate,
         filterCategory,
@@ -67,6 +66,17 @@ class AccountListLoaded extends AccountListState
 
   // Convenience getter (optional)
   List<AssetAccount> get accounts => items;
+
+  AccountListLoaded copyWith({
+    List<AssetAccount>? accounts,
+    String? errorMessage,
+    bool? clearErrorMessage,
+  }) {
+    return AccountListLoaded(
+      accounts: accounts ?? this.items,
+      errorMessage: clearErrorMessage == true ? null : errorMessage ?? this.errorMessage,
+    );
+  }
 }
 
 // Extend base error state

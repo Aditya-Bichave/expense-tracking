@@ -66,8 +66,8 @@ class AppCard extends StatelessWidget {
           ? InkWell(
               onTap: onTap,
               // Optional: Apply highlight/splash from theme if needed
-              // highlightColor: theme.highlightColor.withOpacity(0.1),
-              // splashColor: theme.splashColor.withOpacity(0.1),
+              // highlightColor: theme.highlightColor.withAlpha((255 * 0.1).round()),
+              // splashColor: theme.splashColor.withAlpha((255 * 0.1).round()),
               child: cardContent,
             )
           : cardContent,

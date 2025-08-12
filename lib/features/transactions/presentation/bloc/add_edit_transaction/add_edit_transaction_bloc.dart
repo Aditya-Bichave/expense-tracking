@@ -64,6 +64,7 @@ class AddEditTransactionBloc
     on<CreateCustomCategoryRequested>(_onCreateCustomCategoryRequested);
     on<CategoryCreated>(_onCategoryCreated);
     on<ClearMessages>(_onClearMessages);
+    on<CategorySelected>(_onCategorySelected);
 
     log.info("[AddEditTransactionBloc] Initialized.");
   }
@@ -340,5 +341,19 @@ class AddEditTransactionBloc
       default:
         return 'An unexpected error occurred: ${failure.message}';
     }
+  }
+
+  void _onCategorySelected(
+      CategorySelected event, Emitter<AddEditTransactionState> emit) {
+    log.info(
+        "[AddEditTransactionBloc] User manually selected category: ${event.selectedCategory.name}");
+    emit(state.copyWith(
+      // We use the 'newlyCreatedCategory' field to store the user's manual selection
+      // as it achieves the same goal: overriding any suggestion.
+      // The `effectiveCategory` getter already prioritizes this field.
+      newlyCreatedCategory: () => event.selectedCategory,
+      status: AddEditStatus.ready, // Go back to ready state
+      clearSuggestion: true, // Clear any previous suggestion
+    ));
   }
 }

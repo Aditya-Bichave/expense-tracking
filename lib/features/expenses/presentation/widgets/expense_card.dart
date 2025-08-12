@@ -123,7 +123,7 @@ class ExpenseCard extends StatelessWidget {
                   padding: buttonPadding,
                   minimumSize: buttonMinSize,
                   visualDensity: VisualDensity.compact,
-                  side: BorderSide(color: successColor.withOpacity(0.5)),
+                  side: BorderSide(color: successColor.withAlpha((255 * 0.5).round())),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
@@ -169,7 +169,7 @@ class ExpenseCard extends StatelessWidget {
             padding: buttonPadding, minimumSize: buttonMinSize,
             visualDensity: VisualDensity.compact,
             // Add a subtle border maybe?
-            // side: BorderSide(color: errorColor.withOpacity(0.3))
+            // side: BorderSide(color: errorColor.withAlpha((255 * 0.3).round()))
           ),
           onPressed: () {
             log.info(
@@ -201,7 +201,7 @@ class ExpenseCard extends StatelessWidget {
                 ),
               ),
               // Optional: Add small edit icon here
-              // Icon(Icons.edit, size: 12, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7))
+              // Icon(Icons.edit, size: 12, color: theme.colorScheme.onSurfaceVariant.withAlpha((255 * 0.7).round()))
             ],
           ),
         );
@@ -235,7 +235,7 @@ class ExpenseCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundColor: category.displayColor.withOpacity(0.15),
+            backgroundColor: category.displayColor.withAlpha((255 * 0.15).round()),
             child: _buildIcon(context, modeTheme),
           ),
           SizedBox(width: modeTheme?.listItemPadding.left ?? 16),
@@ -253,13 +253,13 @@ class ExpenseCard extends StatelessWidget {
                 Text('Acc: $accountName',
                     style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant
-                            .withOpacity(0.8)),
+                            .withAlpha((255 * 0.8).round())),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 Text(DateFormatter.formatDateTime(expense.date),
                     style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant
-                            .withOpacity(0.8))),
+                            .withAlpha((255 * 0.8).round()))),
               ],
             ),
           ),

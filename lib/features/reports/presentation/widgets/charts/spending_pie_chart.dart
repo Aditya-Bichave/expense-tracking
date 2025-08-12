@@ -89,7 +89,7 @@ class _SpendingPieChartState extends State<SpendingPieChart> {
         ),
         borderSide: isTouched
             ? BorderSide(color: theme.colorScheme.surface, width: 2)
-            : BorderSide(color: item.categoryColor.withOpacity(0)),
+            : BorderSide(color: item.categoryColor.withAlpha((255 * 0).round())),
       );
     });
   }

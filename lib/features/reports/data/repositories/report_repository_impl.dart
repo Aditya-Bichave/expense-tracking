@@ -74,10 +74,11 @@ class ReportRepositoryImpl implements ReportRepository {
       if (fetchExpenses) {
         futures.add(expenseRepository
             .getExpenses(
-                startDate: startDate,
-                endDate: endDate,
-                accountId: accountIds?.join(','),
-                category: categoryIds?.join(','))
+              startDate: startDate,
+              endDate: endDate,
+              accountId: accountIds?.isNotEmpty == true ? accountIds!.first : null, // Assuming single account filter for now
+              categoryIds: categoryIds, // Correct parameter name
+            )
             .then((either) => either.map((list) => list as List<dynamic>)));
       }
 
@@ -85,10 +86,11 @@ class ReportRepositoryImpl implements ReportRepository {
       if (fetchIncome) {
         futures.add(incomeRepository
             .getIncomes(
-                startDate: startDate,
-                endDate: endDate,
-                accountId: accountIds?.join(','),
-                category: categoryIds?.join(','))
+              startDate: startDate,
+              endDate: endDate,
+              accountId: accountIds?.isNotEmpty == true ? accountIds!.first : null, // Assuming single account filter for now
+              categoryIds: categoryIds, // Correct parameter name
+            )
             .then((either) => either.map((list) => list as List<dynamic>)));
       }
 

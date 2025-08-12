@@ -22,6 +22,8 @@ import 'package:expense_tracker/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart'; // Import AppDialogs
 
+const String _kDeleteConfirmationPhrase = 'DELETE';
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -265,7 +267,7 @@ class _SettingsViewState extends State<SettingsView> {
                           content:
                               "This action will permanently delete ALL accounts, expenses, and income data. This cannot be undone.",
                           confirmText: "Clear Data",
-                          confirmationPhrase: "DELETE",
+                          confirmationPhrase: _kDeleteConfirmationPhrase,
                           confirmColor: Theme.of(context).colorScheme.error,
                         );
                         if (confirmed == true && context.mounted) {
@@ -291,7 +293,7 @@ class _SettingsViewState extends State<SettingsView> {
                 if (isOverallLoading)
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withAlpha((255 * 0.5).round()),
                       child: Center(
                         child: Card(
                           elevation: 8,

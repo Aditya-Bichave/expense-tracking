@@ -85,9 +85,11 @@ class GetTransactionsUseCase
         params.transactionType == TransactionType.expense) {
       fetchFutures.add(expenseRepository
           .getExpenses(
-            // Now returns List<ExpenseModel>
-            startDate: params.startDate, endDate: params.endDate,
-            category: params.categoryId, accountId: params.accountId,
+            startDate: params.startDate,
+            endDate: params.endDate,
+            categoryIds:
+                params.categoryId != null ? [params.categoryId!] : null,
+            accountId: params.accountId,
           )
           .then((either) => either.map((list) => list as List<dynamic>)));
     }
@@ -97,9 +99,12 @@ class GetTransactionsUseCase
         params.transactionType == TransactionType.income) {
       fetchFutures.add(incomeRepository
           .getIncomes(
-            // Now returns List<IncomeModel>
-            startDate: params.startDate, endDate: params.endDate,
-            category: params.categoryId, accountId: params.accountId,
+            startDate: params.startDate,
+            endDate: params.endDate,
+            // The repository now expects a list of category IDs
+            categoryIds:
+                params.categoryId != null ? [params.categoryId!] : null,
+            accountId: params.accountId,
           )
           .then((either) => either.map((list) => list as List<dynamic>)));
     }

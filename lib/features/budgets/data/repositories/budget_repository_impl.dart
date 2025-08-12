@@ -67,14 +67,11 @@ class BudgetRepositoryImpl implements BudgetRepository {
     log.fine(
         "[BudgetRepo] Calculating amount spent for budget '${budget.name}' (${budget.id}) between $periodStart and $periodEnd");
     try {
-      // Fetch relevant expenses using ExpenseRepository
-      // We fetch ALL expenses matching the date range and filter categories/type here
-      // If the expense repo could filter by multiple category IDs, that would be better.
+      // Fetch relevant expenses using ExpenseRepository, now with category filtering
       final expenseResult = await expenseRepository.getExpenses(
         startDate: periodStart,
         endDate: periodEnd,
-        // No account filter here, budget applies across accounts
-        // No category filter here yet, apply below
+        categoryIds: budget.type == BudgetType.categorySpecific ? budget.categoryIds : null,
       );
 
       return expenseResult.fold(
@@ -84,26 +81,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
           return Left(failure);
         },
         (expenseModels) {
-          double totalSpent = 0;
-          log.fine(
-              "[BudgetRepo] Got ${expenseModels.length} expenses in period. Filtering by budget criteria...");
-
-          for (final expenseModel in expenseModels) {
-            bool categoryMatch = false;
-            if (budget.type == BudgetType.overall) {
-              categoryMatch = true; // Overall budget includes all categories
-            } else if (budget.type == BudgetType.categorySpecific &&
-                budget.categoryIds != null &&
-                budget.categoryIds!.isNotEmpty) {
-              // Check if expense category ID is in the budget's list
-              categoryMatch =
-                  budget.categoryIds!.contains(expenseModel.categoryId);
-            }
-
-            if (categoryMatch) {
-              totalSpent += expenseModel.amount;
-            }
-          }
+          double totalSpent = expenseModels.fold(0.0, (sum, item) => sum + item.amount);
           log.info(
               "[BudgetRepo] Calculated total spent for '${budget.name}': $totalSpent");
           return Right(totalSpent);

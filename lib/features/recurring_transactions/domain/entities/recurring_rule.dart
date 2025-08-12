@@ -4,7 +4,6 @@ import 'recurring_rule_enums.dart';
 
 class RecurringRule extends Equatable {
   final String id;
-  final String? userId; // Nullable if not used for multi-user scenarios yet
   final double amount;
   final String description;
   final String categoryId;
@@ -24,7 +23,6 @@ class RecurringRule extends Equatable {
 
   const RecurringRule({
     required this.id,
-    this.userId,
     required this.amount,
     required this.description,
     required this.categoryId,
@@ -46,7 +44,6 @@ class RecurringRule extends Equatable {
   @override
   List<Object?> get props => [
         id,
-        userId,
         amount,
         description,
         categoryId,
@@ -67,7 +64,6 @@ class RecurringRule extends Equatable {
 
   RecurringRule copyWith({
     String? id,
-    String? userId,
     double? amount,
     String? description,
     String? categoryId,
@@ -87,7 +83,6 @@ class RecurringRule extends Equatable {
   }) {
     return RecurringRule(
       id: id ?? this.id,
-      userId: userId ?? this.userId,
       amount: amount ?? this.amount,
       description: description ?? this.description,
       categoryId: categoryId ?? this.categoryId,

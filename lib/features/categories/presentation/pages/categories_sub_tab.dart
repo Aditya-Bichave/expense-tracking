@@ -23,7 +23,7 @@ class CategoriesSubTab extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: category.displayColor.withOpacity(0.15),
+            backgroundColor: category.displayColor.withAlpha((255 * 0.15).round()),
             foregroundColor: category.displayColor.computeLuminance() > 0.5
                 ? Colors.black
                 : null,

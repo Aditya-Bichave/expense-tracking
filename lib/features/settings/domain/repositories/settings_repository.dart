@@ -16,6 +16,7 @@ abstract class SettingsRepository {
   // UI Mode
   Future<Either<Failure, void>> saveUIMode(UIMode mode);
   Future<Either<Failure, UIMode>> getUIMode();
+  Future<Either<Failure, String>> saveUIModeAndResetPalette(UIMode mode);
 
   // Country & Currency
   Future<Either<Failure, void>> saveSelectedCountryCode(String countryCode);

@@ -230,37 +230,27 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       log.warning("[SettingsBloc] Ignoring UpdateUIMode in Demo Mode.");
       return;
     }
-    // ... rest of handler
     log.info(
         "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}");
-    final result = await _settingsRepository.saveUIMode(event.newMode);
-    result.fold((failure) {
-      log.warning("[SettingsBloc] Failed to save UI mode: ${failure.message}");
-      emit(state.copyWith(
-          status: SettingsStatus.error,
-          errorMessage: failure.message,
-          clearAllMessages: true));
-    }, (_) {
-      log.info("[SettingsBloc] UI mode saved. Determining default palette.");
-      String defaultPalette;
-      switch (event.newMode) {
-        case UIMode.elemental:
-          defaultPalette = AppTheme.elementalPalette1;
-          break;
-        case UIMode.quantum:
-          defaultPalette = AppTheme.quantumPalette1;
-          break;
-        case UIMode.aether:
-          defaultPalette = AppTheme.aetherPalette1;
-          break;
-      }
-      log.info("[SettingsBloc] Saving default palette: $defaultPalette");
-      _settingsRepository
-          .savePaletteIdentifier(defaultPalette); // Fire and forget is ok here
 
+    // Call the new centralized repository method
+    final result =
+        await _settingsRepository.saveUIModeAndResetPalette(event.newMode);
+
+    result.fold((failure) {
+      log.warning(
+          "[SettingsBloc] Failed to save UI mode and reset palette: ${failure.message}");
+      emit(state.copyWith(
+        status: SettingsStatus.error,
+        errorMessage: failure.message,
+        clearAllMessages: true,
+      ));
+    }, (newPalette) {
+      log.info(
+          "[SettingsBloc] UI mode and palette saved. Emitting new state.");
       emit(state.copyWith(
         uiMode: event.newMode,
-        paletteIdentifier: defaultPalette, // Update palette in state too
+        paletteIdentifier: newPalette, // Use the palette from the repo
         status: SettingsStatus.loaded,
         clearAllMessages: true,
       ));

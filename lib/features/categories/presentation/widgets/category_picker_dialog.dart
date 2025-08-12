@@ -185,7 +185,7 @@ class _CategoryPickerDialogContentState
                               return ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor:
-                                      category.displayColor.withOpacity(0.15),
+                                      category.displayColor.withAlpha((255 * 0.15).round()),
                                   child: Icon(iconData,
                                       color: category.displayColor, size: 20),
                                 ),

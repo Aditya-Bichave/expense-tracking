@@ -1,6 +1,7 @@
 // lib/features/accounts/presentation/bloc/account_list/account_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/common/base_list_state.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
@@ -29,7 +30,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
         super(const AccountListInitial()) {
     on<LoadAccounts>(_onLoadAccounts);
     on<DeleteAccountRequested>(_onDeleteAccountRequested);
-    on<_DataChanged>(_onDataChanged);
+    on<_DataChanged>(_onDataChanged, transformer: restartable());
     on<ResetState>(_onResetState); // Add handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
@@ -53,6 +54,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
     });
 
     log.info("[AccountListBloc] Initialized and subscribed to data changes.");
+    add(const LoadAccounts());
   }
 
   // --- ADDED: Reset State Handler ---
@@ -103,7 +105,8 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
         (accounts) {
           log.info(
               "[AccountListBloc] Load successful. Emitting AccountListLoaded with ${accounts.length} accounts.");
-          emit(AccountListLoaded(accounts: accounts));
+          // On successful load, emit the new list and ensure any previous error is cleared.
+          emit(AccountListLoaded(accounts: accounts, errorMessage: null));
         },
       );
     } catch (e) {
@@ -127,7 +130,8 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
           currentState.items.where((acc) => acc.id != event.accountId).toList();
       log.info(
           "[AccountListBloc] Optimistic list size: ${optimisticList.length}. Emitting updated AccountListLoaded.");
-      emit(AccountListLoaded(accounts: optimisticList));
+      // Use copyWith to clear any previous error message while updating the list
+      emit(currentState.copyWith(accounts: optimisticList, clearErrorMessage: true));
 
       try {
         final result = await _deleteAssetAccountUseCase(
@@ -138,15 +142,18 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
         result.fold(
           (failure) {
             log.warning(
-                "[AccountListBloc] Deletion failed: ${failure.message}. Reverting UI and emitting Error.");
-            // Revert UI
-            emit(currentState);
-            emit(AccountListError(_mapFailureToMessage(failure,
-                context: "Failed to delete account")));
+                "[AccountListBloc] Deletion failed: ${failure.message}. Reverting optimistic UI and emitting state with error.");
+            // On failure, revert to the original state but with an error message.
+            emit(currentState.copyWith(
+              errorMessage: _mapFailureToMessage(failure,
+                  context: "Failed to delete account"),
+            ));
           },
           (_) {
             log.info(
                 "[AccountListBloc] Deletion successful. Publishing DataChangedEvent.");
+            // The data changed event will trigger a reload via the stream,
+            // which will in turn clear the error message on success.
             publishDataChangedEvent(
                 type: DataChangeType.account, reason: DataChangeReason.deleted);
           },
@@ -154,9 +161,10 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
       } catch (e) {
         log.severe(
             "[AccountListBloc] Unexpected error in _onDeleteAccountRequested for ID ${event.accountId}");
-        emit(currentState); // Revert optimistic update
-        emit(AccountListError(
-            "An unexpected error occurred during deletion: ${e.toString()}"));
+        // Revert optimistic update and show error message
+        emit(currentState.copyWith(
+            errorMessage:
+                "An unexpected error occurred during deletion: ${e.toString()}"));
       }
     } else {
       log.warning(

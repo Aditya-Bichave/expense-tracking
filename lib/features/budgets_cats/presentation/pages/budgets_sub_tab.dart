@@ -45,7 +45,7 @@ class BudgetsSubTab extends StatelessWidget {
                           Icon(Icons.pie_chart_outline_rounded,
                               size: 60,
                               color:
-                                  theme.colorScheme.secondary.withOpacity(0.7)),
+                                  theme.colorScheme.secondary.withAlpha((255 * 0.7).round())),
                           const SizedBox(height: 16),
                           Text("No Budgets Created Yet",
                               style: theme.textTheme.headlineSmall?.copyWith(

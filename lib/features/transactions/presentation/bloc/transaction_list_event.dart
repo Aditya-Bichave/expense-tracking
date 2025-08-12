@@ -116,4 +116,8 @@ class _DataChanged extends TransactionListEvent {
 class ResetState extends TransactionListEvent {
   const ResetState();
 }
+
+class ClearFilters extends TransactionListEvent {
+  const ClearFilters();
+}
 // --- END ADDED ---

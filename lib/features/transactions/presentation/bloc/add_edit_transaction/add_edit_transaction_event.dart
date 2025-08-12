@@ -74,3 +74,11 @@ class CategoryCreated extends AddEditTransactionEvent {
 class ClearMessages extends AddEditTransactionEvent {
   const ClearMessages();
 }
+
+// User manually selected a category from the picker
+class CategorySelected extends AddEditTransactionEvent {
+  final Category selectedCategory;
+  const CategorySelected(this.selectedCategory);
+  @override
+  List<Object?> get props => [selectedCategory];
+}

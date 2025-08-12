@@ -28,15 +28,12 @@ class AddEditTransactionPage extends StatefulWidget {
 }
 
 class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
-  late final AddEditTransactionBloc _bloc;
   TransactionEntity? _initialTransactionEntity;
-  AddEditStatus? _previousStatus; // Track previous status
 
   @override
   void initState() {
     super.initState();
-    _bloc = sl<AddEditTransactionBloc>();
-
+    // Prepare the initial entity but do not create the BLoC here.
     if (widget.initialTransactionData is Expense) {
       _initialTransactionEntity = TransactionEntity.fromExpense(
           widget.initialTransactionData as Expense);
@@ -50,18 +47,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       log.warning(
           "[AddEditTxnPage] Received unexpected initial data type: ${widget.initialTransactionData.runtimeType}");
     }
-
-    _bloc.add(
-        InitializeTransaction(initialTransaction: _initialTransactionEntity));
-    _previousStatus = _bloc.state.status;
     log.info(
         "[AddEditTxnPage] initState complete. Initial Entity ID: ${_initialTransactionEntity?.id}");
-  }
-
-  @override
-  void dispose() {
-    // If the Bloc was created here, dispose it. But it's from sl, so no dispose needed.
-    super.dispose();
   }
 
   void _showSuggestionDialog(BuildContext context, Category suggestedCategory) {
@@ -78,12 +65,13 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         barrierDismissible: false,
       ).then((confirmed) {
         if (!mounted) return;
+        final bloc = context.read<AddEditTransactionBloc>();
         if (confirmed == true) {
           log.info("[AddEditTxnPage] Suggestion accepted.");
-          _bloc.add(AcceptCategorySuggestion(suggestedCategory));
+          bloc.add(AcceptCategorySuggestion(suggestedCategory));
         } else {
           log.info("[AddEditTxnPage] Suggestion rejected.");
-          _bloc.add(const RejectCategorySuggestion());
+          bloc.add(const RejectCategorySuggestion());
         }
       });
     });
@@ -94,6 +82,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         "[AddEditTxnPage] Asking user if they want to create a custom category.");
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final bloc = context.read<AddEditTransactionBloc>();
       AppDialogs.showConfirmation(
         context,
         title: "Choose Category",
@@ -106,11 +95,11 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         if (!mounted) return;
         if (create == true) {
           log.info("[AddEditTxnPage] User chose to create a new category.");
-          _bloc.add(const CreateCustomCategoryRequested());
+          bloc.add(const CreateCustomCategoryRequested());
         } else {
           log.info(
               "[AddEditTxnPage] User chose/cancelled to select an existing category.");
-          _bloc.emit(_bloc.state
+          bloc.emit(bloc.state
               .copyWith(status: AddEditStatus.ready)); // Go back to ready
           if (create == false) {
             ScaffoldMessenger.of(context)
@@ -145,11 +134,13 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     if (result != null) {
       log.info(
           "[AddEditTxnPage] Received new category from Add screen: ${result.name}. Dispatching CategoryCreated.");
-      _bloc.add(CategoryCreated(result));
+      context.read<AddEditTransactionBloc>().add(CategoryCreated(result));
     } else {
       log.info(
           "[AddEditTxnPage] Add Category screen popped without returning a category. Returning to form (ready state).");
-      _bloc.emit(_bloc.state.copyWith(status: AddEditStatus.ready));
+      context
+          .read<AddEditTransactionBloc>()
+          .emit(context.read<AddEditTransactionBloc>().state.copyWith(status: AddEditStatus.ready));
     }
   }
 
@@ -157,36 +148,30 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   Widget build(BuildContext context) {
     final bool isEditing = _initialTransactionEntity != null;
 
-    return BlocProvider.value(
-      value: _bloc,
+    return BlocProvider(
+      create: (context) => sl<AddEditTransactionBloc>()
+        ..add(InitializeTransaction(initialTransaction: _initialTransactionEntity)),
       child: BlocListener<AddEditTransactionBloc, AddEditTransactionState>(
+        listenWhen: (previous, current) => previous.status != current.status,
         listener: (context, state) {
           log.fine(
-              "[AddEditTxnPage] BlocListener: Status=${state.status}, PrevStatus=$_previousStatus, Suggestion=${state.suggestedCategory?.name}");
-
-          // --- Handle State Transitions for Dialogs/Navigation ---
+              "[AddEditTxnPage] BlocListener: Status=${state.status}, Suggestion=${state.suggestedCategory?.name}");
 
           // 1. Show Suggestion Dialog
           if (state.status == AddEditStatus.suggestingCategory &&
-              _previousStatus != AddEditStatus.suggestingCategory &&
               state.suggestedCategory != null) {
             _showSuggestionDialog(context, state.suggestedCategory!);
           }
-          // --- CORRECTED: Check for askingCreateCategory status ---
-          // 2. Ask "Create Custom?" Dialog (Triggered by status)
-          else if (state.status == AddEditStatus.askingCreateCategory &&
-              _previousStatus != AddEditStatus.askingCreateCategory) {
+          // 2. Ask "Create Custom?" Dialog
+          else if (state.status == AddEditStatus.askingCreateCategory) {
             _askCreateCustomCategory(context);
           }
-          // --- END CORRECTION ---
-          // 3. Navigate to Add Category (Triggered by dedicated state)
-          else if (state.status == AddEditStatus.navigatingToCreateCategory &&
-              _previousStatus != AddEditStatus.navigatingToCreateCategory) {
+          // 3. Navigate to Add Category
+          else if (state.status == AddEditStatus.navigatingToCreateCategory) {
             _navigateToAddCategory(context, state.transactionType);
           }
           // 4. Handle Final Success
-          else if (state.status == AddEditStatus.success &&
-              _previousStatus != AddEditStatus.success) {
+          else if (state.status == AddEditStatus.success) {
             log.info(
                 "[AddEditTxnPage] Transaction save successful. Popping route.");
             ScaffoldMessenger.of(context)
@@ -204,9 +189,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             });
           }
           // 5. Handle Error State
-          else if (state.status == AddEditStatus.error &&
-              state.errorMessage != null &&
-              _previousStatus != AddEditStatus.error) {
+          else if (state.status == AddEditStatus.error && state.errorMessage != null) {
             log.warning(
                 "[AddEditTxnPage] Transaction save/process error: ${state.errorMessage}");
             ScaffoldMessenger.of(context)
@@ -215,12 +198,11 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                   content: Text('Error: ${state.errorMessage}'),
                   backgroundColor: Theme.of(context).colorScheme.error));
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _bloc.add(const ClearMessages());
+              if (mounted) {
+                context.read<AddEditTransactionBloc>().add(const ClearMessages());
+              }
             });
           }
-
-          // Update previous state tracking *after* handling transitions
-          _previousStatus = state.status;
         },
         child: Scaffold(
           appBar: AppBar(
@@ -273,7 +255,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                   if (isLoadingOverlayVisible)
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withAlpha((255 * 0.1).round()),
                         child: const Center(child: CircularProgressIndicator()),
                       ),
                     ),

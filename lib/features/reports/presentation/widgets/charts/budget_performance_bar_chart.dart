@@ -176,7 +176,7 @@ class BudgetPerformanceBarChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: maxY / 5,
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+              color: theme.dividerColor.withAlpha((255 * 0.1).round()), strokeWidth: 1),
         ),
         alignment: BarChartAlignment.spaceAround,
       ),
@@ -200,8 +200,8 @@ class BudgetPerformanceBarChart extends StatelessWidget {
       final targetColor =
           theme.colorScheme.secondary; // Use secondary for target
       final actualColor = currentItem.statusColor;
-      final prevTargetColor = targetColor.withOpacity(0.4);
-      final prevActualColor = actualColor.withOpacity(0.4);
+      final prevTargetColor = targetColor.withAlpha((255 * 0.4).round());
+      final prevActualColor = actualColor.withAlpha((255 * 0.4).round());
 
       return BarChartGroupData(
         x: i,

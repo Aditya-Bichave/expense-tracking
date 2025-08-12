@@ -63,6 +63,17 @@ class AppTheme {
     UIMode.aether: 'Aether',
   };
 
+  static String getDefaultPaletteForMode(UIMode mode) {
+    switch (mode) {
+      case UIMode.elemental:
+        return elementalPalette1;
+      case UIMode.quantum:
+        return quantumPalette1;
+      case UIMode.aether:
+        return aetherPalette1;
+    }
+  }
+
   // --- Central Factory Method (Refactored) ---
   static AppThemeDataPair buildTheme(UIMode mode, String paletteIdentifier) {
     // 1. Get the configuration object for the mode and palette
@@ -210,7 +221,7 @@ class AppTheme {
       scaffoldBackgroundColor: colorScheme.background,
 
       // --- Component Themes (Configure using colorScheme and modeTheme) ---
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: modeTheme.cardStyle == CardStyle.flat
             ? 0
             : (modeTheme.cardStyle == CardStyle.floating ? 6 : 1.5),

@@ -11,7 +11,7 @@ abstract class IncomeRepository {
   Future<Either<Failure, List<IncomeModel>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Filter by Category ID
+    List<String>? categoryIds, // Filter by a list of Category IDs
     String? accountId,
   });
   // --- END MODIFIED ---

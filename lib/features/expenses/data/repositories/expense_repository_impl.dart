@@ -19,6 +19,12 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
   ExpenseRepositoryImpl({required this.localDataSource});
 
+  bool _isSameDay(DateTime dateA, DateTime dateB) {
+    return dateA.year == dateB.year &&
+        dateA.month == dateB.month &&
+        dateA.day == dateB.day;
+  }
+
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Expense>> _hydrateSingleModel(
       ExpenseModel model) async {
@@ -79,47 +85,44 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   Future<Either<Failure, List<ExpenseModel>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Category ID
+    List<String>? categoryIds,
     String? accountId,
   }) async {
     log.info(
-        "[ExpenseRepo] Getting expense models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$category");
+        "[ExpenseRepo] Getting expense models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatIDs=$categoryIds");
     try {
-      final expenseModels = await localDataSource.getExpenses();
+      final expenseModels =
+          await localDataSource.getExpenses(categoryIds: categoryIds);
       log.fine(
-          "[ExpenseRepo] Fetched ${expenseModels.length} raw expense models.");
+          "[ExpenseRepo] Fetched ${expenseModels.length} raw expense models from data source.");
 
-      // Apply filtering
+      // Data source handles category filtering.
+      // We only need to handle date and account filtering here.
       final filteredModels = expenseModels.where((model) {
         bool dateMatch = true;
-        bool categoryMatch = true;
         bool accountMatch = true;
+
+        // Date Filtering
         if (startDate != null) {
           final expDateOnly =
               DateTime(model.date.year, model.date.month, model.date.day);
           final startDateOnly =
               DateTime(startDate.year, startDate.month, startDate.day);
-          dateMatch = !expDateOnly.isBefore(startDateOnly);
+          dateMatch = expDateOnly.isAfter(startDateOnly) ||
+              _isSameDay(expDateOnly, startDateOnly);
         }
         if (endDate != null && dateMatch) {
-          final expDateOnly =
-              DateTime(model.date.year, model.date.month, model.date.day);
-          // Ensure end date includes the full day
           final endDateInclusive =
               DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
           dateMatch = !model.date.isAfter(endDateInclusive);
         }
+
+        // Account Filtering (assuming single account ID)
         if (accountId != null && accountId.isNotEmpty) {
-          // Handle multiple account IDs if passed comma-separated
-          final ids = accountId.split(',');
-          accountMatch = ids.contains(model.accountId);
+          accountMatch = model.accountId == accountId;
         }
-        if (category != null && category.isNotEmpty) {
-          // Handle multiple category IDs if passed comma-separated
-          final ids = category.split(',');
-          categoryMatch = ids.contains(model.categoryId);
-        }
-        return dateMatch && categoryMatch && accountMatch;
+
+        return dateMatch && accountMatch;
       }).toList();
 
       log.fine("[ExpenseRepo] Filtered to ${filteredModels.length} models.");

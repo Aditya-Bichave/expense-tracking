@@ -182,7 +182,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                                 ),
                                 color: isSelected
                                     ? theme.colorScheme.primaryContainer
-                                        .withOpacity(0.3)
+                                        .withAlpha((255 * 0.3).round())
                                     : theme.colorScheme
                                         .surfaceContainerHighest, // Use a background color
                                 borderRadius: BorderRadius.circular(8),

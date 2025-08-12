@@ -80,6 +80,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _searchController.dispose();
     _debounce?.cancel();
     _blocSubscription?.cancel();
+    context.read<TransactionListBloc>().add(const ClearFilters());
     super.dispose();
   }
 
@@ -468,7 +469,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
               icon: const Icon(Icons.category_rounded),
               backgroundColor: count > 0
                   ? theme.colorScheme.secondaryContainer
-                  : theme.disabledColor.withOpacity(0.1),
+                  : theme.disabledColor.withAlpha((255 * 0.1).round()),
               foregroundColor: count > 0
                   ? theme.colorScheme.onSecondaryContainer
                   : theme.disabledColor,

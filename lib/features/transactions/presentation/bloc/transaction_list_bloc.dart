@@ -1,6 +1,7 @@
 // lib/features/transactions/presentation/bloc/transaction_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:dartz/dartz.dart'; // Add this if missing for Either
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
@@ -18,9 +19,7 @@ import 'package:expense_tracker/features/income/domain/usecases/delete_income.da
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/main.dart';
-// Import repositories for direct updates
-import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
-import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+import 'package:expense_tracker/features/transactions/domain/usecases/update_transaction_categorization.dart';
 import 'package:flutter/material.dart';
 
 part 'transaction_list_event.dart';
@@ -33,8 +32,8 @@ class TransactionListBloc
   final DeleteIncomeUseCase _deleteIncomeUseCase;
   final ApplyCategoryToBatchUseCase _applyCategoryToBatchUseCase;
   final SaveUserCategorizationHistoryUseCase _saveUserHistoryUseCase;
-  final ExpenseRepository _expenseRepository;
-  final IncomeRepository _incomeRepository;
+  final UpdateTransactionCategorizationUseCase
+      _updateTransactionCategorizationUseCase;
 
   late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
@@ -44,16 +43,16 @@ class TransactionListBloc
     required DeleteIncomeUseCase deleteIncomeUseCase,
     required ApplyCategoryToBatchUseCase applyCategoryToBatchUseCase,
     required SaveUserCategorizationHistoryUseCase saveUserHistoryUseCase,
-    required ExpenseRepository expenseRepository,
-    required IncomeRepository incomeRepository,
+    required UpdateTransactionCategorizationUseCase
+        updateTransactionCategorizationUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
   })  : _getTransactionsUseCase = getTransactionsUseCase,
         _deleteExpenseUseCase = deleteExpenseUseCase,
         _deleteIncomeUseCase = deleteIncomeUseCase,
         _applyCategoryToBatchUseCase = applyCategoryToBatchUseCase,
         _saveUserHistoryUseCase = saveUserHistoryUseCase,
-        _expenseRepository = expenseRepository,
-        _incomeRepository = incomeRepository,
+        _updateTransactionCategorizationUseCase =
+            updateTransactionCategorizationUseCase,
         super(const TransactionListState()) {
     // Register Event Handlers
     on<LoadTransactions>(_onLoadTransactions);
@@ -65,8 +64,9 @@ class TransactionListBloc
     on<ApplyBatchCategory>(_onApplyBatchCategory);
     on<DeleteTransaction>(_onDeleteTransaction);
     on<UserCategorizedTransaction>(_onUserCategorizedTransaction);
-    on<_DataChanged>(_onDataChanged);
+    on<_DataChanged>(_onDataChanged, transformer: restartable());
     on<ResetState>(_onResetState); // Add Reset Handler
+    on<ClearFilters>(_onClearFilters);
 
     // Subscribe to Data Change Stream
     _dataChangeSubscription = dataChangeStream.listen((event) {
@@ -92,6 +92,7 @@ class TransactionListBloc
     });
     log.info(
         "[TransactionListBloc] Initialized and subscribed to data changes.");
+    add(const LoadTransactions());
   }
 
   // --- Add Reset State Handler ---
@@ -102,6 +103,18 @@ class TransactionListBloc
     // add(const LoadTransactions());
   }
   // --- End Reset Handler ---
+
+  void _onClearFilters(ClearFilters event, Emitter<TransactionListState> emit) {
+    log.info("[TransactionListBloc] Clearing filters.");
+    emit(state.copyWith(
+      clearStartDate: true,
+      clearEndDate: true,
+      clearCategoryId: true,
+      clearAccountId: true,
+      clearTransactionType: true,
+    ));
+    add(const LoadTransactions(forceReload: true));
+  }
 
   // --- Event Handlers (Rest remain the same) ---
   Future<void> _onLoadTransactions(
@@ -433,17 +446,15 @@ class TransactionListBloc
     // Update Transaction Categorization State
     log.info(
         "[TransactionListBloc] Updating categorization state for Txn ID: ${event.transactionId}");
-    final repoResult = event.transactionType == TransactionType.expense
-        ? await _expenseRepository.updateExpenseCategorization(
-            event.transactionId,
-            event.selectedCategory.id,
-            CategorizationStatus.categorized,
-            1.0) // Confidence 1.0 for manual set
-        : await _incomeRepository.updateIncomeCategorization(
-            event.transactionId,
-            event.selectedCategory.id,
-            CategorizationStatus.categorized,
-            1.0); // Confidence 1.0 for manual set
+    final repoResult = await _updateTransactionCategorizationUseCase(
+      UpdateTransactionCategorizationParams(
+        transactionId: event.transactionId,
+        categoryId: event.selectedCategory.id,
+        status: CategorizationStatus.categorized,
+        confidenceScore: 1.0, // Confidence 1.0 for manual set
+        type: event.transactionType,
+      ),
+    );
 
     // Handle result of updating the transaction
     repoResult.fold((failure) {

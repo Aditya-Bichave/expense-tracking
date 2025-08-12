@@ -110,7 +110,7 @@ class IncomeCard extends StatelessWidget {
                   padding: buttonPadding,
                   minimumSize: buttonMinSize,
                   visualDensity: VisualDensity.compact,
-                  side: BorderSide(color: successColor.withOpacity(0.5)),
+                  side: BorderSide(color: successColor.withAlpha((255 * 0.5).round())),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14)),
                 ),
@@ -213,7 +213,7 @@ class IncomeCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundColor: category.displayColor.withOpacity(0.15),
+            backgroundColor: category.displayColor.withAlpha((255 * 0.15).round()),
             child: _buildIcon(context, modeTheme),
           ),
           SizedBox(width: modeTheme?.listItemPadding.left ?? 16),
@@ -240,13 +240,13 @@ class IncomeCard extends StatelessWidget {
                 Text('Acc: $accountName',
                     style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant
-                            .withOpacity(0.8)),
+                            .withAlpha((255 * 0.8).round())),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 Text(DateFormatter.formatDateTime(income.date),
                     style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant
-                            .withOpacity(0.8))),
+                            .withAlpha((255 * 0.8).round()))),
                 if (income.notes != null && income.notes!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
@@ -255,7 +255,7 @@ class IncomeCard extends StatelessWidget {
                         Icon(Icons.notes_outlined,
                             size: 14,
                             color: theme.textTheme.bodySmall?.color
-                                ?.withOpacity(0.7)),
+                                ?.withAlpha((255 * 0.7).round())),
                         const SizedBox(width: 4),
                         Expanded(
                             child: Text(income.notes!,
