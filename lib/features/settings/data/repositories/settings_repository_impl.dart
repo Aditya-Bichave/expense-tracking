@@ -11,6 +11,7 @@ import 'package:simple_logger/simple_logger.dart'; // Import Level for log.log
 
 // *** Import the new AppCountries helper ***
 import 'package:expense_tracker/core/data/countries.dart';
+import 'package:expense_tracker/core/theme/app_theme.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDataSource localDataSource;
@@ -175,6 +176,35 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.log(Level.SEVERE, '[SettingsRepo] Error saving app lock status$e$s');
       return Left(
           SettingsFailure('Failed to save app lock setting: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> saveUIModeAndResetPalette(
+      UIMode mode) async {
+    log.info(
+        "[SettingsRepo] Saving UI mode and resetting palette. Mode: ${mode.name}");
+    try {
+      // 1. Save the new UI Mode
+      await localDataSource.saveUIMode(mode);
+      log.info("[SettingsRepo] UI mode saved successfully.");
+
+      // 2. Determine the default palette for this mode
+      final defaultPalette = AppTheme.getDefaultPaletteForMode(mode);
+      log.info(
+          "[SettingsRepo] Determined default palette for ${mode.name}: $defaultPalette");
+
+      // 3. Save the new default palette
+      await localDataSource.savePaletteIdentifier(defaultPalette);
+      log.info("[SettingsRepo] Default palette saved successfully.");
+
+      // 4. Return the new palette identifier so the BLoC can use it
+      return Right(defaultPalette);
+    } catch (e, s) {
+      log.log(Level.SEVERE,
+          '[SettingsRepo] Error during saveUIModeAndResetPalette$e$s');
+      return Left(SettingsFailure(
+          'Failed to save UI mode and palette: ${e.toString()}'));
     }
   }
 }

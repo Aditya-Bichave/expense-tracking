@@ -32,12 +32,6 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  @override
-  void initState() {
-    super.initState();
-    log.info("[DashboardPage] initState called.");
-  }
-
   Future<void> _refreshDashboard() async {
     log.info("[DashboardPage] Pull-to-refresh triggered.");
     // Dispatch load event to all relevant blocs for a full refresh
