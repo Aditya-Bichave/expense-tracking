@@ -1,6 +1,7 @@
 // lib/features/dashboard/presentation/bloc/dashboard_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
@@ -25,8 +26,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     required Stream<DataChangedEvent> dataChangeStream,
   })  : _getFinancialOverviewUseCase = getFinancialOverviewUseCase,
         super(DashboardInitial()) {
-    on<LoadDashboard>(_onLoadDashboard);
-    on<_DataChanged>(_onDataChanged);
+    on<LoadDashboard>(_onLoadDashboard, transformer: restartable());
     on<ResetState>(_onResetState); // Add Handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
@@ -45,7 +45,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           event.type == DataChangeType.settings) {
         log.info(
             "[DashboardBloc] Relevant DataChangedEvent: $event. Triggering reload.");
-        add(const _DataChanged());
+        add(const LoadDashboard(forceReload: true));
       }
       // --- END MODIFIED ---
     }, onError: (error, stackTrace) {
@@ -63,17 +63,6 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   // --- END ADDED ---
 
   // ... (rest of handlers remain the same) ...
-  Future<void> _onDataChanged(
-      _DataChanged event, Emitter<DashboardState> emit) async {
-    if (state is! DashboardLoading) {
-      // Avoid triggering multiple loads
-      log.info("[DashboardBloc] Handling _DataChanged event.");
-      add(const LoadDashboard(forceReload: true));
-    } else {
-      log.fine(
-          "[DashboardBloc] _DataChanged received, but already loading. Skipping explicit reload.");
-    }
-  }
 
   Future<void> _onLoadDashboard(
       LoadDashboard event, Emitter<DashboardState> emit) async {

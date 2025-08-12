@@ -1,6 +1,7 @@
 // lib/features/transactions/presentation/bloc/transaction_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:dartz/dartz.dart'; // Add this if missing for Either
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
@@ -56,7 +57,7 @@ class TransactionListBloc
         _incomeRepository = incomeRepository,
         super(const TransactionListState()) {
     // Register Event Handlers
-    on<LoadTransactions>(_onLoadTransactions);
+    on<LoadTransactions>(_onLoadTransactions, transformer: restartable());
     on<FilterChanged>(_onFilterChanged);
     on<SortChanged>(_onSortChanged);
     on<SearchChanged>(_onSearchChanged);
@@ -65,12 +66,10 @@ class TransactionListBloc
     on<ApplyBatchCategory>(_onApplyBatchCategory);
     on<DeleteTransaction>(_onDeleteTransaction);
     on<UserCategorizedTransaction>(_onUserCategorizedTransaction);
-    on<_DataChanged>(_onDataChanged);
     on<ResetState>(_onResetState); // Add Reset Handler
 
     // Subscribe to Data Change Stream
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // --- MODIFIED Listener ---
       if (event.type == DataChangeType.system &&
           event.reason == DataChangeReason.reset) {
         log.info(
@@ -83,9 +82,8 @@ class TransactionListBloc
           event.type == DataChangeType.settings) {
         log.info(
             "[TransactionListBloc] Relevant DataChangedEvent: $event. Triggering reload.");
-        add(const _DataChanged());
+        add(const LoadTransactions(forceReload: true));
       }
-      // --- END MODIFIED ---
     }, onError: (error, stackTrace) {
       log.severe(
           "[TransactionListBloc] Error in dataChangeStream listener: $error");
@@ -114,88 +112,7 @@ class TransactionListBloc
         ? DateTime.tryParse(event.incomingFilters!['startDate'] as String)
         : state.startDate;
     DateTime? endDate = event.incomingFilters?['endDate'] != null
-        ? DateTime.tryParse(event.incomingFilters!['endDate'] as String)
-        : state.endDate;
-    String? categoryId =
-        event.incomingFilters?['categoryId'] as String? ?? state.categoryId;
-    String? accountId =
-        event.incomingFilters?['accountId'] as String? ?? state.accountId;
-    TransactionType? transactionType;
-    if (event.incomingFilters?['type'] != null) {
-      try {
-        transactionType = TransactionType.values
-            .byName(event.incomingFilters!['type'] as String);
-      } catch (_) {
-        transactionType =
-            state.transactionType; // Fallback to current state if parse fails
-      }
-    } else {
-      transactionType = state.transactionType;
-    }
-
-    // Only show loading state if not already loaded or forced or if filters changed
-    final bool filtersChanged = event.incomingFilters != null;
-    if (state.status != ListStatus.success ||
-        event.forceReload ||
-        filtersChanged) {
-      emit(state.copyWith(
-        status: (state.status == ListStatus.success && !filtersChanged)
-            ? ListStatus.reloading
-            : ListStatus.loading,
-        // Apply incoming filters directly to state if they exist
-        startDate: startDate,
-        endDate: endDate,
-        categoryId: categoryId,
-        accountId: accountId,
-        transactionType: transactionType,
-        clearErrorMessage: true,
-      ));
-    } else {
-      log.info(
-          "[TransactionListBloc] Already loaded, skipping explicit loading state.");
-    }
-
-    final params = GetTransactionsParams(
-      startDate: startDate, // Use determined start date
-      endDate: endDate, // Use determined end date
-      categoryId: categoryId, // Use determined category ID
-      accountId: accountId, // Use determined account ID
-      transactionType: transactionType, // Use determined type
-      searchTerm: state.searchTerm, // Keep current search term from state
-      sortBy: state.sortBy, // Keep current sort from state
-      sortDirection: state.sortDirection, // Keep current sort from state
-    );
-
-    final result = await _getTransactionsUseCase(params);
-
-    result.fold((failure) {
-      log.warning("[TransactionListBloc] Load failed: ${failure.message}");
-      emit(state.copyWith(
-          status: ListStatus.error,
-          errorMessage: _mapFailureToMessage(failure)));
-    }, (transactions) {
-      log.info(
-          "[TransactionListBloc] Load successful with ${transactions.length} transactions.");
-      final validSelection = state.isInBatchEditMode
-          ? state.selectedTransactionIds
-              .where((id) => transactions.any((txn) => txn.id == id))
-              .toSet()
-          : <String>{};
-
-      emit(state.copyWith(
-        status: ListStatus.success,
-        transactions: transactions,
-        selectedTransactionIds: validSelection,
-        // Update filter state explicitly if filters were applied in this load
-        startDate: startDate,
-        endDate: endDate,
-        categoryId: categoryId,
-        accountId: accountId,
-        transactionType: transactionType,
-        clearErrorMessage: true,
-      ));
-    });
-  }
+        ? DateTime.tryP...
 
   Future<void> _onFilterChanged(
       FilterChanged event, Emitter<TransactionListState> emit) async {
@@ -467,20 +384,6 @@ class TransactionListBloc
     });
   }
 
-  Future<void> _onDataChanged(
-      _DataChanged event, Emitter<TransactionListState> emit) async {
-    // Avoid triggering reload if already loading/reloading
-    if (state.status != ListStatus.loading &&
-        state.status != ListStatus.reloading) {
-      log.info(
-          "[TransactionListBloc] _DataChanged received. Triggering LoadTransactions.");
-      add(const LoadTransactions(
-          forceReload: true)); // Force reload to get latest data
-    } else {
-      log.info(
-          "[TransactionListBloc] _DataChanged received, but already loading/reloading. Skipping explicit reload.");
-    }
-  }
 
   // Helper to map Failures to user-friendly strings
   String _mapFailureToMessage(Failure failure,

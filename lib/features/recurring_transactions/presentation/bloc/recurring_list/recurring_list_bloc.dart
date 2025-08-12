@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
@@ -24,7 +25,7 @@ class RecurringListBloc extends Bloc<RecurringListEvent, RecurringListState> {
     required this.deleteRecurringRule,
     required Stream<DataChangedEvent> dataChangedEventStream,
   }) : super(RecurringListInitial()) {
-    on<LoadRecurringRules>(_onLoadRecurringRules);
+    on<LoadRecurringRules>(_onLoadRecurringRules, transformer: restartable());
     on<PauseResumeRule>(_onPauseResumeRule);
     on<DeleteRule>(_onDeleteRule);
 

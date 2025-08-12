@@ -1,6 +1,7 @@
 // lib/features/accounts/presentation/bloc/account_list/account_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/common/base_list_state.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
@@ -27,9 +28,8 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
   })  : _getAssetAccountsUseCase = getAssetAccountsUseCase,
         _deleteAssetAccountUseCase = deleteAssetAccountUseCase,
         super(const AccountListInitial()) {
-    on<LoadAccounts>(_onLoadAccounts);
+    on<LoadAccounts>(_onLoadAccounts, transformer: restartable());
     on<DeleteAccountRequested>(_onDeleteAccountRequested);
-    on<_DataChanged>(_onDataChanged);
     on<ResetState>(_onResetState); // Add handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
@@ -45,7 +45,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
           event.type == DataChangeType.settings) {
         log.info(
             "[AccountListBloc] Relevant DataChangedEvent: $event. Triggering reload.");
-        add(const _DataChanged());
+        add(const LoadAccounts(forceReload: true));
       }
       // --- End System Reset Handling ---
     }, onError: (error, stackTrace) {
@@ -64,16 +64,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
   }
   // --- END ADDED ---
 
-  // ... rest of the handlers (_onDataChanged, _onLoadAccounts, _onDeleteAccountRequested, _mapFailureToMessage, close) remain the same ...
-  // Internal event handler to trigger reload
-  Future<void> _onDataChanged(
-      _DataChanged event, Emitter<AccountListState> emit) async {
-    if (state is! AccountListLoading) {
-      log.info(
-          "[AccountListBloc] Handling _DataChanged event. Dispatching LoadAccounts(forceReload: true).");
-      add(const LoadAccounts(forceReload: true));
-    }
-  }
+  // ... rest of the handlers (_onLoadAccounts, _onDeleteAccountRequested, _mapFailureToMessage, close) remain the same ...
 
   Future<void> _onLoadAccounts(
       LoadAccounts event, Emitter<AccountListState> emit) async {

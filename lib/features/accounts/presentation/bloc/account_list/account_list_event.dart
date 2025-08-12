@@ -21,11 +21,6 @@ class DeleteAccountRequested extends AccountListEvent {
   List<Object> get props => [accountId];
 }
 
-// Internal event triggered by stream listener or other actions needing refresh
-class _DataChanged extends AccountListEvent {
-  const _DataChanged();
-}
-
 // --- ADDED: Reset State Event ---
 class ResetState extends AccountListEvent {
   const ResetState();

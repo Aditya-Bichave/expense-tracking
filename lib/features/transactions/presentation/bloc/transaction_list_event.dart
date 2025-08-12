@@ -107,11 +107,6 @@ class UserCategorizedTransaction extends TransactionListEvent {
       [transactionId, transactionType, selectedCategory, matchData];
 }
 
-// Internal event for reactive updates from data changes
-class _DataChanged extends TransactionListEvent {
-  const _DataChanged();
-}
-
 // --- ADDED: Reset State Event ---
 class ResetState extends TransactionListEvent {
   const ResetState();

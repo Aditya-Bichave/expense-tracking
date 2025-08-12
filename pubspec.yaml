@@ -13,6 +13,7 @@ dependencies:
 
   # State Management
   flutter_bloc: ^8.1.3
+  bloc_concurrency: ^0.2.5
   equatable: ^2.0.5 # For value equality in Blocs/Entities
 
   # Local Storage
