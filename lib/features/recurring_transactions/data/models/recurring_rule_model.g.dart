@@ -18,7 +18,6 @@ class RecurringRuleModelAdapter extends TypeAdapter<RecurringRuleModel> {
     };
     return RecurringRuleModel(
       id: fields[0] as String,
-      userId: fields[1] as String?,
       amount: fields[2] as double,
       description: fields[3] as String,
       categoryId: fields[4] as String,
@@ -41,11 +40,9 @@ class RecurringRuleModelAdapter extends TypeAdapter<RecurringRuleModel> {
   @override
   void write(BinaryWriter writer, RecurringRuleModel obj) {
     writer
-      ..writeByte(18)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.userId)
       ..writeByte(2)
       ..write(obj.amount)
       ..writeByte(3)

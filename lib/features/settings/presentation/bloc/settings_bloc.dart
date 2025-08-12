@@ -242,18 +242,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           clearAllMessages: true));
     }, (_) {
       log.info("[SettingsBloc] UI mode saved. Determining default palette.");
-      String defaultPalette;
-      switch (event.newMode) {
-        case UIMode.elemental:
-          defaultPalette = AppTheme.elementalPalette1;
-          break;
-        case UIMode.quantum:
-          defaultPalette = AppTheme.quantumPalette1;
-          break;
-        case UIMode.aether:
-          defaultPalette = AppTheme.aetherPalette1;
-          break;
-      }
+      final defaultPalette = AppTheme.getDefaultPaletteForMode(event.newMode);
       log.info("[SettingsBloc] Saving default palette: $defaultPalette");
       _settingsRepository
           .savePaletteIdentifier(defaultPalette); // Fire and forget is ok here

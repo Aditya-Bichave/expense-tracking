@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/add_audit_log.dart';
@@ -10,10 +11,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
-class MockRecurringTransactionRepository extends Mock implements RecurringTransactionRepository {}
+class MockRecurringTransactionRepository extends Mock
+    implements RecurringTransactionRepository {}
+
 class MockGetRecurringRuleById extends Mock implements GetRecurringRuleById {}
+
 class MockAddAuditLog extends Mock implements AddAuditLog {}
+
 class MockUuid extends Mock implements Uuid {}
+
+// Create a Fake class for the type that needs a fallback
+class FakeRecurringRuleAuditLog extends Fake implements RecurringRuleAuditLog {}
+
+class FakeRecurringRule extends Fake implements RecurringRule {}
 
 void main() {
   late UpdateRecurringRule usecase;
@@ -21,6 +31,12 @@ void main() {
   late MockGetRecurringRuleById mockGetRecurringRuleById;
   late MockAddAuditLog mockAddAuditLog;
   late MockUuid mockUuid;
+
+  setUpAll(() {
+    // Register the fallback value for any test in this file
+    registerFallbackValue(FakeRecurringRuleAuditLog());
+    registerFallbackValue(FakeRecurringRule());
+  });
 
   setUp(() {
     mockRepository = MockRecurringTransactionRepository();

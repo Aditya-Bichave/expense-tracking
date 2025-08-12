@@ -53,7 +53,7 @@ class TransactionListItem extends StatelessWidget {
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: category.displayColor.withOpacity(0.15),
+        backgroundColor: category.displayColor.withAlpha((255 * 0.15).round()),
         child: _buildIcon(context, theme),
       ),
       title: Text(

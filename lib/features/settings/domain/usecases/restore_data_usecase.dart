@@ -106,16 +106,20 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
       final dataMap =
           decodedJson[AppConstants.backupDataKey] as Map<String, dynamic>;
 
-      // 4. Deserialize data
+      // 4. Deserialize data safely
       log.info("[RestoreUseCase] Deserializing data from JSON...");
-      AllData allData;
-      try {
-        allData = AllData.fromJson(dataMap); // fromJson uses constants now
+      final allDataResult = AllData.fromJson(dataMap);
+
+      final AllData allData;
+      if (allDataResult.isLeft()) {
+        final failure =
+            allDataResult.fold<Failure>((f) => f, (_) => UnexpectedFailure());
+        log.warning(
+            "[RestoreUseCase] Deserialization failed: ${failure.message}");
+        return Left(failure);
+      } else {
+        allData = allDataResult.getOrElse(() => throw UnexpectedFailure());
         log.info("[RestoreUseCase] Deserialization successful.");
-      } catch (e, s) {
-        log.severe("[RestoreUseCase] Error during deserialization$e$s");
-        return Left(RestoreFailure(
-            "Failed to parse backup data content: ${e.toString()}"));
       }
 
       // 5. Restore data via repository (includes clearing)

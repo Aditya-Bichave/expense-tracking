@@ -113,7 +113,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
                   color: selectedColor,
                   shape: BoxShape.circle,
                   border:
-                      Border.all(color: theme.dividerColor.withOpacity(0.5))),
+                      Border.all(color: theme.dividerColor.withAlpha((255 * 0.5).round()))),
             ),
           ),
           onTap: () => _showColorPicker(context),

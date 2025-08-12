@@ -235,7 +235,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     final color =
         goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
     final backgroundColor =
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.5);
+        theme.colorScheme.surfaceContainerHighest.withAlpha((255 * 0.5).round());
     final bool isQuantum = uiMode == UIMode.quantum;
 
     final double radius = isQuantum ? 60.0 : 70.0;
@@ -457,7 +457,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                   Icon(Icons.flag_outlined,
                       size: 16,
                       color:
-                          theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                          theme.colorScheme.onSurfaceVariant.withAlpha((255 * 0.7).round())),
                   const SizedBox(width: 4),
                   Text('Target: ${DateFormatter.formatDate(goal.targetDate!)}',
                       style: theme.textTheme.bodySmall?.copyWith(

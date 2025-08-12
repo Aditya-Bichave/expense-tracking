@@ -130,12 +130,12 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     labels: const ['Expense', 'Income'],
                     activeBgColors: [
                       [
-                        theme.colorScheme.errorContainer.withOpacity(0.7),
+                        theme.colorScheme.errorContainer.withAlpha((255 * 0.7).round()),
                         theme.colorScheme.errorContainer
                       ],
                       [
                         theme.colorScheme.primaryContainer,
-                        theme.colorScheme.primaryContainer.withOpacity(0.7)
+                        theme.colorScheme.primaryContainer.withAlpha((255 * 0.7).round())
                       ]
                     ],
                     onToggle: (index) {

@@ -10,9 +10,6 @@ class RecurringRuleModel extends HiveObject {
   @HiveField(0)
   final String id;
 
-  @HiveField(1)
-  final String? userId;
-
   @HiveField(2)
   final double amount;
 
@@ -63,7 +60,6 @@ class RecurringRuleModel extends HiveObject {
 
   RecurringRuleModel({
     required this.id,
-    this.userId,
     required this.amount,
     required this.description,
     required this.categoryId,
@@ -85,7 +81,6 @@ class RecurringRuleModel extends HiveObject {
   factory RecurringRuleModel.fromEntity(RecurringRule entity) {
     return RecurringRuleModel(
       id: entity.id,
-      userId: entity.userId,
       amount: entity.amount,
       description: entity.description,
       categoryId: entity.categoryId,
@@ -108,7 +103,6 @@ class RecurringRuleModel extends HiveObject {
   RecurringRule toEntity() {
     return RecurringRule(
       id: id,
-      userId: userId,
       amount: amount,
       description: description,
       categoryId: categoryId,

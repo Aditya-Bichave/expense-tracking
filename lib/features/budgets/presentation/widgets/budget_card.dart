@@ -103,7 +103,7 @@ class BudgetCard extends StatelessWidget {
         percent: percentage,
         barRadius: const Radius.circular(3),
         backgroundColor:
-            theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            theme.colorScheme.surfaceContainerHighest.withAlpha((255 * 0.5).round()),
         progressColor: color,
         animation: false,
       );

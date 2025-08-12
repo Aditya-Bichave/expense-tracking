@@ -1,6 +1,7 @@
 // lib/features/dashboard/presentation/bloc/dashboard_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
@@ -26,7 +27,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   })  : _getFinancialOverviewUseCase = getFinancialOverviewUseCase,
         super(DashboardInitial()) {
     on<LoadDashboard>(_onLoadDashboard);
-    on<_DataChanged>(_onDataChanged);
+    on<_DataChanged>(_onDataChanged, transformer: restartable());
     on<ResetState>(_onResetState); // Add Handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
@@ -52,6 +53,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       log.severe("[DashboardBloc] Error in dataChangeStream listener: $error");
     });
     log.info("[DashboardBloc] Initialized and subscribed to data changes.");
+    add(const LoadDashboard());
   }
 
   // --- ADDED: Reset State Handler ---

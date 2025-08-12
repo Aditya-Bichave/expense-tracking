@@ -36,12 +36,18 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
   }
 
   @override
-  Future<List<IncomeModel>> getIncomes() async {
+  Future<List<IncomeModel>> getIncomes({List<String>? categoryIds}) async {
     if (demoModeService.isDemoActive) {
       log.fine("[DemoAwareIncomeDS] Getting demo incomes.");
-      return demoModeService.getDemoIncomes();
+      final allIncomes = await demoModeService.getDemoIncomes();
+      if (categoryIds == null || categoryIds.isEmpty) {
+        return allIncomes;
+      }
+      return allIncomes
+          .where((income) => categoryIds.contains(income.categoryId))
+          .toList();
     } else {
-      return hiveDataSource.getIncomes();
+      return hiveDataSource.getIncomes(categoryIds: categoryIds);
     }
   }
 

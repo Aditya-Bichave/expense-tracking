@@ -202,7 +202,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         ),
         borderSide: isTouched
             ? BorderSide(color: theme.colorScheme.surface, width: 2)
-            : BorderSide(color: colors[i].withOpacity(0)),
+            : BorderSide(color: colors[i].withAlpha((255 * 0).round())),
       );
     });
   }

@@ -63,7 +63,7 @@ class AccountListPage extends StatelessWidget {
                   defaultIllustration,
               height: 120,
               colorFilter: ColorFilter.mode(
-                  theme.colorScheme.secondary.withOpacity(0.8),
+                  theme.colorScheme.secondary.withAlpha((255 * 0.8).round()),
                   BlendMode.srcIn),
             ),
             const SizedBox(height: 24),

@@ -144,7 +144,7 @@ class SpendingBarChart extends StatelessWidget {
             BarChartRodData(
               toY: prevItem?.currentTotalAmount ?? 0,
               color:
-                  currentItem.categoryColor.withOpacity(0.4), // Lighter color
+                  currentItem.categoryColor.withAlpha((255 * 0.4).round()), // Lighter color
               width: barWidth,
               borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(4), topRight: Radius.circular(4)),

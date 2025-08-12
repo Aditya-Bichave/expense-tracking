@@ -164,12 +164,12 @@ class _CategoryFormState extends State<CategoryForm> {
     final bool isEditing = widget.initialCategory != null;
 
     final List<Color> expenseColors = [
-      theme.colorScheme.errorContainer.withOpacity(0.7),
+      theme.colorScheme.errorContainer.withAlpha((255 * 0.7).round()),
       theme.colorScheme.errorContainer
     ];
     final List<Color> incomeColors = [
       theme.colorScheme.primaryContainer,
-      theme.colorScheme.primaryContainer.withOpacity(0.7)
+      theme.colorScheme.primaryContainer.withAlpha((255 * 0.7).round())
     ];
 
     return Form(

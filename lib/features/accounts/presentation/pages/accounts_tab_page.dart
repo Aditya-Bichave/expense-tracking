@@ -62,10 +62,10 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
     // Define gradient lists
     final assetGradientList = [
       theme.colorScheme.primaryContainer,
-      theme.colorScheme.primaryContainer.withOpacity(0.7)
+      theme.colorScheme.primaryContainer.withAlpha((255 * 0.7).round())
     ];
     final liabilityGradientList = [
-      theme.colorScheme.errorContainer.withOpacity(0.7),
+      theme.colorScheme.errorContainer.withAlpha((255 * 0.7).round()),
       theme.colorScheme.errorContainer
     ];
 
@@ -308,7 +308,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
               textStyle: theme.textTheme.labelLarge,
-              side: BorderSide(color: theme.disabledColor.withOpacity(0.5)),
+              side: BorderSide(color: theme.disabledColor.withAlpha((255 * 0.5).round())),
               minimumSize: const Size.fromHeight(45),
             ),
           ),

@@ -12,7 +12,7 @@ abstract class ExpenseRepository {
   Future<Either<Failure, List<ExpenseModel>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Filter by Category ID
+    List<String>? categoryIds,
     String? accountId,
   });
   // --- END MODIFIED ---

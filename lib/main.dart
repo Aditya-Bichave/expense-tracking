@@ -122,13 +122,12 @@ Future<void> main() async {
         lazy: true,
       ),
       BlocProvider<AccountListBloc>(
-        create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
-        lazy: true, // Can lazy load these data blocs
+        create: (context) => sl<AccountListBloc>(),
+        lazy: false,
       ),
       BlocProvider<TransactionListBloc>(
-        create: (context) =>
-            sl<TransactionListBloc>()..add(const LoadTransactions()),
-        lazy: true,
+        create: (context) => sl<TransactionListBloc>(),
+        lazy: false,
       ),
       BlocProvider<CategoryManagementBloc>(
         create: (context) =>
@@ -144,8 +143,8 @@ Future<void> main() async {
         lazy: true,
       ),
       BlocProvider<DashboardBloc>(
-        create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
-        lazy: true,
+        create: (context) => sl<DashboardBloc>(),
+        lazy: false,
       ),
       BlocProvider<SummaryBloc>(
         create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),

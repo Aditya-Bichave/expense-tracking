@@ -19,7 +19,7 @@ class DemoIndicatorWidget extends StatelessWidget {
           ? Material(
               // Use Material for elevation and background
               elevation: 4.0, // Add slight elevation
-              color: theme.colorScheme.secondaryContainer.withOpacity(0.95),
+              color: theme.colorScheme.secondaryContainer.withAlpha((255 * 0.95).round()),
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),

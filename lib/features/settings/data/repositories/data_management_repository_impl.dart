@@ -60,45 +60,65 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
 
   @override
   Future<Either<Failure, void>> restoreData(AllData data) async {
-    log.info("[DataMgmtRepo] restoreData called.");
+    log.info("[DataMgmtRepo] restoreData called. Using transactional approach.");
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final tempAccountBoxName = 'temp_accounts_$timestamp';
+    final tempExpenseBoxName = 'temp_expenses_$timestamp';
+    final tempIncomeBoxName = 'temp_incomes_$timestamp';
+
+    Box<AssetAccountModel>? tempAccountBox;
+    Box<ExpenseModel>? tempExpenseBox;
+    Box<IncomeModel>? tempIncomeBox;
+
     try {
-      // 1. Clear existing data first
-      log.info("[DataMgmtRepo] Clearing existing data before restore...");
+      // 1. Open temporary boxes
+      log.info("[DataMgmtRepo] Opening temporary Hive boxes.");
+      tempAccountBox = await Hive.openBox<AssetAccountModel>(tempAccountBoxName);
+      tempExpenseBox = await Hive.openBox<ExpenseModel>(tempExpenseBoxName);
+      tempIncomeBox = await Hive.openBox<IncomeModel>(tempIncomeBoxName);
+
+      // 2. Write data to temporary boxes to validate it
+      log.info("[DataMgmtRepo] Writing data to temporary boxes for validation.");
+      final Map<String, AssetAccountModel> accountMap = { for (var v in data.accounts) v.id: v };
+      final Map<String, ExpenseModel> expenseMap = { for (var v in data.expenses) v.id: v };
+      final Map<String, IncomeModel> incomeMap = { for (var v in data.incomes) v.id: v };
+
+      await tempAccountBox.putAll(accountMap);
+      await tempExpenseBox.putAll(expenseMap);
+      await tempIncomeBox.putAll(incomeMap);
+      log.info("[DataMgmtRepo] Data validation successful. Data written to temp boxes.");
+
+      // 3. If validation succeeds, clear the main boxes
+      log.info("[DataMgmtRepo] Clearing main boxes.");
       final clearResult = await clearAllData();
       if (clearResult.isLeft()) {
-        log.severe(
-            "[DataMgmtRepo] Failed to clear data before restore. Aborting.");
-        // Propagate the clearing failure
-        return clearResult.fold((failure) => Left(failure),
-            (_) => const Left(CacheFailure("Unknown error during clear.")));
+        log.severe("[DataMgmtRepo] Failed to clear main boxes. Aborting restore.");
+        return clearResult.fold((failure) => Left(failure), (_) => const Left(CacheFailure("Unknown error during clear.")));
       }
-      log.info("[DataMgmtRepo] Data cleared. Proceeding with restore...");
 
-      // 2. Restore data using putAll for efficiency
-      log.info("[DataMgmtRepo] Preparing data maps for restore...");
-      final Map<String, AssetAccountModel> accountMap = {
-        for (var v in data.accounts) v.id: v
-      };
-      final Map<String, ExpenseModel> expenseMap = {
-        for (var v in data.expenses) v.id: v
-      };
-      final Map<String, IncomeModel> incomeMap = {
-        for (var v in data.incomes) v.id: v
-      };
-      log.info(
-          "[DataMgmtRepo] Restoring ${accountMap.length} accounts, ${expenseMap.length} expenses, ${incomeMap.length} incomes...");
-
-      await Future.wait([
-        _accountBox.putAll(accountMap),
-        _expenseBox.putAll(expenseMap),
-        _incomeBox.putAll(incomeMap),
-      ]);
+      // 4. Copy data from temp boxes to main boxes
+      log.info("[DataMgmtRepo] Copying data from temporary to main boxes.");
+      await _accountBox.putAll(tempAccountBox.toMap().cast<String, AssetAccountModel>());
+      await _expenseBox.putAll(tempExpenseBox.toMap().cast<String, ExpenseModel>());
+      await _incomeBox.putAll(tempIncomeBox.toMap().cast<String, IncomeModel>());
 
       log.info("[DataMgmtRepo] Restore completed successfully.");
       return const Right(null);
+
     } catch (e, s) {
-      log.severe("[DataMgmtRepo] Error during restoreData population$e$s");
-      return Left(RestoreFailure("Failed to restore data: ${e.toString()}"));
+      log.severe("[DataMgmtRepo] Error during transactional restore: $e\n$s");
+      return Left(RestoreFailure("Failed to restore data due to an error. Your original data is safe. Error: ${e.toString()}"));
+    } finally {
+      // 5. Clean up: close and delete temporary boxes
+      log.info("[DataMgmtRepo] Cleaning up temporary boxes.");
+      await tempAccountBox?.close();
+      await tempExpenseBox?.close();
+      await tempIncomeBox?.close();
+
+      await Hive.deleteBoxFromDisk(tempAccountBoxName);
+      await Hive.deleteBoxFromDisk(tempExpenseBoxName);
+      await Hive.deleteBoxFromDisk(tempIncomeBoxName);
+      log.info("[DataMgmtRepo] Cleanup complete.");
     }
   }
 }

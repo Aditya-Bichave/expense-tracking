@@ -29,7 +29,7 @@ class TimeSeriesLineChart extends StatelessWidget {
     final currencySymbol = settings.currencySymbol;
     final primaryColor = theme.colorScheme.primary;
     final comparisonColor =
-        theme.colorScheme.secondary.withOpacity(0.6); // Lighter/dashed color
+        theme.colorScheme.secondary.withAlpha((255 * 0.6).round()); // Lighter/dashed color
 
     if (data.isEmpty) {
       return const Center(child: Text("No data to display"));
@@ -79,7 +79,7 @@ class TimeSeriesLineChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: maxY / 5, // Match left title intervals
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+              color: theme.dividerColor.withAlpha((255 * 0.1).round()), strokeWidth: 1),
         ),
         titlesData: FlTitlesData(
           show: true,
@@ -118,7 +118,7 @@ class TimeSeriesLineChart extends StatelessWidget {
             isCurved: true,
             gradient: LinearGradient(
               // Use gradient for primary line
-              colors: [primaryColor.withOpacity(0.8), primaryColor],
+              colors: [primaryColor.withAlpha((255 * 0.8).round()), primaryColor],
             ),
             barWidth: 3,
             isStrokeCapRound: true,
@@ -128,8 +128,8 @@ class TimeSeriesLineChart extends StatelessWidget {
               show: true,
               gradient: LinearGradient(
                 colors: [
-                  primaryColor.withOpacity(0.3),
-                  primaryColor.withOpacity(0.0)
+                  primaryColor.withAlpha((255 * 0.3).round()),
+                  primaryColor.withAlpha((255 * 0.0).round())
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,

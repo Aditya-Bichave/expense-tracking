@@ -28,9 +28,9 @@ class IncomeExpenseBarChart extends StatelessWidget {
     final incomeColor = Colors.green.shade600; // Consistent Income color
     final expenseColor = theme.colorScheme.error;
     final prevIncomeColor =
-        incomeColor.withOpacity(0.4); // Lighter for previous
+        incomeColor.withAlpha((255 * 0.4).round()); // Lighter for previous
     final prevExpenseColor =
-        expenseColor.withOpacity(0.4); // Lighter for previous
+        expenseColor.withAlpha((255 * 0.4).round()); // Lighter for previous
 
     if (data.isEmpty) return const Center(child: Text("No data to display"));
 
@@ -173,7 +173,7 @@ class IncomeExpenseBarChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: maxY / 5,
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+              color: theme.dividerColor.withAlpha((255 * 0.1).round()), strokeWidth: 1),
         ),
         alignment: BarChartAlignment.spaceAround,
       ),

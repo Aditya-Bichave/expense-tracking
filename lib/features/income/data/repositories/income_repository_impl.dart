@@ -17,6 +17,12 @@ class IncomeRepositoryImpl implements IncomeRepository {
 
   IncomeRepositoryImpl({required this.localDataSource});
 
+  bool _isSameDay(DateTime dateA, DateTime dateB) {
+    return dateA.year == dateB.year &&
+        dateA.month == dateB.month &&
+        dateA.day == dateB.day;
+  }
+
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Income>> _hydrateSingleModel(IncomeModel model) async {
     final catResult =
@@ -76,27 +82,32 @@ class IncomeRepositoryImpl implements IncomeRepository {
   Future<Either<Failure, List<IncomeModel>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Category ID
+    List<String>? categoryIds,
     String? accountId,
   }) async {
     log.info(
-        "[IncomeRepo] Getting income models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$category");
+        "[IncomeRepo] Getting income models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatIDs=${categoryIds?.length}");
     try {
-      final incomeModels = await localDataSource.getIncomes();
+      // Pass filtering down to the data source
+      final incomeModels =
+          await localDataSource.getIncomes(categoryIds: categoryIds);
       log.fine(
-          "[IncomeRepo] Fetched ${incomeModels.length} raw income models.");
+          "[IncomeRepo] Fetched ${incomeModels.length} raw income models from data source.");
 
-      // Apply filtering
+      // The data source should handle category filtering.
+      // We only need to handle date and account filtering here.
       final filteredModels = incomeModels.where((model) {
         bool dateMatch = true;
-        bool categoryMatch = true;
         bool accountMatch = true;
+
+        // Date Filtering
         if (startDate != null) {
           final incDateOnly =
               DateTime(model.date.year, model.date.month, model.date.day);
           final startDateOnly =
               DateTime(startDate.year, startDate.month, startDate.day);
-          dateMatch = !incDateOnly.isBefore(startDateOnly);
+          dateMatch = incDateOnly.isAfter(startDateOnly) ||
+              _isSameDay(incDateOnly, startDateOnly);
         }
         if (endDate != null && dateMatch) {
           final incDateOnly =
@@ -105,24 +116,20 @@ class IncomeRepositoryImpl implements IncomeRepository {
               DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
           dateMatch = !model.date.isAfter(endDateInclusive);
         }
+
+        // Account Filtering (assuming single account ID)
         if (accountId != null && accountId.isNotEmpty) {
-          // Handle multiple account IDs if passed comma-separated
-          final ids = accountId.split(',');
-          accountMatch = ids.contains(model.accountId);
+          accountMatch = model.accountId == accountId;
         }
-        if (category != null && category.isNotEmpty) {
-          // Handle multiple category IDs if passed comma-separated
-          final ids = category.split(',');
-          categoryMatch = ids.contains(model.categoryId);
-        }
-        return dateMatch && categoryMatch && accountMatch;
+
+        return dateMatch && accountMatch;
       }).toList();
       log.fine("[IncomeRepo] Filtered to ${filteredModels.length} models.");
 
       // Sort models
       filteredModels.sort((a, b) => b.date.compareTo(a.date));
 
-      return Right(filteredModels); // Return models
+      return Right(filteredModels);
     } on CacheFailure catch (e) {
       log.warning(
           "[IncomeRepo] CacheFailure getting income models: ${e.message}");

@@ -73,7 +73,7 @@ class TransactionCalendarView extends StatelessWidget {
           eventLoader: (day) => getEventsForDay(day),
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.3),
+                color: theme.colorScheme.primary.withAlpha((255 * 0.3).round()),
                 shape: BoxShape.circle),
             selectedDecoration: BoxDecoration(
                 color: theme.colorScheme.primary, shape: BoxShape.circle),
@@ -84,7 +84,7 @@ class TransactionCalendarView extends StatelessWidget {
             markerSize: 5.0,
             markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
             weekendTextStyle:
-                TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+                TextStyle(color: theme.colorScheme.onSurface.withAlpha((255 * 0.7).round())),
             selectedTextStyle: TextStyle(color: theme.colorScheme.onPrimary),
             todayTextStyle: TextStyle(color: theme.colorScheme.primary),
           ),
@@ -96,7 +96,7 @@ class TransactionCalendarView extends StatelessWidget {
                 TextStyle(color: theme.colorScheme.primary, fontSize: 12),
             formatButtonDecoration: BoxDecoration(
               border:
-                  Border.all(color: theme.colorScheme.primary.withOpacity(0.5)),
+                  Border.all(color: theme.colorScheme.primary.withAlpha((255 * 0.5).round())),
               borderRadius: BorderRadius.circular(12.0),
             ),
             leftChevronIcon:
@@ -153,8 +153,8 @@ class TransactionCalendarView extends StatelessWidget {
         final transaction = selectedDayTransactions[index];
         return TransactionListItem(
           transaction: transaction,
-          currencySymbol: settings.currencySymbol,
           onTap: () => navigateToDetailOrEdit(context, transaction),
+          currencySymbol: settings.currencySymbol,
         )
             .animate()
             .fadeIn(delay: (50 * index).ms, duration: 300.ms)

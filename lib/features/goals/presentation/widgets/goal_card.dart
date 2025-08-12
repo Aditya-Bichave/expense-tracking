@@ -62,7 +62,7 @@ class GoalCard extends StatelessWidget {
     final color =
         goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
     final backgroundColor =
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.5);
+        theme.colorScheme.surfaceContainerHighest.withAlpha((255 * 0.5).round());
     final bool isQuantum = uiMode == UIMode.quantum;
     // final bool isAether = uiMode == UIMode.aether; // No Aether specific impl
 
@@ -120,7 +120,7 @@ class GoalCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                  backgroundColor: progressColor.withOpacity(0.1),
+                  backgroundColor: progressColor.withAlpha((255 * 0.1).round()),
                   child: Icon(goal.displayIconData,
                       color: progressColor, size: 20)),
               const SizedBox(width: 12),
@@ -134,7 +134,7 @@ class GoalCard extends StatelessWidget {
                               ? Colors.green.shade800
                               : theme.colorScheme.onSurfaceVariant)),
                   backgroundColor: goal.isAchieved
-                      ? Colors.green.shade100.withOpacity(0.6)
+                      ? Colors.green.shade100.withAlpha((255 * 0.6).round())
                       : theme.colorScheme.surfaceContainerHighest,
                   side: BorderSide.none,
                   visualDensity: VisualDensity.compact,
@@ -183,7 +183,7 @@ class GoalCard extends StatelessWidget {
                   Icon(Icons.run_circle_outlined,
                       size: 14,
                       color:
-                          theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                          theme.colorScheme.onSurfaceVariant.withAlpha((255 * 0.7).round())),
                   const SizedBox(width: 4),
                   Text(pacingInfo,
                       style: theme.textTheme.labelSmall?.copyWith(

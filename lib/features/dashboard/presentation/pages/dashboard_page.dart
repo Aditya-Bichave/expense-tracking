@@ -32,43 +32,16 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  late DashboardBloc _dashboardBloc;
-
   @override
   void initState() {
     super.initState();
     log.info("[DashboardPage] initState called.");
-    _dashboardBloc = BlocProvider.of<DashboardBloc>(context);
-    // Ensure Blocs are loaded
-    _ensureBlocLoaded<AccountListBloc>(() => const LoadAccounts());
-    _ensureBlocLoaded<TransactionListBloc>(() => const LoadTransactions());
-    _ensureBlocLoaded<BudgetListBloc>(() => const LoadBudgets());
-    _ensureBlocLoaded<GoalListBloc>(() => const LoadGoals());
-
-    if (_dashboardBloc.state is DashboardInitial) {
-      _dashboardBloc.add(const LoadDashboard());
-    }
-  }
-
-  void _ensureBlocLoaded<T extends Bloc>(Function eventCreator) {
-    try {
-      final bloc = BlocProvider.of<T>(context);
-      if (bloc.state.runtimeType.toString().contains('Initial') ||
-          bloc.state.runtimeType.toString().contains('Error')) {
-        log.info(
-            "[DashboardPage] ${T.toString()} is initial/error, dispatching load.");
-        bloc.add(eventCreator());
-      }
-    } catch (e) {
-      log.severe(
-          "[DashboardPage] Error ensuring ${T.toString()} is loaded: $e");
-    }
   }
 
   Future<void> _refreshDashboard() async {
     log.info("[DashboardPage] Pull-to-refresh triggered.");
     // Dispatch load event to all relevant blocs for a full refresh
-    _dashboardBloc.add(const LoadDashboard(forceReload: true));
+    context.read<DashboardBloc>().add(const LoadDashboard(forceReload: true));
     context.read<AccountListBloc>().add(const LoadAccounts(forceReload: true));
     context
         .read<TransactionListBloc>()
@@ -78,7 +51,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
     try {
       // Wait for dashboard bloc to finish loading/erroring
-      await _dashboardBloc.stream
+      await context.read<DashboardBloc>().stream
           .firstWhere(
               (state) => state is DashboardLoaded || state is DashboardError)
           .timeout(const Duration(seconds: 10));

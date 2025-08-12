@@ -87,9 +87,10 @@ class AppDialogs {
                           border: const OutlineInputBorder(),
                           isDense: true),
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      validator: (value) => (value != confirmationPhrase)
-                          ? 'Incorrect phrase'
-                          : null,
+                      validator: (value) =>
+                          (value?.toLowerCase() != confirmationPhrase.toLowerCase())
+                              ? 'Incorrect phrase'
+                              : null,
                       onChanged: (_) => setDialogState(() {}),
                     ),
                   ],
@@ -108,13 +109,14 @@ class AppDialogs {
                 return TextButton(
                   style: TextButton.styleFrom(
                       foregroundColor: confirmColor ?? theme.colorScheme.error),
-                  onPressed: value.text == confirmationPhrase
-                      ? () {
-                          if (formKey.currentState?.validate() ?? false) {
-                            Navigator.of(ctx).pop(true);
-                          }
-                        }
-                      : null,
+                  onPressed:
+                      value.text.toLowerCase() == confirmationPhrase.toLowerCase()
+                          ? () {
+                              if (formKey.currentState?.validate() ?? false) {
+                                Navigator.of(ctx).pop(true);
+                              }
+                            }
+                          : null,
                   child: Text(confirmText),
                 );
               },
