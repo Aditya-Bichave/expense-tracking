@@ -1,6 +1,7 @@
 // lib/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
@@ -31,8 +32,7 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
         _budgetRepository = budgetRepository,
         _deleteBudgetUseCase = deleteBudgetUseCase,
         super(const BudgetListState()) {
-    on<LoadBudgets>(_onLoadBudgets);
-    on<_BudgetsDataChanged>(_onDataChanged);
+    on<LoadBudgets>(_onLoadBudgets, transformer: restartable());
     on<DeleteBudget>(_onDeleteBudget);
     on<ResetState>(_onResetState); // Add handler
 
@@ -47,7 +47,7 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
           event.type == DataChangeType.expense) {
         log.info(
             "[BudgetListBloc] Relevant DataChangedEvent ($event). Triggering reload.");
-        add(const _BudgetsDataChanged());
+        add(const LoadBudgets(forceReload: true));
       }
       // --- END MODIFIED ---
     });
@@ -63,17 +63,6 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
   // --- END ADDED ---
 
   // ... (rest of handlers remain the same) ...
-  Future<void> _onDataChanged(
-      _BudgetsDataChanged event, Emitter<BudgetListState> emit) async {
-    // Avoid triggering reload if already loading/reloading
-    if (state.status != BudgetListStatus.loading) {
-      log.fine("[BudgetListBloc] Handling _DataChanged event.");
-      add(const LoadBudgets(forceReload: true));
-    } else {
-      log.fine(
-          "[BudgetListBloc] _DataChanged received, but already loading. Skipping explicit reload.");
-    }
-  }
 
   Future<void> _onLoadBudgets(
       LoadBudgets event, Emitter<BudgetListState> emit) async {

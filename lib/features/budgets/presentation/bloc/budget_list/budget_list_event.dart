@@ -14,10 +14,6 @@ class LoadBudgets extends BudgetListEvent {
   List<Object> get props => [forceReload];
 }
 
-class _BudgetsDataChanged extends BudgetListEvent {
-  const _BudgetsDataChanged();
-}
-
 // --- ADDED Delete Event ---
 class DeleteBudget extends BudgetListEvent {
   final String budgetId;

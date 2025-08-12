@@ -14,10 +14,6 @@ class LoadGoals extends GoalListEvent {
   List<Object> get props => [forceReload];
 }
 
-class _GoalsDataChanged extends GoalListEvent {
-  const _GoalsDataChanged();
-}
-
 class ArchiveGoal extends GoalListEvent {
   final String goalId;
   const ArchiveGoal({required this.goalId});

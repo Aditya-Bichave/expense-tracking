@@ -1,6 +1,7 @@
 // lib/features/analytics/presentation/bloc/summary_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/error/failure.dart';
@@ -24,8 +25,7 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
     required Stream<DataChangedEvent> dataChangeStream,
   })  : _getExpenseSummaryUseCase = getExpenseSummaryUseCase,
         super(SummaryInitial()) {
-    on<LoadSummary>(_onLoadSummary);
-    on<_DataChanged>(_onDataChanged);
+    on<LoadSummary>(_onLoadSummary, transformer: restartable());
     on<ResetState>(_onResetState); // Add handler
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
@@ -39,7 +39,12 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
           event.type == DataChangeType.settings) {
         log.info(
             "[SummaryBloc] Relevant DataChangedEvent: $event. Triggering reload.");
-        add(const _DataChanged());
+        add(LoadSummary(
+          startDate: _currentStartDate,
+          endDate: _currentEndDate,
+          forceReload: true,
+          updateFilters: false,
+        ));
       }
       // --- END MODIFIED ---
     }, onError: (error, stackTrace) {
@@ -57,18 +62,6 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
   // --- END ADDED ---
 
   // ... (rest of handlers remain the same) ...
-  Future<void> _onDataChanged(
-      _DataChanged event, Emitter<SummaryState> emit) async {
-    log.info(
-        "[SummaryBloc] Handling _DataChanged event. Dispatching LoadSummary with current filters.");
-    // Reload summary using the last known filters, force reload
-    add(LoadSummary(
-      startDate: _currentStartDate,
-      endDate: _currentEndDate,
-      forceReload: true,
-      updateFilters: false, // Don't update filters during auto-refresh
-    ));
-  }
 
   Future<void> _onLoadSummary(
       LoadSummary event, Emitter<SummaryState> emit) async {

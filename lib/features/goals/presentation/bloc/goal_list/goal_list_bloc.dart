@@ -1,6 +1,7 @@
 // lib/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
@@ -31,8 +32,7 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
         _archiveGoalUseCase = archiveGoalUseCase,
         _deleteGoalUseCase = deleteGoalUseCase,
         super(const GoalListState()) {
-    on<LoadGoals>(_onLoadGoals);
-    on<_GoalsDataChanged>(_onDataChanged);
+    on<LoadGoals>(_onLoadGoals, transformer: restartable());
     on<ArchiveGoal>(_onArchiveGoal);
     on<DeleteGoal>(_onDeleteGoal);
     on<ResetState>(_onResetState); // Add handler
@@ -48,7 +48,7 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
           event.type == DataChangeType.goalContribution) {
         log.info(
             "[GoalListBloc] Relevant DataChangedEvent ($event). Triggering reload.");
-        add(const _GoalsDataChanged());
+        add(const LoadGoals(forceReload: true));
       }
       // --- END MODIFIED ---
     });
@@ -64,16 +64,6 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
   // --- END ADDED ---
 
   // ... (rest of handlers remain the same) ...
-  Future<void> _onDataChanged(
-      _GoalsDataChanged event, Emitter<GoalListState> emit) async {
-    if (state.status != GoalListStatus.loading) {
-      log.fine("[GoalListBloc] Handling _DataChanged event.");
-      add(const LoadGoals(forceReload: true));
-    } else {
-      log.fine(
-          "[GoalListBloc] _DataChanged received, but already loading. Skipping explicit reload.");
-    }
-  }
 
   Future<void> _onLoadGoals(
       LoadGoals event, Emitter<GoalListState> emit) async {

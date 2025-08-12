@@ -27,11 +27,6 @@ class LoadSummary extends SummaryEvent {
   List<Object?> get props => [startDate, endDate, forceReload, updateFilters];
 }
 
-// Internal event triggered by stream listener (doesn't update filters)
-class _DataChanged extends SummaryEvent {
-  const _DataChanged();
-}
-
 // --- ADDED: Reset State Event ---
 class ResetState extends SummaryEvent {
   const ResetState();
