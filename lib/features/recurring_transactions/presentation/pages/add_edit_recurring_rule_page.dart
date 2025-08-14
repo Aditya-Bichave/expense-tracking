@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -114,8 +115,9 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
           }
           if (_amountController.text !=
               (state.amount == 0 ? '' : state.amount.toString())) {
-            _amountController.text =
-                state.amount == 0 ? '' : state.amount.toString();
+            _amountController.text = state.amount == 0
+                ? ''
+                : state.amount.toString();
           }
           if (_intervalController.text != state.interval.toString()) {
             _intervalController.text = state.interval.toString();
@@ -137,8 +139,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     context: context,
                     initialIndex:
                         state.transactionType == TransactionType.expense
-                            ? 0
-                            : 1,
+                        ? 0
+                        : 1,
                     labels: [
                       AppLocalizations.of(context)!.expense,
                       AppLocalizations.of(context)!.income,
@@ -159,8 +161,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                             ? TransactionType.expense
                             : TransactionType.income;
                         context.read<AddEditRecurringRuleBloc>().add(
-                              TransactionTypeChanged(newType),
-                            );
+                          TransactionTypeChanged(newType),
+                        );
                       }
                     },
                   ),
@@ -175,15 +177,14 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         .add(DescriptionChanged(value)),
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
+                  CommonFormFields.buildAmountField(
+                    context: context,
                     controller: _amountController,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.amount,
-                    ),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) => context
-                        .read<AddEditRecurringRuleBloc>()
-                        .add(AmountChanged(value)),
+                    labelText: AppLocalizations.of(context)!.amount,
+                    currencySymbol: context
+                        .read<SettingsBloc>()
+                        .state
+                        .currencySymbol,
                   ),
                   const SizedBox(height: 16),
                   ListTile(
@@ -195,10 +196,11 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     onTap: () async {
                       final filter =
                           state.transactionType == TransactionType.expense
-                              ? CategoryTypeFilter.expense
-                              : CategoryTypeFilter.income;
-                      final catState =
-                          context.read<CategoryManagementBloc>().state;
+                          ? CategoryTypeFilter.expense
+                          : CategoryTypeFilter.income;
+                      final catState = context
+                          .read<CategoryManagementBloc>()
+                          .state;
                       final list = filter == CategoryTypeFilter.expense
                           ? catState.allExpenseCategories
                           : catState.allIncomeCategories;
@@ -209,8 +211,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       );
                       if (category != null) {
                         context.read<AddEditRecurringRuleBloc>().add(
-                              CategoryChanged(category),
-                            );
+                          CategoryChanged(category),
+                        );
                       }
                     },
                   ),
@@ -236,8 +238,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     onChanged: (value) {
                       if (value != null) {
                         context.read<AddEditRecurringRuleBloc>().add(
-                              FrequencyChanged(value),
-                            );
+                          FrequencyChanged(value),
+                        );
                       }
                     },
                   ),
@@ -256,8 +258,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         );
                         if (time != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                TimeChanged(time),
-                              );
+                            TimeChanged(time),
+                          );
                         }
                       },
                     ),
@@ -279,8 +281,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       onChanged: (value) {
                         if (value != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                DayOfWeekChanged(value),
-                              );
+                            DayOfWeekChanged(value),
+                          );
                         }
                       },
                     ),
@@ -298,8 +300,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       onChanged: (value) {
                         if (value != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                DayOfMonthChanged(value),
-                              );
+                            DayOfMonthChanged(value),
+                          );
                         }
                       },
                     ),
@@ -316,8 +318,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     onChanged: (value) {
                       if (value != null) {
                         context.read<AddEditRecurringRuleBloc>().add(
-                              EndConditionTypeChanged(value),
-                            );
+                          EndConditionTypeChanged(value),
+                        );
                       }
                     },
                   ),
@@ -338,8 +340,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         );
                         if (date != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                EndDateChanged(date),
-                              );
+                            EndDateChanged(date),
+                          );
                         }
                       },
                     ),
@@ -350,8 +352,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(
                           context,
-                        )!
-                            .numberOfOccurrences,
+                        )!.numberOfOccurrences,
                       ),
                       keyboardType: TextInputType.number,
                       onChanged: (value) => context
@@ -362,9 +363,14 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   ElevatedButton(
                     onPressed: state.status == FormStatus.inProgress
                         ? null
-                        : () => context.read<AddEditRecurringRuleBloc>().add(
-                              FormSubmitted(),
-                            ),
+                        : () {
+                      context.read<AddEditRecurringRuleBloc>().add(
+                        FormSubmitted(
+                          description: _descriptionController.text,
+                          amount: _amountController.text,
+                        ),
+                      );
+                    },
                     child: state.status == FormStatus.inProgress
                         ? const CircularProgressIndicator()
                         : Text(AppLocalizations.of(context)!.save),
