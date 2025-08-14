@@ -18,3 +18,7 @@ class DeleteRule extends RecurringListEvent {
   final String ruleId;
   const DeleteRule(this.ruleId);
 }
+
+class ResetState extends RecurringListEvent {
+  const ResetState();
+}
