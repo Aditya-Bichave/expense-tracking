@@ -91,6 +91,7 @@ void main() {
     when(() => mockGetRecurringRuleById(any())).thenAnswer((_) async => Right(tOldRule));
     when(() => mockAddAuditLog(any())).thenAnswer((_) async => Left(failure));
     when(() => mockRepository.updateRecurringRule(any())).thenAnswer((_) async => const Right(null));
+    when(() => mockUuid.v4()).thenReturn('new_log_id');
 
     // Act
     final result = await usecase(tNewRule);
