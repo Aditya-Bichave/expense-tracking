@@ -30,7 +30,10 @@ class UpdateRecurringRule implements UseCase<void, RecurringRule> {
       (oldRule) async {
         final logs = _createAuditLogs(oldRule, newRule);
         for (var log in logs) {
-          await addAuditLog(log);
+          final logResult = await addAuditLog(log);
+          if (logResult.isLeft()) {
+            return logResult;
+          }
         }
         return repository.updateRecurringRule(newRule);
       },

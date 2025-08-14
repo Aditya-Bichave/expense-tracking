@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
@@ -66,5 +67,21 @@ void main() {
     // Assert
     verify(() => mockAddAuditLog(any())).called(2); // For description and amount
     verify(() => mockRepository.updateRecurringRule(tNewRule)).called(1);
+  });
+
+  test('should return failure and not update when an audit log fails', () async {
+    // Arrange
+    const failure = ServerFailure();
+    when(() => mockGetRecurringRuleById(any())).thenAnswer((_) async => Right(tOldRule));
+    when(() => mockAddAuditLog(any())).thenAnswer((_) async => Left(failure));
+    when(() => mockRepository.updateRecurringRule(any())).thenAnswer((_) async => const Right(null));
+
+    // Act
+    final result = await usecase(tNewRule);
+
+    // Assert
+    expect(result, equals(Left(failure)));
+    verify(() => mockAddAuditLog(any())).called(1);
+    verifyNever(() => mockRepository.updateRecurringRule(any()));
   });
 }
