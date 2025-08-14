@@ -2,6 +2,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 
 class DemoIndicatorWidget extends StatelessWidget {
   const DemoIndicatorWidget({super.key});
@@ -44,14 +45,24 @@ class DemoIndicatorWidget extends StatelessWidget {
                         foregroundColor: theme.colorScheme.onSecondaryContainer,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 4),
-                        minimumSize: Size.zero, // Remove extra padding
+                        minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: VisualDensity.compact,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         log.info("[DemoIndicator] Exit Demo button tapped.");
-                        context.read<SettingsBloc>().add(const ExitDemoMode());
-                        // Navigation is handled by the AuthWrapper/Router now based on state
+                        final confirmed = await AppDialogs.showConfirmation(
+                          context,
+                          title: 'Exit Demo Mode?',
+                          content:
+                              'This will clear demo data and restart setup. Continue?',
+                          confirmText: 'Exit',
+                        );
+                        if (confirmed == true && context.mounted) {
+                          context
+                              .read<SettingsBloc>()
+                              .add(const ExitDemoMode());
+                        }
                       },
                       child: const Text('Exit Demo'),
                     ),

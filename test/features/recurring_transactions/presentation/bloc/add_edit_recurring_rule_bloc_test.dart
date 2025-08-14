@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/usecases/
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
@@ -89,6 +90,20 @@ void main() {
     );
   });
 
+  blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
+    'InitializeForEdit sets startTime from rule startDate',
+    build: () => bloc,
+    act: (bloc) => bloc.add(InitializeForEdit(
+        tRule.copyWith(startDate: DateTime(2023, 1, 15, 8, 30)))),
+    expect: () => [
+      isA<AddEditRecurringRuleState>().having(
+        (s) => s.startTime,
+        'startTime',
+        const TimeOfDay(hour: 8, minute: 30),
+      ),
+    ],
+  );
+
   group('FormSubmitted', () {
     blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
       'should call AddRecurringRule when creating a new rule',
@@ -103,24 +118,23 @@ void main() {
         bloc.add(const AmountChanged('100'));
         bloc.add(const AccountChanged('acc1'));
         bloc.add(CategoryChanged(tCategory));
+        bloc.add(StartDateChanged(DateTime(2024, 1, 1)));
+        bloc.add(TimeChanged(const TimeOfDay(hour: 9, minute: 30)));
         bloc.add(FormSubmitted());
       },
+      skip: 6,
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.description, 'description', 'Test'),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.amount, 'amount', 100.0),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.accountId, 'accountId', 'acc1'),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.categoryId, 'categoryId', tCategory.id),
         isA<AddEditRecurringRuleState>()
             .having((s) => s.status, 'status', FormStatus.inProgress),
         isA<AddEditRecurringRuleState>()
             .having((s) => s.status, 'status', FormStatus.success),
       ],
       verify: (_) {
-        verify(() => mockAddRecurringRule(any())).called(1);
+        final verification = verify(() => mockAddRecurringRule(captureAny()));
+        final captured = verification.captured.first as RecurringRule;
+        verification.called(1);
+        expect(captured.startDate, DateTime(2024, 1, 1, 9, 30));
+        expect(captured.nextOccurrenceDate, DateTime(2024, 1, 1, 9, 30));
       },
     );
 

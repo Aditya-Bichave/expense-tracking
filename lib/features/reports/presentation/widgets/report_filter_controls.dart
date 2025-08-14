@@ -63,7 +63,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
   late List<String> _tempSelectedBudgetIds;
   late List<String> _tempSelectedGoalIds;
   late TransactionType?
-  _tempSelectedTransactionType; // Corrected state variable
+      _tempSelectedTransactionType; // Corrected state variable
 
   @override
   void initState() {
@@ -100,16 +100,16 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
 
   void _applyFilters() {
     context.read<ReportFilterBloc>().add(
-      UpdateReportFilters(
-        startDate: _tempStartDate,
-        endDate: _tempEndDate,
-        categoryIds: _tempSelectedCategoryIds,
-        accountIds: _tempSelectedAccountIds,
-        budgetIds: _tempSelectedBudgetIds,
-        goalIds: _tempSelectedGoalIds,
-        transactionType: _tempSelectedTransactionType, // Pass the value
-      ),
-    );
+          UpdateReportFilters(
+            startDate: _tempStartDate,
+            endDate: _tempEndDate,
+            categoryIds: _tempSelectedCategoryIds,
+            accountIds: _tempSelectedAccountIds,
+            budgetIds: _tempSelectedBudgetIds,
+            goalIds: _tempSelectedGoalIds,
+            transactionType: _tempSelectedTransactionType, // Pass the value
+          ),
+        );
     Navigator.pop(context);
   }
 
@@ -177,225 +177,228 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     child: LinearProgressIndicator(),
                   ),
                 const SizedBox(height: 16),
-
-                // Date Range
-                ListTile(
-                  leading: const Icon(Icons.date_range_outlined),
-                  title: const Text('Date Range'),
-                  subtitle: Text(
-                    '${DateFormatter.formatDate(_tempStartDate)} - ${DateFormatter.formatDate(_tempEndDate)}',
-                  ),
-                  trailing: const Icon(Icons.edit_calendar_outlined),
-                  onTap: () => _selectDateRange(context),
-                  shape: RoundedRectangleBorder(
-                    side: BorderSide(color: theme.dividerColor),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Transaction Type Filter
-                DropdownButtonFormField<TransactionType?>(
-                  value: _tempSelectedTransactionType, // Use local temp state
-                  decoration: InputDecoration(
-                    labelText: 'Transaction Type',
-                    prefixIcon: Icon(
-                      _tempSelectedTransactionType == TransactionType.expense
-                          ? Icons.arrow_downward
-                          : _tempSelectedTransactionType ==
-                                TransactionType.income
-                          ? Icons.arrow_upward
-                          : Icons.swap_vert,
-                      size: 20,
-                    ),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 14,
-                    ),
-                  ),
-                  hint: const Text('All Types'),
-                  isExpanded: true,
-                  items: const [
-                    DropdownMenuItem<TransactionType?>(
-                      value: null,
-                      child: Text('All Types'),
-                    ),
-                    DropdownMenuItem<TransactionType?>(
-                      value: TransactionType.expense,
-                      child: Text('Expenses Only'),
-                    ),
-                    DropdownMenuItem<TransactionType?>(
-                      value: TransactionType.income,
-                      child: Text('Income Only'),
-                    ),
-                  ],
-                  onChanged: (TransactionType? newValue) => setState(
-                    () => _tempSelectedTransactionType = newValue,
-                  ), // Update local temp state
-                ),
-                const SizedBox(height: 16),
-
-                // Account Multi-Select
-                if (state.optionsStatus == FilterOptionsStatus.loaded)
-                  MultiSelectDialogField<String>(
-                    items: accountItems,
-                    initialValue: _tempSelectedAccountIds,
-                    title: const Text("Select Accounts"),
-                    buttonText: Text(
-                      _tempSelectedAccountIds.isEmpty
-                          ? "All Accounts"
-                          : "${_tempSelectedAccountIds.length} Accounts Selected",
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    buttonIcon: const Icon(
-                      Icons.account_balance_wallet_outlined,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: theme.dividerColor),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    chipDisplay: MultiSelectChipDisplay.none(),
-                    onConfirm: (values) =>
-                        setState(() => _tempSelectedAccountIds = values),
-                    searchable: true,
-                    searchHint: "Search Accounts",
-                  )
-                else if (state.optionsStatus == FilterOptionsStatus.loading)
-                  const LinearProgressIndicator()
-                else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text(
-                    "Error loading accounts",
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                const SizedBox(height: 16),
-
-                // Category Multi-Select
-                if (state.optionsStatus == FilterOptionsStatus.loaded)
-                  MultiSelectDialogField<String>(
-                    items: categoryItems,
-                    initialValue: _tempSelectedCategoryIds,
-                    title: const Text("Select Categories"),
-                    buttonText: Text(
-                      _tempSelectedCategoryIds.isEmpty
-                          ? "All Categories"
-                          : "${_tempSelectedCategoryIds.length} Categories Selected",
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    buttonIcon: const Icon(Icons.category_outlined),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: theme.dividerColor),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    chipDisplay: MultiSelectChipDisplay.none(),
-                    onConfirm: (values) =>
-                        setState(() => _tempSelectedCategoryIds = values),
-                    searchable: true,
-                    searchHint: "Search Categories",
-                  )
-                else if (state.optionsStatus == FilterOptionsStatus.loading)
-                  const SizedBox.shrink()
-                else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text(
-                    "Error loading categories",
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                const SizedBox(height: 16),
-
-                // Budget Multi-Select
-                if (state.optionsStatus == FilterOptionsStatus.loaded)
-                  MultiSelectDialogField<String>(
-                    items: budgetItems,
-                    initialValue: _tempSelectedBudgetIds,
-                    title: const Text("Select Budgets (For Budget Report)"),
-                    buttonText: Text(
-                      _tempSelectedBudgetIds.isEmpty
-                          ? "All Budgets"
-                          : "${_tempSelectedBudgetIds.length} Budgets Selected",
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    buttonIcon: const Icon(Icons.pie_chart_outline),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: theme.dividerColor),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    chipDisplay: MultiSelectChipDisplay.none(),
-                    onConfirm: (values) =>
-                        setState(() => _tempSelectedBudgetIds = values),
-                    searchable: true,
-                    searchHint: "Search Budgets",
-                  )
-                else if (state.optionsStatus == FilterOptionsStatus.loading)
-                  const SizedBox.shrink()
-                else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text(
-                    "Error loading budgets",
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                const SizedBox(height: 16),
-
-                // Goal Multi-Select
-                if (state.optionsStatus == FilterOptionsStatus.loaded)
-                  MultiSelectDialogField<String>(
-                    items: goalItems,
-                    initialValue: _tempSelectedGoalIds,
-                    title: const Text("Select Goals (For Goal Report)"),
-                    buttonText: Text(
-                      _tempSelectedGoalIds.isEmpty
-                          ? "All Goals"
-                          : "${_tempSelectedGoalIds.length} Goals Selected",
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    buttonIcon: const Icon(Icons.savings_outlined),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: theme.dividerColor),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    chipDisplay: MultiSelectChipDisplay.none(),
-                    onConfirm: (values) =>
-                        setState(() => _tempSelectedGoalIds = values),
-                    searchable: true,
-                    searchHint: "Search Goals",
-                  )
-                else if (state.optionsStatus == FilterOptionsStatus.loading)
-                  const SizedBox.shrink()
-                else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text(
-                    "Error loading goals",
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                const SizedBox(height: 24),
-
-                // Action Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: _clearFilters,
-                      child: const Text('Clear All'),
-                    ),
-                    Row(
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
+                AbsorbPointer(
+                  absorbing: state.optionsStatus == FilterOptionsStatus.loading,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Date Range
+                      ListTile(
+                        leading: const Icon(Icons.date_range_outlined),
+                        title: const Text('Date Range'),
+                        subtitle: Text(
+                          '${DateFormatter.formatDate(_tempStartDate)} - ${DateFormatter.formatDate(_tempEndDate)}',
                         ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed:
-                              state.optionsStatus == FilterOptionsStatus.loaded
-                              ? _applyFilters
-                              : null,
-                          child: Text(
-                            state.optionsStatus == FilterOptionsStatus.loaded
-                                ? 'Apply Filters'
-                                : 'Loading options...',
+                        trailing: const Icon(Icons.edit_calendar_outlined),
+                        onTap: () => _selectDateRange(context),
+                        shape: RoundedRectangleBorder(
+                          side: BorderSide(color: theme.dividerColor),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Transaction Type Filter
+                      DropdownButtonFormField<TransactionType?>(
+                        value:
+                            _tempSelectedTransactionType, // Use local temp state
+                        decoration: InputDecoration(
+                          labelText: 'Transaction Type',
+                          prefixIcon: Icon(
+                            _tempSelectedTransactionType ==
+                                    TransactionType.expense
+                                ? Icons.arrow_downward
+                                : _tempSelectedTransactionType ==
+                                        TransactionType.income
+                                    ? Icons.arrow_upward
+                                    : Icons.swap_vert,
+                            size: 20,
+                          ),
+                          border: const OutlineInputBorder(),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 14,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
+                        hint: const Text('All Types'),
+                        isExpanded: true,
+                        items: const [
+                          DropdownMenuItem<TransactionType?>(
+                            value: null,
+                            child: Text('All Types'),
+                          ),
+                          DropdownMenuItem<TransactionType?>(
+                            value: TransactionType.expense,
+                            child: Text('Expenses Only'),
+                          ),
+                          DropdownMenuItem<TransactionType?>(
+                            value: TransactionType.income,
+                            child: Text('Income Only'),
+                          ),
+                        ],
+                        onChanged: (TransactionType? newValue) => setState(
+                          () => _tempSelectedTransactionType = newValue,
+                        ), // Update local temp state
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Account Multi-Select
+                      if (state.optionsStatus != FilterOptionsStatus.error)
+                        MultiSelectDialogField<String>(
+                          items: accountItems,
+                          initialValue: _tempSelectedAccountIds,
+                          title: const Text("Select Accounts"),
+                          buttonText: Text(
+                            _tempSelectedAccountIds.isEmpty
+                                ? "All Accounts"
+                                : "${_tempSelectedAccountIds.length} Accounts Selected",
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          buttonIcon: const Icon(
+                            Icons.account_balance_wallet_outlined,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: theme.dividerColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          chipDisplay: MultiSelectChipDisplay.none(),
+                          onConfirm: (values) =>
+                              setState(() => _tempSelectedAccountIds = values),
+                          searchable: true,
+                          searchHint: "Search Accounts",
+                        )
+                      else
+                        Text(
+                          "Error loading accounts",
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      const SizedBox(height: 16),
+
+                      // Category Multi-Select
+                      if (state.optionsStatus != FilterOptionsStatus.error)
+                        MultiSelectDialogField<String>(
+                          items: categoryItems,
+                          initialValue: _tempSelectedCategoryIds,
+                          title: const Text("Select Categories"),
+                          buttonText: Text(
+                            _tempSelectedCategoryIds.isEmpty
+                                ? "All Categories"
+                                : "${_tempSelectedCategoryIds.length} Categories Selected",
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          buttonIcon: const Icon(Icons.category_outlined),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: theme.dividerColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          chipDisplay: MultiSelectChipDisplay.none(),
+                          onConfirm: (values) =>
+                              setState(() => _tempSelectedCategoryIds = values),
+                          searchable: true,
+                          searchHint: "Search Categories",
+                        )
+                      else
+                        Text(
+                          "Error loading categories",
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      const SizedBox(height: 16),
+
+                      // Budget Multi-Select
+                      if (state.optionsStatus != FilterOptionsStatus.error)
+                        MultiSelectDialogField<String>(
+                          items: budgetItems,
+                          initialValue: _tempSelectedBudgetIds,
+                          title:
+                              const Text("Select Budgets (For Budget Report)"),
+                          buttonText: Text(
+                            _tempSelectedBudgetIds.isEmpty
+                                ? "All Budgets"
+                                : "${_tempSelectedBudgetIds.length} Budgets Selected",
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          buttonIcon: const Icon(Icons.pie_chart_outline),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: theme.dividerColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          chipDisplay: MultiSelectChipDisplay.none(),
+                          onConfirm: (values) =>
+                              setState(() => _tempSelectedBudgetIds = values),
+                          searchable: true,
+                          searchHint: "Search Budgets",
+                        )
+                      else
+                        Text(
+                          "Error loading budgets",
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      const SizedBox(height: 16),
+
+                      // Goal Multi-Select
+                      if (state.optionsStatus != FilterOptionsStatus.error)
+                        MultiSelectDialogField<String>(
+                          items: goalItems,
+                          initialValue: _tempSelectedGoalIds,
+                          title: const Text("Select Goals (For Goal Report)"),
+                          buttonText: Text(
+                            _tempSelectedGoalIds.isEmpty
+                                ? "All Goals"
+                                : "${_tempSelectedGoalIds.length} Goals Selected",
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          buttonIcon: const Icon(Icons.savings_outlined),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: theme.dividerColor),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          chipDisplay: MultiSelectChipDisplay.none(),
+                          onConfirm: (values) =>
+                              setState(() => _tempSelectedGoalIds = values),
+                          searchable: true,
+                          searchHint: "Search Goals",
+                        )
+                      else
+                        Text(
+                          "Error loading goals",
+                          style: TextStyle(color: theme.colorScheme.error),
+                        ),
+                      const SizedBox(height: 24),
+
+                      // Action Buttons
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: _clearFilters,
+                            child: const Text('Clear All'),
+                          ),
+                          Row(
+                            children: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: state.optionsStatus ==
+                                        FilterOptionsStatus.loaded
+                                    ? _applyFilters
+                                    : null,
+                                child: Text(
+                                  state.optionsStatus ==
+                                          FilterOptionsStatus.loaded
+                                      ? 'Apply Filters'
+                                      : 'Loading options...',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

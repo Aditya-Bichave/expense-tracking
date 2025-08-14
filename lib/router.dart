@@ -113,6 +113,12 @@ class AppRouter {
         log.info(
             "[RouterRedirect] To: $currentRoute, IsInDemo: $isInDemo, IsAuth: $isAuthenticated, IsInit: $isInitialized, SetupSkipped: $setupSkipped");
 
+        if (setupSkipped && isGoingToInitialSetup) {
+          log.info(
+              "[RouterRedirect] Setup skipped, redirecting from InitialSetup to Dashboard.");
+          return RouteNames.dashboard;
+        }
+
         // Don't redirect if settings aren't initialized unless going to setup
         if (!isInitialized && !isGoingToInitialSetup) {
           log.info(
@@ -351,7 +357,8 @@ class AppRouter {
                           const AddEditRecurringRulePage(),
                     ),
                     GoRoute(
-                      path: '${RouteNames.editRecurring}/:${RouteNames.paramId}',
+                      path:
+                          '${RouteNames.editRecurring}/:${RouteNames.paramId}',
                       name: RouteNames.editRecurring,
                       parentNavigatorKey: _rootNavigatorKey,
                       builder: (context, state) {
@@ -413,8 +420,7 @@ class AppRouter {
             child: BlocProvider<ReportFilterBloc>(
               create: (_) => filterBloc,
               child: BlocProvider<SpendingTimeReportBloc>(
-                create: (_) =>
-                    sl<SpendingTimeReportBloc>(param1: filterBloc),
+                create: (_) => sl<SpendingTimeReportBloc>(param1: filterBloc),
                 child: const SpendingOverTimePage(),
               ),
             ),
@@ -432,8 +438,7 @@ class AppRouter {
             child: BlocProvider<ReportFilterBloc>(
               create: (_) => filterBloc,
               child: BlocProvider<IncomeExpenseReportBloc>(
-                create: (_) =>
-                    sl<IncomeExpenseReportBloc>(param1: filterBloc),
+                create: (_) => sl<IncomeExpenseReportBloc>(param1: filterBloc),
                 child: const IncomeVsExpensePage(),
               ),
             ),
@@ -470,8 +475,7 @@ class AppRouter {
             child: BlocProvider<ReportFilterBloc>(
               create: (_) => filterBloc,
               child: BlocProvider<GoalProgressReportBloc>(
-                create: (_) =>
-                    sl<GoalProgressReportBloc>(param1: filterBloc),
+                create: (_) => sl<GoalProgressReportBloc>(param1: filterBloc),
                 child: const GoalProgressPage(),
               ),
             ),

@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:flutter_bloc/flutter_bloc.dart'; // To read settings
@@ -16,6 +17,30 @@ class AssetDistributionPieChart extends StatefulWidget {
 class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
   int touchedIndex = -1;
   late Map<String, Color> _colorCache;
+
+  static const List<Color> colorPalette = [
+    Colors.blue,
+    Colors.red,
+    Colors.green,
+    Colors.orange,
+    Colors.purple,
+    Colors.cyan,
+    Colors.amber,
+    Colors.teal,
+    Colors.pink,
+    Colors.lime,
+  ];
+
+  @visibleForTesting
+  static Map<String, Color> generateColorMap(Iterable<String> accountNames) {
+    final map = <String, Color>{};
+    int index = 0;
+    for (final name in accountNames) {
+      map[name] = colorPalette[index % colorPalette.length];
+      index++;
+    }
+    return map;
+  }
 
   @override
   void initState() {
@@ -38,18 +63,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
   }
 
   void _generateColorCache(Iterable<String> accountNames) {
-    _colorCache.clear();
-    for (final name in accountNames) {
-      _colorCache[name] = _generateColorForName(name);
-    }
-  }
-
-  Color _generateColorForName(String name) {
-    final hash = name.hashCode;
-    final r = (hash & 0xFF0000) >> 16;
-    final g = (hash & 0x00FF00) >> 8;
-    final b = hash & 0x0000FF;
-    return Color.fromRGBO((r % 156) + 100, (g % 156) + 100, (b % 156) + 100, 1);
+    _colorCache = generateColorMap(accountNames);
   }
 
   @override
@@ -95,10 +109,9 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     final double totalPositiveBalance =
         balances.fold(0.0, (sum, item) => sum + item);
 
-    // Get colors from cache/generation
-    final List<Color> sectionColors = accountNames
-        .map((name) => _colorCache[name] ?? _generateColorForName(name))
-        .toList();
+    // Get colors from cache
+    final List<Color> sectionColors =
+        accountNames.map((name) => _colorCache[name]!).toList();
 
     return Card(
       // Use Card theme

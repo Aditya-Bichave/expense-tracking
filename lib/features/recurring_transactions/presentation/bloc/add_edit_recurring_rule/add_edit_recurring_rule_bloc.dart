@@ -58,6 +58,7 @@ class AddEditRecurringRuleBloc
       frequency: event.rule.frequency,
       interval: event.rule.interval,
       startDate: event.rule.startDate,
+      startTime: TimeOfDay.fromDateTime(event.rule.startDate),
       dayOfWeek: event.rule.dayOfWeek,
       dayOfMonth: event.rule.dayOfMonth,
       endConditionType: event.rule.endConditionType,
@@ -123,8 +124,8 @@ class AddEditRecurringRuleBloc
 
   void _onTotalOccurrencesChanged(
       TotalOccurrencesChanged event, Emitter<AddEditRecurringRuleState> emit) {
-    emit(state.copyWith(
-        totalOccurrences: int.tryParse(event.occurrences) ?? 0));
+    emit(
+        state.copyWith(totalOccurrences: int.tryParse(event.occurrences) ?? 0));
   }
 
   void _onDayOfWeekChanged(
@@ -137,7 +138,8 @@ class AddEditRecurringRuleBloc
     emit(state.copyWith(dayOfMonth: event.dayOfMonth));
   }
 
-  void _onTimeChanged(TimeChanged event, Emitter<AddEditRecurringRuleState> emit) {
+  void _onTimeChanged(
+      TimeChanged event, Emitter<AddEditRecurringRuleState> emit) {
     emit(state.copyWith(startTime: event.time));
   }
 
@@ -155,6 +157,14 @@ class AddEditRecurringRuleBloc
       return;
     }
 
+    final startDateTime = DateTime(
+      state.startDate.year,
+      state.startDate.month,
+      state.startDate.day,
+      state.startTime?.hour ?? 0,
+      state.startTime?.minute ?? 0,
+    );
+
     final ruleToSave = RecurringRule(
       id: state.isEditMode ? state.initialRule!.id : uuid.v4(),
       description: state.description,
@@ -164,7 +174,7 @@ class AddEditRecurringRuleBloc
       categoryId: state.categoryId!,
       frequency: state.frequency,
       interval: state.interval,
-      startDate: state.startDate,
+      startDate: startDateTime,
       dayOfWeek: state.dayOfWeek,
       dayOfMonth: state.dayOfMonth,
       endConditionType: state.endConditionType,
@@ -173,7 +183,7 @@ class AddEditRecurringRuleBloc
       status: state.isEditMode ? state.initialRule!.status : RuleStatus.active,
       nextOccurrenceDate: state.isEditMode
           ? state.initialRule!.nextOccurrenceDate
-          : state.startDate,
+          : startDateTime,
       occurrencesGenerated:
           state.isEditMode ? state.initialRule!.occurrencesGenerated : 0,
     );
