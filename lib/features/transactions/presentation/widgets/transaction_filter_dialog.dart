@@ -293,26 +293,29 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
       actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       actions: <Widget>[
         TextButton(
-            child: const Text('Clear All'),
-            onPressed: () {
-              widget.onClearFilter();
-              Navigator.of(context).pop();
-            }),
-        const Spacer(), // Push buttons to the right
+          onPressed: () {
+            widget.onClearFilter();
+            Navigator.of(context).pop();
+          },
+          child: const Text('Clear All'),
+        ),
         TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop()),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
         ElevatedButton(
-            child: const Text('Apply Filters'),
-            onPressed: () {
-              widget.onApplyFilter(
-                  _selectedStartDate,
-                  _selectedEndDate,
-                  _selectedTransactionType,
-                  _selectedAccountId,
-                  _selectedCategoryId);
-              Navigator.of(context).pop();
-            }),
+          onPressed: () {
+            widget.onApplyFilter(
+              _selectedStartDate,
+              _selectedEndDate,
+              _selectedTransactionType,
+              _selectedAccountId,
+              _selectedCategoryId,
+            );
+            Navigator.of(context).pop();
+          },
+          child: const Text('Apply Filters'),
+        ),
       ],
     );
   }

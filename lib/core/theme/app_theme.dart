@@ -210,7 +210,7 @@ class AppTheme {
       scaffoldBackgroundColor: colorScheme.background,
 
       // --- Component Themes (Configure using colorScheme and modeTheme) ---
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: modeTheme.cardStyle == CardStyle.flat
             ? 0
             : (modeTheme.cardStyle == CardStyle.floating ? 6 : 1.5),
@@ -218,12 +218,12 @@ class AppTheme {
             ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
             : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-                modeTheme.cardStyle == CardStyle.flat
-                    ? 8
-                    : (modeTheme.layoutDensity == LayoutDensity.spacious
-                        ? 20
-                        : 16))),
+          borderRadius: BorderRadius.circular(
+            modeTheme.cardStyle == CardStyle.flat
+                ? 8
+                : (modeTheme.layoutDensity == LayoutDensity.spacious ? 20 : 16),
+          ),
+        ),
         color: modePrefix == 'aether'
             ? colorScheme.surfaceVariant.withOpacity(0.85)
             : (modePrefix == 'quantum'
