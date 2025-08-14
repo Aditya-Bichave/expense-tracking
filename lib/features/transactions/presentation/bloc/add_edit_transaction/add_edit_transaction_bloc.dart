@@ -246,8 +246,17 @@ class AddEditTransactionBloc
     log.info(
       "[AddEditTransactionBloc] User requested to create custom category. Emitting navigation state.",
     );
-    // Transition to state indicating navigation is happening
-    emit(state.copyWith(status: AddEditStatus.navigatingToCreateCategory));
+    // Persist form data and transition to navigation state
+    emit(
+      state.copyWith(
+        status: AddEditStatus.navigatingToCreateCategory,
+        tempTitle: event.title,
+        tempAmount: event.amount,
+        tempDate: event.date,
+        tempAccountId: event.accountId,
+        tempNotes: () => event.notes,
+      ),
+    );
   }
 
   Future<void> _onCategoryCreated(

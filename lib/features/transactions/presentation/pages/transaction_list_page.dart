@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // The intended Category entity
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
@@ -149,9 +150,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
     final categoryType = transaction.type == TransactionType.expense
         ? CategoryTypeFilter.expense
         : CategoryTypeFilter.income;
+    final categoryState = context.read<CategoryManagementBloc>().state;
+    final categories = categoryType == CategoryTypeFilter.expense
+        ? categoryState.allExpenseCategories
+        : categoryState.allIncomeCategories;
     final Category? selectedCategory = await showCategoryPicker(
       context,
       categoryType,
+      categories,
     );
 
     if (selectedCategory != null && context.mounted) {
@@ -427,12 +433,21 @@ class _TransactionListPageState extends State<TransactionListPage> {
                       );
                       final type = _getDominantTransactionType(state) ??
                           TransactionType.expense;
-                      final Category? selectedCategory =
-                          await showCategoryPicker(
-                        context,
-                        type == TransactionType.expense
-                            ? CategoryTypeFilter.expense
-                            : CategoryTypeFilter.income,
+                      final CategoryTypeFilter pickerType =
+                              type == TransactionType.expense
+                              ? CategoryTypeFilter.expense
+                              : CategoryTypeFilter.income;
+                          final catState = context
+                              .read<CategoryManagementBloc>()
+                              .state;
+                          final list = pickerType == CategoryTypeFilter.expense
+                              ? catState.allExpenseCategories
+                              : catState.allIncomeCategories;
+                          final Category? selectedCategory =
+                              await showCategoryPicker(
+                                context,
+                                pickerType,
+                                list,
                       );
                       if (selectedCategory != null &&
                           selectedCategory.id != Category.uncategorized.id &&

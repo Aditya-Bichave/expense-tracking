@@ -215,4 +215,61 @@ void main() {
       ],
     );
   });
+
+  group('CreateCustomCategoryRequested', () {
+    late MockAddExpenseUseCase addExpense;
+    late MockUpdateExpenseUseCase updateExpense;
+    late MockAddIncomeUseCase addIncome;
+    late MockUpdateIncomeUseCase updateIncome;
+    late MockCategorizeTransactionUseCase categorize;
+    late MockExpenseRepository expenseRepo;
+    late MockIncomeRepository incomeRepo;
+    late MockCategoryRepository categoryRepo;
+
+    setUp(() {
+      addExpense = MockAddExpenseUseCase();
+      updateExpense = MockUpdateExpenseUseCase();
+      addIncome = MockAddIncomeUseCase();
+      updateIncome = MockUpdateIncomeUseCase();
+      categorize = MockCategorizeTransactionUseCase();
+      expenseRepo = MockExpenseRepository();
+      incomeRepo = MockIncomeRepository();
+      categoryRepo = MockCategoryRepository();
+    });
+
+    blocTest<AddEditTransactionBloc, AddEditTransactionState>(
+      'persists form fields when navigating to create category',
+      build: () => AddEditTransactionBloc(
+        addExpenseUseCase: addExpense,
+        updateExpenseUseCase: updateExpense,
+        addIncomeUseCase: addIncome,
+        updateIncomeUseCase: updateIncome,
+        categorizeTransactionUseCase: categorize,
+        expenseRepository: expenseRepo,
+        incomeRepository: incomeRepo,
+        categoryRepository: categoryRepo,
+      ),
+      act: (bloc) => bloc.add(
+        CreateCustomCategoryRequested(
+          title: 't',
+          amount: 1.0,
+          date: DateTime(2024, 1, 1),
+          accountId: 'a',
+          notes: 'n',
+        ),
+      ),
+      expect: () => [
+        isA<AddEditTransactionState>()
+            .having(
+              (s) => s.status,
+              'status',
+              AddEditStatus.navigatingToCreateCategory,
+            )
+            .having((s) => s.tempTitle, 'title', 't')
+            .having((s) => s.tempAmount, 'amount', 1.0)
+            .having((s) => s.tempAccountId, 'account', 'a')
+            .having((s) => s.tempNotes, 'notes', 'n'),
+      ],
+    );
+  });
 }

@@ -59,7 +59,22 @@ class RejectCategorySuggestion extends AddEditTransactionEvent {
 
 // User confirmed they want to create a category (after rejecting suggestion)
 class CreateCustomCategoryRequested extends AddEditTransactionEvent {
-  const CreateCustomCategoryRequested();
+  final String title;
+  final double amount;
+  final DateTime date;
+  final String accountId;
+  final String? notes;
+
+  const CreateCustomCategoryRequested({
+    required this.title,
+    required this.amount,
+    required this.date,
+    required this.accountId,
+    this.notes,
+  });
+
+  @override
+  List<Object?> get props => [title, amount, date, accountId, notes];
 }
 
 // A new category was created (passed back from AddCategory screen)

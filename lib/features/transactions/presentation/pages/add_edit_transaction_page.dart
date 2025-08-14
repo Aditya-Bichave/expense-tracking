@@ -10,6 +10,8 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_form.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/utils/currency_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -31,6 +33,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   late final AddEditTransactionBloc _bloc;
   TransactionEntity? _initialTransactionEntity;
   AddEditStatus? _previousStatus; // Track previous status
+  final GlobalKey<TransactionFormState> _formKey =
+      GlobalKey<TransactionFormState>();
 
   @override
   void initState() {
@@ -39,23 +43,28 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
     if (widget.initialTransactionData is Expense) {
       _initialTransactionEntity = TransactionEntity.fromExpense(
-          widget.initialTransactionData as Expense);
+        widget.initialTransactionData as Expense,
+      );
     } else if (widget.initialTransactionData is Income) {
-      _initialTransactionEntity =
-          TransactionEntity.fromIncome(widget.initialTransactionData as Income);
+      _initialTransactionEntity = TransactionEntity.fromIncome(
+        widget.initialTransactionData as Income,
+      );
     } else if (widget.initialTransactionData is TransactionEntity) {
       _initialTransactionEntity =
           widget.initialTransactionData as TransactionEntity;
     } else if (widget.initialTransactionData != null) {
       log.warning(
-          "[AddEditTxnPage] Received unexpected initial data type: ${widget.initialTransactionData.runtimeType}");
+        "[AddEditTxnPage] Received unexpected initial data type: ${widget.initialTransactionData.runtimeType}",
+      );
     }
 
     _bloc.add(
-        InitializeTransaction(initialTransaction: _initialTransactionEntity));
+      InitializeTransaction(initialTransaction: _initialTransactionEntity),
+    );
     _previousStatus = _bloc.state.status;
     log.info(
-        "[AddEditTxnPage] initState complete. Initial Entity ID: ${_initialTransactionEntity?.id}");
+      "[AddEditTxnPage] initState complete. Initial Entity ID: ${_initialTransactionEntity?.id}",
+    );
   }
 
   @override
@@ -66,7 +75,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   void _showSuggestionDialog(BuildContext context, Category suggestedCategory) {
     log.info(
-        "[AddEditTxnPage] Showing suggestion dialog for '${suggestedCategory.name}'.");
+      "[AddEditTxnPage] Showing suggestion dialog for '${suggestedCategory.name}'.",
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       AppDialogs.showConfirmation(
@@ -91,7 +101,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   void _askCreateCustomCategory(BuildContext context) {
     log.info(
-        "[AddEditTxnPage] Asking user if they want to create a custom category.");
+      "[AddEditTxnPage] Asking user if they want to create a custom category.",
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       AppDialogs.showConfirmation(
@@ -106,17 +117,38 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         if (!mounted) return;
         if (create == true) {
           log.info("[AddEditTxnPage] User chose to create a new category.");
-          _bloc.add(const CreateCustomCategoryRequested());
+          final formState = _formKey.currentState;
+          if (formState != null) {
+            final settings = context.read<SettingsBloc>().state;
+            final locale = settings.selectedCountryCode;
+            final title = formState.currentTitle.trim();
+            final amount = parseCurrency(formState.currentAmountRaw, locale);
+            final notesText = formState.currentNotes.trim();
+            _bloc.add(
+              CreateCustomCategoryRequested(
+                title: title,
+                amount: amount,
+                date: formState.currentDate,
+                accountId: formState.currentAccountId ?? '',
+                notes: notesText.isEmpty ? null : notesText,
+              ),
+            );
+          }
         } else {
           log.info(
-              "[AddEditTxnPage] User chose/cancelled to select an existing category.");
-          _bloc.emit(_bloc.state
-              .copyWith(status: AddEditStatus.ready)); // Go back to ready
+            "[AddEditTxnPage] User chose/cancelled to select an existing category.",
+          );
+          _bloc.emit(
+            _bloc.state.copyWith(status: AddEditStatus.ready),
+          ); // Go back to ready
           if (create == false) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(const SnackBar(
-                  content: Text("Please select a category manually.")));
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text("Please select a category manually."),
+                ),
+              );
           }
         }
       });
@@ -124,9 +156,12 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   }
 
   Future<void> _navigateToAddCategory(
-      BuildContext context, TransactionType currentType) async {
+    BuildContext context,
+    TransactionType currentType,
+  ) async {
     log.info(
-        "[AddEditTxnPage] Navigating to Add Category screen for type: ${currentType.name}");
+      "[AddEditTxnPage] Navigating to Add Category screen for type: ${currentType.name}",
+    );
     final categoryType = currentType == TransactionType.expense
         ? CategoryType.expense
         : CategoryType.income;
@@ -144,11 +179,13 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
     if (result != null) {
       log.info(
-          "[AddEditTxnPage] Received new category from Add screen: ${result.name}. Dispatching CategoryCreated.");
+        "[AddEditTxnPage] Received new category from Add screen: ${result.name}. Dispatching CategoryCreated.",
+      );
       _bloc.add(CategoryCreated(result));
     } else {
       log.info(
-          "[AddEditTxnPage] Add Category screen popped without returning a category. Returning to form (ready state).");
+        "[AddEditTxnPage] Add Category screen popped without returning a category. Returning to form (ready state).",
+      );
       _bloc.emit(_bloc.state.copyWith(status: AddEditStatus.ready));
     }
   }
@@ -162,7 +199,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       child: BlocListener<AddEditTransactionBloc, AddEditTransactionState>(
         listener: (context, state) {
           log.fine(
-              "[AddEditTxnPage] BlocListener: Status=${state.status}, PrevStatus=$_previousStatus, Suggestion=${state.suggestedCategory?.name}");
+            "[AddEditTxnPage] BlocListener: Status=${state.status}, PrevStatus=$_previousStatus, Suggestion=${state.suggestedCategory?.name}",
+          );
 
           // --- Handle State Transitions for Dialogs/Navigation ---
 
@@ -188,13 +226,18 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           else if (state.status == AddEditStatus.success &&
               _previousStatus != AddEditStatus.success) {
             log.info(
-                "[AddEditTxnPage] Transaction save successful. Popping route.");
+              "[AddEditTxnPage] Transaction save successful. Popping route.",
+            );
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
+              ..showSnackBar(
+                SnackBar(
                   content: Text(
-                      'Transaction ${isEditing ? 'updated' : 'added'} successfully!'),
-                  backgroundColor: Colors.green));
+                    'Transaction ${isEditing ? 'updated' : 'added'} successfully!',
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && context.canPop()) {
                 context.pop();
@@ -208,12 +251,16 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               state.errorMessage != null &&
               _previousStatus != AddEditStatus.error) {
             log.warning(
-                "[AddEditTxnPage] Transaction save/process error: ${state.errorMessage}");
+              "[AddEditTxnPage] Transaction save/process error: ${state.errorMessage}",
+            );
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
+              ..showSnackBar(
+                SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error));
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _bloc.add(const ClearMessages());
             });
@@ -243,8 +290,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
               final bool isLoadingOverlayVisible =
                   state.status == AddEditStatus.saving ||
-                      state.status == AddEditStatus.loading ||
-                      state.status == AddEditStatus.navigatingToCreateCategory;
+                  state.status == AddEditStatus.loading ||
+                  state.status == AddEditStatus.navigatingToCreateCategory;
 
               return Stack(
                 children: [
@@ -273,15 +320,28 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                                   accountId: state.tempAccountId ?? '',
                                   notes: state.tempNotes,
                                 ),
-                              ))
-                        : null,
+                              )),
                     initialType: state.transactionType,
                     initialCategory: state.effectiveCategory,
-                    onSubmit: (type, title, amount, date, category, accountId,
-                        notes) {
-                      log.info(
-                          "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.");
-                      context.read<AddEditTransactionBloc>().add(
+                    initialTitle: state.tempTitle,
+                    initialAmount: state.tempAmount,
+                    initialDate: state.tempDate,
+                    initialAccountId: state.tempAccountId,
+                    initialNotes: state.tempNotes,
+                    onSubmit:
+                        (
+                          type,
+                          title,
+                          amount,
+                          date,
+                          category,
+                          accountId,
+                          notes,
+                        ) {
+                          log.info(
+                            "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.",
+                          );
+                          context.read<AddEditTransactionBloc>().add(
                             SaveTransactionRequested(
                               title: title,
                               amount: amount,
@@ -291,7 +351,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                               notes: notes,
                             ),
                           );
-                    },
+                        },
                   ),
                   if (isLoadingOverlayVisible)
                     Positioned.fill(

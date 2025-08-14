@@ -2,7 +2,8 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
-import 'package:expense_tracker/features/categories/presentation/widgets/category_selection_widget.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
@@ -48,8 +49,12 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
   late final TextEditingController _intervalController;
   late final TextEditingController _occurrencesController;
 
-  List<String> _weekdayNamesMonFirst(BuildContext context) =>
-      weekdayNamesMonFirst(Localizations.localeOf(context).toLanguageTag());
+  List<String> _weekdayNamesMonFirst([String? locale]) {
+    final sundayFirst = DateFormat.EEEE(
+      locale,
+    ).dateSymbols.WEEKDAYS; // [Sun, Mon, ..., Sat]
+    return [...sundayFirst.skip(1), sundayFirst.first]; // [Mon, Tue, ..., Sun]
+  }
 
   @override
   void initState() {
@@ -109,8 +114,9 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
           }
           if (_amountController.text !=
               (state.amount == 0 ? '' : state.amount.toString())) {
-            _amountController.text =
-                state.amount == 0 ? '' : state.amount.toString();
+            _amountController.text = state.amount == 0
+                ? ''
+                : state.amount.toString();
           }
           if (_intervalController.text != state.interval.toString()) {
             _intervalController.text = state.interval.toString();
@@ -132,8 +138,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     context: context,
                     initialIndex:
                         state.transactionType == TransactionType.expense
-                            ? 0
-                            : 1,
+                        ? 0
+                        : 1,
                     labels: [
                       AppLocalizations.of(context)!.expense,
                       AppLocalizations.of(context)!.income,
@@ -154,8 +160,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                             ? TransactionType.expense
                             : TransactionType.income;
                         context.read<AddEditRecurringRuleBloc>().add(
-                              TransactionTypeChanged(newType),
-                            );
+                          TransactionTypeChanged(newType),
+                        );
                       }
                     },
                   ),
@@ -188,16 +194,25 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                           AppLocalizations.of(context)!.selectCategory,
                     ),
                     onTap: () async {
+                      final filter =
+                          state.transactionType == TransactionType.expense
+                          ? CategoryTypeFilter.expense
+                          : CategoryTypeFilter.income;
+                      final catState = context
+                          .read<CategoryManagementBloc>()
+                          .state;
+                      final list = filter == CategoryTypeFilter.expense
+                          ? catState.allExpenseCategories
+                          : catState.allIncomeCategories;
                       final category = await showCategoryPicker(
                         context,
-                        state.transactionType == TransactionType.expense
-                            ? CategoryTypeFilter.expense
-                            : CategoryTypeFilter.income,
+                        filter,
+                        list,
                       );
                       if (category != null) {
                         context.read<AddEditRecurringRuleBloc>().add(
-                              CategoryChanged(category),
-                            );
+                          CategoryChanged(category),
+                        );
                       }
                     },
                   ),
@@ -223,8 +238,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     onChanged: (value) {
                       if (value != null) {
                         context.read<AddEditRecurringRuleBloc>().add(
-                              FrequencyChanged(value),
-                            );
+                          FrequencyChanged(value),
+                        );
                       }
                     },
                   ),
@@ -243,8 +258,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         );
                         if (time != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                TimeChanged(time),
-                              );
+                            TimeChanged(time),
+                          );
                         }
                       },
                     ),
@@ -262,8 +277,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       onChanged: (value) {
                         if (value != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                DayOfWeekChanged(value),
-                              );
+                            DayOfWeekChanged(value),
+                          );
                         }
                       },
                     ),
@@ -281,8 +296,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       onChanged: (value) {
                         if (value != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                DayOfMonthChanged(value),
-                              );
+                            DayOfMonthChanged(value),
+                          );
                         }
                       },
                     ),
@@ -299,8 +314,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     onChanged: (value) {
                       if (value != null) {
                         context.read<AddEditRecurringRuleBloc>().add(
-                              EndConditionTypeChanged(value),
-                            );
+                          EndConditionTypeChanged(value),
+                        );
                       }
                     },
                   ),
@@ -321,8 +336,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         );
                         if (date != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
-                                EndDateChanged(date),
-                              );
+                            EndDateChanged(date),
+                          );
                         }
                       },
                     ),
@@ -346,8 +361,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     onPressed: state.status == FormStatus.inProgress
                         ? null
                         : () => context.read<AddEditRecurringRuleBloc>().add(
-                              FormSubmitted(),
-                            ),
+                            FormSubmitted(),
+                          ),
                     child: state.status == FormStatus.inProgress
                         ? const CircularProgressIndicator()
                         : Text(AppLocalizations.of(context)!.save),

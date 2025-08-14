@@ -12,6 +12,7 @@ import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
@@ -27,6 +28,7 @@ import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 
 class BudgetDetailPage extends StatefulWidget {
   final String budgetId;
@@ -84,15 +86,15 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       _error = null;
     });
 
-    // Find Budget Status
+    // Find Budget entity
     final budgetListState = context.read<BudgetListBloc>().state;
-    BudgetWithStatus? foundBudgetStatus;
+    Budget? budgetEntity;
     if (budgetListState.status == BudgetListStatus.success) {
-      foundBudgetStatus = budgetListState.budgetsWithStatus.firstWhereOrNull(
-        (bws) => bws.budget.id == widget.budgetId,
-      );
+      budgetEntity = budgetListState.budgetsWithStatus
+          .firstWhereOrNull((bws) => bws.budget.id == widget.budgetId)
+          ?.budget;
     }
-    if (foundBudgetStatus == null) {
+    if (budgetEntity == null) {
       log.severe(
         "[BudgetDetail] Cannot load details: Budget ID ${widget.budgetId} not found in loaded state.",
       );
@@ -107,8 +109,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     // Find Transactions
     List<TransactionEntity> foundTransactions = [];
-    final budget = foundBudgetStatus.budget;
-    final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
+    final budget = budgetEntity;
+    final (periodStart, periodEnd) = budget.getPeriodDatesFor(_selectedMonth);
 
     final params = GetTransactionsParams(
       startDate: periodStart,
@@ -136,13 +138,39 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       },
     );
 
+    final amountSpent = foundTransactions.fold<double>(
+      0.0,
+      (sum, txn) => sum + txn.amount,
+    );
+    const thrivingColor = Colors.green;
+    const nearingLimitColor = Colors.orange;
+    const overLimitColor = Colors.red;
+    final calculatedStatus = BudgetWithStatus.calculate(
+      budget: budgetEntity,
+      amountSpent: amountSpent,
+      thrivingColor: thrivingColor,
+      nearingLimitColor: nearingLimitColor,
+      overLimitColor: overLimitColor,
+    );
+
     if (mounted) {
       setState(() {
-        _budgetWithStatus = foundBudgetStatus;
+        _budgetWithStatus = calculatedStatus;
         _relevantTransactions = foundTransactions;
         _isLoading = false;
       });
     }
+  }
+
+  void _changeMonth(int delta) {
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + delta,
+        1,
+      );
+    });
+    _loadData();
   }
 
   void _navigateToEdit(BuildContext context) {
@@ -505,7 +533,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             children: [
               Text(
                 budget.period == BudgetPeriodType.recurringMonthly
-                    ? 'This Month\'s Progress'
+                    ? '${DateFormat.yMMMM().format(_selectedMonth)} Progress'
                     : 'Period Progress (${DateFormatter.formatDate(budget.startDate!)} - ${DateFormatter.formatDate(budget.endDate!)})',
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -570,6 +598,18 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         backgroundColor: isAether ? Colors.transparent : null,
         elevation: isAether ? 0 : null,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Previous Month',
+            onPressed: () => _changeMonth(-1),
+          ),
+          if (_selectedMonth.year != DateTime.now().year ||
+              _selectedMonth.month != DateTime.now().month)
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              tooltip: 'Next Month',
+              onPressed: () => _changeMonth(1),
+            ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => _navigateToEdit(context),
