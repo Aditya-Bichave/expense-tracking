@@ -369,76 +369,96 @@ class AppRouter {
         path: RouteNames.reportSpendingCategory, // Relative path
         name: RouteNames.reportSpendingCategory,
         parentNavigatorKey: parentKey, // Ensure it pushes onto root
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: BlocProvider(
-            create: (_) => sl<SpendingCategoryReportBloc>(),
-            child: BlocProvider.value(
-              value: sl<ReportFilterBloc>(),
-              child: const SpendingByCategoryPage(),
+        pageBuilder: (context, state) {
+          final filterBloc = sl<ReportFilterBloc>();
+          return MaterialPage(
+            key: state.pageKey,
+            child: BlocProvider<ReportFilterBloc>(
+              create: (_) => filterBloc,
+              child: BlocProvider<SpendingCategoryReportBloc>(
+                create: (_) =>
+                    sl<SpendingCategoryReportBloc>(param1: filterBloc),
+                child: const SpendingByCategoryPage(),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.reportSpendingTime,
         name: RouteNames.reportSpendingTime,
         parentNavigatorKey: parentKey,
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: BlocProvider(
-            create: (_) => sl<SpendingTimeReportBloc>(),
-            child: BlocProvider.value(
-              value: sl<ReportFilterBloc>(),
-              child: const SpendingOverTimePage(),
+        pageBuilder: (context, state) {
+          final filterBloc = sl<ReportFilterBloc>();
+          return MaterialPage(
+            key: state.pageKey,
+            child: BlocProvider<ReportFilterBloc>(
+              create: (_) => filterBloc,
+              child: BlocProvider<SpendingTimeReportBloc>(
+                create: (_) =>
+                    sl<SpendingTimeReportBloc>(param1: filterBloc),
+                child: const SpendingOverTimePage(),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.reportIncomeExpense,
         name: RouteNames.reportIncomeExpense,
         parentNavigatorKey: parentKey,
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: BlocProvider(
-            create: (_) => sl<IncomeExpenseReportBloc>(),
-            child: BlocProvider.value(
-              value: sl<ReportFilterBloc>(),
-              child: const IncomeVsExpensePage(),
+        pageBuilder: (context, state) {
+          final filterBloc = sl<ReportFilterBloc>();
+          return MaterialPage(
+            key: state.pageKey,
+            child: BlocProvider<ReportFilterBloc>(
+              create: (_) => filterBloc,
+              child: BlocProvider<IncomeExpenseReportBloc>(
+                create: (_) =>
+                    sl<IncomeExpenseReportBloc>(param1: filterBloc),
+                child: const IncomeVsExpensePage(),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.reportBudgetPerformance,
         name: RouteNames.reportBudgetPerformance,
         parentNavigatorKey: parentKey,
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: BlocProvider(
-            create: (_) => sl<BudgetPerformanceReportBloc>(),
-            child: BlocProvider.value(
-              value: sl<ReportFilterBloc>(),
-              child: const BudgetPerformancePage(),
+        pageBuilder: (context, state) {
+          final filterBloc = sl<ReportFilterBloc>();
+          return MaterialPage(
+            key: state.pageKey,
+            child: BlocProvider<ReportFilterBloc>(
+              create: (_) => filterBloc,
+              child: BlocProvider<BudgetPerformanceReportBloc>(
+                create: (_) =>
+                    sl<BudgetPerformanceReportBloc>(param1: filterBloc),
+                child: const BudgetPerformancePage(),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.reportGoalProgress,
         name: RouteNames.reportGoalProgress,
         parentNavigatorKey: parentKey,
-        pageBuilder: (context, state) => MaterialPage(
-          key: state.pageKey,
-          child: BlocProvider(
-            create: (_) => sl<GoalProgressReportBloc>(),
-            child: BlocProvider.value(
-              value: sl<ReportFilterBloc>(),
-              child: const GoalProgressPage(),
+        pageBuilder: (context, state) {
+          final filterBloc = sl<ReportFilterBloc>();
+          return MaterialPage(
+            key: state.pageKey,
+            child: BlocProvider<ReportFilterBloc>(
+              create: (_) => filterBloc,
+              child: BlocProvider<GoalProgressReportBloc>(
+                create: (_) =>
+                    sl<GoalProgressReportBloc>(param1: filterBloc),
+                child: const GoalProgressPage(),
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     ];
   }
