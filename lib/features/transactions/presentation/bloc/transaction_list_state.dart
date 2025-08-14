@@ -22,6 +22,8 @@ class TransactionListState extends Equatable {
   final Set<String> selectedTransactionIds;
   // Error
   final String? errorMessage;
+  // Transient error specifically for delete failures
+  final String? deleteError;
 
   const TransactionListState({
     this.status = ListStatus.initial,
@@ -37,6 +39,7 @@ class TransactionListState extends Equatable {
     this.isInBatchEditMode = false,
     this.selectedTransactionIds = const {},
     this.errorMessage,
+    this.deleteError,
   });
 
   // Helper to check if filters are applied (excluding search)
@@ -61,6 +64,7 @@ class TransactionListState extends Equatable {
     bool? isInBatchEditMode,
     Set<String>? selectedTransactionIds,
     String? errorMessage,
+    String? deleteError,
     // Flags to clear nullable fields
     bool clearStartDate = false,
     bool clearEndDate = false,
@@ -69,6 +73,7 @@ class TransactionListState extends Equatable {
     bool clearTransactionType = false,
     bool clearSearchTerm = false,
     bool clearErrorMessage = false,
+    bool clearDeleteError = false,
   }) {
     return TransactionListState(
       status: status ?? this.status,
@@ -86,25 +91,28 @@ class TransactionListState extends Equatable {
       isInBatchEditMode: isInBatchEditMode ?? this.isInBatchEditMode,
       selectedTransactionIds:
           selectedTransactionIds ?? this.selectedTransactionIds,
-      errorMessage:
-          clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+      errorMessage: clearErrorMessage
+          ? null
+          : (errorMessage ?? this.errorMessage),
+      deleteError: clearDeleteError ? null : (deleteError ?? this.deleteError),
     );
   }
 
   @override
   List<Object?> get props => [
-        status,
-        transactions,
-        startDate,
-        endDate,
-        categoryId,
-        accountId,
-        transactionType,
-        searchTerm,
-        sortBy,
-        sortDirection,
-        isInBatchEditMode,
-        selectedTransactionIds,
-        errorMessage,
-      ];
+    status,
+    transactions,
+    startDate,
+    endDate,
+    categoryId,
+    accountId,
+    transactionType,
+    searchTerm,
+    sortBy,
+    sortDirection,
+    isInBatchEditMode,
+    selectedTransactionIds,
+    errorMessage,
+    deleteError,
+  ];
 }
