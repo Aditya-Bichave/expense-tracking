@@ -103,17 +103,20 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
       body:
           BlocBuilder<SpendingCategoryReportBloc, SpendingCategoryReportState>(
         builder: (context, state) {
-          if (state is SpendingCategoryReportLoading)
+          if (state is SpendingCategoryReportLoading) {
             return const Center(child: CircularProgressIndicator());
-          if (state is SpendingCategoryReportError)
+          }
+          if (state is SpendingCategoryReportError) {
             return Center(
                 child: Text("Error: ${state.message}",
                     style: TextStyle(color: theme.colorScheme.error)));
+          }
           if (state is SpendingCategoryReportLoaded) {
             final reportData = state.reportData;
-            if (reportData.spendingByCategory.isEmpty)
+            if (reportData.spendingByCategory.isEmpty) {
               return const Center(
                   child: Text("No spending data for this period."));
+            }
 
             Widget chartWidget;
             if (useBarChart) {
@@ -160,10 +163,10 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final currencySymbol = settings.currencySymbol;
     final percentFormat = NumberFormat('##0.0%');
 
-    List<DataColumn> columns = [
-      const DataColumn(label: Text('Category')),
-      DataColumn(label: const Text('Amount'), numeric: true),
-      DataColumn(label: const Text('%'), numeric: true),
+    List<DataColumn> columns = const [
+      DataColumn(label: Text('Category')),
+      DataColumn(label: Text('Amount'), numeric: true),
+      DataColumn(label: Text('%'), numeric: true),
     ];
     // Add comparison columns dynamically
     if (showComparison && data.previousSpendingByCategory != null) {

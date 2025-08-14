@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:html' as html;
+import 'dart:html' as html; // ignore: avoid_web_libraries_in_flutter
 import 'package:flutter/foundation.dart';
 import 'downloader_service.dart';
 

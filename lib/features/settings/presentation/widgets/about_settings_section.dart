@@ -1,11 +1,9 @@
 // lib/features/settings/presentation/widgets/about_settings_section.dart
-import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class AboutSettingsSection extends StatelessWidget {
   final SettingsState state;

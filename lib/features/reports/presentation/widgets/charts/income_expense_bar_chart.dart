@@ -37,18 +37,24 @@ class IncomeExpenseBarChart extends StatelessWidget {
     double maxY = 0;
     for (var item in data) {
       if (item.currentTotalIncome > maxY) maxY = item.currentTotalIncome;
-      if (item.currentTotalExpense > maxY) maxY = item.currentTotalExpense;
+      if (item.currentTotalExpense > maxY) {
+        maxY = item.currentTotalExpense;
+      }
       if (showComparison) {
         if (item.totalIncome.previousValue != null &&
-            item.totalIncome.previousValue! > maxY)
+            item.totalIncome.previousValue! > maxY) {
           maxY = item.totalIncome.previousValue!;
+        }
         if (item.totalExpense.previousValue != null &&
-            item.totalExpense.previousValue! > maxY)
+            item.totalExpense.previousValue! > maxY) {
           maxY = item.totalExpense.previousValue!;
+        }
       }
     }
     maxY = (maxY * 1.15).ceilToDouble();
-    if (maxY <= 0) maxY = 10; // Ensure some height
+    if (maxY <= 0) {
+      maxY = 10; // Ensure some height
+    }
 
     final isMonthly = data.length > 1 &&
         data[1].periodStart.month != data[0].periodStart.month;

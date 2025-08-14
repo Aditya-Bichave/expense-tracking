@@ -103,7 +103,7 @@ void main() {
     occurrencesGenerated: 5,
   );
 
-  final tCategory = const Category(
+  const tCategory = Category(
     id: 'cat1',
     name: 'Test Category',
     iconName: 'icon',
@@ -143,7 +143,7 @@ void main() {
     when(() => mockRecurringTransactionRepository.getRecurringRules())
         .thenAnswer((_) async => Right([tRule]));
     when(() => mockCategoryRepository.getCategoryById(any()))
-        .thenAnswer((_) async => Right(tCategory));
+        .thenAnswer((_) async => const Right(tCategory));
     when(() => mockAddExpenseUseCase(any()))
         .thenAnswer((_) async => Right(tExpense));
     when(() => mockRecurringTransactionRepository.updateRecurringRule(any()))

@@ -67,7 +67,7 @@ void main() {
     occurrencesGenerated: 1,
   );
 
-  final tCategory = const Category(
+  const tCategory = Category(
     id: 'cat1',
     name: 'Subscriptions',
     iconName: 'subscriptions',

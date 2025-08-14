@@ -1,12 +1,7 @@
 // lib/features/reports/presentation/widgets/charts/spending_pie_chart.dart
-import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
-import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/main.dart';
 
 class SpendingPieChart extends StatefulWidget {
   final List<CategorySpendingData> data;

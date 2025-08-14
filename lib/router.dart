@@ -80,12 +80,11 @@ class AppRouter {
                 settingsState.status == SettingsStatus.error;
         final bool setupSkipped = settingsState.setupSkipped;
 
-        final bool isAuthenticated = false; // MOCK
+        const bool isAuthenticated = false; // MOCK
 
         final String currentRoute = state.matchedLocation;
         final bool isGoingToInitialSetup =
             currentRoute == RouteNames.initialSetup;
-        final bool isGoingToAuth = false;
         final bool isGoingToShellRoute = currentRoute == RouteNames.dashboard ||
             currentRoute == RouteNames.transactionsList ||
             currentRoute == RouteNames.budgetsAndCats ||
@@ -136,10 +135,6 @@ class AppRouter {
             return RouteNames.initialSetup;
           }
         }
-
-        // If authenticated (or potentially simulated by skipping) and NOT in demo mode
-        // If trying to access initial setup, redirect to dashboard
-        if (isAuthenticated && isGoingToInitialSetup) {}
 
         // Default: Allow navigation to the intended route (if reached here, conditions are met)
         log.info("[RouterRedirect] Allowing access to $currentRoute.");

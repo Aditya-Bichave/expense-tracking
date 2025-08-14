@@ -113,7 +113,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
 
               // --- Authentication Buttons ---
               ElevatedButton(
-                child: const Text('Sign Up'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: theme.colorScheme.secondaryContainer,
@@ -124,21 +123,21 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Sign Up: Coming Soon!")));
                 },
+                child: const Text('Sign Up'),
               ),
               const SizedBox(height: 12),
               TextButton(
-                child: const Text('Log In'),
                 onPressed: () {
                   log.warning("[InitialSetup] Log In navigation TBD");
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("Log In: Coming Soon!")));
                 },
+                child: const Text('Log In'),
               ),
               const SizedBox(height: 24),
 
               // --- Skip Button ---
               TextButton(
-                child: const Text('Skip for Now'),
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -149,6 +148,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   // --- END MODIFICATION ---
                   context.go(RouteNames.dashboard);
                 },
+                child: const Text('Skip for Now'),
               ),
               // --- End Skip Button ---
             ],

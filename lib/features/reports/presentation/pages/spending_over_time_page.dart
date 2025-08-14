@@ -2,7 +2,6 @@
 import 'package:dartz/dartz.dart' show Right;
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart' as df; // Alias
@@ -14,7 +13,6 @@ import 'package:expense_tracker/features/reports/presentation/widgets/charts/tim
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -151,15 +149,17 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         builder: (context, state) {
           if (state is SpendingTimeReportLoading)
             return const Center(child: CircularProgressIndicator());
-          if (state is SpendingTimeReportError)
+          if (state is SpendingTimeReportError) {
             return Center(
                 child: Text("Error: ${state.message}",
                     style: TextStyle(color: theme.colorScheme.error)));
+          }
           if (state is SpendingTimeReportLoaded) {
             final reportData = state.reportData;
-            if (reportData.spendingData.isEmpty)
+            if (reportData.spendingData.isEmpty) {
               return const Center(
                   child: Text("No spending data for this period."));
+            }
 
             Widget chartWidget = TimeSeriesLineChart(
               data: reportData.spendingData,

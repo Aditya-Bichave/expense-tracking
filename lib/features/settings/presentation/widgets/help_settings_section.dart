@@ -1,12 +1,10 @@
 // lib/features/settings/presentation/widgets/help_settings_section.dart
-import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart'; // Import context.watch
-import 'package:go_router/go_router.dart';
 
 class HelpSettingsSection extends StatelessWidget {
   final bool isLoading;

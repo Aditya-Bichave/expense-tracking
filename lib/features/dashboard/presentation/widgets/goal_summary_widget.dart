@@ -26,7 +26,7 @@ class GoalSummaryWidget extends StatelessWidget {
     double maxVal = 0;
     final spots = data.asMap().entries.map((entry) {
       final index = entry.key.toDouble();
-      final num currentVal = entry.value.currentAmount ?? 0;
+      final num currentVal = entry.value.currentAmount;
       final double amount = currentVal.toDouble().clamp(0.0, double.maxFinite);
       if (amount > maxVal) maxVal = amount;
       return FlSpot(index, amount);

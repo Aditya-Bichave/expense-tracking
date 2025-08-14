@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/constants/hive_constants.dart';
-import 'package:expense_tracker/core/constants/route_names.dart'; // Added
 import 'package:expense_tracker/core/di/service_locator.dart';
 // Removed DemoModeService import, not directly needed here
 import 'package:expense_tracker/core/theme/app_theme.dart';
@@ -28,9 +27,7 @@ import 'package:expense_tracker/features/transactions/presentation/bloc/transact
 import 'package:expense_tracker/router.dart';
 // Removed InitialSetupScreen import, handled by router
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For PlatformException
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 // Removed local_auth import, handled by Settings page
 import 'package:shared_preferences/shared_preferences.dart';

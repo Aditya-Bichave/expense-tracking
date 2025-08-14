@@ -1,14 +1,10 @@
 // lib/features/reports/presentation/widgets/report_filter_controls.dart
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
-import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Added
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 
 class ReportFilterControls extends StatelessWidget {
@@ -23,8 +19,9 @@ class ReportFilterControls extends StatelessWidget {
           state.optionsStatus == FilterOptionsStatus.loaded ||
           state.optionsStatus == FilterOptionsStatus.error);
       if (!context.mounted ||
-          filterBloc.state.optionsStatus == FilterOptionsStatus.error)
+          filterBloc.state.optionsStatus == FilterOptionsStatus.error) {
         return; // Don't show sheet if loading failed
+      }
     }
 
     await showModalBottomSheet<void>(

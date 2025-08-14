@@ -167,9 +167,8 @@ class GoalContributionChart extends StatelessWidget {
                 touchResponse.lineBarSpots!.isNotEmpty) {
               final spotIndex = touchResponse.lineBarSpots![0].spotIndex;
               if (spotIndex < sortedContributions.length) {
-                final tappedContribution = sortedContributions[spotIndex];
-                print("Tapped contribution: ${tappedContribution.id}");
                 // Potential drill-down:
+                // final tappedContribution = sortedContributions[spotIndex];
                 // showLogContributionSheet(context, tappedContribution.goalId, initialContribution: tappedContribution);
               }
             }
@@ -183,8 +182,9 @@ class GoalContributionChart extends StatelessWidget {
   // --- Helper methods unchanged ---
   double? _calculateXInterval(double minX, double maxX, int dataLength) {
     final durationMs = maxX - minX;
-    if (durationMs <= 0 || dataLength < 2)
+    if (durationMs <= 0 || dataLength < 2) {
       return null; // Avoid division by zero or single point
+    }
     // Aim for about 5 labels on the x-axis
     final double interval = durationMs / 5;
     // Ensure interval is at least one day if duration is short
@@ -215,25 +215,7 @@ class GoalContributionChart extends StatelessWidget {
     }
 
     // Avoid label overlap by checking distance to min/max (simplistic check)
-    bool showLabel = true;
-    if (value != meta.min && value != meta.max) {
-      final double range = meta.max - meta.min;
-      if (range > 0) {
-        final double relativePos = (value - meta.min) / range;
-        // Hide labels too close to the edges or center if too crowded
-        if (relativePos < 0.1 ||
-            relativePos > 0.9 ||
-            (durationDays < 10 && relativePos > 0.4 && relativePos < 0.6)) {
-          // Check if it's near the min/max for more fine-grained control maybe?
-          // For now, just hide if too close to edges.
-          // Or better, rely on the interval calculation + check meta.appliedInterval
-          // if( (value - meta.min).abs() < meta.appliedInterval * 0.5 || (value - meta.max).abs() < meta.appliedInterval * 0.5) {
-          //    showLabel = false;
-          // }
-        }
-      }
-    }
-
+    // TODO: implement smarter label hiding if needed
     return SideTitleWidget(
         axisSide: meta.axisSide, space: 4, child: Text(text, style: style));
   }

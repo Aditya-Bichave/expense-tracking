@@ -45,7 +45,6 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
   late final TextEditingController _amountController;
   late final TextEditingController _intervalController;
   late final TextEditingController _occurrencesController;
-  late final List<String> _weekdayNames;
 
   List<String> _weekdayNamesMonFirst([String? locale]) {
     final sundayFirst =

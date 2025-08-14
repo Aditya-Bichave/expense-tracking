@@ -73,7 +73,8 @@ class MainShell extends StatelessWidget {
     final navTheme = theme.bottomNavigationBarTheme;
     final currentTabIndex = navigationShell.currentIndex;
     // --- Check Demo Mode State ---
-    final isInDemoMode = context.watch<SettingsBloc>().state.isInDemoMode;
+    // Trigger rebuild when demo mode changes
+    context.watch<SettingsBloc>().state.isInDemoMode;
     // --- End Check ---
 
     final bool showFab = (currentTabIndex == 0 || // Dashboard
@@ -126,25 +127,21 @@ class MainShell extends StatelessWidget {
               heroTag: 'main_shell_fab',
               onPressed: () {
                 // --- Adjusted FAB navigation based on tab ---
-                String routeName;
                 switch (currentTabIndex) {
                   case 0: // Dashboard -> Add Transaction
                   case 1: // Transactions -> Add Transaction
-                    routeName = RouteNames.addTransaction;
                     log.info(
                         "[MainShell FAB] Navigating to Add Transaction from tab $currentTabIndex.");
                     context.push(
                         '${RouteNames.transactionsList}/${RouteNames.addTransaction}'); // Use full path relative to shell
                     break;
                   case 3: // Accounts -> Add Account
-                    routeName = RouteNames.addAccount;
                     log.info(
                         "[MainShell FAB] Navigating to Add Account from tab $currentTabIndex.");
                     context.push(
                         '${RouteNames.accounts}/${RouteNames.addAccount}'); // Use full path relative to shell
                     break;
                   case 4: // Recurring -> Add Recurring
-                    routeName = RouteNames.addRecurring;
                     log.info(
                         "[MainShell FAB] Navigating to Add Recurring from tab $currentTabIndex.");
                     context.push(
@@ -153,7 +150,6 @@ class MainShell extends StatelessWidget {
                   default:
                     return; // Should not happen if showFab is false for other tabs
                 }
-                // context.pushNamed(routeName); // Pushing named routes within shell can be tricky, using full path is safer
               },
               tooltip: 'Add',
               child: const Icon(Icons.add),
