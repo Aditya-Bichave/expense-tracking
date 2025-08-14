@@ -189,22 +189,12 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final Map<String, String> params = {
       RouteNames.paramTransactionId: transaction.id
     };
-    final dynamic extraData = transaction.originalEntity;
-
-    if (extraData == null) {
-      log.severe(
-          "[BudgetDetail] CRITICAL: originalEntity is null for transaction ID ${transaction.id}. Cannot navigate.");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Error preparing transaction data."),
-          backgroundColor: Colors.red));
-      return;
-    }
     log.info("[BudgetDetail] Attempting navigation via pushNamed:");
     log.info("  Route Name: $routeName");
     log.info("  Path Params: $params");
-    log.info("  Extra Data Type: ${extraData?.runtimeType}");
+    log.info("  Extra Data Type: ${transaction.runtimeType}");
     try {
-      context.pushNamed(routeName, pathParameters: params, extra: extraData);
+      context.pushNamed(routeName, pathParameters: params, extra: transaction);
       log.info("[BudgetDetail] pushNamed executed.");
     } catch (e, s) {
       log.severe("[BudgetDetail] Error executing pushNamed: $e\n$s");

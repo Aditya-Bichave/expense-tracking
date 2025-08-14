@@ -108,7 +108,7 @@ class TransactionListView extends StatelessWidget {
         Widget cardItem;
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
-            expense: transaction.originalEntity as Expense, // Cast required
+            expense: transaction.expense!,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -136,7 +136,7 @@ class TransactionListView extends StatelessWidget {
         } else {
           // Income
           cardItem = IncomeCard(
-            income: transaction.originalEntity as Income, // Cast required
+            income: transaction.income!,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {
