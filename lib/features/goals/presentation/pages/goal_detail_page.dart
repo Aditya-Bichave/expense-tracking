@@ -130,16 +130,18 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
             _isLoadingGoal = false;
           });
 
-          final uiMode = context.read<SettingsBloc>().state.uiMode;
-          if (_currentGoal!.isAchieved &&
-              !goalAlreadyAchievedBeforeLoad &&
-              uiMode != UIMode.quantum) {
-            log.info(
-                "[GoalDetail] Goal ${widget.goalId} newly achieved! Playing confetti.");
-            _confettiController.play();
-          } else if (!_currentGoal!.isAchieved &&
-              goalAlreadyAchievedBeforeLoad) {
-            log.info("[GoalDetail] Goal ${widget.goalId} no longer achieved.");
+          // Check if the goal was newly achieved to play confetti
+          if (loadedGoal != null && loadedGoal.isNewlyAchieved) {
+            final uiMode = context.read<SettingsBloc>().state.uiMode;
+            if (uiMode != UIMode.quantum) {
+              log.info(
+                  "[GoalDetail] Goal ${widget.goalId} newly achieved! Playing confetti.");
+              _confettiController.play();
+            }
+            // Acknowledge the achievement so it doesn't trigger again
+            context
+                .read<GoalListBloc>()
+                .add(AcknowledgeGoalAchieved(goalId: widget.goalId));
           }
         }
       }

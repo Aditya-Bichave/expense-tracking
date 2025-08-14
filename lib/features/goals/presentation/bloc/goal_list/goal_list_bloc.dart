@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/archive_goal.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/delete_goal.dart';
+import 'package:expense_tracker/features/goals/domain/usecases/acknowledge_goal_achieved.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/main.dart';
 
@@ -19,23 +20,27 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
   final GetGoalsUseCase _getGoalsUseCase;
   final ArchiveGoalUseCase _archiveGoalUseCase;
   final DeleteGoalUseCase _deleteGoalUseCase;
+  final AcknowledgeGoalAchievedUseCase _acknowledgeGoalAchievedUseCase;
 
   late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
   GoalListBloc({
     required GetGoalsUseCase getGoalsUseCase,
     required ArchiveGoalUseCase archiveGoalUseCase,
-    required Stream<DataChangedEvent> dataChangeStream,
     required DeleteGoalUseCase deleteGoalUseCase,
+    required AcknowledgeGoalAchievedUseCase acknowledgeGoalAchievedUseCase,
+    required Stream<DataChangedEvent> dataChangeStream,
   })  : _getGoalsUseCase = getGoalsUseCase,
         _archiveGoalUseCase = archiveGoalUseCase,
         _deleteGoalUseCase = deleteGoalUseCase,
+        _acknowledgeGoalAchievedUseCase = acknowledgeGoalAchievedUseCase,
         super(const GoalListState()) {
     on<LoadGoals>(_onLoadGoals);
     on<_GoalsDataChanged>(_onDataChanged);
     on<ArchiveGoal>(_onArchiveGoal);
     on<DeleteGoal>(_onDeleteGoal);
-    on<ResetState>(_onResetState); // Add handler
+    on<ResetState>(_onResetState);
+    on<AcknowledgeGoalAchieved>(_onAcknowledgeGoalAchieved);
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
       // --- MODIFIED Listener ---
@@ -179,5 +184,21 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
     _dataChangeSubscription.cancel();
     log.info("[GoalListBloc] Closed and cancelled data stream subscription.");
     return super.close();
+  }
+
+  Future<void> _onAcknowledgeGoalAchieved(
+      AcknowledgeGoalAchieved event, Emitter<GoalListState> emit) async {
+    log.info(
+        "[GoalListBloc] Acknowledging goal achievement for ID: ${event.goalId}");
+    // This action does not change the list state, it just updates a flag
+    // in the background. We don't need to emit any state here, but we
+    // could emit a success/failure message if we wanted to show a snackbar.
+    final result = await _acknowledgeGoalAchievedUseCase(event.goalId);
+    result.fold(
+      (failure) => log.warning(
+          "[GoalListBloc] Failed to acknowledge goal achievement: ${failure.message}"),
+      (_) => log.info(
+          "[GoalListBloc] Successfully acknowledged goal achievement for ${event.goalId}."),
+    );
   }
 }

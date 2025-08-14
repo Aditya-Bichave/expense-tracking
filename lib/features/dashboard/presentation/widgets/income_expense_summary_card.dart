@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/widgets/app_card.dart';
 
 class IncomeExpenseSummaryCard extends StatelessWidget {
   final FinancialOverview overview;
@@ -15,9 +16,7 @@ class IncomeExpenseSummaryCard extends StatelessWidget {
     final currencySymbol = settingsState.currencySymbol;
     final theme = Theme.of(context);
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8.0), // Add vertical margin
+    return AppCard(
       child: Padding(
         padding: const EdgeInsets.symmetric(
             horizontal: 16.0, vertical: 20.0), // Increase vertical padding

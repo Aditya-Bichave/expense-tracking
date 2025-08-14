@@ -205,4 +205,41 @@ class GoalRepositoryImpl implements GoalRepository {
       return Left(CacheFailure("Failed to update goal: ${e.toString()}"));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> acknowledgeGoalAchieved(String goalId) async {
+    log.info("[GoalRepo] Acknowledging newly achieved goal: $goalId");
+    try {
+      final model = await localDataSource.getGoalById(goalId);
+      if (model == null) {
+        return const Left(CacheFailure("Goal not found to acknowledge."));
+      }
+      if (!model.isNewlyAchieved) {
+        log.info("[GoalRepo] Goal $goalId was not newly achieved. No update needed.");
+        return const Right(null); // Nothing to do
+      }
+
+      final updatedModel = GoalModel(
+        id: model.id,
+        name: model.name,
+        targetAmount: model.targetAmount,
+        targetDate: model.targetDate,
+        iconName: model.iconName,
+        description: model.description,
+        statusIndex: model.statusIndex,
+        totalSavedCache: model.totalSavedCache,
+        createdAt: model.createdAt,
+        achievedAt: model.achievedAt,
+        isNewlyAchieved: false, // Set the flag to false
+      );
+
+      await localDataSource.saveGoal(updatedModel);
+      log.info("[GoalRepo] Successfully acknowledged achievement for goal: $goalId");
+      return const Right(null);
+    } catch (e, s) {
+      log.severe("[GoalRepo] Error acknowledging goal achievement for $goalId$e$s");
+      return Left(CacheFailure(
+          "Failed to acknowledge goal achievement: ${e.toString()}"));
+    }
+  }
 }

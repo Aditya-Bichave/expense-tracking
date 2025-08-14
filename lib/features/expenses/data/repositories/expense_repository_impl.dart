@@ -82,27 +82,37 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   }
 
   @override
-  Future<Either<Failure, List<ExpenseModel>>> getExpenses({
+  Future<Either<Failure, List<Expense>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
     List<String>? categoryIds,
     String? accountId,
   }) async {
     log.info(
-        "[ExpenseRepo] Getting expense models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatIDs=$categoryIds");
+        "[ExpenseRepo] Getting HYDRATED expenses. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatIDs=$categoryIds");
     try {
+      // 1. Fetch raw models
       final expenseModels =
           await localDataSource.getExpenses(categoryIds: categoryIds);
       log.fine(
           "[ExpenseRepo] Fetched ${expenseModels.length} raw expense models from data source.");
 
-      // Data source handles category filtering.
-      // We only need to handle date and account filtering here.
-      final filteredModels = expenseModels.where((model) {
-        bool dateMatch = true;
-        bool accountMatch = true;
+      // 2. Fetch all categories for hydration
+      final categoriesEither = await categoryRepository.getAllCategories();
+      if (categoriesEither.isLeft()) {
+        return Left(categoriesEither.fold((l) => l, (r) => r as Failure));
+      }
+      final categoryMap = {
+        for (var cat in categoriesEither.getOrElse(() => [])) cat.id: cat
+      };
+      log.fine(
+          "[ExpenseRepo] Created category map with ${categoryMap.length} entries for hydration.");
 
+      // 3. Filter and Hydrate
+      final List<Expense> hydratedExpenses = [];
+      for (final model in expenseModels) {
         // Date Filtering
+        bool dateMatch = true;
         if (startDate != null) {
           final expDateOnly =
               DateTime(model.date.year, model.date.month, model.date.day);
@@ -117,26 +127,32 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
           dateMatch = !model.date.isAfter(endDateInclusive);
         }
 
-        // Account Filtering (assuming single account ID)
+        // Account Filtering
+        bool accountMatch = true;
         if (accountId != null && accountId.isNotEmpty) {
           accountMatch = model.accountId == accountId;
         }
 
-        return dateMatch && accountMatch;
-      }).toList();
+        if (dateMatch && accountMatch) {
+          hydratedExpenses.add(model.toEntity(
+            category: categoryMap[model.categoryId],
+          ));
+        }
+      }
 
-      log.fine("[ExpenseRepo] Filtered to ${filteredModels.length} models.");
-      filteredModels.sort((a, b) => b.date.compareTo(a.date));
+      log.fine(
+          "[ExpenseRepo] Filtered and hydrated to ${hydratedExpenses.length} entities.");
+      hydratedExpenses.sort((a, b) => b.date.compareTo(a.date));
 
-      return Right(filteredModels);
+      return Right(hydratedExpenses);
     } on CacheFailure catch (e) {
       log.warning(
-          "[ExpenseRepo] CacheFailure getting expense models: ${e.message}");
+          "[ExpenseRepo] CacheFailure getting expenses: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[ExpenseRepo] Unexpected error getting expense models$e$s");
+      log.severe("[ExpenseRepo] Unexpected error getting expenses$e$s");
       return Left(UnexpectedFailure(
-          'Unexpected error getting expense models: ${e.toString()}'));
+          'Unexpected error getting expenses: ${e.toString()}'));
     }
   }
 
@@ -218,12 +234,12 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
       double total = 0;
       Map<String, double> categoryTotals = {};
-      for (var model in expenseModels) {
-        total += model.amount;
-        final categoryName = categoryMap[model.categoryId]?.name ??
-            Category.uncategorized.name; // Use uncategorized name as fallback
-        categoryTotals.update(categoryName, (value) => value + model.amount,
-            ifAbsent: () => model.amount);
+      for (var expense in expenseModels) {
+        total += expense.amount;
+        final categoryName =
+            expense.category?.name ?? Category.uncategorized.name;
+        categoryTotals.update(categoryName, (value) => value + expense.amount,
+            ifAbsent: () => expense.amount);
       }
       final sortedCategoryTotals = Map.fromEntries(
           categoryTotals.entries.toList()

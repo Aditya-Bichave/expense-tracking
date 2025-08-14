@@ -25,6 +25,7 @@ import 'package:expense_tracker/features/goals/domain/usecases/delete_goal.dart'
 import 'package:expense_tracker/features/goals/domain/usecases/get_contributions_for_goal.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/update_contribution.dart';
+import 'package:expense_tracker/features/goals/domain/usecases/acknowledge_goal_achieved.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/update_goal.dart';
 // Blocs
 import 'package:expense_tracker/features/goals/presentation/bloc/add_edit_goal/add_edit_goal_bloc.dart';
@@ -96,14 +97,19 @@ class GoalDependencies {
     if (!sl.isRegistered<CheckGoalAchievementUseCase>()) {
       sl.registerLazySingleton(() => CheckGoalAchievementUseCase(sl()));
     }
+    if (!sl.isRegistered<AcknowledgeGoalAchievedUseCase>()) {
+      sl.registerLazySingleton(() => AcknowledgeGoalAchievedUseCase(sl()));
+    }
 
     // --- Blocs ---
     if (!sl.isRegistered<GoalListBloc>()) {
       sl.registerFactory(() => GoalListBloc(
             getGoalsUseCase: sl<GetGoalsUseCase>(),
             archiveGoalUseCase: sl<ArchiveGoalUseCase>(),
-            dataChangeStream: sl<Stream<DataChangedEvent>>(),
             deleteGoalUseCase: sl<DeleteGoalUseCase>(),
+            acknowledgeGoalAchievedUseCase:
+                sl<AcknowledgeGoalAchievedUseCase>(),
+            dataChangeStream: sl<Stream<DataChangedEvent>>(),
           ));
     }
     if (!sl.isRegistered<AddEditGoalBloc>()) {

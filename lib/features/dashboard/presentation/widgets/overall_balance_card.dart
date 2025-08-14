@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/widgets/app_card.dart';
 
 class OverallBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
@@ -20,9 +21,7 @@ class OverallBalanceCard extends StatelessWidget {
         ? theme.colorScheme.primary // Use primary color for positive balance
         : theme.colorScheme.error; // Use error color for negative balance
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.symmetric(vertical: 8.0), // Add vertical margin
+    return AppCard(
       color: theme
           .colorScheme.surfaceContainerHighest, // Use a distinct surface color
       child: Padding(

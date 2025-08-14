@@ -37,6 +37,9 @@ class GoalModel extends HiveObject {
   @HiveField(9)
   final DateTime? achievedAt;
 
+  @HiveField(10)
+  final bool isNewlyAchieved;
+
   GoalModel({
     required this.id,
     required this.name,
@@ -48,6 +51,7 @@ class GoalModel extends HiveObject {
     required this.totalSavedCache,
     required this.createdAt,
     this.achievedAt,
+    this.isNewlyAchieved = false,
   });
 
   factory GoalModel.fromEntity(Goal entity) {
@@ -59,10 +63,10 @@ class GoalModel extends HiveObject {
       iconName: entity.iconName,
       description: entity.description,
       statusIndex: entity.status.index,
-      totalSavedCache:
-          entity.totalSaved, // Use the calculated value from entity
+      totalSavedCache: entity.totalSaved,
       createdAt: entity.createdAt,
       achievedAt: entity.achievedAt,
+      isNewlyAchieved: entity.isNewlyAchieved,
     );
   }
 
@@ -75,9 +79,10 @@ class GoalModel extends HiveObject {
       iconName: iconName,
       description: description,
       status: GoalStatus.values[statusIndex],
-      totalSaved: totalSavedCache, // Use the cached value
+      totalSaved: totalSavedCache,
       createdAt: createdAt,
       achievedAt: achievedAt,
+      isNewlyAchieved: isNewlyAchieved,
     );
   }
 }

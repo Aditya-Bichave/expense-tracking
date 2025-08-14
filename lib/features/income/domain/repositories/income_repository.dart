@@ -7,8 +7,7 @@ import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 
 abstract class IncomeRepository {
-  // --- MODIFIED Return Type ---
-  Future<Either<Failure, List<IncomeModel>>> getIncomes({
+  Future<Either<Failure, List<Income>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
     List<String>? categoryIds, // Filter by a list of Category IDs

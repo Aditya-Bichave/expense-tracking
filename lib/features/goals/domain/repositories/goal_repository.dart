@@ -11,4 +11,5 @@ abstract class GoalRepository {
   Future<Either<Failure, void>> deleteGoal(
       String id); // Keep delete for now if needed
   Future<Either<Failure, Goal>> archiveGoal(String id); // ADDED
+  Future<Either<Failure, void>> acknowledgeGoalAchieved(String goalId);
 }

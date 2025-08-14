@@ -4,10 +4,13 @@ import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:flutter_bloc/flutter_bloc.dart'; // To read settings
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 
-class AssetDistributionPieChart extends StatefulWidget {
-  final Map<String, double> accountBalances; // Map<AccountName, Balance>
+import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/core/utils/color_utils.dart';
 
-  const AssetDistributionPieChart({super.key, required this.accountBalances});
+class AssetDistributionPieChart extends StatefulWidget {
+  final List<AssetAccount> accounts;
+
+  const AssetDistributionPieChart({super.key, required this.accounts});
 
   @override
   State<StatefulWidget> createState() => AssetDistributionPieChartState();
@@ -15,42 +18,6 @@ class AssetDistributionPieChart extends StatefulWidget {
 
 class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
   int touchedIndex = -1;
-  late Map<String, Color> _colorCache;
-
-  @override
-  void initState() {
-    super.initState();
-    _colorCache = {};
-    _generateColorCache(widget.accountBalances.keys);
-    log.info(
-        "[PieChart] Initialized with ${widget.accountBalances.length} accounts.");
-  }
-
-  @override
-  void didUpdateWidget(covariant AssetDistributionPieChart oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.accountBalances.keys.toSet() !=
-        oldWidget.accountBalances.keys.toSet()) {
-      log.info("[PieChart] Account keys changed, regenerating color cache.");
-      _generateColorCache(widget.accountBalances.keys);
-      touchedIndex = -1;
-    }
-  }
-
-  void _generateColorCache(Iterable<String> accountNames) {
-    _colorCache.clear();
-    for (final name in accountNames) {
-      _colorCache[name] = _generateColorForName(name);
-    }
-  }
-
-  Color _generateColorForName(String name) {
-    final hash = name.hashCode;
-    final r = (hash & 0xFF0000) >> 16;
-    final g = (hash & 0x00FF00) >> 8;
-    final b = hash & 0x0000FF;
-    return Color.fromRGBO((r % 156) + 100, (g % 156) + 100, (b % 156) + 100, 1);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,16 +37,15 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     // --- End Quantum Mode Handling ---
 
     // Filter out accounts with zero or negative balance for the chart itself
-    final positiveBalances = Map.fromEntries(
-        widget.accountBalances.entries.where((entry) => entry.value > 0));
+    final positiveAccounts =
+        widget.accounts.where((acc) => acc.currentBalance > 0).toList();
 
     log.info(
-        "[PieChart] Filtered positive balances: ${positiveBalances.length} accounts.");
+        "[PieChart] Filtered positive balances: ${positiveAccounts.length} accounts.");
 
-    if (positiveBalances.isEmpty) {
+    if (positiveAccounts.isEmpty) {
       log.info("[PieChart] No positive balances to display.");
       return Card(
-        // Use Card theme
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Center(
@@ -89,19 +55,10 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
       );
     }
 
-    // Prepare data for the chart
-    final List<String> accountNames = positiveBalances.keys.toList();
-    final List<double> balances = positiveBalances.values.toList();
-    final double totalPositiveBalance =
-        balances.fold(0.0, (sum, item) => sum + item);
-
-    // Get colors from cache/generation
-    final List<Color> sectionColors = accountNames
-        .map((name) => _colorCache[name] ?? _generateColorForName(name))
-        .toList();
+    final double totalPositiveBalance = positiveAccounts.fold(
+        0.0, (sum, acc) => sum + acc.currentBalance);
 
     return Card(
-      // Use Card theme
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -114,7 +71,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
             ),
             const SizedBox(height: 20),
             AspectRatio(
-              aspectRatio: 1.4, // Adjust aspect ratio as needed
+              aspectRatio: 1.4,
               child: PieChart(
                 PieChartData(
                   pieTouchData: PieTouchData(
@@ -124,36 +81,32 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
                             pieTouchResponse == null ||
                             pieTouchResponse.touchedSection == null) {
                           if (touchedIndex != -1) {
-                            log.info("[PieChart] Touch ended or invalid.");
-                            touchedIndex = -1; // Reset on touch end/invalid
+                            touchedIndex = -1;
                           }
                           return;
                         }
-                        log.info(
-                            "[PieChart] Touched section index: ${pieTouchResponse.touchedSection!.touchedSectionIndex}");
-                        touchedIndex = pieTouchResponse
-                            .touchedSection!.touchedSectionIndex;
+                        touchedIndex =
+                            pieTouchResponse.touchedSection!.touchedSectionIndex;
                       });
                     },
                   ),
                   borderData: FlBorderData(show: false),
                   sectionsSpace: 2,
-                  centerSpaceRadius: 50, // Make center hole larger
-                  sections: showingSections(positiveBalances, sectionColors,
-                      totalPositiveBalance, theme),
+                  centerSpaceRadius: 50,
+                  sections: showingSections(
+                      positiveAccounts, totalPositiveBalance, theme),
                 ),
               ),
             ),
             const SizedBox(height: 18),
-            // Legends
             Wrap(
               spacing: 12.0,
               runSpacing: 8.0,
               alignment: WrapAlignment.center,
-              children: List.generate(accountNames.length, (index) {
+              children: positiveAccounts.map((account) {
                 return _buildLegend(
-                    accountNames[index], sectionColors[index], theme);
-              }),
+                    account.name, ColorUtils.fromHex(account.colorHex), theme);
+              }).toList(),
             )
           ],
         ),
@@ -175,23 +128,22 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     );
   }
 
-  List<PieChartSectionData> showingSections(Map<String, double> data,
-      List<Color> colors, double totalValue, ThemeData theme) {
-    // Reduce/remove animations in Quantum mode (handled by main check now)
-    // bool isQuantum = context.read<SettingsBloc>().state.uiMode == UIMode.quantum;
-
-    return List.generate(data.length, (i) {
+  List<PieChartSectionData> showingSections(List<AssetAccount> accounts,
+      double totalValue, ThemeData theme) {
+    return List.generate(accounts.length, (i) {
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 15.0 : 11.0;
       final radius = isTouched ? 70.0 : 60.0;
-      final balance = data.values.elementAt(i);
-      final percentage = totalValue > 0 ? (balance / totalValue * 100) : 0.0;
+      final account = accounts[i];
+      final color = ColorUtils.fromHex(account.colorHex);
+      final percentage =
+          totalValue > 0 ? (account.currentBalance / totalValue * 100) : 0.0;
       final titleColor =
-          colors[i].computeLuminance() > 0.5 ? Colors.black : Colors.white;
+          color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
 
       return PieChartSectionData(
-        color: colors[i],
-        value: balance,
+        color: color,
+        value: account.currentBalance,
         title: '${percentage.toStringAsFixed(0)}%',
         radius: radius,
         titleStyle: TextStyle(
@@ -202,7 +154,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         ),
         borderSide: isTouched
             ? BorderSide(color: theme.colorScheme.surface, width: 2)
-            : BorderSide(color: colors[i].withAlpha((255 * 0).round())),
+            : BorderSide(color: color.withAlpha(0)),
       );
     });
   }

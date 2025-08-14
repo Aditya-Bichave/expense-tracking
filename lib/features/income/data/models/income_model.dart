@@ -3,7 +3,7 @@
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-// REMOVED: import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:json_annotation/json_annotation.dart';
 // Import CategorizationStatus
 
@@ -88,15 +88,13 @@ class IncomeModel extends HiveObject {
     );
   }
 
-  // toEntity now requires Category to be looked up elsewhere based on categoryId
-  Income toEntity() {
+  Income toEntity({Category? category}) {
     return Income(
       id: id,
       title: title,
       amount: amount,
       date: date,
-      // Category object is NOT constructed here anymore.
-      category: null, // Set to null initially
+      category: category, // Use the provided category
       accountId: accountId,
       notes: notes,
       status: CategorizationStatusExtension.fromValue(

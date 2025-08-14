@@ -9,6 +9,7 @@ class AssetAccount extends Equatable {
   final AssetType type;
   final double initialBalance;
   final double currentBalance; // Calculated, not stored directly in DB model
+  final String colorHex;
 
   const AssetAccount({
     required this.id,
@@ -16,7 +17,26 @@ class AssetAccount extends Equatable {
     required this.type,
     this.initialBalance = 0.0,
     required this.currentBalance,
+    required this.colorHex,
   });
+
+  AssetAccount copyWith({
+    String? id,
+    String? name,
+    AssetType? type,
+    double? initialBalance,
+    double? currentBalance,
+    String? colorHex,
+  }) {
+    return AssetAccount(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      initialBalance: initialBalance ?? this.initialBalance,
+      currentBalance: currentBalance ?? this.currentBalance,
+      colorHex: colorHex ?? this.colorHex,
+    );
+  }
 
   // Helper for display name
   String get typeName {
@@ -51,5 +71,6 @@ class AssetAccount extends Equatable {
   }
 
   @override
-  List<Object?> get props => [id, name, type, initialBalance, currentBalance];
+  List<Object?> get props =>
+      [id, name, type, initialBalance, currentBalance, colorHex];
 }

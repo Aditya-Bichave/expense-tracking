@@ -79,28 +79,37 @@ class IncomeRepositoryImpl implements IncomeRepository {
   }
 
   @override
-  Future<Either<Failure, List<IncomeModel>>> getIncomes({
+  Future<Either<Failure, List<Income>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
     List<String>? categoryIds,
     String? accountId,
   }) async {
     log.info(
-        "[IncomeRepo] Getting income models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatIDs=${categoryIds?.length}");
+        "[IncomeRepo] Getting HYDRATED incomes. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatIDs=${categoryIds?.length}");
     try {
-      // Pass filtering down to the data source
+      // 1. Fetch raw models
       final incomeModels =
           await localDataSource.getIncomes(categoryIds: categoryIds);
       log.fine(
           "[IncomeRepo] Fetched ${incomeModels.length} raw income models from data source.");
 
-      // The data source should handle category filtering.
-      // We only need to handle date and account filtering here.
-      final filteredModels = incomeModels.where((model) {
-        bool dateMatch = true;
-        bool accountMatch = true;
+      // 2. Fetch all categories for hydration
+      final categoriesEither = await categoryRepository.getAllCategories();
+      if (categoriesEither.isLeft()) {
+        return Left(categoriesEither.fold((l) => l, (r) => r as Failure));
+      }
+      final categoryMap = {
+        for (var cat in categoriesEither.getOrElse(() => [])) cat.id: cat
+      };
+      log.fine(
+          "[IncomeRepo] Created category map with ${categoryMap.length} entries for hydration.");
 
+      // 3. Filter and Hydrate
+      final List<Income> hydratedIncomes = [];
+      for (final model in incomeModels) {
         // Date Filtering
+        bool dateMatch = true;
         if (startDate != null) {
           final incDateOnly =
               DateTime(model.date.year, model.date.month, model.date.day);
@@ -110,34 +119,37 @@ class IncomeRepositoryImpl implements IncomeRepository {
               _isSameDay(incDateOnly, startDateOnly);
         }
         if (endDate != null && dateMatch) {
-          final incDateOnly =
-              DateTime(model.date.year, model.date.month, model.date.day);
           final endDateInclusive =
               DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
           dateMatch = !model.date.isAfter(endDateInclusive);
         }
 
-        // Account Filtering (assuming single account ID)
+        // Account Filtering
+        bool accountMatch = true;
         if (accountId != null && accountId.isNotEmpty) {
           accountMatch = model.accountId == accountId;
         }
 
-        return dateMatch && accountMatch;
-      }).toList();
-      log.fine("[IncomeRepo] Filtered to ${filteredModels.length} models.");
+        if (dateMatch && accountMatch) {
+          hydratedIncomes.add(model.toEntity(
+            category: categoryMap[model.categoryId],
+          ));
+        }
+      }
 
-      // Sort models
-      filteredModels.sort((a, b) => b.date.compareTo(a.date));
+      log.fine(
+          "[IncomeRepo] Filtered and hydrated to ${hydratedIncomes.length} entities.");
+      hydratedIncomes.sort((a, b) => b.date.compareTo(a.date));
 
-      return Right(filteredModels);
+      return Right(hydratedIncomes);
     } on CacheFailure catch (e) {
       log.warning(
-          "[IncomeRepo] CacheFailure getting income models: ${e.message}");
+          "[IncomeRepo] CacheFailure getting incomes: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error getting income models$e$s");
+      log.severe("[IncomeRepo] Unexpected error getting incomes$e$s");
       return Left(UnexpectedFailure(
-          'Unexpected error getting income models: ${e.toString()}'));
+          'Unexpected error getting incomes: ${e.toString()}'));
     }
   }
 

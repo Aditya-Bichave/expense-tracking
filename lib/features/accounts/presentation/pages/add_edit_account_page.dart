@@ -89,17 +89,17 @@ class AddEditAccountPage extends StatelessWidget {
                         currentBalanceForDisplay:
                             state.initialAccount?.currentBalance,
                         // --- END MODIFIED ---
-                        onSubmit: (name, type, initialBalanceFromForm) {
+                        onSubmit:
+                            (name, type, initialBalanceFromForm, colorHex) {
                           log.info(
-                              "[AddEditAccountPage] Form submitted. Dispatching SaveAccountRequested. Balance value from form: $initialBalanceFromForm");
+                              "[AddEditAccountPage] Form submitted. Dispatching SaveAccountRequested. Color: $colorHex");
                           context.read<AddEditAccountBloc>().add(
                                 SaveAccountRequested(
                                   name: name,
                                   type: type,
-                                  // Pass the value from the form field as the 'initialBalance'
                                   initialBalance: initialBalanceFromForm,
-                                  existingAccountId:
-                                      accountId, // Use accountId from route param
+                                  colorHex: colorHex,
+                                  existingAccountId: accountId,
                                 ),
                               );
                         },

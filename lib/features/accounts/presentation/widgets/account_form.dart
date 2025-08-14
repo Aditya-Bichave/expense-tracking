@@ -7,9 +7,13 @@ import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 
-// Callback remains the same, still submitting the value from the field as 'initialBalance'
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:expense_tracker/core/utils/color_utils.dart';
+import 'dart:math';
+
+// Callback now includes the color hex string
 typedef AccountSubmitCallback = Function(
-    String name, AssetType type, double initialBalance);
+    String name, AssetType type, double initialBalance, String colorHex);
 
 class AccountForm extends StatefulWidget {
   final AssetAccount? initialAccount;
@@ -29,37 +33,44 @@ class AccountForm extends StatefulWidget {
   State<AccountForm> createState() => _AccountFormState();
 }
 
-extension StringExtensionCapitalize on String {
-  String capitalizeForm() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}
+import 'package:expense_tracker/core/utils/string_extensions.dart';
 
 class _AccountFormState extends State<AccountForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  late TextEditingController _balanceController; // Renamed for clarity
+  late TextEditingController _balanceController;
   AssetType _selectedType = AssetType.bank;
-  late bool _isEditing; // Track edit mode locally
+  late bool _isEditing;
+  late Color _selectedColor;
+
+  // A simple palette for new accounts
+  final List<Color> _defaultPalette = [
+    Colors.blue.shade300,
+    Colors.red.shade300,
+    Colors.green.shade300,
+    Colors.orange.shade300,
+    Colors.purple.shade300,
+    Colors.teal.shade300,
+    Colors.pink.shade300,
+    Colors.indigo.shade300,
+  ];
 
   @override
   void initState() {
     super.initState();
     final initial = widget.initialAccount;
-    _isEditing = initial != null; // Determine if editing
+    _isEditing = initial != null;
 
     _nameController = TextEditingController(text: initial?.name ?? '');
-    // --- MODIFIED: Use currentBalanceForDisplay if editing, otherwise initialBalance or default ---
     _balanceController = TextEditingController(
       text: _isEditing
-          ? widget.currentBalanceForDisplay?.toStringAsFixed(2) ??
-              '0.00' // Use current balance if editing
-          : initial?.initialBalance.toStringAsFixed(2) ??
-              '0.00', // Use initial or default if adding
+          ? widget.currentBalanceForDisplay?.toStringAsFixed(2) ?? '0.00'
+          : initial?.initialBalance.toStringAsFixed(2) ?? '0.00',
     );
-    // --- END MODIFIED ---
     _selectedType = initial?.type ?? AssetType.bank;
+    _selectedColor = initial?.colorHex != null
+        ? ColorUtils.fromHex(initial!.colorHex)
+        : _defaultPalette[Random().nextInt(_defaultPalette.length)];
   }
 
   @override
@@ -72,18 +83,40 @@ class _AccountFormState extends State<AccountForm> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       final name = _nameController.text.trim();
-      // --- Parse the value from the form field, treat it as the new initial balance ---
-      // This allows users to potentially correct the initial balance if needed,
-      // although the UI now displays the current balance initially during edit.
       final balanceFromField =
           double.tryParse(_balanceController.text.replaceAll(',', '.')) ?? 0.0;
-      // --- END ---
-      widget.onSubmit(name, _selectedType,
-          balanceFromField); // Pass the value from the field
+      widget.onSubmit(
+          name, _selectedType, balanceFromField, ColorUtils.toHex(_selectedColor));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Please correct the errors in the form.')));
     }
+  }
+
+  void _showColorPicker() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Pick a color'),
+        content: SingleChildScrollView(
+          child: BlockPicker(
+            pickerColor: _selectedColor,
+            onColorChanged: (color) {
+              setState(() => _selectedColor = color);
+            },
+            availableColors: _defaultPalette,
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Done'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -122,9 +155,13 @@ class _AccountFormState extends State<AccountForm> {
             prefixIcon: CommonFormFields.getPrefixIcon(
                 context, 'category', Icons.category_outlined),
             items: AssetType.values.map((AssetType type) {
-              final iconData =
-                  AssetAccount(id: '', name: '', type: type, currentBalance: 0)
-                      .iconData;
+              final iconData = AssetAccount(
+                      id: '',
+                      name: '',
+                      type: type,
+                      currentBalance: 0,
+                      colorHex: '#FFFFFF')
+                  .iconData;
               return DropdownMenuItem<AssetType>(
                 value: type,
                 child: Row(
@@ -132,7 +169,7 @@ class _AccountFormState extends State<AccountForm> {
                     Icon(iconData,
                         size: 20, color: theme.colorScheme.secondary),
                     const SizedBox(width: 8),
-                    Text(type.name.capitalizeForm()),
+                    Text(type.name.capitalize()),
                   ],
                 ),
               );
@@ -144,6 +181,17 @@ class _AccountFormState extends State<AccountForm> {
             },
             validator: (value) =>
                 value == null ? 'Please select an account type' : null,
+          ),
+          const SizedBox(height: 16),
+
+          // Color Picker
+          ListTile(
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            leading: CommonFormFields.getPrefixIcon(
+                context, 'color', Icons.color_lens_outlined),
+            title: const Text('Account Color'),
+            trailing: CircleAvatar(backgroundColor: _selectedColor, radius: 14),
+            onTap: _showColorPicker,
           ),
           const SizedBox(height: 16),
 

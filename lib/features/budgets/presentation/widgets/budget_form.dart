@@ -41,12 +41,7 @@ class BudgetForm extends StatefulWidget {
   State<BudgetForm> createState() => _BudgetFormState();
 }
 
-extension StringExtensionCapitalize on String {
-  String capitalizeForm() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}
+import 'package:expense_tracker/core/utils/string_extensions.dart';
 
 class _BudgetFormState extends State<BudgetForm> {
   final _formKey = GlobalKey<FormState>();

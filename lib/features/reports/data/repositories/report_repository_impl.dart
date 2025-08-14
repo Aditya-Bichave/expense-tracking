@@ -235,7 +235,7 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final filteredExpenses =
-        transactionResult.getOrElse(() => []).cast<ExpenseModel>();
+        transactionResult.getOrElse(() => []).cast<Expense>();
 
     if (filteredExpenses.isEmpty) {
       log.fine(
@@ -260,7 +260,7 @@ class ReportRepositoryImpl implements ReportRepository {
     double totalSpending = 0;
 
     for (final expense in filteredExpenses) {
-      final categoryId = expense.categoryId ?? uncategorized.id;
+      final categoryId = expense.category?.id ?? uncategorized.id;
       spendingMap.update(categoryId, (value) => value + expense.amount,
           ifAbsent: () => expense.amount);
       totalSpending += expense.amount;
@@ -389,8 +389,8 @@ class ReportRepositoryImpl implements ReportRepository {
 
     final transactions = transactionResult.getOrElse(() => []);
     final filteredTxns = (typeToFetch == TransactionType.income)
-        ? transactions.whereType<IncomeModel>().toList()
-        : transactions.whereType<ExpenseModel>().toList();
+        ? transactions.whereType<Income>().toList()
+        : transactions.whereType<Expense>().toList();
 
     if (filteredTxns.isEmpty) {
       log.fine(
@@ -400,9 +400,7 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final Map<DateTime, double> aggregatedData = {};
-    for (final hiveObject in filteredTxns) {
-      // Assuming the transaction type is TransactionModel, adjust if different
-      final txn = hiveObject as ExpenseModel;
+    for (final txn in filteredTxns) {
       DateTime periodKey;
       switch (granularity) {
         case TimeSeriesGranularity.daily:
@@ -532,11 +530,11 @@ class ReportRepositoryImpl implements ReportRepository {
       final double amount;
       final bool isIncome;
 
-      if (txn is ExpenseModel) {
+      if (txn is Expense) {
         date = txn.date;
         amount = txn.amount;
         isIncome = false;
-      } else if (txn is IncomeModel) {
+      } else if (txn is Income) {
         date = txn.date;
         amount = txn.amount;
         isIncome = true;
@@ -723,7 +721,7 @@ class ReportRepositoryImpl implements ReportRepository {
         // Check category match
         if (budget.type == BudgetType.overall) return true;
         if (budget.type == BudgetType.categorySpecific) {
-          return budget.categoryIds?.contains(exp.categoryId) ?? false;
+          return budget.categoryIds?.contains(exp.category?.id) ?? false;
         }
         return false; // Should not happen
       }).fold(0.0, (sum, exp) => sum + exp.amount);

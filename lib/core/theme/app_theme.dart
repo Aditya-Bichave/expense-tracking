@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import UIMode
 import 'app_mode_theme.dart'; // Import the ThemeExtension class
 import 'package:google_fonts/google_fonts.dart';
+import 'package:expense_tracker/core/utils/string_extensions.dart';
 // Import AppConstants
 
 // Import Theme Configs
@@ -390,10 +391,3 @@ class AppTheme {
   }
 }
 
-// Keep String capitalization extension
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}

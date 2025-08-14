@@ -88,7 +88,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           DashboardHeader(overview: overview),
           const SizedBox(height: 8),
-          AssetDistributionSection(accountBalances: overview.accountBalances),
+          AssetDistributionSection(accounts: overview.accounts),
           const SizedBox(height: 16),
           BudgetSummaryWidget(
             budgets: overview.activeBudgetsSummary,

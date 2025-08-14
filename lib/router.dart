@@ -618,10 +618,4 @@ class GoRouterObserver extends NavigatorObserver {
   }
 }
 
-// Keep StringExtension
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}
+import 'package:expense_tracker/core/utils/string_extensions.dart';

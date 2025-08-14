@@ -8,8 +8,7 @@ import 'package:expense_tracker/features/analytics/domain/entities/expense_summa
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 
 abstract class ExpenseRepository {
-  // --- MODIFIED Return Type ---
-  Future<Either<Failure, List<ExpenseModel>>> getExpenses({
+  Future<Either<Failure, List<Expense>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
     List<String>? categoryIds,

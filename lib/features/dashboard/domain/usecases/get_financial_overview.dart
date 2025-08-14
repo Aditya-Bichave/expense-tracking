@@ -56,14 +56,7 @@ class GetFinancialOverviewUseCase
       log.fine(
           "[GetFinancialOverviewUseCase] Calculated overall balance: $overallBalance");
 
-      // 3. Create account balances map
-      final Map<String, double> accountBalancesMap = {
-        for (var acc in accounts) acc.name: acc.currentBalance
-      };
-      log.fine(
-          "[GetFinancialOverviewUseCase] Created account balances map (${accountBalancesMap.length} entries).");
-
-      // 4. Get total income/expenses for the period
+      // 3. Get total income/expenses for the period
       log.fine(
           "[GetFinancialOverviewUseCase] Fetching total income/expenses for period...");
       final incomeResult = await incomeRepository.getTotalIncomeForAccount('',
@@ -132,7 +125,6 @@ class GetFinancialOverviewUseCase
         netFlow: netFlow,
         overallBalance: overallBalance,
         accounts: accounts,
-        accountBalances: accountBalancesMap,
         activeBudgetsSummary: budgetSummary,
         activeGoalsSummary: goalSummary,
         recentSpendingSparkline: recentSpendingData, // Use refined data

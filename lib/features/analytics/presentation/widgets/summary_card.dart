@@ -141,11 +141,8 @@ class SummaryCard extends StatelessWidget {
           );
         }
 
-        // Wrap content in Card and AnimatedSwitcher
-        return Card(
-          margin: const EdgeInsets.all(12.0),
-          elevation: 2,
-          clipBehavior: Clip.antiAlias,
+        // Wrap content in AppCard and AnimatedSwitcher
+        return AppCard(
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: content, // Animate the content changes

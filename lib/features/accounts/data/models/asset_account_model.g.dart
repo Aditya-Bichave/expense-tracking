@@ -21,13 +21,14 @@ class AssetAccountModelAdapter extends TypeAdapter<AssetAccountModel> {
       name: fields[1] as String,
       typeIndex: fields[2] as int,
       initialBalance: fields[3] as double,
+      colorHex: fields[4] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, AssetAccountModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class AssetAccountModelAdapter extends TypeAdapter<AssetAccountModel> {
       ..writeByte(2)
       ..write(obj.typeIndex)
       ..writeByte(3)
-      ..write(obj.initialBalance);
+      ..write(obj.initialBalance)
+      ..writeByte(4)
+      ..write(obj.colorHex);
   }
 
   @override
@@ -59,6 +62,7 @@ AssetAccountModel _$AssetAccountModelFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       typeIndex: (json['typeIndex'] as num).toInt(),
       initialBalance: (json['initialBalance'] as num).toDouble(),
+      colorHex: json['colorHex'] as String,
     );
 
 Map<String, dynamic> _$AssetAccountModelToJson(AssetAccountModel instance) =>
@@ -67,4 +71,5 @@ Map<String, dynamic> _$AssetAccountModelToJson(AssetAccountModel instance) =>
       'name': instance.name,
       'typeIndex': instance.typeIndex,
       'initialBalance': instance.initialBalance,
+      'colorHex': instance.colorHex,
     };

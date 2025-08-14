@@ -3,15 +3,13 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 // Import Models
-import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
-import 'package:expense_tracker/features/income/data/models/income_model.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 // Import Repositories
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
-import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart'; // Import Category Repo
 // Import Entities
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // Import Category Entity
 // Import CategorizationStatus
 import 'package:expense_tracker/main.dart';
 
@@ -58,13 +56,10 @@ class GetTransactionsUseCase
     implements UseCase<List<TransactionEntity>, GetTransactionsParams> {
   final ExpenseRepository expenseRepository;
   final IncomeRepository incomeRepository;
-  // --- Inject Category Repository ---
-  final CategoryRepository categoryRepository;
 
   GetTransactionsUseCase({
     required this.expenseRepository,
     required this.incomeRepository,
-    required this.categoryRepository, // Add to constructor
   });
 
   @override
@@ -73,14 +68,9 @@ class GetTransactionsUseCase
     log.info(
         "[GetTransactionsUseCase] Executing. Filters: Type=${params.transactionType?.name ?? 'All'}, Acc=${params.accountId ?? 'All'}, Cat=${params.categoryId ?? 'All'}, Search='${params.searchTerm ?? ''}', Sort=${params.sortBy.name}.${params.sortDirection.name}");
 
-    // --- Fetch Models and Categories Concurrently ---
+    // Fetch hydrated entities directly from repositories
     List<Future<Either<Failure, List<dynamic>>>> fetchFutures = [];
-    Future<Either<Failure, List<Category>>>? categoriesFuture;
 
-    // Fetch categories required for hydration
-    categoriesFuture = categoryRepository.getAllCategories();
-
-    // Fetch expense models if needed
     if (params.transactionType == null ||
         params.transactionType == TransactionType.expense) {
       fetchFutures.add(expenseRepository
@@ -94,96 +84,49 @@ class GetTransactionsUseCase
           .then((either) => either.map((list) => list as List<dynamic>)));
     }
 
-    // Fetch income models if needed
     if (params.transactionType == null ||
         params.transactionType == TransactionType.income) {
       fetchFutures.add(incomeRepository
           .getIncomes(
             startDate: params.startDate,
             endDate: params.endDate,
-            // The repository now expects a list of category IDs
             categoryIds:
                 params.categoryId != null ? [params.categoryId!] : null,
             accountId: params.accountId,
           )
           .then((either) => either.map((list) => list as List<dynamic>)));
     }
-    // --- End Fetch ---
 
     try {
-      // Await all fetches
-      final List<Either<Failure, List<dynamic>>> modelResults =
+      final List<Either<Failure, List<dynamic>>> results =
           await Future.wait(fetchFutures);
-      final Either<Failure, List<Category>> categoryResult =
-          await categoriesFuture;
 
-      // --- Check for Failures ---
-      Failure? firstFailure;
-      if (categoryResult.isLeft()) {
-        firstFailure = categoryResult.fold((l) => l, (_) => null);
-        log.severe(
-            "[GetTransactionsUseCase] Failed to fetch categories: ${firstFailure?.message}");
-        return Left(
-            firstFailure ?? const CacheFailure("Failed to fetch categories"));
-      }
-      for (final result in modelResults) {
+      // Check for failures
+      for (final result in results) {
         if (result.isLeft()) {
-          firstFailure = result.fold((l) => l, (_) => null);
+          final failure = result.fold((l) => l, (_) => null);
           log.warning(
-              "[GetTransactionsUseCase] Failed to fetch transaction models: ${firstFailure?.message}");
-          return Left(firstFailure ??
+              "[GetTransactionsUseCase] Failed to fetch transactions: ${failure?.message}");
+          return Left(failure ??
               const CacheFailure("Failed to fetch transactions"));
         }
       }
-      // --- End Failure Check ---
 
-      // --- Process Successful Results ---
-      final List<Category> allCategories = categoryResult.getOrElse(() => []);
-      final categoryMap = {
-        for (var cat in allCategories) cat.id: cat
-      }; // Create lookup map
-      log.fine(
-          "[GetTransactionsUseCase] Category map created with ${categoryMap.length} entries.");
-
+      // Combine successful results
       List<TransactionEntity> combinedList = [];
+      for (final result in results) {
+        final entities = result.getOrElse(() => []);
+        if (entities.isEmpty) continue;
 
-      for (final result in modelResults) {
-        final models = result.getOrElse(() => []); // Should always succeed here
-        if (models.isEmpty) continue;
-
-        // --- Hydration Logic Moved Here ---
-        if (models.first is ExpenseModel) {
-          final expenseModels = models.cast<ExpenseModel>();
-          for (final model in expenseModels) {
-            final category = categoryMap[model.categoryId];
-            if (model.categoryId != null && category == null) {
-              log.warning(
-                  "[GetTransactionsUseCase] Hydration warning: Category ID '${model.categoryId}' not found for expense ${model.id}.");
-            }
-            combinedList.add(TransactionEntity.fromExpense(model
-                    .toEntity()
-                    .copyWith(categoryOrNull: () => category) // Hydrate here
-                ));
-          }
-          log.fine(
-              "[GetTransactionsUseCase] Hydrated and added ${expenseModels.length} expenses.");
-        } else if (models.first is IncomeModel) {
-          final incomeModels = models.cast<IncomeModel>();
-          for (final model in incomeModels) {
-            final category = categoryMap[model.categoryId];
-            if (model.categoryId != null && category == null) {
-              log.warning(
-                  "[GetTransactionsUseCase] Hydration warning: Category ID '${model.categoryId}' not found for income ${model.id}.");
-            }
-            combinedList.add(TransactionEntity.fromIncome(model
-                    .toEntity()
-                    .copyWith(categoryOrNull: () => category) // Hydrate here
-                ));
-          }
-          log.fine(
-              "[GetTransactionsUseCase] Hydrated and added ${incomeModels.length} incomes.");
+        if (entities.first is Expense) {
+          final expenses = entities.cast<Expense>();
+          combinedList
+              .addAll(expenses.map((e) => TransactionEntity.fromExpense(e)));
+        } else if (entities.first is Income) {
+          final incomes = entities.cast<Income>();
+          combinedList
+              .addAll(incomes.map((i) => TransactionEntity.fromIncome(i)));
         }
-        // --- End Hydration ---
       }
 
       log.info(

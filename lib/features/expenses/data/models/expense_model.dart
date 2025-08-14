@@ -3,7 +3,7 @@
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-// REMOVED: import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:json_annotation/json_annotation.dart';
 // Import CategorizationStatus
 
@@ -85,16 +85,13 @@ class ExpenseModel extends HiveObject {
     );
   }
 
-  // toEntity now requires Category to be looked up elsewhere based on categoryId
-  Expense toEntity() {
+  Expense toEntity({Category? category}) {
     return Expense(
       id: id,
       title: title,
       amount: amount,
       date: date,
-      // Category object is NOT constructed here anymore.
-      // It will be fetched separately using categoryId by the repository/use care.
-      category: null, // Set to null initially
+      category: category, // Use the provided category
       accountId: accountId,
       status: CategorizationStatusExtension.fromValue(
           categorizationStatusValue), // Convert string back to enum

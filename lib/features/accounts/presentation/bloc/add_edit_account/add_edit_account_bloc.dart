@@ -46,6 +46,7 @@ class AddEditAccountBloc
       type: event.type,
       initialBalance: event.initialBalance,
       currentBalance: event.initialBalance, // Placeholder, repo recalculates
+      colorHex: event.colorHex,
     );
 
     log.info(

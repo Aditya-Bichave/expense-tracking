@@ -19,14 +19,15 @@ class AssetAccountModel extends HiveObject {
   @HiveField(3)
   final double initialBalance;
 
-  // No longer storing icon data index
-  // @HiveField(4) -> Removed
+  @HiveField(4)
+  final String colorHex;
 
   AssetAccountModel({
     required this.id,
     required this.name,
     required this.typeIndex,
     required this.initialBalance,
+    required this.colorHex,
   });
 
   factory AssetAccountModel.fromEntity(AssetAccount entity) {
@@ -35,18 +36,18 @@ class AssetAccountModel extends HiveObject {
       name: entity.name,
       typeIndex: entity.type.index,
       initialBalance: entity.initialBalance,
+      colorHex: entity.colorHex,
     );
   }
 
   AssetAccount toEntity(double currentBalance) {
-    // Icon is now determined in the entity or widget
     return AssetAccount(
       id: id,
       name: name,
-      type: AssetType.values[typeIndex], // Get enum from index
+      type: AssetType.values[typeIndex],
       initialBalance: initialBalance,
       currentBalance: currentBalance,
-      // iconData is handled by the entity/widget now
+      colorHex: colorHex,
     );
   }
 

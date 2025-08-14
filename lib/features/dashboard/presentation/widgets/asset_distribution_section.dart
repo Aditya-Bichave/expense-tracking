@@ -6,10 +6,12 @@ import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // For useTable
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class AssetDistributionSection extends StatelessWidget {
-  final Map<String, double> accountBalances;
+import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 
-  const AssetDistributionSection({super.key, required this.accountBalances});
+class AssetDistributionSection extends StatelessWidget {
+  final List<AssetAccount> accounts;
+
+  const AssetDistributionSection({super.key, required this.accounts});
 
   @override
   Widget build(BuildContext context) {
@@ -19,13 +21,17 @@ class AssetDistributionSection extends StatelessWidget {
     final isQuantum = settingsState.uiMode == UIMode.quantum;
     final useTables = modeTheme?.preferDataTableForLists ?? false;
 
+    final accountBalancesMap = {
+      for (var acc in accounts) acc.name: acc.currentBalance
+    };
+
     // Quantum + Prefer Tables = Show Table
     if (isQuantum && useTables) {
-      return _buildQuantumAssetTable(context, accountBalances, settingsState);
+      return _buildQuantumAssetTable(context, accountBalancesMap, settingsState);
     }
     // Elemental or (Quantum + No Tables Pref) = Show Pie Chart
     else if (!isQuantum || (isQuantum && !useTables)) {
-      return AssetDistributionPieChart(accountBalances: accountBalances);
+      return AssetDistributionPieChart(accounts: accounts);
     }
     // Fallback (shouldn't be reached)
     else {

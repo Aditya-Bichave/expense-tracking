@@ -27,13 +27,14 @@ class GoalModelAdapter extends TypeAdapter<GoalModel> {
       totalSavedCache: fields[7] as double,
       createdAt: fields[8] as DateTime,
       achievedAt: fields[9] as DateTime?,
+      isNewlyAchieved: fields[10] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, GoalModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class GoalModelAdapter extends TypeAdapter<GoalModel> {
       ..writeByte(8)
       ..write(obj.createdAt)
       ..writeByte(9)
-      ..write(obj.achievedAt);
+      ..write(obj.achievedAt)
+      ..writeByte(10)
+      ..write(obj.isNewlyAchieved);
   }
 
   @override

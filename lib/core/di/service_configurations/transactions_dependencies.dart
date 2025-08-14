@@ -12,7 +12,6 @@ class TransactionsDependencies {
     sl.registerLazySingleton(() => GetTransactionsUseCase(
           expenseRepository: sl(),
           incomeRepository: sl(),
-          categoryRepository: sl(),
         ));
     sl.registerLazySingleton(() => UpdateTransactionCategorizationUseCase(
           expenseRepository: sl(),

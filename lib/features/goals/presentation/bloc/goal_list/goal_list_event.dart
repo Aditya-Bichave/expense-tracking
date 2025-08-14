@@ -36,4 +36,11 @@ class DeleteGoal extends GoalListEvent {
 class ResetState extends GoalListEvent {
   const ResetState();
 }
+
+class AcknowledgeGoalAchieved extends GoalListEvent {
+  final String goalId;
+  const AcknowledgeGoalAchieved({required this.goalId});
+  @override
+  List<Object> get props => [goalId];
+}
 // --- END ADDED ---

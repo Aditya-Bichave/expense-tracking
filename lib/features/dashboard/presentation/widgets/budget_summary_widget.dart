@@ -2,6 +2,7 @@ import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
+import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/chart_utils.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -54,7 +55,7 @@ class BudgetSummaryWidget extends StatelessWidget {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const SectionHeader(title: 'Budget Status'),
-            Card(
+            AppCard(
                 child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Center(
@@ -89,8 +90,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                     ? theme.colorScheme.error // Use theme error color
                     : theme.colorScheme.primary;
 
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
+            return AppCard(
               child: InkWell(
                 onTap: () => context.pushNamed(RouteNames.budgetDetail,
                     pathParameters: {'id': budget.id}, extra: budget),

@@ -21,18 +21,21 @@ class DemoData {
     name: 'Main Checking',
     typeIndex: AssetType.bank.index,
     initialBalance: 1250.75,
+    colorHex: '#4A90E2',
   );
   static final AssetAccountModel savingsAccount = AssetAccountModel(
     id: _uuid.v4(),
     name: 'Rainy Day Fund',
     typeIndex: AssetType.bank.index,
     initialBalance: 5300.00,
+    colorHex: '#50E3C2',
   );
   static final AssetAccountModel cashWallet = AssetAccountModel(
     id: _uuid.v4(),
     name: 'Cash Wallet',
     typeIndex: AssetType.cash.index,
     initialBalance: 85.50,
+    colorHex: '#F5A623',
   );
 
   static final List<AssetAccountModel> sampleAccounts = [

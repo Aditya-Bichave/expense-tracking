@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/main.dart';
 
@@ -40,17 +41,29 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
         return const Left(
             CacheFailure("Goal not found to update total saved cache."));
       }
-      // 4. Update the GoalModel's cache field
+      // 4. Check if goal is now achieved
+      bool wasAchieved = goalModel.statusIndex == GoalStatus.achieved.index;
+      bool isNowAchieved = newTotalSaved >= goalModel.targetAmount;
+      int newStatusIndex = isNowAchieved
+          ? GoalStatus.achieved.index
+          : GoalStatus.active.index;
+      bool isNewlyAchieved = isNowAchieved && !wasAchieved;
+
+      // 5. Update the GoalModel's cache field and status
       final updatedGoalModel = GoalModel(
-        id: goalModel.id, name: goalModel.name,
+        id: goalModel.id,
+        name: goalModel.name,
         targetAmount: goalModel.targetAmount,
-        targetDate: goalModel.targetDate, iconName: goalModel.iconName,
+        targetDate: goalModel.targetDate,
+        iconName: goalModel.iconName,
         description: goalModel.description,
-        statusIndex: goalModel.statusIndex, createdAt: goalModel.createdAt,
-        achievedAt: goalModel.achievedAt,
-        totalSavedCache: newTotalSaved, // Update the cache
+        statusIndex: newStatusIndex,
+        createdAt: goalModel.createdAt,
+        achievedAt: isNowAchieved ? (goalModel.achievedAt ?? DateTime.now()) : null,
+        totalSavedCache: newTotalSaved,
+        isNewlyAchieved: isNewlyAchieved,
       );
-      // 5. Save the updated GoalModel
+      // 6. Save the updated GoalModel
       await goalDataSource.saveGoal(updatedGoalModel);
       log.info(
           "[ContributionRepo] Successfully updated totalSaved cache for Goal ID $goalId to $newTotalSaved");

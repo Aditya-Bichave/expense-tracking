@@ -16,6 +16,7 @@ class Goal extends Equatable {
       totalSaved; // This will be read from cache in Hive implementation
   final DateTime createdAt;
   final DateTime? achievedAt;
+  final bool isNewlyAchieved;
 
   const Goal({
     required this.id,
@@ -28,6 +29,7 @@ class Goal extends Equatable {
     required this.totalSaved,
     required this.createdAt,
     this.achievedAt,
+    this.isNewlyAchieved = false,
   });
 
   double get percentageComplete =>
@@ -53,6 +55,7 @@ class Goal extends Equatable {
         totalSaved,
         createdAt,
         achievedAt,
+        isNewlyAchieved,
       ];
 
   Goal copyWith({
@@ -70,6 +73,7 @@ class Goal extends Equatable {
     DateTime? createdAt,
     DateTime? achievedAt,
     ValueGetter<DateTime?>? achievedAtOrNull,
+    bool? isNewlyAchieved,
   }) {
     return Goal(
       id: id ?? this.id,
@@ -90,6 +94,7 @@ class Goal extends Equatable {
       achievedAt: achievedAtOrNull != null
           ? achievedAtOrNull()
           : (achievedAt ?? this.achievedAt),
+      isNewlyAchieved: isNewlyAchieved ?? this.isNewlyAchieved,
     );
   }
 }

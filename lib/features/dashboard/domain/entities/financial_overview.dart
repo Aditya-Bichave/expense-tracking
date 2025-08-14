@@ -11,7 +11,6 @@ class FinancialOverview extends Equatable {
   final double netFlow;
   final double overallBalance;
   final List<AssetAccount> accounts;
-  final Map<String, double> accountBalances;
   final List<BudgetWithStatus> activeBudgetsSummary;
   final List<Goal> activeGoalsSummary;
   final List<TimeSeriesDataPoint>
@@ -24,11 +23,10 @@ class FinancialOverview extends Equatable {
     required this.netFlow,
     required this.overallBalance,
     required this.accounts,
-    required this.accountBalances,
     required this.activeBudgetsSummary,
     required this.activeGoalsSummary,
     required this.recentSpendingSparkline,
-    required this.recentContributionSparkline, // Added
+    required this.recentContributionSparkline,
   });
 
   @override
@@ -38,10 +36,9 @@ class FinancialOverview extends Equatable {
         netFlow,
         overallBalance,
         accounts,
-        accountBalances,
         activeBudgetsSummary,
         activeGoalsSummary,
         recentSpendingSparkline,
-        recentContributionSparkline, // Added
+        recentContributionSparkline,
       ];
 }
