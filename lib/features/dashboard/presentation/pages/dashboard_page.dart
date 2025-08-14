@@ -1,9 +1,7 @@
 // lib/features/dashboard/presentation/pages/dashboard_page.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/financial_garden_widget.dart';
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/personal_constellation_widget.dart';
-import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/dashboard_header.dart';
@@ -12,10 +10,8 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_t
 import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
 // Removed Expense/Income entity imports as they are handled by TransactionEntity
-import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
-import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
@@ -39,42 +35,11 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     log.info("[DashboardPage] initState called.");
     _dashboardBloc = BlocProvider.of<DashboardBloc>(context);
-    // Ensure Blocs are loaded
-    _ensureBlocLoaded<AccountListBloc>(() => const LoadAccounts());
-    _ensureBlocLoaded<TransactionListBloc>(() => const LoadTransactions());
-    _ensureBlocLoaded<BudgetListBloc>(() => const LoadBudgets());
-    _ensureBlocLoaded<GoalListBloc>(() => const LoadGoals());
-
-    if (_dashboardBloc.state is DashboardInitial) {
-      _dashboardBloc.add(const LoadDashboard());
-    }
-  }
-
-  void _ensureBlocLoaded<T extends Bloc>(Function eventCreator) {
-    try {
-      final bloc = BlocProvider.of<T>(context);
-      if (bloc.state.runtimeType.toString().contains('Initial') ||
-          bloc.state.runtimeType.toString().contains('Error')) {
-        log.info(
-            "[DashboardPage] ${T.toString()} is initial/error, dispatching load.");
-        bloc.add(eventCreator());
-      }
-    } catch (e) {
-      log.severe(
-          "[DashboardPage] Error ensuring ${T.toString()} is loaded: $e");
-    }
   }
 
   Future<void> _refreshDashboard() async {
     log.info("[DashboardPage] Pull-to-refresh triggered.");
-    // Dispatch load event to all relevant blocs for a full refresh
     _dashboardBloc.add(const LoadDashboard(forceReload: true));
-    context.read<AccountListBloc>().add(const LoadAccounts(forceReload: true));
-    context
-        .read<TransactionListBloc>()
-        .add(const LoadTransactions(forceReload: true));
-    context.read<BudgetListBloc>().add(const LoadBudgets(forceReload: true));
-    context.read<GoalListBloc>().add(const LoadGoals(forceReload: true));
 
     try {
       // Wait for dashboard bloc to finish loading/erroring
