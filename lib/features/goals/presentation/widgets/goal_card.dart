@@ -14,11 +14,7 @@ class GoalCard extends StatelessWidget {
   final Goal goal;
   final VoidCallback? onTap;
 
-  const GoalCard({
-    super.key,
-    required this.goal,
-    this.onTap,
-  });
+  const GoalCard({super.key, required this.goal, this.onTap});
 
   String _getPacingInfo(BuildContext context, ThemeData theme) {
     if (goal.targetDate == null || goal.isAchieved || goal.targetAmount <= 0) {
@@ -30,14 +26,17 @@ class GoalCard extends StatelessWidget {
       return goal.totalSaved >= goal.targetAmount ? '' : 'Target date passed!';
     }
     final daysRemaining = targetDate.difference(now).inDays;
-    final amountNeeded =
-        (goal.targetAmount - goal.totalSaved).clamp(0.0, double.infinity);
+    final amountNeeded = (goal.targetAmount - goal.totalSaved).clamp(
+      0.0,
+      double.infinity,
+    );
     if (daysRemaining <= 0 || amountNeeded <= 0) return '';
     const daysPerMonthApprox = 30.44;
     final monthsRemaining = daysRemaining / daysPerMonthApprox;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
-    final neededPerMonth =
-        monthsRemaining > 0 ? amountNeeded / monthsRemaining : double.infinity;
+    final neededPerMonth = monthsRemaining > 0
+        ? amountNeeded / monthsRemaining
+        : double.infinity;
     final neededPerDay = amountNeeded / daysRemaining;
 
     String pacingText;
@@ -56,13 +55,17 @@ class GoalCard extends StatelessWidget {
 
   // Helper for Progress Indicator based on UI Mode (REMOVED AETHER TBD)
   Widget _buildProgressIndicator(
-      BuildContext context, AppModeTheme? modeTheme, UIMode uiMode) {
+    BuildContext context,
+    AppModeTheme? modeTheme,
+    UIMode uiMode,
+  ) {
     final theme = Theme.of(context);
     final progress = goal.percentageComplete;
-    final color =
-        goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
-    final backgroundColor =
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.5);
+    final color = goal.isAchieved
+        ? Colors.green.shade600
+        : theme.colorScheme.primary;
+    final backgroundColor = theme.colorScheme.surfaceContainerHighest
+        .withOpacity(0.5);
     final bool isQuantum = uiMode == UIMode.quantum;
     // final bool isAether = uiMode == UIMode.aether; // No Aether specific impl
 
@@ -73,8 +76,8 @@ class GoalCard extends StatelessWidget {
     final double lineWidth = isQuantum ? 6.0 : 10.0;
     final TextStyle centerTextStyle =
         (isQuantum ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)
-                ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
-            TextStyle(color: color);
+            ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
+        TextStyle(color: color);
 
     return CircularPercentIndicator(
       radius: radius,
@@ -101,12 +104,14 @@ class GoalCard extends StatelessWidget {
     final modeTheme = context.modeTheme;
     final String pacingInfo = _getPacingInfo(context, theme);
 
-    final cardMargin = modeTheme?.cardOuterPadding ??
+    final cardMargin =
+        modeTheme?.cardOuterPadding ??
         const EdgeInsets.symmetric(horizontal: 12, vertical: 5);
     final cardPadding =
         modeTheme?.cardInnerPadding ?? const EdgeInsets.all(12.0);
-    final progressColor =
-        goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
+    final progressColor = goal.isAchieved
+        ? Colors.green.shade600
+        : theme.colorScheme.primary;
 
     return AppCard(
       onTap: onTap,
@@ -120,26 +125,34 @@ class GoalCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                  backgroundColor: progressColor.withOpacity(0.1),
-                  child: Icon(goal.displayIconData,
-                      color: progressColor, size: 20)),
+                backgroundColor: progressColor.withOpacity(0.1),
+                child: Icon(
+                  goal.displayIconData,
+                  color: progressColor,
+                  size: 20,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
-                  child: Text(goal.name, style: theme.textTheme.titleMedium)),
+                child: Text(goal.name, style: theme.textTheme.titleMedium),
+              ),
               if (goal.isAchieved || goal.isArchived)
                 Chip(
-                  label: Text(goal.status.displayName,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          color: goal.isAchieved
-                              ? Colors.green.shade800
-                              : theme.colorScheme.onSurfaceVariant)),
+                  label: Text(
+                    goal.status.displayName,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: goal.isAchieved
+                          ? Colors.green.shade800
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   backgroundColor: goal.isAchieved
                       ? Colors.green.shade100.withOpacity(0.6)
                       : theme.colorScheme.surfaceContainerHighest,
                   side: BorderSide.none,
                   visualDensity: VisualDensity.compact,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
-                )
+                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -153,14 +166,21 @@ class GoalCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Saved', style: theme.textTheme.labelMedium),
-                    Text(CurrencyFormatter.format(goal.totalSaved, currency),
-                        style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w600, color: progressColor)),
+                    Text(
+                      CurrencyFormatter.format(goal.totalSaved, currency),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: progressColor,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text('Target', style: theme.textTheme.labelSmall),
-                    Text(CurrencyFormatter.format(goal.targetAmount, currency),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant)),
+                    Text(
+                      CurrencyFormatter.format(goal.targetAmount, currency),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -180,14 +200,18 @@ class GoalCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Icon(Icons.run_circle_outlined,
-                      size: 14,
-                      color:
-                          theme.colorScheme.onSurfaceVariant.withOpacity(0.7)),
+                  Icon(
+                    Icons.run_circle_outlined,
+                    size: 14,
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  ),
                   const SizedBox(width: 4),
-                  Text(pacingInfo,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    pacingInfo,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -202,16 +226,18 @@ class GoalCard extends StatelessWidget {
                     ? 'Achieved!'
                     : 'Remaining: ${CurrencyFormatter.format(goal.amountRemaining, currency)}',
                 style: theme.textTheme.bodySmall?.copyWith(
-                    color: goal.isAchieved
-                        ? Colors.green
-                        : theme.colorScheme.primary,
-                    fontWeight: FontWeight.w500),
+                  color: goal.isAchieved
+                      ? Colors.green
+                      : theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               if (goal.targetDate != null)
                 Text(
                   'Target: ${DateFormatter.formatDate(goal.targetDate!)}',
-                  style: theme.textTheme.labelSmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
             ],
           ),

@@ -14,6 +14,7 @@ import 'package:expense_tracker/features/reports/presentation/widgets/report_pag
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -34,25 +35,25 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final newComparisonState = !_showComparison;
     setState(() => _showComparison = newComparisonState);
     // Get current granularity from state
-    final currentGranularity = context.read<SpendingTimeReportBloc>().state
-            is SpendingTimeReportLoaded
+    final currentGranularity =
+        context.read<SpendingTimeReportBloc>().state is SpendingTimeReportLoaded
         ? (context.read<SpendingTimeReportBloc>().state
-                as SpendingTimeReportLoaded)
-            .reportData
-            .granularity
+                  as SpendingTimeReportLoaded)
+              .reportData
+              .granularity
         : (context.read<SpendingTimeReportBloc>().state
-                is SpendingTimeReportLoading)
-            ? (context.read<SpendingTimeReportBloc>().state
-                    as SpendingTimeReportLoading)
-                .granularity
-            : TimeSeriesGranularity.daily; // Default
+              is SpendingTimeReportLoading)
+        ? (context.read<SpendingTimeReportBloc>().state
+                  as SpendingTimeReportLoading)
+              .granularity
+        : TimeSeriesGranularity.daily; // Default
 
     context.read<SpendingTimeReportBloc>().add(
-          LoadSpendingTimeReport(
-            compareToPrevious: newComparisonState, // Pass new comparison state
-            granularity: currentGranularity,
-          ),
-        );
+      LoadSpendingTimeReport(
+        compareToPrevious: newComparisonState, // Pass new comparison state
+        granularity: currentGranularity,
+      ),
+    );
     log.info(
       "[SpendingOverTimePage] Toggled comparison to: $newComparisonState",
     );
@@ -97,7 +98,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final Map<String, String> filters = {
       'startDate': periodStart.toIso8601String(),
       'endDate': periodEnd.toIso8601String(),
-      'type': filterBlocState.selectedTransactionType?.name ??
+      'type':
+          filterBlocState.selectedTransactionType?.name ??
           TransactionType.expense.name, // Use filter or default
     };
     if (filterBlocState.selectedAccountIds.isNotEmpty) {
@@ -139,8 +141,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             final currentGranularity = (state is SpendingTimeReportLoaded)
                 ? state.reportData.granularity
                 : (state is SpendingTimeReportLoading)
-                    ? state.granularity
-                    : TimeSeriesGranularity.daily;
+                ? state.granularity
+                : TimeSeriesGranularity.daily;
             return PopupMenuButton<TimeSeriesGranularity>(
               initialValue: currentGranularity,
               onSelected: (g) {
@@ -211,7 +213,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               ),
             );
 
-            final bool showTable = settingsState.uiMode == UIMode.quantum &&
+            final bool showTable =
+                settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
             return ListView(
@@ -221,7 +224,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                     vertical: 16.0,
                     horizontal: 8.0,
                   ),
-                  child: SizedBox(height: 250, child: chartWidget),
+                  child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
                 ),
                 const Divider(),
                 if (showTable)
@@ -398,6 +401,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             ],
             onSelectChanged: (selected) {
               if (selected == true) {
+                SystemSound.play(SystemSoundType.click);
                 _navigateToFilteredTransactions(
                   context,
                   item,

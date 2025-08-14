@@ -16,6 +16,7 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -42,16 +43,16 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     final currentPeriod = currentState is IncomeExpenseReportLoaded
         ? currentState.reportData.periodType
         : (currentState is IncomeExpenseReportLoading)
-            ? currentState.periodType
-            : IncomeExpensePeriodType.monthly; // Default
+        ? currentState.periodType
+        : IncomeExpensePeriodType.monthly; // Default
 
     // Dispatch event with the NEW comparison state
     context.read<IncomeExpenseReportBloc>().add(
-          LoadIncomeExpenseReport(
-            compareToPrevious: newComparisonState, // Pass the toggled value
-            periodType: currentPeriod,
-          ),
-        );
+      LoadIncomeExpenseReport(
+        compareToPrevious: newComparisonState, // Pass the toggled value
+        periodType: currentPeriod,
+      ),
+    );
     log.info(
       "[IncomeVsExpensePage] Toggled comparison to: $newComparisonState",
     );
@@ -127,8 +128,8 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             final currentPeriod = (state is IncomeExpenseReportLoaded)
                 ? state.reportData.periodType
                 : (state is IncomeExpenseReportLoading)
-                    ? state.periodType
-                    : IncomeExpensePeriodType.monthly;
+                ? state.periodType
+                : IncomeExpensePeriodType.monthly;
             return PopupMenuButton<IncomeExpensePeriodType>(
               initialValue: currentPeriod,
               onSelected: (p) {
@@ -210,7 +211,8 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               },
             );
 
-            final bool showTable = settingsState.uiMode == UIMode.quantum &&
+            final bool showTable =
+                settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
             return ListView(
@@ -220,7 +222,7 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
                     vertical: 16.0,
                     horizontal: 8.0,
                   ),
-                  child: SizedBox(height: 250, child: chartWidget),
+                  child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
                 ),
                 const Divider(),
                 _buildDataTable(
