@@ -466,65 +466,70 @@ class _TransactionListPageState extends State<TransactionListPage> {
           ),
         ],
       ),
-      floatingActionButton:
-          BlocBuilder<TransactionListBloc, TransactionListState>(
-            builder: (context, state) {
-              final bool showFab =
-                  state.isInBatchEditMode && !_showCalendarView;
-              final int count = state.selectedTransactionIds.length;
-              return AnimatedScale(
-                duration: const Duration(milliseconds: 200),
-                scale: showFab ? 1.0 : 0.0,
-                child: FloatingActionButton.extended(
-                  key: const ValueKey('batch_fab'),
-                  heroTag: 'transactions_batch_fab',
-                  onPressed: count > 0
-                      ? () async {
-                          log.info(
-                            "[TxnListPage] Batch categorize button pressed.",
-                          );
-                          final type =
-                              _getDominantTransactionType(state) ??
-                              TransactionType.expense;
-                          final Category? selectedCategory =
-                              await showCategoryPicker(
-                                context,
-                                type == TransactionType.expense
-                                    ? CategoryTypeFilter.expense
-                                    : CategoryTypeFilter.income,
-                              );
-                          if (selectedCategory != null &&
-                              selectedCategory.id !=
-                                  Category.uncategorized.id &&
-                              context.mounted) {
-                            context.read<TransactionListBloc>().add(
-                              ApplyBatchCategory(selectedCategory.id),
-                            );
-                          } else if (selectedCategory?.id ==
-                                  Category.uncategorized.id &&
-                              context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Please select a specific category.",
-                                ),
+      floatingActionButton: BlocBuilder<TransactionListBloc, TransactionListState>(
+        builder: (context, state) {
+          final bool showFab = state.isInBatchEditMode && !_showCalendarView;
+          final int count = state.selectedTransactionIds.length;
+          return AnimatedScale(
+            duration: const Duration(milliseconds: 200),
+            scale: showFab ? 1.0 : 0.0,
+            child: FloatingActionButton.extended(
+              key: const ValueKey('batch_fab'),
+              heroTag: 'transactions_batch_fab',
+              onPressed: count > 0
+                  ? () async {
+                      log.info(
+                        "[TxnListPage] Batch categorize button pressed.",
+                      );
+                      final type = _getDominantTransactionType(state);
+                      if (type == null) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Cannot categorize mixed or invalid transaction types.',
                               ),
-                            );
-                          }
+                            ),
+                          );
                         }
-                      : null,
-                  label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
-                  icon: const Icon(Icons.category_rounded),
-                  backgroundColor: count > 0
-                      ? theme.colorScheme.secondaryContainer
-                      : theme.disabledColor.withOpacity(0.1),
-                  foregroundColor: count > 0
-                      ? theme.colorScheme.onSecondaryContainer
-                      : theme.disabledColor,
-                ),
-              );
-            },
-          ),
+                        return;
+                      }
+                      final Category? selectedCategory =
+                          await showCategoryPicker(
+                            context,
+                            type == TransactionType.expense
+                                ? CategoryTypeFilter.expense
+                                : CategoryTypeFilter.income,
+                          );
+                      if (selectedCategory != null &&
+                          selectedCategory.id != Category.uncategorized.id &&
+                          context.mounted) {
+                        context.read<TransactionListBloc>().add(
+                          ApplyBatchCategory(selectedCategory.id),
+                        );
+                      } else if (selectedCategory?.id ==
+                              Category.uncategorized.id &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Please select a specific category."),
+                          ),
+                        );
+                      }
+                    }
+                  : null,
+              label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
+              icon: const Icon(Icons.category_rounded),
+              backgroundColor: count > 0
+                  ? theme.colorScheme.secondaryContainer
+                  : theme.disabledColor.withOpacity(0.1),
+              foregroundColor: count > 0
+                  ? theme.colorScheme.onSecondaryContainer
+                  : theme.disabledColor,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -554,10 +559,3 @@ class _TransactionListPageState extends State<TransactionListPage> {
 TransactionType? getDominantTransactionTypeForTesting(
   TransactionListState state,
 ) => _TransactionListPageState()._getDominantTransactionType(state);
-
-extension StringCapExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}

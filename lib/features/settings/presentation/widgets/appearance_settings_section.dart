@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/core/utils/string_extensions.dart';
 
 class AppearanceSettingsSection extends StatelessWidget {
   final SettingsState state;
@@ -23,21 +24,21 @@ class AppearanceSettingsSection extends StatelessWidget {
           AppTheme.elementalPalette1,
           AppTheme.elementalPalette2,
           AppTheme.elementalPalette3,
-          AppTheme.elementalPalette4
+          AppTheme.elementalPalette4,
         ];
       case UIMode.quantum:
         return [
           AppTheme.quantumPalette1,
           AppTheme.quantumPalette2,
           AppTheme.quantumPalette3,
-          AppTheme.quantumPalette4
+          AppTheme.quantumPalette4,
         ];
       case UIMode.aether:
         return [
           AppTheme.aetherPalette1,
           AppTheme.aetherPalette2,
           AppTheme.aetherPalette3,
-          AppTheme.aetherPalette4
+          AppTheme.aetherPalette4,
         ];
     }
   }
@@ -45,8 +46,9 @@ class AppearanceSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final relevantPaletteIdentifiers =
-        _getRelevantPaletteIdentifiers(state.uiMode);
+    final relevantPaletteIdentifiers = _getRelevantPaletteIdentifiers(
+      state.uiMode,
+    );
     // --- Check Demo Mode ---
     final bool isEnabled = !isLoading && !state.isInDemoMode;
     // --- End Check ---
@@ -61,8 +63,9 @@ class AppearanceSettingsSection extends StatelessWidget {
           // --- End Use ---
           leadingIcon: Icons.view_quilt_outlined,
           title: 'UI Mode',
-          subtitle: AppTheme.uiModeNames[state.uiMode] ??
-              StringExtension(state.uiMode.name).capitalize(),
+          subtitle:
+              AppTheme.uiModeNames[state.uiMode] ??
+              state.uiMode.name.capitalize(),
           trailing: PopupMenuButton<UIMode>(
             enabled: isEnabled, // Use combined state
             icon: const Icon(Icons.arrow_drop_down),
@@ -71,13 +74,15 @@ class AppearanceSettingsSection extends StatelessWidget {
             onSelected: (UIMode newMode) =>
                 context.read<SettingsBloc>().add(UpdateUIMode(newMode)),
             itemBuilder: (context) => UIMode.values
-                .map((mode) => PopupMenuItem<UIMode>(
-                      value: mode,
-                      child: Text(
-                          AppTheme.uiModeNames[mode] ??
-                              StringExtension(mode.name).capitalize(),
-                          style: theme.textTheme.bodyMedium),
-                    ))
+                .map(
+                  (mode) => PopupMenuItem<UIMode>(
+                    value: mode,
+                    child: Text(
+                      AppTheme.uiModeNames[mode] ?? mode.name.capitalize(),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -87,7 +92,8 @@ class AppearanceSettingsSection extends StatelessWidget {
           // --- End Use ---
           leadingIcon: Icons.palette_outlined,
           title: 'Palette / Variant',
-          subtitle: AppTheme.paletteNames[state.paletteIdentifier] ??
+          subtitle:
+              AppTheme.paletteNames[state.paletteIdentifier] ??
               state.paletteIdentifier,
           trailing: relevantPaletteIdentifiers.isEmpty
               ? null
@@ -100,11 +106,15 @@ class AppearanceSettingsSection extends StatelessWidget {
                       .read<SettingsBloc>()
                       .add(UpdatePaletteIdentifier(newIdentifier)),
                   itemBuilder: (context) => relevantPaletteIdentifiers
-                      .map((id) => PopupMenuItem<String>(
-                            value: id,
-                            child: Text(AppTheme.paletteNames[id] ?? id,
-                                style: theme.textTheme.bodyMedium),
-                          ))
+                      .map(
+                        (id) => PopupMenuItem<String>(
+                          value: id,
+                          child: Text(
+                            AppTheme.paletteNames[id] ?? id,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
         ),
@@ -114,7 +124,7 @@ class AppearanceSettingsSection extends StatelessWidget {
           // --- End Use ---
           leadingIcon: Icons.brightness_6_outlined,
           title: 'Brightness Mode',
-          subtitle: StringExtension(state.themeMode.name).capitalize(),
+          subtitle: state.themeMode.name.capitalize(),
           trailing: PopupMenuButton<ThemeMode>(
             enabled: isEnabled, // Use combined state
             icon: const Icon(Icons.arrow_drop_down),
@@ -123,23 +133,19 @@ class AppearanceSettingsSection extends StatelessWidget {
             onSelected: (ThemeMode newMode) =>
                 context.read<SettingsBloc>().add(UpdateTheme(newMode)),
             itemBuilder: (context) => ThemeMode.values
-                .map((mode) => PopupMenuItem<ThemeMode>(
-                      value: mode,
-                      child: Text(StringExtension(mode.name).capitalize(),
-                          style: theme.textTheme.bodyMedium),
-                    ))
+                .map(
+                  (mode) => PopupMenuItem<ThemeMode>(
+                    value: mode,
+                    child: Text(
+                      mode.name.capitalize(),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),
       ],
     );
-  }
-}
-
-// Helper extension
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
