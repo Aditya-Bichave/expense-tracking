@@ -41,7 +41,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(LinearProgressIndicator), findsWidgets);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
     final ElevatedButton button = tester.widget(
       find.widgetWithText(ElevatedButton, 'Loading options...'),
     );
