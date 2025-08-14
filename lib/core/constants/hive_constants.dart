@@ -12,5 +12,9 @@ abstract class HiveConstants {
 
   // --- Recurring Transactions ---
   static const String recurringRuleBoxName = 'recurring_rules_v1';
-  static const String recurringRuleAuditLogBoxName = 'recurring_rule_audit_logs_v1';
+  static const String recurringRuleAuditLogBoxName =
+      'recurring_rule_audit_logs_v1';
+
+  static const int dataVersion = 1;
+  static const String dataVersionKey = 'hive_data_version';
 }

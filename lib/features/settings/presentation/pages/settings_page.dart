@@ -168,13 +168,17 @@ class _SettingsViewState extends State<SettingsView> {
                     DataManagementSettingsSection(
                       isDataManagementLoading: isDataManagementLoading,
                       isSettingsLoading: isSettingsLoading,
-                      onBackup: () {
+                      onBackup: () async {
                         log.info(
                           "[SettingsPage] Backup requested via section.",
                         );
-                        context.read<DataManagementBloc>().add(
-                              const BackupRequested(),
-                            );
+                        final password = await _promptForPassword(
+                            context, 'Backup Password');
+                        if (password != null && password.isNotEmpty) {
+                          context
+                              .read<DataManagementBloc>()
+                              .add(BackupRequested(password));
+                        }
                       },
                       onRestore: () async {
                         log.info(
@@ -189,9 +193,13 @@ class _SettingsViewState extends State<SettingsView> {
                           confirmColor: Colors.orange[700],
                         );
                         if (confirmed == true && context.mounted) {
-                          context.read<DataManagementBloc>().add(
-                                const RestoreRequested(),
-                              );
+                          final password = await _promptForPassword(
+                              context, 'Backup Password');
+                          if (password != null && password.isNotEmpty) {
+                            context
+                                .read<DataManagementBloc>()
+                                .add(RestoreRequested(password));
+                          }
                         }
                       },
                       onClearData: () async {
@@ -270,6 +278,31 @@ class _SettingsViewState extends State<SettingsView> {
             );
           },
         ),
+      ),
+    );
+  }
+
+  Future<String?> _promptForPassword(BuildContext context, String title) async {
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: TextField(
+          controller: controller,
+          obscureText: true,
+          decoration: const InputDecoration(labelText: 'Password'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(controller.text),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }

@@ -11,7 +11,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart' as df;
 import 'package:dartz/dartz.dart';
@@ -64,26 +65,14 @@ class CsvExportHelper {
 
   Future<void> _saveCsvMobileDesktop(
       BuildContext context, String csvData, String fileName) async {
-    TargetPlatform platform = Theme.of(context).platform;
-    bool permissionGranted = true;
+    final platform = Theme.of(context).platform;
 
-    if (!kIsWeb &&
-        (platform == TargetPlatform.android ||
-            platform == TargetPlatform.iOS)) {
-      var status = await Permission.storage.status;
-      if (!status.isGranted) {
-        status = await Permission.storage.request();
-      }
-      permissionGranted = status.isGranted;
-    }
-
-    if (!permissionGranted) {
-      log.warning("[CsvExportHelper] Storage permission denied.");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Storage permission required to save file.")));
-      }
-      throw Exception("Storage permission denied.");
+    if (platform == TargetPlatform.android || platform == TargetPlatform.iOS) {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsString(csvData, flush: true);
+      await Share.shareXFiles([XFile(file.path)], text: fileName);
+      return;
     }
 
     try {
@@ -112,7 +101,7 @@ class CsvExportHelper {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("CSV saved to Downloads folder (or chosen location)"),
+            content: Text("CSV saved to ${file.parent.path}"),
             action: SnackBarAction(label: "OK", onPressed: () {})));
       }
     } on PlatformException catch (e, s) {
