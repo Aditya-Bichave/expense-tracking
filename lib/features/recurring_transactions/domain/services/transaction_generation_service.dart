@@ -11,7 +11,8 @@ class TransactionGenerationService {
     log.info("Checking for recurring transactions to generate...");
     final result = await _generateTransactionsOnLaunch(const NoParams());
     result.fold(
-      (failure) => log.severe("Failed to generate recurring transactions: ${failure.message}"),
+      (failure) => log.severe(
+          "Failed to generate recurring transactions: ${failure.message}"),
       (_) => log.info("Recurring transaction check completed successfully."),
     );
   }

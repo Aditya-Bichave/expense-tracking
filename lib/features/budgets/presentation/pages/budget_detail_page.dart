@@ -45,6 +45,11 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   bool _isLoading = true;
   String? _error;
   StreamSubscription? _budgetSubscription;
+  DateTime _selectedMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    1,
+  );
 
   @override
   void initState() {

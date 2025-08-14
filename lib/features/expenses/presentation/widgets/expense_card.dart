@@ -167,8 +167,7 @@ class ExpenseCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedDefaultTextStyle(
-                duration:
-                    modeTheme?.fastDuration ??
+                duration: modeTheme?.fastDuration ??
                     const Duration(milliseconds: 150),
                 style: theme.textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,

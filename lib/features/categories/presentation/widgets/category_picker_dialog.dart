@@ -54,9 +54,10 @@ class _CategoryPickerDialogContentState
     super.initState();
     final uncategorizedId = Category.uncategorized.id;
     _allCategories =
-        widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        );
+        widget.categories.where((c) => c.id != uncategorizedId).toList()
+          ..sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          );
     _filteredCategories = List.from(_allCategories);
     _searchController.addListener(_filterCategories);
   }
@@ -158,8 +159,7 @@ class _CategoryPickerDialogContentState
                     itemCount: _filteredCategories.length,
                     itemBuilder: (context, index) {
                       final Category category = _filteredCategories[index];
-                      final iconData =
-                          availableIcons[category.iconName] ??
+                      final iconData = availableIcons[category.iconName] ??
                           Icons.category_outlined;
                       return ListTile(
                         leading: CircleAvatar(

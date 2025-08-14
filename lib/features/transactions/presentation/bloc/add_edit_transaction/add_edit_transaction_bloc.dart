@@ -48,14 +48,14 @@ class AddEditTransactionBloc
     required ExpenseRepository expenseRepository,
     required IncomeRepository incomeRepository,
     required CategoryRepository categoryRepository,
-  }) : _addExpenseUseCase = addExpenseUseCase,
-       _updateExpenseUseCase = updateExpenseUseCase,
-       _addIncomeUseCase = addIncomeUseCase,
-       _updateIncomeUseCase = updateIncomeUseCase,
-       _categorizeTransactionUseCase = categorizeTransactionUseCase,
-       _categoryRepository = categoryRepository,
-       _uuid = const Uuid(),
-       super(const AddEditTransactionState()) {
+  })  : _addExpenseUseCase = addExpenseUseCase,
+        _updateExpenseUseCase = updateExpenseUseCase,
+        _addIncomeUseCase = addIncomeUseCase,
+        _updateIncomeUseCase = updateIncomeUseCase,
+        _categorizeTransactionUseCase = categorizeTransactionUseCase,
+        _categoryRepository = categoryRepository,
+        _uuid = const Uuid(),
+        super(const AddEditTransactionState()) {
     on<InitializeTransaction>(_onInitializeTransaction);
     on<TransactionTypeChanged>(_onTransactionTypeChanged);
     on<SaveTransactionRequested>(_onSaveTransactionRequested);

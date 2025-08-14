@@ -63,7 +63,8 @@ class GeneralSettingsSection extends StatelessWidget {
           onTap: !isEnabled
               ? null
               : () {
-                  log.info("[SettingsPage] Navigating to Recurring Transactions.");
+                  log.info(
+                      "[SettingsPage] Navigating to Recurring Transactions.");
                   context.push(RouteNames.recurring);
                 },
         ),

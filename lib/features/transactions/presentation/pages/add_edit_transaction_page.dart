@@ -290,14 +290,16 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
               final bool isLoadingOverlayVisible =
                   state.status == AddEditStatus.saving ||
-                  state.status == AddEditStatus.loading ||
-                  state.status == AddEditStatus.navigatingToCreateCategory;
+                      state.status == AddEditStatus.loading ||
+                      state.status == AddEditStatus.navigatingToCreateCategory;
 
               return Stack(
                 children: [
                   TransactionForm(
-                    key: ValueKey(state.transactionType.toString() +
-                        (state.transactionId ?? 'new')),
+                    key: ValueKey(
+                      state.transactionType.toString() +
+                          (state.transactionId ?? 'new'),
+                    ),
                     initialTransaction: state.isEditing
                         ? (state.transactionType == TransactionType.expense
                             ? TransactionEntity.fromExpense(
@@ -320,7 +322,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                                   accountId: state.tempAccountId ?? '',
                                   notes: state.tempNotes,
                                 ),
-                              )),
+                              ))
+                        : null,
                     initialType: state.transactionType,
                     initialCategory: state.effectiveCategory,
                     initialTitle: state.tempTitle,
@@ -328,20 +331,19 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                     initialDate: state.tempDate,
                     initialAccountId: state.tempAccountId,
                     initialNotes: state.tempNotes,
-                    onSubmit:
-                        (
-                          type,
-                          title,
-                          amount,
-                          date,
-                          category,
-                          accountId,
-                          notes,
-                        ) {
-                          log.info(
-                            "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.",
-                          );
-                          context.read<AddEditTransactionBloc>().add(
+                    onSubmit: (
+                      type,
+                      title,
+                      amount,
+                      date,
+                      category,
+                      accountId,
+                      notes,
+                    ) {
+                      log.info(
+                        "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.",
+                      );
+                      context.read<AddEditTransactionBloc>().add(
                             SaveTransactionRequested(
                               title: title,
                               amount: amount,
@@ -351,7 +353,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                               notes: notes,
                             ),
                           );
-                        },
+                    },
                   ),
                   if (isLoadingOverlayVisible)
                     Positioned.fill(

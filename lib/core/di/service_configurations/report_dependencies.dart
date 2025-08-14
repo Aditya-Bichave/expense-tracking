@@ -63,19 +63,17 @@ class ReportDependencies {
             reportFilterBloc: filterBloc));
     sl.registerFactoryParam<SpendingTimeReportBloc, ReportFilterBloc, void>(
         (filterBloc, _) => SpendingTimeReportBloc(
-            getSpendingTimeReportUseCase: sl(),
-            reportFilterBloc: filterBloc));
+            getSpendingTimeReportUseCase: sl(), reportFilterBloc: filterBloc));
     sl.registerFactoryParam<IncomeExpenseReportBloc, ReportFilterBloc, void>(
         (filterBloc, _) => IncomeExpenseReportBloc(
-            getIncomeExpenseReportUseCase: sl(),
-            reportFilterBloc: filterBloc));
-    sl.registerFactoryParam<BudgetPerformanceReportBloc, ReportFilterBloc, void>(
+            getIncomeExpenseReportUseCase: sl(), reportFilterBloc: filterBloc));
+    sl.registerFactoryParam<BudgetPerformanceReportBloc, ReportFilterBloc,
+            void>(
         (filterBloc, _) => BudgetPerformanceReportBloc(
             getBudgetPerformanceReportUseCase: sl(),
             reportFilterBloc: filterBloc));
     sl.registerFactoryParam<GoalProgressReportBloc, ReportFilterBloc, void>(
         (filterBloc, _) => GoalProgressReportBloc(
-            getGoalProgressReportUseCase: sl(),
-            reportFilterBloc: filterBloc));
+            getGoalProgressReportUseCase: sl(), reportFilterBloc: filterBloc));
   }
 }

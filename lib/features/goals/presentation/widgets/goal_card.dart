@@ -34,9 +34,8 @@ class GoalCard extends StatelessWidget {
     const daysPerMonthApprox = 30.44;
     final monthsRemaining = daysRemaining / daysPerMonthApprox;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
-    final neededPerMonth = monthsRemaining > 0
-        ? amountNeeded / monthsRemaining
-        : double.infinity;
+    final neededPerMonth =
+        monthsRemaining > 0 ? amountNeeded / monthsRemaining : double.infinity;
     final neededPerDay = amountNeeded / daysRemaining;
 
     String pacingText;
@@ -61,11 +60,10 @@ class GoalCard extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final progress = goal.percentageComplete;
-    final color = goal.isAchieved
-        ? Colors.green.shade600
-        : theme.colorScheme.primary;
-    final backgroundColor = theme.colorScheme.surfaceContainerHighest
-        .withOpacity(0.5);
+    final color =
+        goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
+    final backgroundColor =
+        theme.colorScheme.surfaceContainerHighest.withOpacity(0.5);
     final bool isQuantum = uiMode == UIMode.quantum;
     // final bool isAether = uiMode == UIMode.aether; // No Aether specific impl
 
@@ -76,8 +74,8 @@ class GoalCard extends StatelessWidget {
     final double lineWidth = isQuantum ? 6.0 : 10.0;
     final TextStyle centerTextStyle =
         (isQuantum ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)
-            ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
-        TextStyle(color: color);
+                ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
+            TextStyle(color: color);
 
     return CircularPercentIndicator(
       radius: radius,
@@ -104,14 +102,12 @@ class GoalCard extends StatelessWidget {
     final modeTheme = context.modeTheme;
     final String pacingInfo = _getPacingInfo(context, theme);
 
-    final cardMargin =
-        modeTheme?.cardOuterPadding ??
+    final cardMargin = modeTheme?.cardOuterPadding ??
         const EdgeInsets.symmetric(horizontal: 12, vertical: 5);
     final cardPadding =
         modeTheme?.cardInnerPadding ?? const EdgeInsets.all(12.0);
-    final progressColor = goal.isAchieved
-        ? Colors.green.shade600
-        : theme.colorScheme.primary;
+    final progressColor =
+        goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
 
     return AppCard(
       onTap: onTap,

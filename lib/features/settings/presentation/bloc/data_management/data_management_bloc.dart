@@ -24,10 +24,10 @@ class DataManagementBloc
     required BackupDataUseCase backupDataUseCase,
     required RestoreDataUseCase restoreDataUseCase,
     required ClearAllDataUseCase clearAllDataUseCase,
-  }) : _backupDataUseCase = backupDataUseCase,
-       _restoreDataUseCase = restoreDataUseCase,
-       _clearAllDataUseCase = clearAllDataUseCase,
-       super(const DataManagementState()) {
+  })  : _backupDataUseCase = backupDataUseCase,
+        _restoreDataUseCase = restoreDataUseCase,
+        _clearAllDataUseCase = clearAllDataUseCase,
+        super(const DataManagementState()) {
     on<BackupRequested>(_onBackupRequested);
     on<RestoreRequested>(_onRestoreRequested);
     on<ClearDataRequested>(_onClearDataRequested);
@@ -44,7 +44,7 @@ class DataManagementBloc
     emit(
       state.copyWith(status: DataManagementStatus.loading, clearMessage: true),
     );
-    final result = await _backupDataUseCase(const NoParams());
+    final result = await _backupDataUseCase(BackupParams(event.password));
     result.fold(
       (failure) {
         log.warning("[DataManagementBloc] Backup failed: ${failure.message}");
@@ -72,7 +72,6 @@ class DataManagementBloc
         // emit(state.copyWith(status: DataManagementStatus.initial));
       },
     );
-
   }
 
   Future<void> _onRestoreRequested(
@@ -83,7 +82,7 @@ class DataManagementBloc
     emit(
       state.copyWith(status: DataManagementStatus.loading, clearMessage: true),
     );
-    final result = await _restoreDataUseCase(const NoParams());
+    final result = await _restoreDataUseCase(RestoreParams(event.password));
     result.fold(
       (failure) {
         log.warning("[DataManagementBloc] Restore failed: ${failure.message}");

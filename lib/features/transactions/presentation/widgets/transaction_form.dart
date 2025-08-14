@@ -14,16 +14,15 @@ import 'package:expense_tracker/core/utils/currency_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-typedef TransactionSubmitCallback =
-    void Function(
-      TransactionType type,
-      String title,
-      double amount,
-      DateTime date,
-      Category category,
-      String accountId,
-      String? notes,
-    );
+typedef TransactionSubmitCallback = void Function(
+  TransactionType type,
+  String title,
+  double amount,
+  DateTime date,
+  Category category,
+  String accountId,
+  String? notes,
+);
 
 class TransactionForm extends StatefulWidget {
   final TransactionEntity? initialTransaction;
@@ -120,8 +119,8 @@ class TransactionFormState extends State<TransactionForm> {
         _selectedCategory = null;
       });
       context.read<AddEditTransactionBloc>().add(
-        TransactionTypeChanged(_transactionType),
-      );
+            TransactionTypeChanged(_transactionType),
+          );
     }
     if (widget.initialTitle != oldWidget.initialTitle &&
         widget.initialTitle != null) {
@@ -271,8 +270,7 @@ class TransactionFormState extends State<TransactionForm> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding:
-            modeTheme?.pagePadding.copyWith(
+        padding: modeTheme?.pagePadding.copyWith(
               left: 16,
               right: 16,
               bottom: 40,
@@ -298,8 +296,8 @@ class TransactionFormState extends State<TransactionForm> {
                     _selectedCategory = null;
                   });
                   context.read<AddEditTransactionBloc>().add(
-                    TransactionTypeChanged(newType),
-                  );
+                        TransactionTypeChanged(newType),
+                      );
                 }
               }
             },
@@ -311,9 +309,8 @@ class TransactionFormState extends State<TransactionForm> {
             context: context,
             controller: _titleController,
             labelText: isExpense ? 'Title / Description' : 'Title / Source',
-            fallbackIcon: isExpense
-                ? Icons.description_outlined
-                : Icons.source_outlined,
+            fallbackIcon:
+                isExpense ? Icons.description_outlined : Icons.source_outlined,
             textCapitalization: TextCapitalization.sentences,
           ),
           const SizedBox(height: 16),

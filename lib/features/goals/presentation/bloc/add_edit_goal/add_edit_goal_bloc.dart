@@ -23,9 +23,9 @@ class AddEditGoalBloc extends Bloc<AddEditGoalEvent, AddEditGoalState> {
     required AddGoalUseCase addGoalUseCase,
     required UpdateGoalUseCase updateGoalUseCase, // ADDED
     Goal? initialGoal,
-  }) : _addGoalUseCase = addGoalUseCase,
-       _updateGoalUseCase = updateGoalUseCase, // ADDED
-       super(AddEditGoalState(initialGoal: initialGoal)) {
+  })  : _addGoalUseCase = addGoalUseCase,
+        _updateGoalUseCase = updateGoalUseCase, // ADDED
+        super(AddEditGoalState(initialGoal: initialGoal)) {
     on<SaveGoal>(_onSaveGoal);
     on<ClearGoalFormMessage>(_onClearMessage);
 
@@ -43,14 +43,12 @@ class AddEditGoalBloc extends Bloc<AddEditGoalEvent, AddEditGoalState> {
 
     // Construct Goal object
     final goalData = Goal(
-      id:
-          state.initialGoal?.id ??
+      id: state.initialGoal?.id ??
           sl<Uuid>().v4(), // Use existing ID or generate new
       name: event.name.trim(),
       targetAmount: event.targetAmount,
       targetDate: event.targetDate,
-      iconName:
-          event.iconName ??
+      iconName: event.iconName ??
           state.initialGoal?.iconName ??
           'savings', // Preserve or default
       description: event.description?.trim(),

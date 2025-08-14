@@ -434,20 +434,19 @@ class _TransactionListPageState extends State<TransactionListPage> {
                       final type = _getDominantTransactionType(state) ??
                           TransactionType.expense;
                       final CategoryTypeFilter pickerType =
-                              type == TransactionType.expense
+                          type == TransactionType.expense
                               ? CategoryTypeFilter.expense
                               : CategoryTypeFilter.income;
-                          final catState = context
-                              .read<CategoryManagementBloc>()
-                              .state;
-                          final list = pickerType == CategoryTypeFilter.expense
-                              ? catState.allExpenseCategories
-                              : catState.allIncomeCategories;
-                          final Category? selectedCategory =
-                              await showCategoryPicker(
-                                context,
-                                pickerType,
-                                list,
+                      final catState =
+                          context.read<CategoryManagementBloc>().state;
+                      final list = pickerType == CategoryTypeFilter.expense
+                          ? catState.allExpenseCategories
+                          : catState.allIncomeCategories;
+                      final Category? selectedCategory =
+                          await showCategoryPicker(
+                        context,
+                        pickerType,
+                        list,
                       );
                       if (selectedCategory != null &&
                           selectedCategory.id != Category.uncategorized.id &&

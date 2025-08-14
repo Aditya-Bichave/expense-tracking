@@ -43,15 +43,15 @@ class GetTransactionsParams extends Equatable {
 
   @override
   List<Object?> get props => [
-    startDate,
-    endDate,
-    categoryId,
-    accountId,
-    transactionType,
-    searchTerm,
-    sortBy,
-    sortDirection,
-  ];
+        startDate,
+        endDate,
+        categoryId,
+        accountId,
+        transactionType,
+        searchTerm,
+        sortBy,
+        sortDirection,
+      ];
 }
 
 class GetTransactionsUseCase
@@ -172,8 +172,8 @@ class GetTransactionsUseCase
             combinedList.add(
               TransactionEntity.fromExpense(
                 model.toEntity().copyWith(
-                  categoryOrNull: () => category,
-                ), // Hydrate here
+                      categoryOrNull: () => category,
+                    ), // Hydrate here
               ),
             );
           }
@@ -192,8 +192,8 @@ class GetTransactionsUseCase
             combinedList.add(
               TransactionEntity.fromIncome(
                 model.toEntity().copyWith(
-                  categoryOrNull: () => category,
-                ), // Hydrate here
+                      categoryOrNull: () => category,
+                    ), // Hydrate here
               ),
             );
           }
@@ -232,8 +232,8 @@ class GetTransactionsUseCase
             break;
           case TransactionSortBy.category:
             comparison = (a.category?.name ?? 'zzzzzz').toLowerCase().compareTo(
-              (b.category?.name ?? 'zzzzzz').toLowerCase(),
-            );
+                  (b.category?.name ?? 'zzzzzz').toLowerCase(),
+                );
             break;
           // --- Added Title Sort ---
           case TransactionSortBy.title:

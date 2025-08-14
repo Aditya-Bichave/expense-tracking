@@ -61,8 +61,7 @@ class AccountSelectorDropdown extends StatelessWidget {
           isExpanded: true,
           decoration: InputDecoration(
             labelText: labelText,
-            hintText:
-                isLoading && accounts.isEmpty ? 'Loading...' : hintText,
+            hintText: isLoading && accounts.isEmpty ? 'Loading...' : hintText,
             border: const OutlineInputBorder(),
             errorText: errorMessage,
             prefixIcon: const Icon(Icons.account_balance_wallet_outlined),

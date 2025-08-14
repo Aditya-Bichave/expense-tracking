@@ -57,7 +57,7 @@ class RecurringRuleListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                      '${rule.transactionType == TransactionType.expense ? '-' : '+'}${rule.amount.toStringAsFixed(2)}',
+                    '${rule.transactionType == TransactionType.expense ? '-' : '+'}${rule.amount.toStringAsFixed(2)}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: rule.transactionType == TransactionType.expense
                           ? Colors.red

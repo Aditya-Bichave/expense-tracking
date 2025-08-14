@@ -34,8 +34,7 @@ class CategorySelectorTile extends StatelessWidget {
     // --- Use uncategorized placeholder if selected is null ---
     final Category displayPlaceholder =
         selectedCategory ?? uncategorizedCategory;
-    Color displayColor =
-        selectedCategory?.displayColor ??
+    Color displayColor = selectedCategory?.displayColor ??
         theme.disabledColor; // Use disabled color if null
     Widget leadingWidget;
     // --- End Use ---
@@ -68,7 +67,7 @@ class CategorySelectorTile extends StatelessWidget {
     final borderConfig = theme.inputDecorationTheme.enabledBorder;
     BorderSide borderSide =
         theme.inputDecorationTheme.enabledBorder?.borderSide ??
-        BorderSide(color: theme.dividerColor);
+            BorderSide(color: theme.dividerColor);
     if (hasError) {
       final errorBorderConfig = theme.inputDecorationTheme.errorBorder;
       if (errorBorderConfig is OutlineInputBorder) {
