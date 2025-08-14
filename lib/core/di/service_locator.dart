@@ -27,6 +27,7 @@ import 'package:expense_tracker/core/di/service_configurations/goal_dependencies
 import 'package:expense_tracker/core/di/service_configurations/recurring_transactions_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/report_dependencies.dart';
 import 'package:expense_tracker/core/services/downloader_service_locator.dart';
+import 'package:expense_tracker/core/services/clock.dart';
 
 // Import models only needed for Box types here
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
@@ -76,6 +77,11 @@ Future<void> initLocator({
   if (!sl.isRegistered<AuthService>()) {
     sl.registerLazySingleton<AuthService>(() => AuthService());
     log.info("Registered AuthService.");
+  }
+
+  // *** Register Clock Service ***
+  if (!sl.isRegistered<Clock>()) {
+    sl.registerLazySingleton<Clock>(() => SystemClock());
   }
 
   // *** Data Change Event Stream ***

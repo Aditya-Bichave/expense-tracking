@@ -65,14 +65,12 @@ class SettingsState extends Equatable {
     UIMode? uiMode,
     String? selectedCountryCode,
     bool? isAppLockEnabled,
-    String? errorMessage,
+    ValueGetter<String?>? errorMessage,
     bool? isInDemoMode,
     bool? setupSkipped, // ADDED
     PackageInfoStatus? packageInfoStatus,
-    String? appVersion,
-    String? packageInfoError,
-    bool clearErrorMessage = false,
-    bool clearPackageInfoError = false,
+    ValueGetter<String?>? appVersion,
+    ValueGetter<String?>? packageInfoError,
     bool clearAllMessages = false,
   }) {
     return SettingsState(
@@ -82,34 +80,38 @@ class SettingsState extends Equatable {
       uiMode: uiMode ?? this.uiMode,
       selectedCountryCode: selectedCountryCode ?? this.selectedCountryCode,
       isAppLockEnabled: isAppLockEnabled ?? this.isAppLockEnabled,
-      errorMessage: clearAllMessages || clearErrorMessage
+      errorMessage: clearAllMessages
           ? null
-          : errorMessage ?? this.errorMessage,
+          : errorMessage != null
+          ? errorMessage()
+          : this.errorMessage,
       isInDemoMode: isInDemoMode ?? this.isInDemoMode,
       setupSkipped: setupSkipped ?? this.setupSkipped, // ADDED
       packageInfoStatus: packageInfoStatus ?? this.packageInfoStatus,
-      appVersion: appVersion ?? this.appVersion,
-      packageInfoError: clearAllMessages || clearPackageInfoError
+      appVersion: appVersion != null ? appVersion() : this.appVersion,
+      packageInfoError: clearAllMessages
           ? null
-          : packageInfoError ?? this.packageInfoError,
+          : packageInfoError != null
+          ? packageInfoError()
+          : this.packageInfoError,
     );
   }
 
   // --- props ---
   @override
   List<Object?> get props => [
-        status,
-        themeMode,
-        paletteIdentifier,
-        uiMode,
-        selectedCountryCode,
-        currencySymbol,
-        isAppLockEnabled,
-        errorMessage,
-        isInDemoMode,
-        setupSkipped, // ADDED
-        packageInfoStatus,
-        appVersion,
-        packageInfoError,
-      ];
+    status,
+    themeMode,
+    paletteIdentifier,
+    uiMode,
+    selectedCountryCode,
+    currencySymbol,
+    isAppLockEnabled,
+    errorMessage,
+    isInDemoMode,
+    setupSkipped, // ADDED
+    packageInfoStatus,
+    appVersion,
+    packageInfoError,
+  ];
 }
