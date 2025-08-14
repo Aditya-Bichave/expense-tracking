@@ -83,8 +83,8 @@ class BudgetCard extends StatelessWidget {
           Text(
             '+${budget.categoryIds!.length - 3}',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
           ),
         );
       }
@@ -126,9 +126,8 @@ class BudgetCard extends StatelessWidget {
         center: Text(
           "${(budgetStatus.percentageUsed * 100).toStringAsFixed(0)}%",
           style: TextStyle(
-            color: color.computeLuminance() > 0.5
-                ? Colors.black87
-                : Colors.white,
+            color:
+                color.computeLuminance() > 0.5 ? Colors.black87 : Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 10,
           ),
@@ -150,8 +149,7 @@ class BudgetCard extends StatelessWidget {
     final budget = budgetStatus.budget;
     final categoryIcons = _getCategoryIconWidgets(context, budget);
 
-    final cardMargin =
-        modeTheme?.cardOuterPadding ??
+    final cardMargin = modeTheme?.cardOuterPadding ??
         const EdgeInsets.symmetric(horizontal: 12, vertical: 5);
     final cardPadding =
         modeTheme?.cardInnerPadding ?? const EdgeInsets.all(12.0);

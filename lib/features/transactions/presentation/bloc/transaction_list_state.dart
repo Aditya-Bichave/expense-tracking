@@ -91,28 +91,27 @@ class TransactionListState extends Equatable {
       isInBatchEditMode: isInBatchEditMode ?? this.isInBatchEditMode,
       selectedTransactionIds:
           selectedTransactionIds ?? this.selectedTransactionIds,
-      errorMessage: clearErrorMessage
-          ? null
-          : (errorMessage ?? this.errorMessage),
+      errorMessage:
+          clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
       deleteError: clearDeleteError ? null : (deleteError ?? this.deleteError),
     );
   }
 
   @override
   List<Object?> get props => [
-    status,
-    transactions,
-    startDate,
-    endDate,
-    categoryId,
-    accountId,
-    transactionType,
-    searchTerm,
-    sortBy,
-    sortDirection,
-    isInBatchEditMode,
-    selectedTransactionIds,
-    errorMessage,
-    deleteError,
-  ];
+        status,
+        transactions,
+        startDate,
+        endDate,
+        categoryId,
+        accountId,
+        transactionType,
+        searchTerm,
+        sortBy,
+        sortDirection,
+        isInBatchEditMode,
+        selectedTransactionIds,
+        errorMessage,
+        deleteError,
+      ];
 }

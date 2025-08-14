@@ -76,8 +76,7 @@ class TransactionDetailPage extends StatelessWidget {
     final accountState = context.watch<AccountListBloc>().state;
     String accountName = 'Loading...'; // Default
     if (accountState is AccountListLoaded) {
-      accountName =
-          accountState.items
+      accountName = accountState.items
               .firstWhereOrNull((acc) => acc.id == transaction.accountId)
               ?.name ??
           'Unknown/Deleted Account';
@@ -135,8 +134,7 @@ class TransactionDetailPage extends StatelessWidget {
           if (transaction.category != null)
             _buildDetailRow(
               context,
-              icon:
-                  availableIcons[transaction.category!.iconName] ??
+              icon: availableIcons[transaction.category!.iconName] ??
                   Icons.category_outlined, // Use actual icon
               label: 'Category',
               value: transaction.category!.name,
@@ -185,9 +183,8 @@ class TransactionDetailPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
-        crossAxisAlignment: isMultiline
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.center,
+        crossAxisAlignment:
+            isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           Icon(
             icon,

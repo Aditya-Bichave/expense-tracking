@@ -83,8 +83,8 @@ class SettingsState extends Equatable {
       errorMessage: clearAllMessages
           ? null
           : errorMessage != null
-          ? errorMessage()
-          : this.errorMessage,
+              ? errorMessage()
+              : this.errorMessage,
       isInDemoMode: isInDemoMode ?? this.isInDemoMode,
       setupSkipped: setupSkipped ?? this.setupSkipped, // ADDED
       packageInfoStatus: packageInfoStatus ?? this.packageInfoStatus,
@@ -92,26 +92,26 @@ class SettingsState extends Equatable {
       packageInfoError: clearAllMessages
           ? null
           : packageInfoError != null
-          ? packageInfoError()
-          : this.packageInfoError,
+              ? packageInfoError()
+              : this.packageInfoError,
     );
   }
 
   // --- props ---
   @override
   List<Object?> get props => [
-    status,
-    themeMode,
-    paletteIdentifier,
-    uiMode,
-    selectedCountryCode,
-    currencySymbol,
-    isAppLockEnabled,
-    errorMessage,
-    isInDemoMode,
-    setupSkipped, // ADDED
-    packageInfoStatus,
-    appVersion,
-    packageInfoError,
-  ];
+        status,
+        themeMode,
+        paletteIdentifier,
+        uiMode,
+        selectedCountryCode,
+        currencySymbol,
+        isAppLockEnabled,
+        errorMessage,
+        isInDemoMode,
+        setupSkipped, // ADDED
+        packageInfoStatus,
+        appVersion,
+        packageInfoError,
+      ];
 }

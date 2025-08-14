@@ -7,7 +7,7 @@ import 'package:expense_tracker/main.dart';
 class CategorizationStatusWidget extends StatelessWidget {
   final TransactionEntity transaction;
   final void Function(TransactionEntity tx, Category category)?
-  onUserCategorized;
+      onUserCategorized;
   final void Function(TransactionEntity tx)? onChangeCategoryRequest;
 
   const CategorizationStatusWidget({

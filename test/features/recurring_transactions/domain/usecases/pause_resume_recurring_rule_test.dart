@@ -8,7 +8,9 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockRecurringTransactionRepository extends Mock implements RecurringTransactionRepository {}
+class MockRecurringTransactionRepository extends Mock
+    implements RecurringTransactionRepository {}
+
 class MockUpdateRecurringRule extends Mock implements UpdateRecurringRule {}
 
 void main() {
@@ -58,14 +60,17 @@ void main() {
 
   test('should pause an active rule', () async {
     // Arrange
-    when(() => mockRepository.getRecurringRuleById(any())).thenAnswer((_) async => Right(tActiveRule));
-    when(() => mockUpdateRecurringRule(any())).thenAnswer((_) async => const Right(null));
+    when(() => mockRepository.getRecurringRuleById(any()))
+        .thenAnswer((_) async => Right(tActiveRule));
+    when(() => mockUpdateRecurringRule(any()))
+        .thenAnswer((_) async => const Right(null));
 
     // Act
     await usecase('1');
 
     // Assert
-    final captured = verify(() => mockUpdateRecurringRule(captureAny())).captured;
+    final captured =
+        verify(() => mockUpdateRecurringRule(captureAny())).captured;
     expect(captured.single.status, RuleStatus.paused);
   });
 }

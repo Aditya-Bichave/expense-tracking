@@ -65,17 +65,17 @@ class Budget extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    type,
-    targetAmount,
-    period,
-    startDate,
-    endDate,
-    categoryIds,
-    notes,
-    createdAt,
-  ];
+        id,
+        name,
+        type,
+        targetAmount,
+        period,
+        startDate,
+        endDate,
+        categoryIds,
+        notes,
+        createdAt,
+      ];
 
   Budget copyWith({
     String? id,

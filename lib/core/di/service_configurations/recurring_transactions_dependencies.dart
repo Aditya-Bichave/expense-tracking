@@ -46,8 +46,8 @@ class RecurringTransactionsDependencies {
     sl.registerLazySingleton(() => DeleteRecurringRule(sl()));
     sl.registerLazySingleton(() => AddAuditLog(sl()));
     sl.registerLazySingleton(() => GetAuditLogsForRule(sl()));
-    sl.registerLazySingleton(
-        () => PauseResumeRecurringRule(repository: sl(), updateRecurringRule: sl()));
+    sl.registerLazySingleton(() =>
+        PauseResumeRecurringRule(repository: sl(), updateRecurringRule: sl()));
     sl.registerLazySingleton(() => GenerateTransactionsOnLaunch(
           recurringTransactionRepository: sl(),
           categoryRepository: sl(),

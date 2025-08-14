@@ -69,11 +69,9 @@ class AddEditTransactionState extends Equatable {
     bool clearTempData = false,
     bool clearCategory = false,
   }) {
-    final bool shouldClearSuggestion =
-        clearSuggestion ||
+    final bool shouldClearSuggestion = clearSuggestion ||
         (status != null && status != AddEditStatus.suggestingCategory);
-    final bool shouldClearNewlyCreated =
-        clearNewlyCreated ||
+    final bool shouldClearNewlyCreated = clearNewlyCreated ||
         (status != null &&
             status != AddEditStatus.ready &&
             status != AddEditStatus.saving);
@@ -93,19 +91,18 @@ class AddEditTransactionState extends Equatable {
       suggestedCategory: shouldClearSuggestion
           ? null
           : (suggestedCategory != null
-                ? suggestedCategory()
-                : this.suggestedCategory),
+              ? suggestedCategory()
+              : this.suggestedCategory),
       newlyCreatedCategory: shouldClearNewlyCreated
           ? null
           : (newlyCreatedCategory != null
-                ? newlyCreatedCategory()
-                : this.newlyCreatedCategory),
+              ? newlyCreatedCategory()
+              : this.newlyCreatedCategory),
       tempTitle: clearTempData ? null : (tempTitle ?? this.tempTitle),
       tempAmount: clearTempData ? null : (tempAmount ?? this.tempAmount),
       tempDate: clearTempData ? null : (tempDate ?? this.tempDate),
-      tempAccountId: clearTempData
-          ? null
-          : (tempAccountId ?? this.tempAccountId),
+      tempAccountId:
+          clearTempData ? null : (tempAccountId ?? this.tempAccountId),
       tempNotes: clearTempData
           ? null
           : (tempNotes != null ? tempNotes() : this.tempNotes),
@@ -114,17 +111,17 @@ class AddEditTransactionState extends Equatable {
 
   @override
   List<Object?> get props => [
-    status,
-    transactionType,
-    transactionId,
-    category,
-    errorMessage,
-    suggestedCategory,
-    newlyCreatedCategory,
-    tempTitle,
-    tempAmount,
-    tempDate,
-    tempAccountId,
-    tempNotes,
-  ];
+        status,
+        transactionType,
+        transactionId,
+        category,
+        errorMessage,
+        suggestedCategory,
+        newlyCreatedCategory,
+        tempTitle,
+        tempAmount,
+        tempDate,
+        tempAccountId,
+        tempNotes,
+      ];
 }

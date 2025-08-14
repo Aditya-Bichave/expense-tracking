@@ -81,8 +81,8 @@ class GetFinancialOverviewUseCase
       );
       if (incomeResult.isLeft()) {
         final failure = incomeResult.swap().getOrElse(
-          () => const UnexpectedFailure('Unknown income failure'),
-        );
+              () => const UnexpectedFailure('Unknown income failure'),
+            );
         log.warning(
           "[GetFinancialOverviewUseCase] Failed to get total income: ${failure.message}",
         );
@@ -95,8 +95,8 @@ class GetFinancialOverviewUseCase
       );
       if (expenseResult.isLeft()) {
         final failure = expenseResult.swap().getOrElse(
-          () => const UnexpectedFailure('Unknown expense failure'),
-        );
+              () => const UnexpectedFailure('Unknown expense failure'),
+            );
         log.warning(
           "[GetFinancialOverviewUseCase] Failed to get total expenses: ${failure.message}",
         );
@@ -131,8 +131,8 @@ class GetFinancialOverviewUseCase
       log.fine(
         "[GetFinancialOverviewUseCase] Fetching recent spending for sparklines...",
       );
-      final recentSpendingEither = await reportRepository
-          .getRecentDailySpending(days: 7); // Last 7 days
+      final recentSpendingEither =
+          await reportRepository.getRecentDailySpending(days: 7); // Last 7 days
       final recentSpendingData = recentSpendingEither.fold((l) {
         log.warning(
           "[GetFinancialOverviewUseCase] Failed fetch spending sparkline: ${l.message}",
@@ -149,11 +149,11 @@ class GetFinancialOverviewUseCase
         log.fine(
           "[GetFinancialOverviewUseCase] Fetching recent contributions for top goal sparkline: ${goalSummary.first.id}...",
         );
-        final recentContribEither = await reportRepository
-            .getRecentDailyContributions(
-              goalSummary.first.id,
-              days: 30,
-            ); // Last 30 days for goals
+        final recentContribEither =
+            await reportRepository.getRecentDailyContributions(
+          goalSummary.first.id,
+          days: 30,
+        ); // Last 30 days for goals
         recentContributionData = recentContribEither.fold((l) {
           log.warning(
             "[GetFinancialOverviewUseCase] Failed fetch contribution sparkline: ${l.message}",

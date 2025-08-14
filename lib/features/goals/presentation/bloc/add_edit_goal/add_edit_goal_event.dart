@@ -23,12 +23,12 @@ class SaveGoal extends AddEditGoalEvent {
   });
   @override
   List<Object?> get props => [
-    name,
-    targetAmount,
-    targetDate,
-    iconName,
-    description,
-  ];
+        name,
+        targetAmount,
+        targetDate,
+        iconName,
+        description,
+      ];
 }
 
 class ClearGoalFormMessage extends AddEditGoalEvent {

@@ -15,7 +15,8 @@ abstract class RecurringTransactionLocalDataSource {
   Future<List<RecurringRuleAuditLogModel>> getAuditLogsForRule(String ruleId);
 }
 
-class RecurringTransactionLocalDataSourceImpl implements RecurringTransactionLocalDataSource {
+class RecurringTransactionLocalDataSourceImpl
+    implements RecurringTransactionLocalDataSource {
   final Box<RecurringRuleModel> recurringRuleBox;
   final Box<RecurringRuleAuditLogModel> recurringRuleAuditLogBox;
 
@@ -59,7 +60,8 @@ class RecurringTransactionLocalDataSourceImpl implements RecurringTransactionLoc
   }
 
   @override
-  Future<List<RecurringRuleAuditLogModel>> getAuditLogsForRule(String ruleId) async {
+  Future<List<RecurringRuleAuditLogModel>> getAuditLogsForRule(
+      String ruleId) async {
     return recurringRuleAuditLogBox.values
         .where((log) => log.ruleId == ruleId)
         .toList();

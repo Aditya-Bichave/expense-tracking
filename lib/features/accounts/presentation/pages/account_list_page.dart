@@ -34,7 +34,8 @@ class AccountListPage extends StatelessWidget {
       title: AppLocalizations.of(context)!.confirmDeletion,
       content: AppLocalizations.of(
         context,
-      )!.deleteAccountConfirmation(item.name),
+      )!
+          .deleteAccountConfirmation(item.name),
       confirmText: AppLocalizations.of(context)!.delete,
       confirmColor: Theme.of(context).colorScheme.error,
     );
@@ -158,16 +159,16 @@ class AccountListPage extends StatelessWidget {
                 bodyContent = RefreshIndicator(
                   onRefresh: () async {
                     context.read<AccountListBloc>().add(
-                      const LoadAccounts(forceReload: true),
-                    );
+                          const LoadAccounts(forceReload: true),
+                        );
                     await context.read<AccountListBloc>().stream.firstWhere(
-                      (s) => s is! AccountListLoading || !s.isReloading,
-                    );
+                          (s) => s is! AccountListLoading || !s.isReloading,
+                        );
                   },
                   child: ListView.builder(
                     padding:
                         modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-                        const EdgeInsets.only(top: 8.0, bottom: 80.0),
+                            const EdgeInsets.only(top: 8.0, bottom: 80.0),
                     itemCount: accounts.length,
                     itemBuilder: (ctx, index) {
                       final account = accounts[index];
@@ -200,15 +201,13 @@ class AccountListPage extends StatelessWidget {
                         // --- CORRECTED: Pass the Future<bool> function ---
                         confirmDismiss: (_) => _handleDelete(context, account),
                         // --- END CORRECTION ---
-                        child:
-                            AccountCard(
-                                  account: account,
-                                  onTap: () =>
-                                      _navigateToEditAccount(context, account),
-                                )
-                                .animate(delay: (50 * index).ms)
-                                .fadeIn(duration: 400.ms)
-                                .slideY(begin: 0.2, curve: Curves.easeOut),
+                        child: AccountCard(
+                          account: account,
+                          onTap: () => _navigateToEditAccount(context, account),
+                        )
+                            .animate(delay: (50 * index).ms)
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: 0.2, curve: Curves.easeOut),
                       );
                     },
                   ),
@@ -245,8 +244,8 @@ class AccountListPage extends StatelessWidget {
                         icon: const Icon(Icons.refresh),
                         label: Text(AppLocalizations.of(context)!.retry),
                         onPressed: () => context.read<AccountListBloc>().add(
-                          const LoadAccounts(forceReload: true),
-                        ),
+                              const LoadAccounts(forceReload: true),
+                            ),
                       ),
                     ],
                   ),

@@ -24,8 +24,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   DashboardBloc({
     required GetFinancialOverviewUseCase getFinancialOverviewUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
-  }) : _getFinancialOverviewUseCase = getFinancialOverviewUseCase,
-       super(DashboardInitial()) {
+  })  : _getFinancialOverviewUseCase = getFinancialOverviewUseCase,
+        super(DashboardInitial()) {
     on<LoadDashboard>(_onLoadDashboard);
     on<_DataChanged>(_onDataChanged);
     on<ResetState>(_onResetState); // Add Handler

@@ -38,8 +38,8 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final newComparisonState = !_showComparison;
     setState(() => _showComparison = newComparisonState);
     context.read<SpendingCategoryReportBloc>().add(
-      LoadSpendingCategoryReport(compareToPrevious: newComparisonState),
-    ); // Pass the flag
+          LoadSpendingCategoryReport(compareToPrevious: newComparisonState),
+        ); // Pass the flag
     log.info(
       "[SpendingByCategoryPage] Toggled comparison to: $newComparisonState",
     );
@@ -75,8 +75,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     // Bar chart is default for Quantum, or if comparison active, or if toggled
     final bool useBarChart =
         uiMode == UIMode.quantum || _showComparison || !_showPieChart;
-    final bool showAlternateChartOption =
-        uiMode != UIMode.aether &&
+    final bool showAlternateChartOption = uiMode != UIMode.aether &&
         !_showComparison; // Can toggle if not Aether and not comparing
     final currencySymbol = settingsState.currencySymbol;
 
@@ -124,25 +123,25 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
       },
       body:
           BlocBuilder<SpendingCategoryReportBloc, SpendingCategoryReportState>(
-            builder: (context, state) {
-              if (state is SpendingCategoryReportLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (state is SpendingCategoryReportError) {
-                return Center(
-                  child: Text(
-                    "Error: ${state.message}",
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                );
-              }
-              if (state is SpendingCategoryReportLoaded) {
-                final reportData = state.reportData;
-                if (reportData.spendingByCategory.isEmpty) {
-                  return const Center(
-                    child: Text("No spending data for this period."),
-                  );
-                }
+        builder: (context, state) {
+          if (state is SpendingCategoryReportLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is SpendingCategoryReportError) {
+            return Center(
+              child: Text(
+                "Error: ${state.message}",
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            );
+          }
+          if (state is SpendingCategoryReportLoaded) {
+            final reportData = state.reportData;
+            if (reportData.spendingByCategory.isEmpty) {
+              return const Center(
+                child: Text("No spending data for this period."),
+              );
+            }
 
             Widget chartWidget;
             if (useBarChart) {
@@ -220,11 +219,11 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     // Create a map for quick lookup of previous data
     final Map<String, CategorySpendingData> previousDataMap =
         (showComparison && data.previousSpendingByCategory != null)
-        ? {
-            for (var item in data.previousSpendingByCategory!)
-              item.categoryId: item,
-          }
-        : {};
+            ? {
+                for (var item in data.previousSpendingByCategory!)
+                  item.categoryId: item,
+              }
+            : {};
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

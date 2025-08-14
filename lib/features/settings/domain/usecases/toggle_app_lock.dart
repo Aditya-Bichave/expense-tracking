@@ -13,8 +13,7 @@ class ToggleAppLockUseCase {
   Future<Either<Failure, void>> call(bool enable) async {
     try {
       if (enable) {
-        final canCheck =
-            await localAuth.canCheckBiometrics ||
+        final canCheck = await localAuth.canCheckBiometrics ||
             await localAuth.isDeviceSupported();
         if (!canCheck) {
           return Left(

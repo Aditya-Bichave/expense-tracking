@@ -7,7 +7,8 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 
-class RecurringTransactionRepositoryImpl implements RecurringTransactionRepository {
+class RecurringTransactionRepositoryImpl
+    implements RecurringTransactionRepository {
   final RecurringTransactionLocalDataSource localDataSource;
 
   RecurringTransactionRepositoryImpl({required this.localDataSource});
@@ -79,7 +80,8 @@ class RecurringTransactionRepositoryImpl implements RecurringTransactionReposito
   }
 
   @override
-  Future<Either<Failure, List<RecurringRuleAuditLog>>> getAuditLogsForRule(String ruleId) async {
+  Future<Either<Failure, List<RecurringRuleAuditLog>>> getAuditLogsForRule(
+      String ruleId) async {
     try {
       final logModels = await localDataSource.getAuditLogsForRule(ruleId);
       final logs = logModels.map((model) => model.toEntity()).toList();

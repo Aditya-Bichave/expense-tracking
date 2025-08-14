@@ -43,9 +43,8 @@ class RecurringRuleListPage extends StatelessWidget {
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Icon(Icons.delete_sweep_outlined,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onErrorContainer),
+                          color:
+                              Theme.of(context).colorScheme.onErrorContainer),
                     ),
                     confirmDismiss: (_) async {
                       final confirmed = await AppDialogs.showConfirmation(
