@@ -11,4 +11,10 @@ abstract class GoalContributionRepository {
   Future<Either<Failure, GoalContribution>> updateContribution(
       GoalContribution contribution);
   Future<Either<Failure, void>> deleteContribution(String contributionId);
+  /// Audits all goals and recalculates the cached total saved amount.
+  ///
+  /// This can be used by a periodic background task to ensure that the
+  /// `totalSavedCache` field on each goal remains accurate even if an earlier
+  /// operation crashed before the cache was updated.
+  Future<Either<Failure, void>> auditGoalTotals();
 }

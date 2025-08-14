@@ -27,6 +27,7 @@ import 'package:expense_tracker/features/goals/domain/usecases/get_contributions
 import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/update_contribution.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/update_goal.dart';
+import 'package:expense_tracker/features/goals/domain/usecases/audit_goal_totals.dart';
 // Blocs
 import 'package:expense_tracker/features/goals/presentation/bloc/add_edit_goal/add_edit_goal_bloc.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
@@ -96,6 +97,9 @@ class GoalDependencies {
     }
     if (!sl.isRegistered<CheckGoalAchievementUseCase>()) {
       sl.registerLazySingleton(() => CheckGoalAchievementUseCase(sl()));
+    }
+    if (!sl.isRegistered<AuditGoalTotalsUseCase>()) {
+      sl.registerLazySingleton(() => AuditGoalTotalsUseCase(sl()));
     }
 
     // --- Blocs ---
