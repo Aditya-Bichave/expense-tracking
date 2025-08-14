@@ -210,7 +210,7 @@ class AppTheme {
       scaffoldBackgroundColor: colorScheme.background,
 
       // --- Component Themes (Configure using colorScheme and modeTheme) ---
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: modeTheme.cardStyle == CardStyle.flat
             ? 0
             : (modeTheme.cardStyle == CardStyle.floating ? 6 : 1.5),
