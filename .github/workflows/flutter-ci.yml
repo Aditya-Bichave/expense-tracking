@@ -26,14 +26,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests:
+  quality-gates:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
@@ -45,7 +44,7 @@ jobs:
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-pub-
 
-      - name: Install dependencies
+      - name: flutter pub get
         run: flutter pub get
 
       - name: Format gate
@@ -57,14 +56,14 @@ jobs:
       - name: Unit tests
         run: flutter test test/unit --test-randomize-ordering-seed=random --concurrency 4
 
-      - name: Widget tests with coverage
+      - name: Widget tests + coverage
         run: flutter test test/widget --coverage --test-randomize-ordering-seed=random --concurrency 4
 
       - name: Enforce 90% coverage
         run: |
           awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<90) { print "Coverage below 90%!"; exit 1 } }' coverage/lcov.info
 
-      - name: Upload coverage (artifact)
+      - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
           name: lcov
