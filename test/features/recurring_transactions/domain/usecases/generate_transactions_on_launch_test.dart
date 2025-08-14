@@ -169,8 +169,8 @@ void main() {
     // Assert
     verifyNever(() => mockAddExpenseUseCase(any()));
     verifyNever(() => mockAddIncomeUseCase(any()));
-    verifyNever(() =>
-        mockRecurringTransactionRepository.updateRecurringRule(any()));
+    verifyNever(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()));
   });
 
   test('should return failure when addExpense fails', () async {
@@ -189,8 +189,8 @@ void main() {
     // Assert
     expect(result, equals(const Left(failure)));
     verify(() => mockAddExpenseUseCase(any())).called(1);
-    verifyNever(() =>
-        mockRecurringTransactionRepository.updateRecurringRule(any()));
+    verifyNever(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()));
   });
 
   test('should return failure when addIncome fails', () async {
@@ -209,8 +209,8 @@ void main() {
     // Assert
     expect(result, equals(const Left(failure)));
     verify(() => mockAddIncomeUseCase(any())).called(1);
-    verifyNever(() =>
-        mockRecurringTransactionRepository.updateRecurringRule(any()));
+    verifyNever(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()));
   });
 
   test('should return failure when updateRecurringRule fails', () async {
@@ -234,5 +234,24 @@ void main() {
     verify(() => mockAddExpenseUseCase(any())).called(1);
     verify(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
         .called(1);
+  });
+
+  test('should return failure when category lookup fails', () async {
+    // Arrange
+    const failure = ServerFailure('getCategoryById failed');
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([tRule]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => const Left(failure));
+
+    // Act
+    final result = await usecase(const NoParams());
+
+    // Assert
+    expect(result, equals(const Left(failure)));
+    verify(() => mockCategoryRepository.getCategoryById(any())).called(1);
+    verifyNever(() => mockAddExpenseUseCase(any()));
+    verifyNever(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()));
   });
 }

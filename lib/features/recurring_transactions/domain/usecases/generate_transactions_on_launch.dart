@@ -33,11 +33,13 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final rulesOrFailure = await recurringTransactionRepository.getRecurringRules();
+    final rulesOrFailure =
+        await recurringTransactionRepository.getRecurringRules();
     return await rulesOrFailure.fold<Future<Either<Failure, void>>>(
       (failure) async => Left(failure),
       (rules) async {
-        final activeRules = rules.where((rule) => rule.status == RuleStatus.active).toList();
+        final activeRules =
+            rules.where((rule) => rule.status == RuleStatus.active).toList();
 
         for (var rule in activeRules) {
           if (rule.nextOccurrenceDate.isBefore(today) ||
@@ -54,69 +56,77 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
   }
 
   Future<Either<Failure, void>> _processRule(RecurringRule rule) async {
-    final categoryOrFailure = await categoryRepository.getCategoryById(rule.categoryId);
-    final category = categoryOrFailure.getOrElse(() => null);
+    final categoryOrFailure =
+        await categoryRepository.getCategoryById(rule.categoryId);
 
-    // 1. Generate transaction
-    late Either<Failure, Object> transactionResult;
-    if (rule.transactionType == TransactionType.expense) {
-      final newExpense = Expense(
-        id: uuid.v4(),
-        title: rule.description,
-        amount: rule.amount,
-        date: rule.nextOccurrenceDate,
-        category: category,
-        accountId: rule.accountId,
-        isRecurring: true,
-      );
-      transactionResult = await addExpense(AddExpenseParams(newExpense));
-    } else {
-      final newIncome = Income(
-        id: uuid.v4(),
-        title: rule.description,
-        amount: rule.amount,
-        date: rule.nextOccurrenceDate,
-        category: category,
-        accountId: rule.accountId,
-        notes: '',
-        isRecurring: true,
-      );
-      transactionResult = await addIncome(AddIncomeParams(newIncome));
-    }
-
-    return await transactionResult.fold<Future<Either<Failure, void>>>(
+    return await categoryOrFailure.fold<Future<Either<Failure, void>>>(
       (failure) async => Left(failure),
-      (_) async {
-        // 2. Update rule
-        final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
-        final newNextOccurrenceDate = _calculateNextOccurrence(rule);
-
-        RuleStatus newStatus = rule.status;
-
-        // 3. Check end condition
-        bool hasEnded = false;
-        if (rule.endConditionType == EndConditionType.afterOccurrences) {
-          if (newOccurrencesGenerated >= rule.totalOccurrences!) {
-            hasEnded = true;
-          }
-        } else if (rule.endConditionType == EndConditionType.onDate) {
-          if (rule.endDate != null &&
-              newNextOccurrenceDate.isAfter(rule.endDate!)) {
-            hasEnded = true;
-          }
+      (category) async {
+        // 1. Generate transaction
+        late Either<Failure, void> transactionResult;
+        if (rule.transactionType == TransactionType.expense) {
+          final newExpense = Expense(
+            id: uuid.v4(),
+            title: rule.description,
+            amount: rule.amount,
+            date: rule.nextOccurrenceDate,
+            category: category,
+            accountId: rule.accountId,
+            isRecurring: true,
+          );
+          transactionResult =
+              (await addExpense(AddExpenseParams(newExpense))).map((_) => null);
+        } else {
+          final newIncome = Income(
+            id: uuid.v4(),
+            title: rule.description,
+            amount: rule.amount,
+            date: rule.nextOccurrenceDate,
+            category: category,
+            accountId: rule.accountId,
+            notes: '',
+            isRecurring: true,
+          );
+          transactionResult =
+              (await addIncome(AddIncomeParams(newIncome))).map((_) => null);
         }
 
-        if (hasEnded) {
-          newStatus = RuleStatus.completed;
-        }
+        return await transactionResult.fold<Future<Either<Failure, void>>>(
+          (failure) async => Left(failure),
+          (_) async {
+            // 2. Update rule
+            final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
+            final newNextOccurrenceDate = _calculateNextOccurrence(rule);
 
-        final updatedRule = rule.copyWith(
-          status: newStatus,
-          nextOccurrenceDate: newNextOccurrenceDate,
-          occurrencesGenerated: newOccurrencesGenerated,
+            RuleStatus newStatus = rule.status;
+
+            // 3. Check end condition
+            bool hasEnded = false;
+            if (rule.endConditionType == EndConditionType.afterOccurrences) {
+              if (newOccurrencesGenerated >= rule.totalOccurrences!) {
+                hasEnded = true;
+              }
+            } else if (rule.endConditionType == EndConditionType.onDate) {
+              if (rule.endDate != null &&
+                  newNextOccurrenceDate.isAfter(rule.endDate!)) {
+                hasEnded = true;
+              }
+            }
+
+            if (hasEnded) {
+              newStatus = RuleStatus.completed;
+            }
+
+            final updatedRule = rule.copyWith(
+              status: newStatus,
+              nextOccurrenceDate: newNextOccurrenceDate,
+              occurrencesGenerated: newOccurrencesGenerated,
+            );
+
+            return await recurringTransactionRepository
+                .updateRecurringRule(updatedRule);
+          },
         );
-
-        return await recurringTransactionRepository.updateRecurringRule(updatedRule);
       },
     );
   }
@@ -138,11 +148,13 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
           newYear++;
         }
         final daysInMonth = DateTime(newYear, newMonth + 1, 0).day;
-        final newDay = rule.dayOfMonth! > daysInMonth ? daysInMonth : rule.dayOfMonth!;
+        final newDay =
+            rule.dayOfMonth! > daysInMonth ? daysInMonth : rule.dayOfMonth!;
         nextDate = DateTime(newYear, newMonth, newDay);
         break;
       case Frequency.yearly:
-        nextDate = DateTime(nextDate.year + rule.interval, nextDate.month, nextDate.day);
+        nextDate = DateTime(
+            nextDate.year + rule.interval, nextDate.month, nextDate.day);
         break;
     }
     return nextDate;
