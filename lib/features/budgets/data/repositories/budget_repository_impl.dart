@@ -217,7 +217,6 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return null; // Only check category-specific budgets with categories
     }
 
-    final (newStart, newEnd) = newBudget.getCurrentPeriodDates();
     final newCategorySet = newBudget.categoryIds!.toSet();
 
     for (final existing in existingBudgets) {
@@ -233,15 +232,45 @@ class BudgetRepositoryImpl implements BudgetRepository {
         continue; // No shared categories
       }
 
-      // Check for period overlap
-      final (existingStart, existingEnd) = existing.getCurrentPeriodDates();
-      final periodsOverlap =
-          newStart.isBefore(existingEnd) && existingStart.isBefore(newEnd);
-
-      if (periodsOverlap) {
+      // If either budget is recurring, any shared categories mean an overlap
+      if (newBudget.period == BudgetPeriodType.recurringMonthly &&
+          existing.period == BudgetPeriodType.recurringMonthly) {
         log.fine(
-            "Overlap found: New Budget '${newBudget.name}' ($newStart - $newEnd, Cats: ${newBudget.categoryIds}) overlaps with Existing '${existing.name}' ($existingStart - $existingEnd, Cats: ${existing.categoryIds}) on categories: $intersection");
-        return existing; // Found an overlap
+            "Overlap found: Recurring budgets '${newBudget.name}' and '${existing.name}' share categories: $intersection");
+        return existing;
+      }
+
+      if ((newBudget.period == BudgetPeriodType.recurringMonthly &&
+              existing.period == BudgetPeriodType.oneTime) ||
+          (newBudget.period == BudgetPeriodType.oneTime &&
+              existing.period == BudgetPeriodType.recurringMonthly)) {
+        log.fine(
+            "Overlap found: Recurring/one-time budgets '${newBudget.name}' and '${existing.name}' share categories: $intersection");
+        return existing;
+      }
+
+      // For two one-time budgets, ensure their date ranges overlap
+      if (newBudget.period == BudgetPeriodType.oneTime &&
+          existing.period == BudgetPeriodType.oneTime) {
+        final newStart = newBudget.startDate;
+        final newEnd = newBudget.endDate;
+        final existingStart = existing.startDate;
+        final existingEnd = existing.endDate;
+
+        if (newStart == null ||
+            newEnd == null ||
+            existingStart == null ||
+            existingEnd == null) {
+          continue; // Missing dates, skip
+        }
+
+        final periodsOverlap =
+            newStart.isBefore(existingEnd) && existingStart.isBefore(newEnd);
+        if (periodsOverlap) {
+          log.fine(
+              "Overlap found: One-time budgets '${newBudget.name}' ($newStart - $newEnd) and '${existing.name}' ($existingStart - $existingEnd) share categories: $intersection");
+          return existing; // Found an overlap
+        }
       }
     }
     return null; // No overlap found
