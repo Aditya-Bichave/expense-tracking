@@ -252,11 +252,3 @@ class _CategoryFormState extends State<CategoryForm> {
     );
   }
 }
-
-// Helper extension
-extension StringCapExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}

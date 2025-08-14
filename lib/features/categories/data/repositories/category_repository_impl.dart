@@ -180,8 +180,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
     log.info(
         "[CategoryRepo] updateCategory called for '${category.name}' (ID: ${category.id}), Type: ${category.type.name}. Custom: ${category.isCustom}");
     if (!category.isCustom) {
-      log.warning(
-          "[CategoryRepo] Attempted to update a non-custom category.");
+      log.warning("[CategoryRepo] Attempted to update a non-custom category.");
       return const Left(
           ValidationFailure("Only custom categories can be updated."));
     }

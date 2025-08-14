@@ -11,9 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
-class MockRecurringTransactionRepository extends Mock implements RecurringTransactionRepository {}
+class MockRecurringTransactionRepository extends Mock
+    implements RecurringTransactionRepository {}
+
 class MockGetRecurringRuleById extends Mock implements GetRecurringRuleById {}
+
 class MockAddAuditLog extends Mock implements AddAuditLog {}
+
 class MockUuid extends Mock implements Uuid {}
 
 void main() {
@@ -81,13 +85,17 @@ void main() {
     occurrencesGenerated: 1,
   );
 
-  final tNewRule = tOldRule.copyWith(description: 'New Description', amount: 150);
+  final tNewRule =
+      tOldRule.copyWith(description: 'New Description', amount: 150);
 
   test('should create audit logs for changed fields', () async {
     // Arrange
-    when(() => mockGetRecurringRuleById(any())).thenAnswer((_) async => Right(tOldRule));
-    when(() => mockAddAuditLog(any())).thenAnswer((_) async => const Right(null));
-    when(() => mockRepository.updateRecurringRule(any())).thenAnswer((_) async => const Right(null));
+    when(() => mockGetRecurringRuleById(any()))
+        .thenAnswer((_) async => Right(tOldRule));
+    when(() => mockAddAuditLog(any()))
+        .thenAnswer((_) async => const Right(null));
+    when(() => mockRepository.updateRecurringRule(any()))
+        .thenAnswer((_) async => const Right(null));
     when(() => mockUuid.v4()).thenReturn('new_log_id');
 
     // Act

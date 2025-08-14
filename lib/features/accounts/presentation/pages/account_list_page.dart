@@ -13,25 +13,30 @@ import 'package:flutter_svg/svg.dart';
 import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 
 class AccountListPage extends StatelessWidget {
   const AccountListPage({super.key});
 
   void _navigateToEditAccount(BuildContext context, AssetAccount account) {
     log.info("[AccountListPage] Navigating to Edit Account ID: ${account.id}");
-    context.pushNamed(RouteNames.editAccount,
-        pathParameters: {RouteNames.paramAccountId: account.id},
-        extra: account);
+    context.pushNamed(
+      RouteNames.editAccount,
+      pathParameters: {RouteNames.paramAccountId: account.id},
+      extra: account,
+    );
   }
 
   // --- CORRECTED: Return Future<bool> ---
   Future<bool> _handleDelete(BuildContext context, AssetAccount item) async {
     final confirmed = await AppDialogs.showConfirmation(
       context,
-      title: "Confirm Deletion",
-      content:
-          'Are you sure you want to delete the account "${item.name}"?\n\nThis action might fail if there are existing transactions linked to this account.',
-      confirmText: "Delete",
+      title: AppLocalizations.of(context)!.confirmDeletion,
+      content: AppLocalizations.of(
+        context,
+      )!
+          .deleteAccountConfirmation(item.name),
+      confirmText: AppLocalizations.of(context)!.delete,
       confirmColor: Theme.of(context).colorScheme.error,
     );
     // Return the result (true if confirmed, false or null otherwise)
@@ -58,34 +63,45 @@ class AccountListPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SvgPicture.asset(
-              modeTheme?.assets.getIllustration(illustrationKey,
-                      defaultPath: defaultIllustration) ??
+              modeTheme?.assets.getIllustration(
+                    illustrationKey,
+                    defaultPath: defaultIllustration,
+                  ) ??
                   defaultIllustration,
               height: 120,
               colorFilter: ColorFilter.mode(
-                  theme.colorScheme.secondary.withOpacity(0.8),
-                  BlendMode.srcIn),
+                theme.colorScheme.secondary.withOpacity(0.8),
+                BlendMode.srcIn,
+              ),
             ),
             const SizedBox(height: 24),
-            Text('No accounts yet!',
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(color: theme.colorScheme.secondary),
-                textAlign: TextAlign.center),
+            Text(
+              AppLocalizations.of(context)!.noAccountsYet,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: theme.colorScheme.secondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 12),
             Text(
-                'Tap the "+" button below to add your first bank account, cash wallet, or other assets.',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center),
+              AppLocalizations.of(context)!.addAccountEmptyDescription,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               icon: const Icon(Icons.add),
-              label: const Text('Add First Account'),
+              label: Text(AppLocalizations.of(context)!.addFirstAccount),
               onPressed: () => context.pushNamed(RouteNames.addAccount),
               style: ElevatedButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
-            )
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -100,15 +116,18 @@ class AccountListPage extends StatelessWidget {
     return BlocProvider<AccountListBloc>(
       create: (_) => sl<AccountListBloc>()..add(const LoadAccounts()),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Accounts')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.accounts)),
         body: BlocConsumer<AccountListBloc, AccountListState>(
           listener: (context, state) {
             if (state is AccountListError) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(
+                ..showSnackBar(
+                  SnackBar(
                     content: Text(state.message),
-                    backgroundColor: theme.colorScheme.error));
+                    backgroundColor: theme.colorScheme.error,
+                  ),
+                );
             }
           },
           builder: (context, state) {
@@ -139,11 +158,12 @@ class AccountListPage extends StatelessWidget {
               } else {
                 bodyContent = RefreshIndicator(
                   onRefresh: () async {
-                    context
-                        .read<AccountListBloc>()
-                        .add(const LoadAccounts(forceReload: true));
+                    context.read<AccountListBloc>().add(
+                          const LoadAccounts(forceReload: true),
+                        );
                     await context.read<AccountListBloc>().stream.firstWhere(
-                        (s) => s is! AccountListLoading || !s.isReloading);
+                          (s) => s is! AccountListLoading || !s.isReloading,
+                        );
                   },
                   child: ListView.builder(
                     padding:
@@ -161,25 +181,30 @@ class AccountListPage extends StatelessWidget {
                           alignment: Alignment.centerRight,
                           padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text("Delete",
-                                    style: TextStyle(
-                                        color:
-                                            theme.colorScheme.onErrorContainer,
-                                        fontWeight: FontWeight.bold)),
-                                const SizedBox(width: 8),
-                                Icon(Icons.delete_sweep_outlined,
-                                    color: theme.colorScheme.onErrorContainer)
-                              ]),
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                AppLocalizations.of(context)!.delete,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onErrorContainer,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.delete_sweep_outlined,
+                                color: theme.colorScheme.onErrorContainer,
+                              ),
+                            ],
+                          ),
                         ),
                         // --- CORRECTED: Pass the Future<bool> function ---
                         confirmDismiss: (_) => _handleDelete(context, account),
                         // --- END CORRECTION ---
                         child: AccountCard(
-                                account: account,
-                                onTap: () =>
-                                    _navigateToEditAccount(context, account))
+                          account: account,
+                          onTap: () => _navigateToEditAccount(context, account),
+                        )
                             .animate(delay: (50 * index).ms)
                             .fadeIn(duration: 400.ms)
                             .slideY(begin: 0.2, curve: Curves.easeOut),
@@ -196,23 +221,31 @@ class AccountListPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline,
-                          color: theme.colorScheme.error, size: 50),
+                      Icon(
+                        Icons.error_outline,
+                        color: theme.colorScheme.error,
+                        size: 50,
+                      ),
                       const SizedBox(height: 16),
-                      Text('Error loading accounts',
-                          style: theme.textTheme.titleLarge
-                              ?.copyWith(color: theme.colorScheme.error)),
+                      Text(
+                        AppLocalizations.of(context)!.errorLoadingAccounts,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
                       const SizedBox(height: 8),
-                      Text(state.message,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: theme.colorScheme.error)),
+                      Text(
+                        state.message,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.refresh),
-                        label: const Text('Retry'),
-                        onPressed: () => context
-                            .read<AccountListBloc>()
-                            .add(const LoadAccounts(forceReload: true)),
+                        label: Text(AppLocalizations.of(context)!.retry),
+                        onPressed: () => context.read<AccountListBloc>().add(
+                              const LoadAccounts(forceReload: true),
+                            ),
                       ),
                     ],
                   ),
@@ -226,10 +259,12 @@ class AccountListPage extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               child: KeyedSubtree(
                 // --- CORRECTED: Use concrete state type for key ---
-                key: ValueKey(state.runtimeType.toString() +
-                    (state is AccountListLoaded
-                        ? state.items.length.toString()
-                        : '')),
+                key: ValueKey(
+                  state.runtimeType.toString() +
+                      (state is AccountListLoaded
+                          ? state.items.length.toString()
+                          : ''),
+                ),
                 // --- END CORRECTION ---
                 child: bodyContent,
               ),
@@ -239,7 +274,7 @@ class AccountListPage extends StatelessWidget {
         floatingActionButton: FloatingActionButton(
           heroTag: 'fab_accounts',
           onPressed: () => context.pushNamed(RouteNames.addAccount),
-          tooltip: 'Add Account',
+          tooltip: AppLocalizations.of(context)!.addAccount,
           child: const Icon(Icons.add),
         ),
       ),

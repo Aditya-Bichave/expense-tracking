@@ -90,10 +90,8 @@ class BudgetSummaryWidget extends StatelessWidget {
             final progress = budgetWithStatus.percentageUsed.clamp(0.0, 1.0);
             final progressColor =
                 budgetWithStatus.health == BudgetHealth.overLimit
-                ? theme
-                      .colorScheme
-                      .error // Use theme error color
-                : theme.colorScheme.primary;
+                    ? theme.colorScheme.error // Use theme error color
+                    : theme.colorScheme.primary;
 
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 4.0),

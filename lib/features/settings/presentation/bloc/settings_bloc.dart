@@ -28,15 +28,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     required SettingsRepository settingsRepository,
     required DemoModeService demoModeService,
     required ToggleAppLockUseCase toggleAppLockUseCase,
-  }) : _settingsRepository = settingsRepository,
-       _demoModeService = demoModeService,
-       _toggleAppLockUseCase = toggleAppLockUseCase,
-       super(
-         SettingsState(
-           isInDemoMode: demoModeService.isDemoActive,
-           setupSkipped: false, // Ensure skip starts false
-         ),
-       ) {
+  })  : _settingsRepository = settingsRepository,
+        _demoModeService = demoModeService,
+        _toggleAppLockUseCase = toggleAppLockUseCase,
+        super(
+          SettingsState(
+            isInDemoMode: demoModeService.isDemoActive,
+            setupSkipped: false, // Ensure skip starts false
+          ),
+        ) {
     on<LoadSettings>(_onLoadSettings);
     on<UpdateTheme>(_onUpdateTheme);
     on<UpdatePaletteIdentifier>(_onUpdatePaletteIdentifier);
@@ -169,12 +169,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           errorMessage: () => 'An unexpected error occurred loading settings.',
           packageInfoStatus:
               state.packageInfoStatus == PackageInfoStatus.loading
-              ? PackageInfoStatus.error
-              : state.packageInfoStatus,
+                  ? PackageInfoStatus.error
+                  : state.packageInfoStatus,
           packageInfoError: () =>
               state.packageInfoStatus == PackageInfoStatus.loading
-              ? 'Failed due to main settings error'
-              : state.packageInfoError,
+                  ? 'Failed due to main settings error'
+                  : state.packageInfoError,
           isInDemoMode: false, // Ensure demo mode is off on error too
           setupSkipped: false, // Ensure skip flag is reset on error too
         ),

@@ -60,7 +60,7 @@ class TransactionListItem extends StatelessWidget {
         children: [
           if (transaction.isRecurring)
             Padding(
-              padding: const EdgeInsets.only(right: 8.0),
+              padding: const EdgeInsetsDirectional.only(end: 8.0),
               child: SvgPicture.asset(
                 'assets/elemental/icons/common/ic_recurring.svg',
                 width: 16,
@@ -82,11 +82,13 @@ class TransactionListItem extends StatelessWidget {
         ],
       ),
       subtitle: Text(
-          '${category.name} • ${DateFormatter.formatDate(transaction.date)}', // Show category name and formatted date
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis),
+        '${category.name} • ${DateFormatter.formatDate(transaction.date)}', // Show category name and formatted date
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: Text(
         '${isExpense ? '-' : '+'} ${CurrencyFormatter.format(transaction.amount, currencySymbol)}',
         style: theme.textTheme.bodyLarge?.copyWith(
@@ -98,8 +100,10 @@ class TransactionListItem extends StatelessWidget {
       onTap: onTap, // Use the passed onTap callback
       // onLongPress: onLongPress, // Uncomment if adding long press
       dense: true,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+        vertical: 4.0,
+      ),
       // --- ADDED: Visual density for slightly tighter spacing ---
       visualDensity: VisualDensity.compact,
     );

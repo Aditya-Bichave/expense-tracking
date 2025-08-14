@@ -8,7 +8,8 @@ import 'package:expense_tracker/features/categories/domain/entities/category_typ
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCategoryLocalDataSource extends Mock implements CategoryLocalDataSource {}
+class MockCategoryLocalDataSource extends Mock
+    implements CategoryLocalDataSource {}
 
 class MockCategoryPredefinedDataSource extends Mock
     implements CategoryPredefinedDataSource {}

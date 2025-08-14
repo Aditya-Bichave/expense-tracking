@@ -1,6 +1,7 @@
 // lib/features/transactions/presentation/bloc/transaction_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
@@ -47,16 +48,16 @@ class TransactionListBloc
     required ExpenseRepository expenseRepository,
     required IncomeRepository incomeRepository,
     required Stream<DataChangedEvent> dataChangeStream,
-  }) : _getTransactionsUseCase = getTransactionsUseCase,
-       _deleteExpenseUseCase = deleteExpenseUseCase,
-       _deleteIncomeUseCase = deleteIncomeUseCase,
-       _applyCategoryToBatchUseCase = applyCategoryToBatchUseCase,
-       _saveUserHistoryUseCase = saveUserHistoryUseCase,
-       _expenseRepository = expenseRepository,
-       _incomeRepository = incomeRepository,
-       super(const TransactionListState()) {
+  })  : _getTransactionsUseCase = getTransactionsUseCase,
+        _deleteExpenseUseCase = deleteExpenseUseCase,
+        _deleteIncomeUseCase = deleteIncomeUseCase,
+        _applyCategoryToBatchUseCase = applyCategoryToBatchUseCase,
+        _saveUserHistoryUseCase = saveUserHistoryUseCase,
+        _expenseRepository = expenseRepository,
+        _incomeRepository = incomeRepository,
+        super(const TransactionListState()) {
     // Register Event Handlers
-    on<LoadTransactions>(_onLoadTransactions);
+    on<LoadTransactions>(_onLoadTransactions, transformer: restartable());
     on<FilterChanged>(_onFilterChanged);
     on<SortChanged>(_onSortChanged);
     on<SearchChanged>(_onSearchChanged);
@@ -144,31 +145,31 @@ class TransactionListBloc
       transactionType = state.transactionType;
     }
 
-    // Only show loading state if not already loaded or forced or if filters changed
     final bool filtersChanged = event.incomingFilters != null;
-    if (state.status != ListStatus.success ||
-        event.forceReload ||
-        filtersChanged) {
-      emit(
-        state.copyWith(
-          status: (state.status == ListStatus.success && !filtersChanged)
-              ? ListStatus.reloading
-              : ListStatus.loading,
-          // Apply incoming filters directly to state if they exist
-          startDate: startDate,
-          endDate: endDate,
-          categoryId: categoryId,
-          accountId: accountId,
-          transactionType: transactionType,
-          clearErrorMessage: true,
-          clearDeleteError: true,
-        ),
-      );
-    } else {
+    final bool isLoading = state.status == ListStatus.loading ||
+        state.status == ListStatus.reloading;
+    if (isLoading && !event.forceReload && !filtersChanged) {
       log.info(
-        "[TransactionListBloc] Already loaded, skipping explicit loading state.",
+        "[TransactionListBloc] Load requested while already loading. Ignoring.",
       );
+      return;
     }
+
+    emit(
+      state.copyWith(
+        status: (state.status == ListStatus.success && !filtersChanged)
+            ? ListStatus.reloading
+            : ListStatus.loading,
+        // Apply incoming filters directly to state if they exist
+        startDate: startDate,
+        endDate: endDate,
+        categoryId: categoryId,
+        accountId: accountId,
+        transactionType: transactionType,
+        clearErrorMessage: true,
+        clearDeleteError: true,
+      ),
+    );
 
     final params = GetTransactionsParams(
       startDate: startDate, // Use determined start date
@@ -199,8 +200,8 @@ class TransactionListBloc
         );
         final validSelection = state.isInBatchEditMode
             ? state.selectedTransactionIds
-                  .where((id) => transactions.any((txn) => txn.id == id))
-                  .toSet()
+                .where((id) => transactions.any((txn) => txn.id == id))
+                .toSet()
             : <String>{};
 
         emit(
@@ -454,9 +455,8 @@ class TransactionListBloc
 
     final previousState = state;
 
-    final optimisticList = previousState.transactions
-        .where((t) => t.id != txn.id)
-        .toList();
+    final optimisticList =
+        previousState.transactions.where((t) => t.id != txn.id).toList();
     final updatedSelection = Set<String>.from(
       previousState.selectedTransactionIds,
     )..remove(txn.id);
@@ -509,20 +509,18 @@ class TransactionListBloc
       transactionData: event.matchData,
       selectedCategory: event.selectedCategory,
     );
-    _saveUserHistoryUseCase(historyParams)
-        .then((result) {
-          result.fold(
-            (failure) => log.warning(
-              "[TransactionListBloc] Failed to save user history: ${failure.message}",
-            ),
-            (_) => log.info(
-              "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}",
-            ),
-          );
-        })
-        .catchError((e, s) {
-          log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
-        });
+    _saveUserHistoryUseCase(historyParams).then((result) {
+      result.fold(
+        (failure) => log.warning(
+          "[TransactionListBloc] Failed to save user history: ${failure.message}",
+        ),
+        (_) => log.info(
+          "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}",
+        ),
+      );
+    }).catchError((e, s) {
+      log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
+    });
 
     // Update Transaction Categorization State
     log.info(

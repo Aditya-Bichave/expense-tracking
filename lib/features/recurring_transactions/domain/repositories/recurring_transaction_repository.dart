@@ -11,5 +11,6 @@ abstract class RecurringTransactionRepository {
   Future<Either<Failure, void>> deleteRecurringRule(String id);
 
   Future<Either<Failure, void>> addAuditLog(RecurringRuleAuditLog log);
-  Future<Either<Failure, List<RecurringRuleAuditLog>>> getAuditLogsForRule(String ruleId);
+  Future<Either<Failure, List<RecurringRuleAuditLog>>> getAuditLogsForRule(
+      String ruleId);
 }

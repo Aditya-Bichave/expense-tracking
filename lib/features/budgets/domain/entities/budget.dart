@@ -27,25 +27,41 @@ class Budget extends Equatable {
     required this.createdAt,
   });
 
-  // Helper to get current period start/end for calculations
-  (DateTime, DateTime) getCurrentPeriodDates() {
-    final now = DateTime.now();
+  /// Returns the period start and end dates for the provided [reference] date.
+  ///
+  /// For [BudgetPeriodType.recurringMonthly] budgets, this calculates the first
+  /// and last day of the month that contains [reference]. The last day includes
+  /// the end-of-day time (23:59:59) so comparisons are inclusive.
+  ///
+  /// For one-time budgets the configured [startDate] and [endDate] are returned
+  /// (also including the end-of-day time for the end date). If the dates are not
+  /// set this falls back to an impossible range (1900) which effectively yields
+  /// no results.
+  (DateTime, DateTime) getPeriodDatesFor(DateTime reference) {
     if (period == BudgetPeriodType.recurringMonthly) {
-      final firstDayOfMonth = DateTime(now.year, now.month, 1);
-      final lastDayOfMonth =
-          DateTime(now.year, now.month + 1, 0, 23, 59, 59); // End of day
+      final firstDayOfMonth = DateTime(reference.year, reference.month, 1);
+      final lastDayOfMonth = DateTime(
+        reference.year,
+        reference.month + 1,
+        0,
+        23,
+        59,
+        59,
+      );
       return (firstDayOfMonth, lastDayOfMonth);
     } else {
-      // For one-time, return the defined dates or default to impossible range if null
       final effectiveStartDate =
           startDate ?? DateTime(1900); // Should not be null for one-time
-      // Ensure endDate includes the full day
       final effectiveEndDate = (endDate != null)
           ? DateTime(endDate!.year, endDate!.month, endDate!.day, 23, 59, 59)
-          : DateTime(1900); // Should not be null for one-time
+          : DateTime(1900);
       return (effectiveStartDate, effectiveEndDate);
     }
   }
+
+  /// Convenience wrapper that returns the period for the current date.
+  (DateTime, DateTime) getCurrentPeriodDates() =>
+      getPeriodDatesFor(DateTime.now());
 
   @override
   List<Object?> get props => [

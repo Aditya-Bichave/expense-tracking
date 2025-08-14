@@ -42,16 +42,21 @@ class CategorySelectorTile extends StatelessWidget {
     // Icon Logic (remains similar, uses displayPlaceholder for iconName)
     String? svgPath;
     if (modeTheme != null) {
-      svgPath = modeTheme.assets
-          .getCategoryIcon(displayPlaceholder.iconName, defaultPath: '');
+      svgPath = modeTheme.assets.getCategoryIcon(
+        displayPlaceholder.iconName,
+        defaultPath: '',
+      );
     }
     if (svgPath != null && svgPath.isNotEmpty) {
       leadingWidget = Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SvgPicture.asset(svgPath,
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(displayColor, BlendMode.srcIn)));
+        padding: const EdgeInsets.all(8.0),
+        child: SvgPicture.asset(
+          svgPath,
+          width: 24,
+          height: 24,
+          colorFilter: ColorFilter.mode(displayColor, BlendMode.srcIn),
+        ),
+      );
     } else {
       final iconData =
           availableIcons[displayPlaceholder.iconName] ?? Icons.help_outline;
@@ -81,24 +86,30 @@ class CategorySelectorTile extends StatelessWidget {
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           shape: OutlineInputBorder(
-              borderRadius: inputBorderRadius, borderSide: borderSide),
+            borderRadius: inputBorderRadius,
+            borderSide: borderSide,
+          ),
           leading: leadingWidget,
-          title: Text(selectedCategory?.name ?? hint,
-              style: TextStyle(
-                  color: hasError
-                      ? theme.colorScheme.error
-                      : (selectedCategory == null
-                          ? theme.disabledColor
-                          : null))),
+          title: Text(
+            selectedCategory?.name ?? hint,
+            style: TextStyle(
+              color: hasError
+                  ? theme.colorScheme.error
+                  : (selectedCategory == null ? theme.disabledColor : null),
+            ),
+          ),
           trailing: const Icon(Icons.arrow_drop_down),
           onTap: onTap,
         ),
         if (hasError)
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, top: 8.0),
-            child: Text(errorText!,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.error)),
+            padding: const EdgeInsetsDirectional.only(start: 12.0, top: 8.0),
+            child: Text(
+              errorText!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
           ),
       ],
     );

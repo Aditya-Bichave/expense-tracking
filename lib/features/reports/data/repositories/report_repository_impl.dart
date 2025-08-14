@@ -234,7 +234,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
   // Helper to calculate data for a single period
   Future<Either<Failure, SpendingCategoryReportData>>
-  _calculateSpendingByCategory(
+      _calculateSpendingByCategory(
     DateTime startDate,
     DateTime endDate,
     List<String>? accountIds,
@@ -269,9 +269,8 @@ class ReportRepositoryImpl implements ReportRepository {
       );
     }
 
-    final filteredExpenses = transactionResult
-        .getOrElse(() => [])
-        .cast<ExpenseModel>();
+    final filteredExpenses =
+        transactionResult.getOrElse(() => []).cast<ExpenseModel>();
 
     if (filteredExpenses.isEmpty) {
       log.fine(
@@ -403,20 +402,18 @@ class ReportRepositoryImpl implements ReportRepository {
       }
 
       // Combine Data with ComparisonValue
-      final List<TimeSeriesDataPoint> finalSpendingData = currentData
-          .spendingData
-          .map((currentPoint) {
-            final prevPoint = previousDataMap[currentPoint.date];
-            return TimeSeriesDataPoint(
-              date: currentPoint.date,
-              amount: ComparisonValue<double>(
-                // Explicit type
-                currentValue: currentPoint.currentAmount,
-                previousValue: prevPoint?.currentAmount,
-              ),
-            );
-          })
-          .toList();
+      final List<TimeSeriesDataPoint> finalSpendingData =
+          currentData.spendingData.map((currentPoint) {
+        final prevPoint = previousDataMap[currentPoint.date];
+        return TimeSeriesDataPoint(
+          date: currentPoint.date,
+          amount: ComparisonValue<double>(
+            // Explicit type
+            currentValue: currentPoint.currentAmount,
+            previousValue: prevPoint?.currentAmount,
+          ),
+        );
+      }).toList();
 
       return Right(
         SpendingTimeReportData(
@@ -577,25 +574,23 @@ class ReportRepositoryImpl implements ReportRepository {
       }
 
       // Combine Data with ComparisonValue
-      final List<IncomeExpensePeriodData> finalPeriodData = currentData
-          .periodData
-          .map((currentPoint) {
-            final prevPoint = previousDataMap[currentPoint.periodStart];
-            return IncomeExpensePeriodData(
-              periodStart: currentPoint.periodStart,
-              totalIncome: ComparisonValue<double>(
-                // Explicit type
-                currentValue: currentPoint.currentTotalIncome,
-                previousValue: prevPoint?.currentTotalIncome,
-              ),
-              totalExpense: ComparisonValue<double>(
-                // Explicit type
-                currentValue: currentPoint.currentTotalExpense,
-                previousValue: prevPoint?.currentTotalExpense,
-              ),
-            );
-          })
-          .toList();
+      final List<IncomeExpensePeriodData> finalPeriodData =
+          currentData.periodData.map((currentPoint) {
+        final prevPoint = previousDataMap[currentPoint.periodStart];
+        return IncomeExpensePeriodData(
+          periodStart: currentPoint.periodStart,
+          totalIncome: ComparisonValue<double>(
+            // Explicit type
+            currentValue: currentPoint.currentTotalIncome,
+            previousValue: prevPoint?.currentTotalIncome,
+          ),
+          totalExpense: ComparisonValue<double>(
+            // Explicit type
+            currentValue: currentPoint.currentTotalExpense,
+            previousValue: prevPoint?.currentTotalExpense,
+          ),
+        );
+      }).toList();
 
       return Right(
         IncomeExpenseReportData(
@@ -742,43 +737,41 @@ class ReportRepositoryImpl implements ReportRepository {
       // Combine Data with ComparisonValue
       final List<BudgetPerformanceData> finalPerformanceData =
           currentPerformanceReport.performanceData.map((currentP) {
-            final prevP = previousDataMap[currentP.budget.id];
-            double? prevVariancePercent;
-            if (prevP != null && prevP.budget.targetAmount > 0) {
-              prevVariancePercent =
-                  (prevP.currentVarianceAmount / prevP.budget.targetAmount) *
-                  100;
-            } else if (prevP != null && prevP.currentActualSpending > 0) {
-              prevVariancePercent =
-                  double.negativeInfinity; // Spent something with 0 target
-            } else if (prevP != null) {
-              prevVariancePercent = 0.0; // Spent 0 with 0 target
-            }
+        final prevP = previousDataMap[currentP.budget.id];
+        double? prevVariancePercent;
+        if (prevP != null && prevP.budget.targetAmount > 0) {
+          prevVariancePercent =
+              (prevP.currentVarianceAmount / prevP.budget.targetAmount) * 100;
+        } else if (prevP != null && prevP.currentActualSpending > 0) {
+          prevVariancePercent =
+              double.negativeInfinity; // Spent something with 0 target
+        } else if (prevP != null) {
+          prevVariancePercent = 0.0; // Spent 0 with 0 target
+        }
 
-            return BudgetPerformanceData(
-              budget: currentP.budget,
-              actualSpending: ComparisonValue<double>(
-                // Explicit type
-                currentValue: currentP.currentActualSpending,
-                previousValue: prevP?.currentActualSpending,
-              ),
-              varianceAmount: ComparisonValue<double>(
-                // Explicit type
-                currentValue: currentP.currentVarianceAmount,
-                previousValue: prevP?.currentVarianceAmount,
-              ),
-              currentVariancePercent: currentP.currentVariancePercent,
-              previousVariancePercent:
-                  prevVariancePercent, // Calculated from previous data
-              health: currentP.health,
-              statusColor: currentP.statusColor,
-            );
-          }).toList();
+        return BudgetPerformanceData(
+          budget: currentP.budget,
+          actualSpending: ComparisonValue<double>(
+            // Explicit type
+            currentValue: currentP.currentActualSpending,
+            previousValue: prevP?.currentActualSpending,
+          ),
+          varianceAmount: ComparisonValue<double>(
+            // Explicit type
+            currentValue: currentP.currentVarianceAmount,
+            previousValue: prevP?.currentVarianceAmount,
+          ),
+          currentVariancePercent: currentP.currentVariancePercent,
+          previousVariancePercent:
+              prevVariancePercent, // Calculated from previous data
+          health: currentP.health,
+          statusColor: currentP.statusColor,
+        );
+      }).toList();
 
       // Add previous data list to the final report object
-      final previousPerformanceList = compareToPrevious
-          ? previousDataMap.values.toList()
-          : null;
+      final previousPerformanceList =
+          compareToPrevious ? previousDataMap.values.toList() : null;
 
       return Right(
         BudgetPerformanceReportData(
@@ -797,7 +790,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
   // Helper for single period calculation
   Future<Either<Failure, BudgetPerformanceReportData>>
-  _calculateBudgetPerformance(
+      _calculateBudgetPerformance(
     DateTime startDate,
     DateTime endDate,
     List<String>? budgetIds,
@@ -842,8 +835,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
     for (final budget in relevantBudgets) {
       // Determine effective dates for calculation based on budget period type vs report period
-      final (effStart, effEnd) =
-          (budget.period == BudgetPeriodType.oneTime &&
+      final (effStart, effEnd) = (budget.period == BudgetPeriodType.oneTime &&
               budget.startDate != null &&
               budget.endDate != null)
           ? (
@@ -853,25 +845,22 @@ class ReportRepositoryImpl implements ReportRepository {
           : (startDate, endDate); // Use report range dates if recurring/overall
 
       // Filter expenses for *this* budget within the *effective* date range
-      final double spent = allExpensesInRange
-          .where((exp) {
-            // Ensure expense date falls within the effective period for the budget
-            final endDateInclusive = effEnd
-                .add(const Duration(days: 1))
-                .subtract(const Duration(microseconds: 1));
-            bool dateMatch =
-                !exp.date.isBefore(effStart) &&
-                !exp.date.isAfter(endDateInclusive);
-            if (!dateMatch) return false;
+      final double spent = allExpensesInRange.where((exp) {
+        // Ensure expense date falls within the effective period for the budget
+        final endDateInclusive = effEnd
+            .add(const Duration(days: 1))
+            .subtract(const Duration(microseconds: 1));
+        bool dateMatch =
+            !exp.date.isBefore(effStart) && !exp.date.isAfter(endDateInclusive);
+        if (!dateMatch) return false;
 
-            // Check category match
-            if (budget.type == BudgetType.overall) return true;
-            if (budget.type == BudgetType.categorySpecific) {
-              return budget.categoryIds?.contains(exp.categoryId) ?? false;
-            }
-            return false; // Should not happen
-          })
-          .fold(0.0, (sum, exp) => sum + exp.amount);
+        // Check category match
+        if (budget.type == BudgetType.overall) return true;
+        if (budget.type == BudgetType.categorySpecific) {
+          return budget.categoryIds?.contains(exp.categoryId) ?? false;
+        }
+        return false; // Should not happen
+      }).fold(0.0, (sum, exp) => sum + exp.amount);
 
       final target = budget.targetAmount;
       final variance = target - spent;
@@ -943,8 +932,8 @@ class ReportRepositoryImpl implements ReportRepository {
         return const Right(GoalProgressReportData(progressData: []));
       }
 
-      final contribResult = await goalContributionRepository
-          .getAllContributions();
+      final contribResult =
+          await goalContributionRepository.getAllContributions();
       if (contribResult.isLeft()) {
         return contribResult.fold(
           (l) => Left(l),
@@ -991,7 +980,7 @@ class ReportRepositoryImpl implements ReportRepository {
   }
 
   ({double? daily, double? monthly, DateTime? estimatedCompletion})
-  _calculateGoalPacing(Goal goal) {
+      _calculateGoalPacing(Goal goal) {
     if (goal.isAchieved ||
         goal.targetAmount <= 0 ||
         goal.totalSaved >= goal.targetAmount) {
@@ -1105,7 +1094,7 @@ class ReportRepositoryImpl implements ReportRepository {
   // --- ADDED: getRecentDailyContributions (Example) ---
   @override
   Future<Either<Failure, List<TimeSeriesDataPoint>>>
-  getRecentDailyContributions(String goalId, {int days = 30}) async {
+      getRecentDailyContributions(String goalId, {int days = 30}) async {
     log.info(
       "[ReportRepo] getRecentDailyContributions: Goal=$goalId, Days=$days",
     );
@@ -1126,8 +1115,8 @@ class ReportRepositoryImpl implements ReportRepository {
       );
 
       // 1. Fetch contributions for the goal
-      final contribResult = await goalContributionRepository
-          .getContributionsForGoal(goalId);
+      final contribResult =
+          await goalContributionRepository.getContributionsForGoal(goalId);
       if (contribResult.isLeft()) {
         return contribResult.fold(
           (l) => Left(l),

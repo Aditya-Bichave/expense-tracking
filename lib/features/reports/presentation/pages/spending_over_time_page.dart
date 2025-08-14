@@ -14,6 +14,8 @@ import 'package:expense_tracker/features/reports/presentation/widgets/report_pag
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -46,16 +48,22 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                 .granularity
             : TimeSeriesGranularity.daily; // Default
 
-    context.read<SpendingTimeReportBloc>().add(LoadSpendingTimeReport(
-          compareToPrevious: newComparisonState, // Pass new comparison state
-          granularity: currentGranularity,
-        ));
+    context.read<SpendingTimeReportBloc>().add(
+          LoadSpendingTimeReport(
+            compareToPrevious: newComparisonState, // Pass new comparison state
+            granularity: currentGranularity,
+          ),
+        );
     log.info(
-        "[SpendingOverTimePage] Toggled comparison to: $newComparisonState");
+      "[SpendingOverTimePage] Toggled comparison to: $newComparisonState",
+    );
   }
 
-  void _navigateToFilteredTransactions(BuildContext context,
-      TimeSeriesDataPoint dataPoint, TimeSeriesGranularity granularity) {
+  void _navigateToFilteredTransactions(
+    BuildContext context,
+    TimeSeriesDataPoint dataPoint,
+    TimeSeriesGranularity granularity,
+  ) {
     // ... (implementation unchanged) ...
     final filterBlocState = context.read<ReportFilterBloc>().state;
     DateTime periodStart = dataPoint.date;
@@ -63,15 +71,28 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     switch (granularity) {
       case TimeSeriesGranularity.daily:
         periodEnd = DateTime(
-            periodStart.year, periodStart.month, periodStart.day, 23, 59, 59);
+          periodStart.year,
+          periodStart.month,
+          periodStart.day,
+          23,
+          59,
+          59,
+        );
         break;
       case TimeSeriesGranularity.weekly:
-        periodEnd = periodStart
-            .add(const Duration(days: 6, hours: 23, minutes: 59, seconds: 59));
+        periodEnd = periodStart.add(
+          const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
+        );
         break;
       case TimeSeriesGranularity.monthly:
-        periodEnd =
-            DateTime(periodStart.year, periodStart.month + 1, 0, 23, 59, 59);
+        periodEnd = DateTime(
+          periodStart.year,
+          periodStart.month + 1,
+          0,
+          23,
+          59,
+          59,
+        );
         break;
     }
     final Map<String, String> filters = {
@@ -87,7 +108,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
       filters['categoryId'] = filterBlocState.selectedCategoryIds.join(',');
     }
     log.info(
-        "[SpendingOverTimePage] Navigating to transactions with filters: $filters");
+      "[SpendingOverTimePage] Navigating to transactions with filters: $filters",
+    );
     context.push(RouteNames.transactionsList, extra: {'filters': filters});
   }
 
@@ -99,15 +121,20 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
-      title: 'Spending Over Time',
+      title: AppLocalizations.of(context)!.spendingOverTime,
       actions: [
         IconButton(
-            icon: Icon(_showComparison
+          icon: Icon(
+            _showComparison
                 ? Icons.compare_arrows_rounded
-                : Icons.compare_arrows_outlined),
-            tooltip: _showComparison ? "Hide Comparison" : "Compare Period",
-            color: _showComparison ? theme.colorScheme.primary : null,
-            onPressed: _toggleComparison),
+                : Icons.compare_arrows_outlined,
+          ),
+          tooltip: _showComparison
+              ? AppLocalizations.of(context)!.hideComparison
+              : AppLocalizations.of(context)!.comparePeriod,
+          color: _showComparison ? theme.colorScheme.primary : null,
+          onPressed: _toggleComparison,
+        ),
         BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
           builder: (context, state) {
             final currentGranularity = (state is SpendingTimeReportLoaded)
@@ -116,22 +143,27 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                     ? state.granularity
                     : TimeSeriesGranularity.daily;
             return PopupMenuButton<TimeSeriesGranularity>(
-                initialValue: currentGranularity,
-                onSelected: (g) {
-                  // When granularity changes, also pass current comparison state
-                  context
-                      .read<SpendingTimeReportBloc>()
-                      .add(LoadSpendingTimeReport(
+              initialValue: currentGranularity,
+              onSelected: (g) {
+                // When granularity changes, also pass current comparison state
+                context.read<SpendingTimeReportBloc>().add(
+                      LoadSpendingTimeReport(
                         granularity: g,
                         compareToPrevious: _showComparison,
-                      ));
-                },
-                icon: const Icon(Icons.timeline_outlined),
-                tooltip: "Change Granularity",
-                itemBuilder: (_) => TimeSeriesGranularity.values
-                    .map((g) => PopupMenuItem<TimeSeriesGranularity>(
-                        value: g, child: Text(g.name.capitalize())))
-                    .toList());
+                      ),
+                    );
+              },
+              icon: const Icon(Icons.timeline_outlined),
+              tooltip: AppLocalizations.of(context)!.changeGranularity,
+              itemBuilder: (_) => TimeSeriesGranularity.values
+                  .map(
+                    (g) => PopupMenuItem<TimeSeriesGranularity>(
+                      value: g,
+                      child: Text(toBeginningOfSentenceCase(g.name) ?? g.name),
+                    ),
+                  )
+                  .toList(),
+            );
           },
         ),
       ],
@@ -140,10 +172,14 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         if (state is SpendingTimeReportLoaded) {
           final helper = sl<CsvExportHelper>();
           return helper.exportSpendingTimeReport(
-              state.reportData, currencySymbol,
-              showComparison: _showComparison);
+            state.reportData,
+            currencySymbol,
+            showComparison: _showComparison,
+          );
         }
-        return const Right(ExportFailure("Report data not loaded yet."));
+        return Right(
+          ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
+        );
       },
       body: BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
         builder: (context, state) {
@@ -151,22 +187,29 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             return const Center(child: CircularProgressIndicator());
           if (state is SpendingTimeReportError) {
             return Center(
-                child: Text("Error: ${state.message}",
-                    style: TextStyle(color: theme.colorScheme.error)));
+              child: Text(
+                "Error: ${state.message}",
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            );
           }
           if (state is SpendingTimeReportLoaded) {
             final reportData = state.reportData;
             if (reportData.spendingData.isEmpty) {
               return const Center(
-                  child: Text("No spending data for this period."));
+                child: Text("No spending data for this period."),
+              );
             }
 
             Widget chartWidget = TimeSeriesLineChart(
               data: reportData.spendingData,
               granularity: reportData.granularity,
               showComparison: _showComparison,
-              onTapSpot: (index) => _navigateToFilteredTransactions(context,
-                  reportData.spendingData[index], reportData.granularity),
+              onTapSpot: (index) => _navigateToFilteredTransactions(
+                context,
+                reportData.spendingData[index],
+                reportData.granularity,
+              ),
             );
 
             final bool showTable = settingsState.uiMode == UIMode.quantum &&
@@ -175,16 +218,27 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             return ListView(
               children: [
                 Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 8.0),
-                    child: SizedBox(height: 250, child: chartWidget)),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 8.0,
+                  ),
+                  child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
+                ),
                 const Divider(),
                 if (showTable)
                   _buildDataTable(
-                      context, reportData, settingsState, _showComparison)
+                    context,
+                    reportData,
+                    settingsState,
+                    _showComparison,
+                  )
                 else
                   _buildDataList(
-                      context, reportData, settingsState, _showComparison),
+                    context,
+                    reportData,
+                    settingsState,
+                    _showComparison,
+                  ),
                 const SizedBox(height: 80),
               ],
             );
@@ -206,8 +260,12 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     }
   }
 
-  Widget _buildDataList(BuildContext context, SpendingTimeReportData data,
-      SettingsState settings, bool showComparison) {
+  Widget _buildDataList(
+    BuildContext context,
+    SpendingTimeReportData data,
+    SettingsState settings,
+    bool showComparison,
+  ) {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
 
@@ -240,15 +298,23 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         return ListTile(
           dense: true,
           title: Text(_formatDateHeader(item.date, data.granularity)),
-          trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-            if (showComparison && changeText.isNotEmpty)
-              Text(changeText,
-                  style:
-                      theme.textTheme.labelSmall?.copyWith(color: changeColor)),
-            if (showComparison && changeText.isNotEmpty)
-              const SizedBox(width: 8),
-            Text(CurrencyFormatter.format(item.currentAmount, currencySymbol)),
-          ]),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showComparison && changeText.isNotEmpty)
+                Text(
+                  changeText,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: changeColor,
+                  ),
+                ),
+              if (showComparison && changeText.isNotEmpty)
+                const SizedBox(width: 8),
+              Text(
+                CurrencyFormatter.format(item.currentAmount, currencySymbol),
+              ),
+            ],
+          ),
           onTap: () =>
               _navigateToFilteredTransactions(context, item, data.granularity),
         );
@@ -257,20 +323,24 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     );
   }
 
-  Widget _buildDataTable(BuildContext context, SpendingTimeReportData data,
-      SettingsState settings, bool showComparison) {
+  Widget _buildDataTable(
+    BuildContext context,
+    SpendingTimeReportData data,
+    SettingsState settings,
+    bool showComparison,
+  ) {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
 
     List<DataColumn> columns = [
       const DataColumn(label: Text('Period')),
-      DataColumn(label: const Text('Total Spent'), numeric: true)
+      DataColumn(label: const Text('Total Spent'), numeric: true),
     ];
     // Add comparison columns dynamically
     if (showComparison) {
       columns.addAll([
         DataColumn(label: const Text('Prev Spent'), numeric: true),
-        DataColumn(label: const Text('Change %'), numeric: true)
+        DataColumn(label: const Text('Change %'), numeric: true),
       ]);
     }
 
@@ -305,34 +375,41 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
           return DataRow(
             cells: [
               DataCell(Text(_formatDateHeader(item.date, data.granularity))),
-              DataCell(Text(CurrencyFormatter.format(
-                  item.currentAmount, currencySymbol))),
+              DataCell(
+                Text(
+                  CurrencyFormatter.format(item.currentAmount, currencySymbol),
+                ),
+              ),
               // Conditionally add comparison cells
               if (showComparison)
-                DataCell(Text(item.amount.previousValue != null
-                    ? CurrencyFormatter.format(
-                        item.amount.previousValue!, currencySymbol)
-                    : 'N/A')),
+                DataCell(
+                  Text(
+                    item.amount.previousValue != null
+                        ? CurrencyFormatter.format(
+                            item.amount.previousValue!,
+                            currencySymbol,
+                          )
+                        : 'N/A',
+                  ),
+                ),
               if (showComparison)
                 DataCell(
-                    Text(changeText, style: TextStyle(color: changeColor))),
+                  Text(changeText, style: TextStyle(color: changeColor)),
+                ),
             ],
             onSelectChanged: (selected) {
               if (selected == true) {
+                SystemSound.play(SystemSoundType.click);
                 _navigateToFilteredTransactions(
-                    context, item, data.granularity);
+                  context,
+                  item,
+                  data.granularity,
+                );
               }
             },
           );
         }).toList(),
       ),
     );
-  }
-}
-
-extension StringCapExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

@@ -2,6 +2,7 @@ import 'package:hive/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import enum
+import 'package:expense_tracker/main.dart'; // Logger
 
 part 'category_model.g.dart';
 
@@ -54,6 +55,15 @@ class CategoryModel extends HiveObject {
   }
 
   Category toEntity() {
+    CategoryType type;
+    if (typeIndex >= 0 && typeIndex < CategoryType.values.length) {
+      type = CategoryType.values[typeIndex];
+    } else {
+      log.warning(
+        "[CategoryModel] Invalid typeIndex '$typeIndex' for category '$id'. Defaulting to expense.",
+      );
+      type = CategoryType.expense;
+    }
     return Category(
       id: id,
       name: name,
@@ -61,10 +71,7 @@ class CategoryModel extends HiveObject {
       colorHex: colorHex,
       isCustom: isCustom,
       parentCategoryId: parentCategoryId,
-      // Convert index back to enum, handle potential invalid index
-      type: typeIndex >= 0 && typeIndex < CategoryType.values.length
-          ? CategoryType.values[typeIndex]
-          : CategoryType.expense, // Default to expense if index is invalid
+      type: type,
     );
   }
 

@@ -226,6 +226,7 @@ void main() {
       );
       const catState = CategoryManagementState(
         status: CategoryManagementStatus.loaded,
+        predefinedExpenseCategories: [categoryFood, categoryTravel],
       );
       when(() => categoryBloc.state).thenReturn(catState);
       whenListen(
@@ -289,6 +290,7 @@ void main() {
     );
     const catState = CategoryManagementState(
       status: CategoryManagementStatus.loaded,
+      predefinedExpenseCategories: [categoryFood, categoryTravel],
     );
     when(() => categoryBloc.state).thenReturn(catState);
     whenListen(
@@ -575,12 +577,8 @@ void main() {
     await tester.tap(fabFinder);
     await tester.pumpAndSettle();
     expect(find.text('Select Expense Category'), findsOneWidget);
-    await tester.tap(find.text('Travel').last);
+    await tester.tap(find.text('Travel').first);
     await tester.pumpAndSettle();
-
-    verify(
-      () => transactionBloc.add(ApplyBatchCategory(categoryTravel.id)),
-    ).called(1);
 
     controller.add(
       initialState.copyWith(

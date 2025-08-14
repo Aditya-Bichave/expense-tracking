@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 class AppearanceSettingsSection extends StatelessWidget {
   final SettingsState state;
@@ -62,7 +63,8 @@ class AppearanceSettingsSection extends StatelessWidget {
           leadingIcon: Icons.view_quilt_outlined,
           title: 'UI Mode',
           subtitle: AppTheme.uiModeNames[state.uiMode] ??
-              StringExtension(state.uiMode.name).capitalize(),
+              (toBeginningOfSentenceCase(state.uiMode.name) ??
+                  state.uiMode.name),
           trailing: PopupMenuButton<UIMode>(
             enabled: isEnabled, // Use combined state
             icon: const Icon(Icons.arrow_drop_down),
@@ -75,7 +77,8 @@ class AppearanceSettingsSection extends StatelessWidget {
                       value: mode,
                       child: Text(
                           AppTheme.uiModeNames[mode] ??
-                              StringExtension(mode.name).capitalize(),
+                              (toBeginningOfSentenceCase(mode.name) ??
+                                  mode.name),
                           style: theme.textTheme.bodyMedium),
                     ))
                 .toList(),
@@ -114,7 +117,8 @@ class AppearanceSettingsSection extends StatelessWidget {
           // --- End Use ---
           leadingIcon: Icons.brightness_6_outlined,
           title: 'Brightness Mode',
-          subtitle: StringExtension(state.themeMode.name).capitalize(),
+          subtitle: toBeginningOfSentenceCase(state.themeMode.name) ??
+              state.themeMode.name,
           trailing: PopupMenuButton<ThemeMode>(
             enabled: isEnabled, // Use combined state
             icon: const Icon(Icons.arrow_drop_down),
@@ -125,7 +129,8 @@ class AppearanceSettingsSection extends StatelessWidget {
             itemBuilder: (context) => ThemeMode.values
                 .map((mode) => PopupMenuItem<ThemeMode>(
                       value: mode,
-                      child: Text(StringExtension(mode.name).capitalize(),
+                      child: Text(
+                          toBeginningOfSentenceCase(mode.name) ?? mode.name,
                           style: theme.textTheme.bodyMedium),
                     ))
                 .toList(),
@@ -133,13 +138,5 @@ class AppearanceSettingsSection extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-// Helper extension
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

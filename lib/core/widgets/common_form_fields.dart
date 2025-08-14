@@ -1,12 +1,15 @@
 // lib/core/widgets/common_form_fields.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/core/utils/currency_parser.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/category_selector_tile.dart';
@@ -15,7 +18,10 @@ import 'package:expense_tracker/core/widgets/category_selector_tile.dart';
 class CommonFormFields {
   /// Helper to get a themed prefix icon (SVG or Material).
   static Widget? getPrefixIcon(
-      BuildContext context, String iconKey, IconData fallbackIcon) {
+    BuildContext context,
+    String iconKey,
+    IconData fallbackIcon,
+  ) {
     final modeTheme = context.modeTheme;
     final theme = Theme.of(context);
     if (modeTheme != null) {
@@ -23,11 +29,15 @@ class CommonFormFields {
       if (svgPath.isNotEmpty) {
         return Padding(
           padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(svgPath,
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(
-                  theme.colorScheme.onSurfaceVariant, BlendMode.srcIn)),
+          child: SvgPicture.asset(
+            svgPath,
+            width: 20,
+            height: 20,
+            colorFilter: ColorFilter.mode(
+              theme.colorScheme.onSurfaceVariant,
+              BlendMode.srcIn,
+            ),
+          ),
         );
       }
     }
@@ -80,8 +90,10 @@ class CommonFormFields {
       validator: validator ??
           (value) {
             if (value == null || value.isEmpty) return 'Enter amount';
-            final number = double.tryParse(value.replaceAll(',', '.'));
-            if (number == null) return 'Invalid number';
+            final locale =
+                context.read<SettingsBloc>().state.selectedCountryCode;
+            final number = parseCurrency(value, locale);
+            if (number.isNaN) return 'Invalid number';
             if (number <= 0) return 'Must be positive';
             return null;
           },
@@ -124,23 +136,29 @@ class CommonFormFields {
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
       shape: theme.inputDecorationTheme.enabledBorder ??
           OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: BorderSide(color: theme.dividerColor)),
+            borderRadius: BorderRadius.circular(8.0),
+            borderSide: BorderSide(color: theme.dividerColor),
+          ),
       leading: getPrefixIcon(context, iconKey, fallbackIcon),
-      title: Text(label,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+      title: Text(
+        label,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
       subtitle: Text(
-          selectedDate == null
-              ? 'Not Set'
-              : DateFormatter.formatDate(selectedDate),
-          style: theme.textTheme.bodyLarge),
+        selectedDate == null
+            ? 'Not Set'
+            : DateFormatter.formatDate(selectedDate),
+        style: theme.textTheme.bodyLarge,
+      ),
       trailing: selectedDate != null && onClear != null
           ? IconButton(
               icon: const Icon(Icons.clear, size: 18),
               onPressed: onClear,
               tooltip: "Clear Date",
-              visualDensity: VisualDensity.compact)
+              visualDensity: VisualDensity.compact,
+            )
           : const Icon(Icons.edit_calendar_outlined, size: 18),
       onTap: onTap,
     );

@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.2
 
   # State Management
@@ -27,7 +29,7 @@ dependencies:
   go_router: ^10.1.2 # Or your preferred router
 
   # Utilities
-  intl: ^0.20.0 # For date formatting
+  intl: 0.19.0 # For date formatting
   uuid: ^4.1.0 # For generating unique IDs
   dartz: ^0.10.1
   url_launcher: ^6.3.1
@@ -38,6 +40,7 @@ dependencies:
   csv: ^6.0.0
   encrypt: ^5.0.1
   share_plus: ^7.2.1
+  cross_file: ^0.3.3+1
   crypto: ^3.0.3
 
   # Settings
@@ -58,6 +61,7 @@ dependencies:
   percent_indicator: ^4.2.4
   confetti: ^0.7.0
   fl_chart: ^0.68.0
+  bloc_concurrency: ^0.2.0
 
 
 dev_dependencies:
@@ -75,6 +79,7 @@ dev_dependencies:
   mocktail: ^1.0.1 # Mocking library
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:

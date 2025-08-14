@@ -38,8 +38,7 @@ class TransactionFilterDialog extends StatefulWidget {
   final Widget Function(
     String? selectedAccountId,
     ValueChanged<String?> onChanged,
-  )?
-      accountSelectorBuilder;
+  )? accountSelectorBuilder;
 
   const TransactionFilterDialog({
     super.key,
@@ -258,11 +257,10 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                     });
               }
               if (widget.accountSelectorBuilder != null) {
-                return widget.accountSelectorBuilder!(
-                    _selectedAccountId,
+                return widget.accountSelectorBuilder!(_selectedAccountId,
                     (String? newAccountId) {
-                      setState(() => _selectedAccountId = newAccountId);
-                    });
+                  setState(() => _selectedAccountId = newAccountId);
+                });
               }
               return const SizedBox.shrink();
             }),
