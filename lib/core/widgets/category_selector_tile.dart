@@ -34,7 +34,8 @@ class CategorySelectorTile extends StatelessWidget {
     // --- Use uncategorized placeholder if selected is null ---
     final Category displayPlaceholder =
         selectedCategory ?? uncategorizedCategory;
-    Color displayColor = selectedCategory?.displayColor ??
+    Color displayColor =
+        selectedCategory?.displayColor ??
         theme.disabledColor; // Use disabled color if null
     Widget leadingWidget;
     // --- End Use ---
@@ -42,16 +43,21 @@ class CategorySelectorTile extends StatelessWidget {
     // Icon Logic (remains similar, uses displayPlaceholder for iconName)
     String? svgPath;
     if (modeTheme != null) {
-      svgPath = modeTheme.assets
-          .getCategoryIcon(displayPlaceholder.iconName, defaultPath: '');
+      svgPath = modeTheme.assets.getCategoryIcon(
+        displayPlaceholder.iconName,
+        defaultPath: '',
+      );
     }
     if (svgPath != null && svgPath.isNotEmpty) {
       leadingWidget = Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SvgPicture.asset(svgPath,
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(displayColor, BlendMode.srcIn)));
+        padding: const EdgeInsets.all(8.0),
+        child: SvgPicture.asset(
+          svgPath,
+          width: 24,
+          height: 24,
+          colorFilter: ColorFilter.mode(displayColor, BlendMode.srcIn),
+        ),
+      );
     } else {
       final iconData =
           availableIcons[displayPlaceholder.iconName] ?? Icons.help_outline;
@@ -62,7 +68,7 @@ class CategorySelectorTile extends StatelessWidget {
     final borderConfig = theme.inputDecorationTheme.enabledBorder;
     BorderSide borderSide =
         theme.inputDecorationTheme.enabledBorder?.borderSide ??
-            BorderSide(color: theme.dividerColor);
+        BorderSide(color: theme.dividerColor);
     if (hasError) {
       final errorBorderConfig = theme.inputDecorationTheme.errorBorder;
       if (errorBorderConfig is OutlineInputBorder) {
@@ -81,24 +87,30 @@ class CategorySelectorTile extends StatelessWidget {
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           shape: OutlineInputBorder(
-              borderRadius: inputBorderRadius, borderSide: borderSide),
+            borderRadius: inputBorderRadius,
+            borderSide: borderSide,
+          ),
           leading: leadingWidget,
-          title: Text(selectedCategory?.name ?? hint,
-              style: TextStyle(
-                  color: hasError
-                      ? theme.colorScheme.error
-                      : (selectedCategory == null
-                          ? theme.disabledColor
-                          : null))),
+          title: Text(
+            selectedCategory?.name ?? hint,
+            style: TextStyle(
+              color: hasError
+                  ? theme.colorScheme.error
+                  : (selectedCategory == null ? theme.disabledColor : null),
+            ),
+          ),
           trailing: const Icon(Icons.arrow_drop_down),
           onTap: onTap,
         ),
         if (hasError)
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, top: 8.0),
-            child: Text(errorText!,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.error)),
+            padding: const EdgeInsetsDirectional.only(start: 12.0, top: 8.0),
+            child: Text(
+              errorText!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
           ),
       ],
     );

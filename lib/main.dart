@@ -34,6 +34,8 @@ import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 
 final log = SimpleLogger();
 File? _startupLogFile;
@@ -68,6 +70,8 @@ Future<void> _runMigrations(int fromVersion) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _initFileLogger();
+  final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  Intl.defaultLocale = locale.toLanguageTag();
 
   log.setLevel(Level.INFO, includeCallerInfo: false);
   log.info("==========================================");
@@ -312,6 +316,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: themeDataPair.light,
       darkTheme: themeDataPair.dark,
       themeMode: themeMode,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       routerConfig: AppRouter.router,
     );

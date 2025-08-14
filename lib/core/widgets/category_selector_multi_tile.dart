@@ -39,29 +39,39 @@ class CategorySelectorMultiTile extends StatelessWidget {
             availableIcons[category.iconName] ?? Icons.label;
 
         if (modeTheme != null) {
-          String svgPath = modeTheme.assets
-              .getCategoryIcon(category.iconName, defaultPath: '');
+          String svgPath = modeTheme.assets.getCategoryIcon(
+            category.iconName,
+            defaultPath: '',
+          );
           if (svgPath.isNotEmpty) {
-            iconWidget = SvgPicture.asset(svgPath,
-                width: 16,
-                height: 16,
-                colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn));
+            iconWidget = SvgPicture.asset(
+              svgPath,
+              width: 16,
+              height: 16,
+              colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),
+            );
           } else {
             iconWidget = Icon(fallbackIcon, size: 16, color: iconColor);
           }
         } else {
           iconWidget = Icon(fallbackIcon, size: 16, color: iconColor);
         }
-        iconWidgets.add(Padding(
-          padding: const EdgeInsets.only(right: 3.0),
-          child: iconWidget,
-        ));
+        iconWidgets.add(
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 3.0),
+            child: iconWidget,
+          ),
+        );
         count++;
       }
     }
     if (selectedCategoryIds.length > maxIcons) {
-      iconWidgets.add(Text('+${selectedCategoryIds.length - maxIcons}',
-          style: Theme.of(context).textTheme.labelSmall));
+      iconWidgets.add(
+        Text(
+          '+${selectedCategoryIds.length - maxIcons}',
+          style: Theme.of(context).textTheme.labelSmall,
+        ),
+      );
     }
     return iconWidgets;
   }
@@ -92,7 +102,7 @@ class CategorySelectorMultiTile extends StatelessWidget {
     final borderConfig = theme.inputDecorationTheme.enabledBorder;
     BorderSide borderSide =
         theme.inputDecorationTheme.enabledBorder?.borderSide ??
-            BorderSide(color: theme.dividerColor);
+        BorderSide(color: theme.dividerColor);
     if (hasError) {
       final errorBorderConfig = theme.inputDecorationTheme.errorBorder;
       if (errorBorderConfig is OutlineInputBorder) {
@@ -111,7 +121,9 @@ class CategorySelectorMultiTile extends StatelessWidget {
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           shape: OutlineInputBorder(
-              borderRadius: inputBorderRadius, borderSide: borderSide),
+            borderRadius: inputBorderRadius,
+            borderSide: borderSide,
+          ),
           // Show generic category icon or first few selected icons
           leading: isSelectionEmpty
               ? Icon(Icons.category_outlined, color: theme.disabledColor)
@@ -122,10 +134,13 @@ class CategorySelectorMultiTile extends StatelessWidget {
         ),
         if (hasError)
           Padding(
-            padding: const EdgeInsets.only(left: 12.0, top: 8.0),
-            child: Text(errorText!,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.error)),
+            padding: const EdgeInsetsDirectional.only(start: 12.0, top: 8.0),
+            child: Text(
+              errorText!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.error,
+              ),
+            ),
           ),
       ],
     );
