@@ -8,12 +8,14 @@ import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart'
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/core/services/clock.dart';
 
 class AddGoalUseCase implements UseCase<Goal, AddGoalParams> {
   final GoalRepository repository;
   final Uuid uuid;
+  final Clock clock;
 
-  AddGoalUseCase(this.repository, this.uuid);
+  AddGoalUseCase(this.repository, this.uuid, this.clock);
 
   @override
   Future<Either<Failure, Goal>> call(AddGoalParams params) async {
@@ -27,8 +29,9 @@ class AddGoalUseCase implements UseCase<Goal, AddGoalParams> {
       return const Left(ValidationFailure("Target amount must be positive."));
     }
     if (params.targetDate != null &&
-        params.targetDate!
-            .isBefore(DateTime.now().subtract(const Duration(days: 1)))) {
+        params.targetDate!.isBefore(
+          DateTime.now().subtract(const Duration(days: 1)),
+        )) {
       // Allow today, but not past days
       // return const Left(ValidationFailure("Target date cannot be in the past."));
       // Let's allow past dates for flexibility (e.g., logging a past goal)
@@ -47,7 +50,7 @@ class AddGoalUseCase implements UseCase<Goal, AddGoalParams> {
       description: params.description?.trim(),
       status: GoalStatus.active,
       totalSaved: 0.0, // Initial saved amount is 0
-      createdAt: DateTime.now(),
+      createdAt: clock.now(),
       achievedAt: null,
     );
 
@@ -71,6 +74,11 @@ class AddGoalParams extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [name, targetAmount, targetDate, iconName, description];
+  List<Object?> get props => [
+    name,
+    targetAmount,
+    targetDate,
+    iconName,
+    description,
+  ];
 }
