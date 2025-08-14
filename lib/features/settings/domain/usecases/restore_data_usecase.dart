@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
+import 'package:expense_tracker/core/utils/encryption_helper.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -14,13 +15,13 @@ import 'package:flutter/services.dart';
 // Import constants
 import 'package:expense_tracker/core/constants/app_constants.dart';
 
-class RestoreDataUseCase implements UseCase<void, NoParams> {
+class RestoreDataUseCase implements UseCase<void, RestoreParams> {
   final DataManagementRepository dataManagementRepository;
 
   RestoreDataUseCase(this.dataManagementRepository);
 
   @override
-  Future<Either<Failure, void>> call(NoParams params) async {
+  Future<Either<Failure, void>> call(RestoreParams params) async {
     log.info(
       "[RestoreUseCase] Restore process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}",
     );
@@ -80,16 +81,35 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
         }
       }
 
-      // 3. Decode and Validate JSON
-      log.info("[RestoreUseCase] Decoding JSON...");
-      Map<String, dynamic> decodedJson;
+      // 3. Decrypt payload and decode JSON
+      log.info("[RestoreUseCase] Decoding encrypted payload...");
+      Map<String, dynamic> payload;
       try {
-        decodedJson = jsonDecode(jsonString) as Map<String, dynamic>;
+        payload = jsonDecode(jsonString) as Map<String, dynamic>;
       } catch (e) {
-        log.warning("[RestoreUseCase] JSON decoding error: $e");
+        log.warning("[RestoreUseCase] Payload JSON decoding error: $e");
         return const Left(
           RestoreFailure("Invalid backup file format (not valid JSON)."),
         );
+      }
+
+      String decryptedJsonString;
+      try {
+        decryptedJsonString =
+            EncryptionHelper.decryptString(payload, params.password);
+      } catch (e) {
+        log.warning("[RestoreUseCase] Decryption failed: $e");
+        return const Left(
+            RestoreFailure("Incorrect password or corrupted backup."));
+      }
+
+      Map<String, dynamic> decodedJson;
+      try {
+        decodedJson = jsonDecode(decryptedJsonString) as Map<String, dynamic>;
+      } catch (e) {
+        log.warning("[RestoreUseCase] Decrypted JSON decoding error: $e");
+        return const Left(
+            RestoreFailure("Invalid decrypted backup structure."));
       }
       log.info("[RestoreUseCase] JSON decoded.");
 
@@ -164,4 +184,9 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
       );
     }
   }
+}
+
+class RestoreParams {
+  final String password;
+  const RestoreParams(this.password);
 }

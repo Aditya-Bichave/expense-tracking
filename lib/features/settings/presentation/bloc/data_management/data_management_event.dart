@@ -8,11 +8,19 @@ abstract class DataManagementEvent extends Equatable {
 }
 
 class BackupRequested extends DataManagementEvent {
-  const BackupRequested();
+  final String password;
+  const BackupRequested(this.password);
+
+  @override
+  List<Object?> get props => [password];
 }
 
 class RestoreRequested extends DataManagementEvent {
-  const RestoreRequested();
+  final String password;
+  const RestoreRequested(this.password);
+
+  @override
+  List<Object?> get props => [password];
 }
 
 class ClearDataRequested extends DataManagementEvent {

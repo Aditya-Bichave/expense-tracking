@@ -30,7 +30,7 @@ class AddGoalUseCase implements UseCase<Goal, AddGoalParams> {
     }
     if (params.targetDate != null &&
         params.targetDate!.isBefore(
-          DateTime.now().subtract(const Duration(days: 1)),
+          clock.now().subtract(const Duration(days: 1)),
         )) {
       // Allow today, but not past days
       // return const Left(ValidationFailure("Target date cannot be in the past."));
@@ -75,10 +75,10 @@ class AddGoalParams extends Equatable {
 
   @override
   List<Object?> get props => [
-    name,
-    targetAmount,
-    targetDate,
-    iconName,
-    description,
-  ];
+        name,
+        targetAmount,
+        targetDate,
+        iconName,
+        description,
+      ];
 }
