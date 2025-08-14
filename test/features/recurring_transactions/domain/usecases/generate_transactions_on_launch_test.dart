@@ -312,4 +312,47 @@ void main() {
         .single as RecurringRule;
     expect(captured.nextOccurrenceDate, expectedNextDate);
   });
+
+  test(
+      'should use original startDate day for monthly rule without dayOfMonth when previous month is shorter',
+      () async {
+    // Arrange
+    final ruleAfterShortMonth = RecurringRule(
+      id: '4',
+      description: 'After February',
+      amount: 40,
+      transactionType: TransactionType.expense,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+      frequency: Frequency.monthly,
+      interval: 1,
+      startDate: DateTime(2023, 1, 31),
+      endConditionType: EndConditionType.never,
+      status: RuleStatus.active,
+      nextOccurrenceDate: DateTime(2023, 2, 28),
+      occurrencesGenerated: 1,
+    );
+
+    final expectedNextDate = DateTime(2023, 3, 31);
+
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([ruleAfterShortMonth]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => Right(tCategory));
+    when(() => mockAddExpenseUseCase(any()))
+        .thenAnswer((_) async => Right(tExpense));
+    when(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
+        .thenAnswer((_) async => const Right(null));
+    when(() => mockUuid.v4()).thenReturn('new_id');
+
+    // Act
+    await usecase(const NoParams());
+
+    // Assert
+    final captured = verify(() =>
+            mockRecurringTransactionRepository.updateRecurringRule(captureAny()))
+        .captured
+        .single as RecurringRule;
+    expect(captured.nextOccurrenceDate, expectedNextDate);
+  });
 }
