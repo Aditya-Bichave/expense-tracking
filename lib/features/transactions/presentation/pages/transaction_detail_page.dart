@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:collection/collection.dart';
 
 class TransactionDetailPage extends StatelessWidget {
   final TransactionEntity transaction; // Passed via GoRouter 'extra'
@@ -46,11 +47,12 @@ class TransactionDetailPage extends StatelessWidget {
   // Navigate to the unified Edit page
   void _navigateToEdit(BuildContext context) {
     log.info(
-        "[TxnDetailPage] Navigate to Edit requested for TXN ID: ${transaction.id}");
+      "[TxnDetailPage] Navigate to Edit requested for TXN ID: ${transaction.id}",
+    );
     // Use the unified edit route name
     const String routeName = RouteNames.editTransaction;
     final Map<String, String> params = {
-      RouteNames.paramTransactionId: transaction.id
+      RouteNames.paramTransactionId: transaction.id,
     };
     log.info("[TxnDetailPage] Navigating via pushNamed:");
     log.info("  Route Name: $routeName");
@@ -74,13 +76,11 @@ class TransactionDetailPage extends StatelessWidget {
     final accountState = context.watch<AccountListBloc>().state;
     String accountName = 'Loading...'; // Default
     if (accountState is AccountListLoaded) {
-      try {
-        accountName = accountState.items
-            .firstWhere((acc) => acc.id == transaction.accountId)
-            .name;
-      } catch (_) {
-        accountName = 'Unknown/Deleted Account';
-      }
+      accountName =
+          accountState.items
+              .firstWhereOrNull((acc) => acc.id == transaction.accountId)
+              ?.name ??
+          'Unknown/Deleted Account';
     }
 
     return Scaffold(
@@ -135,7 +135,8 @@ class TransactionDetailPage extends StatelessWidget {
           if (transaction.category != null)
             _buildDetailRow(
               context,
-              icon: availableIcons[transaction.category!.iconName] ??
+              icon:
+                  availableIcons[transaction.category!.iconName] ??
                   Icons.category_outlined, // Use actual icon
               label: 'Category',
               value: transaction.category!.name,
@@ -171,32 +172,38 @@ class TransactionDetailPage extends StatelessWidget {
   }
 
   // Helper for consistent detail rows
-  Widget _buildDetailRow(BuildContext context,
-      {required IconData icon,
-      required String label,
-      required String value,
-      Color? valueColor,
-      Color? iconColor, // Optional color for the icon
-      bool isMultiline = false}) {
+  Widget _buildDetailRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    Color? valueColor,
+    Color? iconColor, // Optional color for the icon
+    bool isMultiline = false,
+  }) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Row(
-        crossAxisAlignment:
-            isMultiline ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: isMultiline
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
-          Icon(icon,
-              size: 20,
-              color: iconColor ??
-                  theme.colorScheme.secondary), // Use iconColor or default
+          Icon(
+            icon,
+            size: 20,
+            color: iconColor ?? theme.colorScheme.secondary,
+          ), // Use iconColor or default
           const SizedBox(width: 16),
           Text('$label:', style: theme.textTheme.bodyLarge),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               value,
-              style: theme.textTheme.bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.w500, color: valueColor),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: valueColor,
+              ),
               textAlign: TextAlign.end,
               softWrap: isMultiline,
             ),
