@@ -81,7 +81,7 @@ class ReportRepositoryImpl implements ReportRepository {
                 startDate: startDate,
                 endDate: endDate,
                 accountId: accountIds?.join(','),
-                category: categoryIds?.join(','),
+                categoryId: categoryIds?.join(','),
               )
               .then((either) => either.map((list) => list as List<dynamic>)),
         );
@@ -95,7 +95,7 @@ class ReportRepositoryImpl implements ReportRepository {
                 startDate: startDate,
                 endDate: endDate,
                 accountId: accountIds?.join(','),
-                category: categoryIds?.join(','),
+                categoryId: categoryIds?.join(','),
               )
               .then((either) => either.map((list) => list as List<dynamic>)),
         );

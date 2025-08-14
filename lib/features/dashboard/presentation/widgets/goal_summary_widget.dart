@@ -23,22 +23,12 @@ class GoalSummaryWidget extends StatelessWidget {
 
   List<FlSpot> _getSparklineSpots(List<TimeSeriesDataPoint> data) {
     if (data.isEmpty) return [const FlSpot(0, 0)];
-    double maxVal = 0;
-    final spots = data.asMap().entries.map((entry) {
+    return data.asMap().entries.map((entry) {
       final index = entry.key.toDouble();
       final num currentVal = entry.value.currentAmount;
       final double amount = currentVal.toDouble().clamp(0.0, double.maxFinite);
-      if (amount > maxVal) maxVal = amount;
       return FlSpot(index, amount);
     }).toList();
-    // Avoid division by zero if maxVal is 0
-    if (maxVal > 0) {
-      return spots
-          .map((spot) => FlSpot(spot.x, (spot.y / maxVal) * 10.0))
-          .toList();
-    } else {
-      return spots.map((spot) => FlSpot(spot.x, 0)).toList();
-    }
   }
 
   @override
@@ -50,26 +40,39 @@ class GoalSummaryWidget extends StatelessWidget {
 
     if (goals.isEmpty) {
       return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             const SectionHeader(title: 'Goal Progress'),
             Card(
-                child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Center(
-                        child: Column(children: [
-                      Icon(Icons.savings_outlined,
-                          size: 32, color: theme.colorScheme.secondary),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.savings_outlined,
+                        size: 32,
+                        color: theme.colorScheme.secondary,
+                      ),
                       const SizedBox(height: 8),
-                      Text("No savings goals set yet.",
-                          style: theme.textTheme.bodyMedium),
+                      Text(
+                        "No savings goals set yet.",
+                        style: theme.textTheme.bodyMedium,
+                      ),
                       TextButton(
-                          onPressed: () =>
-                              context.pushNamed(RouteNames.addGoal),
-                          child: const Text('Create Goal'))
-                    ]))))
-          ]));
+                        onPressed: () => context.pushNamed(RouteNames.addGoal),
+                        child: const Text('Create Goal'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return Column(
@@ -89,8 +92,11 @@ class GoalSummaryWidget extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.symmetric(vertical: 4.0),
               child: InkWell(
-                onTap: () => context.pushNamed(RouteNames.goalDetail,
-                    pathParameters: {'id': goal.id}, extra: goal),
+                onTap: () => context.pushNamed(
+                  RouteNames.goalDetail,
+                  pathParameters: {'id': goal.id},
+                  extra: goal,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
@@ -105,8 +111,11 @@ class GoalSummaryWidget extends StatelessWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min, // Important
                               children: [
-                                Icon(goal.displayIconData,
-                                    color: progressColor, size: 20),
+                                Icon(
+                                  goal.displayIconData,
+                                  color: progressColor,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 // Use Flexible instead of Expanded
                                 Flexible(
@@ -126,36 +135,44 @@ class GoalSummaryWidget extends StatelessWidget {
                               width: 50, // Ensure sparkline has width
                               child: LineChart(
                                 ChartUtils.sparklineChartData(
-                                    sparklineSpots, progressColor),
+                                  sparklineSpots,
+                                  progressColor,
+                                ),
                                 duration: Duration.zero,
                               ),
-                            )
+                            ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       LinearPercentIndicator(
-                          padding: EdgeInsets.zero,
-                          lineHeight: 8.0,
-                          percent: progress.clamp(0.0, 1.0),
-                          barRadius: const Radius.circular(4),
-                          backgroundColor:
-                              theme.colorScheme.surfaceContainerHighest,
-                          progressColor: progressColor,
-                          animation: true,
-                          animationDuration: 600),
+                        padding: EdgeInsets.zero,
+                        lineHeight: 8.0,
+                        percent: progress.clamp(0.0, 1.0),
+                        barRadius: const Radius.circular(4),
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
+                        progressColor: progressColor,
+                        animation: true,
+                        animationDuration: 600,
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                              'Saved: ${CurrencyFormatter.format(goal.totalSaved, currency)}',
-                              style: theme.textTheme.labelSmall
-                                  ?.copyWith(color: progressColor)),
-                          Text('${(progress * 100).toStringAsFixed(0)}%',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant))
+                            'Saved: ${CurrencyFormatter.format(goal.totalSaved, currency)}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: progressColor,
+                            ),
+                          ),
+                          Text(
+                            '${(progress * 100).toStringAsFixed(0)}%',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -165,16 +182,22 @@ class GoalSummaryWidget extends StatelessWidget {
         ),
         if (goals.length >= 3)
           Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Center(
-                  child: TextButton(
-                      onPressed: () =>
-                          context.go(RouteNames.budgetsAndCats, extra: {
-                            'initialTabIndex': 1 // Navigate to Goals tab
-                          }),
-                      style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact),
-                      child: const Text('View All Goals'))))
+            padding: const EdgeInsets.only(top: 4.0),
+            child: Center(
+              child: TextButton(
+                onPressed: () => context.go(
+                  RouteNames.budgetsAndCats,
+                  extra: {
+                    'initialTabIndex': 1, // Navigate to Goals tab
+                  },
+                ),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: const Text('View All Goals'),
+              ),
+            ),
+          ),
       ],
     );
   }

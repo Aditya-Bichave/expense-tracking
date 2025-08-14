@@ -93,70 +93,24 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   Future<Either<Failure, List<ExpenseModel>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Category ID
+    String? categoryId,
     String? accountId,
   }) async {
     log.info(
-      "[ExpenseRepo] Getting expense models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$category",
+      "[ExpenseRepo] Getting expense models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$categoryId",
     );
     try {
-      final expenseModels = await localDataSource.getExpenses();
-      log.fine(
-        "[ExpenseRepo] Fetched ${expenseModels.length} raw expense models.",
+      final expenseModels = await localDataSource.getExpenses(
+        startDate: startDate,
+        endDate: endDate,
+        categoryId: categoryId,
+        accountId: accountId,
       );
-
-      // Apply filtering
-      final filteredModels = expenseModels.where((model) {
-        bool dateMatch = true;
-        bool categoryMatch = true;
-        bool accountMatch = true;
-        if (startDate != null) {
-          final expDateOnly = DateTime(
-            model.date.year,
-            model.date.month,
-            model.date.day,
-          );
-          final startDateOnly = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day,
-          );
-          dateMatch = !expDateOnly.isBefore(startDateOnly);
-        }
-        if (endDate != null && dateMatch) {
-          final expDateOnly = DateTime(
-            model.date.year,
-            model.date.month,
-            model.date.day,
-          );
-          // Ensure end date includes the full day
-          final endDateInclusive = DateTime(
-            endDate.year,
-            endDate.month,
-            endDate.day,
-            23,
-            59,
-            59,
-          );
-          dateMatch = !model.date.isAfter(endDateInclusive);
-        }
-        if (accountId != null && accountId.isNotEmpty) {
-          // Handle multiple account IDs if passed comma-separated
-          final ids = accountId.split(',');
-          accountMatch = ids.contains(model.accountId);
-        }
-        if (category != null && category.isNotEmpty) {
-          // Handle multiple category IDs if passed comma-separated
-          final ids = category.split(',');
-          categoryMatch = ids.contains(model.categoryId);
-        }
-        return dateMatch && categoryMatch && accountMatch;
-      }).toList();
-
-      log.fine("[ExpenseRepo] Filtered to ${filteredModels.length} models.");
-      filteredModels.sort((a, b) => b.date.compareTo(a.date));
-
-      return Right(filteredModels);
+      log.fine(
+        "[ExpenseRepo] Retrieved ${expenseModels.length} expense models after filtering.",
+      );
+      expenseModels.sort((a, b) => b.date.compareTo(a.date));
+      return Right(expenseModels);
     } on CacheFailure catch (e) {
       log.warning(
         "[ExpenseRepo] CacheFailure getting expense models: ${e.message}",

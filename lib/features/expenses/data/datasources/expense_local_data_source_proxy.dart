@@ -40,14 +40,58 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
   }
 
   @override
-  Future<List<ExpenseModel>> getExpenses() async {
+  Future<List<ExpenseModel>> getExpenses({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryId,
+    String? accountId,
+  }) async {
     if (demoModeService.isDemoActive) {
-      log.fine("[DemoAwareExpenseDS] Getting demo expenses.");
-      // Return the cached demo data
-      return demoModeService.getDemoExpenses();
+      log.fine("[DemoAwareExpenseDS] Getting demo expenses with filters.");
+      final expenses = await demoModeService.getDemoExpenses();
+      return expenses.where((expense) {
+        if (startDate != null) {
+          final expDateOnly = DateTime(
+            expense.date.year,
+            expense.date.month,
+            expense.date.day,
+          );
+          final startDateOnly = DateTime(
+            startDate.year,
+            startDate.month,
+            startDate.day,
+          );
+          if (expDateOnly.isBefore(startDateOnly)) return false;
+        }
+        if (endDate != null) {
+          final endDateInclusive = DateTime(
+            endDate.year,
+            endDate.month,
+            endDate.day,
+            23,
+            59,
+            59,
+          );
+          if (expense.date.isAfter(endDateInclusive)) return false;
+        }
+        if (accountId != null && accountId.isNotEmpty) {
+          final ids = accountId.split(',');
+          if (!ids.contains(expense.accountId)) return false;
+        }
+        if (categoryId != null && categoryId.isNotEmpty) {
+          final ids = categoryId.split(',');
+          if (!ids.contains(expense.categoryId)) return false;
+        }
+        return true;
+      }).toList();
     } else {
       // Return live data from Hive
-      return hiveDataSource.getExpenses();
+      return hiveDataSource.getExpenses(
+        startDate: startDate,
+        endDate: endDate,
+        categoryId: categoryId,
+        accountId: accountId,
+      );
     }
   }
 
@@ -77,7 +121,8 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
   Future<void> clearAll() async {
     if (demoModeService.isDemoActive) {
       log.warning(
-          "[DemoAwareExpenseDS] clearAll called in Demo Mode. Ignoring.");
+        "[DemoAwareExpenseDS] clearAll called in Demo Mode. Ignoring.",
+      );
       // Do nothing in demo mode for clearAll data sources
       return;
     } else {
