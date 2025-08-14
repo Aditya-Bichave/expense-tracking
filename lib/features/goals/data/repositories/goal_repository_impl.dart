@@ -8,15 +8,15 @@ import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart'; // Import Status
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/di/service_locator.dart'; // For Contribution DS access during delete
 
 class GoalRepositoryImpl implements GoalRepository {
   final GoalLocalDataSource localDataSource;
-  // Optional: Inject contribution DS if you want repo to handle cascading deletes
-  GoalContributionLocalDataSource get _contributionDataSource =>
-      sl<GoalContributionLocalDataSource>();
+  final GoalContributionLocalDataSource contributionDataSource;
 
-  GoalRepositoryImpl({required this.localDataSource});
+  GoalRepositoryImpl({
+    required this.localDataSource,
+    required this.contributionDataSource,
+  });
 
   @override
   Future<Either<Failure, Goal>> addGoal(Goal goal) async {
@@ -25,7 +25,8 @@ class GoalRepositoryImpl implements GoalRepository {
       // Cache is updated manually by ContributionRepo, so we use 0 here for add
       // Ensure status is active when adding
       final model = GoalModel.fromEntity(
-          goal.copyWith(totalSaved: 0.0, status: GoalStatus.active));
+        goal.copyWith(totalSaved: 0.0, status: GoalStatus.active),
+      );
       await localDataSource.saveGoal(model);
       log.info("[GoalRepo] Goal added successfully: ${goal.id}");
       return Right(model.toEntity()); // Return entity reflecting saved state
@@ -46,12 +47,16 @@ class GoalRepositoryImpl implements GoalRepository {
       }
       // Update status and save
       final updatedModel = GoalModel(
-        id: model.id, name: model.name, targetAmount: model.targetAmount,
-        targetDate: model.targetDate, iconName: model.iconName,
+        id: model.id,
+        name: model.name,
+        targetAmount: model.targetAmount,
+        targetDate: model.targetDate,
+        iconName: model.iconName,
         description: model.description,
         statusIndex: GoalStatus.archived.index, // <-- Set status to archived
         totalSavedCache: model.totalSavedCache, // Keep existing cache
-        createdAt: model.createdAt, achievedAt: model.achievedAt,
+        createdAt: model.createdAt,
+        achievedAt: model.achievedAt,
       );
       await localDataSource.saveGoal(updatedModel);
       log.info("[GoalRepo] Goal archived successfully: $id");
@@ -66,20 +71,23 @@ class GoalRepositoryImpl implements GoalRepository {
   Future<Either<Failure, void>> deleteGoal(String id) async {
     // **Warning:** Permanent delete. Archiving is preferred.
     log.warning(
-        "[GoalRepo] Attempting PERMANENT delete for goal ID: $id. Archive is preferred.");
+      "[GoalRepo] Attempting PERMANENT delete for goal ID: $id. Archive is preferred.",
+    );
     try {
       // --- Optional: Cascade delete contributions ---
       log.info(
-          "[GoalRepo] Deleting associated contributions for Goal ID: $id...");
-      final contributions =
-          await _contributionDataSource.getContributionsForGoal(id);
+        "[GoalRepo] Deleting associated contributions for Goal ID: $id...",
+      );
+      final contributions = await contributionDataSource
+          .getContributionsForGoal(id);
       List<Future<void>> deleteFutures = [];
       for (var c in contributions) {
-        deleteFutures.add(_contributionDataSource.deleteContribution(c.id));
+        deleteFutures.add(contributionDataSource.deleteContribution(c.id));
       }
       await Future.wait(deleteFutures);
       log.info(
-          "[GoalRepo] Deleted ${contributions.length} associated contributions.");
+        "[GoalRepo] Deleted ${contributions.length} associated contributions.",
+      );
       // --- End Optional Cascade ---
 
       await localDataSource.deleteGoal(id);
@@ -108,8 +116,9 @@ class GoalRepositoryImpl implements GoalRepository {
   }
 
   @override
-  Future<Either<Failure, List<Goal>>> getGoals(
-      {bool includeArchived = false}) async {
+  Future<Either<Failure, List<Goal>>> getGoals({
+    bool includeArchived = false,
+  }) async {
     log.fine("[GoalRepo] Getting goals. IncludeArchived: $includeArchived");
     try {
       final models = await localDataSource.getGoals();
@@ -143,7 +152,8 @@ class GoalRepositoryImpl implements GoalRepository {
       final currentModel = await localDataSource.getGoalById(goal.id);
       if (currentModel == null) {
         return Left(
-            CacheFailure("Goal with ID ${goal.id} not found for update."));
+          CacheFailure("Goal with ID ${goal.id} not found for update."),
+        );
       }
       final currentTotalSaved = currentModel.totalSavedCache;
       final currentAchievedAt = currentModel.achievedAt;

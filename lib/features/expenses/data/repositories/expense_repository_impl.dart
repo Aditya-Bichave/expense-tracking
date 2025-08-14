@@ -10,31 +10,40 @@ import 'package:expense_tracker/features/expenses/domain/repositories/expense_re
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseLocalDataSource localDataSource;
-  CategoryRepository get categoryRepository => sl<CategoryRepository>();
+  final CategoryRepository categoryRepository;
 
-  ExpenseRepositoryImpl({required this.localDataSource});
+  ExpenseRepositoryImpl({
+    required this.localDataSource,
+    required this.categoryRepository,
+  });
 
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Expense>> _hydrateSingleModel(
-      ExpenseModel model) async {
-    final catResult =
-        await categoryRepository.getCategoryById(model.categoryId ?? '');
-    return catResult.fold((failure) {
-      log.warning(
-          "[ExpenseRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}");
-      return Right(model.toEntity().copyWith(categoryOrNull: () => null));
-    }, (category) {
-      if (model.categoryId != null && category == null) {
+    ExpenseModel model,
+  ) async {
+    final catResult = await categoryRepository.getCategoryById(
+      model.categoryId ?? '',
+    );
+    return catResult.fold(
+      (failure) {
         log.warning(
-            "[ExpenseRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for expense ${model.id}.");
-      }
-      return Right(model.toEntity().copyWith(categoryOrNull: () => category));
-    });
+          "[ExpenseRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}",
+        );
+        return Right(model.toEntity().copyWith(categoryOrNull: () => null));
+      },
+      (category) {
+        if (model.categoryId != null && category == null) {
+          log.warning(
+            "[ExpenseRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for expense ${model.id}.",
+          );
+        }
+        return Right(model.toEntity().copyWith(categoryOrNull: () => category));
+      },
+    );
   }
 
   @override
@@ -44,34 +53,39 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       final expenseModel = ExpenseModel.fromEntity(expense);
       final addedModel = await localDataSource.addExpense(expenseModel);
       log.info(
-          "[ExpenseRepo] Add successful (ID: ${addedModel.id}). Hydrating category for return.");
+        "[ExpenseRepo] Add successful (ID: ${addedModel.id}). Hydrating category for return.",
+      );
       return await _hydrateSingleModel(addedModel);
     } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
       log.severe("[ExpenseRepo] Unexpected error adding expense$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error adding expense: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure('Unexpected error adding expense: ${e.toString()}'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, Expense>> updateExpense(Expense expense) async {
     log.info(
-        "[ExpenseRepo] Updating expense '${expense.title}' (ID: ${expense.id}).");
+      "[ExpenseRepo] Updating expense '${expense.title}' (ID: ${expense.id}).",
+    );
     try {
       final expenseModel = ExpenseModel.fromEntity(expense);
       final updatedModel = await localDataSource.updateExpense(expenseModel);
       log.info(
-          "[ExpenseRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.");
+        "[ExpenseRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.",
+      );
       return await _hydrateSingleModel(updatedModel);
     } on CacheFailure catch (e) {
       log.warning("[ExpenseRepo] CacheFailure updating expense: ${e.message}");
       return Left(e);
     } catch (e, s) {
       log.severe("[ExpenseRepo] Unexpected error updating expense$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error updating expense: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure('Unexpected error updating expense: ${e.toString()}'),
+      );
     }
   }
 
@@ -83,11 +97,13 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     String? accountId,
   }) async {
     log.info(
-        "[ExpenseRepo] Getting expense models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$category");
+      "[ExpenseRepo] Getting expense models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$category",
+    );
     try {
       final expenseModels = await localDataSource.getExpenses();
       log.fine(
-          "[ExpenseRepo] Fetched ${expenseModels.length} raw expense models.");
+        "[ExpenseRepo] Fetched ${expenseModels.length} raw expense models.",
+      );
 
       // Apply filtering
       final filteredModels = expenseModels.where((model) {
@@ -95,18 +111,33 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         bool categoryMatch = true;
         bool accountMatch = true;
         if (startDate != null) {
-          final expDateOnly =
-              DateTime(model.date.year, model.date.month, model.date.day);
-          final startDateOnly =
-              DateTime(startDate.year, startDate.month, startDate.day);
+          final expDateOnly = DateTime(
+            model.date.year,
+            model.date.month,
+            model.date.day,
+          );
+          final startDateOnly = DateTime(
+            startDate.year,
+            startDate.month,
+            startDate.day,
+          );
           dateMatch = !expDateOnly.isBefore(startDateOnly);
         }
         if (endDate != null && dateMatch) {
-          final expDateOnly =
-              DateTime(model.date.year, model.date.month, model.date.day);
+          final expDateOnly = DateTime(
+            model.date.year,
+            model.date.month,
+            model.date.day,
+          );
           // Ensure end date includes the full day
-          final endDateInclusive =
-              DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+          final endDateInclusive = DateTime(
+            endDate.year,
+            endDate.month,
+            endDate.day,
+            23,
+            59,
+            59,
+          );
           dateMatch = !model.date.isAfter(endDateInclusive);
         }
         if (accountId != null && accountId.isNotEmpty) {
@@ -128,12 +159,16 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Right(filteredModels);
     } on CacheFailure catch (e) {
       log.warning(
-          "[ExpenseRepo] CacheFailure getting expense models: ${e.message}");
+        "[ExpenseRepo] CacheFailure getting expense models: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe("[ExpenseRepo] Unexpected error getting expense models$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error getting expense models: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure(
+          'Unexpected error getting expense models: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -146,141 +181,186 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return const Right(null);
     } on CacheFailure catch (e) {
       log.warning(
-          "[ExpenseRepo] CacheFailure deleting expense ID $id: ${e.message}");
+        "[ExpenseRepo] CacheFailure deleting expense ID $id: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe("[ExpenseRepo] Unexpected error deleting expense ID $id$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error deleting expense: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure('Unexpected error deleting expense: ${e.toString()}'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, double>> getTotalExpensesForAccount(String accountId,
-      {DateTime? startDate, DateTime? endDate}) async {
+  Future<Either<Failure, double>> getTotalExpensesForAccount(
+    String accountId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     log.info(
-        "[ExpenseRepo] Getting total expenses for account: $accountId, Start=$startDate, End=$endDate");
+      "[ExpenseRepo] Getting total expenses for account: $accountId, Start=$startDate, End=$endDate",
+    );
     try {
       final allModelsResult = await getExpenses(
-          accountId: accountId.isEmpty ? null : accountId,
-          startDate: startDate,
-          endDate: endDate);
+        accountId: accountId.isEmpty ? null : accountId,
+        startDate: startDate,
+        endDate: endDate,
+      );
       return allModelsResult.fold(
         (failure) {
           log.warning(
-              "[ExpenseRepo] Failed to get models while calculating total for account $accountId: ${failure.message}");
+            "[ExpenseRepo] Failed to get models while calculating total for account $accountId: ${failure.message}",
+          );
           return Left(failure);
         },
         (models) {
           double total = models.fold(0.0, (sum, item) => sum + item.amount);
           log.info(
-              "[ExpenseRepo] Calculated total expenses for account '$accountId': $total");
+            "[ExpenseRepo] Calculated total expenses for account '$accountId': $total",
+          );
           return Right(total);
         },
       );
     } catch (e, s) {
       log.severe(
-          "[ExpenseRepo] Unexpected error calculating total expenses for account '$accountId'$e$s");
-      return Left(UnexpectedFailure(
-          'Failed to calculate total expenses: ${e.toString()}'));
+        "[ExpenseRepo] Unexpected error calculating total expenses for account '$accountId'$e$s",
+      );
+      return Left(
+        UnexpectedFailure(
+          'Failed to calculate total expenses: ${e.toString()}',
+        ),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, ExpenseSummary>> getExpenseSummary(
-      {DateTime? startDate, DateTime? endDate}) async {
+  Future<Either<Failure, ExpenseSummary>> getExpenseSummary({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     log.info(
-        "[ExpenseRepo] Getting expense summary. Start=$startDate, End=$endDate");
+      "[ExpenseRepo] Getting expense summary. Start=$startDate, End=$endDate",
+    );
     try {
-      final modelsResult =
-          await getExpenses(startDate: startDate, endDate: endDate);
+      final modelsResult = await getExpenses(
+        startDate: startDate,
+        endDate: endDate,
+      );
       if (modelsResult.isLeft()) {
         return modelsResult.fold(
-            (l) => Left(l),
-            (_) =>
-                const Left(CacheFailure("Failed to get models for summary")));
+          (l) => Left(l),
+          (_) => const Left(CacheFailure("Failed to get models for summary")),
+        );
       }
       final expenseModels = modelsResult.getOrElse(() => []);
 
       final categoriesResult = await categoryRepository.getAllCategories();
       if (categoriesResult.isLeft()) {
         return categoriesResult.fold(
-            (l) => Left(l),
-            (_) => const Left(
-                CacheFailure("Failed to get categories for summary")));
+          (l) => Left(l),
+          (_) =>
+              const Left(CacheFailure("Failed to get categories for summary")),
+        );
       }
       final categoryMap = {
-        for (var cat in categoriesResult.getOrElse(() => [])) cat.id: cat
+        for (var cat in categoriesResult.getOrElse(() => [])) cat.id: cat,
       };
 
       double total = 0;
       Map<String, double> categoryTotals = {};
       for (var model in expenseModels) {
         total += model.amount;
-        final categoryName = categoryMap[model.categoryId]?.name ??
+        final categoryName =
+            categoryMap[model.categoryId]?.name ??
             Category.uncategorized.name; // Use uncategorized name as fallback
-        categoryTotals.update(categoryName, (value) => value + model.amount,
-            ifAbsent: () => model.amount);
+        categoryTotals.update(
+          categoryName,
+          (value) => value + model.amount,
+          ifAbsent: () => model.amount,
+        );
       }
       final sortedCategoryTotals = Map.fromEntries(
-          categoryTotals.entries.toList()
-            ..sort((e1, e2) => e2.value.compareTo(e1.value)));
+        categoryTotals.entries.toList()
+          ..sort((e1, e2) => e2.value.compareTo(e1.value)),
+      );
       log.info(
-          "[ExpenseRepo] Calculated summary: Total=$total, Categories=${sortedCategoryTotals.length}");
-      return Right(ExpenseSummary(
-          totalExpenses: total, categoryBreakdown: sortedCategoryTotals));
+        "[ExpenseRepo] Calculated summary: Total=$total, Categories=${sortedCategoryTotals.length}",
+      );
+      return Right(
+        ExpenseSummary(
+          totalExpenses: total,
+          categoryBreakdown: sortedCategoryTotals,
+        ),
+      );
     } catch (e, s) {
       log.severe("[ExpenseRepo] Unexpected error calculating summary$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error calculating summary: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure(
+          'Unexpected error calculating summary: ${e.toString()}',
+        ),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> updateExpenseCategorization(
-      String expenseId,
-      String? categoryId,
-      CategorizationStatus status,
-      double? confidenceScore) async {
+    String expenseId,
+    String? categoryId,
+    CategorizationStatus status,
+    double? confidenceScore,
+  ) async {
     log.info(
-        "[ExpenseRepo] updateExpenseCategorization called for ID: $expenseId, CatID: $categoryId, Status: ${status.name}");
+      "[ExpenseRepo] updateExpenseCategorization called for ID: $expenseId, CatID: $categoryId, Status: ${status.name}",
+    );
     try {
       final existingModel = await localDataSource.getExpenseById(expenseId);
       if (existingModel == null) {
         log.warning(
-            "[ExpenseRepo] Expense not found for categorization update: $expenseId");
+          "[ExpenseRepo] Expense not found for categorization update: $expenseId",
+        );
         return const Left(CacheFailure("Expense not found."));
       }
       final updatedModel = ExpenseModel(
-          id: existingModel.id,
-          title: existingModel.title,
-          amount: existingModel.amount,
-          date: existingModel.date,
-          accountId: existingModel.accountId,
-          categoryId: categoryId,
-          categorizationStatusValue: status.value,
-          confidenceScoreValue: confidenceScore);
+        id: existingModel.id,
+        title: existingModel.title,
+        amount: existingModel.amount,
+        date: existingModel.date,
+        accountId: existingModel.accountId,
+        categoryId: categoryId,
+        categorizationStatusValue: status.value,
+        confidenceScoreValue: confidenceScore,
+      );
       await localDataSource.updateExpense(updatedModel);
       log.info(
-          "[ExpenseRepo] Expense categorization updated successfully for ID: $expenseId");
+        "[ExpenseRepo] Expense categorization updated successfully for ID: $expenseId",
+      );
       return const Right(null);
     } on CacheFailure catch (e) {
       log.warning(
-          "[ExpenseRepo] CacheFailure during updateExpenseCategorization ID $expenseId: ${e.message}");
+        "[ExpenseRepo] CacheFailure during updateExpenseCategorization ID $expenseId: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[ExpenseRepo] Unexpected error in updateExpenseCategorization ID $expenseId$e$s");
-      return Left(CacheFailure(
-          "Failed to update expense categorization: ${e.toString()}"));
+        "[ExpenseRepo] Unexpected error in updateExpenseCategorization ID $expenseId$e$s",
+      );
+      return Left(
+        CacheFailure(
+          "Failed to update expense categorization: ${e.toString()}",
+        ),
+      );
     }
   }
 
   @override
   Future<Either<Failure, int>> reassignExpensesCategory(
-      String oldCategoryId, String newCategoryId) async {
+    String oldCategoryId,
+    String newCategoryId,
+  ) async {
     log.info(
-        "[ExpenseRepo] Reassigning expenses from CatID '$oldCategoryId' to '$newCategoryId'.");
+      "[ExpenseRepo] Reassigning expenses from CatID '$oldCategoryId' to '$newCategoryId'.",
+    );
     int updateCount = 0;
     try {
       final allModels = await localDataSource.getExpenses();
@@ -290,16 +370,20 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
       if (modelsToUpdate.isEmpty) {
         log.info(
-            "[ExpenseRepo] No expenses found with category ID '$oldCategoryId'. No reassignment needed.");
+          "[ExpenseRepo] No expenses found with category ID '$oldCategoryId'. No reassignment needed.",
+        );
         return const Right(0);
       }
       log.info(
-          "[ExpenseRepo] Found ${modelsToUpdate.length} expenses to reassign.");
+        "[ExpenseRepo] Found ${modelsToUpdate.length} expenses to reassign.",
+      );
 
       List<Future<void>> updateFutures = [];
       for (final model in modelsToUpdate) {
         final updatedModel = ExpenseModel(
-          id: model.id, title: model.title, amount: model.amount,
+          id: model.id,
+          title: model.title,
+          amount: model.amount,
           date: model.date,
           accountId: model.accountId,
           categoryId: newCategoryId, // Assign new category ID
@@ -313,17 +397,21 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       await Future.wait(updateFutures);
 
       log.info(
-          "[ExpenseRepo] Successfully triggered updates for $updateCount expenses from '$oldCategoryId' to '$newCategoryId'.");
+        "[ExpenseRepo] Successfully triggered updates for $updateCount expenses from '$oldCategoryId' to '$newCategoryId'.",
+      );
       return Right(updateCount);
     } on CacheFailure catch (e) {
       log.warning(
-          "[ExpenseRepo] CacheFailure during reassignExpensesCategory: ${e.message}");
+        "[ExpenseRepo] CacheFailure during reassignExpensesCategory: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[ExpenseRepo] Unexpected error during reassignExpensesCategory$e$s");
-      return Left(CacheFailure(
-          "Failed to reassign expense categories: ${e.toString()}"));
+        "[ExpenseRepo] Unexpected error during reassignExpensesCategory$e$s",
+      );
+      return Left(
+        CacheFailure("Failed to reassign expense categories: ${e.toString()}"),
+      );
     }
   }
 }

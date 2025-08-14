@@ -15,9 +15,7 @@ import 'package:expense_tracker/features/settings/presentation/widgets/about_set
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 // Other imports
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:local_auth/local_auth.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart'; // Import AppDialogs
@@ -38,102 +36,26 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  final LocalAuthentication _localAuth = LocalAuthentication();
-  bool _isAuthenticating = false;
-
-  // --- App Lock Handler (Remains in View State) ---
-  Future<void> _handleAppLockToggle(BuildContext context, bool enable) async {
-    final settingsState = context.read<SettingsBloc>().state;
-    if (settingsState.isInDemoMode) {
-      log.warning("[SettingsPage] App Lock toggle blocked in Demo Mode.");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("App Lock cannot be changed in Demo Mode.")));
-      return;
-    }
-
-    log.info("[SettingsPage] App Lock toggle requested. Enable: $enable");
-    if (_isAuthenticating) return;
-    setState(() => _isAuthenticating = true);
-    try {
-      bool canAuth = false;
-      if (enable) {
-        canAuth = await _localAuth.canCheckBiometrics ||
-            await _localAuth.isDeviceSupported();
-        if (!canAuth && mounted) {
-          log.warning(
-              "[SettingsPage] Cannot enable App Lock: Biometrics/Device lock not available/setup.");
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              content: const Text(
-                  "Cannot enable App Lock. Please set up device screen lock or biometrics first."),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ));
-          setState(() => _isAuthenticating = false);
-          return;
-        }
-      }
-      if (mounted) {
-        log.info(
-            "[SettingsPage] Dispatching UpdateAppLock event. IsEnabled: $enable");
-        context.read<SettingsBloc>().add(UpdateAppLock(enable));
-      }
-    } on PlatformException catch (e, s) {
-      log.severe(
-          "[SettingsPage] PlatformException checking/setting App Lock: $e\n$s");
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            content: Text("Error setting App Lock: ${e.message ?? e.code}"),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ));
-        setState(() => _isAuthenticating = false);
-      }
-    } catch (e, s) {
-      log.severe(
-          "[SettingsPage] Unexpected error checking/setting App Lock: $e\n$s");
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(
-            content:
-                const Text("An unexpected error occurred setting App Lock."),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ));
-        setState(() => _isAuthenticating = false);
-      }
-    } finally {
-      if (mounted && _isAuthenticating) {
-        // Re-check BLoC state before setting authenticating back to false
-        final finalSettingsState = context.read<SettingsBloc>().state;
-        if (finalSettingsState.status != SettingsStatus.loading) {
-          // Ensure loading is finished before resetting flag
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) setState(() => _isAuthenticating = false);
-          });
-        }
-      }
-    }
-  }
-
   // --- URL Launcher (Remains in View State) ---
   void _launchURL(BuildContext context, String urlString) async {
     final Uri url = Uri.parse(urlString);
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         log.warning(
-            "[SettingsPage] Could not launch URL (launchUrl returned false): $urlString");
+          "[SettingsPage] Could not launch URL (launchUrl returned false): $urlString",
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Could not open link: $urlString')));
+            SnackBar(content: Text('Could not open link: $urlString')),
+          );
         }
       }
     } catch (e, s) {
       log.severe("[SettingsPage] Error launching URL $urlString: $e\n$s");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error opening link: ${e.toString()}')));
+          SnackBar(content: Text('Error opening link: ${e.toString()}')),
+        );
       }
     }
   }
@@ -152,9 +74,12 @@ class _SettingsViewState extends State<SettingsView> {
             if (state.status == SettingsStatus.error && errorMsg != null) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(
+                ..showSnackBar(
+                  SnackBar(
                     content: Text("Settings Error: $errorMsg"),
-                    backgroundColor: theme.colorScheme.error));
+                    backgroundColor: theme.colorScheme.error,
+                  ),
+                );
               context.read<SettingsBloc>().add(const ClearSettingsMessage());
             }
             // Handle package info errors
@@ -163,9 +88,12 @@ class _SettingsViewState extends State<SettingsView> {
                 pkgErrorMsg != null) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(
+                ..showSnackBar(
+                  SnackBar(
                     content: Text("Version Info Error: $pkgErrorMsg"),
-                    backgroundColor: theme.colorScheme.error));
+                    backgroundColor: theme.colorScheme.error,
+                  ),
+                );
               // Optionally clear the error message if needed
               // context.read<SettingsBloc>().add(const ClearPackageInfoErrorMessage());
             }
@@ -181,13 +109,16 @@ class _SettingsViewState extends State<SettingsView> {
               final isError = state.status == DataManagementStatus.error;
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(
+                ..showSnackBar(
+                  SnackBar(
                     content: Text(dataMsg),
                     backgroundColor:
-                        isError ? theme.colorScheme.error : Colors.green));
-              context
-                  .read<DataManagementBloc>()
-                  .add(const ClearDataManagementMessage());
+                        isError ? theme.colorScheme.error : Colors.green,
+                  ),
+                );
+              context.read<DataManagementBloc>().add(
+                    const ClearDataManagementMessage(),
+                  );
             }
           },
         ),
@@ -205,9 +136,8 @@ class _SettingsViewState extends State<SettingsView> {
                 settingsState.packageInfoStatus == PackageInfoStatus.loading;
             final isDataManagementLoading =
                 dataManagementState.status == DataManagementStatus.loading;
-            final isOverallLoading = isDataManagementLoading ||
-                _isAuthenticating ||
-                isSettingsLoading;
+            final isOverallLoading =
+                isDataManagementLoading || isSettingsLoading;
 
             if (settingsState.status == SettingsStatus.initial) {
               return const Center(child: CircularProgressIndicator());
@@ -221,26 +151,35 @@ class _SettingsViewState extends State<SettingsView> {
                           const EdgeInsets.only(top: 8.0, bottom: 80.0),
                   children: [
                     AppearanceSettingsSection(
-                        state: settingsState, isLoading: isOverallLoading),
+                      state: settingsState,
+                      isLoading: isOverallLoading,
+                    ),
                     GeneralSettingsSection(
-                        state: settingsState, isLoading: isOverallLoading),
+                      state: settingsState,
+                      isLoading: isOverallLoading,
+                    ),
                     SecuritySettingsSection(
-                        state: settingsState,
-                        isLoading: isOverallLoading,
-                        onAppLockToggle: _handleAppLockToggle),
+                      state: settingsState,
+                      isLoading: isOverallLoading,
+                      onAppLockToggle: (_, enable) {
+                        context.read<SettingsBloc>().add(UpdateAppLock(enable));
+                      },
+                    ),
                     DataManagementSettingsSection(
                       isDataManagementLoading: isDataManagementLoading,
                       isSettingsLoading: isSettingsLoading,
                       onBackup: () {
                         log.info(
-                            "[SettingsPage] Backup requested via section.");
-                        context
-                            .read<DataManagementBloc>()
-                            .add(const BackupRequested());
+                          "[SettingsPage] Backup requested via section.",
+                        );
+                        context.read<DataManagementBloc>().add(
+                              const BackupRequested(),
+                            );
                       },
                       onRestore: () async {
                         log.info(
-                            "[SettingsPage] Restore requested via section.");
+                          "[SettingsPage] Restore requested via section.",
+                        );
                         final confirmed = await AppDialogs.showConfirmation(
                           context,
                           title: "Confirm Restore",
@@ -250,14 +189,15 @@ class _SettingsViewState extends State<SettingsView> {
                           confirmColor: Colors.orange[700],
                         );
                         if (confirmed == true && context.mounted) {
-                          context
-                              .read<DataManagementBloc>()
-                              .add(const RestoreRequested());
+                          context.read<DataManagementBloc>().add(
+                                const RestoreRequested(),
+                              );
                         }
                       },
                       onClearData: () async {
                         log.info(
-                            "[SettingsPage] Clear data requested via section.");
+                          "[SettingsPage] Clear data requested via section.",
+                        );
                         final confirmed =
                             await AppDialogs.showStrongConfirmation(
                           context,
@@ -269,20 +209,24 @@ class _SettingsViewState extends State<SettingsView> {
                           confirmColor: Theme.of(context).colorScheme.error,
                         );
                         if (confirmed == true && context.mounted) {
-                          context
-                              .read<DataManagementBloc>()
-                              .add(const ClearDataRequested());
+                          context.read<DataManagementBloc>().add(
+                                const ClearDataRequested(),
+                              );
                         }
                       },
                     ),
                     HelpSettingsSection(
-                        isLoading: isOverallLoading,
-                        launchUrlCallback: _launchURL),
+                      isLoading: isOverallLoading,
+                      launchUrlCallback: _launchURL,
+                    ),
                     LegalSettingsSection(
-                        isLoading: isOverallLoading,
-                        launchUrlCallback: _launchURL),
+                      isLoading: isOverallLoading,
+                      launchUrlCallback: _launchURL,
+                    ),
                     AboutSettingsSection(
-                        state: settingsState, isLoading: isOverallLoading),
+                      state: settingsState,
+                      isLoading: isOverallLoading,
+                    ),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -296,21 +240,22 @@ class _SettingsViewState extends State<SettingsView> {
                         child: Card(
                           elevation: 8,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 32.0, vertical: 24.0),
+                              horizontal: 32.0,
+                              vertical: 24.0,
+                            ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const CircularProgressIndicator(),
                                 const SizedBox(height: 20),
                                 Text(
-                                  _isAuthenticating
-                                      ? "Authenticating..."
-                                      : isDataManagementLoading
-                                          ? "Processing data..."
-                                          : "Loading settings...",
+                                  isDataManagementLoading
+                                      ? "Processing data..."
+                                      : "Loading settings...",
                                   style: theme.textTheme.titleMedium,
                                   textAlign: TextAlign.center,
                                 ),

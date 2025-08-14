@@ -35,41 +35,51 @@ import 'package:expense_tracker/features/goals/presentation/bloc/log_contributio
 // External
 import 'package:uuid/uuid.dart';
 import 'dart:async'; // For Stream
+import 'package:expense_tracker/core/services/clock.dart';
 
 class GoalDependencies {
   static void register() {
     // --- Data Sources (Proxies) ---
     if (!sl.isRegistered<GoalLocalDataSource>()) {
       sl.registerLazySingleton<GoalLocalDataSource>(
-          () => DemoAwareGoalDataSource(
-                hiveDataSource: sl<HiveGoalLocalDataSource>(),
-                demoModeService: sl<DemoModeService>(),
-              ));
+        () => DemoAwareGoalDataSource(
+          hiveDataSource: sl<HiveGoalLocalDataSource>(),
+          demoModeService: sl<DemoModeService>(),
+        ),
+      );
     }
     if (!sl.isRegistered<GoalContributionLocalDataSource>()) {
       sl.registerLazySingleton<GoalContributionLocalDataSource>(
-          () => DemoAwareGoalContributionDataSource(
-                hiveDataSource: sl<HiveContributionLocalDataSource>(),
-                demoModeService: sl<DemoModeService>(),
-              ));
+        () => DemoAwareGoalContributionDataSource(
+          hiveDataSource: sl<HiveContributionLocalDataSource>(),
+          demoModeService: sl<DemoModeService>(),
+        ),
+      );
     }
 
     // --- Repositories ---
     if (!sl.isRegistered<GoalRepository>()) {
       sl.registerLazySingleton<GoalRepository>(
-          () => GoalRepositoryImpl(localDataSource: sl()));
+        () => GoalRepositoryImpl(
+          localDataSource: sl(),
+          contributionDataSource: sl(),
+        ),
+      );
     }
     if (!sl.isRegistered<GoalContributionRepository>()) {
       sl.registerLazySingleton<GoalContributionRepository>(
-          () => GoalContributionRepositoryImpl(
-                contributionDataSource: sl(),
-                goalDataSource: sl(), // Goal DS needed for cache update
-              ));
+        () => GoalContributionRepositoryImpl(
+          contributionDataSource: sl(),
+          goalDataSource: sl(), // Goal DS needed for cache update
+        ),
+      );
     }
 
     // --- Use Cases ---
     if (!sl.isRegistered<AddGoalUseCase>()) {
-      sl.registerLazySingleton(() => AddGoalUseCase(sl(), sl<Uuid>()));
+      sl.registerLazySingleton(
+        () => AddGoalUseCase(sl(), sl<Uuid>(), sl<Clock>()),
+      );
     }
     if (!sl.isRegistered<GetGoalsUseCase>()) {
       sl.registerLazySingleton(() => GetGoalsUseCase(sl()));
@@ -84,7 +94,9 @@ class GoalDependencies {
       sl.registerLazySingleton(() => DeleteGoalUseCase(sl()));
     }
     if (!sl.isRegistered<AddContributionUseCase>()) {
-      sl.registerLazySingleton(() => AddContributionUseCase(sl(), sl<Uuid>()));
+      sl.registerLazySingleton(
+        () => AddContributionUseCase(sl(), sl<Uuid>(), sl<Clock>()),
+      );
     }
     if (!sl.isRegistered<GetContributionsForGoalUseCase>()) {
       sl.registerLazySingleton(() => GetContributionsForGoalUseCase(sl()));
@@ -104,28 +116,33 @@ class GoalDependencies {
 
     // --- Blocs ---
     if (!sl.isRegistered<GoalListBloc>()) {
-      sl.registerFactory(() => GoalListBloc(
-            getGoalsUseCase: sl<GetGoalsUseCase>(),
-            archiveGoalUseCase: sl<ArchiveGoalUseCase>(),
-            dataChangeStream: sl<Stream<DataChangedEvent>>(),
-            deleteGoalUseCase: sl<DeleteGoalUseCase>(),
-          ));
+      sl.registerFactory(
+        () => GoalListBloc(
+          getGoalsUseCase: sl<GetGoalsUseCase>(),
+          archiveGoalUseCase: sl<ArchiveGoalUseCase>(),
+          dataChangeStream: sl<Stream<DataChangedEvent>>(),
+          deleteGoalUseCase: sl<DeleteGoalUseCase>(),
+        ),
+      );
     }
     if (!sl.isRegistered<AddEditGoalBloc>()) {
       sl.registerFactoryParam<AddEditGoalBloc, Goal?, void>(
-          (initialGoal, _) => AddEditGoalBloc(
-                addGoalUseCase: sl<AddGoalUseCase>(),
-                updateGoalUseCase: sl<UpdateGoalUseCase>(),
-                initialGoal: initialGoal,
-              ));
+        (initialGoal, _) => AddEditGoalBloc(
+          addGoalUseCase: sl<AddGoalUseCase>(),
+          updateGoalUseCase: sl<UpdateGoalUseCase>(),
+          initialGoal: initialGoal,
+        ),
+      );
     }
     if (!sl.isRegistered<LogContributionBloc>()) {
-      sl.registerFactory(() => LogContributionBloc(
-            addContributionUseCase: sl<AddContributionUseCase>(),
-            updateContributionUseCase: sl<UpdateContributionUseCase>(),
-            deleteContributionUseCase: sl<DeleteContributionUseCase>(),
-            checkGoalAchievementUseCase: sl<CheckGoalAchievementUseCase>(),
-          ));
+      sl.registerFactory(
+        () => LogContributionBloc(
+          addContributionUseCase: sl<AddContributionUseCase>(),
+          updateContributionUseCase: sl<UpdateContributionUseCase>(),
+          deleteContributionUseCase: sl<DeleteContributionUseCase>(),
+          checkGoalAchievementUseCase: sl<CheckGoalAchievementUseCase>(),
+        ),
+      );
     }
   }
 }

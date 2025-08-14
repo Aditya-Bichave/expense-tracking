@@ -5,20 +5,32 @@ import 'package:expense_tracker/features/settings/data/datasources/settings_loca
 import 'package:expense_tracker/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/settings/domain/usecases/toggle_app_lock.dart';
+import 'package:local_auth/local_auth.dart';
 
 class SettingsDependencies {
   static void register() {
     // Data Source
     sl.registerLazySingleton<SettingsLocalDataSource>(
-        () => SettingsLocalDataSourceImpl(prefs: sl()));
+      () => SettingsLocalDataSourceImpl(prefs: sl()),
+    );
     // Repository
     sl.registerLazySingleton<SettingsRepository>(
-        () => SettingsRepositoryImpl(localDataSource: sl()));
+      () => SettingsRepositoryImpl(localDataSource: sl()),
+    );
+    // Use Case and external deps
+    sl.registerLazySingleton<LocalAuthentication>(() => LocalAuthentication());
+    sl.registerLazySingleton<ToggleAppLockUseCase>(
+      () => ToggleAppLockUseCase(sl(), sl()),
+    );
     // BLoC
     // Provide a single instance so router and app share the same stream
-    sl.registerLazySingleton<SettingsBloc>(() => SettingsBloc(
-          settingsRepository: sl<SettingsRepository>(),
-          demoModeService: sl<DemoModeService>(), // Provide the dependency
-        ));
+    sl.registerLazySingleton<SettingsBloc>(
+      () => SettingsBloc(
+        settingsRepository: sl<SettingsRepository>(),
+        demoModeService: sl<DemoModeService>(), // Provide the dependency
+        toggleAppLockUseCase: sl<ToggleAppLockUseCase>(),
+      ),
+    );
   }
 }

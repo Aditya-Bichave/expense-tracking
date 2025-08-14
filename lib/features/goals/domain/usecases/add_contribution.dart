@@ -7,23 +7,28 @@ import 'package:expense_tracker/features/goals/domain/entities/goal_contribution
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/core/services/clock.dart';
 
 class AddContributionUseCase
     implements UseCase<GoalContribution, AddContributionParams> {
   final GoalContributionRepository repository;
   final Uuid uuid;
+  final Clock clock;
 
-  AddContributionUseCase(this.repository, this.uuid);
+  AddContributionUseCase(this.repository, this.uuid, this.clock);
 
   @override
   Future<Either<Failure, GoalContribution>> call(
-      AddContributionParams params) async {
+    AddContributionParams params,
+  ) async {
     log.info(
-        "[AddContributionUseCase] Adding contribution to Goal ID: ${params.goalId}");
+      "[AddContributionUseCase] Adding contribution to Goal ID: ${params.goalId}",
+    );
 
     if (params.amount <= 0) {
       return const Left(
-          ValidationFailure("Contribution amount must be positive."));
+        ValidationFailure("Contribution amount must be positive."),
+      );
     }
     // Date validation usually handled by picker
 
@@ -33,7 +38,7 @@ class AddContributionUseCase
       amount: params.amount,
       date: params.date,
       note: params.note?.trim(),
-      createdAt: DateTime.now(),
+      createdAt: clock.now(),
     );
 
     return await repository.addContribution(newContribution);
