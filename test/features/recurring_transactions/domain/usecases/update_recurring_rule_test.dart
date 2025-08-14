@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
+import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/add_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/get_recurring_rule_by_id.dart';
@@ -21,6 +22,19 @@ void main() {
   late MockGetRecurringRuleById mockGetRecurringRuleById;
   late MockAddAuditLog mockAddAuditLog;
   late MockUuid mockUuid;
+  const tUserId = 'user-123';
+
+  setUpAll(() {
+    registerFallbackValue(RecurringRuleAuditLog(
+      id: '',
+      ruleId: '',
+      timestamp: DateTime(0),
+      userId: '',
+      fieldChanged: '',
+      oldValue: '',
+      newValue: '',
+    ));
+  });
 
   setUp(() {
     mockRepository = MockRecurringTransactionRepository();
@@ -32,6 +46,7 @@ void main() {
       getRecurringRuleById: mockGetRecurringRuleById,
       addAuditLog: mockAddAuditLog,
       uuid: mockUuid,
+      userId: tUserId,
     );
   });
 
@@ -64,7 +79,11 @@ void main() {
     await usecase(tNewRule);
 
     // Assert
-    verify(() => mockAddAuditLog(any())).called(2); // For description and amount
+    final captured = verify(() => mockAddAuditLog(captureAny())).captured;
+    expect(captured.length, 2); // For description and amount
+    for (final log in captured) {
+      expect((log as RecurringRuleAuditLog).userId, tUserId);
+    }
     verify(() => mockRepository.updateRecurringRule(tNewRule)).called(1);
   });
 }
