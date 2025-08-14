@@ -21,81 +21,102 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
 
   @override
   Future<Either<Failure, AssetAccount>> addAssetAccount(
-      AssetAccount account) async {
+    AssetAccount account,
+  ) async {
     log.info("[AssetAccountRepo] Adding account '${account.name}'.");
     try {
       final accountModel = AssetAccountModel.fromEntity(account);
       log.info(
-          "[AssetAccountRepo] Mapped to model. Calling localDataSource...");
+        "[AssetAccountRepo] Mapped to model. Calling localDataSource...",
+      );
       await localDataSource.addAssetAccount(accountModel);
       log.info(
-          "[AssetAccountRepo] Added to local source. Calculating balance...");
+        "[AssetAccountRepo] Added to local source. Calculating balance...",
+      );
 
       // Recalculate balance for the returned entity
-      final balanceResult =
-          await _calculateBalance(account.id, account.initialBalance);
+      final balanceResult = await _calculateBalance(
+        account.id,
+        account.initialBalance,
+      );
       log.info(
-          "[AssetAccountRepo] Balance calculation result isLeft: ${balanceResult.isLeft()}.");
+        "[AssetAccountRepo] Balance calculation result isLeft: ${balanceResult.isLeft()}.",
+      );
 
       return balanceResult.fold(
         (failure) {
           log.warning(
-              "[AssetAccountRepo] Balance calculation failed during add for '${account.name}': ${failure.message}.");
+            "[AssetAccountRepo] Balance calculation failed during add for '${account.name}': ${failure.message}.",
+          );
           return Left(failure); // Propagate balance calculation failure
         },
         (balance) {
           log.info(
-              "[AssetAccountRepo] Balance calculated ($balance) for '${account.name}'. Returning entity.");
+            "[AssetAccountRepo] Balance calculated ($balance) for '${account.name}'. Returning entity.",
+          );
           return Right(accountModel.toEntity(balance));
         },
       );
     } on CacheFailure catch (e, s) {
       log.severe(
-          "[AssetAccountRepo] CacheFailure during add for '${account.name}'$e$s");
+        "[AssetAccountRepo] CacheFailure during add for '${account.name}'$e$s",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[AssetAccountRepo] Unexpected error during add for '${account.name}'$e$s");
+        "[AssetAccountRepo] Unexpected error during add for '${account.name}'$e$s",
+      );
       return Left(CacheFailure('Failed to add account: ${e.toString()}'));
     }
   }
 
   @override
   Future<Either<Failure, AssetAccount>> updateAssetAccount(
-      AssetAccount account) async {
+    AssetAccount account,
+  ) async {
     log.info(
-        "[AssetAccountRepo] Updating account '${account.name}' (ID: ${account.id}).");
+      "[AssetAccountRepo] Updating account '${account.name}' (ID: ${account.id}).",
+    );
     try {
       final accountModel = AssetAccountModel.fromEntity(account);
       log.info(
-          "[AssetAccountRepo] Mapped to model. Calling localDataSource...");
+        "[AssetAccountRepo] Mapped to model. Calling localDataSource...",
+      );
       await localDataSource.updateAssetAccount(accountModel);
       log.info(
-          "[AssetAccountRepo] Updated local source. Calculating balance...");
-      final balanceResult =
-          await _calculateBalance(account.id, account.initialBalance);
+        "[AssetAccountRepo] Updated local source. Calculating balance...",
+      );
+      final balanceResult = await _calculateBalance(
+        account.id,
+        account.initialBalance,
+      );
       log.info(
-          "[AssetAccountRepo] Balance calculation result isLeft: ${balanceResult.isLeft()}.");
+        "[AssetAccountRepo] Balance calculation result isLeft: ${balanceResult.isLeft()}.",
+      );
 
       return balanceResult.fold(
         (failure) {
           log.warning(
-              "[AssetAccountRepo] Balance calculation failed during update for '${account.name}': ${failure.message}.");
+            "[AssetAccountRepo] Balance calculation failed during update for '${account.name}': ${failure.message}.",
+          );
           return Left(failure);
         },
         (balance) {
           log.info(
-              "[AssetAccountRepo] Balance calculated ($balance) for '${account.name}'. Returning entity.");
+            "[AssetAccountRepo] Balance calculated ($balance) for '${account.name}'. Returning entity.",
+          );
           return Right(accountModel.toEntity(balance));
         },
       );
     } on CacheFailure catch (e, s) {
       log.severe(
-          "[AssetAccountRepo] CacheFailure during update for '${account.name}'$e$s");
+        "[AssetAccountRepo] CacheFailure during update for '${account.name}'$e$s",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[AssetAccountRepo] Unexpected error during update for '${account.name}'$e$s");
+        "[AssetAccountRepo] Unexpected error during update for '${account.name}'$e$s",
+      );
       return Left(CacheFailure('Failed to update account: ${e.toString()}'));
     }
   }
@@ -107,7 +128,8 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
     // **Chosen Strategy:** Prevent deletion if account has transactions.
     try {
       log.info(
-          "[AssetAccountRepo] Checking for linked income/expenses for account ID: $id...");
+        "[AssetAccountRepo] Checking for linked income/expenses for account ID: $id...",
+      );
       final incomeCheck = await incomeRepository.getIncomes(accountId: id);
       final expenseCheck = await expenseRepository.getExpenses(accountId: id);
 
@@ -115,42 +137,54 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       String transactionCheckError = '';
 
       incomeCheck.fold(
-          (f) => transactionCheckError += "Income check failed: ${f.message}. ",
-          (incomes) => hasTransactions = hasTransactions || incomes.isNotEmpty);
+        (f) => transactionCheckError += "Income check failed: ${f.message}. ",
+        (incomes) => hasTransactions = hasTransactions || incomes.isNotEmpty,
+      );
       expenseCheck.fold(
-          (f) =>
-              transactionCheckError += "Expense check failed: ${f.message}. ",
-          (expenses) =>
-              hasTransactions = hasTransactions || expenses.isNotEmpty);
+        (f) => transactionCheckError += "Expense check failed: ${f.message}. ",
+        (expenses) => hasTransactions = hasTransactions || expenses.isNotEmpty,
+      );
 
       if (transactionCheckError.isNotEmpty) {
         log.warning(
-            "[AssetAccountRepo] Error checking transactions for account $id: $transactionCheckError");
-        return Left(CacheFailure(
-            "Could not verify linked transactions: $transactionCheckError"));
+          "[AssetAccountRepo] Error checking transactions for account $id: $transactionCheckError",
+        );
+        return Left(
+          CacheFailure(
+            "Could not verify linked transactions: $transactionCheckError",
+          ),
+        );
       }
 
       if (hasTransactions) {
         log.warning(
-            "[AssetAccountRepo] Account $id has linked transactions. Preventing deletion.");
-        return const Left(ValidationFailure(
-            "Cannot delete account with existing income or expenses. Reassign or delete transactions first."));
+          "[AssetAccountRepo] Account $id has linked transactions. Preventing deletion.",
+        );
+        return const Left(
+          ValidationFailure(
+            "Cannot delete account with existing income or expenses. Reassign or delete transactions first.",
+          ),
+        );
       }
 
       // Proceed with deletion if no transactions found
       log.info(
-          "[AssetAccountRepo] No linked transactions found. Calling localDataSource.deleteAssetAccount...");
+        "[AssetAccountRepo] No linked transactions found. Calling localDataSource.deleteAssetAccount...",
+      );
       await localDataSource.deleteAssetAccount(id);
       log.info(
-          "[AssetAccountRepo] Deleted account $id from local source. Returning success.");
+        "[AssetAccountRepo] Deleted account $id from local source. Returning success.",
+      );
       return const Right(null);
     } on CacheFailure catch (e, s) {
       log.severe(
-          "[AssetAccountRepo] CacheFailure during delete for ID $id$e$s");
+        "[AssetAccountRepo] CacheFailure during delete for ID $id$e$s",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[AssetAccountRepo] Unexpected error during delete for ID $id$e$s");
+        "[AssetAccountRepo] Unexpected error during delete for ID $id$e$s",
+      );
       return Left(CacheFailure('Failed to delete account: ${e.toString()}'));
     }
   }
@@ -162,118 +196,159 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       log.info("[AssetAccountRepo] Fetching account models...");
       final accountModels = await localDataSource.getAssetAccounts();
       log.info("[AssetAccountRepo] Fetched ${accountModels.length} models.");
-      final List<AssetAccount> accounts = [];
 
-      // Calculate balance for each account sequentially
-      for (int i = 0; i < accountModels.length; i++) {
-        final model = accountModels[i];
-        log.info(
-            "[AssetAccountRepo] Processing account ${i + 1}/${accountModels.length}: ${model.name} (ID: ${model.id})");
-        log.info("[AssetAccountRepo] Calculating balance for ${model.name}...");
-        final balanceResult =
-            await _calculateBalance(model.id, model.initialBalance);
-        log.info(
-            "[AssetAccountRepo] Balance result for ${model.name}: isLeft=${balanceResult.isLeft()}");
+      // Fetch all incomes and expenses in parallel to avoid N+1 queries
+      final incomesFuture = incomeRepository.getIncomes();
+      final expensesFuture = expenseRepository.getExpenses();
+      final incomeResult = await incomesFuture;
+      final expenseResult = await expensesFuture;
 
-        if (balanceResult.isLeft()) {
-          log.warning(
-              "[AssetAccountRepo] Balance calculation failed for ${model.name}. Propagating failure for getAssetAccounts.");
-          // Propagate the specific failure from _calculateBalance
-          return balanceResult.fold(
-            (failure) => Left(failure),
-            // This fallback should not be reached if isLeft() is true
-            (_) => Left(UnexpectedFailure(
-                // Use a more specific failure if needed
-                'Unexpected state: _calculateBalance returned Left but fold failed for ${model.name}.')),
-          );
-        }
-
-        // Balance calculation succeeded, get the value and add the entity
-        final calculatedBalance = balanceResult.getOrElse(() {
-          // This should ideally not happen if isLeft() check passes, but good fallback
-          log.warning(
-              "[AssetAccountRepo] WARNING: balanceResult was Right but getOrElse fallback triggered for ${model.name}. Using initialBalance.");
-          return model.initialBalance;
-        });
-        accounts.add(model.toEntity(calculatedBalance));
-        log.info(
-            "[AssetAccountRepo] Added account ${model.name} with balance $calculatedBalance to list.");
+      if (incomeResult.isLeft()) {
+        return incomeResult.fold(
+          (l) => Left(l),
+          (_) => const Left(CacheFailure('Failed to fetch incomes')),
+        );
       }
+      if (expenseResult.isLeft()) {
+        return expenseResult.fold(
+          (l) => Left(l),
+          (_) => const Left(CacheFailure('Failed to fetch expenses')),
+        );
+      }
+
+      final incomeModels = incomeResult.getOrElse(() => []);
+      final expenseModels = expenseResult.getOrElse(() => []);
+
+      final Map<String, double> incomeMap = {};
+      for (final income in incomeModels) {
+        incomeMap.update(
+          income.accountId,
+          (value) => value + income.amount,
+          ifAbsent: () => income.amount,
+        );
+      }
+
+      final Map<String, double> expenseMap = {};
+      for (final expense in expenseModels) {
+        expenseMap.update(
+          expense.accountId,
+          (value) => value + expense.amount,
+          ifAbsent: () => expense.amount,
+        );
+      }
+
+      final accounts = accountModels.map((model) {
+        final totalIncome = incomeMap[model.id] ?? 0;
+        final totalExpenses = expenseMap[model.id] ?? 0;
+        final balance = model.initialBalance + totalIncome - totalExpenses;
+        return model.toEntity(balance);
+      }).toList();
+
       log.info(
-          "[AssetAccountRepo] Finished calculating all balances. Returning ${accounts.length} accounts.");
+        "[AssetAccountRepo] Finished calculating all balances in-memory. Returning ${accounts.length} accounts.",
+      );
       return Right(accounts);
     } on CacheFailure catch (e, s) {
       log.severe("[AssetAccountRepo] CacheFailure getting asset accounts$e$s");
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[AssetAccountRepo] Unexpected error getting asset accounts$e$s");
+        "[AssetAccountRepo] Unexpected error getting asset accounts$e$s",
+      );
       return Left(CacheFailure('Failed to get accounts: ${e.toString()}'));
     }
   }
 
   // Helper method for balance calculation - Returns Either<Failure, double>
   Future<Either<Failure, double>> _calculateBalance(
-      String accountId, double initialBalance) async {
+    String accountId,
+    double initialBalance,
+  ) async {
     log.info(
-        "[$runtimeType] _calculateBalance called for accountId: $accountId, initialBalance: $initialBalance");
+      "[$runtimeType] _calculateBalance called for accountId: $accountId, initialBalance: $initialBalance",
+    );
     try {
       log.info(
-          "[$runtimeType] Fetching total income for account $accountId...");
+        "[$runtimeType] Fetching total income for account $accountId...",
+      );
       final totalIncomeEither = await incomeRepository.getTotalIncomeForAccount(
-          accountId); // Empty string handled in IncomeRepo
+        accountId,
+      ); // Empty string handled in IncomeRepo
       totalIncomeEither.fold(
-          (f) => log.warning(
-              "[$runtimeType] Income fetch failed for $accountId: ${f.message}"),
-          (r) => log.info(
-              "[$runtimeType] Income fetch success for $accountId: Value=$r"));
+        (f) => log.warning(
+          "[$runtimeType] Income fetch failed for $accountId: ${f.message}",
+        ),
+        (r) => log.info(
+          "[$runtimeType] Income fetch success for $accountId: Value=$r",
+        ),
+      );
 
       if (totalIncomeEither.isLeft()) {
         log.warning(
-            "[$runtimeType] Returning Left due to income fetch failure for $accountId.");
+          "[$runtimeType] Returning Left due to income fetch failure for $accountId.",
+        );
         return totalIncomeEither.fold(
           (failure) =>
               Left<Failure, double>(failure), // Extract and return Left
-          (_) => const Left(UnexpectedFailure(
-              "Impossible state: income fetch failed but fold didn't extract Failure")),
+          (_) => const Left(
+            UnexpectedFailure(
+              "Impossible state: income fetch failed but fold didn't extract Failure",
+            ),
+          ),
         );
       }
-      final totalIncome =
-          totalIncomeEither.getOrElse(() => 0.0); // Safe extraction
+      final totalIncome = totalIncomeEither.getOrElse(
+        () => 0.0,
+      ); // Safe extraction
 
       log.info(
-          "[$runtimeType] Fetching total expenses for account $accountId...");
-      final totalExpensesEither =
-          await expenseRepository.getTotalExpensesForAccount(
-              accountId); // Empty string handled in ExpenseRepo
+        "[$runtimeType] Fetching total expenses for account $accountId...",
+      );
+      final totalExpensesEither = await expenseRepository
+          .getTotalExpensesForAccount(
+            accountId,
+          ); // Empty string handled in ExpenseRepo
       totalExpensesEither.fold(
-          (f) => log.warning(
-              "[$runtimeType] Expense fetch failed for $accountId: ${f.message}"),
-          (r) => log.info(
-              "[$runtimeType] Expense fetch success for $accountId: Value=$r"));
+        (f) => log.warning(
+          "[$runtimeType] Expense fetch failed for $accountId: ${f.message}",
+        ),
+        (r) => log.info(
+          "[$runtimeType] Expense fetch success for $accountId: Value=$r",
+        ),
+      );
 
       if (totalExpensesEither.isLeft()) {
         log.warning(
-            "[$runtimeType] Returning Left due to expense fetch failure for $accountId.");
+          "[$runtimeType] Returning Left due to expense fetch failure for $accountId.",
+        );
         return totalExpensesEither.fold(
           (failure) =>
               Left<Failure, double>(failure), // Extract and return Left
-          (_) => const Left(UnexpectedFailure(
-              "Impossible state: expense fetch failed but fold didn't extract Failure")),
+          (_) => const Left(
+            UnexpectedFailure(
+              "Impossible state: expense fetch failed but fold didn't extract Failure",
+            ),
+          ),
         );
       }
-      final totalExpenses =
-          totalExpensesEither.getOrElse(() => 0.0); // Safe extraction
+      final totalExpenses = totalExpensesEither.getOrElse(
+        () => 0.0,
+      ); // Safe extraction
 
       final finalBalance = initialBalance + totalIncome - totalExpenses;
       log.info(
-          "[$runtimeType] Calculated balance for $accountId: $initialBalance + $totalIncome - $totalExpenses = $finalBalance. Returning Right.");
+        "[$runtimeType] Calculated balance for $accountId: $initialBalance + $totalIncome - $totalExpenses = $finalBalance. Returning Right.",
+      );
       return Right(finalBalance);
     } catch (e, s) {
       log.severe(
-          "[$runtimeType] CRITICAL ERROR in _calculateBalance for account $accountId$e$s");
-      return Left(CacheFailure(
-          'Failed to calculate balance for account $accountId: ${e.toString()}'));
+        "[$runtimeType] CRITICAL ERROR in _calculateBalance for account $accountId$e$s",
+      );
+      return Left(
+        CacheFailure(
+          'Failed to calculate balance for account $accountId: ${e.toString()}',
+        ),
+      );
     }
   }
 }
