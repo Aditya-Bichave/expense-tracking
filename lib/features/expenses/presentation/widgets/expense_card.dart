@@ -14,6 +14,8 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/presentation/widgets/categorization_status_widget.dart';
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
@@ -38,10 +40,13 @@ class ExpenseCard extends StatelessWidget {
       fallbackIcon = _getElementalCategoryIcon(category.name);
     } catch (_) {}
     log.info(
-        "[ExpenseCard] Building icon for category '${category.name}' (IconName: ${category.iconName})");
+      "[ExpenseCard] Building icon for category '${category.name}' (IconName: ${category.iconName})",
+    );
     if (modeTheme != null) {
-      String svgPath =
-          modeTheme.assets.getCategoryIcon(category.iconName, defaultPath: '');
+      String svgPath = modeTheme.assets.getCategoryIcon(
+        category.iconName,
+        defaultPath: '',
+      );
       if (svgPath.isNotEmpty) {
         log.info("[ExpenseCard] Using SVG: $svgPath");
         return SvgPicture.asset(
@@ -86,131 +91,10 @@ class ExpenseCard extends StatelessWidget {
     }
   }
 
-  // Helper to build status indicator OR action buttons
-  Widget _buildStatusUI(BuildContext context) {
-    final theme = Theme.of(context);
-    final textStyleSmall =
-        theme.textTheme.bodySmall ?? const TextStyle(fontSize: 12);
-    final Color primaryColor = theme.colorScheme.primary;
-    final Color errorColor = theme.colorScheme.error;
-    final Color successColor = Colors.green.shade600;
-    final Color warningColor = Colors.orange.shade800;
-    const EdgeInsets buttonPadding = EdgeInsets.symmetric(
-        horizontal: 6.0, vertical: 2.0); // Padding for buttons
-    const Size buttonMinSize = Size(28, 28); // Minimum size for tap targets
-
-    switch (expense.status) {
-      case CategorizationStatus.needsReview:
-        // --- Interactive Suggestion Prompt UI ---
-        return Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 6.0, // Increased spacing
-          runSpacing: 4.0,
-          children: [
-            Icon(Icons.help_outline_rounded, size: 16, color: warningColor),
-            Text('Suggest: ${expense.category?.name ?? "?"}',
-                style: textStyleSmall.copyWith(
-                    color: warningColor, fontStyle: FontStyle.italic)),
-            // Confirm Button (using OutlinedButton for clearer boundary)
-            SizedBox(
-              // Constrain button size
-              height: 28,
-              child: OutlinedButton.icon(
-                icon: Icon(Icons.check, size: 16, color: successColor),
-                label: Text("Confirm",
-                    style: textStyleSmall.copyWith(color: successColor)),
-                style: OutlinedButton.styleFrom(
-                  padding: buttonPadding,
-                  minimumSize: buttonMinSize,
-                  visualDensity: VisualDensity.compact,
-                  side: BorderSide(color: successColor.withOpacity(0.5)),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
-                ),
-                onPressed: () {
-                  log.info(
-                      "[ExpenseCard] Suggestion confirmed for ${expense.id}");
-                  if (expense.category != null && onUserCategorized != null) {
-// TODO: merchantId
-                    onUserCategorized!(expense, expense.category!);
-                  }
-                },
-              ),
-            ),
-            // Change Button (using TextButton for less emphasis)
-            SizedBox(
-              height: 28,
-              child: TextButton.icon(
-                icon: Icon(Icons.edit_outlined, size: 16, color: primaryColor),
-                label: Text("Change",
-                    style: textStyleSmall.copyWith(color: primaryColor)),
-                style: TextButton.styleFrom(
-                  padding: buttonPadding,
-                  minimumSize: buttonMinSize,
-                  visualDensity: VisualDensity.compact,
-                ),
-                onPressed: () {
-                  log.info(
-                      "[ExpenseCard] Change requested for suggested ${expense.id}");
-                  onChangeCategoryRequest?.call(expense);
-                },
-              ),
-            ),
-          ],
-        );
-      // --- End Prompt ---
-      case CategorizationStatus.uncategorized:
-        // --- Interactive Uncategorized Button ---
-        return TextButton.icon(
-          icon: Icon(Icons.label_off_outlined, size: 16, color: errorColor),
-          label: Text('Categorize',
-              style: textStyleSmall.copyWith(color: errorColor)),
-          style: TextButton.styleFrom(
-            padding: buttonPadding, minimumSize: buttonMinSize,
-            visualDensity: VisualDensity.compact,
-            // Add a subtle border maybe?
-            // side: BorderSide(color: errorColor.withOpacity(0.3))
-          ),
-          onPressed: () {
-            log.info(
-                "[ExpenseCard] Change requested for uncategorized ${expense.id}");
-            onChangeCategoryRequest?.call(expense);
-          },
-        );
-      // --- End Button ---
-      case CategorizationStatus.categorized:
-        // Tappable Category Name
-        return InkWell(
-          onTap: () {
-            log.info(
-                "[ExpenseCard] Change requested for categorized ${expense.id}");
-            onChangeCategoryRequest?.call(expense);
-          },
-          child: Row(
-            // Wrap in row to allow potential future edit icon next to text
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                // Allow text to wrap/ellipsis if needed
-                child: Text(
-                  expense.category?.name ?? Category.uncategorized.name,
-                  style: textStyleSmall.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              // Optional: Add small edit icon here
-              // Icon(Icons.edit, size: 12, color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7))
-            ],
-          ),
-        );
-    }
-  }
+  // Removed _buildStatusUI, replaced by CategorizationStatusWidget
 
   @override
   Widget build(BuildContext context) {
-    // ... (Rest of build method remains the same, calling _buildStatusUI) ...
     final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
@@ -243,23 +127,37 @@ class ExpenseCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(expense.title,
-                    style: theme.textTheme.titleMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  expense.title,
+                  style: theme.textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 4),
-                _buildStatusUI(context),
+                CategorizationStatusWidget(
+                  transaction: TransactionEntity.fromExpense(expense),
+                  onUserCategorized: onUserCategorized == null
+                      ? null
+                      : (tx, cat) => onUserCategorized!(expense, cat),
+                  onChangeCategoryRequest: onChangeCategoryRequest == null
+                      ? null
+                      : (_) => onChangeCategoryRequest!(expense),
+                ),
                 const SizedBox(height: 2),
-                Text('Acc: $accountName',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant
-                            .withOpacity(0.8)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                Text(DateFormatter.formatDateTime(expense.date),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant
-                            .withOpacity(0.8))),
+                Text(
+                  'Acc: $accountName',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  DateFormatter.formatDateTime(expense.date),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  ),
+                ),
               ],
             ),
           ),
@@ -269,14 +167,16 @@ class ExpenseCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedDefaultTextStyle(
-                duration: modeTheme?.fastDuration ??
+                duration:
+                    modeTheme?.fastDuration ??
                     const Duration(milliseconds: 150),
                 style: theme.textTheme.titleMedium!.copyWith(
                   fontWeight: FontWeight.bold,
                   color: modeTheme?.expenseGlowColor ?? theme.colorScheme.error,
                 ),
                 child: Text(
-                    CurrencyFormatter.format(expense.amount, currencySymbol)),
+                  CurrencyFormatter.format(expense.amount, currencySymbol),
+                ),
               ),
             ],
           ),

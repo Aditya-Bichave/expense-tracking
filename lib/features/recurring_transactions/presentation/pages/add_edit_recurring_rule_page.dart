@@ -2,7 +2,8 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
-import 'package:expense_tracker/features/categories/presentation/widgets/category_selection_widget.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
@@ -47,8 +48,9 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
   late final TextEditingController _occurrencesController;
 
   List<String> _weekdayNamesMonFirst([String? locale]) {
-    final sundayFirst =
-        DateFormat.EEEE(locale).dateSymbols.WEEKDAYS; // [Sun, Mon, ..., Sat]
+    final sundayFirst = DateFormat.EEEE(
+      locale,
+    ).dateSymbols.WEEKDAYS; // [Sun, Mon, ..., Sat]
     return [...sundayFirst.skip(1), sundayFirst.first]; // [Mon, Tue, ..., Sun]
   }
 
@@ -58,11 +60,14 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
     final state = context.read<AddEditRecurringRuleBloc>().state;
     _descriptionController = TextEditingController(text: state.description);
     _amountController = TextEditingController(
-        text: state.amount == 0 ? '' : state.amount.toString());
-    _intervalController =
-        TextEditingController(text: state.interval.toString());
-    _occurrencesController =
-        TextEditingController(text: state.totalOccurrences?.toString() ?? '');
+      text: state.amount == 0 ? '' : state.amount.toString(),
+    );
+    _intervalController = TextEditingController(
+      text: state.interval.toString(),
+    );
+    _occurrencesController = TextEditingController(
+      text: state.totalOccurrences?.toString() ?? '',
+    );
   }
 
   @override
@@ -79,9 +84,11 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.initialRule == null
-            ? 'Add Recurring Rule'
-            : 'Edit Recurring Rule'),
+        title: Text(
+          widget.initialRule == null
+              ? 'Add Recurring Rule'
+              : 'Edit Recurring Rule',
+        ),
       ),
       body: BlocConsumer<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
         listener: (context, state) {
@@ -92,7 +99,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                    content: Text(state.errorMessage ?? 'An error occurred.')),
+                  content: Text(state.errorMessage ?? 'An error occurred.'),
+                ),
               );
           }
 
@@ -101,8 +109,9 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
           }
           if (_amountController.text !=
               (state.amount == 0 ? '' : state.amount.toString())) {
-            _amountController.text =
-                state.amount == 0 ? '' : state.amount.toString();
+            _amountController.text = state.amount == 0
+                ? ''
+                : state.amount.toString();
           }
           if (_intervalController.text != state.interval.toString()) {
             _intervalController.text = state.interval.toString();
@@ -124,27 +133,27 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     context: context,
                     initialIndex:
                         state.transactionType == TransactionType.expense
-                            ? 0
-                            : 1,
+                        ? 0
+                        : 1,
                     labels: const ['Expense', 'Income'],
                     activeBgColors: [
                       [
                         theme.colorScheme.errorContainer.withOpacity(0.7),
-                        theme.colorScheme.errorContainer
+                        theme.colorScheme.errorContainer,
                       ],
                       [
                         theme.colorScheme.primaryContainer,
-                        theme.colorScheme.primaryContainer.withOpacity(0.7)
-                      ]
+                        theme.colorScheme.primaryContainer.withOpacity(0.7),
+                      ],
                     ],
                     onToggle: (index) {
                       if (index != null) {
                         final newType = index == 0
                             ? TransactionType.expense
                             : TransactionType.income;
-                        context
-                            .read<AddEditRecurringRuleBloc>()
-                            .add(TransactionTypeChanged(newType));
+                        context.read<AddEditRecurringRuleBloc>().add(
+                          TransactionTypeChanged(newType),
+                        );
                       }
                     },
                   ),
@@ -168,19 +177,29 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   const SizedBox(height: 16),
                   ListTile(
                     leading: const Icon(Icons.category),
-                    title:
-                        Text(state.selectedCategory?.name ?? 'Select Category'),
+                    title: Text(
+                      state.selectedCategory?.name ?? 'Select Category',
+                    ),
                     onTap: () async {
+                      final filter =
+                          state.transactionType == TransactionType.expense
+                          ? CategoryTypeFilter.expense
+                          : CategoryTypeFilter.income;
+                      final catState = context
+                          .read<CategoryManagementBloc>()
+                          .state;
+                      final list = filter == CategoryTypeFilter.expense
+                          ? catState.allExpenseCategories
+                          : catState.allIncomeCategories;
                       final category = await showCategoryPicker(
                         context,
-                        state.transactionType == TransactionType.expense
-                            ? CategoryTypeFilter.expense
-                            : CategoryTypeFilter.income,
+                        filter,
+                        list,
                       );
                       if (category != null) {
-                        context
-                            .read<AddEditRecurringRuleBloc>()
-                            .add(CategoryChanged(category));
+                        context.read<AddEditRecurringRuleBloc>().add(
+                          CategoryChanged(category),
+                        );
                       }
                     },
                   ),
@@ -198,14 +217,16 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     labelText: 'Frequency',
                     value: state.frequency,
                     items: Frequency.values
-                        .map((f) =>
-                            DropdownMenuItem(value: f, child: Text(f.name)))
+                        .map(
+                          (f) =>
+                              DropdownMenuItem(value: f, child: Text(f.name)),
+                        )
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
-                        context
-                            .read<AddEditRecurringRuleBloc>()
-                            .add(FrequencyChanged(value));
+                        context.read<AddEditRecurringRuleBloc>().add(
+                          FrequencyChanged(value),
+                        );
                       }
                     },
                   ),
@@ -214,16 +235,17 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     ListTile(
                       leading: const Icon(Icons.access_time),
                       title: Text(
-                          state.startTime?.format(context) ?? 'Select Time'),
+                        state.startTime?.format(context) ?? 'Select Time',
+                      ),
                       onTap: () async {
                         final time = await showTimePicker(
                           context: context,
                           initialTime: state.startTime ?? TimeOfDay.now(),
                         );
                         if (time != null) {
-                          context
-                              .read<AddEditRecurringRuleBloc>()
-                              .add(TimeChanged(time));
+                          context.read<AddEditRecurringRuleBloc>().add(
+                            TimeChanged(time),
+                          );
                         }
                       },
                     ),
@@ -232,16 +254,17 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       labelText: 'Day of Week',
                       value: state.dayOfWeek,
                       items: List.generate(
-                          7,
-                          (index) => DropdownMenuItem(
-                                value: index + 1,
-                                child: Text(_weekdayNamesMonFirst()[index]),
-                              )),
+                        7,
+                        (index) => DropdownMenuItem(
+                          value: index + 1,
+                          child: Text(_weekdayNamesMonFirst()[index]),
+                        ),
+                      ),
                       onChanged: (value) {
                         if (value != null) {
-                          context
-                              .read<AddEditRecurringRuleBloc>()
-                              .add(DayOfWeekChanged(value));
+                          context.read<AddEditRecurringRuleBloc>().add(
+                            DayOfWeekChanged(value),
+                          );
                         }
                       },
                     ),
@@ -250,15 +273,17 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       labelText: 'Day of Month',
                       value: state.dayOfMonth,
                       items: List.generate(
-                          31,
-                          (index) => DropdownMenuItem(
-                              value: index + 1,
-                              child: Text((index + 1).toString()))),
+                        31,
+                        (index) => DropdownMenuItem(
+                          value: index + 1,
+                          child: Text((index + 1).toString()),
+                        ),
+                      ),
                       onChanged: (value) {
                         if (value != null) {
-                          context
-                              .read<AddEditRecurringRuleBloc>()
-                              .add(DayOfMonthChanged(value));
+                          context.read<AddEditRecurringRuleBloc>().add(
+                            DayOfMonthChanged(value),
+                          );
                         }
                       },
                     ),
@@ -267,23 +292,27 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     labelText: 'Ends',
                     value: state.endConditionType,
                     items: EndConditionType.values
-                        .map((ec) =>
-                            DropdownMenuItem(value: ec, child: Text(ec.name)))
+                        .map(
+                          (ec) =>
+                              DropdownMenuItem(value: ec, child: Text(ec.name)),
+                        )
                         .toList(),
                     onChanged: (value) {
                       if (value != null) {
-                        context
-                            .read<AddEditRecurringRuleBloc>()
-                            .add(EndConditionTypeChanged(value));
+                        context.read<AddEditRecurringRuleBloc>().add(
+                          EndConditionTypeChanged(value),
+                        );
                       }
                     },
                   ),
                   if (state.endConditionType == EndConditionType.onDate)
                     ListTile(
                       leading: const Icon(Icons.calendar_today),
-                      title: Text(state.endDate != null
-                          ? DateFormat.yMd().format(state.endDate!)
-                          : 'Select End Date'),
+                      title: Text(
+                        state.endDate != null
+                            ? DateFormat.yMd().format(state.endDate!)
+                            : 'Select End Date',
+                      ),
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
@@ -292,9 +321,9 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                           lastDate: DateTime(2100),
                         );
                         if (date != null) {
-                          context
-                              .read<AddEditRecurringRuleBloc>()
-                              .add(EndDateChanged(date));
+                          context.read<AddEditRecurringRuleBloc>().add(
+                            EndDateChanged(date),
+                          );
                         }
                       },
                     ),
@@ -303,7 +332,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     TextFormField(
                       controller: _occurrencesController,
                       decoration: const InputDecoration(
-                          labelText: 'Number of Occurrences'),
+                        labelText: 'Number of Occurrences',
+                      ),
                       keyboardType: TextInputType.number,
                       onChanged: (value) => context
                           .read<AddEditRecurringRuleBloc>()
@@ -313,13 +343,13 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   ElevatedButton(
                     onPressed: state.status == FormStatus.inProgress
                         ? null
-                        : () => context
-                            .read<AddEditRecurringRuleBloc>()
-                            .add(FormSubmitted()),
+                        : () => context.read<AddEditRecurringRuleBloc>().add(
+                            FormSubmitted(),
+                          ),
                     child: state.status == FormStatus.inProgress
                         ? const CircularProgressIndicator()
                         : const Text('Save'),
-                  )
+                  ),
                 ],
               ),
             ),
