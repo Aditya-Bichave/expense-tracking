@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
+import 'package:collection/collection.dart';
 
 class EncryptionHelper {
   static const _saltLength = 16;
@@ -13,10 +14,12 @@ class EncryptionHelper {
     final iv = encrypt.IV.fromSecureRandom(16);
     final encrypter = encrypt.Encrypter(encrypt.AES(key));
     final encrypted = encrypter.encrypt(plainText, iv: iv);
+    final mac = Hmac(sha256, key.bytes).convert(utf8.encode(plainText)).bytes;
     return {
       'salt': base64Encode(salt),
       'iv': iv.base64,
       'cipher': encrypted.base64,
+      'mac': base64Encode(mac),
     };
   }
 
@@ -25,7 +28,15 @@ class EncryptionHelper {
     final key = _deriveKey(password, salt);
     final iv = encrypt.IV.fromBase64(payload['iv'] as String);
     final encrypter = encrypt.Encrypter(encrypt.AES(key));
-    return encrypter.decrypt64(payload['cipher'] as String, iv: iv);
+    final decrypted = encrypter.decrypt64(payload['cipher'] as String, iv: iv);
+    final macBase64 = payload['mac'] as String?;
+    if (macBase64 != null) {
+      final mac = Hmac(sha256, key.bytes).convert(utf8.encode(decrypted)).bytes;
+      if (!const ListEquality().equals(mac, base64Decode(macBase64))) {
+        throw const FormatException('Invalid password or corrupted data');
+      }
+    }
+    return decrypted;
   }
 
   static encrypt.Key _deriveKey(String password, List<int> salt) {

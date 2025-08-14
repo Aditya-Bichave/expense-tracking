@@ -4,8 +4,8 @@ import '../error/failure.dart';
 
 // Use dartz for Functional Error Handling (Either<Failure, Success>)
 
-abstract class UseCase<Type, Params> {
-  Future<Either<Failure, Type>> call(Params params);
+abstract class UseCase<T, Params> {
+  Future<Either<Failure, T>> call(Params params);
 }
 
 // Parameter class if no parameters are needed

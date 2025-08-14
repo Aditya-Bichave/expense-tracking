@@ -271,7 +271,11 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         7,
                         (index) => DropdownMenuItem(
                           value: index + 1,
-                          child: Text(_weekdayNamesMonFirst(context)[index]),
+                          child: Text(
+                            _weekdayNamesMonFirst(
+                              Localizations.localeOf(context).toString(),
+                            )[index],
+                          ),
                         ),
                       ),
                       onChanged: (value) {
@@ -348,8 +352,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(
                           context,
-                        )!
-                            .numberOfOccurrences,
+                        )!.numberOfOccurrences,
                       ),
                       keyboardType: TextInputType.number,
                       onChanged: (value) => context

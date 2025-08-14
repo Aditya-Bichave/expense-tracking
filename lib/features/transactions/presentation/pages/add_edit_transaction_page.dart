@@ -296,31 +296,34 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               return Stack(
                 children: [
                   TransactionForm(
-                    key: ValueKey(state.transactionType.toString() +
-                        (state.transactionId ?? 'new')),
+                    key: ValueKey(
+                      state.transactionType.toString() +
+                          (state.transactionId ?? 'new'),
+                    ),
                     initialTransaction: state.isEditing
                         ? (state.transactionType == TransactionType.expense
-                            ? TransactionEntity.fromExpense(
-                                Expense(
-                                  id: state.transactionId!,
-                                  title: state.tempTitle ?? '',
-                                  amount: state.tempAmount ?? 0,
-                                  date: state.tempDate ?? DateTime.now(),
-                                  category: state.category,
-                                  accountId: state.tempAccountId ?? '',
-                                ),
-                              )
-                            : TransactionEntity.fromIncome(
-                                Income(
-                                  id: state.transactionId!,
-                                  title: state.tempTitle ?? '',
-                                  amount: state.tempAmount ?? 0,
-                                  date: state.tempDate ?? DateTime.now(),
-                                  category: state.category,
-                                  accountId: state.tempAccountId ?? '',
-                                  notes: state.tempNotes,
-                                ),
-                              )),
+                              ? TransactionEntity.fromExpense(
+                                  Expense(
+                                    id: state.transactionId!,
+                                    title: state.tempTitle ?? '',
+                                    amount: state.tempAmount ?? 0,
+                                    date: state.tempDate ?? DateTime.now(),
+                                    category: state.category,
+                                    accountId: state.tempAccountId ?? '',
+                                  ),
+                                )
+                              : TransactionEntity.fromIncome(
+                                  Income(
+                                    id: state.transactionId!,
+                                    title: state.tempTitle ?? '',
+                                    amount: state.tempAmount ?? 0,
+                                    date: state.tempDate ?? DateTime.now(),
+                                    category: state.category,
+                                    accountId: state.tempAccountId ?? '',
+                                    notes: state.tempNotes,
+                                  ),
+                                ))
+                        : null,
                     initialType: state.transactionType,
                     initialCategory: state.effectiveCategory,
                     initialTitle: state.tempTitle,

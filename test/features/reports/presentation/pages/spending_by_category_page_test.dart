@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 
 class MockSpendingCategoryReportBloc
     extends MockBloc<SpendingCategoryReportEvent, SpendingCategoryReportState>
@@ -100,7 +101,11 @@ void main() {
         BlocProvider<ReportFilterBloc>.value(value: filterBloc),
         BlocProvider<SettingsBloc>.value(value: settingsBloc),
       ],
-      child: MaterialApp.router(routerConfig: router),
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
     ));
     await tester.pumpAndSettle();
 

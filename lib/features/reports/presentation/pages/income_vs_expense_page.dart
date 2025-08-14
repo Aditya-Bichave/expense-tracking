@@ -43,16 +43,16 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     final currentPeriod = currentState is IncomeExpenseReportLoaded
         ? currentState.reportData.periodType
         : (currentState is IncomeExpenseReportLoading)
-        ? currentState.periodType
-        : IncomeExpensePeriodType.monthly; // Default
+            ? currentState.periodType
+            : IncomeExpensePeriodType.monthly; // Default
 
     // Dispatch event with the NEW comparison state
     context.read<IncomeExpenseReportBloc>().add(
-      LoadIncomeExpenseReport(
-        compareToPrevious: newComparisonState, // Pass the toggled value
-        periodType: currentPeriod,
-      ),
-    );
+          LoadIncomeExpenseReport(
+            compareToPrevious: newComparisonState, // Pass the toggled value
+            periodType: currentPeriod,
+          ),
+        );
     log.info(
       "[IncomeVsExpensePage] Toggled comparison to: $newComparisonState",
     );
@@ -128,8 +128,8 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             final currentPeriod = (state is IncomeExpenseReportLoaded)
                 ? state.reportData.periodType
                 : (state is IncomeExpenseReportLoading)
-                ? state.periodType
-                : IncomeExpensePeriodType.monthly;
+                    ? state.periodType
+                    : IncomeExpensePeriodType.monthly;
             return PopupMenuButton<IncomeExpensePeriodType>(
               initialValue: currentPeriod,
               onSelected: (p) {
@@ -211,8 +211,7 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               },
             );
 
-            final bool showTable =
-                settingsState.uiMode == UIMode.quantum &&
+            final bool showTable = settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
             return ListView(
@@ -319,11 +318,14 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
                     currencySymbol,
                   ),
                 ),
-                onTap: () => _navigateToFilteredTransactions(
-                  context,
-                  item,
-                  TransactionType.income,
-                ),
+                onTap: () {
+                  SystemSound.play(SystemSoundType.click);
+                  _navigateToFilteredTransactions(
+                    context,
+                    item,
+                    TransactionType.income,
+                  );
+                },
               ),
               DataCell(
                 Text(
@@ -332,11 +334,14 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
                     currencySymbol,
                   ),
                 ),
-                onTap: () => _navigateToFilteredTransactions(
-                  context,
-                  item,
-                  TransactionType.expense,
-                ),
+                onTap: () {
+                  SystemSound.play(SystemSoundType.click);
+                  _navigateToFilteredTransactions(
+                    context,
+                    item,
+                    TransactionType.expense,
+                  );
+                },
               ),
               DataCell(
                 Text(
