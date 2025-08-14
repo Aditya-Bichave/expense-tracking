@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:dartz/dartz.dart';
@@ -146,5 +147,26 @@ void main() {
     verifyNever(() => mockAddIncomeUseCase(any()));
     verifyNever(() =>
         mockRecurringTransactionRepository.updateRecurringRule(any()));
+  });
+
+  test(
+      'should return failure and not generate transaction when category lookup fails',
+      () async {
+    // Arrange
+    final failure = CacheFailure('cache error');
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([tRule]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => Left(failure));
+
+    // Act
+    final result = await usecase(const NoParams());
+
+    // Assert
+    expect(result, Left(failure));
+    verifyNever(() => mockAddExpenseUseCase(any()));
+    verifyNever(() => mockAddIncomeUseCase(any()));
+    verifyNever(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()));
   });
 }
