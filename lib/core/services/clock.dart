@@ -4,5 +4,5 @@ abstract class Clock {
 
 class SystemClock implements Clock {
   @override
-  DateTime now() => DateTime.now();
+  DateTime now() => DateTime.now().toUtc();
 }

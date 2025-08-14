@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/services/downloader_service.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
+import 'package:expense_tracker/core/utils/encryption_helper.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -13,7 +14,7 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/services.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 
-class BackupDataUseCase implements UseCase<String?, NoParams> {
+class BackupDataUseCase implements UseCase<String?, BackupParams> {
   final DataManagementRepository dataManagementRepository;
   final DownloaderService downloaderService;
 
@@ -23,7 +24,7 @@ class BackupDataUseCase implements UseCase<String?, NoParams> {
   });
 
   @override
-  Future<Either<Failure, String?>> call(NoParams params) async {
+  Future<Either<Failure, String?>> call(BackupParams params) async {
     log.info(
         "[BackupUseCase] Backup process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}");
     try {
@@ -55,20 +56,22 @@ class BackupDataUseCase implements UseCase<String?, NoParams> {
           AppConstants.backupTimestampKey: backupTimestamp,
           AppConstants.backupFormatVersionKey: AppConstants.backupFormatVersion,
         },
-        AppConstants.backupDataKey:
-            allData.toJson(),
+        AppConstants.backupDataKey: allData.toJson(),
       };
       log.info("[BackupUseCase] Backup structure prepared.");
 
       log.info("[BackupUseCase] Encoding data to JSON...");
       final jsonString = jsonEncode(backupData);
+      final encryptedPayload =
+          EncryptionHelper.encryptString(jsonString, params.password);
+      final payloadString = jsonEncode(encryptedPayload);
       final backupFilename =
           '${AppConstants.appName.toLowerCase().replaceAll(' ', '_')}_backup_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.json';
 
       if (kIsWeb) {
         log.info("[BackupUseCase] Platform is Web. Triggering download...");
         try {
-          final bytes = utf8.encode(jsonString);
+          final bytes = utf8.encode(payloadString);
           await downloaderService.downloadFile(
             bytes: Uint8List.fromList(bytes),
             downloadName: backupFilename,
@@ -106,7 +109,7 @@ class BackupDataUseCase implements UseCase<String?, NoParams> {
 
           log.info("[BackupUseCase] Writing JSON to file: $finalPath...");
           final file = File(finalPath);
-          await file.writeAsString(jsonString, flush: true);
+          await file.writeAsString(payloadString, flush: true);
           log.info("[BackupUseCase] File written successfully.");
           return Right(finalPath);
         } on PlatformException catch (e, s) {
@@ -128,4 +131,9 @@ class BackupDataUseCase implements UseCase<String?, NoParams> {
           "An unexpected error occurred during backup: ${e.toString()}"));
     }
   }
+}
+
+class BackupParams {
+  final String password;
+  const BackupParams(this.password);
 }

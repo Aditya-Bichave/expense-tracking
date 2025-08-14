@@ -41,7 +41,7 @@ class DataManagementBloc
     log.info("[DataManagementBloc] Received BackupRequested event.");
     emit(state.copyWith(
         status: DataManagementStatus.loading, clearMessage: true));
-    final result = await _backupDataUseCase(const NoParams());
+    final result = await _backupDataUseCase(BackupParams(event.password));
     result.fold((failure) {
       log.warning("[DataManagementBloc] Backup failed: ${failure.message}");
       emit(state.copyWith(
@@ -65,7 +65,7 @@ class DataManagementBloc
     log.info("[DataManagementBloc] Received RestoreRequested event.");
     emit(state.copyWith(
         status: DataManagementStatus.loading, clearMessage: true));
-    final result = await _restoreDataUseCase(const NoParams());
+    final result = await _restoreDataUseCase(RestoreParams(event.password));
     result.fold(
       (failure) {
         log.warning("[DataManagementBloc] Restore failed: ${failure.message}");
