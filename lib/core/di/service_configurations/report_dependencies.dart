@@ -48,32 +48,34 @@ class ReportDependencies {
         () => CsvExportHelper(downloaderService: sl()));
 
     // --- Blocs ---
-    // Shared filter bloc - Singleton
-    sl.registerLazySingleton<ReportFilterBloc>(() => ReportFilterBloc(
-          // --- FINAL FIX: Use parameter names from the Bloc's constructor ---
-          categoryRepository: sl<
-              GetCategoriesUseCase>(), // Parameter name is 'categoryRepository'
-          accountRepository: sl<
-              GetAssetAccountsUseCase>(), // Parameter name is 'accountRepository'
-          budgetRepository:
-              sl<GetBudgetsUseCase>(), // Parameter name is 'budgetRepository'
-          goalRepository:
-              sl<GetGoalsUseCase>(), // Parameter name is 'goalRepository'
-          // --- END FIX ---
+    // Filter bloc - Factory (new instance per report page)
+    sl.registerFactory<ReportFilterBloc>(() => ReportFilterBloc(
+          categoryRepository: sl<GetCategoriesUseCase>(),
+          accountRepository: sl<GetAssetAccountsUseCase>(),
+          budgetRepository: sl<GetBudgetsUseCase>(),
+          goalRepository: sl<GetGoalsUseCase>(),
         ));
 
-    // Individual report Blocs (depend on filter bloc stream) - Factory
-    sl.registerFactory<SpendingCategoryReportBloc>(() =>
-        SpendingCategoryReportBloc(
-            getSpendingCategoryReportUseCase: sl(), reportFilterBloc: sl()));
-    sl.registerFactory<SpendingTimeReportBloc>(() => SpendingTimeReportBloc(
-        getSpendingTimeReportUseCase: sl(), reportFilterBloc: sl()));
-    sl.registerFactory<IncomeExpenseReportBloc>(() => IncomeExpenseReportBloc(
-        getIncomeExpenseReportUseCase: sl(), reportFilterBloc: sl()));
-    sl.registerFactory<BudgetPerformanceReportBloc>(() =>
-        BudgetPerformanceReportBloc(
-            getBudgetPerformanceReportUseCase: sl(), reportFilterBloc: sl()));
-    sl.registerFactory<GoalProgressReportBloc>(() => GoalProgressReportBloc(
-        getGoalProgressReportUseCase: sl(), reportFilterBloc: sl()));
+    // Individual report Blocs require an external ReportFilterBloc
+    sl.registerFactoryParam<SpendingCategoryReportBloc, ReportFilterBloc, void>(
+        (filterBloc, _) => SpendingCategoryReportBloc(
+            getSpendingCategoryReportUseCase: sl(),
+            reportFilterBloc: filterBloc));
+    sl.registerFactoryParam<SpendingTimeReportBloc, ReportFilterBloc, void>(
+        (filterBloc, _) => SpendingTimeReportBloc(
+            getSpendingTimeReportUseCase: sl(),
+            reportFilterBloc: filterBloc));
+    sl.registerFactoryParam<IncomeExpenseReportBloc, ReportFilterBloc, void>(
+        (filterBloc, _) => IncomeExpenseReportBloc(
+            getIncomeExpenseReportUseCase: sl(),
+            reportFilterBloc: filterBloc));
+    sl.registerFactoryParam<BudgetPerformanceReportBloc, ReportFilterBloc, void>(
+        (filterBloc, _) => BudgetPerformanceReportBloc(
+            getBudgetPerformanceReportUseCase: sl(),
+            reportFilterBloc: filterBloc));
+    sl.registerFactoryParam<GoalProgressReportBloc, ReportFilterBloc, void>(
+        (filterBloc, _) => GoalProgressReportBloc(
+            getGoalProgressReportUseCase: sl(),
+            reportFilterBloc: filterBloc));
   }
 }
