@@ -3,7 +3,7 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart'; // Updated path
+import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -14,9 +14,6 @@ class TransactionCalendarView extends StatelessWidget {
   final CalendarFormat calendarFormat;
   final DateTime focusedDay;
   final DateTime? selectedDay;
-  final List<TransactionEntity> selectedDayTransactions;
-  final List<TransactionEntity> currentTransactionsForCalendar;
-  final Function(DateTime) getEventsForDay;
   final Function(DateTime, DateTime) onDaySelected;
   final Function(CalendarFormat) onFormatChanged;
   final Function(DateTime) onPageChanged;
@@ -29,9 +26,6 @@ class TransactionCalendarView extends StatelessWidget {
     required this.calendarFormat,
     required this.focusedDay,
     required this.selectedDay,
-    required this.selectedDayTransactions,
-    required this.currentTransactionsForCalendar,
-    required this.getEventsForDay,
     required this.onDaySelected,
     required this.onFormatChanged,
     required this.onPageChanged,
@@ -42,12 +36,10 @@ class TransactionCalendarView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (state.status == ListStatus.loading &&
-        currentTransactionsForCalendar.isEmpty) {
+    if (state.status == ListStatus.loading && state.transactions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (state.status == ListStatus.error &&
-        currentTransactionsForCalendar.isEmpty) {
+    if (state.status == ListStatus.error && state.transactions.isEmpty) {
       return Center(
           child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -56,6 +48,18 @@ class TransactionCalendarView extends StatelessWidget {
                   style: TextStyle(color: theme.colorScheme.error),
                   textAlign: TextAlign.center)));
     }
+    List<TransactionEntity> eventsForDay(DateTime day) {
+      final normalizedDay = DateTime(day.year, day.month, day.day);
+      return state.transactions.where((txn) {
+        final normalizedTxnDate =
+            DateTime(txn.date.year, txn.date.month, txn.date.day);
+        return isSameDay(normalizedTxnDate, normalizedDay);
+      }).toList();
+    }
+
+    final transactionsForSelectedDay = selectedDay != null
+        ? eventsForDay(selectedDay!)
+        : <TransactionEntity>[];
 
     return Column(
       children: [
@@ -70,7 +74,7 @@ class TransactionCalendarView extends StatelessWidget {
             CalendarFormat.twoWeeks: '2 Weeks',
             CalendarFormat.week: 'Week',
           },
-          eventLoader: (day) => getEventsForDay(day),
+          eventLoader: eventsForDay,
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
                 color: theme.colorScheme.primary.withOpacity(0.3),
@@ -126,16 +130,19 @@ class TransactionCalendarView extends StatelessWidget {
         ),
         const Divider(height: 1, thickness: 1),
         Expanded(
-          child: _buildSelectedDayTransactionList(context, settings),
+          child: _buildSelectedDayTransactionList(
+              context, settings, transactionsForSelectedDay),
         ),
       ],
     );
   }
 
   Widget _buildSelectedDayTransactionList(
-      BuildContext context, SettingsState settings) {
+      BuildContext context,
+      SettingsState settings,
+      List<TransactionEntity> transactionsForSelectedDay) {
     final theme = Theme.of(context);
-    if (selectedDayTransactions.isEmpty) {
+    if (transactionsForSelectedDay.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40.0),
@@ -148,9 +155,9 @@ class TransactionCalendarView extends StatelessWidget {
     return ListView.builder(
       key: ValueKey(selectedDay),
       padding: const EdgeInsets.only(top: 8.0, bottom: 80.0),
-      itemCount: selectedDayTransactions.length,
+      itemCount: transactionsForSelectedDay.length,
       itemBuilder: (ctx, index) {
-        final transaction = selectedDayTransactions[index];
+        final transaction = transactionsForSelectedDay[index];
         return TransactionListItem(
           transaction: transaction,
           currencySymbol: settings.currencySymbol,
