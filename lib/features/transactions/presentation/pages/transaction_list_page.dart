@@ -18,12 +18,10 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_calendar_view.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:flutter/foundation.dart' hide Category; // For listEquals
 import 'package:flutter/material.dart'; // Hide the conflicting Category
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:collection/collection.dart';
 
 class TransactionListPage extends StatefulWidget {
   // --- ADDED: Accept optional initial filters ---
@@ -44,9 +42,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<TransactionEntity> _selectedDayTransactions = [];
-  List<TransactionEntity> _currentTransactionsForCalendar = [];
-  StreamSubscription? _blocSubscription;
 
   @override
   void initState() {
@@ -63,20 +58,18 @@ class _TransactionListPageState extends State<TransactionListPage> {
       log.info(
         "[TxnListPage] Applying initial filters from route: ${widget.initialFilters}",
       );
-      // Dispatch event to bloc to apply filters and load
       context.read<TransactionListBloc>().add(
-        LoadTransactions(
-          forceReload: true,
-          incomingFilters: widget.initialFilters,
-        ),
-      );
+            LoadTransactions(
+              forceReload: true,
+              incomingFilters: widget.initialFilters,
+            ),
+          );
     } else {
-      // Load normally if no initial filters
-      _setupInitialCalendarData();
+      final bloc = context.read<TransactionListBloc>();
+      if (bloc.state.status == ListStatus.initial) {
+        bloc.add(const LoadTransactions());
+      }
     }
-    // --- END MODIFICATION ---
-
-    _listenToBlocChanges();
   }
 
   @override
@@ -84,57 +77,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _debounce?.cancel();
-    _blocSubscription?.cancel();
     super.dispose();
-  }
-
-  void _listenToBlocChanges() {
-    _blocSubscription = context.read<TransactionListBloc>().stream.listen((
-      state,
-    ) {
-      if (state.status == ListStatus.success && mounted) {
-        if (!listEquals(_currentTransactionsForCalendar, state.transactions)) {
-          log.fine(
-            "[TxnListPage] BLoC state updated, refreshing calendar data cache.",
-          );
-          setState(() {
-            _currentTransactionsForCalendar = state.transactions;
-            _updateSelectedDayTransactions(); // Refresh selected day's list too
-          });
-        }
-      } else if (state.status != ListStatus.success &&
-          mounted &&
-          _currentTransactionsForCalendar.isNotEmpty) {
-        log.fine(
-          "[TxnListPage] BLoC state not success, clearing calendar data cache.",
-        );
-        setState(() {
-          _currentTransactionsForCalendar = [];
-          _selectedDayTransactions = [];
-        });
-      }
-    });
-  }
-
-  void _setupInitialCalendarData() {
-    // Check initial BLoC state and populate calendar data if ready
-    final bloc = context.read<TransactionListBloc>();
-    if (bloc.state.status == ListStatus.initial) {
-      bloc.add(const LoadTransactions()); // Trigger load if initial
-    } else if (bloc.state.status == ListStatus.success) {
-      // Ensure calendar uses the current state's transactions
-      if (!listEquals(
-        _currentTransactionsForCalendar,
-        bloc.state.transactions,
-      )) {
-        setState(() {
-          _currentTransactionsForCalendar = bloc.state.transactions;
-          _updateSelectedDayTransactions(); // Update list for initially selected day
-        });
-      } else {
-        _updateSelectedDayTransactions(); // Update list for initially selected day even if txns haven't changed
-      }
-    }
   }
 
   // --- Interaction Handlers (Keep as is) ---
@@ -145,8 +88,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
         final searchTerm = _searchController.text.trim();
         log.fine("[TxnListPage] Search term changed: '$searchTerm'");
         context.read<TransactionListBloc>().add(
-          SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
-        );
+              SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
+            );
       }
     });
   }
@@ -212,13 +155,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
             null, // TODO: Add merchant ID if available on transaction entity
       );
       context.read<TransactionListBloc>().add(
-        UserCategorizedTransaction(
-          transactionId: transaction.id,
-          transactionType: transaction.type,
-          selectedCategory: selectedCategory,
-          matchData: matchData,
-        ),
-      );
+            UserCategorizedTransaction(
+              transactionId: transaction.id,
+              transactionType: transaction.type,
+              selectedCategory: selectedCategory,
+              matchData: matchData,
+            ),
+          );
     } else {
       log.info("[TxnListPage] Category picker dismissed without selection.");
     }
@@ -278,14 +221,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
             initialCategoryId: currentState.categoryId,
             onApplyFilter: (startDate, endDate, type, accountId, categoryId) {
               context.read<TransactionListBloc>().add(
-                FilterChanged(
-                  startDate: startDate,
-                  endDate: endDate,
-                  transactionType: type,
-                  accountId: accountId,
-                  categoryId: categoryId,
-                ),
-              );
+                    FilterChanged(
+                      startDate: startDate,
+                      endDate: endDate,
+                      transactionType: type,
+                      accountId: accountId,
+                      categoryId: categoryId,
+                    ),
+                  );
             },
             onClearFilter: () {
               context.read<TransactionListBloc>().add(const FilterChanged());
@@ -312,8 +255,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
           currentSortDirection: currentState.sortDirection,
           onApplySort: (sortBy, sortDirection) {
             context.read<TransactionListBloc>().add(
-              SortChanged(sortBy: sortBy, sortDirection: sortDirection),
-            );
+                  SortChanged(sortBy: sortBy, sortDirection: sortDirection),
+                );
           },
         );
       },
@@ -332,7 +275,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       setState(() {
         _selectedDay = normalizedSelectedDay;
         _focusedDay = focusedDay; // Keep focusedDay in sync
-        _updateSelectedDayTransactions();
       });
     }
   }
@@ -349,33 +291,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
   void _onPageChanged(DateTime focusedDay) {
     log.fine("[TxnListPage] Calendar page changed, focused day: $focusedDay");
     _focusedDay = focusedDay;
-  }
-
-  List<TransactionEntity> _getEventsForDay(DateTime day) {
-    final normalizedDay = DateTime(day.year, day.month, day.day);
-    return _currentTransactionsForCalendar.where((txn) {
-      final normalizedTxnDate = DateTime(
-        txn.date.year,
-        txn.date.month,
-        txn.date.day,
-      );
-      return isSameDay(normalizedTxnDate, normalizedDay);
-    }).toList();
-  }
-
-  void _updateSelectedDayTransactions() {
-    if (_selectedDay != null && mounted) {
-      setState(() {
-        _selectedDayTransactions = _getEventsForDay(_selectedDay!);
-      });
-    } else if (mounted) {
-      setState(() {
-        _selectedDayTransactions = [];
-      });
-    }
-    log.fine(
-      "[TxnListPage] Updated selected day transactions for $_selectedDay. Count: ${_selectedDayTransactions.length}",
-    );
   }
 
   // --- Main Build Method (Keep as is) ---
@@ -416,14 +331,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionListBloc>().add(
-                      const LoadTransactions(forceReload: true),
-                    );
+                          const LoadTransactions(forceReload: true),
+                        );
                     // Wait for the loading state to finish
                     await context.read<TransactionListBloc>().stream.firstWhere(
-                      (s) =>
-                          s.status != ListStatus.loading &&
-                          s.status != ListStatus.reloading,
-                    );
+                          (s) =>
+                              s.status != ListStatus.loading &&
+                              s.status != ListStatus.reloading,
+                        );
                   },
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
@@ -438,10 +353,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
                               calendarFormat: _calendarFormat,
                               focusedDay: _focusedDay,
                               selectedDay: _selectedDay,
-                              selectedDayTransactions: _selectedDayTransactions,
-                              currentTransactionsForCalendar:
-                                  _currentTransactionsForCalendar,
-                              getEventsForDay: _getEventsForDay,
                               onDaySelected: _onDaySelected,
                               onFormatChanged: _onFormatChanged,
                               onPageChanged: _onPageChanged,
@@ -468,63 +379,60 @@ class _TransactionListPageState extends State<TransactionListPage> {
       ),
       floatingActionButton:
           BlocBuilder<TransactionListBloc, TransactionListState>(
-            builder: (context, state) {
-              final bool showFab =
-                  state.isInBatchEditMode && !_showCalendarView;
-              final int count = state.selectedTransactionIds.length;
-              return AnimatedScale(
-                duration: const Duration(milliseconds: 200),
-                scale: showFab ? 1.0 : 0.0,
-                child: FloatingActionButton.extended(
-                  key: const ValueKey('batch_fab'),
-                  heroTag: 'transactions_batch_fab',
-                  onPressed: count > 0
-                      ? () async {
-                          log.info(
-                            "[TxnListPage] Batch categorize button pressed.",
-                          );
-                          final type =
-                              _getDominantTransactionType(state) ??
-                              TransactionType.expense;
-                          final Category? selectedCategory =
-                              await showCategoryPicker(
-                                context,
-                                type == TransactionType.expense
-                                    ? CategoryTypeFilter.expense
-                                    : CategoryTypeFilter.income,
-                              );
-                          if (selectedCategory != null &&
-                              selectedCategory.id !=
-                                  Category.uncategorized.id &&
-                              context.mounted) {
-                            context.read<TransactionListBloc>().add(
+        builder: (context, state) {
+          final bool showFab = state.isInBatchEditMode && !_showCalendarView;
+          final int count = state.selectedTransactionIds.length;
+          return AnimatedScale(
+            duration: const Duration(milliseconds: 200),
+            scale: showFab ? 1.0 : 0.0,
+            child: FloatingActionButton.extended(
+              key: const ValueKey('batch_fab'),
+              heroTag: 'transactions_batch_fab',
+              onPressed: count > 0
+                  ? () async {
+                      log.info(
+                        "[TxnListPage] Batch categorize button pressed.",
+                      );
+                      final type = _getDominantTransactionType(state) ??
+                          TransactionType.expense;
+                      final Category? selectedCategory =
+                          await showCategoryPicker(
+                        context,
+                        type == TransactionType.expense
+                            ? CategoryTypeFilter.expense
+                            : CategoryTypeFilter.income,
+                      );
+                      if (selectedCategory != null &&
+                          selectedCategory.id != Category.uncategorized.id &&
+                          context.mounted) {
+                        context.read<TransactionListBloc>().add(
                               ApplyBatchCategory(selectedCategory.id),
                             );
-                          } else if (selectedCategory?.id ==
-                                  Category.uncategorized.id &&
-                              context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Please select a specific category.",
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
-                  icon: const Icon(Icons.category_rounded),
-                  backgroundColor: count > 0
-                      ? theme.colorScheme.secondaryContainer
-                      : theme.disabledColor.withOpacity(0.1),
-                  foregroundColor: count > 0
-                      ? theme.colorScheme.onSecondaryContainer
-                      : theme.disabledColor,
-                ),
-              );
-            },
-          ),
+                      } else if (selectedCategory?.id ==
+                              Category.uncategorized.id &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Please select a specific category.",
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  : null,
+              label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
+              icon: const Icon(Icons.category_rounded),
+              backgroundColor: count > 0
+                  ? theme.colorScheme.secondaryContainer
+                  : theme.disabledColor.withOpacity(0.1),
+              foregroundColor: count > 0
+                  ? theme.colorScheme.onSecondaryContainer
+                  : theme.disabledColor,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -532,7 +440,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
     if (state.selectedTransactionIds.isEmpty) return null;
     TransactionType? type;
     for (final id in state.selectedTransactionIds) {
-      final txn = state.transactions.firstWhereOrNull((t) => t.id == id);
+      TransactionEntity? txn;
+      for (final t in state.transactions) {
+        if (t.id == id) {
+          txn = t;
+          break;
+        }
+      }
       if (txn == null) {
         log.warning(
           "[TxnListPage] Selected ID $id not found in state during dominant type check.",
@@ -553,7 +467,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
 @visibleForTesting
 TransactionType? getDominantTransactionTypeForTesting(
   TransactionListState state,
-) => _TransactionListPageState()._getDominantTransactionType(state);
+) =>
+    _TransactionListPageState()._getDominantTransactionType(state);
 
 extension StringCapExtension on String {
   String capitalize() {

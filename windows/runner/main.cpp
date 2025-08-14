@@ -26,7 +26,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
+  // Let the window_manager plugin restore the last window size.
+  Win32Window::Size size(0, 0);
   if (!window.Create(L"expense_tracking", origin, size)) {
     return EXIT_FAILURE;
   }

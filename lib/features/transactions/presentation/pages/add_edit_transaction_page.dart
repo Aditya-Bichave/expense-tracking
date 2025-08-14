@@ -77,7 +77,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         cancelText: "No, pick myself",
         barrierDismissible: false,
       ).then((confirmed) {
-        if (!mounted) return;
+        if (!mounted || !context.mounted) return;
         if (confirmed == true) {
           log.info("[AddEditTxnPage] Suggestion accepted.");
           _bloc.add(AcceptCategorySuggestion(suggestedCategory));
@@ -103,7 +103,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         cancelText: "Select Existing",
         barrierDismissible: false,
       ).then((create) {
-        if (!mounted) return;
+        if (!mounted || !context.mounted) return;
         if (create == true) {
           log.info("[AddEditTxnPage] User chose to create a new category.");
           _bloc.add(const CreateCustomCategoryRequested());
