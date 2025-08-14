@@ -4,7 +4,6 @@ import 'package:expense_tracker/features/reports/domain/entities/report_data.dar
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/chart_utils.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For NumberFormat
 
 class BudgetPerformanceBarChart extends StatelessWidget {
   final List<BudgetPerformanceData> data;
@@ -28,8 +27,9 @@ class BudgetPerformanceBarChart extends StatelessWidget {
     final bool showComparison =
         previousData != null && previousData!.isNotEmpty;
 
-    if (data.isEmpty)
+    if (data.isEmpty) {
       return const Center(child: Text("No budget data to display"));
+    }
 
     // Take limited data for display, but need full previous data for lookup
     final chartData = data.take(maxBarsToShow).toList();
@@ -39,18 +39,26 @@ class BudgetPerformanceBarChart extends StatelessWidget {
 
     double maxY = 0;
     for (var item in chartData) {
-      if (item.budget.targetAmount > maxY) maxY = item.budget.targetAmount;
-      if (item.currentActualSpending > maxY) maxY = item.currentActualSpending;
+      if (item.budget.targetAmount > maxY) {
+        maxY = item.budget.targetAmount;
+      }
+      if (item.currentActualSpending > maxY) {
+        maxY = item.currentActualSpending;
+      }
       if (showComparison && previousDataMap.containsKey(item.budget.id)) {
         final prevItem = previousDataMap[item.budget.id]!;
-        if (prevItem.budget.targetAmount > maxY)
+        if (prevItem.budget.targetAmount > maxY) {
           maxY = prevItem.budget.targetAmount;
-        if (prevItem.currentActualSpending > maxY)
+        }
+        if (prevItem.currentActualSpending > maxY) {
           maxY = prevItem.currentActualSpending;
+        }
       }
     }
     maxY = (maxY * 1.15).ceilToDouble();
-    if (maxY <= 0) maxY = 10; // Ensure some height
+    if (maxY <= 0) {
+      maxY = 10; // Ensure some height
+    }
 
     return BarChart(
       BarChartData(

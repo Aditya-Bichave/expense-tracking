@@ -1,4 +1,6 @@
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -55,15 +57,15 @@ class RecurringRuleListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${rule.transactionType.name == 'expense' ? '-' : '+'}${rule.amount.toStringAsFixed(2)}',
+                      '${rule.transactionType == TransactionType.expense ? '-' : '+'}${rule.amount.toStringAsFixed(2)}',
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: rule.transactionType.name == 'expense'
+                      color: rule.transactionType == TransactionType.expense
                           ? Colors.red
                           : Colors.green,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  if (rule.status == 'paused')
+                  if (rule.status == RuleStatus.paused)
                     Icon(
                       Icons.pause_circle_filled,
                       color: theme.disabledColor,

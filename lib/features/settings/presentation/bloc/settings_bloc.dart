@@ -14,7 +14,6 @@ import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
-import 'package:simple_logger/simple_logger.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';

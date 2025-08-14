@@ -26,7 +26,6 @@ class CurrencyFormatter {
     } catch (e) {
       // Fallback in case of intl error (e.g., invalid locale)
       // Consider logging this error
-      print("CurrencyFormatter Error: $e. Falling back to basic formatting.");
       return "$symbolToUse${amount.toStringAsFixed(2)}";
     }
   }

@@ -4,7 +4,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'dart:async';
 import 'package:mocktail/mocktail.dart';
-import 'package:expense_tracker/core/usecases/usecase.dart'; // for NoParams
+// for NoParams
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
@@ -14,7 +14,6 @@ import 'package:expense_tracker/features/recurring_transactions/domain/usecases/
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/recurring_list/recurring_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
 class MockGetRecurringRules extends Mock implements GetRecurringRules {}
 

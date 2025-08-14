@@ -144,29 +144,4 @@ class GoalProgressPage extends StatelessWidget {
   }
 
   // Optional: Helper to build a short list of recent contributions
-  Widget _buildContributionList(BuildContext context,
-      List<GoalContribution> contributions, SettingsState settings) {
-    // Show maybe last 3?
-    final recentContributions = contributions.take(3).toList();
-    if (recentContributions.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Divider(height: 24),
-        Text("Recent Contributions",
-            style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 8),
-        ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: recentContributions.length,
-            itemBuilder: (ctx, index) {
-              return ContributionListItem(
-                  contribution: recentContributions[index],
-                  goalId: recentContributions[index].goalId);
-            })
-      ],
-    );
-  }
 }

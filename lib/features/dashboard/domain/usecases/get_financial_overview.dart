@@ -190,7 +190,7 @@ class GetFinancialOverviewUseCase
               nearingLimitColor: nearingLimitColor,
               overLimitColor: overLimitColor));
         });
-        if (budgetError != null && !(budgetError is ValidationFailure)) break;
+        if (budgetError != null && budgetError is! ValidationFailure) break;
       }
     });
     if (budgetError != null) {
