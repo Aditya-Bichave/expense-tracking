@@ -15,9 +15,11 @@ class ReportFilterControls extends StatelessWidget {
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
-      await filterBloc.stream.firstWhere((state) =>
-          state.optionsStatus == FilterOptionsStatus.loaded ||
-          state.optionsStatus == FilterOptionsStatus.error);
+      await filterBloc.stream.firstWhere(
+        (state) =>
+            state.optionsStatus == FilterOptionsStatus.loaded ||
+            state.optionsStatus == FilterOptionsStatus.error,
+      );
       if (!context.mounted ||
           filterBloc.state.optionsStatus == FilterOptionsStatus.error) {
         return; // Don't show sheet if loading failed
@@ -28,11 +30,14 @@ class ReportFilterControls extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (sheetContext) {
         // Provide the SAME Filter Bloc instance down to the sheet content
         return BlocProvider.value(
-            value: filterBloc, child: const ReportFilterSheetContent());
+          value: filterBloc,
+          child: const ReportFilterSheetContent(),
+        );
       },
     );
   }
@@ -58,7 +63,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
   late List<String> _tempSelectedBudgetIds;
   late List<String> _tempSelectedGoalIds;
   late TransactionType?
-      _tempSelectedTransactionType; // Corrected state variable
+  _tempSelectedTransactionType; // Corrected state variable
 
   @override
   void initState() {
@@ -75,8 +80,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
   }
 
   Future<void> _selectDateRange(BuildContext context) async {
-    final initialRange =
-        DateTimeRange(start: _tempStartDate, end: _tempEndDate);
+    final initialRange = DateTimeRange(
+      start: _tempStartDate,
+      end: _tempEndDate,
+    );
     final DateTimeRange? picked = await showDateRangePicker(
       context: context,
       initialDateRange: initialRange,
@@ -92,13 +99,17 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
   }
 
   void _applyFilters() {
-    context.read<ReportFilterBloc>().add(UpdateReportFilters(
-          startDate: _tempStartDate, endDate: _tempEndDate,
-          categoryIds: _tempSelectedCategoryIds,
-          accountIds: _tempSelectedAccountIds,
-          budgetIds: _tempSelectedBudgetIds, goalIds: _tempSelectedGoalIds,
-          transactionType: _tempSelectedTransactionType, // Pass the value
-        ));
+    context.read<ReportFilterBloc>().add(
+      UpdateReportFilters(
+        startDate: _tempStartDate,
+        endDate: _tempEndDate,
+        categoryIds: _tempSelectedCategoryIds,
+        accountIds: _tempSelectedAccountIds,
+        budgetIds: _tempSelectedBudgetIds,
+        goalIds: _tempSelectedGoalIds,
+        transactionType: _tempSelectedTransactionType, // Pass the value
+      ),
+    );
     Navigator.pop(context);
   }
 
@@ -145,18 +156,26 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
 
         return Padding(
           padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-              top: 16,
-              left: 16,
-              right: 16),
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            top: 16,
+            left: 16,
+            right: 16,
+          ),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text('Filter Report Data',
-                    style: theme.textTheme.titleLarge,
-                    textAlign: TextAlign.center),
+                Text(
+                  'Filter Report Data',
+                  style: theme.textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                if (state.optionsStatus == FilterOptionsStatus.loading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: LinearProgressIndicator(),
+                  ),
                 const SizedBox(height: 16),
 
                 // Date Range
@@ -164,12 +183,14 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                   leading: const Icon(Icons.date_range_outlined),
                   title: const Text('Date Range'),
                   subtitle: Text(
-                      '${DateFormatter.formatDate(_tempStartDate)} - ${DateFormatter.formatDate(_tempEndDate)}'),
+                    '${DateFormatter.formatDate(_tempStartDate)} - ${DateFormatter.formatDate(_tempEndDate)}',
+                  ),
                   trailing: const Icon(Icons.edit_calendar_outlined),
                   onTap: () => _selectDateRange(context),
                   shape: RoundedRectangleBorder(
-                      side: BorderSide(color: theme.dividerColor),
-                      borderRadius: BorderRadius.circular(8)),
+                    side: BorderSide(color: theme.dividerColor),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 const SizedBox(height: 16),
 
@@ -179,32 +200,40 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                   decoration: InputDecoration(
                     labelText: 'Transaction Type',
                     prefixIcon: Icon(
-                        _tempSelectedTransactionType == TransactionType.expense
-                            ? Icons.arrow_downward
-                            : _tempSelectedTransactionType ==
-                                    TransactionType.income
-                                ? Icons.arrow_upward
-                                : Icons.swap_vert,
-                        size: 20),
+                      _tempSelectedTransactionType == TransactionType.expense
+                          ? Icons.arrow_downward
+                          : _tempSelectedTransactionType ==
+                                TransactionType.income
+                          ? Icons.arrow_upward
+                          : Icons.swap_vert,
+                      size: 20,
+                    ),
                     border: const OutlineInputBorder(),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 14),
+                      horizontal: 12,
+                      vertical: 14,
+                    ),
                   ),
-                  hint: const Text('All Types'), isExpanded: true,
+                  hint: const Text('All Types'),
+                  isExpanded: true,
                   items: const [
                     DropdownMenuItem<TransactionType?>(
-                        value: null, child: Text('All Types')),
+                      value: null,
+                      child: Text('All Types'),
+                    ),
                     DropdownMenuItem<TransactionType?>(
-                        value: TransactionType.expense,
-                        child: Text('Expenses Only')),
+                      value: TransactionType.expense,
+                      child: Text('Expenses Only'),
+                    ),
                     DropdownMenuItem<TransactionType?>(
-                        value: TransactionType.income,
-                        child: Text('Income Only'))
+                      value: TransactionType.income,
+                      child: Text('Income Only'),
+                    ),
                   ],
-                  onChanged: (TransactionType? newValue) => setState(() =>
-                      _tempSelectedTransactionType =
-                          newValue), // Update local temp state
+                  onChanged: (TransactionType? newValue) => setState(
+                    () => _tempSelectedTransactionType = newValue,
+                  ), // Update local temp state
                 ),
                 const SizedBox(height: 16),
 
@@ -215,15 +244,18 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     initialValue: _tempSelectedAccountIds,
                     title: const Text("Select Accounts"),
                     buttonText: Text(
-                        _tempSelectedAccountIds.isEmpty
-                            ? "All Accounts"
-                            : "${_tempSelectedAccountIds.length} Accounts Selected",
-                        overflow: TextOverflow.ellipsis),
-                    buttonIcon:
-                        const Icon(Icons.account_balance_wallet_outlined),
+                      _tempSelectedAccountIds.isEmpty
+                          ? "All Accounts"
+                          : "${_tempSelectedAccountIds.length} Accounts Selected",
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    buttonIcon: const Icon(
+                      Icons.account_balance_wallet_outlined,
+                    ),
                     decoration: BoxDecoration(
-                        border: Border.all(color: theme.dividerColor),
-                        borderRadius: BorderRadius.circular(8)),
+                      border: Border.all(color: theme.dividerColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     chipDisplay: MultiSelectChipDisplay.none(),
                     onConfirm: (values) =>
                         setState(() => _tempSelectedAccountIds = values),
@@ -233,8 +265,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 else if (state.optionsStatus == FilterOptionsStatus.loading)
                   const LinearProgressIndicator()
                 else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text("Error loading accounts",
-                      style: TextStyle(color: theme.colorScheme.error)),
+                  Text(
+                    "Error loading accounts",
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
                 const SizedBox(height: 16),
 
                 // Category Multi-Select
@@ -244,14 +278,16 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     initialValue: _tempSelectedCategoryIds,
                     title: const Text("Select Categories"),
                     buttonText: Text(
-                        _tempSelectedCategoryIds.isEmpty
-                            ? "All Categories"
-                            : "${_tempSelectedCategoryIds.length} Categories Selected",
-                        overflow: TextOverflow.ellipsis),
+                      _tempSelectedCategoryIds.isEmpty
+                          ? "All Categories"
+                          : "${_tempSelectedCategoryIds.length} Categories Selected",
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     buttonIcon: const Icon(Icons.category_outlined),
                     decoration: BoxDecoration(
-                        border: Border.all(color: theme.dividerColor),
-                        borderRadius: BorderRadius.circular(8)),
+                      border: Border.all(color: theme.dividerColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     chipDisplay: MultiSelectChipDisplay.none(),
                     onConfirm: (values) =>
                         setState(() => _tempSelectedCategoryIds = values),
@@ -261,8 +297,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 else if (state.optionsStatus == FilterOptionsStatus.loading)
                   const SizedBox.shrink()
                 else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text("Error loading categories",
-                      style: TextStyle(color: theme.colorScheme.error)),
+                  Text(
+                    "Error loading categories",
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
                 const SizedBox(height: 16),
 
                 // Budget Multi-Select
@@ -272,14 +310,16 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     initialValue: _tempSelectedBudgetIds,
                     title: const Text("Select Budgets (For Budget Report)"),
                     buttonText: Text(
-                        _tempSelectedBudgetIds.isEmpty
-                            ? "All Budgets"
-                            : "${_tempSelectedBudgetIds.length} Budgets Selected",
-                        overflow: TextOverflow.ellipsis),
+                      _tempSelectedBudgetIds.isEmpty
+                          ? "All Budgets"
+                          : "${_tempSelectedBudgetIds.length} Budgets Selected",
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     buttonIcon: const Icon(Icons.pie_chart_outline),
                     decoration: BoxDecoration(
-                        border: Border.all(color: theme.dividerColor),
-                        borderRadius: BorderRadius.circular(8)),
+                      border: Border.all(color: theme.dividerColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     chipDisplay: MultiSelectChipDisplay.none(),
                     onConfirm: (values) =>
                         setState(() => _tempSelectedBudgetIds = values),
@@ -289,8 +329,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 else if (state.optionsStatus == FilterOptionsStatus.loading)
                   const SizedBox.shrink()
                 else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text("Error loading budgets",
-                      style: TextStyle(color: theme.colorScheme.error)),
+                  Text(
+                    "Error loading budgets",
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
                 const SizedBox(height: 16),
 
                 // Goal Multi-Select
@@ -300,14 +342,16 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     initialValue: _tempSelectedGoalIds,
                     title: const Text("Select Goals (For Goal Report)"),
                     buttonText: Text(
-                        _tempSelectedGoalIds.isEmpty
-                            ? "All Goals"
-                            : "${_tempSelectedGoalIds.length} Goals Selected",
-                        overflow: TextOverflow.ellipsis),
+                      _tempSelectedGoalIds.isEmpty
+                          ? "All Goals"
+                          : "${_tempSelectedGoalIds.length} Goals Selected",
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     buttonIcon: const Icon(Icons.savings_outlined),
                     decoration: BoxDecoration(
-                        border: Border.all(color: theme.dividerColor),
-                        borderRadius: BorderRadius.circular(8)),
+                      border: Border.all(color: theme.dividerColor),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     chipDisplay: MultiSelectChipDisplay.none(),
                     onConfirm: (values) =>
                         setState(() => _tempSelectedGoalIds = values),
@@ -317,27 +361,42 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 else if (state.optionsStatus == FilterOptionsStatus.loading)
                   const SizedBox.shrink()
                 else if (state.optionsStatus == FilterOptionsStatus.error)
-                  Text("Error loading goals",
-                      style: TextStyle(color: theme.colorScheme.error)),
+                  Text(
+                    "Error loading goals",
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
                 const SizedBox(height: 24),
 
                 // Action Buttons
                 Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                          onPressed: _clearFilters,
-                          child: const Text('Clear All')),
-                      Row(children: [
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: _clearFilters,
+                      child: const Text('Clear All'),
+                    ),
+                    Row(
+                      children: [
                         TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel')),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                            onPressed: _applyFilters,
-                            child: const Text('Apply Filters'))
-                      ])
-                    ]),
+                          onPressed:
+                              state.optionsStatus == FilterOptionsStatus.loaded
+                              ? _applyFilters
+                              : null,
+                          child: Text(
+                            state.optionsStatus == FilterOptionsStatus.loaded
+                                ? 'Apply Filters'
+                                : 'Loading options...',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
