@@ -31,13 +31,18 @@ class BudgetRepositoryImpl implements BudgetRepository {
           final overlap = _checkForOverlap(budget, existingBudgets);
           if (overlap != null) {
             log.warning(
-                "[BudgetRepo] Overlap detected with budget: ${overlap.name}");
-            return Left(ValidationFailure(
-                "Budget overlap detected with '${overlap.name}'. Adjust categories or period."));
+              "[BudgetRepo] Overlap detected with budget: ${overlap.name}",
+            );
+            return Left(
+              ValidationFailure(
+                "Budget overlap detected with '${overlap.name}'. Adjust categories or period.",
+              ),
+            );
           }
         } else {
           log.warning(
-              "[BudgetRepo] Could not perform overlap check due to error fetching existing budgets.");
+            "[BudgetRepo] Could not perform overlap check due to error fetching existing budgets.",
+          );
           // Decide: proceed or fail? Failing is safer.
           return budgetsResult.fold(
             (failure) => Left(failure), // Propagate fetch error
@@ -65,7 +70,8 @@ class BudgetRepositoryImpl implements BudgetRepository {
     required DateTime periodEnd,
   }) async {
     log.fine(
-        "[BudgetRepo] Calculating amount spent for budget '${budget.name}' (${budget.id}) between $periodStart and $periodEnd");
+      "[BudgetRepo] Calculating amount spent for budget '${budget.name}' (${budget.id}) between $periodStart and $periodEnd",
+    );
     try {
       // Fetch relevant expenses using ExpenseRepository
       // We fetch ALL expenses matching the date range and filter categories/type here
@@ -80,13 +86,15 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return expenseResult.fold(
         (failure) {
           log.warning(
-              "[BudgetRepo] Failed to get expenses for calculation: ${failure.message}");
+            "[BudgetRepo] Failed to get expenses for calculation: ${failure.message}",
+          );
           return Left(failure);
         },
         (expenseModels) {
           double totalSpent = 0;
           log.fine(
-              "[BudgetRepo] Got ${expenseModels.length} expenses in period. Filtering by budget criteria...");
+            "[BudgetRepo] Got ${expenseModels.length} expenses in period. Filtering by budget criteria...",
+          );
 
           for (final expenseModel in expenseModels) {
             bool categoryMatch = false;
@@ -96,8 +104,9 @@ class BudgetRepositoryImpl implements BudgetRepository {
                 budget.categoryIds != null &&
                 budget.categoryIds!.isNotEmpty) {
               // Check if expense category ID is in the budget's list
-              categoryMatch =
-                  budget.categoryIds!.contains(expenseModel.categoryId);
+              categoryMatch = budget.categoryIds!.contains(
+                expenseModel.categoryId,
+              );
             }
 
             if (categoryMatch) {
@@ -105,14 +114,16 @@ class BudgetRepositoryImpl implements BudgetRepository {
             }
           }
           log.info(
-              "[BudgetRepo] Calculated total spent for '${budget.name}': $totalSpent");
+            "[BudgetRepo] Calculated total spent for '${budget.name}': $totalSpent",
+          );
           return Right(totalSpent);
         },
       );
     } catch (e, s) {
       log.severe("[BudgetRepo] Error calculating amount spent$e$s");
       return Left(
-          CacheFailure("Failed to calculate budget spending: ${e.toString()}"));
+        CacheFailure("Failed to calculate budget spending: ${e.toString()}"),
+      );
     }
   }
 
@@ -142,7 +153,8 @@ class BudgetRepositoryImpl implements BudgetRepository {
     } catch (e, s) {
       log.severe("[BudgetRepo] Error getting budget by ID $id$e$s");
       return Left(
-          CacheFailure("Failed to get budget details: ${e.toString()}"));
+        CacheFailure("Failed to get budget details: ${e.toString()}"),
+      );
     }
   }
 
@@ -184,13 +196,18 @@ class BudgetRepositoryImpl implements BudgetRepository {
           final overlap = _checkForOverlap(budget, otherBudgets);
           if (overlap != null) {
             log.warning(
-                "[BudgetRepo] Overlap detected during update with budget: ${overlap.name}");
-            return Left(ValidationFailure(
-                "Budget overlap detected with '${overlap.name}'. Adjust categories or period."));
+              "[BudgetRepo] Overlap detected during update with budget: ${overlap.name}",
+            );
+            return Left(
+              ValidationFailure(
+                "Budget overlap detected with '${overlap.name}'. Adjust categories or period.",
+              ),
+            );
           }
         } else {
           log.warning(
-              "[BudgetRepo] Could not perform overlap check during update.");
+            "[BudgetRepo] Could not perform overlap check during update.",
+          );
           return budgetsResult.fold(
             (failure) => Left(failure), // Propagate fetch error
             (_) =>
@@ -236,18 +253,12 @@ class BudgetRepositoryImpl implements BudgetRepository {
       if (newBudget.period == BudgetPeriodType.recurringMonthly &&
           existing.period == BudgetPeriodType.recurringMonthly) {
         log.fine(
-            "Overlap found: Recurring budgets '${newBudget.name}' and '${existing.name}' share categories: $intersection");
+          "Overlap found: Recurring budgets '${newBudget.name}' and '${existing.name}' share categories: $intersection",
+        );
         return existing;
       }
 
-      if ((newBudget.period == BudgetPeriodType.recurringMonthly &&
-              existing.period == BudgetPeriodType.oneTime) ||
-          (newBudget.period == BudgetPeriodType.oneTime &&
-              existing.period == BudgetPeriodType.recurringMonthly)) {
-        log.fine(
-            "Overlap found: Recurring/one-time budgets '${newBudget.name}' and '${existing.name}' share categories: $intersection");
-        return existing;
-      }
+      // Allow one-time and recurring budgets to coexist even if they share categories
 
       // For two one-time budgets, ensure their date ranges overlap
       if (newBudget.period == BudgetPeriodType.oneTime &&
@@ -268,7 +279,8 @@ class BudgetRepositoryImpl implements BudgetRepository {
             newStart.isBefore(existingEnd) && existingStart.isBefore(newEnd);
         if (periodsOverlap) {
           log.fine(
-              "Overlap found: One-time budgets '${newBudget.name}' ($newStart - $newEnd) and '${existing.name}' ($existingStart - $existingEnd) share categories: $intersection");
+            "Overlap found: One-time budgets '${newBudget.name}' ($newStart - $newEnd) and '${existing.name}' ($existingStart - $existingEnd) share categories: $intersection",
+          );
           return existing; // Found an overlap
         }
       }

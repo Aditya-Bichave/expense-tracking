@@ -22,7 +22,8 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
   @override
   Future<Either<Failure, void>> call(NoParams params) async {
     log.info(
-        "[RestoreUseCase] Restore process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}");
+      "[RestoreUseCase] Restore process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}",
+    );
     try {
       // 1. Prompt user to pick a file
       log.info("[RestoreUseCase] Prompting user to pick backup file...");
@@ -34,7 +35,8 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
 
       if (result == null || result.files.isEmpty) {
         log.info(
-            "[RestoreUseCase] User cancelled file picker or no file selected.");
+          "[RestoreUseCase] User cancelled file picker or no file selected.",
+        );
         return const Left(RestoreFailure("Restore cancelled by user."));
       }
 
@@ -50,13 +52,15 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
         log.severe("[RestoreUseCase] File picker did not return bytes.");
         if (!kIsWeb && pickedFile.path != null) {
           log.info(
-              "[RestoreUseCase] Attempting to read from path as fallback: ${pickedFile.path}");
+            "[RestoreUseCase] Attempting to read from path as fallback: ${pickedFile.path}",
+          );
           try {
             final file = File(pickedFile.path!);
             jsonString = await file.readAsString(); // Read as string directly
           } catch (e, s) {
             log.severe(
-                "[RestoreUseCase] Failed to read from path fallback.$e$s");
+              "[RestoreUseCase] Failed to read from path fallback.$e$s",
+            );
             return const Left(RestoreFailure("Could not read file content."));
           }
         } else {
@@ -66,11 +70,13 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
         try {
           jsonString = utf8.decode(fileBytes); // Decode bytes assuming UTF-8
           log.info(
-              "[RestoreUseCase] File content read and decoded (${jsonString.length} chars).");
+            "[RestoreUseCase] File content read and decoded (${jsonString.length} chars).",
+          );
         } catch (e, s) {
           log.severe("[RestoreUseCase] Error decoding file bytes$e$s");
           return Left(
-              RestoreFailure("Failed to decode file content: ${e.toString()}"));
+            RestoreFailure("Failed to decode file content: ${e.toString()}"),
+          );
         }
       }
 
@@ -82,7 +88,8 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
       } catch (e) {
         log.warning("[RestoreUseCase] JSON decoding error: $e");
         return const Left(
-            RestoreFailure("Invalid backup file format (not valid JSON)."));
+          RestoreFailure("Invalid backup file format (not valid JSON)."),
+        );
       }
       log.info("[RestoreUseCase] JSON decoded.");
 
@@ -91,17 +98,23 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
           decodedJson[AppConstants.backupDataKey] is! Map ||
           !decodedJson.containsKey(AppConstants.backupMetaKey)) {
         log.warning(
-            "[RestoreUseCase] Invalid backup format: Missing '${AppConstants.backupDataKey}' or '${AppConstants.backupMetaKey}'.");
+          "[RestoreUseCase] Invalid backup format: Missing '${AppConstants.backupDataKey}' or '${AppConstants.backupMetaKey}'.",
+        );
         return const Left(RestoreFailure("Invalid backup file structure."));
       }
 
-      // Further validation (optional but recommended)
-      // final metadata = decodedJson[AppConstants.backupMetaKey] as Map<String, dynamic>?;
-      // if (metadata?[AppConstants.backupFormatVersionKey] != AppConstants.backupFormatVersion) {
-      //    log.warning("[RestoreUseCase] Backup format version mismatch.");
-      //    // Decide whether to attempt restore or fail
-      //    // return Left(RestoreFailure("Backup file format version mismatch."));
-      // }
+      // Validate backup format version
+      final metadata =
+          decodedJson[AppConstants.backupMetaKey] as Map<String, dynamic>;
+      if (metadata[AppConstants.backupFormatVersionKey] !=
+          AppConstants.backupFormatVersion) {
+        log.warning(
+          "[RestoreUseCase] Backup format version mismatch. Found: ${metadata[AppConstants.backupFormatVersionKey]}, Expected: ${AppConstants.backupFormatVersion}",
+        );
+        return const Left(
+          RestoreFailure("Backup file format version mismatch."),
+        );
+      }
 
       final dataMap =
           decodedJson[AppConstants.backupDataKey] as Map<String, dynamic>;
@@ -114,8 +127,11 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
         log.info("[RestoreUseCase] Deserialization successful.");
       } catch (e, s) {
         log.severe("[RestoreUseCase] Error during deserialization$e$s");
-        return Left(RestoreFailure(
-            "Failed to parse backup data content: ${e.toString()}"));
+        return Left(
+          RestoreFailure(
+            "Failed to parse backup data content: ${e.toString()}",
+          ),
+        );
       }
 
       // 5. Restore data via repository (includes clearing)
@@ -125,7 +141,8 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
       return restoreResult.fold(
         (failure) {
           log.severe(
-              "[RestoreUseCase] Repository restore failed: ${failure.message}");
+            "[RestoreUseCase] Repository restore failed: ${failure.message}",
+          );
           return Left(failure);
         },
         (_) {
@@ -136,11 +153,15 @@ class RestoreDataUseCase implements UseCase<void, NoParams> {
     } on PlatformException catch (e, s) {
       log.severe("[RestoreUseCase] PlatformException during file picking$e$s");
       return Left(
-          RestoreFailure("Could not pick file: ${e.message} (${e.code})"));
+        RestoreFailure("Could not pick file: ${e.message} (${e.code})"),
+      );
     } catch (e, s) {
       log.severe("[RestoreUseCase] Unexpected error in restore process$e$s");
-      return Left(RestoreFailure(
-          "An unexpected error occurred during restore: ${e.toString()}"));
+      return Left(
+        RestoreFailure(
+          "An unexpected error occurred during restore: ${e.toString()}",
+        ),
+      );
     }
   }
 }
