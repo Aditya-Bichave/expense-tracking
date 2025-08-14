@@ -51,6 +51,22 @@ void main() {
       date: DateTime.now(),
       accountId: '',
     )));
+    registerFallbackValue(RecurringRule(
+      id: '',
+      description: '',
+      amount: 0,
+      transactionType: TransactionType.expense,
+      accountId: '',
+      categoryId: '',
+      frequency: Frequency.monthly,
+      dayOfMonth: 1,
+      interval: 1,
+      startDate: DateTime.now(),
+      endConditionType: EndConditionType.never,
+      status: RuleStatus.active,
+      nextOccurrenceDate: DateTime.now(),
+      occurrencesGenerated: 0,
+    ));
   });
 
   setUp(() {
