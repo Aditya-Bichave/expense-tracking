@@ -15,11 +15,10 @@ class SettingsDependencies {
     sl.registerLazySingleton<SettingsRepository>(
         () => SettingsRepositoryImpl(localDataSource: sl()));
     // BLoC
-    // --- MODIFIED: Pass DemoModeService ---
-    sl.registerFactory(() => SettingsBloc(
+    // Provide a single instance so router and app share the same stream
+    sl.registerLazySingleton<SettingsBloc>(() => SettingsBloc(
           settingsRepository: sl<SettingsRepository>(),
           demoModeService: sl<DemoModeService>(), // Provide the dependency
         ));
-    // --- END MODIFIED ---
   }
 }

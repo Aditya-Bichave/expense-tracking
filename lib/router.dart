@@ -1,4 +1,5 @@
 // lib/router.dart
+import 'dart:async';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl
 import 'package:expense_tracker/core/screens/initial_setup_screen.dart';
@@ -46,6 +47,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+// Simple Listenable that refreshes GoRouter when the stream emits
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    _subscription = stream.listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 // --- Navigator Keys ---
 final GlobalKey<NavigatorState> _rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -64,6 +80,8 @@ final GlobalKey<NavigatorState> _shellNavigatorKeySettings =
 
 // --- Router Configuration ---
 class AppRouter {
+  static final SettingsBloc _settingsBloc = sl<SettingsBloc>();
+
   static final GoRouter router = GoRouter(
       // --- FIXED: Set initialLocation to /setup ---
       initialLocation: RouteNames.initialSetup,
@@ -71,9 +89,9 @@ class AppRouter {
       navigatorKey: _rootNavigatorKey,
       debugLogDiagnostics: kDebugMode,
       observers: [GoRouterObserver()],
+      refreshListenable: GoRouterRefreshStream(_settingsBloc.stream),
       redirect: (BuildContext context, GoRouterState state) {
-        final settingsBloc = context.read<SettingsBloc>();
-        final settingsState = settingsBloc.state;
+        final settingsState = _settingsBloc.state;
         final bool isInDemo = settingsState.isInDemoMode;
         final bool isInitialized =
             settingsState.status == SettingsStatus.loaded ||
