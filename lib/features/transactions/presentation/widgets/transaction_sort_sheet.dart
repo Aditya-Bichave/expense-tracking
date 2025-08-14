@@ -20,33 +20,46 @@ class TransactionSortSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    SortDirection defaultDirection(TransactionSortBy sortBy) {
+      switch (sortBy) {
+        case TransactionSortBy.date:
+        case TransactionSortBy.amount:
+          return SortDirection.descending;
+        case TransactionSortBy.category:
+        case TransactionSortBy.title:
+          return SortDirection.ascending;
+      }
+    }
+
     final sortOptions = TransactionSortBy.values.map((sortBy) {
       final bool isSelected = currentSortBy == sortBy;
+      final SortDirection defaultDir = defaultDirection(sortBy);
       final IconData directionIcon = isSelected
           ? (currentSortDirection == SortDirection.descending
               ? Icons.arrow_downward_rounded
               : Icons.arrow_upward_rounded)
-          : Icons.swap_vert_rounded; // Indicate sortable but not selected
+          : (defaultDir == SortDirection.descending
+              ? Icons.arrow_downward_rounded
+              : Icons.arrow_upward_rounded);
 
       return RadioListTile<TransactionSortBy>(
-        title: Text(
-            sortBy.name.capitalize()), // Assuming capitalize extension exists
+        title: Text(sortBy.name.capitalize()),
         value: sortBy,
         groupValue: currentSortBy,
-        secondary: Icon(directionIcon,
-            color:
-                isSelected ? theme.colorScheme.primary : theme.disabledColor),
+        secondary: Icon(
+          directionIcon,
+          color: isSelected ? theme.colorScheme.primary : theme.disabledColor,
+        ),
         activeColor: theme.colorScheme.primary,
         onChanged: (TransactionSortBy? value) {
           if (value != null) {
-            // If selecting the same criteria, toggle direction, otherwise default to descending
             final newDirection = isSelected
                 ? (currentSortDirection == SortDirection.descending
                     ? SortDirection.ascending
                     : SortDirection.descending)
-                : SortDirection.descending;
+                : defaultDirection(value);
             onApplySort(value, newDirection);
-            Navigator.pop(context); // Close sheet after selection
+            Navigator.pop(context);
           }
         },
       );
@@ -59,10 +72,14 @@ class TransactionSortSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child:
-                Text('Sort Transactions By', style: theme.textTheme.titleLarge),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Text(
+              'Sort Transactions By',
+              style: theme.textTheme.titleLarge,
+            ),
           ),
           ...sortOptions,
           const SizedBox(height: 8), // Padding at bottom

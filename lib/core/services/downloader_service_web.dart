@@ -17,7 +17,11 @@ class DownloaderServiceImpl implements DownloaderService {
       ..style.display = 'none'
       ..download = downloadName;
     html.document.body!.children.add(anchor);
-    anchor.click();
+    try {
+      anchor.click();
+    } catch (e) {
+      debugPrint('Download blocked by browser: $e');
+    }
     html.document.body!.children.remove(anchor);
     html.Url.revokeObjectUrl(url);
   }
