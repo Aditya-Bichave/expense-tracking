@@ -82,4 +82,13 @@ class TimeChanged extends AddEditRecurringRuleEvent {
   const TimeChanged(this.time);
 }
 
-class FormSubmitted extends AddEditRecurringRuleEvent {}
+class FormSubmitted extends AddEditRecurringRuleEvent {
+  final String description;
+  final String amount; // Pass the raw amount string from the controller
+
+  const FormSubmitted({required this.description, required this.amount});
+
+  @override
+  List<Object> get props => [description, amount];
+}
+

@@ -158,7 +158,7 @@ void main() {
         bloc.add(CategoryChanged(tCategory));
         bloc.add(StartDateChanged(DateTime(2024, 1, 1)));
         bloc.add(TimeChanged(const TimeOfDay(hour: 9, minute: 30)));
-        bloc.add(FormSubmitted());
+        bloc.add(FormSubmitted(description: '', amount: ''));
       },
       skip: 6,
       expect: () => [
@@ -198,7 +198,7 @@ void main() {
         description: tRule.description,
         amount: tRule.amount,
       ),
-      act: (bloc) => bloc.add(FormSubmitted()),
+      act: (bloc) => bloc.add(FormSubmitted(description: '', amount: '')),
       expect: () => [
         isA<AddEditRecurringRuleState>().having(
           (s) => s.status,

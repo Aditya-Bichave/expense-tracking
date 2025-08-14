@@ -185,9 +185,6 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         .read<SettingsBloc>()
                         .state
                         .currencySymbol,
-                    onChanged: (value) => context
-                        .read<AddEditRecurringRuleBloc>()
-                        .add(AmountChanged(value)),
                   ),
                   const SizedBox(height: 16),
                   ListTile(
@@ -366,9 +363,14 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   ElevatedButton(
                     onPressed: state.status == FormStatus.inProgress
                         ? null
-                        : () => context.read<AddEditRecurringRuleBloc>().add(
-                            FormSubmitted(),
-                          ),
+                        : () {
+                      context.read<AddEditRecurringRuleBloc>().add(
+                        FormSubmitted(
+                          description: _descriptionController.text,
+                          amount: _amountController.text,
+                        ),
+                      );
+                    },
                     child: state.status == FormStatus.inProgress
                         ? const CircularProgressIndicator()
                         : Text(AppLocalizations.of(context)!.save),

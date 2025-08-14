@@ -92,13 +92,7 @@ class CommonFormFields {
       prefixIcon: getPrefixIcon(context, iconKey, fallbackIcon),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
-        TextInputFormatter.withFunction((oldValue, newValue) {
-          final sanitized = newValue.text.replaceAll(RegExp('[^0-9.,]'), '');
-          return newValue.copyWith(
-            text: sanitized,
-            selection: TextSelection.collapsed(offset: sanitized.length),
-          );
-        }),
+        FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
       ],
       validator:
           validator ??

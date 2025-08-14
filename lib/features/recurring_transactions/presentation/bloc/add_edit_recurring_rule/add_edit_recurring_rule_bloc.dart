@@ -184,11 +184,27 @@ class AddEditRecurringRuleBloc
     emit(state.copyWith(startTime: event.time));
   }
 
+// After
   Future<void> _onFormSubmitted(
-    FormSubmitted event,
-    Emitter<AddEditRecurringRuleState> emit,
-  ) async {
+      FormSubmitted event,
+      Emitter<AddEditRecurringRuleState> emit,
+      ) async {
     emit(state.copyWith(status: FormStatus.inProgress));
+
+    // --- PARSE AND VALIDATE THE AMOUNT HERE ---
+    final locale = sl<SettingsBloc>().state.selectedCountryCode;
+    final amount = parseCurrency(event.amount, locale);
+
+    if (amount.isNaN || amount <= 0) {
+      emit(
+        state.copyWith(
+          status: FormStatus.failure,
+          errorMessage: 'Please enter a valid, positive amount.',
+        ),
+      );
+      return;
+    }
+    // --- END PARSING AND VALIDATION ---
 
     if (state.accountId == null || state.categoryId == null) {
       emit(
@@ -210,8 +226,8 @@ class AddEditRecurringRuleBloc
 
     final ruleToSave = RecurringRule(
       id: state.isEditMode ? state.initialRule!.id : uuid.v4(),
-      description: state.description,
-      amount: state.amount,
+      description: event.description, // Use fresh data from the event
+      amount: amount,                 // Use the newly parsed amount
       transactionType: state.transactionType,
       accountId: state.accountId!,
       categoryId: state.categoryId!,
@@ -227,9 +243,8 @@ class AddEditRecurringRuleBloc
       nextOccurrenceDate: state.isEditMode
           ? state.initialRule!.nextOccurrenceDate
           : startDateTime,
-      occurrencesGenerated: state.isEditMode
-          ? state.initialRule!.occurrencesGenerated
-          : 0,
+      occurrencesGenerated:
+      state.isEditMode ? state.initialRule!.occurrencesGenerated : 0,
     );
 
     final result = state.isEditMode
@@ -237,13 +252,13 @@ class AddEditRecurringRuleBloc
         : await addRecurringRule(ruleToSave);
 
     result.fold(
-      (failure) => emit(
+          (failure) => emit(
         state.copyWith(
           status: FormStatus.failure,
           errorMessage: failure.message,
         ),
       ),
-      (_) {
+          (_) {
         publishDataChangedEvent(
           type: DataChangeType.recurringRule,
           reason: state.isEditMode

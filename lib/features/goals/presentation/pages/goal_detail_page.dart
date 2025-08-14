@@ -73,10 +73,20 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     super.dispose();
   }
 
-  void _handleBlocStateChange(dynamic state) {
-    if (mounted && !_isLoadingGoal) {
-      log.fine("[GoalDetail] Received Bloc update, reloading detail data.");
-      _loadData();
+// In _GoalDetailPageState
+  void _handleBlocStateChange(GoalListState state) {
+    if (mounted && _isLoadingGoal) {
+      // Find the updated goal directly from the new state
+      final updatedGoal = state.goals.firstWhereOrNull((g) => g.id == widget.goalId);
+      if (updatedGoal != null && updatedGoal != _currentGoal) {
+        log.fine("[GoalDetail] Bloc update detected, updating UI from new state.");
+        // Update the local state with the new data from the BLoC
+        // This avoids another round trip to the database.
+        setState(() {
+          _currentGoal = updatedGoal;
+        });
+        // You would still need to reload contributions separately if they changed.
+      }
     }
   }
 
