@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
@@ -27,6 +28,8 @@ class MockAddIncomeUseCase extends Mock implements AddIncomeUseCase {}
 
 class MockUuid extends Mock implements Uuid {}
 
+class _RecurringRuleFake extends Fake implements RecurringRule {}
+
 void main() {
   late GenerateTransactionsOnLaunch usecase;
   late MockRecurringTransactionRepository mockRecurringTransactionRepository;
@@ -43,6 +46,14 @@ void main() {
       date: DateTime.now(),
       accountId: '',
     )));
+    registerFallbackValue(AddIncomeParams(Income(
+      id: '',
+      title: '',
+      amount: 0,
+      date: DateTime.now(),
+      accountId: '',
+    )));
+    registerFallbackValue(_RecurringRuleFake());
   });
 
   setUp(() {
