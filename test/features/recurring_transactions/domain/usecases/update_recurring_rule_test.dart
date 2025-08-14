@@ -25,6 +25,21 @@ void main() {
   const tUserId = 'user-123';
 
   setUpAll(() {
+    registerFallbackValue(RecurringRule(
+      id: '',
+      description: '',
+      amount: 0,
+      transactionType: TransactionType.expense,
+      accountId: '',
+      categoryId: '',
+      frequency: Frequency.daily,
+      interval: 1,
+      startDate: DateTime(0),
+      endConditionType: EndConditionType.never,
+      status: RuleStatus.active,
+      nextOccurrenceDate: DateTime(0),
+      occurrencesGenerated: 0,
+    ));
     registerFallbackValue(RecurringRuleAuditLog(
       id: '',
       ruleId: '',
