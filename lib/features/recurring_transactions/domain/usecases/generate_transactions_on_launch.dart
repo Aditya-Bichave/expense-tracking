@@ -127,7 +127,8 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
           newYear++;
         }
         final daysInMonth = DateTime(newYear, newMonth + 1, 0).day;
-        final newDay = rule.dayOfMonth! > daysInMonth ? daysInMonth : rule.dayOfMonth!;
+        final targetDay = rule.dayOfMonth ?? nextDate.day;
+        final newDay = targetDay > daysInMonth ? daysInMonth : targetDay;
         nextDate = DateTime(newYear, newMonth, newDay);
         break;
       case Frequency.yearly:

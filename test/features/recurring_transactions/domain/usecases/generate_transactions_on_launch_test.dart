@@ -147,4 +147,46 @@ void main() {
     verifyNever(() =>
         mockRecurringTransactionRepository.updateRecurringRule(any()));
   });
+
+  test('should handle monthly rule without dayOfMonth by defaulting to current day',
+      () async {
+    // Arrange
+    final ruleWithoutDayOfMonth = RecurringRule(
+      id: '3',
+      description: 'No dayOfMonth',
+      amount: 40,
+      transactionType: TransactionType.expense,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+      frequency: Frequency.monthly,
+      interval: 1,
+      startDate: DateTime(2023, 1, 31),
+      endConditionType: EndConditionType.never,
+      status: RuleStatus.active,
+      nextOccurrenceDate: DateTime(2023, 1, 31),
+      occurrencesGenerated: 0,
+    );
+
+    final expectedNextDate = DateTime(2023, 2, 28);
+
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([ruleWithoutDayOfMonth]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => Right(tCategory));
+    when(() => mockAddExpenseUseCase(any()))
+        .thenAnswer((_) async => Right(tExpense));
+    when(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
+        .thenAnswer((_) async => const Right(null));
+    when(() => mockUuid.v4()).thenReturn('new_id');
+
+    // Act
+    await usecase(const NoParams());
+
+    // Assert
+    final captured = verify(() =>
+            mockRecurringTransactionRepository.updateRecurringRule(captureAny()))
+        .captured
+        .single as RecurringRule;
+    expect(captured.nextOccurrenceDate, expectedNextDate);
+  });
 }
