@@ -115,4 +115,36 @@ void main() {
     verify(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
         .called(1);
   });
+
+  test('should not generate a transaction for a future rule', () async {
+    // Arrange
+    final futureRule = RecurringRule(
+      id: '2',
+      description: 'Future Expense',
+      amount: 20,
+      transactionType: TransactionType.expense,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+      frequency: Frequency.monthly,
+      dayOfMonth: 15,
+      interval: 1,
+      startDate: DateTime(2023, 1, 15),
+      endConditionType: EndConditionType.never,
+      status: RuleStatus.active,
+      nextOccurrenceDate: DateTime.now().add(const Duration(days: 1)),
+      occurrencesGenerated: 0,
+    );
+
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([futureRule]));
+
+    // Act
+    await usecase(const NoParams());
+
+    // Assert
+    verifyNever(() => mockAddExpenseUseCase(any()));
+    verifyNever(() => mockAddIncomeUseCase(any()));
+    verifyNever(() =>
+        mockRecurringTransactionRepository.updateRecurringRule(any()));
+  });
 }
