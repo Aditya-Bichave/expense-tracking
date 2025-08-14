@@ -61,7 +61,8 @@ class CommonFormFields {
       hintText: hintText,
       prefixIcon: getPrefixIcon(context, iconKey, fallbackIcon),
       textCapitalization: textCapitalization,
-      validator: validator ??
+      validator:
+          validator ??
           (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Please enter a value';
@@ -82,6 +83,7 @@ class CommonFormFields {
     String iconKey = 'amount',
     IconData fallbackIcon = Icons.attach_money,
     String? Function(String?)? validator,
+    ValueChanged<String>? onChanged,
   }) {
     return AppTextFormField(
       controller: controller,
@@ -92,16 +94,20 @@ class CommonFormFields {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
       ],
-      validator: validator ??
+      validator:
+          validator ??
           (value) {
             if (value == null || value.isEmpty) return 'Enter amount';
-            final locale =
-                context.read<SettingsBloc>().state.selectedCountryCode;
+            final locale = context
+                .read<SettingsBloc>()
+                .state
+                .selectedCountryCode;
             final number = parseCurrency(value, locale);
             if (number.isNaN) return 'Invalid number';
             if (number <= 0) return 'Must be positive';
             return null;
           },
+      onChanged: onChanged,
     );
   }
 
@@ -139,7 +145,8 @@ class CommonFormFields {
     final theme = Theme.of(context);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      shape: theme.inputDecorationTheme.enabledBorder ??
+      shape:
+          theme.inputDecorationTheme.enabledBorder ??
           OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
             borderSide: BorderSide(color: theme.dividerColor),
@@ -181,7 +188,8 @@ class CommonFormFields {
     return AccountSelectorDropdown(
       selectedAccountId: selectedAccountId,
       onChanged: onChanged,
-      validator: validator ??
+      validator:
+          validator ??
           (value) => value == null ? 'Please select an account' : null,
       labelText: labelText,
       hintText: hintText,

@@ -14,6 +14,11 @@ void main() {
       expect(result, closeTo(1234.56, 0.001));
     });
 
+    test('parses numbers when locale is a country code', () {
+      final result = parseCurrency('3000', 'US');
+      expect(result, 3000);
+    });
+
     test('returns NaN for invalid input', () {
       final result = parseCurrency('abc', 'en_US');
       expect(result.isNaN, isTrue);
