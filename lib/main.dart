@@ -1,5 +1,7 @@
 // lib/main.dart
 import 'dart:async';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/constants/hive_constants.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -32,6 +34,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 // Removed local_auth import, handled by Settings page
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_logger/simple_logger.dart';
+import 'package:window_manager/window_manager.dart';
 
 final log = SimpleLogger();
 
@@ -58,30 +61,61 @@ Future<void> main() async {
     Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
 
     log.info("Opening Hive boxes...");
-    final expenseBox =
-        await Hive.openBox<ExpenseModel>(HiveConstants.expenseBoxName);
-    final accountBox =
-        await Hive.openBox<AssetAccountModel>(HiveConstants.accountBoxName);
-    final incomeBox =
-        await Hive.openBox<IncomeModel>(HiveConstants.incomeBoxName);
-    final categoryBox =
-        await Hive.openBox<CategoryModel>(HiveConstants.categoryBoxName);
+    final expenseBox = await Hive.openBox<ExpenseModel>(
+      HiveConstants.expenseBoxName,
+    );
+    final accountBox = await Hive.openBox<AssetAccountModel>(
+      HiveConstants.accountBoxName,
+    );
+    final incomeBox = await Hive.openBox<IncomeModel>(
+      HiveConstants.incomeBoxName,
+    );
+    final categoryBox = await Hive.openBox<CategoryModel>(
+      HiveConstants.categoryBoxName,
+    );
     final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
-        HiveConstants.userHistoryRuleBoxName);
-    final budgetBox =
-        await Hive.openBox<BudgetModel>(HiveConstants.budgetBoxName);
+      HiveConstants.userHistoryRuleBoxName,
+    );
+    final budgetBox = await Hive.openBox<BudgetModel>(
+      HiveConstants.budgetBoxName,
+    );
     final goalBox = await Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
     final contributionBox = await Hive.openBox<GoalContributionModel>(
-        HiveConstants.goalContributionBoxName);
+      HiveConstants.goalContributionBoxName,
+    );
     final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
-        HiveConstants.recurringRuleBoxName);
+      HiveConstants.recurringRuleBoxName,
+    );
     final recurringRuleAuditLogBox =
         await Hive.openBox<RecurringRuleAuditLogModel>(
-            HiveConstants.recurringRuleAuditLogBoxName);
+          HiveConstants.recurringRuleAuditLogBoxName,
+        );
     log.info("All Hive boxes opened.");
 
     final prefs = await SharedPreferences.getInstance();
     log.info("SharedPreferences instance obtained.");
+
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+      await windowManager.ensureInitialized();
+      final width = prefs.getDouble('window-width');
+      final height = prefs.getDouble('window-height');
+      final dx = prefs.getDouble('window-x');
+      final dy = prefs.getDouble('window-y');
+      final windowOptions = WindowOptions(
+        size: width != null && height != null ? Size(width, height) : null,
+      );
+      await windowManager.waitUntilReadyToShow(windowOptions, () async {
+        if (dx != null && dy != null) {
+          await windowManager.setPosition(Offset(dx, dy));
+        } else {
+          await windowManager.center();
+        }
+        await windowManager.show();
+        await windowManager.focus();
+      });
+      windowManager.addListener(_WindowPersistenceListener(prefs));
+    }
 
     await initLocator(
       prefs: prefs,
@@ -107,50 +141,71 @@ Future<void> main() async {
   }
 
   // --- Global Bloc Providers ---
-  runApp(MultiBlocProvider(
-    providers: [
-      // SettingsBloc MUST be provided early for Router redirect logic
-      BlocProvider<SettingsBloc>(
-        create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
-        lazy: false, // Load settings immediately
-      ),
-      BlocProvider<DataManagementBloc>(
-        create: (context) => sl<DataManagementBloc>(),
-        lazy: true,
-      ),
-      BlocProvider<AccountListBloc>(
-        create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
-        lazy: false, // Load immediately for dashboard dependencies
-      ),
-      BlocProvider<TransactionListBloc>(
-        create: (context) =>
-            sl<TransactionListBloc>()..add(const LoadTransactions()),
-        lazy: false,
-      ),
-      BlocProvider<CategoryManagementBloc>(
-        create: (context) =>
-            sl<CategoryManagementBloc>()..add(const LoadCategories()),
-        lazy: true,
-      ),
-      BlocProvider<BudgetListBloc>(
-        create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
-        lazy: false,
-      ),
-      BlocProvider<GoalListBloc>(
-        create: (context) => sl<GoalListBloc>()..add(const LoadGoals()),
-        lazy: false,
-      ),
-      BlocProvider<DashboardBloc>(
-        create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
-        lazy: false,
-      ),
-      BlocProvider<SummaryBloc>(
-        create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
-        lazy: true,
-      ),
-    ],
-    child: const MyApp(), // Use MyApp directly, router handles initial screen
-  ));
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        // SettingsBloc MUST be provided early for Router redirect logic
+        BlocProvider<SettingsBloc>(
+          create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
+          lazy: false, // Load settings immediately
+        ),
+        BlocProvider<DataManagementBloc>(
+          create: (context) => sl<DataManagementBloc>(),
+          lazy: true,
+        ),
+        BlocProvider<AccountListBloc>(
+          create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
+          lazy: false, // Load immediately for dashboard dependencies
+        ),
+        BlocProvider<TransactionListBloc>(
+          create: (context) =>
+              sl<TransactionListBloc>()..add(const LoadTransactions()),
+          lazy: false,
+        ),
+        BlocProvider<CategoryManagementBloc>(
+          create: (context) =>
+              sl<CategoryManagementBloc>()..add(const LoadCategories()),
+          lazy: true,
+        ),
+        BlocProvider<BudgetListBloc>(
+          create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
+          lazy: false,
+        ),
+        BlocProvider<GoalListBloc>(
+          create: (context) => sl<GoalListBloc>()..add(const LoadGoals()),
+          lazy: false,
+        ),
+        BlocProvider<DashboardBloc>(
+          create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
+          lazy: false,
+        ),
+        BlocProvider<SummaryBloc>(
+          create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
+          lazy: true,
+        ),
+      ],
+      child: const MyApp(), // Use MyApp directly, router handles initial screen
+    ),
+  );
+}
+
+class _WindowPersistenceListener extends WindowListener {
+  final SharedPreferences prefs;
+  _WindowPersistenceListener(this.prefs);
+
+  @override
+  void onWindowResize() async {
+    final size = await windowManager.getSize();
+    await prefs.setDouble('window-width', size.width);
+    await prefs.setDouble('window-height', size.height);
+  }
+
+  @override
+  void onWindowMove() async {
+    final position = await windowManager.getPosition();
+    await prefs.setDouble('window-x', position.dx);
+    await prefs.setDouble('window-y', position.dy);
+  }
 }
 
 class InitializationErrorApp extends StatelessWidget {
@@ -161,7 +216,9 @@ class InitializationErrorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Provide default theme data even if settings failed
     final defaultThemePair = AppTheme.buildTheme(
-        SettingsState.defaultUIMode, SettingsState.defaultPaletteIdentifier);
+      SettingsState.defaultUIMode,
+      SettingsState.defaultPaletteIdentifier,
+    );
 
     return MaterialApp(
       theme: defaultThemePair.light,
@@ -179,9 +236,10 @@ class InitializationErrorApp extends StatelessWidget {
                 Text(
                   "Application Initialization Failed",
                   style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red.shade900),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade900,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),

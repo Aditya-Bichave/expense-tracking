@@ -3,6 +3,7 @@
 
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -204,20 +205,40 @@ class _TransactionFormState extends State<TransactionForm> {
             initialIndex: isExpense ? 0 : 1,
             labels: const ['Expense', 'Income'],
             activeBgColors: [expenseColors, incomeColors],
-            onToggle: (index) {
+            onToggle: (index) async {
               if (index != null) {
                 log.info("[TransactionForm] Toggle switched to index: $index");
                 final newType = index == 0
                     ? TransactionType.expense
                     : TransactionType.income;
                 if (_transactionType != newType) {
-                  setState(() {
-                    _transactionType = newType;
-                    _selectedCategory = null;
-                  });
-                  context
-                      .read<AddEditTransactionBloc>()
-                      .add(TransactionTypeChanged(newType));
+                  final hasData = _titleController.text.trim().isNotEmpty ||
+                      _amountController.text.trim().isNotEmpty ||
+                      _selectedCategory != null ||
+                      _selectedAccountId != null ||
+                      _notesController.text.trim().isNotEmpty;
+                  if (hasData) {
+                    final confirm = await AppDialogs.showConfirmation(
+                      context,
+                      title: 'Change Transaction Type',
+                      content:
+                          'Changing the type will clear the selected category. Continue?',
+                      confirmText: 'Continue',
+                    );
+                    if (!mounted || confirm != true) {
+                      if (mounted) setState(() {});
+                      return;
+                    }
+                  }
+                  if (mounted) {
+                    setState(() {
+                      _transactionType = newType;
+                      _selectedCategory = null;
+                    });
+                    context
+                        .read<AddEditTransactionBloc>()
+                        .add(TransactionTypeChanged(newType));
+                  }
                 }
               }
             },

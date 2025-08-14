@@ -18,12 +18,10 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_calendar_view.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart'; // Hide the conflicting Category
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:collection/collection.dart';
 
 class TransactionListPage extends StatefulWidget {
   // --- ADDED: Accept optional initial filters ---
@@ -61,18 +59,18 @@ class _TransactionListPageState extends State<TransactionListPage> {
       log.info(
         "[TxnListPage] Applying initial filters from route: ${widget.initialFilters}",
       );
-      // Dispatch event to bloc to apply filters and load
       context.read<TransactionListBloc>().add(
-        LoadTransactions(
-          forceReload: true,
-          incomingFilters: widget.initialFilters,
-        ),
-      );
+            LoadTransactions(
+              forceReload: true,
+              incomingFilters: widget.initialFilters,
+            ),
+          );
     } else {
-      // Load normally if no initial filters
-      _setupInitialCalendarData();
+      final bloc = context.read<TransactionListBloc>();
+      if (bloc.state.status == ListStatus.initial) {
+        bloc.add(const LoadTransactions());
+      }
     }
-    // --- END MODIFICATION ---
   }
 
   @override
@@ -83,13 +81,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
     super.dispose();
   }
 
+
   void _setupInitialCalendarData() {
     final bloc = context.read<TransactionListBloc>();
     if (bloc.state.status == ListStatus.initial) {
       bloc.add(const LoadTransactions()); // Trigger load if initial
     }
   }
-
   // --- Interaction Handlers (Keep as is) ---
   void _onSearchChanged() {
     _debounce?.cancel();
@@ -98,8 +96,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
         final searchTerm = _searchController.text.trim();
         log.fine("[TxnListPage] Search term changed: '$searchTerm'");
         context.read<TransactionListBloc>().add(
-          SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
-        );
+              SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
+            );
       }
     });
   }
@@ -165,13 +163,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
             null, // TODO: Add merchant ID if available on transaction entity
       );
       context.read<TransactionListBloc>().add(
-        UserCategorizedTransaction(
-          transactionId: transaction.id,
-          transactionType: transaction.type,
-          selectedCategory: selectedCategory,
-          matchData: matchData,
-        ),
-      );
+            UserCategorizedTransaction(
+              transactionId: transaction.id,
+              transactionType: transaction.type,
+              selectedCategory: selectedCategory,
+              matchData: matchData,
+            ),
+          );
     } else {
       log.info("[TxnListPage] Category picker dismissed without selection.");
     }
@@ -231,14 +229,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
             initialCategoryId: currentState.categoryId,
             onApplyFilter: (startDate, endDate, type, accountId, categoryId) {
               context.read<TransactionListBloc>().add(
-                FilterChanged(
-                  startDate: startDate,
-                  endDate: endDate,
-                  transactionType: type,
-                  accountId: accountId,
-                  categoryId: categoryId,
-                ),
-              );
+                    FilterChanged(
+                      startDate: startDate,
+                      endDate: endDate,
+                      transactionType: type,
+                      accountId: accountId,
+                      categoryId: categoryId,
+                    ),
+                  );
             },
             onClearFilter: () {
               context.read<TransactionListBloc>().add(const FilterChanged());
@@ -265,8 +263,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
           currentSortDirection: currentState.sortDirection,
           onApplySort: (sortBy, sortDirection) {
             context.read<TransactionListBloc>().add(
-              SortChanged(sortBy: sortBy, sortDirection: sortDirection),
-            );
+                  SortChanged(sortBy: sortBy, sortDirection: sortDirection),
+                );
           },
         );
       },
@@ -303,6 +301,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _focusedDay = focusedDay;
   }
 
+
   List<TransactionEntity> _getEventsForDay(
     DateTime day,
     List<TransactionEntity> transactions,
@@ -317,7 +316,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       return isSameDay(normalizedTxnDate, normalizedDay);
     }).toList();
   }
-
   // --- Main Build Method (Keep as is) ---
   @override
   Widget build(BuildContext context) {
@@ -359,13 +357,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionListBloc>().add(
-                      const LoadTransactions(forceReload: true),
-                    );
+                          const LoadTransactions(forceReload: true),
+                        );
+                    // Wait for the loading state to finish
                     await context.read<TransactionListBloc>().stream.firstWhere(
-                      (s) =>
-                          s.status != ListStatus.loading &&
-                          s.status != ListStatus.reloading,
-                    );
+                          (s) =>
+                              s.status != ListStatus.loading &&
+                              s.status != ListStatus.reloading,
+                        );
                   },
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
@@ -385,6 +384,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                   state.transactions,
                               getEventsForDay: (day) =>
                                   _getEventsForDay(day, state.transactions),
+
                               onDaySelected: _onDaySelected,
                               onFormatChanged: _onFormatChanged,
                               onPageChanged: _onPageChanged,
@@ -411,63 +411,60 @@ class _TransactionListPageState extends State<TransactionListPage> {
       ),
       floatingActionButton:
           BlocBuilder<TransactionListBloc, TransactionListState>(
-            builder: (context, state) {
-              final bool showFab =
-                  state.isInBatchEditMode && !_showCalendarView;
-              final int count = state.selectedTransactionIds.length;
-              return AnimatedScale(
-                duration: const Duration(milliseconds: 200),
-                scale: showFab ? 1.0 : 0.0,
-                child: FloatingActionButton.extended(
-                  key: const ValueKey('batch_fab'),
-                  heroTag: 'transactions_batch_fab',
-                  onPressed: count > 0
-                      ? () async {
-                          log.info(
-                            "[TxnListPage] Batch categorize button pressed.",
-                          );
-                          final type =
-                              _getDominantTransactionType(state) ??
-                              TransactionType.expense;
-                          final Category? selectedCategory =
-                              await showCategoryPicker(
-                                context,
-                                type == TransactionType.expense
-                                    ? CategoryTypeFilter.expense
-                                    : CategoryTypeFilter.income,
-                              );
-                          if (selectedCategory != null &&
-                              selectedCategory.id !=
-                                  Category.uncategorized.id &&
-                              context.mounted) {
-                            context.read<TransactionListBloc>().add(
+        builder: (context, state) {
+          final bool showFab = state.isInBatchEditMode && !_showCalendarView;
+          final int count = state.selectedTransactionIds.length;
+          return AnimatedScale(
+            duration: const Duration(milliseconds: 200),
+            scale: showFab ? 1.0 : 0.0,
+            child: FloatingActionButton.extended(
+              key: const ValueKey('batch_fab'),
+              heroTag: 'transactions_batch_fab',
+              onPressed: count > 0
+                  ? () async {
+                      log.info(
+                        "[TxnListPage] Batch categorize button pressed.",
+                      );
+                      final type = _getDominantTransactionType(state) ??
+                          TransactionType.expense;
+                      final Category? selectedCategory =
+                          await showCategoryPicker(
+                        context,
+                        type == TransactionType.expense
+                            ? CategoryTypeFilter.expense
+                            : CategoryTypeFilter.income,
+                      );
+                      if (selectedCategory != null &&
+                          selectedCategory.id != Category.uncategorized.id &&
+                          context.mounted) {
+                        context.read<TransactionListBloc>().add(
                               ApplyBatchCategory(selectedCategory.id),
                             );
-                          } else if (selectedCategory?.id ==
-                                  Category.uncategorized.id &&
-                              context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Please select a specific category.",
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      : null,
-                  label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
-                  icon: const Icon(Icons.category_rounded),
-                  backgroundColor: count > 0
-                      ? theme.colorScheme.secondaryContainer
-                      : theme.disabledColor.withOpacity(0.1),
-                  foregroundColor: count > 0
-                      ? theme.colorScheme.onSecondaryContainer
-                      : theme.disabledColor,
-                ),
-              );
-            },
-          ),
+                      } else if (selectedCategory?.id ==
+                              Category.uncategorized.id &&
+                          context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Please select a specific category.",
+                            ),
+                          ),
+                        );
+                      }
+                    }
+                  : null,
+              label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
+              icon: const Icon(Icons.category_rounded),
+              backgroundColor: count > 0
+                  ? theme.colorScheme.secondaryContainer
+                  : theme.disabledColor.withOpacity(0.1),
+              foregroundColor: count > 0
+                  ? theme.colorScheme.onSecondaryContainer
+                  : theme.disabledColor,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -475,7 +472,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
     if (state.selectedTransactionIds.isEmpty) return null;
     TransactionType? type;
     for (final id in state.selectedTransactionIds) {
-      final txn = state.transactions.firstWhereOrNull((t) => t.id == id);
+      TransactionEntity? txn;
+      for (final t in state.transactions) {
+        if (t.id == id) {
+          txn = t;
+          break;
+        }
+      }
       if (txn == null) {
         log.warning(
           "[TxnListPage] Selected ID $id not found in state during dominant type check.",
@@ -496,7 +499,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
 @visibleForTesting
 TransactionType? getDominantTransactionTypeForTesting(
   TransactionListState state,
-) => _TransactionListPageState()._getDominantTransactionType(state);
+) =>
+    _TransactionListPageState()._getDominantTransactionType(state);
 
 extension StringCapExtension on String {
   String capitalize() {
