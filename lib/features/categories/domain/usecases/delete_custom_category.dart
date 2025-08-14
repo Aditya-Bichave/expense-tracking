@@ -16,16 +16,30 @@ class DeleteCustomCategoryUseCase
   final IncomeRepository incomeRepository;
 
   DeleteCustomCategoryUseCase(
-      this.categoryRepository, this.expenseRepository, this.incomeRepository);
+    this.categoryRepository,
+    this.expenseRepository,
+    this.incomeRepository,
+  );
 
   @override
   Future<Either<Failure, void>> call(DeleteCustomCategoryParams params) async {
     log.info(
-        "[DeleteCustomCategoryUseCase] Executing for category ID: ${params.categoryId}. Fallback: ${params.fallbackCategoryId}");
+      "[DeleteCustomCategoryUseCase] Executing for category ID: ${params.categoryId}. Fallback: ${params.fallbackCategoryId}",
+    );
+
+    if (params.categoryId == params.fallbackCategoryId) {
+      log.warning(
+        "[DeleteCustomCategoryUseCase] categoryId and fallbackCategoryId are the same: ${params.categoryId}",
+      );
+      return const Left(
+        ValidationFailure('Category and fallback cannot be the same.'),
+      );
+    }
 
     // --- Step 1: Reassign Transactions ---
     log.info(
-        "[DeleteCustomCategoryUseCase] Reassigning expenses from ${params.categoryId} to ${params.fallbackCategoryId}...");
+      "[DeleteCustomCategoryUseCase] Reassigning expenses from ${params.categoryId} to ${params.fallbackCategoryId}...",
+    );
     final expenseReassignResult = await expenseRepository
         .reassignExpensesCategory(params.categoryId, params.fallbackCategoryId);
 
@@ -34,7 +48,8 @@ class DeleteCustomCategoryUseCase
     int expensesReassigned = 0;
     expenseReassignResult.fold((failure) {
       log.warning(
-          "[DeleteCustomCategoryUseCase] Failed to reassign expenses: ${failure.message}");
+        "[DeleteCustomCategoryUseCase] Failed to reassign expenses: ${failure.message}",
+      );
       reassignmentFailure = failure;
     }, (count) => expensesReassigned = count);
     // If expense reassignment failed, stop here
@@ -42,18 +57,23 @@ class DeleteCustomCategoryUseCase
       return Left(reassignmentFailure!);
     }
     log.info(
-        "[DeleteCustomCategoryUseCase] Reassigned $expensesReassigned expenses.");
+      "[DeleteCustomCategoryUseCase] Reassigned $expensesReassigned expenses.",
+    );
 
     log.info(
-        "[DeleteCustomCategoryUseCase] Reassigning income from ${params.categoryId} to ${params.fallbackCategoryId}...");
+      "[DeleteCustomCategoryUseCase] Reassigning income from ${params.categoryId} to ${params.fallbackCategoryId}...",
+    );
     final incomeReassignResult = await incomeRepository.reassignIncomesCategory(
-        params.categoryId, params.fallbackCategoryId);
+      params.categoryId,
+      params.fallbackCategoryId,
+    );
 
     // Handle failure during income reassignment
     int incomeReassigned = 0;
     incomeReassignResult.fold((failure) {
       log.warning(
-          "[DeleteCustomCategoryUseCase] Failed to reassign income: ${failure.message}");
+        "[DeleteCustomCategoryUseCase] Failed to reassign income: ${failure.message}",
+      );
       reassignmentFailure = failure; // Update failure if income fails too
     }, (count) => incomeReassigned = count);
     // If income reassignment failed, stop here
@@ -61,14 +81,18 @@ class DeleteCustomCategoryUseCase
       return Left(reassignmentFailure!);
     }
     log.info(
-        "[DeleteCustomCategoryUseCase] Reassigned $incomeReassigned incomes.");
+      "[DeleteCustomCategoryUseCase] Reassigned $incomeReassigned incomes.",
+    );
 
     log.info(
-        "[DeleteCustomCategoryUseCase] Reassignment complete. Calling category repository to delete.");
+      "[DeleteCustomCategoryUseCase] Reassignment complete. Calling category repository to delete.",
+    );
     // --- Step 2: Delete the Category ---
     // This is only called if both reassignments succeeded (or had nothing to reassign)
     return await categoryRepository.deleteCustomCategory(
-        params.categoryId, params.fallbackCategoryId);
+      params.categoryId,
+      params.fallbackCategoryId,
+    );
   }
 }
 
@@ -76,8 +100,10 @@ class DeleteCustomCategoryParams extends Equatable {
   final String categoryId;
   final String fallbackCategoryId; // e.g., Category.uncategorized.id
 
-  const DeleteCustomCategoryParams(
-      {required this.categoryId, required this.fallbackCategoryId});
+  const DeleteCustomCategoryParams({
+    required this.categoryId,
+    required this.fallbackCategoryId,
+  });
 
   @override
   List<Object?> get props => [categoryId, fallbackCategoryId];

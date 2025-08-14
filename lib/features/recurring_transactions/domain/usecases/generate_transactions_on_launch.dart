@@ -75,7 +75,7 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
             isRecurring: true,
           );
           transactionResult =
-              (await addExpense(AddExpenseParams(newExpense))).map((_) => null);
+              (await addExpense(AddExpenseParams(newExpense))).map((_) {});
         } else {
           final newIncome = Income(
             id: uuid.v4(),
@@ -88,7 +88,7 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
             isRecurring: true,
           );
           transactionResult =
-              (await addIncome(AddIncomeParams(newIncome))).map((_) => null);
+              (await addIncome(AddIncomeParams(newIncome))).map((_) {});
         }
 
         return await transactionResult.fold<Future<Either<Failure, void>>>(
