@@ -378,13 +378,16 @@ class TransactionListBloc
     log.info(
         "[TransactionListBloc] DeleteTransaction requested: ID=${txn.id}, Type=${txn.type}");
 
+    final previousState = state;
+
     final optimisticList =
-        state.transactions.where((t) => t.id != txn.id).toList();
-    final updatedSelection = Set<String>.from(state.selectedTransactionIds)
+        previousState.transactions.where((t) => t.id != txn.id).toList();
+    final updatedSelection = Set<String>.from(previousState.selectedTransactionIds)
       ..remove(txn.id);
-    emit(state.copyWith(
+    emit(previousState.copyWith(
         transactions: optimisticList,
-        selectedTransactionIds: updatedSelection));
+        selectedTransactionIds: updatedSelection,
+        clearErrorMessage: true));
 
     final deleteResult = txn.type == TransactionType.expense
         ? await _deleteExpenseUseCase(DeleteExpenseParams(txn.id))
@@ -393,12 +396,9 @@ class TransactionListBloc
     deleteResult.fold((failure) {
       log.warning(
           "[TransactionListBloc] DeleteTransaction failed for ${txn.id}: ${failure.message}");
-      emit(state.copyWith(
-          status: ListStatus.error,
+      emit(previousState.copyWith(
           errorMessage:
               _mapFailureToMessage(failure, context: "Failed to delete")));
-      // Trigger reload to revert optimistic delete and show error
-      add(const LoadTransactions(forceReload: true));
     }, (_) {
       log.info(
           "[TransactionListBloc] DeleteTransaction successful for ${txn.id}. DataChanged event will handle list update.");

@@ -138,11 +138,10 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
         result.fold(
           (failure) {
             log.warning(
-                "[AccountListBloc] Deletion failed: ${failure.message}. Reverting UI and emitting Error.");
-            // Revert UI
-            emit(currentState);
+                "[AccountListBloc] Deletion failed: ${failure.message}. Reverting to previous state.");
             emit(AccountListError(_mapFailureToMessage(failure,
                 context: "Failed to delete account")));
+            emit(currentState);
           },
           (_) {
             log.info(
@@ -154,9 +153,9 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
       } catch (e) {
         log.severe(
             "[AccountListBloc] Unexpected error in _onDeleteAccountRequested for ID ${event.accountId}");
-        emit(currentState); // Revert optimistic update
         emit(AccountListError(
             "An unexpected error occurred during deletion: ${e.toString()}"));
+        emit(currentState); // Revert optimistic update
       }
     } else {
       log.warning(
