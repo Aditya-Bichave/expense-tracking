@@ -77,9 +77,11 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
   void _handleBlocStateChange(GoalListState state) {
     if (mounted && _isLoadingGoal) {
       // Find the updated goal directly from the new state
-      final updatedGoal = state.goals.firstWhereOrNull((g) => g.id == widget.goalId);
+      final updatedGoal =
+          state.goals.firstWhereOrNull((g) => g.id == widget.goalId);
       if (updatedGoal != null && updatedGoal != _currentGoal) {
-        log.fine("[GoalDetail] Bloc update detected, updating UI from new state.");
+        log.fine(
+            "[GoalDetail] Bloc update detected, updating UI from new state.");
         // Update the local state with the new data from the BLoC
         // This avoids another round trip to the database.
         setState(() {
