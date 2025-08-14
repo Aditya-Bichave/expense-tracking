@@ -325,9 +325,12 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      TextButton(
-                          onPressed: _clearFilters,
-                          child: const Text('Clear All')),
+                      Tooltip(
+                        message: 'Reset filters to their default values',
+                        child: TextButton(
+                            onPressed: _clearFilters,
+                            child: const Text('Clear Filters')),
+                      ),
                       Row(children: [
                         TextButton(
                             onPressed: () => Navigator.pop(context),

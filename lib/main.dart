@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'dart:async';
+import 'dart:io';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/constants/hive_constants.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -32,6 +33,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 // Removed local_auth import, handled by Settings page
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_logger/simple_logger.dart';
+import 'package:window_manager/window_manager.dart';
 
 final log = SimpleLogger();
 
@@ -82,6 +84,27 @@ Future<void> main() async {
 
     final prefs = await SharedPreferences.getInstance();
     log.info("SharedPreferences instance obtained.");
+
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      await windowManager.ensureInitialized();
+      final width = prefs.getDouble('window-width');
+      final height = prefs.getDouble('window-height');
+      final dx = prefs.getDouble('window-x');
+      final dy = prefs.getDouble('window-y');
+      final windowOptions = WindowOptions(
+        size: width != null && height != null ? Size(width, height) : null,
+      );
+      await windowManager.waitUntilReadyToShow(windowOptions, () async {
+        if (dx != null && dy != null) {
+          await windowManager.setPosition(Offset(dx, dy));
+        } else {
+          await windowManager.center();
+        }
+        await windowManager.show();
+        await windowManager.focus();
+      });
+      windowManager.addListener(_WindowPersistenceListener(prefs));
+    }
 
     await initLocator(
       prefs: prefs,
@@ -151,6 +174,25 @@ Future<void> main() async {
     ],
     child: const MyApp(), // Use MyApp directly, router handles initial screen
   ));
+}
+
+class _WindowPersistenceListener extends WindowListener {
+  final SharedPreferences prefs;
+  _WindowPersistenceListener(this.prefs);
+
+  @override
+  void onWindowResize() async {
+    final size = await windowManager.getSize();
+    await prefs.setDouble('window-width', size.width);
+    await prefs.setDouble('window-height', size.height);
+  }
+
+  @override
+  void onWindowMove() async {
+    final position = await windowManager.getPosition();
+    await prefs.setDouble('window-x', position.dx);
+    await prefs.setDouble('window-y', position.dy);
+  }
 }
 
 class InitializationErrorApp extends StatelessWidget {
