@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
+import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/add_audit_log.dart';
@@ -23,19 +24,6 @@ void main() {
   late MockAddAuditLog mockAddAuditLog;
   late MockUuid mockUuid;
 
-  setUp(() {
-    mockRepository = MockRecurringTransactionRepository();
-    mockGetRecurringRuleById = MockGetRecurringRuleById();
-    mockAddAuditLog = MockAddAuditLog();
-    mockUuid = MockUuid();
-    usecase = UpdateRecurringRule(
-      repository: mockRepository,
-      getRecurringRuleById: mockGetRecurringRuleById,
-      addAuditLog: mockAddAuditLog,
-      uuid: mockUuid,
-    );
-  });
-
   final tOldRule = RecurringRule(
     id: '1',
     description: 'Old Description',
@@ -53,6 +41,34 @@ void main() {
   );
 
   final tNewRule = tOldRule.copyWith(description: 'New Description', amount: 150);
+
+  setUpAll(() {
+    registerFallbackValue(tOldRule);
+    registerFallbackValue(
+      RecurringRuleAuditLog(
+        id: 'log',
+        ruleId: 'rule',
+        timestamp: DateTime(2023, 1, 1),
+        userId: 'user',
+        fieldChanged: 'field',
+        oldValue: 'old',
+        newValue: 'new',
+      ),
+    );
+  });
+
+  setUp(() {
+    mockRepository = MockRecurringTransactionRepository();
+    mockGetRecurringRuleById = MockGetRecurringRuleById();
+    mockAddAuditLog = MockAddAuditLog();
+    mockUuid = MockUuid();
+    usecase = UpdateRecurringRule(
+      repository: mockRepository,
+      getRecurringRuleById: mockGetRecurringRuleById,
+      addAuditLog: mockAddAuditLog,
+      uuid: mockUuid,
+    );
+  });
 
   test('should create audit logs for changed fields', () async {
     // Arrange
