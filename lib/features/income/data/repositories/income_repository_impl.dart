@@ -21,17 +21,21 @@ class IncomeRepositoryImpl implements IncomeRepository {
   Future<Either<Failure, Income>> _hydrateSingleModel(IncomeModel model) async {
     final catResult =
         await categoryRepository.getCategoryById(model.categoryId ?? '');
-    return catResult.fold((failure) {
-      log.warning(
-          "[IncomeRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}");
-      return Right(model.toEntity().copyWith(categoryOrNull: () => null));
-    }, (category) {
-      if (model.categoryId != null && category == null) {
+    return catResult.fold(
+      (failure) {
+        if (failure is NotFoundFailure) {
+          log.warning(
+              "[IncomeRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for income ${model.id}.");
+          return Right(model.toEntity().copyWith(categoryOrNull: () => null));
+        }
         log.warning(
-            "[IncomeRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for income ${model.id}.");
-      }
-      return Right(model.toEntity().copyWith(categoryOrNull: () => category));
-    });
+            "[IncomeRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}");
+        return Left(failure);
+      },
+      (category) {
+        return Right(model.toEntity().copyWith(categoryOrNull: () => category));
+      },
+    );
   }
 
   @override

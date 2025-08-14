@@ -24,17 +24,21 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       ExpenseModel model) async {
     final catResult =
         await categoryRepository.getCategoryById(model.categoryId ?? '');
-    return catResult.fold((failure) {
-      log.warning(
-          "[ExpenseRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}");
-      return Right(model.toEntity().copyWith(categoryOrNull: () => null));
-    }, (category) {
-      if (model.categoryId != null && category == null) {
+    return catResult.fold(
+      (failure) {
+        if (failure is NotFoundFailure) {
+          log.warning(
+              "[ExpenseRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for expense ${model.id}.");
+          return Right(model.toEntity().copyWith(categoryOrNull: () => null));
+        }
         log.warning(
-            "[ExpenseRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for expense ${model.id}.");
-      }
-      return Right(model.toEntity().copyWith(categoryOrNull: () => category));
-    });
+            "[ExpenseRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}");
+        return Left(failure);
+      },
+      (category) {
+        return Right(model.toEntity().copyWith(categoryOrNull: () => category));
+      },
+    );
   }
 
   @override

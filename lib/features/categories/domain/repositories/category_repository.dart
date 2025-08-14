@@ -17,7 +17,7 @@ abstract class CategoryRepository {
   Future<Either<Failure, List<Category>>> getCustomCategories(
       {CategoryType? type}); // Allow filtering custom by type
 
-  Future<Either<Failure, Category?>> getCategoryById(String categoryId);
+  Future<Either<Failure, Category>> getCategoryById(String categoryId);
   Future<Either<Failure, void>> addCustomCategory(
       Category category); // Category now includes type
   Future<Either<Failure, void>> updateCategory(

@@ -50,8 +50,23 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
   }
 
   Future<void> _processRule(RecurringRule rule) async {
-    final categoryOrFailure = await categoryRepository.getCategoryById(rule.categoryId);
-    final category = categoryOrFailure.getOrElse(() => null);
+    final categoryResult =
+        await categoryRepository.getCategoryById(rule.categoryId);
+    Category? category;
+    categoryResult.fold(
+      (failure) {
+        if (failure is NotFoundFailure) {
+          log.warning(
+              "[GenerateTransactionsOnLaunch] Category with ID '${rule.categoryId}' not found. Continuing with null category.");
+          category = null;
+        } else {
+          log.warning(
+              "[GenerateTransactionsOnLaunch] Failed to fetch category for rule ${rule.id}: ${failure.message}");
+          category = null;
+        }
+      },
+      (cat) => category = cat,
+    );
 
     // 1. Generate transaction
     if (rule.transactionType == TransactionType.expense) {

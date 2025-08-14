@@ -135,20 +135,26 @@ class CategoryRepositoryImpl implements CategoryRepository {
   }
 
   @override
-  Future<Either<Failure, Category?>> getCategoryById(String categoryId) async {
+  Future<Either<Failure, Category>> getCategoryById(String categoryId) async {
     log.fine("[CategoryRepo] getCategoryById called for ID: $categoryId");
     final allCategoriesResult = await getAllCategories();
-    return allCategoriesResult.fold((failure) => Left(failure), (categories) {
-      // Use firstWhereOrNull from collection package for safety
-      final category =
-          categories.firstWhereOrNull((cat) => cat.id == categoryId);
-      if (category != null) {
-        log.fine("[CategoryRepo] Found category by ID: ${category.name}");
-      } else {
-        log.warning("[CategoryRepo] Category with ID '$categoryId' not found.");
-      }
-      return Right(category); // Return Right(null) if not found
-    });
+    return allCategoriesResult.fold(
+      (failure) => Left(failure),
+      (categories) {
+        // Use firstWhereOrNull from collection package for safety
+        final category =
+            categories.firstWhereOrNull((cat) => cat.id == categoryId);
+        if (category != null) {
+          log.fine("[CategoryRepo] Found category by ID: ${category.name}");
+          return Right(category);
+        } else {
+          log.warning(
+              "[CategoryRepo] Category with ID '$categoryId' not found.");
+          return Left(
+              NotFoundFailure("Category with ID '$categoryId' not found"));
+        }
+      },
+    );
   }
 
   @override

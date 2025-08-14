@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:dartz/dartz.dart';
@@ -114,6 +115,29 @@ void main() {
     verify(() => mockAddExpenseUseCase(any())).called(1);
     verify(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
         .called(1);
+  });
+
+  test('should generate transaction with null category when category missing',
+      () async {
+    // Arrange
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([tRule]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => const Left(NotFoundFailure('not found')));
+    when(() => mockAddExpenseUseCase(any()))
+        .thenAnswer((_) async => Right(tExpense));
+    when(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
+        .thenAnswer((_) async => const Right(null));
+    when(() => mockUuid.v4()).thenReturn('new_id');
+
+    // Act
+    await usecase(const NoParams());
+
+    // Assert
+    final captured =
+        verify(() => mockAddExpenseUseCase(captureAny())).captured.single
+            as AddExpenseParams;
+    expect(captured.expense.category, isNull);
   });
 
   test('should not generate a transaction for a future rule', () async {

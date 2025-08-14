@@ -230,7 +230,8 @@ class CategorizeTransactionUseCase
   Future<Category?> _getCategoryById(String? categoryId) async {
     /* ... same as before ... */
     if (categoryId == null) return null;
-    final result = await categoryRepository.getCategoryById(categoryId);
+    final result =
+        await categoryRepository.getCategoryById(categoryId!);
     return result.fold(
       (failure) {
         log.warning(
