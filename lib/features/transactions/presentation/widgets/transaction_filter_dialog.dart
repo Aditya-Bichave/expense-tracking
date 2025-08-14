@@ -6,6 +6,16 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+extension MaybeReadBuildContext on BuildContext {
+  T? maybeRead<T>() {
+    try {
+      return read<T>();
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
 // Callback type for applying filters
 typedef ApplyFiltersCallback = void Function(
   DateTime? startDate,
