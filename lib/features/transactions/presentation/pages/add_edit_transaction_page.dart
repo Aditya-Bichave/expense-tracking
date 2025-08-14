@@ -250,8 +250,31 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                 children: [
                   TransactionForm(
                     key: ValueKey(state.transactionType.toString() +
-                        (state.initialTransaction?.id ?? 'new')),
-                    initialTransaction: state.initialTransaction,
+                        (state.transactionId ?? 'new')),
+                    initialTransaction: state.isEditing
+                        ? (state.transactionType == TransactionType.expense
+                            ? TransactionEntity.fromExpense(
+                                Expense(
+                                  id: state.transactionId!,
+                                  title: state.tempTitle ?? '',
+                                  amount: state.tempAmount ?? 0,
+                                  date: state.tempDate ?? DateTime.now(),
+                                  category: state.category,
+                                  accountId: state.tempAccountId ?? '',
+                                ),
+                              )
+                            : TransactionEntity.fromIncome(
+                                Income(
+                                  id: state.transactionId!,
+                                  title: state.tempTitle ?? '',
+                                  amount: state.tempAmount ?? 0,
+                                  date: state.tempDate ?? DateTime.now(),
+                                  category: state.category,
+                                  accountId: state.tempAccountId ?? '',
+                                  notes: state.tempNotes,
+                                ),
+                              ))
+                        : null,
                     initialType: state.transactionType,
                     initialCategory: state.effectiveCategory,
                     onSubmit: (type, title, amount, date, category, accountId,
