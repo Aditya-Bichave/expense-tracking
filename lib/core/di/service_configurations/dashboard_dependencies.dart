@@ -1,4 +1,4 @@
-// lib/core/di/service_configuration/dashboard_dependencies.dart
+// lib/core/di/service_configurations/dashboard_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';

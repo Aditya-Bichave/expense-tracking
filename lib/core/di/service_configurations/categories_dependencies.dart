@@ -1,4 +1,4 @@
-// lib/core/di/service_configuration/categories_dependencies.dart
+// lib/core/di/service_configurations/categories_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/categories/data/datasources/category_local_data_source.dart';
 import 'package:expense_tracker/features/categories/data/datasources/category_predefined_data_source.dart';

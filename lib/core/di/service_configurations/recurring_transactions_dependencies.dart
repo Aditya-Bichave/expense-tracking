@@ -1,3 +1,4 @@
+// lib/core/di/service_configurations/recurring_transactions_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/datasources/recurring_transaction_local_data_source.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/repositories/recurring_transaction_repository_impl.dart';
