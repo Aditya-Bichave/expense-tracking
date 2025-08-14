@@ -90,7 +90,8 @@ class AppRouter {
             currentRoute == RouteNames.transactionsList ||
             currentRoute == RouteNames.budgetsAndCats ||
             currentRoute == RouteNames.accounts ||
-            currentRoute == RouteNames.settings;
+            currentRoute == RouteNames.settings ||
+            currentRoute.startsWith(RouteNames.recurring);
 
         log.info(
             "[RouterRedirect] To: $currentRoute, IsInDemo: $isInDemo, IsAuth: $isAuthenticated, IsInit: $isInitialized, SetupSkipped: $setupSkipped");
