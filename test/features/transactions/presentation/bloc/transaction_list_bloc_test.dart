@@ -210,4 +210,59 @@ void main() {
       ],
     );
   });
+
+  group('TransactionListBloc concurrency', () {
+    late MockGetTransactionsUseCase getTransactions;
+    late MockDeleteExpenseUseCase deleteExpense;
+    late MockDeleteIncomeUseCase deleteIncome;
+    late MockApplyBatchCategoryUseCase applyBatch;
+    late MockSaveUserCategorizationHistoryUseCase saveHistory;
+    late MockExpenseRepository expenseRepo;
+    late MockIncomeRepository incomeRepo;
+
+    setUp(() {
+      getTransactions = MockGetTransactionsUseCase();
+      deleteExpense = MockDeleteExpenseUseCase();
+      deleteIncome = MockDeleteIncomeUseCase();
+      applyBatch = MockApplyBatchCategoryUseCase();
+      saveHistory = MockSaveUserCategorizationHistoryUseCase();
+      expenseRepo = MockExpenseRepository();
+      incomeRepo = MockIncomeRepository();
+    });
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'drops second load when first is in progress',
+      build: () {
+        when(() => getTransactions(any())).thenAnswer((_) async {
+          await Future.delayed(const Duration(milliseconds: 10));
+          return const Right(<TransactionEntity>[]);
+        });
+        return TransactionListBloc(
+          getTransactionsUseCase: getTransactions,
+          deleteExpenseUseCase: deleteExpense,
+          deleteIncomeUseCase: deleteIncome,
+          applyCategoryToBatchUseCase: applyBatch,
+          saveUserHistoryUseCase: saveHistory,
+          expenseRepository: expenseRepo,
+          incomeRepository: incomeRepo,
+          dataChangeStream: const Stream<DataChangedEvent>.empty(),
+        );
+      },
+      act: (bloc) {
+        bloc.add(const LoadTransactions());
+        bloc.add(const LoadTransactions());
+      },
+      wait: const Duration(milliseconds: 100),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'loading',
+          ListStatus.loading,
+        ),
+      ],
+      verify: (_) {
+        verify(() => getTransactions(any())).called(1);
+      },
+    );
+  });
 }
