@@ -17,9 +17,15 @@ class UpdateAssetAccountUseCase
       UpdateAssetAccountParams params) async {
     log.info(
         "Executing UpdateAssetAccountUseCase for '${params.account.name}' (ID: ${params.account.id}).");
-    if (params.account.name.trim().isEmpty) {
+    final name = params.account.name.trim();
+    if (name.isEmpty) {
       log.warning("Validation failed: Account name cannot be empty.");
       return const Left(ValidationFailure("Account name cannot be empty."));
+    }
+    if (!RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(name)) {
+      log.warning("Validation failed: Account name must be alphanumeric.");
+      return const Left(
+          ValidationFailure("Account name must be alphanumeric."));
     }
     // Add other validations if needed (e.g., initialBalance >= 0)
     return await repository.updateAssetAccount(params.account);
