@@ -1,3 +1,4 @@
+// lib/core/di/service_configurations/expenses_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';

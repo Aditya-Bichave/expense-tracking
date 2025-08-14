@@ -1,4 +1,4 @@
-// lib/core/di/service_configuration/data_management_dependencies.dart
+// lib/core/di/service_configurations/data_management_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/settings/data/repositories/data_management_repository_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
