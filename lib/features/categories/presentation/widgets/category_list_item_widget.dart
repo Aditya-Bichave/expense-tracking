@@ -40,32 +40,44 @@ class CategoryListItemWidget extends StatelessWidget {
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    iconSize: 20,
-                    color: theme.colorScheme.secondary,
-                    visualDensity: VisualDensity.compact,
-                    tooltip: 'Edit Category',
-                    onPressed: onEdit, // Use callback
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      iconSize: 20,
+                      color: theme.colorScheme.secondary,
+                      padding: EdgeInsets.zero,
+                      tooltip: 'Edit Category',
+                      onPressed: onEdit, // Use callback
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    iconSize: 20,
-                    color: theme.colorScheme.error,
-                    visualDensity: VisualDensity.compact,
-                    tooltip: 'Delete Category',
-                    onPressed: onDelete, // Use callback
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      iconSize: 20,
+                      color: theme.colorScheme.error,
+                      padding: EdgeInsets.zero,
+                      tooltip: 'Delete Category',
+                      onPressed: onDelete, // Use callback
+                    ),
                   ),
                 ],
               )
-            : IconButton(
-                // Action for predefined (personalize icon)
-                icon: const Icon(Icons.palette_outlined),
-                iconSize: 20,
-                color: theme.colorScheme.secondary,
-                visualDensity: VisualDensity.compact,
-                tooltip: 'Personalize Icon/Color (Coming Soon)',
-                onPressed: onPersonalize, // Use callback
+            : SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  // Action for predefined (personalize icon)
+                  icon: const Icon(Icons.palette_outlined),
+                  iconSize: 20,
+                  color: theme.colorScheme.secondary,
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Personalize Icon/Color (Coming Soon)',
+                  onPressed: onPersonalize, // Use callback
+                ),
               ),
       ),
     );
