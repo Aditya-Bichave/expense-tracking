@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:mocktail/mocktail.dart';
 // for NoParams
 import 'package:expense_tracker/core/events/data_change_event.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/delete_recurring_rule.dart';
@@ -29,11 +30,17 @@ void main() {
   late RecurringListBloc recurringListBloc;
   late StreamController<DataChangedEvent> dataChangeController;
 
-  setUp(() {
+  setUp(() async {
     mockGetRecurringRules = MockGetRecurringRules();
     mockPauseResumeRecurringRule = MockPauseResumeRecurringRule();
     mockDeleteRecurringRule = MockDeleteRecurringRule();
     dataChangeController = StreamController<DataChangedEvent>.broadcast();
+
+    await sl.reset();
+    sl.registerSingleton<StreamController<DataChangedEvent>>(
+        dataChangeController,
+        instanceName: 'dataChangeController');
+    sl.registerSingleton<Stream<DataChangedEvent>>(dataChangeController.stream);
 
     recurringListBloc = RecurringListBloc(
       getRecurringRules: mockGetRecurringRules,
@@ -50,6 +57,7 @@ void main() {
   tearDown(() async {
     await recurringListBloc.close();
     await dataChangeController.close();
+    await sl.reset();
   });
 
   group('RecurringListBloc', () {
@@ -77,8 +85,9 @@ void main() {
     blocTest<RecurringListBloc, RecurringListState>(
       'emits [RecurringListLoading, RecurringListLoaded] when LoadRecurringRules is added.',
       build: () {
-        when(() => mockGetRecurringRules(any()))
-            .thenAnswer((_) async => Right(tRecurringRules));
+        when(
+          () => mockGetRecurringRules(any()),
+        ).thenAnswer((_) async => Right(tRecurringRules));
         return recurringListBloc;
       },
       act: (bloc) => bloc.add(LoadRecurringRules()),
@@ -91,24 +100,24 @@ void main() {
     blocTest<RecurringListBloc, RecurringListState>(
       'emits [RecurringListError] when GetRecurringRules fails.',
       build: () {
-        when(() => mockGetRecurringRules(any()))
-            .thenAnswer((_) async => const Left(CacheFailure('Error')));
+        when(
+          () => mockGetRecurringRules(any()),
+        ).thenAnswer((_) async => const Left(CacheFailure('Error')));
         return recurringListBloc;
       },
       act: (bloc) => bloc.add(LoadRecurringRules()),
-      expect: () => [
-        RecurringListLoading(),
-        const RecurringListError('Error'),
-      ],
+      expect: () => [RecurringListLoading(), const RecurringListError('Error')],
     );
 
     blocTest<RecurringListBloc, RecurringListState>(
       'calls PauseResumeRecurringRule and reloads list on success',
       build: () {
-        when(() => mockPauseResumeRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
-        when(() => mockGetRecurringRules(any()))
-            .thenAnswer((_) async => Right(tRecurringRules));
+        when(
+          () => mockPauseResumeRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGetRecurringRules(any()),
+        ).thenAnswer((_) async => Right(tRecurringRules));
         return recurringListBloc;
       },
       act: (bloc) => bloc.add(const PauseResumeRule('1')),
@@ -121,10 +130,12 @@ void main() {
     blocTest<RecurringListBloc, RecurringListState>(
       'calls DeleteRecurringRule and reloads list on success',
       build: () {
-        when(() => mockDeleteRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
-        when(() => mockGetRecurringRules(any()))
-            .thenAnswer((_) async => Right(tRecurringRules));
+        when(
+          () => mockDeleteRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGetRecurringRules(any()),
+        ).thenAnswer((_) async => Right(tRecurringRules));
         return recurringListBloc;
       },
       act: (bloc) => bloc.add(const DeleteRule('1')),
@@ -132,6 +143,29 @@ void main() {
         verify(() => mockDeleteRecurringRule('1')).called(1);
         verify(() => mockGetRecurringRules(any())).called(1);
       },
+    );
+
+    blocTest<RecurringListBloc, RecurringListState>(
+      'resets and reloads when system reset DataChangedEvent is received',
+      build: () {
+        when(
+          () => mockGetRecurringRules(any()),
+        ).thenAnswer((_) async => Right(tRecurringRules));
+        return recurringListBloc;
+      },
+      act: (bloc) {
+        dataChangeController.add(
+          const DataChangedEvent(
+            type: DataChangeType.system,
+            reason: DataChangeReason.reset,
+          ),
+        );
+      },
+      expect: () => [
+        RecurringListInitial(),
+        RecurringListLoading(),
+        RecurringListLoaded(tRecurringRules),
+      ],
     );
   });
 }

@@ -27,9 +27,13 @@ class RecurringListBloc extends Bloc<RecurringListEvent, RecurringListState> {
     on<LoadRecurringRules>(_onLoadRecurringRules);
     on<PauseResumeRule>(_onPauseResumeRule);
     on<DeleteRule>(_onDeleteRule);
+    on<ResetState>(_onResetState);
 
     _dataChangeSubscription = dataChangedEventStream.listen((event) {
-      if (event.type == DataChangeType.recurringRule) {
+      if (event.type == DataChangeType.system &&
+          event.reason == DataChangeReason.reset) {
+        add(const ResetState());
+      } else if (event.type == DataChangeType.recurringRule) {
         add(LoadRecurringRules());
       }
     });
@@ -79,5 +83,10 @@ class RecurringListBloc extends Bloc<RecurringListEvent, RecurringListState> {
         reason: DataChangeReason.deleted,
       ),
     );
+  }
+
+  void _onResetState(ResetState event, Emitter<RecurringListState> emit) {
+    emit(RecurringListInitial());
+    add(LoadRecurringRules());
   }
 }
