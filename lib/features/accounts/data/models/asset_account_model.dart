@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:expense_tracker/main.dart';
 
 part 'asset_account_model.g.dart';
 
@@ -39,14 +40,20 @@ class AssetAccountModel extends HiveObject {
   }
 
   AssetAccount toEntity(double currentBalance) {
-    // Icon is now determined in the entity or widget
+    final assetType = (typeIndex >= 0 && typeIndex < AssetType.values.length)
+        ? AssetType.values[typeIndex]
+        : AssetType.other;
+    if (typeIndex < 0 || typeIndex >= AssetType.values.length) {
+      log.warning(
+        '[AssetAccountModel] Invalid typeIndex $typeIndex, defaulting to AssetType.other',
+      );
+    }
     return AssetAccount(
       id: id,
       name: name,
-      type: AssetType.values[typeIndex], // Get enum from index
+      type: assetType,
       initialBalance: initialBalance,
       currentBalance: currentBalance,
-      // iconData is handled by the entity/widget now
     );
   }
 

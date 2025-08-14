@@ -32,6 +32,7 @@ import 'package:expense_tracker/features/goals/domain/usecases/audit_goal_totals
 import 'package:expense_tracker/features/goals/presentation/bloc/add_edit_goal/add_edit_goal_bloc.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
+import 'package:expense_tracker/features/goals/presentation/bloc/contribution_list/contribution_list_bloc.dart';
 // External
 import 'package:uuid/uuid.dart';
 import 'dart:async'; // For Stream
@@ -41,30 +42,34 @@ class GoalDependencies {
     // --- Data Sources (Proxies) ---
     if (!sl.isRegistered<GoalLocalDataSource>()) {
       sl.registerLazySingleton<GoalLocalDataSource>(
-          () => DemoAwareGoalDataSource(
-                hiveDataSource: sl<HiveGoalLocalDataSource>(),
-                demoModeService: sl<DemoModeService>(),
-              ));
+        () => DemoAwareGoalDataSource(
+          hiveDataSource: sl<HiveGoalLocalDataSource>(),
+          demoModeService: sl<DemoModeService>(),
+        ),
+      );
     }
     if (!sl.isRegistered<GoalContributionLocalDataSource>()) {
       sl.registerLazySingleton<GoalContributionLocalDataSource>(
-          () => DemoAwareGoalContributionDataSource(
-                hiveDataSource: sl<HiveContributionLocalDataSource>(),
-                demoModeService: sl<DemoModeService>(),
-              ));
+        () => DemoAwareGoalContributionDataSource(
+          hiveDataSource: sl<HiveContributionLocalDataSource>(),
+          demoModeService: sl<DemoModeService>(),
+        ),
+      );
     }
 
     // --- Repositories ---
     if (!sl.isRegistered<GoalRepository>()) {
       sl.registerLazySingleton<GoalRepository>(
-          () => GoalRepositoryImpl(localDataSource: sl()));
+        () => GoalRepositoryImpl(localDataSource: sl()),
+      );
     }
     if (!sl.isRegistered<GoalContributionRepository>()) {
       sl.registerLazySingleton<GoalContributionRepository>(
-          () => GoalContributionRepositoryImpl(
-                contributionDataSource: sl(),
-                goalDataSource: sl(), // Goal DS needed for cache update
-              ));
+        () => GoalContributionRepositoryImpl(
+          contributionDataSource: sl(),
+          goalDataSource: sl(), // Goal DS needed for cache update
+        ),
+      );
     }
 
     // --- Use Cases ---
@@ -104,28 +109,42 @@ class GoalDependencies {
 
     // --- Blocs ---
     if (!sl.isRegistered<GoalListBloc>()) {
-      sl.registerFactory(() => GoalListBloc(
-            getGoalsUseCase: sl<GetGoalsUseCase>(),
-            archiveGoalUseCase: sl<ArchiveGoalUseCase>(),
-            dataChangeStream: sl<Stream<DataChangedEvent>>(),
-            deleteGoalUseCase: sl<DeleteGoalUseCase>(),
-          ));
+      sl.registerFactory(
+        () => GoalListBloc(
+          getGoalsUseCase: sl<GetGoalsUseCase>(),
+          archiveGoalUseCase: sl<ArchiveGoalUseCase>(),
+          dataChangeStream: sl<Stream<DataChangedEvent>>(),
+          deleteGoalUseCase: sl<DeleteGoalUseCase>(),
+        ),
+      );
     }
     if (!sl.isRegistered<AddEditGoalBloc>()) {
       sl.registerFactoryParam<AddEditGoalBloc, Goal?, void>(
-          (initialGoal, _) => AddEditGoalBloc(
-                addGoalUseCase: sl<AddGoalUseCase>(),
-                updateGoalUseCase: sl<UpdateGoalUseCase>(),
-                initialGoal: initialGoal,
-              ));
+        (initialGoal, _) => AddEditGoalBloc(
+          addGoalUseCase: sl<AddGoalUseCase>(),
+          updateGoalUseCase: sl<UpdateGoalUseCase>(),
+          initialGoal: initialGoal,
+        ),
+      );
     }
     if (!sl.isRegistered<LogContributionBloc>()) {
-      sl.registerFactory(() => LogContributionBloc(
-            addContributionUseCase: sl<AddContributionUseCase>(),
-            updateContributionUseCase: sl<UpdateContributionUseCase>(),
-            deleteContributionUseCase: sl<DeleteContributionUseCase>(),
-            checkGoalAchievementUseCase: sl<CheckGoalAchievementUseCase>(),
-          ));
+      sl.registerFactory(
+        () => LogContributionBloc(
+          addContributionUseCase: sl<AddContributionUseCase>(),
+          updateContributionUseCase: sl<UpdateContributionUseCase>(),
+          deleteContributionUseCase: sl<DeleteContributionUseCase>(),
+          checkGoalAchievementUseCase: sl<CheckGoalAchievementUseCase>(),
+        ),
+      );
+    }
+    if (!sl.isRegistered<ContributionListBloc>()) {
+      sl.registerFactoryParam<ContributionListBloc, String, void>(
+        (goalId, _) => ContributionListBloc(
+          goalId: goalId,
+          getContributionsUseCase: sl<GetContributionsForGoalUseCase>(),
+          dataChangeStream: sl<Stream<DataChangedEvent>>(),
+        ),
+      );
     }
   }
 }
