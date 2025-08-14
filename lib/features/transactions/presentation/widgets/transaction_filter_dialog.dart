@@ -6,6 +6,16 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+extension MaybeReadBuildContext on BuildContext {
+  T? maybeRead<T>() {
+    try {
+      return read<T>();
+    } catch (_) {
+      return null;
+    }
+  }
+}
+
 // Callback type for applying filters
 typedef ApplyFiltersCallback = void Function(
   DateTime? startDate,
@@ -24,6 +34,12 @@ class TransactionFilterDialog extends StatefulWidget {
   final ApplyFiltersCallback onApplyFilter;
   final VoidCallback onClearFilter;
   final List<Category> availableCategories; // Pass categories from BLoC/UseCase
+  final VoidCallback? onLoadAccounts;
+  final Widget Function(
+    String? selectedAccountId,
+    ValueChanged<String?> onChanged,
+  )?
+      accountSelectorBuilder;
 
   const TransactionFilterDialog({
     super.key,
@@ -35,6 +51,8 @@ class TransactionFilterDialog extends StatefulWidget {
     required this.onApplyFilter,
     required this.onClearFilter,
     required this.availableCategories,
+    this.onLoadAccounts,
+    this.accountSelectorBuilder,
   });
 
   @override
@@ -59,7 +77,12 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
     _selectedCategoryId = widget.initialCategoryId;
     // Ensure AccountListBloc is loaded if AccountSelectorDropdown needs it
     // This assumes AccountListBloc is provided higher up via MultiBlocProvider
-    context.read<AccountListBloc>().add(const LoadAccounts());
+    final bloc = context.maybeRead<AccountListBloc>();
+    if (bloc != null) {
+      bloc.add(const LoadAccounts());
+    } else {
+      widget.onLoadAccounts?.call();
+    }
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
@@ -222,15 +245,27 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
             const SizedBox(height: 16),
 
             // --- Account Selector ---
-            AccountSelectorDropdown(
-                // Reuse existing widget
-                selectedAccountId: _selectedAccountId,
-                labelText: 'Account',
-                hintText: 'All Accounts',
-                validator: null, // No validation needed for filter
-                onChanged: (String? newAccountId) {
-                  setState(() => _selectedAccountId = newAccountId);
-                }),
+            Builder(builder: (context) {
+              if (context.maybeRead<AccountListBloc>() != null) {
+                return AccountSelectorDropdown(
+                    // Reuse existing widget
+                    selectedAccountId: _selectedAccountId,
+                    labelText: 'Account',
+                    hintText: 'All Accounts',
+                    validator: null, // No validation needed for filter
+                    onChanged: (String? newAccountId) {
+                      setState(() => _selectedAccountId = newAccountId);
+                    });
+              }
+              if (widget.accountSelectorBuilder != null) {
+                return widget.accountSelectorBuilder!(
+                    _selectedAccountId,
+                    (String? newAccountId) {
+                      setState(() => _selectedAccountId = newAccountId);
+                    });
+              }
+              return const SizedBox.shrink();
+            }),
             const SizedBox(height: 16),
 
             // --- Category Selector ---
@@ -258,26 +293,29 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
       actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       actions: <Widget>[
         TextButton(
-            child: const Text('Clear All'),
-            onPressed: () {
-              widget.onClearFilter();
-              Navigator.of(context).pop();
-            }),
-        const Spacer(), // Push buttons to the right
+          onPressed: () {
+            widget.onClearFilter();
+            Navigator.of(context).pop();
+          },
+          child: const Text('Clear All'),
+        ),
         TextButton(
-            child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop()),
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
         ElevatedButton(
-            child: const Text('Apply Filters'),
-            onPressed: () {
-              widget.onApplyFilter(
-                  _selectedStartDate,
-                  _selectedEndDate,
-                  _selectedTransactionType,
-                  _selectedAccountId,
-                  _selectedCategoryId);
-              Navigator.of(context).pop();
-            }),
+          onPressed: () {
+            widget.onApplyFilter(
+              _selectedStartDate,
+              _selectedEndDate,
+              _selectedTransactionType,
+              _selectedAccountId,
+              _selectedCategoryId,
+            );
+            Navigator.of(context).pop();
+          },
+          child: const Text('Apply Filters'),
+        ),
       ],
     );
   }

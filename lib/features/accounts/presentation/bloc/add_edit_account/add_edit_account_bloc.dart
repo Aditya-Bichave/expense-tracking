@@ -39,13 +39,17 @@ class AddEditAccountBloc
     emit(state.copyWith(status: FormStatus.submitting, clearError: true));
 
     final bool isEditing = event.existingAccountId != null;
-    // Current balance is calculated by repository, use 0 or initial value as placeholder
+    // Preserve existing current balance when editing; repository recalculates later
+    final currentBalance = isEditing
+        ? state.initialAccount?.currentBalance ?? event.initialBalance
+        : event.initialBalance;
+
     final accountData = AssetAccount(
       id: event.existingAccountId ?? _uuid.v4(),
       name: event.name,
       type: event.type,
       initialBalance: event.initialBalance,
-      currentBalance: event.initialBalance, // Placeholder, repo recalculates
+      currentBalance: currentBalance,
     );
 
     log.info(

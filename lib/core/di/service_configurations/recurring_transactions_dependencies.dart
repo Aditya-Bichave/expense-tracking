@@ -41,6 +41,7 @@ class RecurringTransactionsDependencies {
           getRecurringRuleById: sl(),
           addAuditLog: sl(),
           uuid: sl<Uuid>(),
+          userId: 'demo-user-id', // Replace with authenticated user ID
         ));
     sl.registerLazySingleton(() => DeleteRecurringRule(sl()));
     sl.registerLazySingleton(() => AddAuditLog(sl()));

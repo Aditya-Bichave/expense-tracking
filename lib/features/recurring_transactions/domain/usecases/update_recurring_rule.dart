@@ -13,12 +13,14 @@ class UpdateRecurringRule implements UseCase<void, RecurringRule> {
   final GetRecurringRuleById getRecurringRuleById;
   final AddAuditLog addAuditLog;
   final Uuid uuid;
+  final String userId;
 
   UpdateRecurringRule({
     required this.repository,
     required this.getRecurringRuleById,
     required this.addAuditLog,
     required this.uuid,
+    required this.userId,
   });
 
   @override
@@ -37,10 +39,11 @@ class UpdateRecurringRule implements UseCase<void, RecurringRule> {
     );
   }
 
-  List<RecurringRuleAuditLog> _createAuditLogs(RecurringRule oldRule, RecurringRule newRule) {
+  List<RecurringRuleAuditLog> _createAuditLogs(
+      RecurringRule oldRule, RecurringRule newRule) {
     final List<RecurringRuleAuditLog> logs = [];
     final timestamp = DateTime.now();
-    const userId = 'user_id_placeholder'; // TODO: Get actual user ID
+    final userId = this.userId;
 
     void addLog(String field, dynamic oldValue, dynamic newValue) {
       if (oldValue != newValue) {
