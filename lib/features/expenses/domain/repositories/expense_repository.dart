@@ -12,7 +12,7 @@ abstract class ExpenseRepository {
   Future<Either<Failure, List<ExpenseModel>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Filter by Category ID
+    String? categoryId,
     String? accountId,
   });
   // --- END MODIFIED ---
@@ -23,12 +23,23 @@ abstract class ExpenseRepository {
   Future<Either<Failure, Expense>> updateExpense(Expense expense);
 
   Future<Either<Failure, void>> deleteExpense(String id);
-  Future<Either<Failure, double>> getTotalExpensesForAccount(String accountId,
-      {DateTime? startDate, DateTime? endDate});
-  Future<Either<Failure, ExpenseSummary>> getExpenseSummary(
-      {DateTime? startDate, DateTime? endDate});
-  Future<Either<Failure, void>> updateExpenseCategorization(String expenseId,
-      String? categoryId, CategorizationStatus status, double? confidenceScore);
+  Future<Either<Failure, double>> getTotalExpensesForAccount(
+    String accountId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+  Future<Either<Failure, ExpenseSummary>> getExpenseSummary({
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+  Future<Either<Failure, void>> updateExpenseCategorization(
+    String expenseId,
+    String? categoryId,
+    CategorizationStatus status,
+    double? confidenceScore,
+  );
   Future<Either<Failure, int>> reassignExpensesCategory(
-      String oldCategoryId, String newCategoryId);
+    String oldCategoryId,
+    String newCategoryId,
+  );
 }

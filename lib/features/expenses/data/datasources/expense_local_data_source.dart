@@ -4,7 +4,12 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 
 abstract class ExpenseLocalDataSource {
-  Future<List<ExpenseModel>> getExpenses();
+  Future<List<ExpenseModel>> getExpenses({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryId,
+    String? accountId,
+  });
   Future<ExpenseModel?> getExpenseById(String id); // ADDED: Return nullable
   Future<ExpenseModel> addExpense(ExpenseModel expense);
   Future<ExpenseModel> updateExpense(ExpenseModel expense);
@@ -41,11 +46,53 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
   }
 
   @override
-  Future<List<ExpenseModel>> getExpenses() async {
+  Future<List<ExpenseModel>> getExpenses({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryId,
+    String? accountId,
+  }) async {
     try {
-      final expenses = expenseBox.values.toList();
-      log.info("Retrieved ${expenses.length} expenses from Hive.");
-      return expenses;
+      final List<ExpenseModel> results = [];
+      for (final expense in expenseBox.values) {
+        if (startDate != null) {
+          final expenseDateOnly = DateTime(
+            expense.date.year,
+            expense.date.month,
+            expense.date.day,
+          );
+          final startDateOnly = DateTime(
+            startDate.year,
+            startDate.month,
+            startDate.day,
+          );
+          if (expenseDateOnly.isBefore(startDateOnly)) continue;
+        }
+        if (endDate != null) {
+          final endDateInclusive = DateTime(
+            endDate.year,
+            endDate.month,
+            endDate.day,
+            23,
+            59,
+            59,
+          );
+          if (expense.date.isAfter(endDateInclusive)) continue;
+        }
+        if (accountId != null && accountId.isNotEmpty) {
+          final ids = accountId.split(',');
+          if (!ids.contains(expense.accountId)) continue;
+        }
+        if (categoryId != null && categoryId.isNotEmpty) {
+          final ids = categoryId.split(',');
+          if (!ids.contains(expense.categoryId)) continue;
+        }
+        results.add(expense);
+      }
+      log.info(
+        "Retrieved ${results.length} expenses from Hive after applying filters.",
+      );
+      return results;
     } catch (e, s) {
       log.severe("Failed to get expenses from cache$e$s");
       throw CacheFailure('Failed to get expenses: ${e.toString()}');
@@ -80,7 +127,8 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
     try {
       await expenseBox.put(expense.id, expense);
       log.info(
-          "Updated expense '${expense.title}' (ID: ${expense.id}) in Hive.");
+        "Updated expense '${expense.title}' (ID: ${expense.id}) in Hive.",
+      );
       return expense;
     } catch (e, s) {
       log.severe("Failed to update expense '${expense.title}' in cache$e$s");

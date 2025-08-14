@@ -43,15 +43,15 @@ class GetTransactionsParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        startDate,
-        endDate,
-        categoryId,
-        accountId,
-        transactionType,
-        searchTerm,
-        sortBy,
-        sortDirection,
-      ];
+    startDate,
+    endDate,
+    categoryId,
+    accountId,
+    transactionType,
+    searchTerm,
+    sortBy,
+    sortDirection,
+  ];
 }
 
 class GetTransactionsUseCase
@@ -69,9 +69,11 @@ class GetTransactionsUseCase
 
   @override
   Future<Either<Failure, List<TransactionEntity>>> call(
-      GetTransactionsParams params) async {
+    GetTransactionsParams params,
+  ) async {
     log.info(
-        "[GetTransactionsUseCase] Executing. Filters: Type=${params.transactionType?.name ?? 'All'}, Acc=${params.accountId ?? 'All'}, Cat=${params.categoryId ?? 'All'}, Search='${params.searchTerm ?? ''}', Sort=${params.sortBy.name}.${params.sortDirection.name}");
+      "[GetTransactionsUseCase] Executing. Filters: Type=${params.transactionType?.name ?? 'All'}, Acc=${params.accountId ?? 'All'}, Cat=${params.categoryId ?? 'All'}, Search='${params.searchTerm ?? ''}', Sort=${params.sortBy.name}.${params.sortDirection.name}",
+    );
 
     // --- Fetch Models and Categories Concurrently ---
     List<Future<Either<Failure, List<dynamic>>>> fetchFutures = [];
@@ -83,25 +85,31 @@ class GetTransactionsUseCase
     // Fetch expense models if needed
     if (params.transactionType == null ||
         params.transactionType == TransactionType.expense) {
-      fetchFutures.add(expenseRepository
-          .getExpenses(
-            // Now returns List<ExpenseModel>
-            startDate: params.startDate, endDate: params.endDate,
-            category: params.categoryId, accountId: params.accountId,
-          )
-          .then((either) => either.map((list) => list as List<dynamic>)));
+      fetchFutures.add(
+        expenseRepository
+            .getExpenses(
+              startDate: params.startDate,
+              endDate: params.endDate,
+              categoryId: params.categoryId,
+              accountId: params.accountId,
+            )
+            .then((either) => either.map((list) => list as List<dynamic>)),
+      );
     }
 
     // Fetch income models if needed
     if (params.transactionType == null ||
         params.transactionType == TransactionType.income) {
-      fetchFutures.add(incomeRepository
-          .getIncomes(
-            // Now returns List<IncomeModel>
-            startDate: params.startDate, endDate: params.endDate,
-            category: params.categoryId, accountId: params.accountId,
-          )
-          .then((either) => either.map((list) => list as List<dynamic>)));
+      fetchFutures.add(
+        incomeRepository
+            .getIncomes(
+              startDate: params.startDate,
+              endDate: params.endDate,
+              categoryId: params.categoryId,
+              accountId: params.accountId,
+            )
+            .then((either) => either.map((list) => list as List<dynamic>)),
+      );
     }
     // --- End Fetch ---
 
@@ -117,17 +125,21 @@ class GetTransactionsUseCase
       if (categoryResult.isLeft()) {
         firstFailure = categoryResult.fold((l) => l, (_) => null);
         log.severe(
-            "[GetTransactionsUseCase] Failed to fetch categories: ${firstFailure?.message}");
+          "[GetTransactionsUseCase] Failed to fetch categories: ${firstFailure?.message}",
+        );
         return Left(
-            firstFailure ?? const CacheFailure("Failed to fetch categories"));
+          firstFailure ?? const CacheFailure("Failed to fetch categories"),
+        );
       }
       for (final result in modelResults) {
         if (result.isLeft()) {
           firstFailure = result.fold((l) => l, (_) => null);
           log.warning(
-              "[GetTransactionsUseCase] Failed to fetch transaction models: ${firstFailure?.message}");
-          return Left(firstFailure ??
-              const CacheFailure("Failed to fetch transactions"));
+            "[GetTransactionsUseCase] Failed to fetch transaction models: ${firstFailure?.message}",
+          );
+          return Left(
+            firstFailure ?? const CacheFailure("Failed to fetch transactions"),
+          );
         }
       }
       // --- End Failure Check ---
@@ -135,10 +147,11 @@ class GetTransactionsUseCase
       // --- Process Successful Results ---
       final List<Category> allCategories = categoryResult.getOrElse(() => []);
       final categoryMap = {
-        for (var cat in allCategories) cat.id: cat
+        for (var cat in allCategories) cat.id: cat,
       }; // Create lookup map
       log.fine(
-          "[GetTransactionsUseCase] Category map created with ${categoryMap.length} entries.");
+        "[GetTransactionsUseCase] Category map created with ${categoryMap.length} entries.",
+      );
 
       List<TransactionEntity> combinedList = [];
 
@@ -153,36 +166,47 @@ class GetTransactionsUseCase
             final category = categoryMap[model.categoryId];
             if (model.categoryId != null && category == null) {
               log.warning(
-                  "[GetTransactionsUseCase] Hydration warning: Category ID '${model.categoryId}' not found for expense ${model.id}.");
+                "[GetTransactionsUseCase] Hydration warning: Category ID '${model.categoryId}' not found for expense ${model.id}.",
+              );
             }
-            combinedList.add(TransactionEntity.fromExpense(model
-                    .toEntity()
-                    .copyWith(categoryOrNull: () => category) // Hydrate here
-                ));
+            combinedList.add(
+              TransactionEntity.fromExpense(
+                model.toEntity().copyWith(
+                  categoryOrNull: () => category,
+                ), // Hydrate here
+              ),
+            );
           }
           log.fine(
-              "[GetTransactionsUseCase] Hydrated and added ${expenseModels.length} expenses.");
+            "[GetTransactionsUseCase] Hydrated and added ${expenseModels.length} expenses.",
+          );
         } else if (models.first is IncomeModel) {
           final incomeModels = models.cast<IncomeModel>();
           for (final model in incomeModels) {
             final category = categoryMap[model.categoryId];
             if (model.categoryId != null && category == null) {
               log.warning(
-                  "[GetTransactionsUseCase] Hydration warning: Category ID '${model.categoryId}' not found for income ${model.id}.");
+                "[GetTransactionsUseCase] Hydration warning: Category ID '${model.categoryId}' not found for income ${model.id}.",
+              );
             }
-            combinedList.add(TransactionEntity.fromIncome(model
-                    .toEntity()
-                    .copyWith(categoryOrNull: () => category) // Hydrate here
-                ));
+            combinedList.add(
+              TransactionEntity.fromIncome(
+                model.toEntity().copyWith(
+                  categoryOrNull: () => category,
+                ), // Hydrate here
+              ),
+            );
           }
           log.fine(
-              "[GetTransactionsUseCase] Hydrated and added ${incomeModels.length} incomes.");
+            "[GetTransactionsUseCase] Hydrated and added ${incomeModels.length} incomes.",
+          );
         }
         // --- End Hydration ---
       }
 
       log.info(
-          "[GetTransactionsUseCase] Combined ${combinedList.length} hydrated transactions before filtering/sorting.");
+        "[GetTransactionsUseCase] Combined ${combinedList.length} hydrated transactions before filtering/sorting.",
+      );
 
       // Apply Search Term Filter (Client-side)
       List<TransactionEntity> filteredList = combinedList;
@@ -195,7 +219,8 @@ class GetTransactionsUseCase
               txn.amount.toStringAsFixed(2).contains(searchTermLower);
         }).toList();
         log.info(
-            "[GetTransactionsUseCase] Filtered by search '${params.searchTerm}': ${filteredList.length} items remaining.");
+          "[GetTransactionsUseCase] Filtered by search '${params.searchTerm}': ${filteredList.length} items remaining.",
+        );
       }
 
       // Apply Sorting
@@ -206,9 +231,9 @@ class GetTransactionsUseCase
             comparison = a.amount.compareTo(b.amount);
             break;
           case TransactionSortBy.category:
-            comparison = (a.category?.name ?? 'zzzzzz')
-                .toLowerCase()
-                .compareTo((b.category?.name ?? 'zzzzzz').toLowerCase());
+            comparison = (a.category?.name ?? 'zzzzzz').toLowerCase().compareTo(
+              (b.category?.name ?? 'zzzzzz').toLowerCase(),
+            );
             break;
           // --- Added Title Sort ---
           case TransactionSortBy.title:
@@ -223,14 +248,19 @@ class GetTransactionsUseCase
             : -comparison;
       });
       log.info(
-          "[GetTransactionsUseCase] Sorted list. Returning ${filteredList.length} transactions.");
+        "[GetTransactionsUseCase] Sorted list. Returning ${filteredList.length} transactions.",
+      );
 
       return Right(filteredList);
     } catch (e, s) {
       log.severe(
-          "[GetTransactionsUseCase] Unexpected error during processing: $e\n$s");
-      return Left(UnexpectedFailure(
-          "An unexpected error occurred while fetching transactions: $e"));
+        "[GetTransactionsUseCase] Unexpected error during processing: $e\n$s",
+      );
+      return Left(
+        UnexpectedFailure(
+          "An unexpected error occurred while fetching transactions: $e",
+        ),
+      );
     }
   }
 }

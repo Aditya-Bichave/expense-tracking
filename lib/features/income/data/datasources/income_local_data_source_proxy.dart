@@ -36,12 +36,57 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
   }
 
   @override
-  Future<List<IncomeModel>> getIncomes() async {
+  Future<List<IncomeModel>> getIncomes({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryId,
+    String? accountId,
+  }) async {
     if (demoModeService.isDemoActive) {
-      log.fine("[DemoAwareIncomeDS] Getting demo incomes.");
-      return demoModeService.getDemoIncomes();
+      log.fine("[DemoAwareIncomeDS] Getting demo incomes with filters.");
+      final incomes = await demoModeService.getDemoIncomes();
+      return incomes.where((income) {
+        if (startDate != null) {
+          final incDateOnly = DateTime(
+            income.date.year,
+            income.date.month,
+            income.date.day,
+          );
+          final startDateOnly = DateTime(
+            startDate.year,
+            startDate.month,
+            startDate.day,
+          );
+          if (incDateOnly.isBefore(startDateOnly)) return false;
+        }
+        if (endDate != null) {
+          final endDateInclusive = DateTime(
+            endDate.year,
+            endDate.month,
+            endDate.day,
+            23,
+            59,
+            59,
+          );
+          if (income.date.isAfter(endDateInclusive)) return false;
+        }
+        if (accountId != null && accountId.isNotEmpty) {
+          final ids = accountId.split(',');
+          if (!ids.contains(income.accountId)) return false;
+        }
+        if (categoryId != null && categoryId.isNotEmpty) {
+          final ids = categoryId.split(',');
+          if (!ids.contains(income.categoryId)) return false;
+        }
+        return true;
+      }).toList();
     } else {
-      return hiveDataSource.getIncomes();
+      return hiveDataSource.getIncomes(
+        startDate: startDate,
+        endDate: endDate,
+        categoryId: categoryId,
+        accountId: accountId,
+      );
     }
   }
 
@@ -69,7 +114,8 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
   Future<void> clearAll() async {
     if (demoModeService.isDemoActive) {
       log.warning(
-          "[DemoAwareIncomeDS] clearAll called in Demo Mode. Ignoring.");
+        "[DemoAwareIncomeDS] clearAll called in Demo Mode. Ignoring.",
+      );
       return;
     } else {
       return hiveDataSource.clearAll();

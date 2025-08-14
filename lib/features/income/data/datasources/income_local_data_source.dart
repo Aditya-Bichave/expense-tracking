@@ -4,7 +4,12 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 
 abstract class IncomeLocalDataSource {
-  Future<List<IncomeModel>> getIncomes();
+  Future<List<IncomeModel>> getIncomes({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryId,
+    String? accountId,
+  });
   Future<IncomeModel?> getIncomeById(String id); // ADDED: Return nullable
   Future<IncomeModel> addIncome(IncomeModel income);
   Future<IncomeModel> updateIncome(IncomeModel income);
@@ -41,11 +46,53 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
   }
 
   @override
-  Future<List<IncomeModel>> getIncomes() async {
+  Future<List<IncomeModel>> getIncomes({
+    DateTime? startDate,
+    DateTime? endDate,
+    String? categoryId,
+    String? accountId,
+  }) async {
     try {
-      final incomes = incomeBox.values.toList();
-      log.info("Retrieved ${incomes.length} incomes from Hive.");
-      return incomes;
+      final List<IncomeModel> results = [];
+      for (final income in incomeBox.values) {
+        if (startDate != null) {
+          final incDateOnly = DateTime(
+            income.date.year,
+            income.date.month,
+            income.date.day,
+          );
+          final startDateOnly = DateTime(
+            startDate.year,
+            startDate.month,
+            startDate.day,
+          );
+          if (incDateOnly.isBefore(startDateOnly)) continue;
+        }
+        if (endDate != null) {
+          final endDateInclusive = DateTime(
+            endDate.year,
+            endDate.month,
+            endDate.day,
+            23,
+            59,
+            59,
+          );
+          if (income.date.isAfter(endDateInclusive)) continue;
+        }
+        if (accountId != null && accountId.isNotEmpty) {
+          final ids = accountId.split(',');
+          if (!ids.contains(income.accountId)) continue;
+        }
+        if (categoryId != null && categoryId.isNotEmpty) {
+          final ids = categoryId.split(',');
+          if (!ids.contains(income.categoryId)) continue;
+        }
+        results.add(income);
+      }
+      log.info(
+        "Retrieved ${results.length} incomes from Hive after applying filters.",
+      );
+      return results;
     } catch (e, s) {
       log.severe("Failed to get incomes from cache$e$s");
       throw CacheFailure('Failed to get incomes: ${e.toString()}');

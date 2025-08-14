@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'dart:async';
+import 'dart:io';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/constants/hive_constants.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -32,11 +33,35 @@ import 'package:hive_flutter/hive_flutter.dart';
 // Removed local_auth import, handled by Settings page
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_logger/simple_logger.dart';
+import 'package:path_provider/path_provider.dart';
 
 final log = SimpleLogger();
+File? _startupLogFile;
+
+Future<void> _initFileLogger() async {
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    _startupLogFile = File('${dir.path}/startup.log');
+  } catch (_) {
+    // If path_provider fails, continue without file logging
+  }
+}
+
+Future<void> _writeStartupLog(String message) async {
+  try {
+    final file = _startupLogFile;
+    if (file != null) {
+      final timestamp = DateTime.now().toIso8601String();
+      await file.writeAsString('$timestamp $message\n', mode: FileMode.append);
+    }
+  } catch (_) {
+    // Swallow errors to avoid failing startup logging
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await _initFileLogger();
 
   log.setLevel(Level.INFO, includeCallerInfo: false);
   log.info("==========================================");
@@ -58,26 +83,35 @@ Future<void> main() async {
     Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
 
     log.info("Opening Hive boxes...");
-    final expenseBox =
-        await Hive.openBox<ExpenseModel>(HiveConstants.expenseBoxName);
-    final accountBox =
-        await Hive.openBox<AssetAccountModel>(HiveConstants.accountBoxName);
-    final incomeBox =
-        await Hive.openBox<IncomeModel>(HiveConstants.incomeBoxName);
-    final categoryBox =
-        await Hive.openBox<CategoryModel>(HiveConstants.categoryBoxName);
+    final expenseBox = await Hive.openBox<ExpenseModel>(
+      HiveConstants.expenseBoxName,
+    );
+    final accountBox = await Hive.openBox<AssetAccountModel>(
+      HiveConstants.accountBoxName,
+    );
+    final incomeBox = await Hive.openBox<IncomeModel>(
+      HiveConstants.incomeBoxName,
+    );
+    final categoryBox = await Hive.openBox<CategoryModel>(
+      HiveConstants.categoryBoxName,
+    );
     final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
-        HiveConstants.userHistoryRuleBoxName);
-    final budgetBox =
-        await Hive.openBox<BudgetModel>(HiveConstants.budgetBoxName);
+      HiveConstants.userHistoryRuleBoxName,
+    );
+    final budgetBox = await Hive.openBox<BudgetModel>(
+      HiveConstants.budgetBoxName,
+    );
     final goalBox = await Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
     final contributionBox = await Hive.openBox<GoalContributionModel>(
-        HiveConstants.goalContributionBoxName);
+      HiveConstants.goalContributionBoxName,
+    );
     final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
-        HiveConstants.recurringRuleBoxName);
+      HiveConstants.recurringRuleBoxName,
+    );
     final recurringRuleAuditLogBox =
         await Hive.openBox<RecurringRuleAuditLogModel>(
-            HiveConstants.recurringRuleAuditLogBoxName);
+          HiveConstants.recurringRuleAuditLogBoxName,
+        );
     log.info("All Hive boxes opened.");
 
     final prefs = await SharedPreferences.getInstance();
@@ -101,56 +135,59 @@ Future<void> main() async {
     log.severe("!!! CRITICAL INITIALIZATION FAILURE !!!");
     log.severe("Error: $e");
     log.severe("Stack Trace: $s");
+    await _writeStartupLog('Initialization failure: $e\n$s');
     log.severe("!!! APPLICATION CANNOT CONTINUE !!!");
     runApp(InitializationErrorApp(error: e));
     return;
   }
 
   // --- Global Bloc Providers ---
-  runApp(MultiBlocProvider(
-    providers: [
-      // SettingsBloc MUST be provided early for Router redirect logic
-      BlocProvider<SettingsBloc>(
-        create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
-        lazy: false, // Load settings immediately
-      ),
-      BlocProvider<DataManagementBloc>(
-        create: (context) => sl<DataManagementBloc>(),
-        lazy: true,
-      ),
-      BlocProvider<AccountListBloc>(
-        create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
-        lazy: false, // Load immediately for dashboard dependencies
-      ),
-      BlocProvider<TransactionListBloc>(
-        create: (context) =>
-            sl<TransactionListBloc>()..add(const LoadTransactions()),
-        lazy: false,
-      ),
-      BlocProvider<CategoryManagementBloc>(
-        create: (context) =>
-            sl<CategoryManagementBloc>()..add(const LoadCategories()),
-        lazy: true,
-      ),
-      BlocProvider<BudgetListBloc>(
-        create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
-        lazy: false,
-      ),
-      BlocProvider<GoalListBloc>(
-        create: (context) => sl<GoalListBloc>()..add(const LoadGoals()),
-        lazy: false,
-      ),
-      BlocProvider<DashboardBloc>(
-        create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
-        lazy: false,
-      ),
-      BlocProvider<SummaryBloc>(
-        create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
-        lazy: true,
-      ),
-    ],
-    child: const MyApp(), // Use MyApp directly, router handles initial screen
-  ));
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        // SettingsBloc MUST be provided early for Router redirect logic
+        BlocProvider<SettingsBloc>(
+          create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
+          lazy: false, // Load settings immediately
+        ),
+        BlocProvider<DataManagementBloc>(
+          create: (context) => sl<DataManagementBloc>(),
+          lazy: true,
+        ),
+        BlocProvider<AccountListBloc>(
+          create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
+          lazy: false, // Load immediately for dashboard dependencies
+        ),
+        BlocProvider<TransactionListBloc>(
+          create: (context) =>
+              sl<TransactionListBloc>()..add(const LoadTransactions()),
+          lazy: false,
+        ),
+        BlocProvider<CategoryManagementBloc>(
+          create: (context) =>
+              sl<CategoryManagementBloc>()..add(const LoadCategories()),
+          lazy: true,
+        ),
+        BlocProvider<BudgetListBloc>(
+          create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
+          lazy: false,
+        ),
+        BlocProvider<GoalListBloc>(
+          create: (context) => sl<GoalListBloc>()..add(const LoadGoals()),
+          lazy: false,
+        ),
+        BlocProvider<DashboardBloc>(
+          create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
+          lazy: false,
+        ),
+        BlocProvider<SummaryBloc>(
+          create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
+          lazy: true,
+        ),
+      ],
+      child: const MyApp(), // Use MyApp directly, router handles initial screen
+    ),
+  );
 }
 
 class InitializationErrorApp extends StatelessWidget {
@@ -161,7 +198,9 @@ class InitializationErrorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Provide default theme data even if settings failed
     final defaultThemePair = AppTheme.buildTheme(
-        SettingsState.defaultUIMode, SettingsState.defaultPaletteIdentifier);
+      SettingsState.defaultUIMode,
+      SettingsState.defaultPaletteIdentifier,
+    );
 
     return MaterialApp(
       theme: defaultThemePair.light,
@@ -179,9 +218,10 @@ class InitializationErrorApp extends StatelessWidget {
                 Text(
                   "Application Initialization Failed",
                   style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red.shade900),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade900,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),

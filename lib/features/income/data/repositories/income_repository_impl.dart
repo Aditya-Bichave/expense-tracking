@@ -19,19 +19,25 @@ class IncomeRepositoryImpl implements IncomeRepository {
 
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Income>> _hydrateSingleModel(IncomeModel model) async {
-    final catResult =
-        await categoryRepository.getCategoryById(model.categoryId ?? '');
-    return catResult.fold((failure) {
-      log.warning(
-          "[IncomeRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}");
-      return Right(model.toEntity().copyWith(categoryOrNull: () => null));
-    }, (category) {
-      if (model.categoryId != null && category == null) {
+    final catResult = await categoryRepository.getCategoryById(
+      model.categoryId ?? '',
+    );
+    return catResult.fold(
+      (failure) {
         log.warning(
-            "[IncomeRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for income ${model.id}.");
-      }
-      return Right(model.toEntity().copyWith(categoryOrNull: () => category));
-    });
+          "[IncomeRepo._hydrateSingleModel] Failed category lookup for ${model.id}: ${failure.message}",
+        );
+        return Right(model.toEntity().copyWith(categoryOrNull: () => null));
+      },
+      (category) {
+        if (model.categoryId != null && category == null) {
+          log.warning(
+            "[IncomeRepo._hydrateSingleModel] Category ID '${model.categoryId}' not found for income ${model.id}.",
+          );
+        }
+        return Right(model.toEntity().copyWith(categoryOrNull: () => category));
+      },
+    );
   }
 
   @override
@@ -41,34 +47,39 @@ class IncomeRepositoryImpl implements IncomeRepository {
       final incomeModel = IncomeModel.fromEntity(income);
       final addedModel = await localDataSource.addIncome(incomeModel);
       log.info(
-          "[IncomeRepo] Add successful (ID: ${addedModel.id}). Hydrating category.");
+        "[IncomeRepo] Add successful (ID: ${addedModel.id}). Hydrating category.",
+      );
       return await _hydrateSingleModel(addedModel);
     } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error adding income$e$s");
       return Left(
-          UnexpectedFailure('Unexpected error adding income: ${e.toString()}'));
+        UnexpectedFailure('Unexpected error adding income: ${e.toString()}'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, Income>> updateIncome(Income income) async {
     log.info(
-        "[IncomeRepo] Updating income '${income.title}' (ID: ${income.id}).");
+      "[IncomeRepo] Updating income '${income.title}' (ID: ${income.id}).",
+    );
     try {
       final incomeModel = IncomeModel.fromEntity(income);
       final updatedModel = await localDataSource.updateIncome(incomeModel);
       log.info(
-          "[IncomeRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.");
+        "[IncomeRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.",
+      );
       return await _hydrateSingleModel(updatedModel);
     } on CacheFailure catch (e) {
       log.warning("[IncomeRepo] CacheFailure during update: ${e.message}");
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error updating income$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error updating income: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure('Unexpected error updating income: ${e.toString()}'),
+      );
     }
   }
 
@@ -76,61 +87,38 @@ class IncomeRepositoryImpl implements IncomeRepository {
   Future<Either<Failure, List<IncomeModel>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Category ID
+    String? categoryId,
     String? accountId,
   }) async {
     log.info(
-        "[IncomeRepo] Getting income models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$category");
+      "[IncomeRepo] Getting income models. Filters: AccID=$accountId, Start=$startDate, End=$endDate, CatID=$categoryId",
+    );
     try {
-      final incomeModels = await localDataSource.getIncomes();
+      final incomeModels = await localDataSource.getIncomes(
+        startDate: startDate,
+        endDate: endDate,
+        categoryId: categoryId,
+        accountId: accountId,
+      );
       log.fine(
-          "[IncomeRepo] Fetched ${incomeModels.length} raw income models.");
+        "[IncomeRepo] Retrieved ${incomeModels.length} income models after filtering.",
+      );
 
-      // Apply filtering
-      final filteredModels = incomeModels.where((model) {
-        bool dateMatch = true;
-        bool categoryMatch = true;
-        bool accountMatch = true;
-        if (startDate != null) {
-          final incDateOnly =
-              DateTime(model.date.year, model.date.month, model.date.day);
-          final startDateOnly =
-              DateTime(startDate.year, startDate.month, startDate.day);
-          dateMatch = !incDateOnly.isBefore(startDateOnly);
-        }
-        if (endDate != null && dateMatch) {
-          final incDateOnly =
-              DateTime(model.date.year, model.date.month, model.date.day);
-          final endDateInclusive =
-              DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-          dateMatch = !model.date.isAfter(endDateInclusive);
-        }
-        if (accountId != null && accountId.isNotEmpty) {
-          // Handle multiple account IDs if passed comma-separated
-          final ids = accountId.split(',');
-          accountMatch = ids.contains(model.accountId);
-        }
-        if (category != null && category.isNotEmpty) {
-          // Handle multiple category IDs if passed comma-separated
-          final ids = category.split(',');
-          categoryMatch = ids.contains(model.categoryId);
-        }
-        return dateMatch && categoryMatch && accountMatch;
-      }).toList();
-      log.fine("[IncomeRepo] Filtered to ${filteredModels.length} models.");
+      incomeModels.sort((a, b) => b.date.compareTo(a.date));
 
-      // Sort models
-      filteredModels.sort((a, b) => b.date.compareTo(a.date));
-
-      return Right(filteredModels); // Return models
+      return Right(incomeModels); // Return models
     } on CacheFailure catch (e) {
       log.warning(
-          "[IncomeRepo] CacheFailure getting income models: ${e.message}");
+        "[IncomeRepo] CacheFailure getting income models: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error getting income models$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error getting income models: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure(
+          'Unexpected error getting income models: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -143,93 +131,115 @@ class IncomeRepositoryImpl implements IncomeRepository {
       return const Right(null);
     } on CacheFailure catch (e) {
       log.warning(
-          "[IncomeRepo] CacheFailure deleting income ID $id: ${e.message}");
+        "[IncomeRepo] CacheFailure deleting income ID $id: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error deleting income ID $id$e$s");
-      return Left(UnexpectedFailure(
-          'Unexpected error deleting income: ${e.toString()}'));
+      return Left(
+        UnexpectedFailure('Unexpected error deleting income: ${e.toString()}'),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, double>> getTotalIncomeForAccount(String accountId,
-      {DateTime? startDate, DateTime? endDate}) async {
+  Future<Either<Failure, double>> getTotalIncomeForAccount(
+    String accountId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     log.info(
-        "[IncomeRepo] Getting total income for account: $accountId, Start=$startDate, End=$endDate");
+      "[IncomeRepo] Getting total income for account: $accountId, Start=$startDate, End=$endDate",
+    );
     try {
       final allModelsResult = await getIncomes(
-          accountId: accountId.isEmpty ? null : accountId,
-          startDate: startDate,
-          endDate: endDate);
+        accountId: accountId.isEmpty ? null : accountId,
+        startDate: startDate,
+        endDate: endDate,
+      );
 
       return allModelsResult.fold(
         (failure) {
           log.warning(
-              "[IncomeRepo] Failed to get models while calculating total for account '$accountId': ${failure.message}");
+            "[IncomeRepo] Failed to get models while calculating total for account '$accountId': ${failure.message}",
+          );
           return Left(failure);
         },
         (models) {
           double total = models.fold(0.0, (sum, item) => sum + item.amount);
           log.info(
-              "[IncomeRepo] Calculated total income for account '$accountId': $total");
+            "[IncomeRepo] Calculated total income for account '$accountId': $total",
+          );
           return Right(total);
         },
       );
     } catch (e, s) {
       log.severe(
-          "[IncomeRepo] Unexpected error calculating total income for account '$accountId'$e$s");
-      return Left(UnexpectedFailure(
-          'Failed to calculate total income: ${e.toString()}'));
+        "[IncomeRepo] Unexpected error calculating total income for account '$accountId'$e$s",
+      );
+      return Left(
+        UnexpectedFailure('Failed to calculate total income: ${e.toString()}'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> updateIncomeCategorization(
-      String incomeId,
-      String? categoryId,
-      CategorizationStatus status,
-      double? confidenceScore) async {
+    String incomeId,
+    String? categoryId,
+    CategorizationStatus status,
+    double? confidenceScore,
+  ) async {
     log.info(
-        "[IncomeRepo] updateIncomeCategorization called for ID: $incomeId, CatID: $categoryId, Status: ${status.name}");
+      "[IncomeRepo] updateIncomeCategorization called for ID: $incomeId, CatID: $categoryId, Status: ${status.name}",
+    );
     try {
       final existingModel = await localDataSource.getIncomeById(incomeId);
       if (existingModel == null) {
         log.warning(
-            "[IncomeRepo] Income not found for categorization update: $incomeId");
+          "[IncomeRepo] Income not found for categorization update: $incomeId",
+        );
         return const Left(CacheFailure("Income not found."));
       }
       final updatedModel = IncomeModel(
-          id: existingModel.id,
-          title: existingModel.title,
-          amount: existingModel.amount,
-          date: existingModel.date,
-          accountId: existingModel.accountId,
-          notes: existingModel.notes,
-          categoryId: categoryId,
-          categorizationStatusValue: status.value,
-          confidenceScoreValue: confidenceScore);
+        id: existingModel.id,
+        title: existingModel.title,
+        amount: existingModel.amount,
+        date: existingModel.date,
+        accountId: existingModel.accountId,
+        notes: existingModel.notes,
+        categoryId: categoryId,
+        categorizationStatusValue: status.value,
+        confidenceScoreValue: confidenceScore,
+      );
       await localDataSource.updateIncome(updatedModel);
       log.info(
-          "[IncomeRepo] Income categorization updated successfully for ID: $incomeId");
+        "[IncomeRepo] Income categorization updated successfully for ID: $incomeId",
+      );
       return const Right(null);
     } on CacheFailure catch (e) {
       log.warning(
-          "[IncomeRepo] CacheFailure during updateIncomeCategorization ID $incomeId: ${e.message}");
+        "[IncomeRepo] CacheFailure during updateIncomeCategorization ID $incomeId: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[IncomeRepo] Unexpected error in updateIncomeCategorization ID $incomeId$e$s");
-      return Left(CacheFailure(
-          "Failed to update income categorization: ${e.toString()}"));
+        "[IncomeRepo] Unexpected error in updateIncomeCategorization ID $incomeId$e$s",
+      );
+      return Left(
+        CacheFailure("Failed to update income categorization: ${e.toString()}"),
+      );
     }
   }
 
   @override
   Future<Either<Failure, int>> reassignIncomesCategory(
-      String oldCategoryId, String newCategoryId) async {
+    String oldCategoryId,
+    String newCategoryId,
+  ) async {
     log.info(
-        "[IncomeRepo] Reassigning incomes from CatID '$oldCategoryId' to '$newCategoryId'.");
+      "[IncomeRepo] Reassigning incomes from CatID '$oldCategoryId' to '$newCategoryId'.",
+    );
     int updateCount = 0;
     try {
       final allModels = await localDataSource.getIncomes();
@@ -239,18 +249,23 @@ class IncomeRepositoryImpl implements IncomeRepository {
 
       if (modelsToUpdate.isEmpty) {
         log.info(
-            "[IncomeRepo] No incomes found with category ID '$oldCategoryId'. No reassignment needed.");
+          "[IncomeRepo] No incomes found with category ID '$oldCategoryId'. No reassignment needed.",
+        );
         return const Right(0);
       }
       log.info(
-          "[IncomeRepo] Found ${modelsToUpdate.length} incomes to reassign.");
+        "[IncomeRepo] Found ${modelsToUpdate.length} incomes to reassign.",
+      );
 
       List<Future<void>> updateFutures = [];
       for (final model in modelsToUpdate) {
         final updatedModel = IncomeModel(
-          id: model.id, title: model.title, amount: model.amount,
+          id: model.id,
+          title: model.title,
+          amount: model.amount,
           date: model.date,
-          accountId: model.accountId, notes: model.notes,
+          accountId: model.accountId,
+          notes: model.notes,
           categoryId: newCategoryId, // Assign new category ID
           categorizationStatusValue:
               CategorizationStatus.categorized.value, // Mark as categorized
@@ -262,17 +277,21 @@ class IncomeRepositoryImpl implements IncomeRepository {
       await Future.wait(updateFutures);
 
       log.info(
-          "[IncomeRepo] Successfully triggered updates for $updateCount incomes from '$oldCategoryId' to '$newCategoryId'.");
+        "[IncomeRepo] Successfully triggered updates for $updateCount incomes from '$oldCategoryId' to '$newCategoryId'.",
+      );
       return Right(updateCount);
     } on CacheFailure catch (e) {
       log.warning(
-          "[IncomeRepo] CacheFailure during reassignIncomesCategory: ${e.message}");
+        "[IncomeRepo] CacheFailure during reassignIncomesCategory: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(
-          "[IncomeRepo] Unexpected error during reassignIncomesCategory$e$s");
-      return Left(CacheFailure(
-          "Failed to reassign income categories: ${e.toString()}"));
+        "[IncomeRepo] Unexpected error during reassignIncomesCategory$e$s",
+      );
+      return Left(
+        CacheFailure("Failed to reassign income categories: ${e.toString()}"),
+      );
     }
   }
 }

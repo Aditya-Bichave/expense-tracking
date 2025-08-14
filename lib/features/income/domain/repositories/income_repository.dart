@@ -11,7 +11,7 @@ abstract class IncomeRepository {
   Future<Either<Failure, List<IncomeModel>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,
-    String? category, // Filter by Category ID
+    String? categoryId,
     String? accountId,
   });
   // --- END MODIFIED ---
@@ -21,10 +21,19 @@ abstract class IncomeRepository {
   Future<Either<Failure, Income>> updateIncome(Income income);
 
   Future<Either<Failure, void>> deleteIncome(String id);
-  Future<Either<Failure, double>> getTotalIncomeForAccount(String accountId,
-      {DateTime? startDate, DateTime? endDate});
-  Future<Either<Failure, void>> updateIncomeCategorization(String incomeId,
-      String? categoryId, CategorizationStatus status, double? confidenceScore);
+  Future<Either<Failure, double>> getTotalIncomeForAccount(
+    String accountId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  });
+  Future<Either<Failure, void>> updateIncomeCategorization(
+    String incomeId,
+    String? categoryId,
+    CategorizationStatus status,
+    double? confidenceScore,
+  );
   Future<Either<Failure, int>> reassignIncomesCategory(
-      String oldCategoryId, String newCategoryId);
+    String oldCategoryId,
+    String newCategoryId,
+  );
 }
