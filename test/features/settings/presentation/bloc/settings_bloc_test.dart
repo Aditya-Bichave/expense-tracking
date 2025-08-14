@@ -27,10 +27,10 @@ void main() {
   });
 
   SettingsBloc buildBloc() => SettingsBloc(
-    settingsRepository: repository,
-    demoModeService: demoModeService,
-    localAuth: localAuth,
-  );
+        settingsRepository: repository,
+        demoModeService: demoModeService,
+        localAuth: localAuth,
+      );
 
   group('UpdateAppLock', () {
     blocTest<SettingsBloc, SettingsState>(

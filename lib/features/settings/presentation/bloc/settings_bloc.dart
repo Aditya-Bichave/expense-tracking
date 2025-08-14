@@ -85,7 +85,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         setupSkipped: false,
       ),
     );
-    // ... (rest of loading logic unchanged) ...
     PackageInfo? packageInfo;
     String? packageInfoLoadError;
     try {
@@ -197,7 +196,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       log.warning("[SettingsBloc] Ignoring UpdateTheme in Demo Mode.");
       return;
     }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdateTheme event: ${event.newMode.name}",
     );
@@ -238,7 +236,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       );
       return;
     }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdatePaletteIdentifier event: ${event.newIdentifier}",
     );
@@ -285,7 +282,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       log.warning("[SettingsBloc] Ignoring UpdateUIMode in Demo Mode.");
       return;
     }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}",
     );
@@ -347,7 +343,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     //   log.warning("[SettingsBloc] Ignoring UpdateCountry in Demo Mode.");
     //   return;
     // }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdateCountry event: ${event.newCountryCode}",
     );
