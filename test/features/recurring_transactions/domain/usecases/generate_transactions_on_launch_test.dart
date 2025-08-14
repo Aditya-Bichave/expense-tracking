@@ -75,6 +75,7 @@ void main() {
     mockAddExpenseUseCase = MockAddExpenseUseCase();
     mockAddIncomeUseCase = MockAddIncomeUseCase();
     mockUuid = MockUuid();
+    when(() => mockUuid.v4()).thenReturn('new_id');
     usecase = GenerateTransactionsOnLaunch(
       recurringTransactionRepository: mockRecurringTransactionRepository,
       categoryRepository: mockCategoryRepository,
@@ -146,7 +147,6 @@ void main() {
         .thenAnswer((_) async => Right(tExpense));
     when(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
         .thenAnswer((_) async => const Right(null));
-    when(() => mockUuid.v4()).thenReturn('new_id');
 
     // Act
     await usecase(const NoParams());
@@ -240,7 +240,6 @@ void main() {
         .thenAnswer((_) async => Right(tExpense));
     when(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
         .thenAnswer((_) async => const Left(failure));
-    when(() => mockUuid.v4()).thenReturn('new_id');
 
     // Act
     final result = await usecase(const NoParams());

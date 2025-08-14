@@ -122,9 +122,9 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
               nextOccurrenceDate: newNextOccurrenceDate,
               occurrencesGenerated: newOccurrencesGenerated,
             );
-
-            return await recurringTransactionRepository
+            final updateResult = await recurringTransactionRepository
                 .updateRecurringRule(updatedRule);
+            return updateResult;
           },
         );
       },
