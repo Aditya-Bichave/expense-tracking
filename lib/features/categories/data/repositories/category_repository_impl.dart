@@ -179,20 +179,19 @@ class CategoryRepositoryImpl implements CategoryRepository {
   Future<Either<Failure, void>> updateCategory(Category category) async {
     log.info(
         "[CategoryRepo] updateCategory called for '${category.name}' (ID: ${category.id}), Type: ${category.type.name}. Custom: ${category.isCustom}");
+    if (!category.isCustom) {
+      log.warning(
+          "[CategoryRepo] Attempted to update a non-custom category.");
+      return const Left(
+          ValidationFailure("Only custom categories can be updated."));
+    }
     try {
       final model = CategoryModel.fromEntity(category);
-      if (!category.isCustom) {
-        log.warning(
-            "[CategoryRepo] Updating predefined category personalization NOT YET IMPLEMENTED. Ignoring update.");
-        // TODO: Implement saving personalization
-        return const Right(null);
-      } else {
-        await localDataSource.updateCustomCategory(model);
-        invalidateCache(); // Invalidate cache after successful update
-        log.info(
-            "[CategoryRepo] Custom category '${category.name}' updated successfully.");
-        return const Right(null);
-      }
+      await localDataSource.updateCustomCategory(model);
+      invalidateCache(); // Invalidate cache after successful update
+      log.info(
+          "[CategoryRepo] Custom category '${category.name}' updated successfully.");
+      return const Right(null);
     } catch (e) {
       invalidateCache(); // Invalidate on error?
       log.warning(

@@ -17,6 +17,12 @@ class UpdateCustomCategoryUseCase
     final category = params.category;
     log.info(
         "[UpdateCustomCategoryUseCase] Executing for category ID: ${category.id}, Name: '${category.name}'.");
+    if (!category.isCustom) {
+      log.warning(
+          "[UpdateCustomCategoryUseCase] Validation failed: Only custom categories can be updated.");
+      return const Left(
+          ValidationFailure("Only custom categories can be updated."));
+    }
 
     // Validation (similar to Add, but allow existing name if ID matches)
     if (category.name.trim().isEmpty) {
