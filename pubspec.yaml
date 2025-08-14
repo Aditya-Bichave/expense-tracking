@@ -29,7 +29,7 @@ dependencies:
   go_router: ^10.1.2 # Or your preferred router
 
   # Utilities
-  intl: 0.19.0 # For date formatting
+  intl: ^0.20.2 # For date formatting
   uuid: ^4.1.0 # For generating unique IDs
   dartz: ^0.10.1
   url_launcher: ^6.3.1

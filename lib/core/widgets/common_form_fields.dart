@@ -62,9 +62,14 @@ class CommonFormFields {
       prefixIcon: getPrefixIcon(context, iconKey, fallbackIcon),
       textCapitalization: textCapitalization,
       validator: validator ??
-          (value) => (value == null || value.trim().isEmpty)
-              ? 'Please enter a value'
-              : null,
+          (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Please enter a value';
+            }
+            // Ensure only alphanumeric characters and spaces are used
+            final isValid = RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(value.trim());
+            return isValid ? null : 'Only letters and numbers allowed';
+          },
     );
   }
 
