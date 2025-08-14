@@ -166,4 +166,25 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
           CacheFailure("Failed to update contribution: ${e.toString()}"));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> auditGoalTotals() async {
+    log.info("[ContributionRepo] Auditing cached totals for all goals");
+    try {
+      final goals = await goalDataSource.getGoals();
+      for (final goal in goals) {
+        final result = await _updateGoalTotalSavedCache(goal.id);
+        if (result.isLeft()) {
+          log.warning(
+              "[ContributionRepo] Failed to sync total saved cache for goal ${goal.id}");
+        }
+      }
+      return const Right(null);
+    } catch (e, s) {
+      log.severe(
+          "[ContributionRepo] Error auditing goal total saved caches$e$s");
+      return Left(CacheFailure(
+          "Failed to audit goal total saved caches: ${e.toString()}"));
+    }
+  }
 }
