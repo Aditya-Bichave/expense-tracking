@@ -14,6 +14,8 @@ import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
@@ -21,16 +23,21 @@ part 'settings_state.dart';
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository _settingsRepository;
   final DemoModeService _demoModeService;
+  final LocalAuthentication _localAuth;
 
   SettingsBloc({
     required SettingsRepository settingsRepository,
     required DemoModeService demoModeService,
+    required LocalAuthentication localAuth,
   })  : _settingsRepository = settingsRepository,
         _demoModeService = demoModeService,
-        super(SettingsState(
-          isInDemoMode: demoModeService.isDemoActive,
-          setupSkipped: false, // Ensure skip starts false
-        )) {
+        _localAuth = localAuth,
+        super(
+          SettingsState(
+            isInDemoMode: demoModeService.isDemoActive,
+            setupSkipped: false, // Ensure skip starts false
+          ),
+        ) {
     on<LoadSettings>(_onLoadSettings);
     on<UpdateTheme>(_onUpdateTheme);
     on<UpdatePaletteIdentifier>(_onUpdatePaletteIdentifier);
@@ -53,7 +60,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   }
 
   void _onResetSkipSetupFlag(
-      ResetSkipSetupFlag event, Emitter<SettingsState> emit) {
+    ResetSkipSetupFlag event,
+    Emitter<SettingsState> emit,
+  ) {
     if (state.setupSkipped) {
       log.info("[SettingsBloc] Resetting setup skipped flag.");
       emit(state.copyWith(setupSkipped: false));
@@ -62,16 +71,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   // --- END ADDED ---
 
   Future<void> _onLoadSettings(
-      LoadSettings event, Emitter<SettingsState> emit) async {
+    LoadSettings event,
+    Emitter<SettingsState> emit,
+  ) async {
     log.info("[SettingsBloc] Received LoadSettings event.");
-    emit(state.copyWith(
-      status: SettingsStatus.loading,
-      packageInfoStatus: PackageInfoStatus.loading,
-      clearAllMessages: true,
-      // Ensure flags are reset on a full load (e.g., app start)
-      isInDemoMode: false,
-      setupSkipped: false,
-    ));
+    emit(
+      state.copyWith(
+        status: SettingsStatus.loading,
+        packageInfoStatus: PackageInfoStatus.loading,
+        clearAllMessages: true,
+        // Ensure flags are reset on a full load (e.g., app start)
+        isInDemoMode: false,
+        setupSkipped: false,
+      ),
+    );
     // ... (rest of loading logic unchanged) ...
     PackageInfo? packageInfo;
     String? packageInfoLoadError;
@@ -105,58 +118,67 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final appLockResult = results[4] as Either<Failure, bool>;
 
       themeModeResult.fold(
-          (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
-          (mode) => loadedThemeMode = mode);
+        (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
+        (mode) => loadedThemeMode = mode,
+      );
       paletteIdResult.fold(
-          (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
-          (id) => loadedPaletteIdentifier = id);
+        (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
+        (id) => loadedPaletteIdentifier = id,
+      );
       uiModeResult.fold(
-          (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
-          (mode) => loadedUIMode = mode);
+        (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
+        (mode) => loadedUIMode = mode,
+      );
       countryResult.fold(
-          (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
-          (code) =>
-              loadedCountryCode = code ?? SettingsState.defaultCountryCode);
+        (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
+        (code) => loadedCountryCode = code ?? SettingsState.defaultCountryCode,
+      );
       appLockResult.fold(
-          (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
-          (enabled) => loadedLock = enabled);
+        (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
+        (enabled) => loadedLock = enabled,
+      );
 
-      emit(state.copyWith(
-        status: settingsLoadError != null
-            ? SettingsStatus.error
-            : SettingsStatus.loaded,
-        errorMessage: settingsLoadError,
-        themeMode: loadedThemeMode,
-        paletteIdentifier: loadedPaletteIdentifier,
-        uiMode: loadedUIMode,
-        selectedCountryCode: loadedCountryCode,
-        isAppLockEnabled: loadedLock,
-        packageInfoStatus: packageInfoLoadError != null
-            ? PackageInfoStatus.error
-            : PackageInfoStatus.loaded,
-        packageInfoError: packageInfoLoadError,
-        appVersion: packageInfo != null
-            ? '${packageInfo.version}+${packageInfo.buildNumber}'
-            : null,
-        // Ensure isInDemoMode stays false after loading real settings
-        isInDemoMode: false,
-        setupSkipped: false, // Ensure skip flag is reset on full load
-      ));
+      emit(
+        state.copyWith(
+          status: settingsLoadError != null
+              ? SettingsStatus.error
+              : SettingsStatus.loaded,
+          errorMessage: settingsLoadError,
+          themeMode: loadedThemeMode,
+          paletteIdentifier: loadedPaletteIdentifier,
+          uiMode: loadedUIMode,
+          selectedCountryCode: loadedCountryCode,
+          isAppLockEnabled: loadedLock,
+          packageInfoStatus: packageInfoLoadError != null
+              ? PackageInfoStatus.error
+              : PackageInfoStatus.loaded,
+          packageInfoError: packageInfoLoadError,
+          appVersion: packageInfo != null
+              ? '${packageInfo.version}+${packageInfo.buildNumber}'
+              : null,
+          // Ensure isInDemoMode stays false after loading real settings
+          isInDemoMode: false,
+          setupSkipped: false, // Ensure skip flag is reset on full load
+        ),
+      );
       log.info("[SettingsBloc] Emitted final loaded/error state.");
     } catch (e, s) {
       log.severe("[SettingsBloc] Unexpected error loading settings$e$s");
-      emit(state.copyWith(
-        status: SettingsStatus.error,
-        errorMessage: 'An unexpected error occurred loading settings.',
-        packageInfoStatus: state.packageInfoStatus == PackageInfoStatus.loading
-            ? PackageInfoStatus.error
-            : state.packageInfoStatus,
-        packageInfoError: state.packageInfoStatus == PackageInfoStatus.loading
-            ? 'Failed due to main settings error'
-            : state.packageInfoError,
-        isInDemoMode: false, // Ensure demo mode is off on error too
-        setupSkipped: false, // Ensure skip flag is reset on error too
-      ));
+      emit(
+        state.copyWith(
+          status: SettingsStatus.error,
+          errorMessage: 'An unexpected error occurred loading settings.',
+          packageInfoStatus:
+              state.packageInfoStatus == PackageInfoStatus.loading
+                  ? PackageInfoStatus.error
+                  : state.packageInfoStatus,
+          packageInfoError: state.packageInfoStatus == PackageInfoStatus.loading
+              ? 'Failed due to main settings error'
+              : state.packageInfoError,
+          isInDemoMode: false, // Ensure demo mode is off on error too
+          setupSkipped: false, // Ensure skip flag is reset on error too
+        ),
+      );
     }
   }
 
@@ -168,108 +190,158 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
 
   // --- Other Event Handlers (Unchanged but added demo checks) ---
   Future<void> _onUpdateTheme(
-      UpdateTheme event, Emitter<SettingsState> emit) async {
+    UpdateTheme event,
+    Emitter<SettingsState> emit,
+  ) async {
     if (_demoModeService.isDemoActive) {
       log.warning("[SettingsBloc] Ignoring UpdateTheme in Demo Mode.");
       return;
     }
     // ... rest of handler
     log.info(
-        "[SettingsBloc] Received UpdateTheme event: ${event.newMode.name}");
+      "[SettingsBloc] Received UpdateTheme event: ${event.newMode.name}",
+    );
     final result = await _settingsRepository.saveThemeMode(event.newMode);
-    result.fold((failure) {
-      log.warning(
-          "[SettingsBloc] Failed to save theme mode: ${failure.message}");
-      emit(state.copyWith(
-          status: SettingsStatus.error,
-          errorMessage: failure.message,
-          clearAllMessages: true));
-    }, (_) {
-      log.info("[SettingsBloc] Theme mode saved. Emitting new state.");
-      emit(state.copyWith(
-          themeMode: event.newMode,
-          status: SettingsStatus.loaded,
-          clearAllMessages: true));
-    });
+    result.fold(
+      (failure) {
+        log.warning(
+          "[SettingsBloc] Failed to save theme mode: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: SettingsStatus.error,
+            errorMessage: failure.message,
+            clearAllMessages: true,
+          ),
+        );
+      },
+      (_) {
+        log.info("[SettingsBloc] Theme mode saved. Emitting new state.");
+        emit(
+          state.copyWith(
+            themeMode: event.newMode,
+            status: SettingsStatus.loaded,
+            clearAllMessages: true,
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _onUpdatePaletteIdentifier(
-      UpdatePaletteIdentifier event, Emitter<SettingsState> emit) async {
+    UpdatePaletteIdentifier event,
+    Emitter<SettingsState> emit,
+  ) async {
     if (_demoModeService.isDemoActive) {
       log.warning(
-          "[SettingsBloc] Ignoring UpdatePaletteIdentifier in Demo Mode.");
+        "[SettingsBloc] Ignoring UpdatePaletteIdentifier in Demo Mode.",
+      );
       return;
     }
     // ... rest of handler
     log.info(
-        "[SettingsBloc] Received UpdatePaletteIdentifier event: ${event.newIdentifier}");
-    final result =
-        await _settingsRepository.savePaletteIdentifier(event.newIdentifier);
-    result.fold((failure) {
-      log.warning(
-          "[SettingsBloc] Failed to save palette identifier: ${failure.message}");
-      emit(state.copyWith(
-          status: SettingsStatus.error,
-          errorMessage: failure.message,
-          clearAllMessages: true));
-    }, (_) {
-      log.info("[SettingsBloc] Palette identifier saved. Emitting new state.");
-      emit(state.copyWith(
-          paletteIdentifier: event.newIdentifier,
-          status: SettingsStatus.loaded,
-          clearAllMessages: true));
-      publishDataChangedEvent(
-          type: DataChangeType.settings, reason: DataChangeReason.updated);
-    });
+      "[SettingsBloc] Received UpdatePaletteIdentifier event: ${event.newIdentifier}",
+    );
+    final result = await _settingsRepository.savePaletteIdentifier(
+      event.newIdentifier,
+    );
+    result.fold(
+      (failure) {
+        log.warning(
+          "[SettingsBloc] Failed to save palette identifier: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: SettingsStatus.error,
+            errorMessage: failure.message,
+            clearAllMessages: true,
+          ),
+        );
+      },
+      (_) {
+        log.info(
+          "[SettingsBloc] Palette identifier saved. Emitting new state.",
+        );
+        emit(
+          state.copyWith(
+            paletteIdentifier: event.newIdentifier,
+            status: SettingsStatus.loaded,
+            clearAllMessages: true,
+          ),
+        );
+        publishDataChangedEvent(
+          type: DataChangeType.settings,
+          reason: DataChangeReason.updated,
+        );
+      },
+    );
   }
 
   Future<void> _onUpdateUIMode(
-      UpdateUIMode event, Emitter<SettingsState> emit) async {
+    UpdateUIMode event,
+    Emitter<SettingsState> emit,
+  ) async {
     if (_demoModeService.isDemoActive) {
       log.warning("[SettingsBloc] Ignoring UpdateUIMode in Demo Mode.");
       return;
     }
     // ... rest of handler
     log.info(
-        "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}");
+      "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}",
+    );
     final result = await _settingsRepository.saveUIMode(event.newMode);
-    result.fold((failure) {
-      log.warning("[SettingsBloc] Failed to save UI mode: ${failure.message}");
-      emit(state.copyWith(
-          status: SettingsStatus.error,
-          errorMessage: failure.message,
-          clearAllMessages: true));
-    }, (_) {
-      log.info("[SettingsBloc] UI mode saved. Determining default palette.");
-      String defaultPalette;
-      switch (event.newMode) {
-        case UIMode.elemental:
-          defaultPalette = AppTheme.elementalPalette1;
-          break;
-        case UIMode.quantum:
-          defaultPalette = AppTheme.quantumPalette1;
-          break;
-        case UIMode.aether:
-          defaultPalette = AppTheme.aetherPalette1;
-          break;
-      }
-      log.info("[SettingsBloc] Saving default palette: $defaultPalette");
-      _settingsRepository
-          .savePaletteIdentifier(defaultPalette); // Fire and forget is ok here
+    result.fold(
+      (failure) {
+        log.warning(
+          "[SettingsBloc] Failed to save UI mode: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: SettingsStatus.error,
+            errorMessage: failure.message,
+            clearAllMessages: true,
+          ),
+        );
+      },
+      (_) {
+        log.info("[SettingsBloc] UI mode saved. Determining default palette.");
+        String defaultPalette;
+        switch (event.newMode) {
+          case UIMode.elemental:
+            defaultPalette = AppTheme.elementalPalette1;
+            break;
+          case UIMode.quantum:
+            defaultPalette = AppTheme.quantumPalette1;
+            break;
+          case UIMode.aether:
+            defaultPalette = AppTheme.aetherPalette1;
+            break;
+        }
+        log.info("[SettingsBloc] Saving default palette: $defaultPalette");
+        _settingsRepository.savePaletteIdentifier(
+          defaultPalette,
+        ); // Fire and forget is ok here
 
-      emit(state.copyWith(
-        uiMode: event.newMode,
-        paletteIdentifier: defaultPalette, // Update palette in state too
-        status: SettingsStatus.loaded,
-        clearAllMessages: true,
-      ));
-      publishDataChangedEvent(
-          type: DataChangeType.settings, reason: DataChangeReason.updated);
-    });
+        emit(
+          state.copyWith(
+            uiMode: event.newMode,
+            paletteIdentifier: defaultPalette, // Update palette in state too
+            status: SettingsStatus.loaded,
+            clearAllMessages: true,
+          ),
+        );
+        publishDataChangedEvent(
+          type: DataChangeType.settings,
+          reason: DataChangeReason.updated,
+        );
+      },
+    );
   }
 
   Future<void> _onUpdateCountry(
-      UpdateCountry event, Emitter<SettingsState> emit) async {
+    UpdateCountry event,
+    Emitter<SettingsState> emit,
+  ) async {
     // Currency *can* be changed before entering demo
     // if (_demoModeService.isDemoActive) {
     //   log.warning("[SettingsBloc] Ignoring UpdateCountry in Demo Mode.");
@@ -277,76 +349,150 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     // }
     // ... rest of handler
     log.info(
-        "[SettingsBloc] Received UpdateCountry event: ${event.newCountryCode}");
-    final result =
-        await _settingsRepository.saveSelectedCountryCode(event.newCountryCode);
-    result.fold((failure) {
-      log.warning(
-          "[SettingsBloc] Failed to save country code: ${failure.message}");
-      emit(state.copyWith(
-          status: SettingsStatus.error,
-          errorMessage: failure.message,
-          clearAllMessages: true));
-    }, (_) {
-      log.info("[SettingsBloc] Country code saved. Emitting new state.");
-      emit(state.copyWith(
-          selectedCountryCode: event.newCountryCode,
-          status: SettingsStatus.loaded,
-          clearAllMessages: true));
-      publishDataChangedEvent(
-          type: DataChangeType.settings, reason: DataChangeReason.updated);
-    });
+      "[SettingsBloc] Received UpdateCountry event: ${event.newCountryCode}",
+    );
+    final result = await _settingsRepository.saveSelectedCountryCode(
+      event.newCountryCode,
+    );
+    result.fold(
+      (failure) {
+        log.warning(
+          "[SettingsBloc] Failed to save country code: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: SettingsStatus.error,
+            errorMessage: failure.message,
+            clearAllMessages: true,
+          ),
+        );
+      },
+      (_) {
+        log.info("[SettingsBloc] Country code saved. Emitting new state.");
+        emit(
+          state.copyWith(
+            selectedCountryCode: event.newCountryCode,
+            status: SettingsStatus.loaded,
+            clearAllMessages: true,
+          ),
+        );
+        publishDataChangedEvent(
+          type: DataChangeType.settings,
+          reason: DataChangeReason.updated,
+        );
+      },
+    );
   }
 
   Future<void> _onUpdateAppLock(
-      UpdateAppLock event, Emitter<SettingsState> emit) async {
+    UpdateAppLock event,
+    Emitter<SettingsState> emit,
+  ) async {
     if (_demoModeService.isDemoActive) {
       log.warning("[SettingsBloc] Ignoring UpdateAppLock in Demo Mode.");
       return;
     }
-    // ... rest of handler
+
     log.info("[SettingsBloc] Received UpdateAppLock event: ${event.isEnabled}");
-    final result =
-        await _settingsRepository.saveAppLockEnabled(event.isEnabled);
-    result.fold((failure) {
-      log.warning(
-          "[SettingsBloc] Failed to save app lock setting: ${failure.message}");
-      emit(state.copyWith(
+    emit(
+      state.copyWith(status: SettingsStatus.loading, clearAllMessages: true),
+    );
+
+    try {
+      if (event.isEnabled) {
+        final canAuth = await _localAuth.canCheckBiometrics ||
+            await _localAuth.isDeviceSupported();
+        if (!canAuth) {
+          emit(
+            state.copyWith(
+              status: SettingsStatus.error,
+              errorMessage:
+                  'Cannot enable App Lock. Please set up device screen lock or biometrics first.',
+            ),
+          );
+          return;
+        }
+      }
+
+      final result = await _settingsRepository.saveAppLockEnabled(
+        event.isEnabled,
+      );
+      result.fold(
+        (failure) {
+          log.warning(
+            "[SettingsBloc] Failed to save app lock setting: ${failure.message}",
+          );
+          emit(
+            state.copyWith(
+              status: SettingsStatus.error,
+              errorMessage: failure.message,
+            ),
+          );
+        },
+        (_) {
+          log.info(
+            "[SettingsBloc] App lock setting saved. Emitting new state.",
+          );
+          emit(
+            state.copyWith(
+              isAppLockEnabled: event.isEnabled,
+              status: SettingsStatus.loaded,
+            ),
+          );
+        },
+      );
+    } on PlatformException catch (e, s) {
+      log.severe(
+        "[SettingsBloc] PlatformException during app lock update: $e\n$s",
+      );
+      emit(
+        state.copyWith(
           status: SettingsStatus.error,
-          errorMessage: failure.message,
-          clearAllMessages: true));
-    }, (_) {
-      log.info("[SettingsBloc] App lock setting saved. Emitting new state.");
-      emit(state.copyWith(
-          isAppLockEnabled: event.isEnabled,
-          status: SettingsStatus.loaded,
-          clearAllMessages: true));
-    });
+          errorMessage: e.message ?? e.code,
+        ),
+      );
+    } catch (e, s) {
+      log.severe(
+        "[SettingsBloc] Unexpected error during app lock update: $e\n$s",
+      );
+      emit(
+        state.copyWith(
+          status: SettingsStatus.error,
+          errorMessage: 'An unexpected error occurred setting App Lock.',
+        ),
+      );
+    }
   }
 
   // --- Demo Mode Handlers ---
   void _onEnterDemoMode(EnterDemoMode event, Emitter<SettingsState> emit) {
     log.info("[SettingsBloc] Entering Demo Mode.");
     _demoModeService.enterDemoMode();
-    emit(state.copyWith(
-        isInDemoMode: true,
-        setupSkipped: false)); // Entering demo clears skip flag
+    emit(
+      state.copyWith(isInDemoMode: true, setupSkipped: false),
+    ); // Entering demo clears skip flag
     publishDataChangedEvent(
-        type: DataChangeType.system, reason: DataChangeReason.updated);
+      type: DataChangeType.system,
+      reason: DataChangeReason.updated,
+    );
   }
 
   void _onExitDemoMode(ExitDemoMode event, Emitter<SettingsState> emit) {
     log.info("[SettingsBloc] Exiting Demo Mode.");
     _demoModeService.exitDemoMode();
-    emit(state.copyWith(
-        isInDemoMode: false,
-        setupSkipped: false)); // Exiting demo clears skip flag
+    emit(
+      state.copyWith(isInDemoMode: false, setupSkipped: false),
+    ); // Exiting demo clears skip flag
     publishDataChangedEvent(
-        type: DataChangeType.system, reason: DataChangeReason.reset);
+      type: DataChangeType.system,
+      reason: DataChangeReason.reset,
+    );
   }
 
   void _onClearMessage(
-      ClearSettingsMessage event, Emitter<SettingsState> emit) {
+    ClearSettingsMessage event,
+    Emitter<SettingsState> emit,
+  ) {
     log.info("[SettingsBloc] Clearing settings message.");
     emit(state.copyWith(clearErrorMessage: true));
   }

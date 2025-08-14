@@ -3,17 +3,16 @@ import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SecuritySettingsSection extends StatelessWidget {
   final SettingsState state;
   final bool isLoading;
-  final Function(BuildContext, bool) onAppLockToggle;
 
   const SecuritySettingsSection({
     super.key,
     required this.state,
     required this.isLoading,
-    required this.onAppLockToggle,
   });
 
   @override
@@ -28,24 +27,27 @@ class SecuritySettingsSection extends StatelessWidget {
       children: [
         const SectionHeader(title: 'Security'),
         SwitchListTile(
-          secondary: Icon(Icons.security_outlined,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.listTileTheme.iconColor),
-          title: Text('App Lock',
-              style: TextStyle(
-                  color: !isEnabled
-                      ? theme.disabledColor
-                      : null)), // Use combined state
-          subtitle: Text('Require authentication on launch/resume',
-              style: TextStyle(
-                  color: !isEnabled
-                      ? theme.disabledColor
-                      : null)), // Use combined state
+          secondary: Icon(
+            Icons.security_outlined,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.listTileTheme.iconColor,
+          ),
+          title: Text(
+            'App Lock',
+            style: TextStyle(color: !isEnabled ? theme.disabledColor : null),
+          ), // Use combined state
+          subtitle: Text(
+            'Require authentication on launch/resume',
+            style: TextStyle(color: !isEnabled ? theme.disabledColor : null),
+          ), // Use combined state
           value: state.isAppLockEnabled,
-          onChanged: !isEnabled // Use combined state
+          onChanged:
+              !isEnabled // Use combined state
               ? null
-              : (bool value) => onAppLockToggle(context, value),
+              : (bool value) =>
+                    context.read<SettingsBloc>().add(UpdateAppLock(value)),
           activeColor: theme.colorScheme.primary,
         ),
         SettingsListTile(
@@ -55,8 +57,10 @@ class SecuritySettingsSection extends StatelessWidget {
           subtitle: state.isInDemoMode
               ? 'Disabled in Demo Mode'
               : 'Feature coming soon',
-          trailing: Icon(Icons.chevron_right,
-              color: theme.disabledColor), // Always disabled color
+          trailing: Icon(
+            Icons.chevron_right,
+            color: theme.disabledColor,
+          ), // Always disabled color
           onTap: null, // Always disabled
         ),
       ],
