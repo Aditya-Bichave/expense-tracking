@@ -52,25 +52,12 @@ class TransactionDetailPage extends StatelessWidget {
     final Map<String, String> params = {
       RouteNames.paramTransactionId: transaction.id
     };
-    final dynamic extraData =
-        transaction.originalEntity; // Pass original Expense/Income
-
-    if (extraData == null) {
-      log.severe(
-          "[TxnDetailPage] CRITICAL: originalEntity is null for transaction ID ${transaction.id}. Cannot navigate.");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text("Error preparing edit data."),
-        backgroundColor: Colors.red,
-      ));
-      return;
-    }
-
     log.info("[TxnDetailPage] Navigating via pushNamed:");
     log.info("  Route Name: $routeName");
     log.info("  Path Params: $params");
-    log.info("  Extra Data Type: ${extraData?.runtimeType}");
+    log.info("  Extra Data Type: ${transaction.runtimeType}");
 
-    context.pushNamed(routeName, pathParameters: params, extra: extraData);
+    context.pushNamed(routeName, pathParameters: params, extra: transaction);
   }
 
   @override

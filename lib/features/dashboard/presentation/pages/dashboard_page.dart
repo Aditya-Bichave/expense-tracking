@@ -97,16 +97,7 @@ class _DashboardPageState extends State<DashboardPage> {
     final Map<String, String> params = {
       RouteNames.paramTransactionId: transaction.id
     };
-    final dynamic extraData = transaction.originalEntity;
-    if (extraData == null) {
-      log.severe(
-          "[DashboardPage] CRITICAL: originalEntity is null for transaction ID ${transaction.id}. Cannot navigate.");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Error preparing edit data."),
-          backgroundColor: Colors.red));
-      return;
-    }
-    context.pushNamed(routeName, pathParameters: params, extra: extraData);
+    context.pushNamed(routeName, pathParameters: params, extra: transaction);
   }
 
   Widget _buildElementalQuantumDashboard(BuildContext context,

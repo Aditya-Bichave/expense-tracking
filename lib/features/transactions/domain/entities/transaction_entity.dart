@@ -20,6 +20,10 @@ class TransactionEntity extends Equatable {
   final double? confidenceScore;
   final bool isRecurring;
 
+  // Preserve original typed entities to avoid reconstruction/casting
+  final Expense? expense;
+  final Income? income;
+
   // Private constructor
   const TransactionEntity._({
     required this.id,
@@ -33,6 +37,8 @@ class TransactionEntity extends Equatable {
     required this.status,
     required this.confidenceScore,
     required this.isRecurring,
+    this.expense,
+    this.income,
   });
 
   // Factory constructor from Expense
@@ -49,6 +55,8 @@ class TransactionEntity extends Equatable {
       status: expense.status,
       confidenceScore: expense.confidenceScore,
       isRecurring: expense.isRecurring,
+      expense: expense,
+      income: null,
     );
   }
 
@@ -66,37 +74,9 @@ class TransactionEntity extends Equatable {
       status: income.status,
       confidenceScore: income.confidenceScore,
       isRecurring: income.isRecurring,
+      expense: null,
+      income: income,
     );
-  }
-
-  // Helper to get original Expense/Income if needed (use with caution)
-  dynamic get originalEntity {
-    if (type == TransactionType.expense) {
-      // Reconstruct Expense - assumes category is already hydrated
-      return Expense(
-          id: id,
-          title: title,
-          amount: amount,
-          date: date,
-          category: category,
-          accountId: accountId,
-          status: status,
-          confidenceScore: confidenceScore,
-          isRecurring: isRecurring);
-    } else {
-      // Reconstruct Income
-      return Income(
-          id: id,
-          title: title,
-          amount: amount,
-          date: date,
-          category: category,
-          accountId: accountId,
-          notes: notes,
-          status: status,
-          confidenceScore: confidenceScore,
-          isRecurring: isRecurring);
-    }
   }
 
   @override
