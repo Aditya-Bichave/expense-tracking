@@ -12,6 +12,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/main.dart';
 
 class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
   final RecurringTransactionRepository recurringTransactionRepository;
