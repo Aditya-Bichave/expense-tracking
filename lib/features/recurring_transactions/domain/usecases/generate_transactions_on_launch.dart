@@ -12,7 +12,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:uuid/uuid.dart';
-import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/main.dart' as app_logger;
 
 class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
   final RecurringTransactionRepository recurringTransactionRepository;
@@ -57,11 +57,11 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     categoryResult.fold(
       (failure) {
         if (failure is NotFoundFailure) {
-          log.warning(
+          app_logger.log.warning(
               "[GenerateTransactionsOnLaunch] Category with ID '${rule.categoryId}' not found. Continuing with null category.");
           category = null;
         } else {
-          log.warning(
+          app_logger.log.warning(
               "[GenerateTransactionsOnLaunch] Failed to fetch category for rule ${rule.id}: ${failure.message}");
           category = null;
         }
