@@ -91,7 +91,15 @@ class CommonFormFields {
       prefixText: '$currencySymbol ',
       prefixIcon: getPrefixIcon(context, iconKey, fallbackIcon),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+      inputFormatters: [
+        TextInputFormatter.withFunction((oldValue, newValue) {
+          final sanitized = newValue.text.replaceAll(RegExp('[^0-9.,]'), '');
+          return newValue.copyWith(
+            text: sanitized,
+            selection: TextSelection.collapsed(offset: sanitized.length),
+          );
+        }),
+      ],
       validator:
           validator ??
           (value) {
