@@ -34,14 +34,18 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     final today = DateTime(now.year, now.month, now.day);
 
     final rulesOrFailure = await recurringTransactionRepository.getRecurringRules();
-    return rulesOrFailure.fold(
-      (failure) => Left(failure),
+    return await rulesOrFailure.fold<Future<Either<Failure, void>>>(
+      (failure) async => Left(failure),
       (rules) async {
         final activeRules = rules.where((rule) => rule.status == RuleStatus.active).toList();
 
         for (var rule in activeRules) {
-          if (rule.nextOccurrenceDate.isBefore(today) || rule.nextOccurrenceDate.isAtSameMomentAs(today)) {
-            await _processRule(rule);
+          if (rule.nextOccurrenceDate.isBefore(today) ||
+              rule.nextOccurrenceDate.isAtSameMomentAs(today)) {
+            final result = await _processRule(rule);
+            if (result.isLeft()) {
+              return result;
+            }
           }
         }
         return const Right(null);
@@ -49,11 +53,12 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     );
   }
 
-  Future<void> _processRule(RecurringRule rule) async {
+  Future<Either<Failure, void>> _processRule(RecurringRule rule) async {
     final categoryOrFailure = await categoryRepository.getCategoryById(rule.categoryId);
     final category = categoryOrFailure.getOrElse(() => null);
 
     // 1. Generate transaction
+    late Either<Failure, Object> transactionResult;
     if (rule.transactionType == TransactionType.expense) {
       final newExpense = Expense(
         id: uuid.v4(),
@@ -64,7 +69,7 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         accountId: rule.accountId,
         isRecurring: true,
       );
-      await addExpense(AddExpenseParams(newExpense));
+      transactionResult = await addExpense(AddExpenseParams(newExpense));
     } else {
       final newIncome = Income(
         id: uuid.v4(),
@@ -76,38 +81,44 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         notes: '',
         isRecurring: true,
       );
-      await addIncome(AddIncomeParams(newIncome));
+      transactionResult = await addIncome(AddIncomeParams(newIncome));
     }
 
-    // 2. Update rule
-    final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
-    final newNextOccurrenceDate = _calculateNextOccurrence(rule);
+    return await transactionResult.fold<Future<Either<Failure, void>>>(
+      (failure) async => Left(failure),
+      (_) async {
+        // 2. Update rule
+        final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
+        final newNextOccurrenceDate = _calculateNextOccurrence(rule);
 
-    RuleStatus newStatus = rule.status;
+        RuleStatus newStatus = rule.status;
 
-    // 3. Check end condition
-    bool hasEnded = false;
-    if (rule.endConditionType == EndConditionType.afterOccurrences) {
-      if (newOccurrencesGenerated >= rule.totalOccurrences!) {
-        hasEnded = true;
-      }
-    } else if (rule.endConditionType == EndConditionType.onDate) {
-      if (rule.endDate != null && newNextOccurrenceDate.isAfter(rule.endDate!)) {
-        hasEnded = true;
-      }
-    }
+        // 3. Check end condition
+        bool hasEnded = false;
+        if (rule.endConditionType == EndConditionType.afterOccurrences) {
+          if (newOccurrencesGenerated >= rule.totalOccurrences!) {
+            hasEnded = true;
+          }
+        } else if (rule.endConditionType == EndConditionType.onDate) {
+          if (rule.endDate != null &&
+              newNextOccurrenceDate.isAfter(rule.endDate!)) {
+            hasEnded = true;
+          }
+        }
 
-    if (hasEnded) {
-      newStatus = RuleStatus.completed;
-    }
+        if (hasEnded) {
+          newStatus = RuleStatus.completed;
+        }
 
-    final updatedRule = rule.copyWith(
-      status: newStatus,
-      nextOccurrenceDate: newNextOccurrenceDate,
-      occurrencesGenerated: newOccurrencesGenerated,
+        final updatedRule = rule.copyWith(
+          status: newStatus,
+          nextOccurrenceDate: newNextOccurrenceDate,
+          occurrencesGenerated: newOccurrencesGenerated,
+        );
+
+        return await recurringTransactionRepository.updateRecurringRule(updatedRule);
+      },
     );
-
-    await recurringTransactionRepository.updateRecurringRule(updatedRule);
   }
 
   DateTime _calculateNextOccurrence(RecurringRule rule) {

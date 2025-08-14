@@ -1,10 +1,12 @@
+import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
@@ -36,6 +38,13 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(AddExpenseParams(Expense(
+      id: '',
+      title: '',
+      amount: 0,
+      date: DateTime.now(),
+      accountId: '',
+    )));
+    registerFallbackValue(AddIncomeParams(Income(
       id: '',
       title: '',
       amount: 0,
@@ -95,6 +104,22 @@ void main() {
     isRecurring: true,
   );
 
+  final tIncomeRule = tRule.copyWith(
+    id: 'income_1',
+    description: 'Test Income',
+    transactionType: TransactionType.income,
+    categoryId: 'cat2',
+  );
+
+  final tIncomeCategory = const Category(
+    id: 'cat2',
+    name: 'Income Category',
+    iconName: 'icon',
+    colorHex: '#FFFFFF',
+    type: CategoryType.income,
+    isCustom: false,
+  );
+
   test('should generate a transaction for a due rule', () async {
     // Arrange
     when(() => mockRecurringTransactionRepository.getRecurringRules())
@@ -146,5 +171,68 @@ void main() {
     verifyNever(() => mockAddIncomeUseCase(any()));
     verifyNever(() =>
         mockRecurringTransactionRepository.updateRecurringRule(any()));
+  });
+
+  test('should return failure when addExpense fails', () async {
+    // Arrange
+    const failure = ServerFailure('addExpense failed');
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([tRule]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => Right(tCategory));
+    when(() => mockAddExpenseUseCase(any()))
+        .thenAnswer((_) async => const Left(failure));
+
+    // Act
+    final result = await usecase(const NoParams());
+
+    // Assert
+    expect(result, equals(const Left(failure)));
+    verify(() => mockAddExpenseUseCase(any())).called(1);
+    verifyNever(() =>
+        mockRecurringTransactionRepository.updateRecurringRule(any()));
+  });
+
+  test('should return failure when addIncome fails', () async {
+    // Arrange
+    const failure = ServerFailure('addIncome failed');
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([tIncomeRule]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => Right(tIncomeCategory));
+    when(() => mockAddIncomeUseCase(any()))
+        .thenAnswer((_) async => const Left(failure));
+
+    // Act
+    final result = await usecase(const NoParams());
+
+    // Assert
+    expect(result, equals(const Left(failure)));
+    verify(() => mockAddIncomeUseCase(any())).called(1);
+    verifyNever(() =>
+        mockRecurringTransactionRepository.updateRecurringRule(any()));
+  });
+
+  test('should return failure when updateRecurringRule fails', () async {
+    // Arrange
+    const failure = ServerFailure('updateRecurringRule failed');
+    when(() => mockRecurringTransactionRepository.getRecurringRules())
+        .thenAnswer((_) async => Right([tRule]));
+    when(() => mockCategoryRepository.getCategoryById(any()))
+        .thenAnswer((_) async => Right(tCategory));
+    when(() => mockAddExpenseUseCase(any()))
+        .thenAnswer((_) async => Right(tExpense));
+    when(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
+        .thenAnswer((_) async => const Left(failure));
+    when(() => mockUuid.v4()).thenReturn('new_id');
+
+    // Act
+    final result = await usecase(const NoParams());
+
+    // Assert
+    expect(result, equals(const Left(failure)));
+    verify(() => mockAddExpenseUseCase(any())).called(1);
+    verify(() => mockRecurringTransactionRepository.updateRecurringRule(any()))
+        .called(1);
   });
 }
