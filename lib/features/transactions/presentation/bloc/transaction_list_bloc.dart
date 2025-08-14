@@ -21,6 +21,7 @@ import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 
 part 'transaction_list_event.dart';
 part 'transaction_list_state.dart';
@@ -419,29 +420,42 @@ class TransactionListBloc
       });
     } else {
       log.info(
-        "[TransactionListBloc] ApplyBatchCategory successful. Exiting batch mode and publishing events.",
+        "[TransactionListBloc] ApplyBatchCategory successful. Updating state in-memory.",
       );
+      final categoryResult = await sl<CategoryRepository>().getCategoryById(
+        event.categoryId,
+      );
+      final category = categoryResult.getOrElse(() => Category.uncategorized);
+      final updatedTransactions = state.transactions.map((t) {
+        if (state.selectedTransactionIds.contains(t.id)) {
+          if (t.type == TransactionType.expense && t.expense != null) {
+            final updated = t.expense!.copyWith(
+              category: category,
+              status: CategorizationStatus.categorized,
+              confidenceScore: 1.0,
+            );
+            return TransactionEntity.fromExpense(updated);
+          } else if (t.type == TransactionType.income && t.income != null) {
+            final updated = t.income!.copyWith(
+              category: category,
+              status: CategorizationStatus.categorized,
+              confidenceScore: 1.0,
+            );
+            return TransactionEntity.fromIncome(updated);
+          }
+        }
+        return t;
+      }).toList();
+
       emit(
         state.copyWith(
           isInBatchEditMode: false,
           selectedTransactionIds: {},
+          transactions: updatedTransactions,
           status: ListStatus.success, // Important: Set back to success
           clearErrorMessage: true,
         ),
       );
-      // Events will trigger reload via _onDataChanged
-      if (expenseIds.isNotEmpty) {
-        publishDataChangedEvent(
-          type: DataChangeType.expense,
-          reason: DataChangeReason.updated,
-        );
-      }
-      if (incomeIds.isNotEmpty) {
-        publishDataChangedEvent(
-          type: DataChangeType.income,
-          reason: DataChangeReason.updated,
-        );
-      }
     }
   }
 
@@ -490,13 +504,7 @@ class TransactionListBloc
       },
       (_) {
         log.info(
-          "[TransactionListBloc] DeleteTransaction successful for ${txn.id}. DataChanged event will handle list update.",
-        );
-        publishDataChangedEvent(
-          type: txn.type == TransactionType.expense
-              ? DataChangeType.expense
-              : DataChangeType.income,
-          reason: DataChangeReason.deleted,
+          '[TransactionListBloc] DeleteTransaction successful for ${txn.id}. State already updated optimistically.',
         );
       },
     );
@@ -568,14 +576,35 @@ class TransactionListBloc
       },
       (_) {
         log.info(
-          "[TransactionListBloc] Categorization update successful for ${event.transactionId}. DataChanged event will refresh list.",
+          "[TransactionListBloc] Categorization update successful for ${event.transactionId}. Updating state in-memory.",
         );
-        // Publish event to trigger list reload via _onDataChanged
-        publishDataChangedEvent(
-          type: event.transactionType == TransactionType.expense
-              ? DataChangeType.expense
-              : DataChangeType.income,
-          reason: DataChangeReason.updated,
+        final updatedTransactions = state.transactions.map((t) {
+          if (t.id == event.transactionId) {
+            if (event.transactionType == TransactionType.expense &&
+                t.expense != null) {
+              final updated = t.expense!.copyWith(
+                category: event.selectedCategory,
+                status: CategorizationStatus.categorized,
+                confidenceScore: 1.0,
+              );
+              return TransactionEntity.fromExpense(updated);
+            } else if (event.transactionType == TransactionType.income &&
+                t.income != null) {
+              final updated = t.income!.copyWith(
+                category: event.selectedCategory,
+                status: CategorizationStatus.categorized,
+                confidenceScore: 1.0,
+              );
+              return TransactionEntity.fromIncome(updated);
+            }
+          }
+          return t;
+        }).toList();
+        emit(
+          state.copyWith(
+            transactions: updatedTransactions,
+            clearErrorMessage: true,
+          ),
         );
       },
     );

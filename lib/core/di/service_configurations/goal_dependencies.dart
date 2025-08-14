@@ -36,6 +36,7 @@ import 'package:expense_tracker/features/goals/presentation/bloc/contribution_li
 // External
 import 'package:uuid/uuid.dart';
 import 'dart:async'; // For Stream
+import 'package:expense_tracker/core/services/clock.dart';
 
 class GoalDependencies {
   static void register() {
@@ -60,7 +61,10 @@ class GoalDependencies {
     // --- Repositories ---
     if (!sl.isRegistered<GoalRepository>()) {
       sl.registerLazySingleton<GoalRepository>(
-        () => GoalRepositoryImpl(localDataSource: sl()),
+        () => GoalRepositoryImpl(
+          localDataSource: sl(),
+          contributionDataSource: sl(),
+        ),
       );
     }
     if (!sl.isRegistered<GoalContributionRepository>()) {
@@ -74,7 +78,9 @@ class GoalDependencies {
 
     // --- Use Cases ---
     if (!sl.isRegistered<AddGoalUseCase>()) {
-      sl.registerLazySingleton(() => AddGoalUseCase(sl(), sl<Uuid>()));
+      sl.registerLazySingleton(
+        () => AddGoalUseCase(sl(), sl<Uuid>(), sl<Clock>()),
+      );
     }
     if (!sl.isRegistered<GetGoalsUseCase>()) {
       sl.registerLazySingleton(() => GetGoalsUseCase(sl()));
@@ -89,7 +95,9 @@ class GoalDependencies {
       sl.registerLazySingleton(() => DeleteGoalUseCase(sl()));
     }
     if (!sl.isRegistered<AddContributionUseCase>()) {
-      sl.registerLazySingleton(() => AddContributionUseCase(sl(), sl<Uuid>()));
+      sl.registerLazySingleton(
+        () => AddContributionUseCase(sl(), sl<Uuid>(), sl<Clock>()),
+      );
     }
     if (!sl.isRegistered<GetContributionsForGoalUseCase>()) {
       sl.registerLazySingleton(() => GetContributionsForGoalUseCase(sl()));

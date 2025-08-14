@@ -16,14 +16,19 @@ class ExpensesDependencies {
     // --- MODIFIED: Register Proxy ---
     // Data Source (Proxy that wraps the real one)
     sl.registerLazySingleton<ExpenseLocalDataSource>(
-        () => DemoAwareExpenseDataSource(
-              hiveDataSource: sl<HiveExpenseLocalDataSource>(), // Get real DS
-              demoModeService: sl<DemoModeService>(),
-            ));
+      () => DemoAwareExpenseDataSource(
+        hiveDataSource: sl<HiveExpenseLocalDataSource>(), // Get real DS
+        demoModeService: sl<DemoModeService>(),
+      ),
+    );
     // --- END MODIFIED ---
 
     sl.registerLazySingleton<ExpenseRepository>(
-        () => ExpenseRepositoryImpl(localDataSource: sl()));
+      () => ExpenseRepositoryImpl(
+        localDataSource: sl(),
+        categoryRepository: sl(),
+      ),
+    );
     // Domain
     sl.registerLazySingleton(() => AddExpenseUseCase(sl()));
     sl.registerLazySingleton(() => UpdateExpenseUseCase(sl()));
