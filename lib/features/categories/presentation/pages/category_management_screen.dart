@@ -1,5 +1,4 @@
 // lib/features/categories/presentation/pages/category_management_screen.dart
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
@@ -15,22 +14,26 @@ class CategoryManagementScreen extends StatelessWidget {
 
   void _navigateToAddEdit(BuildContext context, {Category? category}) {
     log.info(
-        "[CategoryMgmtScreen] Navigating to Add/Edit. Category: ${category?.name}");
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => BlocProvider.value(
-        value: BlocProvider.of<CategoryManagementBloc>(context),
-        child: AddEditCategoryScreen(initialCategory: category),
+      "[CategoryMgmtScreen] Navigating to Add/Edit. Category: ${category?.name}",
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AddEditCategoryScreen(initialCategory: category),
       ),
-    ));
+    );
   }
 
   void _handleDelete(BuildContext context, Category category) async {
     log.info("[CategoryMgmtScreen] Delete requested for: ${category.name}");
     if (!category.isCustom) {
       log.warning(
-          "[CategoryMgmtScreen] Attempted to delete a non-custom category: ${category.name}");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Predefined categories cannot be deleted.")));
+        "[CategoryMgmtScreen] Attempted to delete a non-custom category: ${category.name}",
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Predefined categories cannot be deleted."),
+        ),
+      );
       return;
     }
     final confirmed = await AppDialogs.showConfirmation(
@@ -43,9 +46,9 @@ class CategoryManagementScreen extends StatelessWidget {
     );
     if (confirmed == true && context.mounted) {
       log.info("[CategoryMgmtScreen] Delete confirmed for: ${category.name}");
-      context
-          .read<CategoryManagementBloc>()
-          .add(DeleteCategory(categoryId: category.id));
+      context.read<CategoryManagementBloc>().add(
+        DeleteCategory(categoryId: category.id),
+      );
     } else {
       log.info("[CategoryMgmtScreen] Delete cancelled for: ${category.name}");
     }
@@ -54,100 +57,105 @@ class CategoryManagementScreen extends StatelessWidget {
   void _handlePersonalize(BuildContext context, Category category) {
     log.warning("Personalization for predefined categories not implemented.");
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Personalization coming soon!")));
+      const SnackBar(content: Text("Personalization coming soon!")),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<CategoryManagementBloc>(
-      create: (context) =>
-          sl<CategoryManagementBloc>()..add(const LoadCategories()),
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Manage Categories'),
-            bottom: TabBar(
-              tabs: const [
-                Tab(icon: Icon(Icons.arrow_downward), text: 'Expenses'),
-                Tab(icon: Icon(Icons.arrow_upward), text: 'Income'),
-              ],
-              indicatorColor: Theme.of(context).colorScheme.primary,
-              labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor:
-                  Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Manage Categories'),
+          bottom: TabBar(
+            tabs: const [
+              Tab(icon: Icon(Icons.arrow_downward), text: 'Expenses'),
+              Tab(icon: Icon(Icons.arrow_upward), text: 'Income'),
+            ],
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant,
           ),
-          body: BlocConsumer<CategoryManagementBloc, CategoryManagementState>(
-            listener: (context, state) {
-              if (state.status == CategoryManagementStatus.error &&
-                  state.errorMessage != null) {
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(
-                      content: Text("Error: ${state.errorMessage!}"),
-                      backgroundColor: Theme.of(context).colorScheme.error));
-                // Optionally clear error message via Bloc event
-                // context.read<CategoryManagementBloc>().add(const ClearCategoryMessages());
-              }
-            },
-            builder: (context, state) {
-              if (state.status == CategoryManagementStatus.initial ||
-                  state.status == CategoryManagementStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (state.status == CategoryManagementStatus.error &&
-                  state.predefinedExpenseCategories.isEmpty &&
-                  state.customExpenseCategories.isEmpty) {
-                return Center(
-                    child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text(
-                            "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.error))));
-              }
-
-              // Use the decomposed list section widget
-              return TabBarView(
-                children: [
-                  CategoryListSectionWidget(
-                    categories: [
-                      ...state.predefinedExpenseCategories,
-                      ...state.customExpenseCategories
-                    ],
-                    emptyMessage: 'No expense categories found.',
-                    onEditCategory: (category) =>
-                        _navigateToAddEdit(context, category: category),
-                    onDeleteCategory: (category) =>
-                        _handleDelete(context, category),
-                    onPersonalizeCategory: (category) =>
-                        _handlePersonalize(context, category),
+        ),
+        body: BlocConsumer<CategoryManagementBloc, CategoryManagementState>(
+          listener: (context, state) {
+            if (state.status == CategoryManagementStatus.error &&
+                state.errorMessage != null) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text("Error: ${state.errorMessage!}"),
+                    backgroundColor: Theme.of(context).colorScheme.error,
                   ),
-                  CategoryListSectionWidget(
-                    categories: [
-                      ...state.predefinedIncomeCategories,
-                      ...state.customIncomeCategories
-                    ],
-                    emptyMessage: 'No income categories found.',
-                    onEditCategory: (category) =>
-                        _navigateToAddEdit(context, category: category),
-                    onDeleteCategory: (category) =>
-                        _handleDelete(context, category),
-                    onPersonalizeCategory: (category) =>
-                        _handlePersonalize(context, category),
+                );
+              // Optionally clear error message via Bloc event
+              // context.read<CategoryManagementBloc>().add(const ClearCategoryMessages());
+            }
+          },
+          builder: (context, state) {
+            if (state.status == CategoryManagementStatus.initial ||
+                state.status == CategoryManagementStatus.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.status == CategoryManagementStatus.error &&
+                state.predefinedExpenseCategories.isEmpty &&
+                state.customExpenseCategories.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Text(
+                    "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                ],
+                ),
               );
-            },
-          ),
-          floatingActionButton: FloatingActionButton.extended(
-            heroTag: 'add_category_fab',
-            icon: const Icon(Icons.add),
-            label: const Text("Add Custom"),
-            tooltip: 'Add Custom Category',
-            onPressed: () => _navigateToAddEdit(context),
-          ),
+            }
+
+            // Use the decomposed list section widget
+            return TabBarView(
+              children: [
+                CategoryListSectionWidget(
+                  categories: [
+                    ...state.predefinedExpenseCategories,
+                    ...state.customExpenseCategories,
+                  ],
+                  emptyMessage: 'No expense categories found.',
+                  onEditCategory: (category) =>
+                      _navigateToAddEdit(context, category: category),
+                  onDeleteCategory: (category) =>
+                      _handleDelete(context, category),
+                  onPersonalizeCategory: (category) =>
+                      _handlePersonalize(context, category),
+                ),
+                CategoryListSectionWidget(
+                  categories: [
+                    ...state.predefinedIncomeCategories,
+                    ...state.customIncomeCategories,
+                  ],
+                  emptyMessage: 'No income categories found.',
+                  onEditCategory: (category) =>
+                      _navigateToAddEdit(context, category: category),
+                  onDeleteCategory: (category) =>
+                      _handleDelete(context, category),
+                  onPersonalizeCategory: (category) =>
+                      _handlePersonalize(context, category),
+                ),
+              ],
+            );
+          },
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'add_category_fab',
+          icon: const Icon(Icons.add),
+          label: const Text("Add Custom"),
+          tooltip: 'Add Custom Category',
+          onPressed: () => _navigateToAddEdit(context),
         ),
       ),
     );

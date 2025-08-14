@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 // logger
 
 // Common widget to display either an Expense or Income in a ListTile format
@@ -24,11 +25,13 @@ class TransactionListItem extends StatelessWidget {
 
   // Helper to get icon based on category or type
   Widget _buildIcon(BuildContext context, ThemeData theme) {
-    final category = transaction.category ??
+    final category =
+        transaction.category ??
         Category.uncategorized; // Use uncategorized as fallback
     final isExpense = transaction.type == TransactionType.expense;
-    final fallbackIconData =
-        isExpense ? Icons.arrow_downward : Icons.arrow_upward;
+    final fallbackIconData = isExpense
+        ? Icons.arrow_downward
+        : Icons.arrow_upward;
 
     // Attempt to get icon from category definition using the availableIcons map
     final IconData displayIconData =
@@ -63,11 +66,13 @@ class TransactionListItem extends StatelessWidget {
         style: theme.textTheme.bodyLarge,
       ),
       subtitle: Text(
-          '${category.name} • ${DateFormatter.formatDate(transaction.date)}', // Show category name and formatted date
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis),
+        '${category.name} • ${DateFormatter.formatDate(transaction.date)}', // Show category name and formatted date
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
       trailing: Text(
         '${isExpense ? '-' : '+'} ${CurrencyFormatter.format(transaction.amount, currencySymbol)}',
         style: theme.textTheme.bodyLarge?.copyWith(
@@ -79,8 +84,10 @@ class TransactionListItem extends StatelessWidget {
       onTap: onTap, // Use the passed onTap callback
       // onLongPress: onLongPress, // Uncomment if adding long press
       dense: true,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: context.modeTheme.spacingMedium,
+        vertical: context.modeTheme.spacingSmall / 2,
+      ),
       // --- ADDED: Visual density for slightly tighter spacing ---
       visualDensity: VisualDensity.compact,
     );

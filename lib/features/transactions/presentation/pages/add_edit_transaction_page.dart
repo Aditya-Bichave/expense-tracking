@@ -2,7 +2,6 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
@@ -35,38 +34,43 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   @override
   void initState() {
     super.initState();
-    _bloc = sl<AddEditTransactionBloc>();
+    _bloc = context.read<AddEditTransactionBloc>();
 
     if (widget.initialTransactionData is Expense) {
       _initialTransactionEntity = TransactionEntity.fromExpense(
-          widget.initialTransactionData as Expense);
+        widget.initialTransactionData as Expense,
+      );
     } else if (widget.initialTransactionData is Income) {
-      _initialTransactionEntity =
-          TransactionEntity.fromIncome(widget.initialTransactionData as Income);
+      _initialTransactionEntity = TransactionEntity.fromIncome(
+        widget.initialTransactionData as Income,
+      );
     } else if (widget.initialTransactionData is TransactionEntity) {
       _initialTransactionEntity =
           widget.initialTransactionData as TransactionEntity;
     } else if (widget.initialTransactionData != null) {
       log.warning(
-          "[AddEditTxnPage] Received unexpected initial data type: ${widget.initialTransactionData.runtimeType}");
+        "[AddEditTxnPage] Received unexpected initial data type: ${widget.initialTransactionData.runtimeType}",
+      );
     }
 
     _bloc.add(
-        InitializeTransaction(initialTransaction: _initialTransactionEntity));
+      InitializeTransaction(initialTransaction: _initialTransactionEntity),
+    );
     _previousStatus = _bloc.state.status;
     log.info(
-        "[AddEditTxnPage] initState complete. Initial Entity ID: ${_initialTransactionEntity?.id}");
+      "[AddEditTxnPage] initState complete. Initial Entity ID: ${_initialTransactionEntity?.id}",
+    );
   }
 
   @override
   void dispose() {
-    // If the Bloc was created here, dispose it. But it's from sl, so no dispose needed.
     super.dispose();
   }
 
   void _showSuggestionDialog(BuildContext context, Category suggestedCategory) {
     log.info(
-        "[AddEditTxnPage] Showing suggestion dialog for '${suggestedCategory.name}'.");
+      "[AddEditTxnPage] Showing suggestion dialog for '${suggestedCategory.name}'.",
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       AppDialogs.showConfirmation(
@@ -91,7 +95,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   void _askCreateCustomCategory(BuildContext context) {
     log.info(
-        "[AddEditTxnPage] Asking user if they want to create a custom category.");
+      "[AddEditTxnPage] Asking user if they want to create a custom category.",
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       AppDialogs.showConfirmation(
@@ -109,14 +114,19 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           _bloc.add(const CreateCustomCategoryRequested());
         } else {
           log.info(
-              "[AddEditTxnPage] User chose/cancelled to select an existing category.");
-          _bloc.emit(_bloc.state
-              .copyWith(status: AddEditStatus.ready)); // Go back to ready
+            "[AddEditTxnPage] User chose/cancelled to select an existing category.",
+          );
+          _bloc.emit(
+            _bloc.state.copyWith(status: AddEditStatus.ready),
+          ); // Go back to ready
           if (create == false) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(const SnackBar(
-                  content: Text("Please select a category manually.")));
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text("Please select a category manually."),
+                ),
+              );
           }
         }
       });
@@ -124,9 +134,12 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   }
 
   Future<void> _navigateToAddCategory(
-      BuildContext context, TransactionType currentType) async {
+    BuildContext context,
+    TransactionType currentType,
+  ) async {
     log.info(
-        "[AddEditTxnPage] Navigating to Add Category screen for type: ${currentType.name}");
+      "[AddEditTxnPage] Navigating to Add Category screen for type: ${currentType.name}",
+    );
     final categoryType = currentType == TransactionType.expense
         ? CategoryType.expense
         : CategoryType.income;
@@ -134,7 +147,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     final result = await Navigator.of(context).push<Category>(
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
-          value: sl<CategoryManagementBloc>(),
+          value: context.read<CategoryManagementBloc>(),
           child: AddEditCategoryScreen(initialType: categoryType),
         ),
       ),
@@ -144,11 +157,13 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
     if (result != null) {
       log.info(
-          "[AddEditTxnPage] Received new category from Add screen: ${result.name}. Dispatching CategoryCreated.");
+        "[AddEditTxnPage] Received new category from Add screen: ${result.name}. Dispatching CategoryCreated.",
+      );
       _bloc.add(CategoryCreated(result));
     } else {
       log.info(
-          "[AddEditTxnPage] Add Category screen popped without returning a category. Returning to form (ready state).");
+        "[AddEditTxnPage] Add Category screen popped without returning a category. Returning to form (ready state).",
+      );
       _bloc.emit(_bloc.state.copyWith(status: AddEditStatus.ready));
     }
   }
@@ -162,7 +177,8 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       child: BlocListener<AddEditTransactionBloc, AddEditTransactionState>(
         listener: (context, state) {
           log.fine(
-              "[AddEditTxnPage] BlocListener: Status=${state.status}, PrevStatus=$_previousStatus, Suggestion=${state.suggestedCategory?.name}");
+            "[AddEditTxnPage] BlocListener: Status=${state.status}, PrevStatus=$_previousStatus, Suggestion=${state.suggestedCategory?.name}",
+          );
 
           // --- Handle State Transitions for Dialogs/Navigation ---
 
@@ -188,13 +204,18 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           else if (state.status == AddEditStatus.success &&
               _previousStatus != AddEditStatus.success) {
             log.info(
-                "[AddEditTxnPage] Transaction save successful. Popping route.");
+              "[AddEditTxnPage] Transaction save successful. Popping route.",
+            );
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
+              ..showSnackBar(
+                SnackBar(
                   content: Text(
-                      'Transaction ${isEditing ? 'updated' : 'added'} successfully!'),
-                  backgroundColor: Colors.green));
+                    'Transaction ${isEditing ? 'updated' : 'added'} successfully!',
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && context.canPop()) {
                 context.pop();
@@ -208,12 +229,16 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               state.errorMessage != null &&
               _previousStatus != AddEditStatus.error) {
             log.warning(
-                "[AddEditTxnPage] Transaction save/process error: ${state.errorMessage}");
+              "[AddEditTxnPage] Transaction save/process error: ${state.errorMessage}",
+            );
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
+              ..showSnackBar(
+                SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error));
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _bloc.add(const ClearMessages());
             });
@@ -243,22 +268,33 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
               final bool isLoadingOverlayVisible =
                   state.status == AddEditStatus.saving ||
-                      state.status == AddEditStatus.loading ||
-                      state.status == AddEditStatus.navigatingToCreateCategory;
+                  state.status == AddEditStatus.loading ||
+                  state.status == AddEditStatus.navigatingToCreateCategory;
 
               return Stack(
                 children: [
                   TransactionForm(
-                    key: ValueKey(state.transactionType.toString() +
-                        (state.initialTransaction?.id ?? 'new')),
+                    key: ValueKey(
+                      state.transactionType.toString() +
+                          (state.initialTransaction?.id ?? 'new'),
+                    ),
                     initialTransaction: state.initialTransaction,
                     initialType: state.transactionType,
                     initialCategory: state.effectiveCategory,
-                    onSubmit: (type, title, amount, date, category, accountId,
-                        notes) {
-                      log.info(
-                          "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.");
-                      context.read<AddEditTransactionBloc>().add(
+                    onSubmit:
+                        (
+                          type,
+                          title,
+                          amount,
+                          date,
+                          category,
+                          accountId,
+                          notes,
+                        ) {
+                          log.info(
+                            "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.",
+                          );
+                          context.read<AddEditTransactionBloc>().add(
                             SaveTransactionRequested(
                               title: title,
                               amount: amount,
@@ -268,7 +304,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                               notes: notes,
                             ),
                           );
-                    },
+                        },
                   ),
                   if (isLoadingOverlayVisible)
                     Positioned.fill(

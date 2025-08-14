@@ -24,8 +24,12 @@ class TransactionListState extends Equatable {
   final String? errorMessage;
   // Transient error specifically for delete failures
   final String? deleteError;
+  final bool isCalendarViewVisible;
+  final DateTime focusedDay;
+  final DateTime? selectedDay;
+  final CalendarFormat calendarFormat;
 
-  const TransactionListState({
+  TransactionListState({
     this.status = ListStatus.initial,
     this.transactions = const [],
     this.startDate,
@@ -40,7 +44,12 @@ class TransactionListState extends Equatable {
     this.selectedTransactionIds = const {},
     this.errorMessage,
     this.deleteError,
-  });
+    this.isCalendarViewVisible = false,
+    DateTime? focusedDay,
+    DateTime? selectedDay,
+    this.calendarFormat = CalendarFormat.month,
+  }) : focusedDay = focusedDay ?? DateTime.now(),
+       selectedDay = selectedDay ?? DateTime.now();
 
   // Helper to check if filters are applied (excluding search)
   bool get filtersApplied =>
@@ -65,6 +74,10 @@ class TransactionListState extends Equatable {
     Set<String>? selectedTransactionIds,
     String? errorMessage,
     String? deleteError,
+    bool? isCalendarViewVisible,
+    DateTime? focusedDay,
+    DateTime? selectedDay,
+    CalendarFormat? calendarFormat,
     // Flags to clear nullable fields
     bool clearStartDate = false,
     bool clearEndDate = false,
@@ -95,6 +108,11 @@ class TransactionListState extends Equatable {
           ? null
           : (errorMessage ?? this.errorMessage),
       deleteError: clearDeleteError ? null : (deleteError ?? this.deleteError),
+      isCalendarViewVisible:
+          isCalendarViewVisible ?? this.isCalendarViewVisible,
+      focusedDay: focusedDay ?? this.focusedDay,
+      selectedDay: selectedDay ?? this.selectedDay,
+      calendarFormat: calendarFormat ?? this.calendarFormat,
     );
   }
 
@@ -114,5 +132,9 @@ class TransactionListState extends Equatable {
     selectedTransactionIds,
     errorMessage,
     deleteError,
+    isCalendarViewVisible,
+    focusedDay,
+    selectedDay,
+    calendarFormat,
   ];
 }

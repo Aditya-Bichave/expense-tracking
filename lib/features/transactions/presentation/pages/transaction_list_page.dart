@@ -1,14 +1,12 @@
 // lib/features/transactions/presentation/pages/transaction_list_page.dart
 import 'dart:async'; // For Timer (debounce)
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // The intended Category entity
-import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
-import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -37,24 +35,14 @@ class TransactionListPage extends StatefulWidget {
 
 class _TransactionListPageState extends State<TransactionListPage> {
   final TextEditingController _searchController = TextEditingController();
-  bool _showCalendarView = false;
   Timer? _debounce;
 
-  // Calendar state
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
   // Transactions for selected day are derived directly from bloc state
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-    _selectedDay = DateTime(
-      _focusedDay.year,
-      _focusedDay.month,
-      _focusedDay.day,
-    );
 
     // --- MODIFIED: Apply initial filters if provided ---
     if (widget.initialFilters != null && widget.initialFilters!.isNotEmpty) {
@@ -195,26 +183,22 @@ class _TransactionListPageState extends State<TransactionListPage> {
   void _showFilterDialog(
     BuildContext context,
     TransactionListState currentState,
-  ) async {
+  ) {
     log.info("[TxnListPage] Showing filter dialog.");
-    final getCategoriesUseCase =
-        sl<GetCategoriesUseCase>(); // Assuming it's registered
-    final categoriesResult = await getCategoriesUseCase(const NoParams());
-    List<Category> categories = [];
-    if (categoriesResult.isRight()) {
-      categories = categoriesResult.getOrElse(() => []);
-    } else {
-      log.warning("[TxnListPage] Failed to load categories for filter dialog.");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Could not load categories for filtering."),
-          ),
-        );
-      }
+    final categoryState = context.read<CategoryManagementBloc>().state;
+    final categories = [
+      ...categoryState.allExpenseCategories,
+      ...categoryState.allIncomeCategories,
+    ];
+    if (categories.isEmpty) {
+      log.warning("[TxnListPage] No categories available for filter dialog.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Could not load categories for filtering."),
+        ),
+      );
       return;
     }
-    if (!context.mounted) return;
 
     showDialog(
       context: context,
@@ -275,32 +259,20 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   // --- Calendar Specific Logic ---
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    final normalizedSelectedDay = DateTime(
-      selectedDay.year,
-      selectedDay.month,
-      selectedDay.day,
+    log.fine("[TxnListPage] Calendar day selected: $selectedDay");
+    context.read<TransactionListBloc>().add(
+      CalendarDaySelected(selectedDay: selectedDay, focusedDay: focusedDay),
     );
-    log.fine("[TxnListPage] Calendar day selected: $normalizedSelectedDay");
-    if (!isSameDay(_selectedDay, normalizedSelectedDay)) {
-      setState(() {
-        _selectedDay = normalizedSelectedDay;
-        _focusedDay = focusedDay; // Keep focusedDay in sync
-      });
-    }
   }
 
   void _onFormatChanged(CalendarFormat format) {
-    if (_calendarFormat != format) {
-      log.fine("[TxnListPage] Calendar format changed to: $format");
-      setState(() {
-        _calendarFormat = format;
-      });
-    }
+    log.fine("[TxnListPage] Calendar format changed to: $format");
+    context.read<TransactionListBloc>().add(CalendarFormatChanged(format));
   }
 
   void _onPageChanged(DateTime focusedDay) {
     log.fine("[TxnListPage] Calendar page changed, focused day: $focusedDay");
-    _focusedDay = focusedDay;
+    context.read<TransactionListBloc>().add(CalendarPageChanged(focusedDay));
   }
 
   List<TransactionEntity> _getEventsForDay(
@@ -330,9 +302,12 @@ class _TransactionListPageState extends State<TransactionListPage> {
           TransactionListHeader(
             searchController: _searchController,
             onClearSearch: _clearSearch,
-            onToggleCalendarView: () =>
-                setState(() => _showCalendarView = !_showCalendarView),
-            isCalendarViewShown: _showCalendarView,
+            onToggleCalendarView: () => context.read<TransactionListBloc>().add(
+              const ToggleCalendarView(),
+            ),
+            isCalendarViewShown: context.select(
+              (TransactionListBloc b) => b.state.isCalendarViewVisible,
+            ),
             showFilterDialog: _showFilterDialog,
             showSortDialog: _showSortDialog,
           ),
@@ -353,9 +328,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 }
               },
               builder: (context, state) {
-                final selectedTransactions = _selectedDay == null
+                final selectedTransactions = state.selectedDay == null
                     ? <TransactionEntity>[]
-                    : _getEventsForDay(_selectedDay!, state.transactions);
+                    : _getEventsForDay(state.selectedDay!, state.transactions);
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionListBloc>().add(
@@ -371,15 +346,15 @@ class _TransactionListPageState extends State<TransactionListPage> {
                     duration: const Duration(milliseconds: 300),
                     transitionBuilder: (child, animation) =>
                         FadeTransition(opacity: animation, child: child),
-                    child: _showCalendarView
+                    child: state.isCalendarViewVisible
                         ? KeyedSubtree(
                             key: const ValueKey('calendar_view'),
                             child: TransactionCalendarView(
                               state: state,
                               settings: settings,
-                              calendarFormat: _calendarFormat,
-                              focusedDay: _focusedDay,
-                              selectedDay: _selectedDay,
+                              calendarFormat: state.calendarFormat,
+                              focusedDay: state.focusedDay,
+                              selectedDay: state.selectedDay,
                               selectedDayTransactions: selectedTransactions,
                               currentTransactionsForCalendar:
                                   state.transactions,
@@ -413,7 +388,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
           BlocBuilder<TransactionListBloc, TransactionListState>(
             builder: (context, state) {
               final bool showFab =
-                  state.isInBatchEditMode && !_showCalendarView;
+                  state.isInBatchEditMode && !state.isCalendarViewVisible;
               final int count = state.selectedTransactionIds.length;
               return AnimatedScale(
                 duration: const Duration(milliseconds: 200),

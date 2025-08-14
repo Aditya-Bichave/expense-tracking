@@ -36,8 +36,13 @@ class FilterChanged extends TransactionListEvent {
   });
 
   @override
-  List<Object?> get props =>
-      [startDate, endDate, categoryId, accountId, transactionType];
+  List<Object?> get props => [
+    startDate,
+    endDate,
+    categoryId,
+    accountId,
+    transactionType,
+  ];
 }
 
 // Update sort order and reload
@@ -62,6 +67,37 @@ class SearchChanged extends TransactionListEvent {
 // Toggle batch edit mode
 class ToggleBatchEdit extends TransactionListEvent {
   const ToggleBatchEdit();
+}
+
+// Toggle between list and calendar views
+class ToggleCalendarView extends TransactionListEvent {
+  const ToggleCalendarView();
+}
+
+// Calendar interactions
+class CalendarDaySelected extends TransactionListEvent {
+  final DateTime selectedDay;
+  final DateTime focusedDay;
+  const CalendarDaySelected({
+    required this.selectedDay,
+    required this.focusedDay,
+  });
+  @override
+  List<Object?> get props => [selectedDay, focusedDay];
+}
+
+class CalendarFormatChanged extends TransactionListEvent {
+  final CalendarFormat format;
+  const CalendarFormatChanged(this.format);
+  @override
+  List<Object?> get props => [format];
+}
+
+class CalendarPageChanged extends TransactionListEvent {
+  final DateTime focusedDay;
+  const CalendarPageChanged(this.focusedDay);
+  @override
+  List<Object?> get props => [focusedDay];
 }
 
 // Select/deselect a transaction in batch mode
@@ -103,8 +139,12 @@ class UserCategorizedTransaction extends TransactionListEvent {
   });
 
   @override
-  List<Object?> get props =>
-      [transactionId, transactionType, selectedCategory, matchData];
+  List<Object?> get props => [
+    transactionId,
+    transactionType,
+    selectedCategory,
+    matchData,
+  ];
 }
 
 // Internal event for reactive updates from data changes
@@ -116,4 +156,5 @@ class _DataChanged extends TransactionListEvent {
 class ResetState extends TransactionListEvent {
   const ResetState();
 }
+
 // --- END ADDED ---

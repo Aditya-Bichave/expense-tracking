@@ -11,7 +11,7 @@ enum CardStyle { flat, elevated, floating }
 enum ListEntranceAnimation {
   none,
   fadeSlide,
-  shimmerSweep
+  shimmerSweep,
 } // Keep for potential future use
 
 // --- Asset Keys ---
@@ -188,20 +188,31 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     this.expenseGlowColor,
     // --- NEW PROPERTIES ---
     this.pagePadding = const EdgeInsets.all(16.0),
-    this.cardOuterPadding =
-        const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    this.cardOuterPadding = const EdgeInsets.symmetric(
+      horizontal: 16.0,
+      vertical: 8.0,
+    ),
     this.cardInnerPadding = const EdgeInsets.all(16.0),
-    this.listItemPadding =
-        const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-    this.mediumDuration =
-        const Duration(milliseconds: 300), // Default medium duration
-    this.fastDuration =
-        const Duration(milliseconds: 150), // Default fast duration
+    this.listItemPadding = const EdgeInsets.symmetric(
+      horizontal: 16.0,
+      vertical: 12.0,
+    ),
+    this.mediumDuration = const Duration(
+      milliseconds: 300,
+    ), // Default medium duration
+    this.fastDuration = const Duration(
+      milliseconds: 150,
+    ), // Default fast duration
     this.primaryCurve = Curves.easeInOut, // Default curve
-    this.listAnimationDelay =
-        const Duration(milliseconds: 50), // Default list stagger
-    this.listAnimationDuration =
-        const Duration(milliseconds: 400), // Default list item duration
+    this.listAnimationDelay = const Duration(
+      milliseconds: 50,
+    ), // Default list stagger
+    this.listAnimationDuration = const Duration(
+      milliseconds: 400,
+    ), // Default list item duration
+    this.spacingSmall = 8.0,
+    this.spacingMedium = 16.0,
+    this.spacingLarge = 24.0,
   });
 
   // Existing properties
@@ -225,6 +236,9 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
   final Curve primaryCurve;
   final Duration listAnimationDelay;
   final Duration listAnimationDuration;
+  final double spacingSmall;
+  final double spacingMedium;
+  final double spacingLarge;
 
   @override
   AppModeTheme copyWith({
@@ -247,21 +261,27 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     Curve? primaryCurve,
     Duration? listAnimationDelay,
     Duration? listAnimationDuration,
+    double? spacingSmall,
+    double? spacingMedium,
+    double? spacingLarge,
   }) {
     return AppModeTheme(
       modeId: modeId ?? this.modeId,
       layoutDensity: layoutDensity ?? this.layoutDensity,
-      cardStyle: cardStyle ?? this.cardStyle, assets: assets ?? this.assets,
+      cardStyle: cardStyle ?? this.cardStyle,
+      assets: assets ?? this.assets,
       preferDataTableForLists:
           preferDataTableForLists ?? this.preferDataTableForLists,
       primaryAnimationDuration:
           primaryAnimationDuration ?? this.primaryAnimationDuration,
       listEntranceAnimation:
           listEntranceAnimation ?? this.listEntranceAnimation,
-      incomeGlowColor:
-          incomeGlowColor != null ? incomeGlowColor() : this.incomeGlowColor,
-      expenseGlowColor:
-          expenseGlowColor != null ? expenseGlowColor() : this.expenseGlowColor,
+      incomeGlowColor: incomeGlowColor != null
+          ? incomeGlowColor()
+          : this.incomeGlowColor,
+      expenseGlowColor: expenseGlowColor != null
+          ? expenseGlowColor()
+          : this.expenseGlowColor,
       // Assign new properties
       pagePadding: pagePadding ?? this.pagePadding,
       cardOuterPadding: cardOuterPadding ?? this.cardOuterPadding,
@@ -273,6 +293,9 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
       listAnimationDelay: listAnimationDelay ?? this.listAnimationDelay,
       listAnimationDuration:
           listAnimationDuration ?? this.listAnimationDuration,
+      spacingSmall: spacingSmall ?? this.spacingSmall,
+      spacingMedium: spacingMedium ?? this.spacingMedium,
+      spacingLarge: spacingLarge ?? this.spacingLarge,
     );
   }
 
@@ -284,15 +307,21 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
       layoutDensity: t < 0.5 ? layoutDensity : other.layoutDensity,
       cardStyle: t < 0.5 ? cardStyle : other.cardStyle,
       assets: t < 0.5 ? assets : other.assets,
-      preferDataTableForLists:
-          t < 0.5 ? preferDataTableForLists : other.preferDataTableForLists,
+      preferDataTableForLists: t < 0.5
+          ? preferDataTableForLists
+          : other.preferDataTableForLists,
       primaryAnimationDuration: Duration(
-          milliseconds: ui
-              .lerpDouble(primaryAnimationDuration.inMilliseconds,
-                  other.primaryAnimationDuration.inMilliseconds, t)!
-              .round()),
-      listEntranceAnimation:
-          t < 0.5 ? listEntranceAnimation : other.listEntranceAnimation,
+        milliseconds: ui
+            .lerpDouble(
+              primaryAnimationDuration.inMilliseconds,
+              other.primaryAnimationDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
+      ),
+      listEntranceAnimation: t < 0.5
+          ? listEntranceAnimation
+          : other.listEntranceAnimation,
       incomeGlowColor: Color.lerp(incomeGlowColor, other.incomeGlowColor, t),
       expenseGlowColor: Color.lerp(expenseGlowColor, other.expenseGlowColor, t),
       // Lerp new properties
@@ -300,46 +329,71 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
           EdgeInsets.lerp(pagePadding, other.pagePadding, t) ?? pagePadding,
       cardOuterPadding:
           EdgeInsets.lerp(cardOuterPadding, other.cardOuterPadding, t) ??
-              cardOuterPadding,
+          cardOuterPadding,
       cardInnerPadding:
           EdgeInsets.lerp(cardInnerPadding, other.cardInnerPadding, t) ??
-              cardInnerPadding,
+          cardInnerPadding,
       listItemPadding:
           EdgeInsets.lerp(listItemPadding, other.listItemPadding, t) ??
-              listItemPadding,
+          listItemPadding,
       mediumDuration: Duration(
-          milliseconds: ui
-              .lerpDouble(mediumDuration.inMilliseconds,
-                  other.mediumDuration.inMilliseconds, t)!
-              .round()),
+        milliseconds: ui
+            .lerpDouble(
+              mediumDuration.inMilliseconds,
+              other.mediumDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
+      ),
       fastDuration: Duration(
-          milliseconds: ui
-              .lerpDouble(fastDuration.inMilliseconds,
-                  other.fastDuration.inMilliseconds, t)!
-              .round()),
+        milliseconds: ui
+            .lerpDouble(
+              fastDuration.inMilliseconds,
+              other.fastDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
+      ),
       primaryCurve: t < 0.5 ? primaryCurve : other.primaryCurve,
       listAnimationDelay: Duration(
-          milliseconds: ui
-              .lerpDouble(listAnimationDelay.inMilliseconds,
-                  other.listAnimationDelay.inMilliseconds, t)!
-              .round()),
+        milliseconds: ui
+            .lerpDouble(
+              listAnimationDelay.inMilliseconds,
+              other.listAnimationDelay.inMilliseconds,
+              t,
+            )!
+            .round(),
+      ),
       listAnimationDuration: Duration(
-          milliseconds: ui
-              .lerpDouble(listAnimationDuration.inMilliseconds,
-                  other.listAnimationDuration.inMilliseconds, t)!
-              .round()),
+        milliseconds: ui
+            .lerpDouble(
+              listAnimationDuration.inMilliseconds,
+              other.listAnimationDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
+      ),
+      spacingSmall:
+          ui.lerpDouble(spacingSmall, other.spacingSmall, t) ?? spacingSmall,
+      spacingMedium:
+          ui.lerpDouble(spacingMedium, other.spacingMedium, t) ?? spacingMedium,
+      spacingLarge:
+          ui.lerpDouble(spacingLarge, other.spacingLarge, t) ?? spacingLarge,
     );
   }
 
   List<Object?> get props => [
-        modeId, layoutDensity, cardStyle, assets, preferDataTableForLists,
-        primaryAnimationDuration, listEntranceAnimation, incomeGlowColor,
-        expenseGlowColor,
-        // New properties
-        pagePadding, cardOuterPadding, cardInnerPadding, listItemPadding,
-        mediumDuration, fastDuration, primaryCurve, listAnimationDelay,
-        listAnimationDuration,
-      ];
+    modeId, layoutDensity, cardStyle, assets, preferDataTableForLists,
+    primaryAnimationDuration, listEntranceAnimation, incomeGlowColor,
+    expenseGlowColor,
+    // New properties
+    pagePadding, cardOuterPadding, cardInnerPadding, listItemPadding,
+    mediumDuration, fastDuration, primaryCurve, listAnimationDelay,
+    listAnimationDuration,
+    spacingSmall,
+    spacingMedium,
+    spacingLarge,
+  ];
 }
 
 // Keep context extension

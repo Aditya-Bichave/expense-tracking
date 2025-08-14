@@ -15,6 +15,7 @@ import 'package:expense_tracker/features/income/domain/repositories/income_repos
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class MockGetTransactionsUseCase extends Mock
     implements GetTransactionsUseCase {}
@@ -207,6 +208,118 @@ void main() {
         isA<TransactionListState>()
             .having((s) => s.status, 'loaded', ListStatus.success)
             .having((s) => s.transactions.first.id, 'new txn id', '2'),
+      ],
+    );
+  });
+
+  group('TransactionListBloc view toggling', () {
+    late MockGetTransactionsUseCase getTransactions;
+    late MockDeleteExpenseUseCase deleteExpense;
+    late MockDeleteIncomeUseCase deleteIncome;
+    late MockApplyBatchCategoryUseCase applyBatch;
+    late MockSaveUserCategorizationHistoryUseCase saveHistory;
+    late MockExpenseRepository expenseRepo;
+    late MockIncomeRepository incomeRepo;
+
+    setUp(() {
+      getTransactions = MockGetTransactionsUseCase();
+      deleteExpense = MockDeleteExpenseUseCase();
+      deleteIncome = MockDeleteIncomeUseCase();
+      applyBatch = MockApplyBatchCategoryUseCase();
+      saveHistory = MockSaveUserCategorizationHistoryUseCase();
+      expenseRepo = MockExpenseRepository();
+      incomeRepo = MockIncomeRepository();
+    });
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'toggles calendar view flag',
+      build: () => TransactionListBloc(
+        getTransactionsUseCase: getTransactions,
+        deleteExpenseUseCase: deleteExpense,
+        deleteIncomeUseCase: deleteIncome,
+        applyCategoryToBatchUseCase: applyBatch,
+        saveUserHistoryUseCase: saveHistory,
+        expenseRepository: expenseRepo,
+        incomeRepository: incomeRepo,
+        dataChangeStream: const Stream<DataChangedEvent>.empty(),
+      ),
+      act: (bloc) => bloc.add(const ToggleCalendarView()),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.isCalendarViewVisible,
+          'calendar',
+          true,
+        ),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'updates selected and focused day',
+      build: () => TransactionListBloc(
+        getTransactionsUseCase: getTransactions,
+        deleteExpenseUseCase: deleteExpense,
+        deleteIncomeUseCase: deleteIncome,
+        applyCategoryToBatchUseCase: applyBatch,
+        saveUserHistoryUseCase: saveHistory,
+        expenseRepository: expenseRepo,
+        incomeRepository: incomeRepo,
+        dataChangeStream: const Stream<DataChangedEvent>.empty(),
+      ),
+      act: (bloc) {
+        final day = DateTime(2024, 1, 2);
+        bloc.add(CalendarDaySelected(selectedDay: day, focusedDay: day));
+      },
+      expect: () => [
+        isA<TransactionListState>()
+            .having((s) => s.selectedDay, 'selectedDay', DateTime(2024, 1, 2))
+            .having((s) => s.focusedDay, 'focusedDay', DateTime(2024, 1, 2)),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'changes calendar format',
+      build: () => TransactionListBloc(
+        getTransactionsUseCase: getTransactions,
+        deleteExpenseUseCase: deleteExpense,
+        deleteIncomeUseCase: deleteIncome,
+        applyCategoryToBatchUseCase: applyBatch,
+        saveUserHistoryUseCase: saveHistory,
+        expenseRepository: expenseRepo,
+        incomeRepository: incomeRepo,
+        dataChangeStream: const Stream<DataChangedEvent>.empty(),
+      ),
+      act: (bloc) => bloc.add(const CalendarFormatChanged(CalendarFormat.week)),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.calendarFormat,
+          'format',
+          CalendarFormat.week,
+        ),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'changes focused day',
+      build: () => TransactionListBloc(
+        getTransactionsUseCase: getTransactions,
+        deleteExpenseUseCase: deleteExpense,
+        deleteIncomeUseCase: deleteIncome,
+        applyCategoryToBatchUseCase: applyBatch,
+        saveUserHistoryUseCase: saveHistory,
+        expenseRepository: expenseRepo,
+        incomeRepository: incomeRepo,
+        dataChangeStream: const Stream<DataChangedEvent>.empty(),
+      ),
+      act: (bloc) {
+        final day = DateTime(2024, 5, 10);
+        bloc.add(CalendarPageChanged(day));
+      },
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.focusedDay,
+          'focusedDay',
+          DateTime(2024, 5, 10),
+        ),
       ],
     );
   });

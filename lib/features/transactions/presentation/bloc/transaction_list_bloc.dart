@@ -4,7 +4,6 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 // CategorizationStatus
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -22,6 +21,7 @@ import 'package:expense_tracker/features/expenses/domain/repositories/expense_re
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 part 'transaction_list_event.dart';
 part 'transaction_list_state.dart';
@@ -54,13 +54,17 @@ class TransactionListBloc
        _saveUserHistoryUseCase = saveUserHistoryUseCase,
        _expenseRepository = expenseRepository,
        _incomeRepository = incomeRepository,
-       super(const TransactionListState()) {
+       super(TransactionListState()) {
     // Register Event Handlers
     on<LoadTransactions>(_onLoadTransactions);
     on<FilterChanged>(_onFilterChanged);
     on<SortChanged>(_onSortChanged);
     on<SearchChanged>(_onSearchChanged);
     on<ToggleBatchEdit>(_onToggleBatchEdit);
+    on<ToggleCalendarView>(_onToggleCalendarView);
+    on<CalendarDaySelected>(_onCalendarDaySelected);
+    on<CalendarFormatChanged>(_onCalendarFormatChanged);
+    on<CalendarPageChanged>(_onCalendarPageChanged);
     on<SelectTransaction>(_onSelectTransaction);
     on<ApplyBatchCategory>(_onApplyBatchCategory);
     on<DeleteTransaction>(_onDeleteTransaction);
@@ -101,10 +105,43 @@ class TransactionListBloc
     );
   }
 
+  void _onToggleCalendarView(
+    ToggleCalendarView event,
+    Emitter<TransactionListState> emit,
+  ) {
+    emit(state.copyWith(isCalendarViewVisible: !state.isCalendarViewVisible));
+  }
+
+  void _onCalendarDaySelected(
+    CalendarDaySelected event,
+    Emitter<TransactionListState> emit,
+  ) {
+    final normalized = DateTime(
+      event.selectedDay.year,
+      event.selectedDay.month,
+      event.selectedDay.day,
+    );
+    emit(state.copyWith(selectedDay: normalized, focusedDay: event.focusedDay));
+  }
+
+  void _onCalendarFormatChanged(
+    CalendarFormatChanged event,
+    Emitter<TransactionListState> emit,
+  ) {
+    emit(state.copyWith(calendarFormat: event.format));
+  }
+
+  void _onCalendarPageChanged(
+    CalendarPageChanged event,
+    Emitter<TransactionListState> emit,
+  ) {
+    emit(state.copyWith(focusedDay: event.focusedDay));
+  }
+
   // --- Add Reset State Handler ---
   void _onResetState(ResetState event, Emitter<TransactionListState> emit) {
     log.info("[TransactionListBloc] Resetting state to initial.");
-    emit(const TransactionListState()); // Emit the initial state
+    emit(TransactionListState()); // Emit the initial state
     // Optionally, trigger an initial load after resetting
     // add(const LoadTransactions());
   }
