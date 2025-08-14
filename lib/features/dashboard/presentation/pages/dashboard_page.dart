@@ -16,6 +16,7 @@ import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
@@ -45,28 +46,36 @@ class _DashboardPageState extends State<DashboardPage> {
       // Wait for dashboard bloc to finish loading/erroring
       await _dashboardBloc.stream
           .firstWhere(
-              (state) => state is DashboardLoaded || state is DashboardError)
+            (state) => state is DashboardLoaded || state is DashboardError,
+          )
           .timeout(const Duration(seconds: 10));
       log.info("[DashboardPage] Refresh stream finished or timed out.");
     } catch (e) {
       log.warning(
-          "[DashboardPage] Error or timeout waiting for refresh stream: $e");
+        "[DashboardPage] Error or timeout waiting for refresh stream: $e",
+      );
     }
   }
 
   void _navigateToDetailOrEdit(
-      BuildContext context, TransactionEntity transaction) {
+    BuildContext context,
+    TransactionEntity transaction,
+  ) {
     log.info(
-        "[DashboardPage] Navigate to Edit requested for TXN ID: ${transaction.id}");
+      "[DashboardPage] Navigate to Edit requested for TXN ID: ${transaction.id}",
+    );
     const String routeName = RouteNames.editTransaction;
     final Map<String, String> params = {
-      RouteNames.paramTransactionId: transaction.id
+      RouteNames.paramTransactionId: transaction.id,
     };
     context.pushNamed(routeName, pathParameters: params, extra: transaction);
   }
 
-  Widget _buildElementalQuantumDashboard(BuildContext context,
-      FinancialOverview overview, SettingsState settings) {
+  Widget _buildElementalQuantumDashboard(
+    BuildContext context,
+    FinancialOverview overview,
+    SettingsState settings,
+  ) {
     final modeTheme = context.modeTheme;
     return RefreshIndicator(
       onRefresh: _refreshDashboard,
@@ -94,14 +103,18 @@ class _DashboardPageState extends State<DashboardPage> {
           _buildReportNavigationButtons(context),
           const SizedBox(height: 16),
           RecentTransactionsSection(
-              navigateToDetailOrEdit: _navigateToDetailOrEdit),
+            navigateToDetailOrEdit: _navigateToDetailOrEdit,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAetherDashboardBody(BuildContext context,
-      FinancialOverview overview, SettingsState settings) {
+  Widget _buildAetherDashboardBody(
+    BuildContext context,
+    FinancialOverview overview,
+    SettingsState settings,
+  ) {
     final modeTheme = context.modeTheme;
     final paletteId = settings.paletteIdentifier;
     Widget aetherContent = (paletteId == AppTheme.aetherPalette2)
@@ -121,19 +134,20 @@ class _DashboardPageState extends State<DashboardPage> {
           ListView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: modeTheme?.pagePadding.copyWith(
-                    top:
-                        kToolbarHeight + MediaQuery.of(context).padding.top + 8,
-                    bottom: 80) ??
+                  top: kToolbarHeight + MediaQuery.of(context).padding.top + 8,
+                  bottom: 80,
+                ) ??
                 EdgeInsets.only(
-                    top: kToolbarHeight +
-                        MediaQuery.of(context).padding.top +
-                        8.0,
-                    bottom: 80.0),
+                  top:
+                      kToolbarHeight + MediaQuery.of(context).padding.top + 8.0,
+                  bottom: 80.0,
+                ),
             children: [
               Container(
-                  height: 300,
-                  alignment: Alignment.center,
-                  child: aetherContent),
+                height: 300,
+                alignment: Alignment.center,
+                child: aetherContent,
+              ),
               const SizedBox(height: 16),
               DashboardHeader(overview: overview),
               const SizedBox(height: 16),
@@ -152,7 +166,8 @@ class _DashboardPageState extends State<DashboardPage> {
               _buildReportNavigationButtons(context),
               const SizedBox(height: 16),
               RecentTransactionsSection(
-                  navigateToDetailOrEdit: _navigateToDetailOrEdit),
+                navigateToDetailOrEdit: _navigateToDetailOrEdit,
+              ),
             ],
           ),
         ],
@@ -171,41 +186,68 @@ class _DashboardPageState extends State<DashboardPage> {
         alignment: WrapAlignment.center,
         children: [
           ActionChip(
-              avatar: Icon(Icons.pie_chart_outline,
-                  size: 16, color: theme.colorScheme.secondary),
-              label: Text('Spending / Cat', style: theme.textTheme.labelSmall),
-              onPressed: () => context.push(
-                  '${RouteNames.dashboard}/${RouteNames.reportSpendingCategory}'),
-              visualDensity: VisualDensity.compact),
+            avatar: Icon(
+              Icons.pie_chart_outline,
+              size: 16,
+              color: theme.colorScheme.secondary,
+            ),
+            label: Text('Spending / Cat', style: theme.textTheme.labelSmall),
+            onPressed: () => context.push(
+              '${RouteNames.dashboard}/${RouteNames.reportSpendingCategory}',
+            ),
+            visualDensity: VisualDensity.compact,
+          ),
           ActionChip(
-              avatar: Icon(Icons.timeline_outlined,
-                  size: 16, color: theme.colorScheme.secondary),
-              label: Text('Spending / Time', style: theme.textTheme.labelSmall),
-              onPressed: () => context.push(
-                  '${RouteNames.dashboard}/${RouteNames.reportSpendingTime}'),
-              visualDensity: VisualDensity.compact),
+            avatar: Icon(
+              Icons.timeline_outlined,
+              size: 16,
+              color: theme.colorScheme.secondary,
+            ),
+            label: Text('Spending / Time', style: theme.textTheme.labelSmall),
+            onPressed: () => context.push(
+              '${RouteNames.dashboard}/${RouteNames.reportSpendingTime}',
+            ),
+            visualDensity: VisualDensity.compact,
+          ),
           ActionChip(
-              avatar: Icon(Icons.compare_arrows_outlined,
-                  size: 16, color: theme.colorScheme.secondary),
-              label:
-                  Text('Income vs Expense', style: theme.textTheme.labelSmall),
-              onPressed: () => context.push(
-                  '${RouteNames.dashboard}/${RouteNames.reportIncomeExpense}'),
-              visualDensity: VisualDensity.compact),
+            avatar: Icon(
+              Icons.compare_arrows_outlined,
+              size: 16,
+              color: theme.colorScheme.secondary,
+            ),
+            label: Text(
+              AppLocalizations.of(context)!.incomeVsExpense,
+              style: theme.textTheme.labelSmall,
+            ),
+            onPressed: () => context.push(
+              '${RouteNames.dashboard}/${RouteNames.reportIncomeExpense}',
+            ),
+            visualDensity: VisualDensity.compact,
+          ),
           ActionChip(
-              avatar: Icon(Icons.assignment_turned_in_outlined,
-                  size: 16, color: theme.colorScheme.secondary),
-              label: Text('Budget Perf.', style: theme.textTheme.labelSmall),
-              onPressed: () => context.push(
-                  '${RouteNames.dashboard}/${RouteNames.reportBudgetPerformance}'),
-              visualDensity: VisualDensity.compact),
+            avatar: Icon(
+              Icons.assignment_turned_in_outlined,
+              size: 16,
+              color: theme.colorScheme.secondary,
+            ),
+            label: Text('Budget Perf.', style: theme.textTheme.labelSmall),
+            onPressed: () => context.push(
+              '${RouteNames.dashboard}/${RouteNames.reportBudgetPerformance}',
+            ),
+            visualDensity: VisualDensity.compact,
+          ),
           ActionChip(
-              avatar: Icon(Icons.track_changes_outlined,
-                  size: 16, color: theme.colorScheme.secondary),
-              label: Text('Goal Progress', style: theme.textTheme.labelSmall),
-              onPressed: () => context.push(
-                  '${RouteNames.dashboard}/${RouteNames.reportGoalProgress}'),
-              visualDensity: VisualDensity.compact),
+            avatar: Icon(
+              Icons.track_changes_outlined,
+              size: 16,
+              color: theme.colorScheme.secondary,
+            ),
+            label: Text('Goal Progress', style: theme.textTheme.labelSmall),
+            onPressed: () => context.push(
+              '${RouteNames.dashboard}/${RouteNames.reportGoalProgress}',
+            ),
+            visualDensity: VisualDensity.compact,
+          ),
         ],
       ),
     );
@@ -229,14 +271,18 @@ class _DashboardPageState extends State<DashboardPage> {
           if (state is DashboardError) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
+              ..showSnackBar(
+                SnackBar(
                   content: Text("Dashboard Error: ${state.message}"),
-                  backgroundColor: theme.colorScheme.error));
+                  backgroundColor: theme.colorScheme.error,
+                ),
+              );
           }
         },
         builder: (context, state) {
           log.fine(
-              "[DashboardPage] BlocBuilder building for state: ${state.runtimeType}");
+            "[DashboardPage] BlocBuilder building for state: ${state.runtimeType}",
+          );
           Widget bodyContent;
 
           if (state is DashboardLoading && !state.isReloading) {
@@ -249,52 +295,65 @@ class _DashboardPageState extends State<DashboardPage> {
                     ?.overview; // Use previous data if reloading
             if (overview == null && state is DashboardLoading) {
               bodyContent = const Center(
-                  child:
-                      CircularProgressIndicator()); // Still loading initial data
+                child: CircularProgressIndicator(),
+              ); // Still loading initial data
             } else if (overview == null) {
               bodyContent = const Center(
-                  child: Text(
-                      "Failed to load overview data.")); // Error case if overview somehow null after loading
+                child: Text("Failed to load overview data."),
+              ); // Error case if overview somehow null after loading
             } else {
               switch (uiMode) {
                 case UIMode.aether:
                   bodyContent = _buildAetherDashboardBody(
-                      context, overview, settingsState);
+                    context,
+                    overview,
+                    settingsState,
+                  );
                   break;
                 case UIMode.quantum:
                 case UIMode.elemental:
                   bodyContent = _buildElementalQuantumDashboard(
-                      context, overview, settingsState);
+                    context,
+                    overview,
+                    settingsState,
+                  );
                   break;
               }
             }
           } else if (state is DashboardError) {
             bodyContent = Center(
-                child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('Error loading dashboard: ${state.message}',
-                              style: TextStyle(color: theme.colorScheme.error),
-                              textAlign: TextAlign.center),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                              onPressed: _refreshDashboard,
-                              icon: const Icon(Icons.refresh),
-                              label: const Text("Retry"))
-                        ])));
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Error loading dashboard: ${state.message}',
+                      style: TextStyle(color: theme.colorScheme.error),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: _refreshDashboard,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Retry"),
+                    ),
+                  ],
+                ),
+              ),
+            );
           } else {
             // Initial state
             bodyContent = const Center(child: CircularProgressIndicator());
           }
 
           return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              child: KeyedSubtree(
-                  key: ValueKey(
-                      state.runtimeType.toString() + uiMode.toString()),
-                  child: bodyContent));
+            duration: const Duration(milliseconds: 400),
+            child: KeyedSubtree(
+              key: ValueKey(state.runtimeType.toString() + uiMode.toString()),
+              child: bodyContent,
+            ),
+          );
         },
       ),
     );

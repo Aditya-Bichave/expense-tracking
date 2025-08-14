@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:expense_tracker/router.dart' deferred as app_router
-    hide StringExtension;
+import 'package:expense_tracker/router.dart' deferred as app_router;
 
 class MockSettingsBloc extends Mock implements SettingsBloc {}
 

@@ -19,8 +19,10 @@ class CategoryAppearanceFormSection extends StatelessWidget {
   });
 
   void _showIconPicker(BuildContext context) async {
-    final String? selectedIcon =
-        await showIconPicker(context, selectedIconName);
+    final String? selectedIcon = await showIconPicker(
+      context,
+      selectedIconName,
+    );
     if (selectedIcon != null && selectedIcon != selectedIconName) {
       onIconSelected(selectedIcon);
     }
@@ -48,14 +50,16 @@ class CategoryAppearanceFormSection extends StatelessWidget {
         ),
         actions: <Widget>[
           TextButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop()),
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           TextButton(
-              child: const Text('Select'),
-              onPressed: () {
-                onColorSelected(pickerColor);
-                Navigator.of(context).pop();
-              }),
+            child: const Text('Select'),
+            onPressed: () {
+              onColorSelected(pickerColor);
+              Navigator.of(context).pop();
+            },
+          ),
         ],
       ),
     );
@@ -75,17 +79,18 @@ class CategoryAppearanceFormSection extends StatelessWidget {
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(
-              side: BorderSide(color: theme.dividerColor),
-              borderRadius: BorderRadius.circular(12)),
+            side: BorderSide(color: theme.dividerColor),
+            borderRadius: BorderRadius.circular(12),
+          ),
           tileColor: theme.colorScheme.surfaceContainerHighest,
           leading: Padding(
-            padding: const EdgeInsets.only(left: 0.0),
+            padding: const EdgeInsetsDirectional.only(start: 0.0),
             child: Icon(displayIconData, color: selectedColor, size: 28),
           ),
           title: const Text('Icon'),
           subtitle: Text(selectedIconName),
           trailing: Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsetsDirectional.only(end: 8.0),
             child: Icon(Icons.edit_outlined, color: theme.colorScheme.primary),
           ),
           onTap: () => _showIconPicker(context),
@@ -94,26 +99,30 @@ class CategoryAppearanceFormSection extends StatelessWidget {
         ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(
-              side: BorderSide(color: theme.dividerColor),
-              borderRadius: BorderRadius.circular(12)),
+            side: BorderSide(color: theme.dividerColor),
+            borderRadius: BorderRadius.circular(12),
+          ),
           tileColor: theme.colorScheme.surfaceContainerHighest,
           leading: Padding(
-            padding: const EdgeInsets.only(left: 0.0),
-            child:
-                Icon(Icons.color_lens_outlined, color: selectedColor, size: 28),
+            padding: const EdgeInsetsDirectional.only(start: 0.0),
+            child: Icon(
+              Icons.color_lens_outlined,
+              color: selectedColor,
+              size: 28,
+            ),
           ),
           title: const Text('Color'),
           subtitle: Text(ColorUtils.toHex(selectedColor)),
           trailing: Padding(
-            padding: const EdgeInsets.only(right: 12.0),
+            padding: const EdgeInsetsDirectional.only(end: 12.0),
             child: Container(
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                  color: selectedColor,
-                  shape: BoxShape.circle,
-                  border:
-                      Border.all(color: theme.dividerColor.withOpacity(0.5))),
+                color: selectedColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: theme.dividerColor.withOpacity(0.5)),
+              ),
             ),
           ),
           onTap: () => _showColorPicker(context),
