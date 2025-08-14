@@ -34,6 +34,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 
 final log = SimpleLogger();
 File? _startupLogFile;
@@ -62,6 +64,8 @@ Future<void> _writeStartupLog(String message) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _initFileLogger();
+  final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  Intl.defaultLocale = locale.toLanguageTag();
 
   log.setLevel(Level.INFO, includeCallerInfo: false);
   log.info("==========================================");
@@ -110,8 +114,8 @@ Future<void> main() async {
     );
     final recurringRuleAuditLogBox =
         await Hive.openBox<RecurringRuleAuditLogModel>(
-          HiveConstants.recurringRuleAuditLogBoxName,
-        );
+      HiveConstants.recurringRuleAuditLogBoxName,
+    );
     log.info("All Hive boxes opened.");
 
     final prefs = await SharedPreferences.getInstance();
@@ -259,6 +263,8 @@ class MyApp extends StatelessWidget {
       theme: themeDataPair.light,
       darkTheme: themeDataPair.dark,
       themeMode: themeMode,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       routerConfig: AppRouter.router, // Use the configured router
     );
