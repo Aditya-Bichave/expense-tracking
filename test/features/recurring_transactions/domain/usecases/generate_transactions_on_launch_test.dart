@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
@@ -42,6 +43,28 @@ void main() {
       date: DateTime.now(),
       accountId: '',
     )));
+    registerFallbackValue(AddIncomeParams(Income(
+      id: '',
+      title: '',
+      amount: 0,
+      date: DateTime.now(),
+      accountId: '',
+    )));
+    registerFallbackValue(RecurringRule(
+      id: '',
+      description: '',
+      amount: 0,
+      transactionType: TransactionType.expense,
+      accountId: '',
+      categoryId: '',
+      frequency: Frequency.monthly,
+      interval: 1,
+      startDate: DateTime.now(),
+      endConditionType: EndConditionType.never,
+      status: RuleStatus.active,
+      nextOccurrenceDate: DateTime.now(),
+      occurrencesGenerated: 0,
+    ));
   });
 
   setUp(() {
