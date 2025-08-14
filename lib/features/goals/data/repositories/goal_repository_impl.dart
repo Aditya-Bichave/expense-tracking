@@ -78,8 +78,8 @@ class GoalRepositoryImpl implements GoalRepository {
       log.info(
         "[GoalRepo] Deleting associated contributions for Goal ID: $id...",
       );
-      final contributions = await contributionDataSource
-          .getContributionsForGoal(id);
+      final contributions =
+          await contributionDataSource.getContributionsForGoal(id);
       List<Future<void>> deleteFutures = [];
       for (var c in contributions) {
         deleteFutures.add(contributionDataSource.deleteContribution(c.id));
@@ -157,24 +157,21 @@ class GoalRepositoryImpl implements GoalRepository {
       }
       final currentTotalSaved = currentModel.totalSavedCache;
       final currentAchievedAt = currentModel.achievedAt;
-      final currentStatusIndex = currentModel.statusIndex;
 
-      // Determine the new status and achievedAt based on the update
-      GoalStatus newStatus =
-          goal.status; // Use status from incoming goal entity
-      DateTime? newAchievedAt =
-          goal.achievedAt; // Use incoming achievedAt initially
+      // Determine the new status and achievedAt based on current progress
+      GoalStatus newStatus;
+      DateTime? newAchievedAt;
 
-      // If status is being set to achieved and wasn't already, set achievedAt
-      if (newStatus == GoalStatus.achieved &&
-          currentStatusIndex != GoalStatus.achieved.index) {
-        newAchievedAt = DateTime.now();
-      } else if (newStatus != GoalStatus.achieved) {
-        newAchievedAt =
-            null; // Clear achievedAt if status is no longer achieved
+      final isAchieved = currentTotalSaved >= goal.targetAmount;
+      if (isAchieved) {
+        newStatus = GoalStatus.achieved;
+        newAchievedAt = currentAchievedAt ?? DateTime.now();
       } else {
-        newAchievedAt =
-            currentAchievedAt; // Preserve existing achievedAt if status remains achieved
+        // If goal isn't achieved, keep archived status if explicitly set
+        newStatus = goal.status == GoalStatus.archived
+            ? GoalStatus.archived
+            : GoalStatus.active;
+        newAchievedAt = null; // Clear achieved timestamp if no longer achieved
       }
 
       // Create the model to save, preserving the totalSaved cache but updating other fields
