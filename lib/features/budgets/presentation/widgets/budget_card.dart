@@ -20,11 +20,7 @@ class BudgetCard extends StatelessWidget {
   final BudgetWithStatus budgetStatus;
   final VoidCallback? onTap;
 
-  const BudgetCard({
-    super.key,
-    required this.budgetStatus,
-    this.onTap,
-  });
+  const BudgetCard({super.key, required this.budgetStatus, this.onTap});
 
   // Helper to get category icons for display
   List<Widget> _getCategoryIconWidgets(BuildContext context, Budget budget) {
@@ -41,7 +37,7 @@ class BudgetCard extends StatelessWidget {
       final allCategories = [
         ...categoryState.allExpenseCategories,
         ...categoryState
-            .allIncomeCategories // Include income just in case for lookup, though budget uses expense
+            .allIncomeCategories, // Include income just in case for lookup, though budget uses expense
       ];
       int count = 0;
       for (String id in budget.categoryIds!) {
@@ -55,8 +51,10 @@ class BudgetCard extends StatelessWidget {
               availableIcons[category.iconName] ?? Icons.label;
 
           if (modeTheme != null) {
-            String svgPath = modeTheme.assets
-                .getCategoryIcon(category.iconName, defaultPath: '');
+            String svgPath = modeTheme.assets.getCategoryIcon(
+              category.iconName,
+              defaultPath: '',
+            );
             if (svgPath.isNotEmpty) {
               iconWidget = SvgPicture.asset(
                 svgPath,
@@ -71,17 +69,24 @@ class BudgetCard extends StatelessWidget {
             iconWidget = Icon(fallbackIcon, size: 14, color: iconColor);
           }
 
-          iconWidgets.add(Padding(
-            padding: const EdgeInsets.only(right: 4.0),
-            child: Tooltip(message: category.name, child: iconWidget),
-          ));
+          iconWidgets.add(
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 4.0),
+              child: Tooltip(message: category.name, child: iconWidget),
+            ),
+          );
           count++;
         }
       }
       if (budget.categoryIds!.length > 3) {
-        iconWidgets.add(Text('+${budget.categoryIds!.length - 3}',
+        iconWidgets.add(
+          Text(
+            '+${budget.categoryIds!.length - 3}',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant)));
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        );
       }
     }
     return iconWidgets;
@@ -89,7 +94,10 @@ class BudgetCard extends StatelessWidget {
 
   // Helper for Progress Bar based on UI Mode
   Widget _buildProgressBar(
-      BuildContext context, AppModeTheme? modeTheme, UIMode uiMode) {
+    BuildContext context,
+    AppModeTheme? modeTheme,
+    UIMode uiMode,
+  ) {
     final theme = Theme.of(context);
     final percentage = budgetStatus.percentageUsed.clamp(0.0, 1.0);
     final color = budgetStatus.statusColor;
@@ -102,8 +110,9 @@ class BudgetCard extends StatelessWidget {
         lineHeight: 6.0,
         percent: percentage,
         barRadius: const Radius.circular(3),
-        backgroundColor:
-            theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(
+          0.5,
+        ),
         progressColor: color,
         animation: false,
       );
@@ -117,11 +126,12 @@ class BudgetCard extends StatelessWidget {
         center: Text(
           "${(budgetStatus.percentageUsed * 100).toStringAsFixed(0)}%",
           style: TextStyle(
-              color: color.computeLuminance() > 0.5
-                  ? Colors.black87
-                  : Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 10),
+            color: color.computeLuminance() > 0.5
+                ? Colors.black87
+                : Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+          ),
         ),
         barRadius: const Radius.circular(8),
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
@@ -140,7 +150,8 @@ class BudgetCard extends StatelessWidget {
     final budget = budgetStatus.budget;
     final categoryIcons = _getCategoryIconWidgets(context, budget);
 
-    final cardMargin = modeTheme?.cardOuterPadding ??
+    final cardMargin =
+        modeTheme?.cardOuterPadding ??
         const EdgeInsets.symmetric(horizontal: 12, vertical: 5);
     final cardPadding =
         modeTheme?.cardInnerPadding ?? const EdgeInsets.all(12.0);
@@ -160,9 +171,11 @@ class BudgetCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(budget.name,
-                        style: theme.textTheme.titleMedium,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      budget.name,
+                      style: theme.textTheme.titleMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (categoryIcons.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
@@ -171,10 +184,13 @@ class BudgetCard extends StatelessWidget {
                     else if (budget.type == BudgetType.overall)
                       Padding(
                         padding: const EdgeInsets.only(top: 4.0),
-                        child: Text('Overall Spending',
-                            style: theme.textTheme.labelSmall
-                                ?.copyWith(color: theme.colorScheme.secondary)),
-                      )
+                        child: Text(
+                          'Overall Spending',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.secondary,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -183,9 +199,10 @@ class BudgetCard extends StatelessWidget {
                 budget.period == BudgetPeriodType.recurringMonthly
                     ? 'Monthly'
                     : 'One-Time',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              )
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -198,13 +215,15 @@ class BudgetCard extends StatelessWidget {
             children: [
               Text(
                 'Spent: ${CurrencyFormatter.format(budgetStatus.amountSpent, currency)}',
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: budgetStatus.statusColor),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: budgetStatus.statusColor,
+                ),
               ),
               Text(
                 'Target: ${CurrencyFormatter.format(budget.targetAmount, currency)}',
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -216,10 +235,11 @@ class BudgetCard extends StatelessWidget {
                     ? '${CurrencyFormatter.format(budgetStatus.amountRemaining, currency)} left'
                     : '${CurrencyFormatter.format(budgetStatus.amountRemaining.abs(), currency)} over',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: budgetStatus.amountRemaining >= 0
-                        ? theme.colorScheme.primary
-                        : budgetStatus.statusColor),
+                  fontWeight: FontWeight.w500,
+                  color: budgetStatus.amountRemaining >= 0
+                      ? theme.colorScheme.primary
+                      : budgetStatus.statusColor,
+                ),
               ),
             ],
           ),

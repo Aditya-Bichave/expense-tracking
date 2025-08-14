@@ -12,13 +12,15 @@ import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
-import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +28,7 @@ import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 
 class BudgetDetailPage extends StatefulWidget {
   final String budgetId;
@@ -42,78 +45,28 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   bool _isLoading = true;
   String? _error;
   StreamSubscription? _budgetSubscription;
-  StreamSubscription? _transactionSubscription;
-  StreamSubscription? _categorySubscription;
 
   @override
   void initState() {
     super.initState();
     _loadData();
     _budgetSubscription = context.read<BudgetListBloc>().stream.listen(
-      _handleBlocStateChange,
-    );
-    _transactionSubscription = context
-        .read<TransactionListBloc>()
-        .stream
-        .listen(_handleBlocStateChange);
-    _categorySubscription = context
-        .read<CategoryManagementBloc>()
-        .stream
-        .listen(_handleBlocStateChange);
+          _handleBudgetStateChange,
+        );
   }
 
   @override
   void dispose() {
     _budgetSubscription?.cancel();
-    _transactionSubscription?.cancel();
-    _categorySubscription?.cancel();
     super.dispose();
   }
 
-  void _handleBlocStateChange(dynamic state) {
+  void _handleBudgetStateChange(BudgetListState state) {
     if (!mounted || _isLoading) return;
 
-    bool shouldReload = false;
-
-    if (state is BudgetListState) {
-      shouldReload = state.budgetsWithStatus.any(
-        (bws) => bws.budget.id == widget.budgetId,
-      );
-    } else if (state is TransactionListState) {
-      final budget = _budgetWithStatus?.budget;
-      if (budget != null) {
-        final (start, end) = budget.getCurrentPeriodDates();
-        shouldReload = state.transactions.any((txn) {
-          if (txn.type != TransactionType.expense) return false;
-          final txnDateOnly = DateTime(
-            txn.date.year,
-            txn.date.month,
-            txn.date.day,
-          );
-          final startOnly = DateTime(start.year, start.month, start.day);
-          final endOnly = DateTime(end.year, end.month, end.day, 23, 59, 59);
-          if (txnDateOnly.isBefore(startOnly) || txn.date.isAfter(endOnly)) {
-            return false;
-          }
-          if (budget.type == BudgetType.categorySpecific &&
-              budget.categoryIds != null &&
-              !budget.categoryIds!.contains(txn.category?.id)) {
-            return false;
-          }
-          return true;
-        });
-      }
-    } else if (state is CategoryManagementState) {
-      final budget = _budgetWithStatus?.budget;
-      if (budget != null &&
-          budget.type == BudgetType.categorySpecific &&
-          budget.categoryIds != null) {
-        final allCats = state.allExpenseCategories;
-        shouldReload = allCats.any(
-          (cat) => budget.categoryIds!.contains(cat.id),
-        );
-      }
-    }
+    final shouldReload = state.budgetsWithStatus.any(
+      (bws) => bws.budget.id == widget.budgetId,
+    );
 
     if (shouldReload) {
       log.fine(
@@ -133,15 +86,15 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       _error = null;
     });
 
-    // Find Budget Status
+    // Find Budget entity
     final budgetListState = context.read<BudgetListBloc>().state;
-    BudgetWithStatus? foundBudgetStatus;
+    Budget? budgetEntity;
     if (budgetListState.status == BudgetListStatus.success) {
-      foundBudgetStatus = budgetListState.budgetsWithStatus.firstWhereOrNull(
-        (bws) => bws.budget.id == widget.budgetId,
-      );
+      budgetEntity = budgetListState.budgetsWithStatus
+          .firstWhereOrNull((bws) => bws.budget.id == widget.budgetId)
+          ?.budget;
     }
-    if (foundBudgetStatus == null) {
+    if (budgetEntity == null) {
       log.severe(
         "[BudgetDetail] Cannot load details: Budget ID ${widget.budgetId} not found in loaded state.",
       );
@@ -155,58 +108,69 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
 
     // Find Transactions
-    final transactionListState = context.read<TransactionListBloc>().state;
     List<TransactionEntity> foundTransactions = [];
-    if (transactionListState.status == ListStatus.success ||
-        transactionListState.status == ListStatus.reloading) {
-      final budget = foundBudgetStatus.budget;
-      final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
-      foundTransactions = transactionListState.transactions.where((txn) {
-        if (txn.type != TransactionType.expense) return false;
-        // Inclusive date check (using isSameDay or checking against start/end boundaries)
-        final txnDateOnly = DateTime(
-          txn.date.year,
-          txn.date.month,
-          txn.date.day,
-        );
-        final startDateOnly = DateTime(
-          periodStart.year,
-          periodStart.month,
-          periodStart.day,
-        );
-        final endDateOnly = DateTime(
-          periodEnd.year,
-          periodEnd.month,
-          periodEnd.day,
-          23,
-          59,
-          59,
-        ); // End of day
+    final budget = budgetEntity;
+    final (periodStart, periodEnd) = budget.getPeriodDatesFor(_selectedMonth);
 
-        // Ensure date is on or after start AND on or before end
-        if (txnDateOnly.isBefore(startDateOnly) ||
-            txn.date.isAfter(endDateOnly)) {
-          return false;
-        }
+    final params = GetTransactionsParams(
+      startDate: periodStart,
+      endDate: periodEnd,
+      transactionType: TransactionType.expense,
+    );
 
-        if (budget.type == BudgetType.overall) return true;
-        if (budget.type == BudgetType.categorySpecific &&
-            budget.categoryIds != null &&
-            budget.categoryIds!.contains(txn.category?.id)) {
+    final txnResult = await sl<GetTransactionsUseCase>()(params);
+    txnResult.fold(
+      (failure) {
+        log.warning(
+          "[BudgetDetail] Failed to load transactions: ${failure.message}",
+        );
+      },
+      (transactions) {
+        foundTransactions = transactions.where((txn) {
+          if (budget.type == BudgetType.categorySpecific &&
+              budget.categoryIds != null &&
+              !budget.categoryIds!.contains(txn.category?.id)) {
+            return false;
+          }
           return true;
-        }
-        return false;
-      }).toList();
-      foundTransactions.sort((a, b) => b.date.compareTo(a.date));
-    }
+        }).toList();
+        foundTransactions.sort((a, b) => b.date.compareTo(a.date));
+      },
+    );
+
+    final amountSpent = foundTransactions.fold<double>(
+      0.0,
+      (sum, txn) => sum + txn.amount,
+    );
+    const thrivingColor = Colors.green;
+    const nearingLimitColor = Colors.orange;
+    const overLimitColor = Colors.red;
+    final calculatedStatus = BudgetWithStatus.calculate(
+      budget: budgetEntity,
+      amountSpent: amountSpent,
+      thrivingColor: thrivingColor,
+      nearingLimitColor: nearingLimitColor,
+      overLimitColor: overLimitColor,
+    );
 
     if (mounted) {
       setState(() {
-        _budgetWithStatus = foundBudgetStatus;
+        _budgetWithStatus = calculatedStatus;
         _relevantTransactions = foundTransactions;
         _isLoading = false;
       });
     }
+  }
+
+  void _changeMonth(int delta) {
+    setState(() {
+      _selectedMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + delta,
+        1,
+      );
+    });
+    _loadData();
   }
 
   void _navigateToEdit(BuildContext context) {
@@ -234,8 +198,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     );
     if (confirmed == true && context.mounted) {
       context.read<BudgetListBloc>().add(
-        DeleteBudget(budgetId: _budgetWithStatus!.budget.id),
-      );
+            DeleteBudget(budgetId: _budgetWithStatus!.budget.id),
+          );
       if (context.canPop()) {
         context.pop();
       } else {
@@ -310,9 +274,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         center: Text(
           "${(status.percentageUsed * 100).toStringAsFixed(0)}%",
           style: TextStyle(
-            color: color.computeLuminance() > 0.5
-                ? Colors.black87
-                : Colors.white,
+            color:
+                color.computeLuminance() > 0.5 ? Colors.black87 : Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
@@ -396,12 +359,10 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     } else {
       // Elemental / Aether ListView
       final bool isAether = uiMode == UIMode.aether;
-      final Duration itemDelay = isAether
-          ? (modeTheme?.listAnimationDelay ?? 80.ms)
-          : 50.ms;
-      final Duration itemDuration = isAether
-          ? (modeTheme?.listAnimationDuration ?? 450.ms)
-          : 300.ms;
+      final Duration itemDelay =
+          isAether ? (modeTheme?.listAnimationDelay ?? 80.ms) : 50.ms;
+      final Duration itemDuration =
+          isAether ? (modeTheme?.listAnimationDuration ?? 450.ms) : 300.ms;
 
       return ListView.builder(
         shrinkWrap: true,
@@ -421,8 +382,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                 .slideY(begin: 0.2, curve: Curves.easeOut);
           } else {
             item = item.animate().fadeIn(
-              delay: (itemDelay.inMilliseconds * 0.5 * index).ms,
-            );
+                  delay: (itemDelay.inMilliseconds * 0.5 * index).ms,
+                );
           }
           return Padding(
             // Add padding between items
@@ -550,18 +511,17 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final isAether = uiMode == UIMode.aether;
     final String? bgPath = isAether
         ? (Theme.of(context).brightness == Brightness.dark
-              ? modeTheme?.assets.mainBackgroundDark
-              : modeTheme?.assets.mainBackgroundLight)
+            ? modeTheme?.assets.mainBackgroundDark
+            : modeTheme?.assets.mainBackgroundLight)
         : null;
 
     Widget mainContent = ListView(
-      padding:
-          modeTheme?.pagePadding.copyWith(
+      padding: modeTheme?.pagePadding.copyWith(
             bottom: 80,
             top: isAether
                 ? (modeTheme.pagePadding.top +
-                      kToolbarHeight +
-                      MediaQuery.of(context).padding.top)
+                    kToolbarHeight +
+                    MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
           const EdgeInsets.all(16.0).copyWith(bottom: 80),
@@ -573,7 +533,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             children: [
               Text(
                 budget.period == BudgetPeriodType.recurringMonthly
-                    ? 'This Month\'s Progress'
+                    ? '${DateFormat.yMMMM().format(_selectedMonth)} Progress'
                     : 'Period Progress (${DateFormatter.formatDate(budget.startDate!)} - ${DateFormatter.formatDate(budget.endDate!)})',
                 style: theme.textTheme.labelMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -638,6 +598,18 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         backgroundColor: isAether ? Colors.transparent : null,
         elevation: isAether ? 0 : null,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            tooltip: 'Previous Month',
+            onPressed: () => _changeMonth(-1),
+          ),
+          if (_selectedMonth.year != DateTime.now().year ||
+              _selectedMonth.month != DateTime.now().month)
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              tooltip: 'Next Month',
+              onPressed: () => _changeMonth(1),
+            ),
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => _navigateToEdit(context),

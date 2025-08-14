@@ -15,6 +15,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -121,7 +122,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
-      title: 'Spending Over Time',
+      title: AppLocalizations.of(context)!.spendingOverTime,
       actions: [
         IconButton(
           icon: Icon(
@@ -129,7 +130,9 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                 ? Icons.compare_arrows_rounded
                 : Icons.compare_arrows_outlined,
           ),
-          tooltip: _showComparison ? "Hide Comparison" : "Compare Period",
+          tooltip: _showComparison
+              ? AppLocalizations.of(context)!.hideComparison
+              : AppLocalizations.of(context)!.comparePeriod,
           color: _showComparison ? theme.colorScheme.primary : null,
           onPressed: _toggleComparison,
         ),
@@ -145,19 +148,19 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               onSelected: (g) {
                 // When granularity changes, also pass current comparison state
                 context.read<SpendingTimeReportBloc>().add(
-                  LoadSpendingTimeReport(
-                    granularity: g,
-                    compareToPrevious: _showComparison,
-                  ),
-                );
+                      LoadSpendingTimeReport(
+                        granularity: g,
+                        compareToPrevious: _showComparison,
+                      ),
+                    );
               },
               icon: const Icon(Icons.timeline_outlined),
-              tooltip: "Change Granularity",
+              tooltip: AppLocalizations.of(context)!.changeGranularity,
               itemBuilder: (_) => TimeSeriesGranularity.values
                   .map(
                     (g) => PopupMenuItem<TimeSeriesGranularity>(
                       value: g,
-                      child: Text(g.name.capitalize()),
+                      child: Text(toBeginningOfSentenceCase(g.name) ?? g.name),
                     ),
                   )
                   .toList(),
@@ -175,7 +178,9 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             showComparison: _showComparison,
           );
         }
-        return const Right(ExportFailure("Report data not loaded yet."));
+        return Right(
+          ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
+        );
       },
       body: BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
         builder: (context, state) {
@@ -408,12 +413,5 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         }).toList(),
       ),
     );
-  }
-}
-
-extension StringCapExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

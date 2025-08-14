@@ -41,13 +41,6 @@ class BudgetForm extends StatefulWidget {
   State<BudgetForm> createState() => _BudgetFormState();
 }
 
-extension StringExtensionCapitalize on String {
-  String capitalizeForm() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}
-
 class _BudgetFormState extends State<BudgetForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
@@ -291,7 +284,8 @@ class _BudgetFormState extends State<BudgetForm> {
             ),
             if (_selectedCategoryIds.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.only(left: 16.0, top: 4.0),
+                padding:
+                    const EdgeInsetsDirectional.only(start: 16.0, top: 4.0),
                 child: Text(
                   _selectedCategoryIds
                       .map((id) =>
@@ -392,7 +386,8 @@ class _BudgetFormState extends State<BudgetForm> {
                   // Error Text display for Date Range FormField
                   if (formFieldState.hasError)
                     Padding(
-                      padding: const EdgeInsets.only(left: 12.0, top: 8.0),
+                      padding: const EdgeInsetsDirectional.only(
+                          start: 12.0, top: 8.0),
                       child: Text(formFieldState.errorText!,
                           style: theme.textTheme.bodySmall
                               ?.copyWith(color: theme.colorScheme.error)),

@@ -17,6 +17,7 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -80,7 +81,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
-      title: 'Spending by Category',
+      title: AppLocalizations.of(context)!.spendingByCategory,
       actions: [
         IconButton(
           icon: Icon(
@@ -88,7 +89,9 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                 ? Icons.compare_arrows_rounded
                 : Icons.compare_arrows_outlined,
           ),
-          tooltip: _showComparison ? "Hide Comparison" : "Compare Period",
+          tooltip: _showComparison
+              ? AppLocalizations.of(context)!.hideComparison
+              : AppLocalizations.of(context)!.comparePeriod,
           color: _showComparison ? theme.colorScheme.primary : null,
           onPressed: _toggleComparison,
         ),
@@ -99,7 +102,9 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                   ? Icons.pie_chart_outline_rounded
                   : Icons.bar_chart_rounded,
             ),
-            tooltip: useBarChart ? "Show Pie Chart" : "Show Bar Chart",
+            tooltip: useBarChart
+                ? AppLocalizations.of(context)!.showPieChart
+                : AppLocalizations.of(context)!.showBarChart,
             onPressed: () => setState(() => _showPieChart = !_showPieChart),
           ),
       ],
@@ -113,7 +118,9 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
             showComparison: _showComparison,
           );
         }
-        return const Right(ExportFailure("Report data not loaded yet."));
+        return Right(
+          ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
+        );
       },
       body:
           BlocBuilder<SpendingCategoryReportBloc, SpendingCategoryReportState>(
@@ -137,57 +144,53 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                   );
                 }
 
-                Widget chartWidget;
-                if (useBarChart) {
-                  chartWidget = SpendingBarChart(
-                    data: reportData.spendingByCategory,
-                    // Pass previous data if comparison is active
-                    previousData:
-                        (_showComparison &&
-                            reportData.previousSpendingByCategory != null)
-                        ? reportData.previousSpendingByCategory
-                        : null,
-                    onTapBar: (index) => _navigateToFilteredTransactions(
-                      context,
-                      reportData.spendingByCategory[index],
-                    ),
-                  );
-                } else {
-                  // Pie Chart for Elemental/Aether (no comparison shown on pie)
-                  chartWidget = SpendingPieChart(
-                    data: reportData.spendingByCategory,
-                    onTapSlice: (index) => _navigateToFilteredTransactions(
-                      context,
-                      reportData.spendingByCategory[index],
-                    ),
-                  );
-                }
-
-                return ListView(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: chartWidget,
-                      ),
-                    ),
-                    const Divider(),
-                    _buildDataTable(
-                      context,
-                      reportData,
-                      settingsState,
-                      _showComparison,
-                    ), // Pass comparison flag
-                    const SizedBox(height: 80),
-                  ],
-                );
-              }
-              return const Center(
-                child: Text("Select filters to view report."),
+            Widget chartWidget;
+            if (useBarChart) {
+              chartWidget = SpendingBarChart(
+                data: reportData.spendingByCategory,
+                // Pass previous data if comparison is active
+                previousData: (_showComparison &&
+                        reportData.previousSpendingByCategory != null)
+                    ? reportData.previousSpendingByCategory
+                    : null,
+                onTapBar: (index) => _navigateToFilteredTransactions(
+                  context,
+                  reportData.spendingByCategory[index],
+                ),
               );
-            },
-          ),
+            } else {
+              // Pie Chart for Elemental/Aether (no comparison shown on pie)
+              chartWidget = SpendingPieChart(
+                data: reportData.spendingByCategory,
+                onTapSlice: (index) => _navigateToFilteredTransactions(
+                  context,
+                  reportData.spendingByCategory[index],
+                ),
+              );
+            }
+
+            return ListView(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  child: SizedBox(height: 250, child: chartWidget),
+                ),
+                const Divider(),
+                _buildDataTable(
+                  context,
+                  reportData,
+                  settingsState,
+                  _showComparison,
+                ), // Pass comparison flag
+                const SizedBox(height: 80),
+              ],
+            );
+          }
+          return const Center(
+            child: Text("Select filters to view report."),
+          );
+        },
+      ),
     );
   }
 

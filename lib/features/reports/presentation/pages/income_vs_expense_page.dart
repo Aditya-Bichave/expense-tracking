@@ -15,6 +15,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -108,7 +109,7 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
-      title: 'Income vs Expense',
+      title: AppLocalizations.of(context)!.incomeVsExpense,
       actions: [
         IconButton(
           icon: Icon(
@@ -116,7 +117,9 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
                 ? Icons.compare_arrows_rounded
                 : Icons.compare_arrows_outlined,
           ),
-          tooltip: _showComparison ? "Hide Comparison" : "Compare Period",
+          tooltip: _showComparison
+              ? AppLocalizations.of(context)!.hideComparison
+              : AppLocalizations.of(context)!.comparePeriod,
           color: _showComparison ? theme.colorScheme.primary : null,
           onPressed: _toggleComparison,
         ),
@@ -132,19 +135,19 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               onSelected: (p) {
                 // When period changes, also pass current comparison state
                 context.read<IncomeExpenseReportBloc>().add(
-                  LoadIncomeExpenseReport(
-                    periodType: p,
-                    compareToPrevious: _showComparison,
-                  ),
-                );
+                      LoadIncomeExpenseReport(
+                        periodType: p,
+                        compareToPrevious: _showComparison,
+                      ),
+                    );
               },
               icon: const Icon(Icons.calendar_view_month_outlined),
-              tooltip: "Change Period Aggregation",
+              tooltip: AppLocalizations.of(context)!.changePeriodAggregation,
               itemBuilder: (_) => IncomeExpensePeriodType.values
                   .map(
                     (p) => PopupMenuItem<IncomeExpensePeriodType>(
                       value: p,
-                      child: Text(p.name.capitalize()),
+                      child: Text(toBeginningOfSentenceCase(p.name) ?? p.name),
                     ),
                   )
                   .toList(),
@@ -162,7 +165,9 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             showComparison: _showComparison,
           );
         }
-        return const Right(ExportFailure("Report data not loaded yet."));
+        return Right(
+          ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
+        );
       },
       body: BlocBuilder<IncomeExpenseReportBloc, IncomeExpenseReportState>(
         builder: (context, state) {
@@ -314,14 +319,11 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
                     currencySymbol,
                   ),
                 ),
-                onTap: () {
-                  SystemSound.play(SystemSoundType.click);
-                  _navigateToFilteredTransactions(
-                    context,
-                    item,
-                    TransactionType.income,
-                  );
-                },
+                onTap: () => _navigateToFilteredTransactions(
+                  context,
+                  item,
+                  TransactionType.income,
+                ),
               ),
               DataCell(
                 Text(
@@ -330,14 +332,11 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
                     currencySymbol,
                   ),
                 ),
-                onTap: () {
-                  SystemSound.play(SystemSoundType.click);
-                  _navigateToFilteredTransactions(
-                    context,
-                    item,
-                    TransactionType.expense,
-                  );
-                },
+                onTap: () => _navigateToFilteredTransactions(
+                  context,
+                  item,
+                  TransactionType.expense,
+                ),
               ),
               DataCell(
                 Text(
@@ -368,12 +367,5 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
         }).toList(),
       ),
     );
-  }
-}
-
-extension StringCapExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

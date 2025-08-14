@@ -7,13 +7,6 @@ abstract class AddEditGoalEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class InitializeGoalForm extends AddEditGoalEvent {
-  final Goal? initialGoal;
-  const InitializeGoalForm({this.initialGoal});
-  @override
-  List<Object?> get props => [initialGoal];
-}
-
 class SaveGoal extends AddEditGoalEvent {
   final String name;
   final double targetAmount;
@@ -29,8 +22,13 @@ class SaveGoal extends AddEditGoalEvent {
     this.description,
   });
   @override
-  List<Object?> get props =>
-      [name, targetAmount, targetDate, iconName, description];
+  List<Object?> get props => [
+    name,
+    targetAmount,
+    targetDate,
+    iconName,
+    description,
+  ];
 }
 
 class ClearGoalFormMessage extends AddEditGoalEvent {

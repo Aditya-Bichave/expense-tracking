@@ -1,5 +1,6 @@
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 typedef ApplySortCallback = void Function(
     TransactionSortBy sortBy, SortDirection sortDirection);
@@ -43,7 +44,7 @@ class TransactionSortSheet extends StatelessWidget {
               : Icons.arrow_upward_rounded);
 
       return RadioListTile<TransactionSortBy>(
-        title: Text(sortBy.name.capitalize()),
+        title: Text(toBeginningOfSentenceCase(sortBy.name) ?? sortBy.name),
         value: sortBy,
         groupValue: currentSortBy,
         secondary: Icon(
@@ -86,13 +87,5 @@ class TransactionSortSheet extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-// Helper extension (if not already in utils)
-extension StringCapExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

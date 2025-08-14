@@ -30,10 +30,12 @@ import 'package:expense_tracker/router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-// Removed local_auth import, handled by Settings page
+import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_logger/simple_logger.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:intl/intl.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 
 final log = SimpleLogger();
 File? _startupLogFile;
@@ -59,9 +61,17 @@ Future<void> _writeStartupLog(String message) async {
   }
 }
 
+Future<void> _runMigrations(int fromVersion) async {
+  log.info('Running Hive migrations from v$fromVersion to '
+      '${HiveConstants.dataVersion}');
+  // TODO: Implement actual migration logic when data models change.
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _initFileLogger();
+  final locale = WidgetsBinding.instance.platformDispatcher.locale;
+  Intl.defaultLocale = locale.toLanguageTag();
 
   log.setLevel(Level.INFO, includeCallerInfo: false);
   log.info("==========================================");
@@ -70,6 +80,15 @@ Future<void> main() async {
 
   try {
     await Hive.initFlutter();
+    final prefs = await SharedPreferences.getInstance();
+    final storedVersion =
+        prefs.getInt(HiveConstants.dataVersionKey) ?? HiveConstants.dataVersion;
+    if (storedVersion < HiveConstants.dataVersion) {
+      await _runMigrations(storedVersion);
+      await prefs.setInt(
+          HiveConstants.dataVersionKey, HiveConstants.dataVersion);
+    }
+
     // Register All Adapters BEFORE opening boxes
     Hive.registerAdapter(ExpenseModelAdapter());
     Hive.registerAdapter(AssetAccountModelAdapter());
@@ -110,11 +129,9 @@ Future<void> main() async {
     );
     final recurringRuleAuditLogBox =
         await Hive.openBox<RecurringRuleAuditLogModel>(
-          HiveConstants.recurringRuleAuditLogBoxName,
-        );
+      HiveConstants.recurringRuleAuditLogBoxName,
+    );
     log.info("All Hive boxes opened.");
-
-    final prefs = await SharedPreferences.getInstance();
     log.info("SharedPreferences instance obtained.");
 
     await initLocator(
@@ -240,18 +257,58 @@ class InitializationErrorApp extends StatelessWidget {
 }
 
 // --- MyApp (Consumes Router) ---
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  final LocalAuthentication _localAuth = sl<LocalAuthentication>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkLock());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkLock();
+    }
+  }
+
+  Future<void> _checkLock() async {
+    final settingsState = context.read<SettingsBloc>().state;
+    if (!settingsState.isAppLockEnabled) return;
+    try {
+      await _localAuth.authenticate(
+          localizedReason: 'Please authenticate to continue',
+          options: const AuthenticationOptions(
+            biometricOnly: false,
+            stickyAuth: true,
+          ));
+    } catch (e) {
+      log.warning('[MyApp] Authentication failed: $e');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Watch SettingsBloc for theme changes
     final settingsState = context.watch<SettingsBloc>().state;
     final themeMode = settingsState.themeMode;
     final uiMode = settingsState.uiMode;
     final paletteId = settingsState.paletteIdentifier;
 
-    // Rebuild theme data whenever settings change
     final themeDataPair = AppTheme.buildTheme(uiMode, paletteId);
 
     return MaterialApp.router(
@@ -259,8 +316,10 @@ class MyApp extends StatelessWidget {
       theme: themeDataPair.light,
       darkTheme: themeDataPair.dark,
       themeMode: themeMode,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
-      routerConfig: AppRouter.router, // Use the configured router
+      routerConfig: AppRouter.router,
     );
   }
 }

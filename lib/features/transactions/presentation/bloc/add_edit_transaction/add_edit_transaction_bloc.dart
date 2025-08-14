@@ -79,7 +79,8 @@ class AddEditTransactionBloc
       final initial = event.initialTransaction!;
       emit(
         state.copyWith(
-          initialTransaction: initial,
+          transactionId: initial.id,
+          category: () => initial.category,
           transactionType: initial.type,
           status: AddEditStatus.ready,
           // Store initial form values in temp fields
@@ -116,6 +117,7 @@ class AddEditTransactionBloc
           // Clear suggestion/newly created category when type changes
           clearSuggestion: true,
           clearNewlyCreated: true,
+          clearCategory: true,
           clearErrorMessage: true,
         ),
       );
@@ -244,8 +246,17 @@ class AddEditTransactionBloc
     log.info(
       "[AddEditTransactionBloc] User requested to create custom category. Emitting navigation state.",
     );
-    // Transition to state indicating navigation is happening
-    emit(state.copyWith(status: AddEditStatus.navigatingToCreateCategory));
+    // Persist form data and transition to navigation state
+    emit(
+      state.copyWith(
+        status: AddEditStatus.navigatingToCreateCategory,
+        tempTitle: event.title,
+        tempAmount: event.amount,
+        tempDate: event.date,
+        tempAccountId: event.accountId,
+        tempNotes: () => event.notes,
+      ),
+    );
   }
 
   Future<void> _onCategoryCreated(
@@ -295,7 +306,7 @@ class AddEditTransactionBloc
     emit(state.copyWith(status: AddEditStatus.saving));
 
     final isEditing = state.isEditing;
-    final id = state.initialTransaction?.id ?? _uuid.v4();
+    final id = state.transactionId ?? _uuid.v4();
     final transactionType = state.transactionType;
 
     // Use temp data stored in the state
