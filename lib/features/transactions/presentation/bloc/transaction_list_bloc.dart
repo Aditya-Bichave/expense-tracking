@@ -46,14 +46,14 @@ class TransactionListBloc
     required ExpenseRepository expenseRepository,
     required IncomeRepository incomeRepository,
     required Stream<DataChangedEvent> dataChangeStream,
-  })  : _getTransactionsUseCase = getTransactionsUseCase,
-        _deleteExpenseUseCase = deleteExpenseUseCase,
-        _deleteIncomeUseCase = deleteIncomeUseCase,
-        _applyCategoryToBatchUseCase = applyCategoryToBatchUseCase,
-        _saveUserHistoryUseCase = saveUserHistoryUseCase,
-        _expenseRepository = expenseRepository,
-        _incomeRepository = incomeRepository,
-        super(const TransactionListState()) {
+  }) : _getTransactionsUseCase = getTransactionsUseCase,
+       _deleteExpenseUseCase = deleteExpenseUseCase,
+       _deleteIncomeUseCase = deleteIncomeUseCase,
+       _applyCategoryToBatchUseCase = applyCategoryToBatchUseCase,
+       _saveUserHistoryUseCase = saveUserHistoryUseCase,
+       _expenseRepository = expenseRepository,
+       _incomeRepository = incomeRepository,
+       super(const TransactionListState()) {
     // Register Event Handlers
     on<LoadTransactions>(_onLoadTransactions);
     on<FilterChanged>(_onFilterChanged);
@@ -68,29 +68,38 @@ class TransactionListBloc
     on<ResetState>(_onResetState); // Add Reset Handler
 
     // Subscribe to Data Change Stream
-    _dataChangeSubscription = dataChangeStream.listen((event) {
-      // --- MODIFIED Listener ---
-      if (event.type == DataChangeType.system &&
-          event.reason == DataChangeReason.reset) {
-        log.info(
-            "[TransactionListBloc] System Reset event received. Adding ResetState.");
-        add(const ResetState()); // Dispatch ResetState internally
-      } else if (event.type == DataChangeType.expense ||
-          event.type == DataChangeType.income ||
-          event.type == DataChangeType.category ||
-          event.type == DataChangeType.account ||
-          event.type == DataChangeType.settings) {
-        log.info(
-            "[TransactionListBloc] Relevant DataChangedEvent: $event. Triggering reload.");
-        add(const _DataChanged());
-      }
-      // --- END MODIFIED ---
-    }, onError: (error, stackTrace) {
-      log.severe(
-          "[TransactionListBloc] Error in dataChangeStream listener: $error");
-    });
+    _dataChangeSubscription = dataChangeStream.listen(
+      (event) {
+        // --- MODIFIED Listener ---
+        if (event.type == DataChangeType.system &&
+            event.reason == DataChangeReason.reset) {
+          log.info(
+            "[TransactionListBloc] System Reset event received. Adding ResetState.",
+          );
+          add(const ResetState()); // Dispatch ResetState internally
+        } else if (event.type == DataChangeType.expense ||
+            event.type == DataChangeType.income ||
+            event.type == DataChangeType.category ||
+            event.type == DataChangeType.account ||
+            event.type == DataChangeType.settings ||
+            (event.type == DataChangeType.system &&
+                event.reason == DataChangeReason.updated)) {
+          log.info(
+            "[TransactionListBloc] Relevant DataChangedEvent: $event. Triggering reload.",
+          );
+          add(const _DataChanged());
+        }
+        // --- END MODIFIED ---
+      },
+      onError: (error, stackTrace) {
+        log.severe(
+          "[TransactionListBloc] Error in dataChangeStream listener: $error",
+        );
+      },
+    );
     log.info(
-        "[TransactionListBloc] Initialized and subscribed to data changes.");
+      "[TransactionListBloc] Initialized and subscribed to data changes.",
+    );
   }
 
   // --- Add Reset State Handler ---
@@ -104,9 +113,12 @@ class TransactionListBloc
 
   // --- Event Handlers (Rest remain the same) ---
   Future<void> _onLoadTransactions(
-      LoadTransactions event, Emitter<TransactionListState> emit) async {
+    LoadTransactions event,
+    Emitter<TransactionListState> emit,
+  ) async {
     log.info(
-        "[TransactionListBloc] LoadTransactions triggered. ForceReload: ${event.forceReload}, Incoming Filters: ${event.incomingFilters}");
+      "[TransactionListBloc] LoadTransactions triggered. ForceReload: ${event.forceReload}, Incoming Filters: ${event.incomingFilters}",
+    );
 
     // Determine current filters from state, potentially overridden by incoming filters
     DateTime? startDate = event.incomingFilters?['startDate'] != null
@@ -122,8 +134,9 @@ class TransactionListBloc
     TransactionType? transactionType;
     if (event.incomingFilters?['type'] != null) {
       try {
-        transactionType = TransactionType.values
-            .byName(event.incomingFilters!['type'] as String);
+        transactionType = TransactionType.values.byName(
+          event.incomingFilters!['type'] as String,
+        );
       } catch (_) {
         transactionType =
             state.transactionType; // Fallback to current state if parse fails
@@ -137,21 +150,24 @@ class TransactionListBloc
     if (state.status != ListStatus.success ||
         event.forceReload ||
         filtersChanged) {
-      emit(state.copyWith(
-        status: (state.status == ListStatus.success && !filtersChanged)
-            ? ListStatus.reloading
-            : ListStatus.loading,
-        // Apply incoming filters directly to state if they exist
-        startDate: startDate,
-        endDate: endDate,
-        categoryId: categoryId,
-        accountId: accountId,
-        transactionType: transactionType,
-        clearErrorMessage: true,
-      ));
+      emit(
+        state.copyWith(
+          status: (state.status == ListStatus.success && !filtersChanged)
+              ? ListStatus.reloading
+              : ListStatus.loading,
+          // Apply incoming filters directly to state if they exist
+          startDate: startDate,
+          endDate: endDate,
+          categoryId: categoryId,
+          accountId: accountId,
+          transactionType: transactionType,
+          clearErrorMessage: true,
+        ),
+      );
     } else {
       log.info(
-          "[TransactionListBloc] Already loaded, skipping explicit loading state.");
+        "[TransactionListBloc] Already loaded, skipping explicit loading state.",
+      );
     }
 
     final params = GetTransactionsParams(
@@ -167,107 +183,137 @@ class TransactionListBloc
 
     final result = await _getTransactionsUseCase(params);
 
-    result.fold((failure) {
-      log.warning("[TransactionListBloc] Load failed: ${failure.message}");
-      emit(state.copyWith(
-          status: ListStatus.error,
-          errorMessage: _mapFailureToMessage(failure)));
-    }, (transactions) {
-      log.info(
-          "[TransactionListBloc] Load successful with ${transactions.length} transactions.");
-      final validSelection = state.isInBatchEditMode
-          ? state.selectedTransactionIds
-              .where((id) => transactions.any((txn) => txn.id == id))
-              .toSet()
-          : <String>{};
+    result.fold(
+      (failure) {
+        log.warning("[TransactionListBloc] Load failed: ${failure.message}");
+        emit(
+          state.copyWith(
+            status: ListStatus.error,
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
+      },
+      (transactions) {
+        log.info(
+          "[TransactionListBloc] Load successful with ${transactions.length} transactions.",
+        );
+        final validSelection = state.isInBatchEditMode
+            ? state.selectedTransactionIds
+                  .where((id) => transactions.any((txn) => txn.id == id))
+                  .toSet()
+            : <String>{};
 
-      emit(state.copyWith(
-        status: ListStatus.success,
-        transactions: transactions,
-        selectedTransactionIds: validSelection,
-        // Update filter state explicitly if filters were applied in this load
-        startDate: startDate,
-        endDate: endDate,
-        categoryId: categoryId,
-        accountId: accountId,
-        transactionType: transactionType,
-        clearErrorMessage: true,
-      ));
-    });
+        emit(
+          state.copyWith(
+            status: ListStatus.success,
+            transactions: transactions,
+            selectedTransactionIds: validSelection,
+            // Update filter state explicitly if filters were applied in this load
+            startDate: startDate,
+            endDate: endDate,
+            categoryId: categoryId,
+            accountId: accountId,
+            transactionType: transactionType,
+            clearErrorMessage: true,
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _onFilterChanged(
-      FilterChanged event, Emitter<TransactionListState> emit) async {
+    FilterChanged event,
+    Emitter<TransactionListState> emit,
+  ) async {
     log.info("[TransactionListBloc] FilterChanged triggered.");
     // Update state first (sets filters, clears batch mode)
-    emit(state.copyWith(
-      startDate: event.startDate,
-      endDate: event.endDate,
-      categoryId: event.categoryId,
-      accountId: event.accountId,
-      transactionType: event.transactionType,
-      isInBatchEditMode: false,
-      selectedTransactionIds: {},
-      clearStartDate: event.startDate == null && state.startDate != null,
-      clearEndDate: event.endDate == null && state.endDate != null,
-      clearCategoryId: event.categoryId == null && state.categoryId != null,
-      clearAccountId: event.accountId == null && state.accountId != null,
-      clearTransactionType:
-          event.transactionType == null && state.transactionType != null,
-      clearErrorMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        startDate: event.startDate,
+        endDate: event.endDate,
+        categoryId: event.categoryId,
+        accountId: event.accountId,
+        transactionType: event.transactionType,
+        isInBatchEditMode: false,
+        selectedTransactionIds: {},
+        clearStartDate: event.startDate == null && state.startDate != null,
+        clearEndDate: event.endDate == null && state.endDate != null,
+        clearCategoryId: event.categoryId == null && state.categoryId != null,
+        clearAccountId: event.accountId == null && state.accountId != null,
+        clearTransactionType:
+            event.transactionType == null && state.transactionType != null,
+        clearErrorMessage: true,
+      ),
+    );
     // Then trigger LoadTransactions which will use the new state filters
     add(const LoadTransactions(forceReload: true));
   }
 
   Future<void> _onSortChanged(
-      SortChanged event, Emitter<TransactionListState> emit) async {
+    SortChanged event,
+    Emitter<TransactionListState> emit,
+  ) async {
     log.info(
-        "[TransactionListBloc] SortChanged triggered: ${event.sortBy}.${event.sortDirection}");
+      "[TransactionListBloc] SortChanged triggered: ${event.sortBy}.${event.sortDirection}",
+    );
     // Update state first
-    emit(state.copyWith(
-      sortBy: event.sortBy,
-      sortDirection: event.sortDirection,
-      isInBatchEditMode: false,
-      selectedTransactionIds: {},
-      clearErrorMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        sortBy: event.sortBy,
+        sortDirection: event.sortDirection,
+        isInBatchEditMode: false,
+        selectedTransactionIds: {},
+        clearErrorMessage: true,
+      ),
+    );
     // Then trigger reload
     add(const LoadTransactions(forceReload: true));
   }
 
   Future<void> _onSearchChanged(
-      SearchChanged event, Emitter<TransactionListState> emit) async {
+    SearchChanged event,
+    Emitter<TransactionListState> emit,
+  ) async {
     log.info(
-        "[TransactionListBloc] SearchChanged triggered: '${event.searchTerm}'");
+      "[TransactionListBloc] SearchChanged triggered: '${event.searchTerm}'",
+    );
     // Update state first
-    emit(state.copyWith(
-      searchTerm: event.searchTerm,
-      clearSearchTerm: event.searchTerm == null || event.searchTerm!.isEmpty,
-      isInBatchEditMode: false,
-      selectedTransactionIds: {},
-      clearErrorMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        searchTerm: event.searchTerm,
+        clearSearchTerm: event.searchTerm == null || event.searchTerm!.isEmpty,
+        isInBatchEditMode: false,
+        selectedTransactionIds: {},
+        clearErrorMessage: true,
+      ),
+    );
     // Then trigger reload
     add(const LoadTransactions(forceReload: true));
   }
 
   void _onToggleBatchEdit(
-      ToggleBatchEdit event, Emitter<TransactionListState> emit) {
+    ToggleBatchEdit event,
+    Emitter<TransactionListState> emit,
+  ) {
     log.info("[TransactionListBloc] ToggleBatchEdit triggered.");
     final newMode = !state.isInBatchEditMode;
-    emit(state.copyWith(
-      isInBatchEditMode: newMode,
-      selectedTransactionIds: newMode ? state.selectedTransactionIds : {},
-      clearErrorMessage: true,
-    ));
+    emit(
+      state.copyWith(
+        isInBatchEditMode: newMode,
+        selectedTransactionIds: newMode ? state.selectedTransactionIds : {},
+        clearErrorMessage: true,
+      ),
+    );
   }
 
   void _onSelectTransaction(
-      SelectTransaction event, Emitter<TransactionListState> emit) {
+    SelectTransaction event,
+    Emitter<TransactionListState> emit,
+  ) {
     if (!state.isInBatchEditMode) {
       log.warning(
-          "[TransactionListBloc] SelectTransaction ignored: Not in batch edit mode.");
+        "[TransactionListBloc] SelectTransaction ignored: Not in batch edit mode.",
+      );
       return;
     }
     log.fine("[TransactionListBloc] SelectTransaction: ${event.transactionId}");
@@ -282,29 +328,39 @@ class TransactionListBloc
   }
 
   Future<void> _onApplyBatchCategory(
-      ApplyBatchCategory event, Emitter<TransactionListState> emit) async {
+    ApplyBatchCategory event,
+    Emitter<TransactionListState> emit,
+  ) async {
     if (!state.isInBatchEditMode || state.selectedTransactionIds.isEmpty) {
       log.warning(
-          "[TransactionListBloc] ApplyBatchCategory ignored: Not in batch mode or no selection.");
+        "[TransactionListBloc] ApplyBatchCategory ignored: Not in batch mode or no selection.",
+      );
       return;
     }
     log.info(
-        "[TransactionListBloc] ApplyBatchCategory: CatID=${event.categoryId}, Count=${state.selectedTransactionIds.length}");
+      "[TransactionListBloc] ApplyBatchCategory: CatID=${event.categoryId}, Count=${state.selectedTransactionIds.length}",
+    );
 
     emit(
-        state.copyWith(status: ListStatus.reloading)); // Show loading indicator
+      state.copyWith(status: ListStatus.reloading),
+    ); // Show loading indicator
 
     final List<String> expenseIds = [];
     final List<String> incomeIds = [];
     final currentTransactions = state.transactions;
 
     for (final id in state.selectedTransactionIds) {
-      final txn = currentTransactions.firstWhere((t) => t.id == id, orElse: () {
-        log.severe(
-            "[TransactionListBloc] CRITICAL: Selected ID $id not found in current transaction state during batch apply!");
-        throw Exception(
-            "Selected ID $id not found in state during batch apply");
-      });
+      final txn = currentTransactions.firstWhere(
+        (t) => t.id == id,
+        orElse: () {
+          log.severe(
+            "[TransactionListBloc] CRITICAL: Selected ID $id not found in current transaction state during batch apply!",
+          );
+          throw Exception(
+            "Selected ID $id not found in state during batch apply",
+          );
+        },
+      );
       if (txn.type == TransactionType.expense) {
         expenseIds.add(id);
       } else if (txn.type == TransactionType.income) {
@@ -323,7 +379,8 @@ class TransactionListBloc
       final expenseResult = await _applyCategoryToBatchUseCase(expenseParams);
       expenseResult.fold((f) => batchFailure = f, (_) {});
       log.fine(
-          "[TransactionListBloc] Expense batch apply result: ${expenseResult.isRight()}");
+        "[TransactionListBloc] Expense batch apply result: ${expenseResult.isRight()}",
+      );
     }
 
     if (batchFailure == null && incomeIds.isNotEmpty) {
@@ -335,157 +392,223 @@ class TransactionListBloc
       final incomeResult = await _applyCategoryToBatchUseCase(incomeParams);
       incomeResult.fold((f) => batchFailure = f, (_) {});
       log.fine(
-          "[TransactionListBloc] Income batch apply result: ${incomeResult.isRight()}");
+        "[TransactionListBloc] Income batch apply result: ${incomeResult.isRight()}",
+      );
     }
 
     if (batchFailure != null) {
       log.warning(
-          "[TransactionListBloc] ApplyBatchCategory failed: ${batchFailure?.message}");
-      emit(state.copyWith(
+        "[TransactionListBloc] ApplyBatchCategory failed: ${batchFailure?.message}",
+      );
+      emit(
+        state.copyWith(
           status: ListStatus.error,
-          errorMessage: _mapFailureToMessage(batchFailure!,
-              context: "Failed batch category update")));
+          errorMessage: _mapFailureToMessage(
+            batchFailure!,
+            context: "Failed batch category update",
+          ),
+        ),
+      );
       // Keep batch mode active, but reset status after showing error
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (state.status == ListStatus.error) {
-          emit(state.copyWith(
-              status: ListStatus.success, clearErrorMessage: true));
+          emit(
+            state.copyWith(status: ListStatus.success, clearErrorMessage: true),
+          );
         }
       });
     } else {
       log.info(
-          "[TransactionListBloc] ApplyBatchCategory successful. Exiting batch mode and publishing events.");
-      emit(state.copyWith(
+        "[TransactionListBloc] ApplyBatchCategory successful. Exiting batch mode and publishing events.",
+      );
+      emit(
+        state.copyWith(
           isInBatchEditMode: false,
           selectedTransactionIds: {},
           status: ListStatus.success, // Important: Set back to success
-          clearErrorMessage: true));
+          clearErrorMessage: true,
+        ),
+      );
       // Events will trigger reload via _onDataChanged
       if (expenseIds.isNotEmpty) {
         publishDataChangedEvent(
-            type: DataChangeType.expense, reason: DataChangeReason.updated);
+          type: DataChangeType.expense,
+          reason: DataChangeReason.updated,
+        );
       }
       if (incomeIds.isNotEmpty) {
         publishDataChangedEvent(
-            type: DataChangeType.income, reason: DataChangeReason.updated);
+          type: DataChangeType.income,
+          reason: DataChangeReason.updated,
+        );
       }
     }
   }
 
   Future<void> _onDeleteTransaction(
-      DeleteTransaction event, Emitter<TransactionListState> emit) async {
+    DeleteTransaction event,
+    Emitter<TransactionListState> emit,
+  ) async {
     final txn = event.transaction;
     log.info(
-        "[TransactionListBloc] DeleteTransaction requested: ID=${txn.id}, Type=${txn.type}");
+      "[TransactionListBloc] DeleteTransaction requested: ID=${txn.id}, Type=${txn.type}",
+    );
 
     final previousState = state;
 
-    final optimisticList =
-        previousState.transactions.where((t) => t.id != txn.id).toList();
-    final updatedSelection = Set<String>.from(previousState.selectedTransactionIds)
-      ..remove(txn.id);
-    emit(previousState.copyWith(
+    final optimisticList = previousState.transactions
+        .where((t) => t.id != txn.id)
+        .toList();
+    final updatedSelection = Set<String>.from(
+      previousState.selectedTransactionIds,
+    )..remove(txn.id);
+    emit(
+      previousState.copyWith(
         transactions: optimisticList,
         selectedTransactionIds: updatedSelection,
-        clearErrorMessage: true));
+        clearErrorMessage: true,
+      ),
+    );
 
     final deleteResult = txn.type == TransactionType.expense
         ? await _deleteExpenseUseCase(DeleteExpenseParams(txn.id))
         : await _deleteIncomeUseCase(DeleteIncomeParams(txn.id));
 
-    deleteResult.fold((failure) {
-      log.warning(
-          "[TransactionListBloc] DeleteTransaction failed for ${txn.id}: ${failure.message}");
-      emit(previousState.copyWith(
-          errorMessage:
-              _mapFailureToMessage(failure, context: "Failed to delete")));
-    }, (_) {
-      log.info(
-          "[TransactionListBloc] DeleteTransaction successful for ${txn.id}. DataChanged event will handle list update.");
-      publishDataChangedEvent(
+    deleteResult.fold(
+      (failure) {
+        log.warning(
+          "[TransactionListBloc] DeleteTransaction failed for ${txn.id}: ${failure.message}",
+        );
+        emit(
+          previousState.copyWith(
+            errorMessage: _mapFailureToMessage(
+              failure,
+              context: "Failed to delete",
+            ),
+          ),
+        );
+      },
+      (_) {
+        log.info(
+          "[TransactionListBloc] DeleteTransaction successful for ${txn.id}. DataChanged event will handle list update.",
+        );
+        publishDataChangedEvent(
           type: txn.type == TransactionType.expense
               ? DataChangeType.expense
               : DataChangeType.income,
-          reason: DataChangeReason.deleted);
-    });
+          reason: DataChangeReason.deleted,
+        );
+      },
+    );
   }
 
-  Future<void> _onUserCategorizedTransaction(UserCategorizedTransaction event,
-      Emitter<TransactionListState> emit) async {
+  Future<void> _onUserCategorizedTransaction(
+    UserCategorizedTransaction event,
+    Emitter<TransactionListState> emit,
+  ) async {
     log.info(
-        "[TransactionListBloc] UserCategorizedTransaction: ID=${event.transactionId}, Cat=${event.selectedCategory.name}");
+      "[TransactionListBloc] UserCategorizedTransaction: ID=${event.transactionId}, Cat=${event.selectedCategory.name}",
+    );
 
     // Save History (Fire and forget)
     final historyParams = SaveUserCategorizationHistoryParams(
-        transactionData: event.matchData,
-        selectedCategory: event.selectedCategory);
-    _saveUserHistoryUseCase(historyParams).then((result) {
-      result.fold(
-          (failure) => log.warning(
-              "[TransactionListBloc] Failed to save user history: ${failure.message}"),
-          (_) => log.info(
-              "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}"));
-    }).catchError((e, s) {
-      log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
-    });
+      transactionData: event.matchData,
+      selectedCategory: event.selectedCategory,
+    );
+    _saveUserHistoryUseCase(historyParams)
+        .then((result) {
+          result.fold(
+            (failure) => log.warning(
+              "[TransactionListBloc] Failed to save user history: ${failure.message}",
+            ),
+            (_) => log.info(
+              "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}",
+            ),
+          );
+        })
+        .catchError((e, s) {
+          log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
+        });
 
     // Update Transaction Categorization State
     log.info(
-        "[TransactionListBloc] Updating categorization state for Txn ID: ${event.transactionId}");
+      "[TransactionListBloc] Updating categorization state for Txn ID: ${event.transactionId}",
+    );
     final repoResult = event.transactionType == TransactionType.expense
         ? await _expenseRepository.updateExpenseCategorization(
             event.transactionId,
             event.selectedCategory.id,
             CategorizationStatus.categorized,
-            1.0) // Confidence 1.0 for manual set
+            1.0,
+          ) // Confidence 1.0 for manual set
         : await _incomeRepository.updateIncomeCategorization(
             event.transactionId,
             event.selectedCategory.id,
             CategorizationStatus.categorized,
-            1.0); // Confidence 1.0 for manual set
+            1.0,
+          ); // Confidence 1.0 for manual set
 
     // Handle result of updating the transaction
-    repoResult.fold((failure) {
-      log.warning(
-          "[TransactionListBloc] Failed to update categorization state for ${event.transactionId}: ${failure.message}");
-      emit(state.copyWith(
-          status: ListStatus.error,
-          errorMessage: _mapFailureToMessage(failure,
-              context: "Failed to update category")));
-      // Optionally reload to revert optimistic UI if needed
-      // add(const LoadTransactions(forceReload: true));
-    }, (_) {
-      log.info(
-          "[TransactionListBloc] Categorization update successful for ${event.transactionId}. DataChanged event will refresh list.");
-      // Publish event to trigger list reload via _onDataChanged
-      publishDataChangedEvent(
+    repoResult.fold(
+      (failure) {
+        log.warning(
+          "[TransactionListBloc] Failed to update categorization state for ${event.transactionId}: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: ListStatus.error,
+            errorMessage: _mapFailureToMessage(
+              failure,
+              context: "Failed to update category",
+            ),
+          ),
+        );
+        // Optionally reload to revert optimistic UI if needed
+        // add(const LoadTransactions(forceReload: true));
+      },
+      (_) {
+        log.info(
+          "[TransactionListBloc] Categorization update successful for ${event.transactionId}. DataChanged event will refresh list.",
+        );
+        // Publish event to trigger list reload via _onDataChanged
+        publishDataChangedEvent(
           type: event.transactionType == TransactionType.expense
               ? DataChangeType.expense
               : DataChangeType.income,
-          reason: DataChangeReason.updated);
-    });
+          reason: DataChangeReason.updated,
+        );
+      },
+    );
   }
 
   Future<void> _onDataChanged(
-      _DataChanged event, Emitter<TransactionListState> emit) async {
+    _DataChanged event,
+    Emitter<TransactionListState> emit,
+  ) async {
     // Avoid triggering reload if already loading/reloading
     if (state.status != ListStatus.loading &&
         state.status != ListStatus.reloading) {
       log.info(
-          "[TransactionListBloc] _DataChanged received. Triggering LoadTransactions.");
-      add(const LoadTransactions(
-          forceReload: true)); // Force reload to get latest data
+        "[TransactionListBloc] _DataChanged received. Triggering LoadTransactions.",
+      );
+      add(
+        const LoadTransactions(forceReload: true),
+      ); // Force reload to get latest data
     } else {
       log.info(
-          "[TransactionListBloc] _DataChanged received, but already loading/reloading. Skipping explicit reload.");
+        "[TransactionListBloc] _DataChanged received, but already loading/reloading. Skipping explicit reload.",
+      );
     }
   }
 
   // Helper to map Failures to user-friendly strings
-  String _mapFailureToMessage(Failure failure,
-      {String context = "An error occurred"}) {
+  String _mapFailureToMessage(
+    Failure failure, {
+    String context = "An error occurred",
+  }) {
     log.warning(
-        "[TransactionListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
+      "[TransactionListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
+    );
     switch (failure.runtimeType) {
       case CacheFailure:
         return '$context: Database Error: ${failure.message}';
@@ -501,7 +624,8 @@ class TransactionListBloc
   Future<void> close() {
     _dataChangeSubscription.cancel();
     log.info(
-        "[TransactionListBloc] Closed and cancelled data stream subscription.");
+      "[TransactionListBloc] Closed and cancelled data stream subscription.",
+    );
     return super.close();
   }
 }

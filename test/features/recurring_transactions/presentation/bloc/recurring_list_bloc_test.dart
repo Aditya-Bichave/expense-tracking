@@ -38,8 +38,9 @@ void main() {
 
     await sl.reset();
     sl.registerSingleton<StreamController<DataChangedEvent>>(
-        dataChangeController,
-        instanceName: 'dataChangeController');
+      dataChangeController,
+      instanceName: 'dataChangeController',
+    );
     sl.registerSingleton<Stream<DataChangedEvent>>(dataChangeController.stream);
 
     recurringListBloc = RecurringListBloc(
@@ -163,6 +164,28 @@ void main() {
       },
       expect: () => [
         RecurringListInitial(),
+        RecurringListLoading(),
+        RecurringListLoaded(tRecurringRules),
+      ],
+    );
+
+    blocTest<RecurringListBloc, RecurringListState>(
+      'reloads when system updated DataChangedEvent is received',
+      build: () {
+        when(
+          () => mockGetRecurringRules(any()),
+        ).thenAnswer((_) async => Right(tRecurringRules));
+        return recurringListBloc;
+      },
+      act: (bloc) {
+        dataChangeController.add(
+          const DataChangedEvent(
+            type: DataChangeType.system,
+            reason: DataChangeReason.updated,
+          ),
+        );
+      },
+      expect: () => [
         RecurringListLoading(),
         RecurringListLoaded(tRecurringRules),
       ],

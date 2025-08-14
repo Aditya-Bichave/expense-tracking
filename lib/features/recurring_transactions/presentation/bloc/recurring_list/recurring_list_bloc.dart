@@ -33,7 +33,9 @@ class RecurringListBloc extends Bloc<RecurringListEvent, RecurringListState> {
       if (event.type == DataChangeType.system &&
           event.reason == DataChangeReason.reset) {
         add(const ResetState());
-      } else if (event.type == DataChangeType.recurringRule) {
+      } else if (event.type == DataChangeType.recurringRule ||
+          (event.type == DataChangeType.system &&
+              event.reason == DataChangeReason.updated)) {
         add(LoadRecurringRules());
       }
     });

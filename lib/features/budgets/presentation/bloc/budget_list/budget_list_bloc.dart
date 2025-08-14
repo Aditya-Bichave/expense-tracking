@@ -27,10 +27,10 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     required BudgetRepository budgetRepository,
     required DeleteBudgetUseCase deleteBudgetUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
-  })  : _getBudgetsUseCase = getBudgetsUseCase,
-        _budgetRepository = budgetRepository,
-        _deleteBudgetUseCase = deleteBudgetUseCase,
-        super(const BudgetListState()) {
+  }) : _getBudgetsUseCase = getBudgetsUseCase,
+       _budgetRepository = budgetRepository,
+       _deleteBudgetUseCase = deleteBudgetUseCase,
+       super(const BudgetListState()) {
     on<LoadBudgets>(_onLoadBudgets);
     on<_BudgetsDataChanged>(_onDataChanged);
     on<DeleteBudget>(_onDeleteBudget);
@@ -41,12 +41,16 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
       if (event.type == DataChangeType.system &&
           event.reason == DataChangeReason.reset) {
         log.info(
-            "[BudgetListBloc] System Reset event received. Adding ResetState.");
+          "[BudgetListBloc] System Reset event received. Adding ResetState.",
+        );
         add(const ResetState());
       } else if (event.type == DataChangeType.budget ||
-          event.type == DataChangeType.expense) {
+          event.type == DataChangeType.expense ||
+          (event.type == DataChangeType.system &&
+              event.reason == DataChangeReason.updated)) {
         log.info(
-            "[BudgetListBloc] Relevant DataChangedEvent ($event). Triggering reload.");
+          "[BudgetListBloc] Relevant DataChangedEvent ($event). Triggering reload.",
+        );
         add(const _BudgetsDataChanged());
       }
       // --- END MODIFIED ---
@@ -64,19 +68,24 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
 
   // ... (rest of handlers remain the same) ...
   Future<void> _onDataChanged(
-      _BudgetsDataChanged event, Emitter<BudgetListState> emit) async {
+    _BudgetsDataChanged event,
+    Emitter<BudgetListState> emit,
+  ) async {
     // Avoid triggering reload if already loading/reloading
     if (state.status != BudgetListStatus.loading) {
       log.fine("[BudgetListBloc] Handling _DataChanged event.");
       add(const LoadBudgets(forceReload: true));
     } else {
       log.fine(
-          "[BudgetListBloc] _DataChanged received, but already loading. Skipping explicit reload.");
+        "[BudgetListBloc] _DataChanged received, but already loading. Skipping explicit reload.",
+      );
     }
   }
 
   Future<void> _onLoadBudgets(
-      LoadBudgets event, Emitter<BudgetListState> emit) async {
+    LoadBudgets event,
+    Emitter<BudgetListState> emit,
+  ) async {
     // Prevent duplicate loading unless forced
     if (state.status == BudgetListStatus.loading && !event.forceReload) {
       log.fine("[BudgetListBloc] LoadBudgets ignored, already loading.");
@@ -84,7 +93,8 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     }
 
     log.info(
-        "[BudgetListBloc] LoadBudgets triggered. ForceReload: ${event.forceReload}");
+      "[BudgetListBloc] LoadBudgets triggered. ForceReload: ${event.forceReload}",
+    );
     emit(state.copyWith(status: BudgetListStatus.loading, clearError: true));
 
     final budgetsResult = await _getBudgetsUseCase(const NoParams());
@@ -92,14 +102,19 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     await budgetsResult.fold(
       (failure) async {
         log.warning(
-            "[BudgetListBloc] Failed to load budgets: ${failure.message}");
-        emit(state.copyWith(
+          "[BudgetListBloc] Failed to load budgets: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
             status: BudgetListStatus.error,
-            errorMessage: _mapFailureToMessage(failure)));
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
       },
       (budgets) async {
         log.info(
-            "[BudgetListBloc] Loaded ${budgets.length} budgets. Calculating status...");
+          "[BudgetListBloc] Loaded ${budgets.length} budgets. Calculating status...",
+        );
         List<BudgetWithStatus> budgetsWithStatusList = [];
         bool calculationErrorOccurred = false;
         String? firstCalcErrorMsg;
@@ -118,20 +133,27 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
             periodEnd: periodEnd,
           );
 
-          spentResult.fold((failure) {
-            log.warning(
-                "[BudgetListBloc] Failed to calculate spent for '${budget.name}': ${failure.message}");
-            calculationErrorOccurred = true;
-            firstCalcErrorMsg ??=
-                "Failed to calculate status for '${budget.name}': ${_mapFailureToMessage(failure)}";
-          }, (amountSpent) {
-            budgetsWithStatusList.add(BudgetWithStatus.calculate(
-                budget: budget,
-                amountSpent: amountSpent,
-                thrivingColor: thrivingColor,
-                nearingLimitColor: nearingLimitColor,
-                overLimitColor: overLimitColor));
-          });
+          spentResult.fold(
+            (failure) {
+              log.warning(
+                "[BudgetListBloc] Failed to calculate spent for '${budget.name}': ${failure.message}",
+              );
+              calculationErrorOccurred = true;
+              firstCalcErrorMsg ??=
+                  "Failed to calculate status for '${budget.name}': ${_mapFailureToMessage(failure)}";
+            },
+            (amountSpent) {
+              budgetsWithStatusList.add(
+                BudgetWithStatus.calculate(
+                  budget: budget,
+                  amountSpent: amountSpent,
+                  thrivingColor: thrivingColor,
+                  nearingLimitColor: nearingLimitColor,
+                  overLimitColor: overLimitColor,
+                ),
+              );
+            },
+          );
           // Optional: Stop processing if a critical calculation error occurred
           if (calculationErrorOccurred &&
               firstCalcErrorMsg != null &&
@@ -142,29 +164,37 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
 
         if (calculationErrorOccurred) {
           // Emit error if any calculation failed, but still show successfully calculated budgets
-          emit(state.copyWith(
-            status: BudgetListStatus.error,
-            budgetsWithStatus: budgetsWithStatusList, // Show what we have
-            errorMessage:
-                firstCalcErrorMsg ?? "An unknown calculation error occurred.",
-          ));
+          emit(
+            state.copyWith(
+              status: BudgetListStatus.error,
+              budgetsWithStatus: budgetsWithStatusList, // Show what we have
+              errorMessage:
+                  firstCalcErrorMsg ?? "An unknown calculation error occurred.",
+            ),
+          );
         } else {
           log.info(
-              "[BudgetListBloc] Successfully calculated status for all budgets.");
-          emit(state.copyWith(
-            status: BudgetListStatus.success,
-            budgetsWithStatus: budgetsWithStatusList,
-            clearError: true,
-          ));
+            "[BudgetListBloc] Successfully calculated status for all budgets.",
+          );
+          emit(
+            state.copyWith(
+              status: BudgetListStatus.success,
+              budgetsWithStatus: budgetsWithStatusList,
+              clearError: true,
+            ),
+          );
         }
       },
     );
   }
 
   Future<void> _onDeleteBudget(
-      DeleteBudget event, Emitter<BudgetListState> emit) async {
+    DeleteBudget event,
+    Emitter<BudgetListState> emit,
+  ) async {
     log.info(
-        "[BudgetListBloc] DeleteBudget triggered for ID: ${event.budgetId}");
+      "[BudgetListBloc] DeleteBudget triggered for ID: ${event.budgetId}",
+    );
 
     // Optimistic UI update - remove the item from the current list
     final optimisticList = state.budgetsWithStatus
@@ -174,40 +204,54 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     final optimisticStatus = state.status == BudgetListStatus.error
         ? BudgetListStatus.success
         : state.status;
-    emit(state.copyWith(
+    emit(
+      state.copyWith(
         budgetsWithStatus: optimisticList,
         status: optimisticStatus, // Assume success during operation
-        clearError: true));
+        clearError: true,
+      ),
+    );
 
-    final result =
-        await _deleteBudgetUseCase(DeleteBudgetParams(id: event.budgetId));
+    final result = await _deleteBudgetUseCase(
+      DeleteBudgetParams(id: event.budgetId),
+    );
 
     result.fold(
       (failure) {
         log.warning("[BudgetListBloc] Delete failed: ${failure.message}");
         // Revert UI implicitly by forcing a reload which will show the error state
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             status: BudgetListStatus.error,
-            errorMessage: _mapFailureToMessage(failure,
-                context: "Failed to delete budget")));
-        add(const LoadBudgets(
-            forceReload:
-                true)); // Force reload to show error and potentially revert list if needed
+            errorMessage: _mapFailureToMessage(
+              failure,
+              context: "Failed to delete budget",
+            ),
+          ),
+        );
+        add(
+          const LoadBudgets(forceReload: true),
+        ); // Force reload to show error and potentially revert list if needed
       },
       (_) {
         log.info("[BudgetListBloc] Delete successful for ${event.budgetId}.");
         // Publish event - list will reload reactively via _onDataChanged
         publishDataChangedEvent(
-            type: DataChangeType.budget, reason: DataChangeReason.deleted);
+          type: DataChangeType.budget,
+          reason: DataChangeReason.deleted,
+        );
         // No need to emit success state here, reactive reload handles it
       },
     );
   }
 
-  String _mapFailureToMessage(Failure failure,
-      {String context = "An error occurred"}) {
+  String _mapFailureToMessage(
+    Failure failure, {
+    String context = "An error occurred",
+  }) {
     log.warning(
-        "[BudgetListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
+      "[BudgetListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
+    );
     switch (failure.runtimeType) {
       case ValidationFailure:
         return failure.message; // Use validation message directly
