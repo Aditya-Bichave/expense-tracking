@@ -13,6 +13,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/usecases/
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/get_recurring_rules.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/pause_resume_recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/update_recurring_rule.dart';
+import 'package:expense_tracker/core/services/auth_service.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/recurring_list/recurring_list_bloc.dart';
 import 'package:uuid/uuid.dart';
@@ -36,40 +37,53 @@ class RecurringTransactionsDependencies {
     sl.registerLazySingleton(() => AddRecurringRule(sl()));
     sl.registerLazySingleton(() => GetRecurringRules(sl()));
     sl.registerLazySingleton(() => GetRecurringRuleById(sl()));
-    sl.registerLazySingleton(() => UpdateRecurringRule(
-          repository: sl(),
-          getRecurringRuleById: sl(),
-          addAuditLog: sl(),
-          uuid: sl<Uuid>(),
-          userId: 'demo-user-id', // Replace with authenticated user ID
-        ));
+    sl.registerLazySingleton(
+      () => UpdateRecurringRule(
+        repository: sl(),
+        getRecurringRuleById: sl(),
+        addAuditLog: sl(),
+        uuid: sl<Uuid>(),
+      ),
+    );
     sl.registerLazySingleton(() => DeleteRecurringRule(sl()));
     sl.registerLazySingleton(() => AddAuditLog(sl()));
     sl.registerLazySingleton(() => GetAuditLogsForRule(sl()));
     sl.registerLazySingleton(
-        () => PauseResumeRecurringRule(repository: sl(), updateRecurringRule: sl()));
-    sl.registerLazySingleton(() => GenerateTransactionsOnLaunch(
-          recurringTransactionRepository: sl(),
-          categoryRepository: sl(),
-          addExpense: sl(),
-          addIncome: sl(),
-          uuid: sl<Uuid>(),
-        ));
+      () => PauseResumeRecurringRule(
+        repository: sl(),
+        updateRecurringRule: sl(),
+        authService: sl<AuthService>(),
+      ),
+    );
+    sl.registerLazySingleton(
+      () => GenerateTransactionsOnLaunch(
+        recurringTransactionRepository: sl(),
+        categoryRepository: sl(),
+        addExpense: sl(),
+        addIncome: sl(),
+        uuid: sl<Uuid>(),
+      ),
+    );
 
     // Services
     sl.registerLazySingleton(() => TransactionGenerationService(sl()));
 
     // BLoCs
-    sl.registerFactory(() => RecurringListBloc(
-          getRecurringRules: sl(),
-          pauseResumeRecurringRule: sl(),
-          deleteRecurringRule: sl(),
-          dataChangedEventStream: sl(),
-        ));
-    sl.registerFactory(() => AddEditRecurringRuleBloc(
-          addRecurringRule: sl(),
-          updateRecurringRule: sl(),
-          uuid: sl<Uuid>(),
-        ));
+    sl.registerFactory(
+      () => RecurringListBloc(
+        getRecurringRules: sl(),
+        pauseResumeRecurringRule: sl(),
+        deleteRecurringRule: sl(),
+        dataChangedEventStream: sl(),
+      ),
+    );
+    sl.registerFactory(
+      () => AddEditRecurringRuleBloc(
+        addRecurringRule: sl(),
+        updateRecurringRule: sl(),
+        uuid: sl<Uuid>(),
+        authService: sl<AuthService>(),
+      ),
+    );
   }
 }

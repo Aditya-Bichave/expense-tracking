@@ -11,9 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
-class MockRecurringTransactionRepository extends Mock implements RecurringTransactionRepository {}
+class MockRecurringTransactionRepository extends Mock
+    implements RecurringTransactionRepository {}
+
 class MockGetRecurringRuleById extends Mock implements GetRecurringRuleById {}
+
 class MockAddAuditLog extends Mock implements AddAuditLog {}
+
 class MockUuid extends Mock implements Uuid {}
 
 void main() {
@@ -25,30 +29,34 @@ void main() {
   const tUserId = 'user-123';
 
   setUpAll(() {
-    registerFallbackValue(RecurringRule(
-      id: '',
-      description: '',
-      amount: 0,
-      transactionType: TransactionType.expense,
-      accountId: '',
-      categoryId: '',
-      frequency: Frequency.daily,
-      interval: 1,
-      startDate: DateTime(0),
-      endConditionType: EndConditionType.never,
-      status: RuleStatus.active,
-      nextOccurrenceDate: DateTime(0),
-      occurrencesGenerated: 0,
-    ));
-    registerFallbackValue(RecurringRuleAuditLog(
-      id: '',
-      ruleId: '',
-      timestamp: DateTime(0),
-      userId: '',
-      fieldChanged: '',
-      oldValue: '',
-      newValue: '',
-    ));
+    registerFallbackValue(
+      RecurringRule(
+        id: '',
+        description: '',
+        amount: 0,
+        transactionType: TransactionType.expense,
+        accountId: '',
+        categoryId: '',
+        frequency: Frequency.daily,
+        interval: 1,
+        startDate: DateTime(0),
+        endConditionType: EndConditionType.never,
+        status: RuleStatus.active,
+        nextOccurrenceDate: DateTime(0),
+        occurrencesGenerated: 0,
+      ),
+    );
+    registerFallbackValue(
+      RecurringRuleAuditLog(
+        id: '',
+        ruleId: '',
+        timestamp: DateTime(0),
+        userId: '',
+        fieldChanged: '',
+        oldValue: '',
+        newValue: '',
+      ),
+    );
   });
 
   setUp(() {
@@ -61,7 +69,6 @@ void main() {
       getRecurringRuleById: mockGetRecurringRuleById,
       addAuditLog: mockAddAuditLog,
       uuid: mockUuid,
-      userId: tUserId,
     );
   });
 
@@ -81,17 +88,28 @@ void main() {
     occurrencesGenerated: 1,
   );
 
-  final tNewRule = tOldRule.copyWith(description: 'New Description', amount: 150);
+  final tNewRule = tOldRule.copyWith(
+    description: 'New Description',
+    amount: 150,
+  );
 
   test('should create audit logs for changed fields', () async {
     // Arrange
-    when(() => mockGetRecurringRuleById(any())).thenAnswer((_) async => Right(tOldRule));
-    when(() => mockAddAuditLog(any())).thenAnswer((_) async => const Right(null));
-    when(() => mockRepository.updateRecurringRule(any())).thenAnswer((_) async => const Right(null));
+    when(
+      () => mockGetRecurringRuleById(any()),
+    ).thenAnswer((_) async => Right(tOldRule));
+    when(
+      () => mockAddAuditLog(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.updateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
     when(() => mockUuid.v4()).thenReturn('new_log_id');
 
     // Act
-    await usecase(tNewRule);
+    await usecase(
+      UpdateRecurringRuleParams(newRule: tNewRule, userId: tUserId),
+    );
 
     // Assert
     final captured = verify(() => mockAddAuditLog(captureAny())).captured;

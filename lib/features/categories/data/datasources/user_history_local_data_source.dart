@@ -25,35 +25,45 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
 
   HiveUserHistoryLocalDataSource(this.historyBox);
 
+  String _composeKey(String ruleType, String matcher) => '${ruleType}_$matcher';
+
   @override
   Future<void> deleteRule(String ruleId) async {
     try {
-      // Assuming ruleId is the key used in Hive. If not, need to find the key first.
-      await historyBox.delete(ruleId);
-      log.info("Deleted user history rule (ID: $ruleId) from Hive.");
+      final key = historyBox.keys.firstWhere(
+        (k) => historyBox.get(k)!.ruleId == ruleId,
+        orElse: () => null,
+      );
+      if (key != null) {
+        await historyBox.delete(key);
+        log.info("Deleted user history rule (ID: $ruleId) from Hive.");
+      }
     } catch (e, s) {
       log.severe(
-          "Failed to delete user history rule (ID: $ruleId) from cache$e$s");
+        "Failed to delete user history rule (ID: $ruleId) from cache$e$s",
+      );
       throw CacheFailure('Failed to delete history rule: ${e.toString()}');
     }
   }
 
   @override
   Future<UserHistoryRuleModel?> findRule(
-      String ruleType, String matcher) async {
+    String ruleType,
+    String matcher,
+  ) async {
     try {
-      // Hive boxes aren't easily queryable like SQL. We need to iterate.
-      // This could be slow for very large history sets. Consider optimization if needed.
-      for (var rule in historyBox.values) {
-        if (rule.ruleType == ruleType && rule.matcher == matcher) {
-          log.info(
-              "Found matching user history rule. Type: $ruleType, Matcher: $matcher, CategoryId: ${rule.assignedCategoryId}");
-          return rule;
-        }
+      final key = _composeKey(ruleType, matcher);
+      final rule = historyBox.get(key);
+      if (rule != null) {
+        log.info(
+          "Found matching user history rule. Type: $ruleType, Matcher: $matcher, CategoryId: ${rule.assignedCategoryId}",
+        );
+        return rule;
       }
       log.fine(
-          "No matching user history rule found for Type: $ruleType, Matcher: $matcher");
-      return null; // Not found
+        "No matching user history rule found for Type: $ruleType, Matcher: $matcher",
+      );
+      return null;
     } catch (e, s) {
       log.severe("Failed to query user history rules from cache$e$s");
       throw CacheFailure('Failed to find history rule: ${e.toString()}');
@@ -75,13 +85,15 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
   @override
   Future<void> saveRule(UserHistoryRuleModel rule) async {
     try {
-      // Simple approach: Use ruleId as the key. Assumes ruleId is unique.
-      await historyBox.put(rule.ruleId, rule);
+      final key = _composeKey(rule.ruleType, rule.matcher);
+      await historyBox.put(key, rule);
       log.info(
-          "Saved/Updated user history rule (ID: ${rule.ruleId}, Type: ${rule.ruleType}, Matcher: ${rule.matcher}) to Hive.");
+        "Saved/Updated user history rule (ID: ${rule.ruleId}, Type: ${rule.ruleType}, Matcher: ${rule.matcher}) to Hive with key $key.",
+      );
     } catch (e, s) {
       log.severe(
-          "Failed to save user history rule (ID: ${rule.ruleId}) to cache$e$s");
+        "Failed to save user history rule (ID: ${rule.ruleId}) to cache$e$s",
+      );
       throw CacheFailure('Failed to save history rule: ${e.toString()}');
     }
   }
@@ -91,11 +103,13 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
     try {
       final count = await historyBox.clear();
       log.info(
-          "Cleared user history rules box in Hive ($count items removed).");
+        "Cleared user history rules box in Hive ($count items removed).",
+      );
     } catch (e, s) {
       log.severe("Failed to clear user history rules cache$e$s");
       throw CacheFailure(
-          'Failed to clear history rules cache: ${e.toString()}');
+        'Failed to clear history rules cache: ${e.toString()}',
+      );
     }
   }
 }

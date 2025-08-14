@@ -4,42 +4,19 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/pause_resume_recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/update_recurring_rule.dart';
+import 'package:expense_tracker/core/services/auth_service.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockRecurringTransactionRepository extends Mock implements RecurringTransactionRepository {}
+class MockRecurringTransactionRepository extends Mock
+    implements RecurringTransactionRepository {}
+
 class MockUpdateRecurringRule extends Mock implements UpdateRecurringRule {}
 
+class MockAuthService extends Mock implements AuthService {}
+
 void main() {
-  late PauseResumeRecurringRule usecase;
-  late MockRecurringTransactionRepository mockRepository;
-  late MockUpdateRecurringRule mockUpdateRecurringRule;
-
-  setUp(() {
-    mockRepository = MockRecurringTransactionRepository();
-    mockUpdateRecurringRule = MockUpdateRecurringRule();
-    usecase = PauseResumeRecurringRule(
-      repository: mockRepository,
-      updateRecurringRule: mockUpdateRecurringRule,
-    );
-    registerFallbackValue(RecurringRule(
-      id: '',
-      description: '',
-      amount: 0,
-      transactionType: TransactionType.expense,
-      accountId: '',
-      categoryId: '',
-      frequency: Frequency.monthly,
-      interval: 1,
-      startDate: DateTime.now(),
-      endConditionType: EndConditionType.never,
-      status: RuleStatus.active,
-      nextOccurrenceDate: DateTime.now(),
-      occurrencesGenerated: 0,
-    ));
-  });
-
   final tActiveRule = RecurringRule(
     id: '1',
     description: 'Test',
@@ -56,16 +33,59 @@ void main() {
     occurrencesGenerated: 1,
   );
 
+  late PauseResumeRecurringRule usecase;
+  late MockRecurringTransactionRepository mockRepository;
+  late MockUpdateRecurringRule mockUpdateRecurringRule;
+  late MockAuthService mockAuthService;
+
+  setUp(() {
+    mockRepository = MockRecurringTransactionRepository();
+    mockUpdateRecurringRule = MockUpdateRecurringRule();
+    mockAuthService = MockAuthService();
+    registerFallbackValue(
+        UpdateRecurringRuleParams(newRule: tActiveRule, userId: 'user-1'));
+    usecase = PauseResumeRecurringRule(
+      repository: mockRepository,
+      updateRecurringRule: mockUpdateRecurringRule,
+      authService: mockAuthService,
+    );
+    registerFallbackValue(
+      RecurringRule(
+        id: '',
+        description: '',
+        amount: 0,
+        transactionType: TransactionType.expense,
+        accountId: '',
+        categoryId: '',
+        frequency: Frequency.monthly,
+        interval: 1,
+        startDate: DateTime.now(),
+        endConditionType: EndConditionType.never,
+        status: RuleStatus.active,
+        nextOccurrenceDate: DateTime.now(),
+        occurrencesGenerated: 0,
+      ),
+    );
+  });
+
   test('should pause an active rule', () async {
     // Arrange
-    when(() => mockRepository.getRecurringRuleById(any())).thenAnswer((_) async => Right(tActiveRule));
-    when(() => mockUpdateRecurringRule(any())).thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.getRecurringRuleById(any()),
+    ).thenAnswer((_) async => Right(tActiveRule));
+    when(() => mockAuthService.getCurrentUserId()).thenReturn('user-1');
+    when(
+      () => mockUpdateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     await usecase('1');
 
     // Assert
-    final captured = verify(() => mockUpdateRecurringRule(captureAny())).captured;
-    expect(captured.single.status, RuleStatus.paused);
+    final captured = verify(() => mockUpdateRecurringRule(captureAny()))
+        .captured
+        .single as UpdateRecurringRuleParams;
+    expect(captured.newRule.status, RuleStatus.paused);
+    expect(captured.userId, 'user-1');
   });
 }

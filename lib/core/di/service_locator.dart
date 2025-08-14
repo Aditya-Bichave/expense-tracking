@@ -1,6 +1,7 @@
 // lib/core/di/service_locator.dart
 import 'dart:async';
 import 'package:expense_tracker/core/services/demo_mode_service.dart'; // Added
+import 'package:expense_tracker/core/services/auth_service.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -71,12 +72,19 @@ Future<void> initLocator({
     log.info("Registered DemoModeService.");
   }
 
+  // Authentication service (placeholder)
+  if (!sl.isRegistered<AuthService>()) {
+    sl.registerLazySingleton<AuthService>(() => AuthService());
+    log.info("Registered AuthService.");
+  }
+
   // *** Data Change Event Stream ***
   if (!sl.isRegistered<StreamController<DataChangedEvent>>()) {
     final dataChangeController = StreamController<DataChangedEvent>.broadcast();
     sl.registerSingleton<StreamController<DataChangedEvent>>(
-        dataChangeController,
-        instanceName: 'dataChangeController');
+      dataChangeController,
+      instanceName: 'dataChangeController',
+    );
     sl.registerSingleton<Stream<DataChangedEvent>>(dataChangeController.stream);
     log.info("Registered DataChangedEvent StreamController and Stream.");
   } else {
@@ -116,24 +124,32 @@ Future<void> initLocator({
   }
   if (!sl.isRegistered<Box<RecurringRuleAuditLogModel>>()) {
     sl.registerLazySingleton<Box<RecurringRuleAuditLogModel>>(
-        () => recurringRuleAuditLogBox);
+      () => recurringRuleAuditLogBox,
+    );
   }
   log.info(
-      "Registered SharedPreferences and Hive Boxes (incl. Budgets, Goals, Contributions).");
+    "Registered SharedPreferences and Hive Boxes (incl. Budgets, Goals, Contributions).",
+  );
 
   // --- Register REAL Hive DataSources (needed by Proxies) ---
   sl.registerLazySingleton<HiveExpenseLocalDataSource>(
-      () => HiveExpenseLocalDataSource(sl()));
+    () => HiveExpenseLocalDataSource(sl()),
+  );
   sl.registerLazySingleton<HiveIncomeLocalDataSource>(
-      () => HiveIncomeLocalDataSource(sl()));
+    () => HiveIncomeLocalDataSource(sl()),
+  );
   sl.registerLazySingleton<HiveAssetAccountLocalDataSource>(
-      () => HiveAssetAccountLocalDataSource(sl()));
+    () => HiveAssetAccountLocalDataSource(sl()),
+  );
   sl.registerLazySingleton<HiveBudgetLocalDataSource>(
-      () => HiveBudgetLocalDataSource(sl()));
+    () => HiveBudgetLocalDataSource(sl()),
+  );
   sl.registerLazySingleton<HiveGoalLocalDataSource>(
-      () => HiveGoalLocalDataSource(sl()));
+    () => HiveGoalLocalDataSource(sl()),
+  );
   sl.registerLazySingleton<HiveContributionLocalDataSource>(
-      () => HiveContributionLocalDataSource(sl()));
+    () => HiveContributionLocalDataSource(sl()),
+  );
   // Keep HiveCategoryLocalDataSource and HiveUserHistoryLocalDataSource registrations
   // (if they exist in categories_dependencies.dart, ensure they are registered there)
   log.info("Registered REAL Hive DataSources.");
@@ -166,27 +182,32 @@ Future<void> initLocator({
     log.info("Feature dependencies registered.");
   } else {
     log.warning(
-        "Feature dependencies seem to be already registered. Skipping registration call.");
+      "Feature dependencies seem to be already registered. Skipping registration call.",
+    );
   }
 
   log.info("Service Locator initialization complete.");
 }
 
 // --- publishDataChangedEvent ---
-void publishDataChangedEvent(
-    {required DataChangeType type, required DataChangeReason reason}) {
+void publishDataChangedEvent({
+  required DataChangeType type,
+  required DataChangeReason reason,
+}) {
   if (sl.isRegistered<StreamController<DataChangedEvent>>(
-      instanceName: 'dataChangeController')) {
+    instanceName: 'dataChangeController',
+  )) {
     try {
       sl<StreamController<DataChangedEvent>>(
-              instanceName: 'dataChangeController')
-          .add(DataChangedEvent(type: type, reason: reason));
+        instanceName: 'dataChangeController',
+      ).add(DataChangedEvent(type: type, reason: reason));
       log.fine("Published DataChangedEvent: Type=$type, Reason=$reason");
     } catch (e, s) {
       log.severe("Error publishing DataChangedEvent: $e\n$s");
     }
   } else {
     log.warning(
-        "Attempted to publish DataChangedEvent, but StreamController 'dataChangeController' is not registered.");
+      "Attempted to publish DataChangedEvent, but StreamController 'dataChangeController' is not registered.",
+    );
   }
 }

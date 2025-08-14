@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
+import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
@@ -8,54 +9,67 @@ import 'package:expense_tracker/features/recurring_transactions/domain/usecases/
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/get_recurring_rule_by_id.dart';
 import 'package:uuid/uuid.dart';
 
-class UpdateRecurringRule implements UseCase<void, RecurringRule> {
+class UpdateRecurringRuleParams extends Equatable {
+  final RecurringRule newRule;
+  final String userId;
+
+  const UpdateRecurringRuleParams({
+    required this.newRule,
+    required this.userId,
+  });
+
+  @override
+  List<Object?> get props => [newRule, userId];
+}
+
+class UpdateRecurringRule implements UseCase<void, UpdateRecurringRuleParams> {
   final RecurringTransactionRepository repository;
   final GetRecurringRuleById getRecurringRuleById;
   final AddAuditLog addAuditLog;
   final Uuid uuid;
-  final String userId;
 
   UpdateRecurringRule({
     required this.repository,
     required this.getRecurringRuleById,
     required this.addAuditLog,
     required this.uuid,
-    required this.userId,
   });
 
   @override
-  Future<Either<Failure, void>> call(RecurringRule newRule) async {
+  Future<Either<Failure, void>> call(UpdateRecurringRuleParams params) async {
+    final newRule = params.newRule;
     final oldRuleOrFailure = await getRecurringRuleById(newRule.id);
 
-    return oldRuleOrFailure.fold(
-      (failure) => Left(failure),
-      (oldRule) async {
-        final logs = _createAuditLogs(oldRule, newRule);
-        for (var log in logs) {
-          await addAuditLog(log);
-        }
-        return repository.updateRecurringRule(newRule);
-      },
-    );
+    return oldRuleOrFailure.fold((failure) => Left(failure), (oldRule) async {
+      final logs = _createAuditLogs(oldRule, newRule, params.userId);
+      for (var log in logs) {
+        await addAuditLog(log);
+      }
+      return repository.updateRecurringRule(newRule);
+    });
   }
 
   List<RecurringRuleAuditLog> _createAuditLogs(
-      RecurringRule oldRule, RecurringRule newRule) {
+    RecurringRule oldRule,
+    RecurringRule newRule,
+    String userId,
+  ) {
     final List<RecurringRuleAuditLog> logs = [];
     final timestamp = DateTime.now();
-    final userId = this.userId;
 
     void addLog(String field, dynamic oldValue, dynamic newValue) {
       if (oldValue != newValue) {
-        logs.add(RecurringRuleAuditLog(
-          id: uuid.v4(),
-          ruleId: oldRule.id,
-          timestamp: timestamp,
-          userId: userId,
-          fieldChanged: field,
-          oldValue: oldValue.toString(),
-          newValue: newValue.toString(),
-        ));
+        logs.add(
+          RecurringRuleAuditLog(
+            id: uuid.v4(),
+            ruleId: oldRule.id,
+            timestamp: timestamp,
+            userId: userId,
+            fieldChanged: field,
+            oldValue: oldValue.toString(),
+            newValue: newValue.toString(),
+          ),
+        );
       }
     }
 

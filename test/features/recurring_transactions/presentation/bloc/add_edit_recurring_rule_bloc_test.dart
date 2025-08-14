@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/add_recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/update_recurring_rule.dart';
+import 'package:expense_tracker/core/services/auth_service.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,41 +19,34 @@ class MockUpdateRecurringRule extends Mock implements UpdateRecurringRule {}
 
 class MockUuid extends Mock implements Uuid {}
 
+class MockAuthService extends Mock implements AuthService {}
+
 void main() {
   late AddEditRecurringRuleBloc bloc;
   late MockAddRecurringRule mockAddRecurringRule;
   late MockUpdateRecurringRule mockUpdateRecurringRule;
   late MockUuid mockUuid;
+  late MockAuthService mockAuthService;
 
   setUpAll(() {
-    registerFallbackValue(RecurringRule(
-      id: '',
-      description: '',
-      amount: 0,
-      transactionType: TransactionType.expense,
-      accountId: '',
-      categoryId: '',
-      frequency: Frequency.monthly,
-      interval: 1,
-      startDate: DateTime.now(),
-      endConditionType: EndConditionType.never,
-      status: RuleStatus.active,
-      nextOccurrenceDate: DateTime.now(),
-      occurrencesGenerated: 0,
-    ));
-  });
-
-  setUp(() {
-    mockAddRecurringRule = MockAddRecurringRule();
-    mockUpdateRecurringRule = MockUpdateRecurringRule();
-    mockUuid = MockUuid();
-    bloc = AddEditRecurringRuleBloc(
-      addRecurringRule: mockAddRecurringRule,
-      updateRecurringRule: mockUpdateRecurringRule,
-      uuid: mockUuid,
+    registerFallbackValue(
+      RecurringRule(
+        id: '',
+        description: '',
+        amount: 0,
+        transactionType: TransactionType.expense,
+        accountId: '',
+        categoryId: '',
+        frequency: Frequency.monthly,
+        interval: 1,
+        startDate: DateTime.now(),
+        endConditionType: EndConditionType.never,
+        status: RuleStatus.active,
+        nextOccurrenceDate: DateTime.now(),
+        occurrencesGenerated: 0,
+      ),
     );
   });
-
   final tRule = RecurringRule(
     id: '1',
     description: 'Netflix',
@@ -68,6 +62,22 @@ void main() {
     nextOccurrenceDate: DateTime(2023, 2, 15),
     occurrencesGenerated: 1,
   );
+
+  setUp(() {
+    mockAddRecurringRule = MockAddRecurringRule();
+    mockUpdateRecurringRule = MockUpdateRecurringRule();
+    mockUuid = MockUuid();
+    mockAuthService = MockAuthService();
+    registerFallbackValue(
+        UpdateRecurringRuleParams(newRule: tRule, userId: 'user-1'));
+    when(() => mockAuthService.getCurrentUserId()).thenReturn('user-1');
+    bloc = AddEditRecurringRuleBloc(
+      addRecurringRule: mockAddRecurringRule,
+      updateRecurringRule: mockUpdateRecurringRule,
+      uuid: mockUuid,
+      authService: mockAuthService,
+    );
+  });
 
   const tCategory = Category(
     id: 'cat1',
@@ -94,8 +104,9 @@ void main() {
       'should call AddRecurringRule when creating a new rule',
       setUp: () {
         when(() => mockUuid.v4()).thenReturn('new_id');
-        when(() => mockAddRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockAddRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
       act: (bloc) {
@@ -106,18 +117,36 @@ void main() {
         bloc.add(FormSubmitted());
       },
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.description, 'description', 'Test'),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.amount, 'amount', 100.0),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.accountId, 'accountId', 'acc1'),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.categoryId, 'categoryId', tCategory.id),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.inProgress),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.success),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.description,
+          'description',
+          'Test',
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.amount,
+          'amount',
+          100.0,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.accountId,
+          'accountId',
+          'acc1',
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.categoryId,
+          'categoryId',
+          tCategory.id,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.success,
+        ),
       ],
       verify: (_) {
         verify(() => mockAddRecurringRule(any())).called(1);
@@ -127,8 +156,9 @@ void main() {
     blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
       'should call UpdateRecurringRule when editing an existing rule',
       setUp: () {
-        when(() => mockUpdateRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockUpdateRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
       seed: () => AddEditRecurringRuleState.initial().copyWith(
@@ -141,13 +171,22 @@ void main() {
       ),
       act: (bloc) => bloc.add(FormSubmitted()),
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.inProgress),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.success),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.success,
+        ),
       ],
       verify: (_) {
-        verify(() => mockUpdateRecurringRule(any())).called(1);
+        final params = verify(() => mockUpdateRecurringRule(captureAny()))
+            .captured
+            .single as UpdateRecurringRuleParams;
+        expect(params.userId, 'user-1');
       },
     );
   });
