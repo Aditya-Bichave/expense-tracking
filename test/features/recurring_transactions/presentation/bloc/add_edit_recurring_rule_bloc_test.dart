@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/core/di/service_locator.dart' as di;
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 
 class MockAddRecurringRule extends Mock implements AddRecurringRule {}
 
@@ -19,39 +21,53 @@ class MockUpdateRecurringRule extends Mock implements UpdateRecurringRule {}
 
 class MockUuid extends Mock implements Uuid {}
 
+class MockSettingsBloc extends Mock implements SettingsBloc {}
+
 void main() {
   late AddEditRecurringRuleBloc bloc;
   late MockAddRecurringRule mockAddRecurringRule;
   late MockUpdateRecurringRule mockUpdateRecurringRule;
   late MockUuid mockUuid;
+  late MockSettingsBloc settingsBloc;
 
   setUpAll(() {
-    registerFallbackValue(RecurringRule(
-      id: '',
-      description: '',
-      amount: 0,
-      transactionType: TransactionType.expense,
-      accountId: '',
-      categoryId: '',
-      frequency: Frequency.monthly,
-      interval: 1,
-      startDate: DateTime.now(),
-      endConditionType: EndConditionType.never,
-      status: RuleStatus.active,
-      nextOccurrenceDate: DateTime.now(),
-      occurrencesGenerated: 0,
-    ));
+    registerFallbackValue(
+      RecurringRule(
+        id: '',
+        description: '',
+        amount: 0,
+        transactionType: TransactionType.expense,
+        accountId: '',
+        categoryId: '',
+        frequency: Frequency.monthly,
+        interval: 1,
+        startDate: DateTime.now(),
+        endConditionType: EndConditionType.never,
+        status: RuleStatus.active,
+        nextOccurrenceDate: DateTime.now(),
+        occurrencesGenerated: 0,
+      ),
+    );
   });
 
   setUp(() {
     mockAddRecurringRule = MockAddRecurringRule();
     mockUpdateRecurringRule = MockUpdateRecurringRule();
     mockUuid = MockUuid();
+    settingsBloc = MockSettingsBloc();
+    when(
+      () => settingsBloc.state,
+    ).thenReturn(const SettingsState(selectedCountryCode: 'en_US'));
+    di.sl.registerSingleton<SettingsBloc>(settingsBloc);
     bloc = AddEditRecurringRuleBloc(
       addRecurringRule: mockAddRecurringRule,
       updateRecurringRule: mockUpdateRecurringRule,
       uuid: mockUuid,
     );
+  });
+
+  tearDown(() {
+    di.sl.reset();
   });
 
   final tRule = RecurringRule(
@@ -91,10 +107,31 @@ void main() {
   });
 
   blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
+    'AmountChanged parses locale-specific formats',
+    setUp: () {
+      when(
+        () => settingsBloc.state,
+      ).thenReturn(const SettingsState(selectedCountryCode: 'de_DE'));
+    },
+    build: () => bloc,
+    act: (bloc) => bloc.add(const AmountChanged('1.234,56')),
+    expect: () => [
+      isA<AddEditRecurringRuleState>().having(
+        (s) => s.amount,
+        'amount',
+        1234.56,
+      ),
+    ],
+  );
+
+  blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
     'InitializeForEdit sets startTime from rule startDate',
     build: () => bloc,
-    act: (bloc) => bloc.add(InitializeForEdit(
-        tRule.copyWith(startDate: DateTime(2023, 1, 15, 8, 30)))),
+    act: (bloc) => bloc.add(
+      InitializeForEdit(
+        tRule.copyWith(startDate: DateTime(2023, 1, 15, 8, 30)),
+      ),
+    ),
     expect: () => [
       isA<AddEditRecurringRuleState>().having(
         (s) => s.startTime,
@@ -109,8 +146,9 @@ void main() {
       'should call AddRecurringRule when creating a new rule',
       setUp: () {
         when(() => mockUuid.v4()).thenReturn('new_id');
-        when(() => mockAddRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockAddRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
       act: (bloc) {
@@ -124,10 +162,16 @@ void main() {
       },
       skip: 6,
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.inProgress),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.success),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.success,
+        ),
       ],
       verify: (_) {
         final verification = verify(() => mockAddRecurringRule(captureAny()));
@@ -141,8 +185,9 @@ void main() {
     blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
       'should call UpdateRecurringRule when editing an existing rule',
       setUp: () {
-        when(() => mockUpdateRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockUpdateRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
       seed: () => AddEditRecurringRuleState.initial().copyWith(
@@ -155,10 +200,16 @@ void main() {
       ),
       act: (bloc) => bloc.add(FormSubmitted()),
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.inProgress),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.success),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.success,
+        ),
       ],
       verify: (_) {
         verify(() => mockUpdateRecurringRule(any())).called(1);
