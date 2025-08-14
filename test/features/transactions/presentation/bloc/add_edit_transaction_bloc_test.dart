@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
@@ -154,6 +155,63 @@ void main() {
             .having((s) => s.status, 'error', AddEditStatus.error)
             .having((s) => s.tempTitle, 'title persists', 't')
             .having((s) => s.tempAmount, 'amount persists', 1.0),
+      ],
+    );
+  });
+
+  group('AddEditTransactionBloc initialization', () {
+    late MockAddExpenseUseCase addExpense;
+    late MockUpdateExpenseUseCase updateExpense;
+    late MockAddIncomeUseCase addIncome;
+    late MockUpdateIncomeUseCase updateIncome;
+    late MockCategorizeTransactionUseCase categorize;
+    late MockExpenseRepository expenseRepo;
+    late MockIncomeRepository incomeRepo;
+    late MockCategoryRepository categoryRepo;
+
+    setUp(() {
+      addExpense = MockAddExpenseUseCase();
+      updateExpense = MockUpdateExpenseUseCase();
+      addIncome = MockAddIncomeUseCase();
+      updateIncome = MockUpdateIncomeUseCase();
+      categorize = MockCategorizeTransactionUseCase();
+      expenseRepo = MockExpenseRepository();
+      incomeRepo = MockIncomeRepository();
+      categoryRepo = MockCategoryRepository();
+    });
+
+    blocTest<AddEditTransactionBloc, AddEditTransactionState>(
+      'maps existing transaction into temp fields and clears original',
+      build: () => AddEditTransactionBloc(
+        addExpenseUseCase: addExpense,
+        updateExpenseUseCase: updateExpense,
+        addIncomeUseCase: addIncome,
+        updateIncomeUseCase: updateIncome,
+        categorizeTransactionUseCase: categorize,
+        expenseRepository: expenseRepo,
+        incomeRepository: incomeRepo,
+        categoryRepository: categoryRepo,
+      ),
+      act: (bloc) {
+        final expense = Expense(
+          id: '1',
+          title: 't',
+          amount: 2,
+          date: DateTime(2024),
+          accountId: 'a',
+          category: Category.uncategorized,
+        );
+        bloc.add(
+          InitializeTransaction(
+            initialTransaction: TransactionEntity.fromExpense(expense),
+          ),
+        );
+      },
+      expect: () => [
+        isA<AddEditTransactionState>()
+            .having((s) => s.transactionId, 'id', '1')
+            .having((s) => s.tempTitle, 'title', 't')
+            .having((s) => s.isEditing, 'isEditing', true),
       ],
     );
   });

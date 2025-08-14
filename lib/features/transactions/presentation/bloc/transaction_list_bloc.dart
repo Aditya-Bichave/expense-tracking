@@ -1,6 +1,7 @@
 // lib/features/transactions/presentation/bloc/transaction_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
@@ -56,7 +57,7 @@ class TransactionListBloc
        _incomeRepository = incomeRepository,
        super(const TransactionListState()) {
     // Register Event Handlers
-    on<LoadTransactions>(_onLoadTransactions);
+    on<LoadTransactions>(_onLoadTransactions, transformer: restartable());
     on<FilterChanged>(_onFilterChanged);
     on<SortChanged>(_onSortChanged);
     on<SearchChanged>(_onSearchChanged);
@@ -144,31 +145,32 @@ class TransactionListBloc
       transactionType = state.transactionType;
     }
 
-    // Only show loading state if not already loaded or forced or if filters changed
     final bool filtersChanged = event.incomingFilters != null;
-    if (state.status != ListStatus.success ||
-        event.forceReload ||
-        filtersChanged) {
-      emit(
-        state.copyWith(
-          status: (state.status == ListStatus.success && !filtersChanged)
-              ? ListStatus.reloading
-              : ListStatus.loading,
-          // Apply incoming filters directly to state if they exist
-          startDate: startDate,
-          endDate: endDate,
-          categoryId: categoryId,
-          accountId: accountId,
-          transactionType: transactionType,
-          clearErrorMessage: true,
-          clearDeleteError: true,
-        ),
-      );
-    } else {
+    final bool isLoading =
+        state.status == ListStatus.loading ||
+        state.status == ListStatus.reloading;
+    if (isLoading && !event.forceReload && !filtersChanged) {
       log.info(
-        "[TransactionListBloc] Already loaded, skipping explicit loading state.",
+        "[TransactionListBloc] Load requested while already loading. Ignoring.",
       );
+      return;
     }
+
+    emit(
+      state.copyWith(
+        status: (state.status == ListStatus.success && !filtersChanged)
+            ? ListStatus.reloading
+            : ListStatus.loading,
+        // Apply incoming filters directly to state if they exist
+        startDate: startDate,
+        endDate: endDate,
+        categoryId: categoryId,
+        accountId: accountId,
+        transactionType: transactionType,
+        clearErrorMessage: true,
+        clearDeleteError: true,
+      ),
+    );
 
     final params = GetTransactionsParams(
       startDate: startDate, // Use determined start date

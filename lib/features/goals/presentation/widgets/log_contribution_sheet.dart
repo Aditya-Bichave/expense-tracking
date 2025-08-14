@@ -11,10 +11,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // For getting bloc instance
 import 'package:flutter_svg/flutter_svg.dart'; // For themed icons
+import 'package:expense_tracker/l10n/app_localizations.dart';
 
 // Function to show the sheet
-Future<bool> showLogContributionSheet(BuildContext context, String goalId,
-    {GoalContribution? initialContribution}) async {
+Future<bool> showLogContributionSheet(
+  BuildContext context,
+  String goalId, {
+  GoalContribution? initialContribution,
+}) async {
   return await showModalBottomSheet<bool>(
         context: context,
         isScrollControlled: true,
@@ -26,13 +30,19 @@ Future<bool> showLogContributionSheet(BuildContext context, String goalId,
             // Provide a NEW instance each time the sheet is shown
             // This requires LogContributionBloc to be registered as a Factory in DI
             create: (_) => sl<LogContributionBloc>()
-              ..add(InitializeContribution(
-                  goalId: goalId, initialContribution: initialContribution)),
+              ..add(
+                InitializeContribution(
+                  goalId: goalId,
+                  initialContribution: initialContribution,
+                ),
+              ),
             child: Padding(
               padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(builderContext).viewInsets.bottom),
+                bottom: MediaQuery.of(builderContext).viewInsets.bottom,
+              ),
               child: LogContributionSheetContent(
-                  initialContribution: initialContribution),
+                initialContribution: initialContribution,
+              ),
             ),
           );
         },
@@ -64,8 +74,9 @@ class _LogContributionSheetContentState
     super.initState();
     final initial = widget.initialContribution;
     _isEditing = initial != null;
-    _amountController =
-        TextEditingController(text: initial?.amount.toStringAsFixed(2) ?? '');
+    _amountController = TextEditingController(
+      text: initial?.amount.toStringAsFixed(2) ?? '',
+    );
     _noteController = TextEditingController(text: initial?.note ?? '');
     _selectedDate = initial?.date ?? DateTime.now();
     log.info("[LogContribSheet] initState. Editing: $_isEditing");
@@ -82,29 +93,34 @@ class _LogContributionSheetContentState
     final DateTime initial =
         _selectedDate; // Always use current selected as initial
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: initial,
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2101));
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
     if (picked != null && mounted) {
-      setState(() =>
-          _selectedDate = DateTime(picked.year, picked.month, picked.day));
+      setState(
+        () => _selectedDate = DateTime(picked.year, picked.month, picked.day),
+      );
     }
   }
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       log.info(
-          "[LogContribSheet] Form validated, dispatching SaveContribution.");
-      context.read<LogContributionBloc>().add(SaveContribution(
-            amount:
-                double.tryParse(_amountController.text.replaceAll(',', '.')) ??
-                    0.0,
-            date: _selectedDate,
-            note: _noteController.text.trim().isEmpty
-                ? null
-                : _noteController.text.trim(),
-          ));
+        "[LogContribSheet] Form validated, dispatching SaveContribution.",
+      );
+      context.read<LogContributionBloc>().add(
+            SaveContribution(
+              amount: double.tryParse(
+                      _amountController.text.replaceAll(',', '.')) ??
+                  0.0,
+              date: _selectedDate,
+              note: _noteController.text.trim().isEmpty
+                  ? null
+                  : _noteController.text.trim(),
+            ),
+          );
     } else {
       log.warning("[LogContribSheet] Form validation failed.");
     }
@@ -112,7 +128,10 @@ class _LogContributionSheetContentState
 
   // Helper to get themed prefix icon or null (same as in BudgetForm)
   Widget? _getPrefixIcon(
-      BuildContext context, String iconKey, IconData fallbackIcon) {
+    BuildContext context,
+    String iconKey,
+    IconData fallbackIcon,
+  ) {
     final modeTheme = context.modeTheme;
     final theme = Theme.of(context);
     if (modeTheme != null) {
@@ -120,11 +139,15 @@ class _LogContributionSheetContentState
       if (svgPath.isNotEmpty) {
         return Padding(
           padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(svgPath,
-              width: 20,
-              height: 20,
-              colorFilter: ColorFilter.mode(
-                  theme.colorScheme.onSurfaceVariant, BlendMode.srcIn)),
+          child: SvgPicture.asset(
+            svgPath,
+            width: 20,
+            height: 20,
+            colorFilter: ColorFilter.mode(
+              theme.colorScheme.onSurfaceVariant,
+              BlendMode.srcIn,
+            ),
+          ),
         );
       }
     }
@@ -150,19 +173,25 @@ class _LogContributionSheetContentState
           log.warning("[LogContribSheet] Save error: ${state.errorMessage}");
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              content: Text('Error: ${state.errorMessage}'),
-              backgroundColor: theme.colorScheme.error,
-            ));
-          context
-              .read<LogContributionBloc>()
-              .add(const ClearContributionMessage());
+            ..showSnackBar(
+              SnackBar(
+                content: Text('Error: ${state.errorMessage}'),
+                backgroundColor: theme.colorScheme.error,
+              ),
+            );
+          context.read<LogContributionBloc>().add(
+                const ClearContributionMessage(),
+              );
         }
       },
       child: Padding(
         // --- PHASE 5: Apply themed padding (or default) ---
-        padding: modeTheme?.pagePadding
-                .copyWith(left: 20, right: 20, top: 8, bottom: 20) ??
+        padding: modeTheme?.pagePadding.copyWith(
+              left: 20,
+              right: 20,
+              top: 8,
+              bottom: 20,
+            ) ??
             const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
@@ -172,9 +201,11 @@ class _LogContributionSheetContentState
             children: [
               // Drag Handle & Title
               const Row(/* ... Drag Handle ... */),
-              Text(_isEditing ? 'Edit Contribution' : 'Log Contribution',
-                  style: theme.textTheme.titleLarge,
-                  textAlign: TextAlign.center),
+              Text(
+                _isEditing ? 'Edit Contribution' : 'Log Contribution',
+                style: theme.textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 20),
 
               // Amount
@@ -183,13 +214,18 @@ class _LogContributionSheetContentState
                 labelText: 'Amount Contributed',
                 prefixText: '$currencySymbol ',
                 // --- PHASE 5: Use helper for potentially themed icon ---
-                prefixIcon: _getPrefixIcon(context, 'savings',
-                    Icons.savings_outlined), // Example key 'savings'
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                prefixIcon: _getPrefixIcon(
+                  context,
+                  'savings',
+                  Icons.savings_outlined,
+                ), // Example key 'savings'
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(
-                      RegExp(r'^\d*[,.]?\d{0,2}')),
+                    RegExp(r'^\d*[,.]?\d{0,2}'),
+                  ),
                 ],
                 validator: (value) {
                   return null; /* ... validation ... */
@@ -204,14 +240,19 @@ class _LogContributionSheetContentState
                     const OutlineInputBorder(),
                 // --- PHASE 5: Use helper for potentially themed icon ---
                 leading: Padding(
-                    padding: const EdgeInsets.only(left: 12.0),
-                    child: _getPrefixIcon(
-                        context, 'calendar', Icons.calendar_today)),
-                title: const Text('Contribution Date'),
+                  padding: const EdgeInsetsDirectional.only(start: 12.0),
+                  child: _getPrefixIcon(
+                    context,
+                    'calendar',
+                    Icons.calendar_today,
+                  ),
+                ),
+                title: Text(AppLocalizations.of(context)!.contributionDate),
                 subtitle: Text(DateFormatter.formatDate(_selectedDate)),
                 trailing: const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
-                    child: Icon(Icons.edit_calendar_outlined)),
+                  padding: EdgeInsetsDirectional.only(end: 8.0),
+                  child: Icon(Icons.edit_calendar_outlined),
+                ),
                 onTap: () => _selectDate(context),
               ),
               const SizedBox(height: 16),
@@ -221,8 +262,11 @@ class _LogContributionSheetContentState
                 controller: _noteController,
                 labelText: 'Note (Optional)',
                 // --- PHASE 5: Use helper for potentially themed icon ---
-                prefixIcon:
-                    _getPrefixIcon(context, 'notes', Icons.note_alt_outlined),
+                prefixIcon: _getPrefixIcon(
+                  context,
+                  'notes',
+                  Icons.note_alt_outlined,
+                ),
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
@@ -236,16 +280,17 @@ class _LogContributionSheetContentState
                       icon: const Icon(Icons.delete_outline),
                       label: const Text("Delete"),
                       style: OutlinedButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error),
+                        foregroundColor: theme.colorScheme.error,
+                      ),
                       onPressed:
                           context.watch<LogContributionBloc>().state.status ==
                                   LogContributionStatus.loading
                               ? null
                               : () async {
                                   // Confirmation is handled in GoalDetailPage before calling delete use case
-                                  context
-                                      .read<LogContributionBloc>()
-                                      .add(const DeleteContribution());
+                                  context.read<LogContributionBloc>().add(
+                                        const DeleteContribution(),
+                                      );
                                 },
                     ),
                   if (_isEditing) const SizedBox(width: 10),
@@ -260,13 +305,20 @@ class _LogContributionSheetContentState
                                   height: 20,
                                   padding: const EdgeInsets.all(2),
                                   child: const CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
-                              : Icon(_isEditing
-                                  ? Icons.save_outlined
-                                  : Icons.add_task_outlined),
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Icon(
+                                  _isEditing
+                                      ? Icons.save_outlined
+                                      : Icons.add_task_outlined,
+                                ),
                           label: Text(_isEditing ? 'Update' : 'Add'),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16,
+                            ),
                             textStyle: theme.textTheme.titleMedium,
                           ),
                           onPressed:

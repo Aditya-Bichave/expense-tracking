@@ -210,4 +210,212 @@ void main() {
       ],
     );
   });
+
+
+  group('TransactionListBloc filtering and sorting', () {
+    late MockGetTransactionsUseCase getTransactions;
+    late MockDeleteExpenseUseCase deleteExpense;
+    late MockDeleteIncomeUseCase deleteIncome;
+    late MockApplyBatchCategoryUseCase applyBatch;
+    late MockSaveUserCategorizationHistoryUseCase saveHistory;
+    late MockExpenseRepository expenseRepo;
+    late MockIncomeRepository incomeRepo;
+
+    setUp(() {
+      getTransactions = MockGetTransactionsUseCase();
+      deleteExpense = MockDeleteExpenseUseCase();
+      deleteIncome = MockDeleteIncomeUseCase();
+      applyBatch = MockApplyBatchCategoryUseCase();
+      saveHistory = MockSaveUserCategorizationHistoryUseCase();
+      expenseRepo = MockExpenseRepository();
+      incomeRepo = MockIncomeRepository();
+    });
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'loads transactions with incoming filters',
+      build: () {
+        when(() => getTransactions(any())).thenAnswer((_) async => Right([]));
+        return TransactionListBloc(
+          getTransactionsUseCase: getTransactions,
+          deleteExpenseUseCase: deleteExpense,
+          deleteIncomeUseCase: deleteIncome,
+          applyCategoryToBatchUseCase: applyBatch,
+          saveUserHistoryUseCase: saveHistory,
+          expenseRepository: expenseRepo,
+          incomeRepository: incomeRepo,
+          dataChangeStream: const Stream<DataChangedEvent>.empty(),
+        );
+      },
+      act: (bloc) => bloc.add(
+        const LoadTransactions(
+          incomingFilters: {'categoryId': 'c1', 'accountId': 'a1'},
+        ),
+      ),
+      expect: () => [
+        isA<TransactionListState>()
+            .having((s) => s.status, 'loading', ListStatus.loading)
+            .having((s) => s.categoryId, 'categoryId', 'c1')
+            .having((s) => s.accountId, 'accountId', 'a1'),
+        isA<TransactionListState>()
+            .having((s) => s.status, 'success', ListStatus.success)
+            .having((s) => s.categoryId, 'categoryId', 'c1')
+            .having((s) => s.accountId, 'accountId', 'a1'),
+      ],
+      verify: (_) {
+        verify(() => getTransactions(any())).called(1);
+      },
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'updates filters and reloads',
+      build: () {
+        when(() => getTransactions(any())).thenAnswer((_) async => Right([]));
+        return TransactionListBloc(
+          getTransactionsUseCase: getTransactions,
+          deleteExpenseUseCase: deleteExpense,
+          deleteIncomeUseCase: deleteIncome,
+          applyCategoryToBatchUseCase: applyBatch,
+          saveUserHistoryUseCase: saveHistory,
+          expenseRepository: expenseRepo,
+          incomeRepository: incomeRepo,
+          dataChangeStream: const Stream<DataChangedEvent>.empty(),
+        );
+      },
+      seed: () => const TransactionListState(status: ListStatus.success),
+      act: (bloc) => bloc.add(const FilterChanged(categoryId: 'c1')),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.categoryId,
+          'categoryId',
+          'c1',
+        ),
+        isA<TransactionListState>()
+            .having((s) => s.status, 'reloading', ListStatus.reloading),
+        isA<TransactionListState>()
+            .having((s) => s.status, 'success', ListStatus.success),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'updates sort and reloads',
+      build: () {
+        when(() => getTransactions(any())).thenAnswer((_) async => Right([]));
+        return TransactionListBloc(
+          getTransactionsUseCase: getTransactions,
+          deleteExpenseUseCase: deleteExpense,
+          deleteIncomeUseCase: deleteIncome,
+          applyCategoryToBatchUseCase: applyBatch,
+          saveUserHistoryUseCase: saveHistory,
+          expenseRepository: expenseRepo,
+          incomeRepository: incomeRepo,
+          dataChangeStream: const Stream<DataChangedEvent>.empty(),
+        );
+      },
+      seed: () => const TransactionListState(status: ListStatus.success),
+      act: (bloc) => bloc.add(
+        const SortChanged(
+          sortBy: TransactionSortBy.amount,
+          sortDirection: SortDirection.ascending,
+        ),
+      ),
+      expect: () => [
+        isA<TransactionListState>()
+            .having((s) => s.sortBy, 'sortBy', TransactionSortBy.amount)
+            .having(
+              (s) => s.sortDirection,
+              'direction',
+              SortDirection.ascending,
+            ),
+        isA<TransactionListState>()
+            .having((s) => s.status, 'reloading', ListStatus.reloading),
+        isA<TransactionListState>()
+            .having((s) => s.status, 'success', ListStatus.success),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'updates search term and reloads',
+      build: () {
+        when(() => getTransactions(any())).thenAnswer((_) async => Right([]));
+        return TransactionListBloc(
+          getTransactionsUseCase: getTransactions,
+          deleteExpenseUseCase: deleteExpense,
+          deleteIncomeUseCase: deleteIncome,
+          applyCategoryToBatchUseCase: applyBatch,
+          saveUserHistoryUseCase: saveHistory,
+          expenseRepository: expenseRepo,
+          incomeRepository: incomeRepo,
+          dataChangeStream: const Stream<DataChangedEvent>.empty(),
+        );
+      },
+      seed: () => const TransactionListState(status: ListStatus.success),
+      act: (bloc) => bloc.add(const SearchChanged(searchTerm: 'coffee')),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.searchTerm,
+          'search',
+          'coffee',
+        ),
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'reloading',
+          ListStatus.reloading,
+        ),
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'success',
+          ListStatus.success,
+        ),
+      ],
+    );
+  });
+
+  group('TransactionListBloc batch edit toggle', () {
+    late MockGetTransactionsUseCase getTransactions;
+    late MockDeleteExpenseUseCase deleteExpense;
+    late MockDeleteIncomeUseCase deleteIncome;
+    late MockApplyBatchCategoryUseCase applyBatch;
+    late MockSaveUserCategorizationHistoryUseCase saveHistory;
+    late MockExpenseRepository expenseRepo;
+    late MockIncomeRepository incomeRepo;
+
+    setUp(() {
+      getTransactions = MockGetTransactionsUseCase();
+      deleteExpense = MockDeleteExpenseUseCase();
+      deleteIncome = MockDeleteIncomeUseCase();
+      applyBatch = MockApplyBatchCategoryUseCase();
+      saveHistory = MockSaveUserCategorizationHistoryUseCase();
+      expenseRepo = MockExpenseRepository();
+      incomeRepo = MockIncomeRepository();
+    });
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'toggles batch edit mode and clears selection when turning off',
+      build: () => TransactionListBloc(
+        getTransactionsUseCase: getTransactions,
+        deleteExpenseUseCase: deleteExpense,
+        deleteIncomeUseCase: deleteIncome,
+        applyCategoryToBatchUseCase: applyBatch,
+        saveUserHistoryUseCase: saveHistory,
+        expenseRepository: expenseRepo,
+        incomeRepository: incomeRepo,
+        dataChangeStream: const Stream<DataChangedEvent>.empty(),
+      ),
+      seed: () => const TransactionListState(
+        isInBatchEditMode: true,
+        selectedTransactionIds: {'1'},
+      ),
+      act: (bloc) => bloc.add(const ToggleBatchEdit()),
+      expect: () => [
+        isA<TransactionListState>()
+            .having((s) => s.isInBatchEditMode, 'batch off', false)
+            .having(
+              (s) => s.selectedTransactionIds.isEmpty,
+              'selection cleared',
+              true,
+            ),
+      ],
+
+    );
+  });
 }

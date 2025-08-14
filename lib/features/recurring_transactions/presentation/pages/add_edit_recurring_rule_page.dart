@@ -11,6 +11,8 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
+import '../../utils/weekday_names.dart';
 
 class AddEditRecurringRulePage extends StatelessWidget {
   final RecurringRule? initialRule;
@@ -86,8 +88,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
       appBar: AppBar(
         title: Text(
           widget.initialRule == null
-              ? 'Add Recurring Rule'
-              : 'Edit Recurring Rule',
+              ? AppLocalizations.of(context)!.addRecurringRule
+              : AppLocalizations.of(context)!.editRecurringRule,
         ),
       ),
       body: BlocConsumer<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
@@ -99,7 +101,10 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
-                  content: Text(state.errorMessage ?? 'An error occurred.'),
+                  content: Text(
+                    state.errorMessage ??
+                        AppLocalizations.of(context)!.anErrorOccurred,
+                  ),
                 ),
               );
           }
@@ -135,7 +140,10 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         state.transactionType == TransactionType.expense
                         ? 0
                         : 1,
-                    labels: const ['Expense', 'Income'],
+                    labels: [
+                      AppLocalizations.of(context)!.expense,
+                      AppLocalizations.of(context)!.income,
+                    ],
                     activeBgColors: [
                       [
                         theme.colorScheme.errorContainer.withOpacity(0.7),
@@ -160,7 +168,9 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(labelText: 'Description'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.description,
+                    ),
                     onChanged: (value) => context
                         .read<AddEditRecurringRuleBloc>()
                         .add(DescriptionChanged(value)),
@@ -168,7 +178,9 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _amountController,
-                    decoration: const InputDecoration(labelText: 'Amount'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.amount,
+                    ),
                     keyboardType: TextInputType.number,
                     onChanged: (value) => context
                         .read<AddEditRecurringRuleBloc>()
@@ -178,7 +190,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   ListTile(
                     leading: const Icon(Icons.category),
                     title: Text(
-                      state.selectedCategory?.name ?? 'Select Category',
+                      state.selectedCategory?.name ??
+                          AppLocalizations.of(context)!.selectCategory,
                     ),
                     onTap: () async {
                       final filter =
@@ -214,7 +227,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   const Divider(),
                   const SizedBox(height: 16),
                   AppDropdownFormField<Frequency>(
-                    labelText: 'Frequency',
+                    labelText: AppLocalizations.of(context)!.frequency,
                     value: state.frequency,
                     items: Frequency.values
                         .map(
@@ -235,7 +248,8 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     ListTile(
                       leading: const Icon(Icons.access_time),
                       title: Text(
-                        state.startTime?.format(context) ?? 'Select Time',
+                        state.startTime?.format(context) ??
+                            AppLocalizations.of(context)!.selectTime,
                       ),
                       onTap: () async {
                         final time = await showTimePicker(
@@ -251,13 +265,13 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     ),
                   if (state.frequency == Frequency.weekly)
                     AppDropdownFormField<int>(
-                      labelText: 'Day of Week',
+                      labelText: AppLocalizations.of(context)!.dayOfWeek,
                       value: state.dayOfWeek,
                       items: List.generate(
                         7,
                         (index) => DropdownMenuItem(
                           value: index + 1,
-                          child: Text(_weekdayNamesMonFirst()[index]),
+                          child: Text(_weekdayNamesMonFirst(context)[index]),
                         ),
                       ),
                       onChanged: (value) {
@@ -270,7 +284,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     ),
                   if (state.frequency == Frequency.monthly)
                     AppDropdownFormField<int>(
-                      labelText: 'Day of Month',
+                      labelText: AppLocalizations.of(context)!.dayOfMonth,
                       value: state.dayOfMonth,
                       items: List.generate(
                         31,
@@ -289,7 +303,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     ),
                   const SizedBox(height: 16),
                   AppDropdownFormField<EndConditionType>(
-                    labelText: 'Ends',
+                    labelText: AppLocalizations.of(context)!.ends,
                     value: state.endConditionType,
                     items: EndConditionType.values
                         .map(
@@ -311,7 +325,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       title: Text(
                         state.endDate != null
                             ? DateFormat.yMd().format(state.endDate!)
-                            : 'Select End Date',
+                            : AppLocalizations.of(context)!.selectEndDate,
                       ),
                       onTap: () async {
                         final date = await showDatePicker(
@@ -331,8 +345,11 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                       EndConditionType.afterOccurrences)
                     TextFormField(
                       controller: _occurrencesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Number of Occurrences',
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(
+                          context,
+                        )!
+                            .numberOfOccurrences,
                       ),
                       keyboardType: TextInputType.number,
                       onChanged: (value) => context
@@ -348,7 +365,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                           ),
                     child: state.status == FormStatus.inProgress
                         ? const CircularProgressIndicator()
-                        : const Text('Save'),
+                        : Text(AppLocalizations.of(context)!.save),
                   ),
                 ],
               ),

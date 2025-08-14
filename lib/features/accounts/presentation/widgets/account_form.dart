@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:intl/intl.dart';
 
 // Callback remains the same, still submitting the value from the field as 'initialBalance'
 typedef AccountSubmitCallback =
@@ -14,9 +15,7 @@ typedef AccountSubmitCallback =
 
 class AccountForm extends StatefulWidget {
   final AssetAccount? initialAccount;
-  // --- ADDED: Pass current balance for display during edit ---
   final double? currentBalanceForDisplay;
-  // --- END ADDED ---
   final AccountSubmitCallback onSubmit;
 
   const AccountForm({
@@ -28,13 +27,6 @@ class AccountForm extends StatefulWidget {
 
   @override
   State<AccountForm> createState() => _AccountFormState();
-}
-
-extension StringExtensionCapitalize on String {
-  String capitalizeForm() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
 }
 
 class _AccountFormState extends State<AccountForm> {
@@ -152,7 +144,7 @@ class _AccountFormState extends State<AccountForm> {
                       color: theme.colorScheme.secondary,
                     ),
                     const SizedBox(width: 8),
-                    Text(type.name.capitalizeForm()),
+                    Text(toBeginningOfSentenceCase(type.name) ?? type.name),
                   ],
                 ),
               );
@@ -193,7 +185,7 @@ class _AccountFormState extends State<AccountForm> {
           ),
           if (_isEditing) // Add helper text when editing
             Padding(
-              padding: const EdgeInsets.only(top: 4.0, left: 12.0),
+              padding: const EdgeInsetsDirectional.only(top: 4.0, start: 12.0),
               child: Text(
                 'Editing this updates the initial balance setting.',
                 style: theme.textTheme.bodySmall?.copyWith(

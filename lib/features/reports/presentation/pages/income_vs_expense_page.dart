@@ -15,6 +15,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -33,7 +34,8 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
   void _toggleComparison() {
     final newComparisonState = !_showComparison;
     setState(
-        () => _showComparison = newComparisonState); // Update local state first
+      () => _showComparison = newComparisonState,
+    ); // Update local state first
 
     // Get current period type from BLoC state
     final currentState = context.read<IncomeExpenseReportBloc>().state;
@@ -44,16 +46,22 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             : IncomeExpensePeriodType.monthly; // Default
 
     // Dispatch event with the NEW comparison state
-    context.read<IncomeExpenseReportBloc>().add(LoadIncomeExpenseReport(
-          compareToPrevious: newComparisonState, // Pass the toggled value
-          periodType: currentPeriod,
-        ));
+    context.read<IncomeExpenseReportBloc>().add(
+          LoadIncomeExpenseReport(
+            compareToPrevious: newComparisonState, // Pass the toggled value
+            periodType: currentPeriod,
+          ),
+        );
     log.info(
-        "[IncomeVsExpensePage] Toggled comparison to: $newComparisonState");
+      "[IncomeVsExpensePage] Toggled comparison to: $newComparisonState",
+    );
   }
 
-  void _navigateToFilteredTransactions(BuildContext context,
-      IncomeExpensePeriodData periodData, TransactionType type) {
+  void _navigateToFilteredTransactions(
+    BuildContext context,
+    IncomeExpensePeriodData periodData,
+    TransactionType type,
+  ) {
     final filterBlocState = context.read<ReportFilterBloc>().state;
     final reportState = context.read<IncomeExpenseReportBloc>().state;
     // Ensure state is loaded before proceeding
@@ -64,8 +72,14 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     DateTime periodStart = periodData.periodStart;
     DateTime periodEnd;
     if (periodType == IncomeExpensePeriodType.monthly) {
-      periodEnd =
-          DateTime(periodStart.year, periodStart.month + 1, 0, 23, 59, 59);
+      periodEnd = DateTime(
+        periodStart.year,
+        periodStart.month + 1,
+        0,
+        23,
+        59,
+        59,
+      );
     } else {
       // Yearly
       periodEnd = DateTime(periodStart.year, 12, 31, 23, 59, 59);
@@ -81,7 +95,8 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     }
 
     log.info(
-        "[IncomeVsExpensePage] Navigating to transactions with filters: $filters");
+      "[IncomeVsExpensePage] Navigating to transactions with filters: $filters",
+    );
     context.push(RouteNames.transactionsList, extra: {'filters': filters});
   }
 
@@ -93,15 +108,20 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
-      title: 'Income vs Expense',
+      title: AppLocalizations.of(context)!.incomeVsExpense,
       actions: [
         IconButton(
-            icon: Icon(_showComparison
+          icon: Icon(
+            _showComparison
                 ? Icons.compare_arrows_rounded
-                : Icons.compare_arrows_outlined),
-            tooltip: _showComparison ? "Hide Comparison" : "Compare Period",
-            color: _showComparison ? theme.colorScheme.primary : null,
-            onPressed: _toggleComparison),
+                : Icons.compare_arrows_outlined,
+          ),
+          tooltip: _showComparison
+              ? AppLocalizations.of(context)!.hideComparison
+              : AppLocalizations.of(context)!.comparePeriod,
+          color: _showComparison ? theme.colorScheme.primary : null,
+          onPressed: _toggleComparison,
+        ),
         BlocBuilder<IncomeExpenseReportBloc, IncomeExpenseReportState>(
           builder: (context, state) {
             final currentPeriod = (state is IncomeExpenseReportLoaded)
@@ -110,22 +130,27 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
                     ? state.periodType
                     : IncomeExpensePeriodType.monthly;
             return PopupMenuButton<IncomeExpensePeriodType>(
-                initialValue: currentPeriod,
-                onSelected: (p) {
-                  // When period changes, also pass current comparison state
-                  context
-                      .read<IncomeExpenseReportBloc>()
-                      .add(LoadIncomeExpenseReport(
+              initialValue: currentPeriod,
+              onSelected: (p) {
+                // When period changes, also pass current comparison state
+                context.read<IncomeExpenseReportBloc>().add(
+                      LoadIncomeExpenseReport(
                         periodType: p,
                         compareToPrevious: _showComparison,
-                      ));
-                },
-                icon: const Icon(Icons.calendar_view_month_outlined),
-                tooltip: "Change Period Aggregation",
-                itemBuilder: (_) => IncomeExpensePeriodType.values
-                    .map((p) => PopupMenuItem<IncomeExpensePeriodType>(
-                        value: p, child: Text(p.name.capitalize())))
-                    .toList());
+                      ),
+                    );
+              },
+              icon: const Icon(Icons.calendar_view_month_outlined),
+              tooltip: AppLocalizations.of(context)!.changePeriodAggregation,
+              itemBuilder: (_) => IncomeExpensePeriodType.values
+                  .map(
+                    (p) => PopupMenuItem<IncomeExpensePeriodType>(
+                      value: p,
+                      child: Text(toBeginningOfSentenceCase(p.name) ?? p.name),
+                    ),
+                  )
+                  .toList(),
+            );
           },
         ),
       ],
@@ -134,10 +159,14 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
         if (state is IncomeExpenseReportLoaded) {
           final helper = sl<CsvExportHelper>();
           return helper.exportIncomeExpenseReport(
-              state.reportData, currencySymbol,
-              showComparison: _showComparison);
+            state.reportData,
+            currencySymbol,
+            showComparison: _showComparison,
+          );
         }
-        return const Right(ExportFailure("Report data not loaded yet."));
+        return Right(
+          ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
+        );
       },
       body: BlocBuilder<IncomeExpenseReportBloc, IncomeExpenseReportState>(
         builder: (context, state) {
@@ -145,33 +174,41 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             return const Center(child: CircularProgressIndicator());
           if (state is IncomeExpenseReportError)
             return Center(
-                child: Text("Error: ${state.message}",
-                    style: TextStyle(color: theme.colorScheme.error)));
+              child: Text(
+                "Error: ${state.message}",
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            );
           if (state is IncomeExpenseReportLoaded) {
             final reportData = state.reportData;
             if (reportData.periodData.isEmpty)
               return const Center(
-                  child: Text("No income or expense data for this period."));
+                child: Text("No income or expense data for this period."),
+              );
 
             Widget chartWidget = IncomeExpenseBarChart(
-                data: reportData.periodData,
-                showComparison: _showComparison,
-                onTapBar: (groupIndex, rodIndex) {
-                  TransactionType type;
-                  if (_showComparison) {
-                    // PrevIncome=0, CurrIncome=1, PrevExpense=2, CurrExpense=3
-                    type = (rodIndex <= 1)
-                        ? TransactionType.income
-                        : TransactionType.expense;
-                  } else {
-                    // CurrIncome=0, CurrExpense=1
-                    type = (rodIndex == 0)
-                        ? TransactionType.income
-                        : TransactionType.expense;
-                  }
-                  _navigateToFilteredTransactions(
-                      context, reportData.periodData[groupIndex], type);
-                });
+              data: reportData.periodData,
+              showComparison: _showComparison,
+              onTapBar: (groupIndex, rodIndex) {
+                TransactionType type;
+                if (_showComparison) {
+                  // PrevIncome=0, CurrIncome=1, PrevExpense=2, CurrExpense=3
+                  type = (rodIndex <= 1)
+                      ? TransactionType.income
+                      : TransactionType.expense;
+                } else {
+                  // CurrIncome=0, CurrExpense=1
+                  type = (rodIndex == 0)
+                      ? TransactionType.income
+                      : TransactionType.expense;
+                }
+                _navigateToFilteredTransactions(
+                  context,
+                  reportData.periodData[groupIndex],
+                  type,
+                );
+              },
+            );
 
             final bool showTable = settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
@@ -179,12 +216,19 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             return ListView(
               children: [
                 Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 8.0),
-                    child: SizedBox(height: 250, child: chartWidget)),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 8.0,
+                  ),
+                  child: SizedBox(height: 250, child: chartWidget),
+                ),
                 const Divider(),
                 _buildDataTable(
-                    context, reportData, settingsState, _showComparison),
+                  context,
+                  reportData,
+                  settingsState,
+                  _showComparison,
+                ),
                 const SizedBox(height: 80),
               ],
             );
@@ -196,7 +240,9 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
   }
 
   String _formatPeriodHeader(
-      DateTime date, IncomeExpensePeriodType periodType) {
+    DateTime date,
+    IncomeExpensePeriodType periodType,
+  ) {
     switch (periodType) {
       case IncomeExpensePeriodType.monthly:
         return DateFormat('MMM yyyy').format(date);
@@ -205,8 +251,12 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     }
   }
 
-  Widget _buildDataTable(BuildContext context, IncomeExpenseReportData data,
-      SettingsState settings, bool showComparison) {
+  Widget _buildDataTable(
+    BuildContext context,
+    IncomeExpenseReportData data,
+    SettingsState settings,
+    bool showComparison,
+  ) {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
 
@@ -214,12 +264,12 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
       const DataColumn(label: Text('Period')),
       const DataColumn(label: Text('Income'), numeric: true),
       const DataColumn(label: Text('Expense'), numeric: true),
-      const DataColumn(label: Text('Net Flow'), numeric: true)
+      const DataColumn(label: Text('Net Flow'), numeric: true),
     ];
     if (showComparison) {
       columns.addAll([
         const DataColumn(label: Text('Prev Net'), numeric: true),
-        const DataColumn(label: Text('Net Δ%'), numeric: true)
+        const DataColumn(label: Text('Net Δ%'), numeric: true),
       ]);
     }
 
@@ -258,40 +308,62 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
           return DataRow(
             cells: [
               DataCell(
-                  Text(_formatPeriodHeader(item.periodStart, data.periodType))),
+                Text(_formatPeriodHeader(item.periodStart, data.periodType)),
+              ),
               DataCell(
-                  Text(CurrencyFormatter.format(
-                      item.currentTotalIncome, currencySymbol)),
-                  onTap: () => _navigateToFilteredTransactions(
-                      context, item, TransactionType.income)),
+                Text(
+                  CurrencyFormatter.format(
+                    item.currentTotalIncome,
+                    currencySymbol,
+                  ),
+                ),
+                onTap: () => _navigateToFilteredTransactions(
+                  context,
+                  item,
+                  TransactionType.income,
+                ),
+              ),
               DataCell(
-                  Text(CurrencyFormatter.format(
-                      item.currentTotalExpense, currencySymbol)),
-                  onTap: () => _navigateToFilteredTransactions(
-                      context, item, TransactionType.expense)),
-              DataCell(Text(
+                Text(
+                  CurrencyFormatter.format(
+                    item.currentTotalExpense,
+                    currencySymbol,
+                  ),
+                ),
+                onTap: () => _navigateToFilteredTransactions(
+                  context,
+                  item,
+                  TransactionType.expense,
+                ),
+              ),
+              DataCell(
+                Text(
                   CurrencyFormatter.format(item.currentNetFlow, currencySymbol),
                   style: TextStyle(
-                      color: netFlowColor, fontWeight: FontWeight.w500))),
-              if (showComparison)
-                DataCell(Text(netFlow.previousValue != null
-                    ? CurrencyFormatter.format(
-                        netFlow.previousValue!, currencySymbol)
-                    : 'N/A')),
+                    color: netFlowColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
               if (showComparison)
                 DataCell(
-                    Text(changeText, style: TextStyle(color: changeColor))),
+                  Text(
+                    netFlow.previousValue != null
+                        ? CurrencyFormatter.format(
+                            netFlow.previousValue!,
+                            currencySymbol,
+                          )
+                        : 'N/A',
+                  ),
+                ),
+              if (showComparison)
+                DataCell(
+                  Text(changeText, style: TextStyle(color: changeColor)),
+                ),
             ],
           );
         }).toList(),
       ),
     );
-  }
-}
-
-extension StringCapExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

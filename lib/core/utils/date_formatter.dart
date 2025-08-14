@@ -1,21 +1,20 @@
 import 'package:intl/intl.dart';
 
 class DateFormatter {
-  static String formatDateTime(DateTime dateTime) {
+  static String formatDateTime(DateTime dateTime, {String? locale}) {
     try {
-      // Example format: Jan 5, 2024 03:45 PM
-      return DateFormat('MMM d, yyyy hh:mm a').format(dateTime);
+      final format = DateFormat.yMMMd(locale).add_jm();
+      return format.format(dateTime);
     } catch (e) {
-      return dateTime.toIso8601String(); // Fallback
+      return dateTime.toIso8601String();
     }
   }
 
-  static String formatDate(DateTime dateTime) {
+  static String formatDate(DateTime dateTime, {String? locale}) {
     try {
-      // Example format: 2024-01-05
-      return DateFormat('yyyy-MM-dd').format(dateTime);
+      return DateFormat.yMd(locale).format(dateTime);
     } catch (e) {
-      return "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}"; // Fallback
+      return "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}";
     }
   }
 }
