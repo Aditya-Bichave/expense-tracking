@@ -161,6 +161,7 @@ class TransactionListBloc
           accountId: accountId,
           transactionType: transactionType,
           clearErrorMessage: true,
+          clearDeleteError: true,
         ),
       );
     } else {
@@ -214,6 +215,7 @@ class TransactionListBloc
             accountId: accountId,
             transactionType: transactionType,
             clearErrorMessage: true,
+            clearDeleteError: true,
           ),
         );
       },
@@ -242,6 +244,7 @@ class TransactionListBloc
         clearTransactionType:
             event.transactionType == null && state.transactionType != null,
         clearErrorMessage: true,
+        clearDeleteError: true,
       ),
     );
     // Then trigger LoadTransactions which will use the new state filters
@@ -263,6 +266,7 @@ class TransactionListBloc
         isInBatchEditMode: false,
         selectedTransactionIds: {},
         clearErrorMessage: true,
+        clearDeleteError: true,
       ),
     );
     // Then trigger reload
@@ -284,6 +288,7 @@ class TransactionListBloc
         isInBatchEditMode: false,
         selectedTransactionIds: {},
         clearErrorMessage: true,
+        clearDeleteError: true,
       ),
     );
     // Then trigger reload
@@ -301,6 +306,7 @@ class TransactionListBloc
         isInBatchEditMode: newMode,
         selectedTransactionIds: newMode ? state.selectedTransactionIds : {},
         clearErrorMessage: true,
+        clearDeleteError: true,
       ),
     );
   }
@@ -341,7 +347,7 @@ class TransactionListBloc
     );
 
     emit(
-      state.copyWith(status: ListStatus.reloading),
+      state.copyWith(status: ListStatus.reloading, clearDeleteError: true),
     ); // Show loading indicator
 
     final List<String> expenseIds = [];
@@ -412,48 +418,28 @@ class TransactionListBloc
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (state.status == ListStatus.error) {
           emit(
-            state.copyWith(status: ListStatus.success, clearErrorMessage: true),
+            state.copyWith(
+              status: ListStatus.success,
+              clearErrorMessage: true,
+              clearDeleteError: true,
+            ),
           );
         }
       });
     } else {
       log.info(
-        "[TransactionListBloc] ApplyBatchCategory successful. Updating state in-memory.",
+        "[TransactionListBloc] ApplyBatchCategory successful. Refreshing transactions from source.",
       );
-      final categoryResult = await sl<CategoryRepository>().getCategoryById(
-        event.categoryId,
-      );
-      final category = categoryResult.getOrElse(() => Category.uncategorized);
-      final updatedTransactions = state.transactions.map((t) {
-        if (state.selectedTransactionIds.contains(t.id)) {
-          if (t.type == TransactionType.expense && t.expense != null) {
-            final updated = t.expense!.copyWith(
-              category: category,
-              status: CategorizationStatus.categorized,
-              confidenceScore: 1.0,
-            );
-            return TransactionEntity.fromExpense(updated);
-          } else if (t.type == TransactionType.income && t.income != null) {
-            final updated = t.income!.copyWith(
-              category: category,
-              status: CategorizationStatus.categorized,
-              confidenceScore: 1.0,
-            );
-            return TransactionEntity.fromIncome(updated);
-          }
-        }
-        return t;
-      }).toList();
-
       emit(
         state.copyWith(
           isInBatchEditMode: false,
           selectedTransactionIds: {},
-          transactions: updatedTransactions,
-          status: ListStatus.success, // Important: Set back to success
+          status: ListStatus.reloading,
           clearErrorMessage: true,
+          clearDeleteError: true,
         ),
       );
+      add(const LoadTransactions(forceReload: true));
     }
   }
 
@@ -479,6 +465,7 @@ class TransactionListBloc
         transactions: optimisticList,
         selectedTransactionIds: updatedSelection,
         clearErrorMessage: true,
+        clearDeleteError: true,
       ),
     );
 
@@ -493,10 +480,11 @@ class TransactionListBloc
         );
         emit(
           previousState.copyWith(
-            errorMessage: _mapFailureToMessage(
+            deleteError: _mapFailureToMessage(
               failure,
               context: "Failed to delete",
             ),
+            clearErrorMessage: true,
           ),
         );
       },
@@ -602,6 +590,7 @@ class TransactionListBloc
           state.copyWith(
             transactions: updatedTransactions,
             clearErrorMessage: true,
+            clearDeleteError: true,
           ),
         );
       },

@@ -49,8 +49,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   void initState() {
     super.initState();
     _loadData();
-    _budgetSubscription =
-        context.read<BudgetListBloc>().stream.listen(_handleBlocStateChange);
+    _budgetSubscription = context.read<BudgetListBloc>().stream.listen(
+      _handleBlocStateChange,
+    );
     _transactionSubscription = context
         .read<TransactionListBloc>()
         .stream
@@ -70,8 +71,54 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   }
 
   void _handleBlocStateChange(dynamic state) {
-    if (mounted && !_isLoading) {
-      log.fine("[BudgetDetail] Received Bloc update, reloading detail data.");
+    if (!mounted || _isLoading) return;
+
+    bool shouldReload = false;
+
+    if (state is BudgetListState) {
+      shouldReload = state.budgetsWithStatus.any(
+        (bws) => bws.budget.id == widget.budgetId,
+      );
+    } else if (state is TransactionListState) {
+      final budget = _budgetWithStatus?.budget;
+      if (budget != null) {
+        final (start, end) = budget.getCurrentPeriodDates();
+        shouldReload = state.transactions.any((txn) {
+          if (txn.type != TransactionType.expense) return false;
+          final txnDateOnly = DateTime(
+            txn.date.year,
+            txn.date.month,
+            txn.date.day,
+          );
+          final startOnly = DateTime(start.year, start.month, start.day);
+          final endOnly = DateTime(end.year, end.month, end.day, 23, 59, 59);
+          if (txnDateOnly.isBefore(startOnly) || txn.date.isAfter(endOnly)) {
+            return false;
+          }
+          if (budget.type == BudgetType.categorySpecific &&
+              budget.categoryIds != null &&
+              !budget.categoryIds!.contains(txn.category?.id)) {
+            return false;
+          }
+          return true;
+        });
+      }
+    } else if (state is CategoryManagementState) {
+      final budget = _budgetWithStatus?.budget;
+      if (budget != null &&
+          budget.type == BudgetType.categorySpecific &&
+          budget.categoryIds != null) {
+        final allCats = state.allExpenseCategories;
+        shouldReload = allCats.any(
+          (cat) => budget.categoryIds!.contains(cat.id),
+        );
+      }
+    }
+
+    if (shouldReload) {
+      log.fine(
+        "[BudgetDetail] Relevant Bloc update detected, reloading detail data.",
+      );
       _loadData();
     }
   }
@@ -90,12 +137,14 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final budgetListState = context.read<BudgetListBloc>().state;
     BudgetWithStatus? foundBudgetStatus;
     if (budgetListState.status == BudgetListStatus.success) {
-      foundBudgetStatus = budgetListState.budgetsWithStatus
-          .firstWhereOrNull((bws) => bws.budget.id == widget.budgetId);
+      foundBudgetStatus = budgetListState.budgetsWithStatus.firstWhereOrNull(
+        (bws) => bws.budget.id == widget.budgetId,
+      );
     }
     if (foundBudgetStatus == null) {
       log.severe(
-          "[BudgetDetail] Cannot load details: Budget ID ${widget.budgetId} not found in loaded state.");
+        "[BudgetDetail] Cannot load details: Budget ID ${widget.budgetId} not found in loaded state.",
+      );
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -115,12 +164,24 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       foundTransactions = transactionListState.transactions.where((txn) {
         if (txn.type != TransactionType.expense) return false;
         // Inclusive date check (using isSameDay or checking against start/end boundaries)
-        final txnDateOnly =
-            DateTime(txn.date.year, txn.date.month, txn.date.day);
-        final startDateOnly =
-            DateTime(periodStart.year, periodStart.month, periodStart.day);
-        final endDateOnly = DateTime(periodEnd.year, periodEnd.month,
-            periodEnd.day, 23, 59, 59); // End of day
+        final txnDateOnly = DateTime(
+          txn.date.year,
+          txn.date.month,
+          txn.date.day,
+        );
+        final startDateOnly = DateTime(
+          periodStart.year,
+          periodStart.month,
+          periodStart.day,
+        );
+        final endDateOnly = DateTime(
+          periodEnd.year,
+          periodEnd.month,
+          periodEnd.day,
+          23,
+          59,
+          59,
+        ); // End of day
 
         // Ensure date is on or after start AND on or before end
         if (txnDateOnly.isBefore(startDateOnly) ||
@@ -151,15 +212,18 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   void _navigateToEdit(BuildContext context) {
     if (_budgetWithStatus == null) return;
     // Navigate using the new route
-    context.pushNamed(RouteNames.editBudget,
-        pathParameters: {'id': _budgetWithStatus!.budget.id},
-        extra: _budgetWithStatus!.budget);
+    context.pushNamed(
+      RouteNames.editBudget,
+      pathParameters: {'id': _budgetWithStatus!.budget.id},
+      extra: _budgetWithStatus!.budget,
+    );
   }
 
   void _handleDelete(BuildContext context) async {
     if (_budgetWithStatus == null) return;
     log.info(
-        "[BudgetDetail] Delete requested for budget: ${_budgetWithStatus!.budget.name}");
+      "[BudgetDetail] Delete requested for budget: ${_budgetWithStatus!.budget.name}",
+    );
     final confirmed = await AppDialogs.showConfirmation(
       context,
       title: "Confirm Delete",
@@ -169,9 +233,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       confirmColor: Theme.of(context).colorScheme.error,
     );
     if (confirmed == true && context.mounted) {
-      context
-          .read<BudgetListBloc>()
-          .add(DeleteBudget(budgetId: _budgetWithStatus!.budget.id));
+      context.read<BudgetListBloc>().add(
+        DeleteBudget(budgetId: _budgetWithStatus!.budget.id),
+      );
       if (context.canPop()) {
         context.pop();
       } else {
@@ -181,13 +245,16 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   }
 
   void _navigateToTransactionDetail(
-      BuildContext context, TransactionEntity transaction) {
+    BuildContext context,
+    TransactionEntity transaction,
+  ) {
     log.info(
-        "[BudgetDetail] _navigateToTransactionDetail called for ${transaction.type.name} ID: ${transaction.id}");
+      "[BudgetDetail] _navigateToTransactionDetail called for ${transaction.type.name} ID: ${transaction.id}",
+    );
     const String routeName =
         RouteNames.editTransaction; // Use edit route for now
     final Map<String, String> params = {
-      RouteNames.paramTransactionId: transaction.id
+      RouteNames.paramTransactionId: transaction.id,
     };
     log.info("[BudgetDetail] Attempting navigation via pushNamed:");
     log.info("  Route Name: $routeName");
@@ -198,15 +265,21 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       log.info("[BudgetDetail] pushNamed executed.");
     } catch (e, s) {
       log.severe("[BudgetDetail] Error executing pushNamed: $e\n$s");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text("Error navigating to transaction: $e"),
-          backgroundColor: Colors.red));
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   // Helper for Progress Bar (REMOVED AETHER TBD)
   Widget _buildProgressBarWidget(
-      BuildContext context, AppModeTheme? modeTheme, UIMode uiMode) {
+    BuildContext context,
+    AppModeTheme? modeTheme,
+    UIMode uiMode,
+  ) {
     final theme = Theme.of(context);
     if (_budgetWithStatus == null) return const SizedBox(height: 20);
     final status = _budgetWithStatus!;
@@ -217,37 +290,46 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     if (isQuantum) {
       return LinearPercentIndicator(
-          padding: EdgeInsets.zero,
-          lineHeight: 8.0,
-          percent: percentage,
-          barRadius: const Radius.circular(4),
-          backgroundColor:
-              theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
-          progressColor: color,
-          animation: false);
+        padding: EdgeInsets.zero,
+        lineHeight: 8.0,
+        percent: percentage,
+        barRadius: const Radius.circular(4),
+        backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(
+          0.5,
+        ),
+        progressColor: color,
+        animation: false,
+      );
     } else {
       // Default for Elemental & Aether
       return LinearPercentIndicator(
-          animation: true,
-          animationDuration: 600,
-          lineHeight: 20.0,
-          percent: percentage,
-          center: Text("${(status.percentageUsed * 100).toStringAsFixed(0)}%",
-              style: TextStyle(
-                  color: color.computeLuminance() > 0.5
-                      ? Colors.black87
-                      : Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12)),
-          barRadius: const Radius.circular(10),
-          backgroundColor: theme.colorScheme.surfaceContainerHighest,
-          progressColor: color);
+        animation: true,
+        animationDuration: 600,
+        lineHeight: 20.0,
+        percent: percentage,
+        center: Text(
+          "${(status.percentageUsed * 100).toStringAsFixed(0)}%",
+          style: TextStyle(
+            color: color.computeLuminance() > 0.5
+                ? Colors.black87
+                : Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
+        ),
+        barRadius: const Radius.circular(10),
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        progressColor: color,
+      );
     }
   }
 
   // Helper for Transaction List
   Widget _buildTransactionListWidget(
-      BuildContext context, AppModeTheme? modeTheme, UIMode uiMode) {
+    BuildContext context,
+    AppModeTheme? modeTheme,
+    UIMode uiMode,
+  ) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
     final currency = settings.currencySymbol;
@@ -257,14 +339,17 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     if (_isLoading) {
       // Check main loading flag here
       return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 20.0),
-          child: Center(child: CircularProgressIndicator(strokeWidth: 2)));
+        padding: EdgeInsets.symmetric(vertical: 20.0),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
     }
     if (_relevantTransactions.isEmpty) {
       return const Padding(
-          padding: EdgeInsets.symmetric(vertical: 24.0),
-          child: Center(
-              child: Text("No transactions found for this budget period.")));
+        padding: EdgeInsets.symmetric(vertical: 24.0),
+        child: Center(
+          child: Text("No transactions found for this budget period."),
+        ),
+      );
     }
 
     if (useTable) {
@@ -285,31 +370,38 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             DataColumn(label: Text('Amount'), numeric: true),
           ],
           rows: _relevantTransactions
-              .map((txn) => DataRow(
-                      onSelectChanged: (selected) {
-                        if (selected == true) {
-                          _navigateToTransactionDetail(context, txn);
-                        }
-                      },
-                      cells: [
-                        DataCell(Text(DateFormatter.formatDate(txn.date))),
-                        DataCell(
-                            Text(txn.title, overflow: TextOverflow.ellipsis)),
-                        DataCell(Text(txn.category?.name ?? 'N/A')),
-                        DataCell(Text(
-                            CurrencyFormatter.format(txn.amount, currency),
-                            textAlign: TextAlign.end)),
-                      ]))
+              .map(
+                (txn) => DataRow(
+                  onSelectChanged: (selected) {
+                    if (selected == true) {
+                      _navigateToTransactionDetail(context, txn);
+                    }
+                  },
+                  cells: [
+                    DataCell(Text(DateFormatter.formatDate(txn.date))),
+                    DataCell(Text(txn.title, overflow: TextOverflow.ellipsis)),
+                    DataCell(Text(txn.category?.name ?? 'N/A')),
+                    DataCell(
+                      Text(
+                        CurrencyFormatter.format(txn.amount, currency),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
+                ),
+              )
               .toList(),
         ),
       );
     } else {
       // Elemental / Aether ListView
       final bool isAether = uiMode == UIMode.aether;
-      final Duration itemDelay =
-          isAether ? (modeTheme?.listAnimationDelay ?? 80.ms) : 50.ms;
-      final Duration itemDuration =
-          isAether ? (modeTheme?.listAnimationDuration ?? 450.ms) : 300.ms;
+      final Duration itemDelay = isAether
+          ? (modeTheme?.listAnimationDelay ?? 80.ms)
+          : 50.ms;
+      final Duration itemDuration = isAether
+          ? (modeTheme?.listAnimationDuration ?? 450.ms)
+          : 300.ms;
 
       return ListView.builder(
         shrinkWrap: true,
@@ -318,18 +410,19 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         itemBuilder: (ctx, index) {
           final txn = _relevantTransactions[index];
           Widget item = TransactionListItem(
-              transaction: txn,
-              currencySymbol: currency,
-              onTap: () => _navigateToTransactionDetail(context, txn));
+            transaction: txn,
+            currencySymbol: currency,
+            onTap: () => _navigateToTransactionDetail(context, txn),
+          );
           if (isAether) {
             item = item
                 .animate(delay: itemDelay * index)
                 .fadeIn(duration: itemDuration)
                 .slideY(begin: 0.2, curve: Curves.easeOut);
           } else {
-            item = item
-                .animate()
-                .fadeIn(delay: (itemDelay.inMilliseconds * 0.5 * index).ms);
+            item = item.animate().fadeIn(
+              delay: (itemDelay.inMilliseconds * 0.5 * index).ms,
+            );
           }
           return Padding(
             // Add padding between items
@@ -350,7 +443,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
     final allCategories = [
       ...categoryState.allExpenseCategories,
-      ...categoryState.allIncomeCategories
+      ...categoryState.allIncomeCategories,
     ];
     final chips = categoryIds
         .map((id) {
@@ -363,28 +456,41 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
               availableIcons[category.iconName] ?? Icons.label;
 
           if (modeTheme != null) {
-            String svgPath = modeTheme.assets
-                .getCategoryIcon(category.iconName, defaultPath: '');
+            String svgPath = modeTheme.assets.getCategoryIcon(
+              category.iconName,
+              defaultPath: '',
+            );
             if (svgPath.isNotEmpty) {
-              avatarIcon = SvgPicture.asset(svgPath,
-                  width: 16,
-                  height: 16,
-                  colorFilter:
-                      ColorFilter.mode(category.displayColor, BlendMode.srcIn));
+              avatarIcon = SvgPicture.asset(
+                svgPath,
+                width: 16,
+                height: 16,
+                colorFilter: ColorFilter.mode(
+                  category.displayColor,
+                  BlendMode.srcIn,
+                ),
+              );
             } else {
-              avatarIcon =
-                  Icon(fallbackIcon, size: 16, color: category.displayColor);
+              avatarIcon = Icon(
+                fallbackIcon,
+                size: 16,
+                color: category.displayColor,
+              );
             }
           } else {
-            avatarIcon =
-                Icon(fallbackIcon, size: 16, color: category.displayColor);
+            avatarIcon = Icon(
+              fallbackIcon,
+              size: 16,
+              color: category.displayColor,
+            );
           }
 
           return Chip(
             avatar: avatarIcon,
             label: Text(category.name),
-            labelStyle: theme.textTheme.labelSmall
-                ?.copyWith(color: category.displayColor),
+            labelStyle: theme.textTheme.labelSmall?.copyWith(
+              color: category.displayColor,
+            ),
             backgroundColor: category.displayColor.withOpacity(0.1),
             side: BorderSide.none,
             visualDensity: VisualDensity.compact,
@@ -394,15 +500,20 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         .whereNotNull()
         .toList();
     if (chips.isEmpty) {
-      return Text("Applies to: All Categories",
-          style:
-              theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic));
+      return Text(
+        "Applies to: All Categories",
+        style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+      );
     }
-    return Wrap(spacing: 6.0, runSpacing: 4.0, children: [
-      Text("Applies to:", style: theme.textTheme.bodySmall),
-      const SizedBox(width: 4),
-      ...chips
-    ]);
+    return Wrap(
+      spacing: 6.0,
+      runSpacing: 4.0,
+      children: [
+        Text("Applies to:", style: theme.textTheme.bodySmall),
+        const SizedBox(width: 4),
+        ...chips,
+      ],
+    );
   }
 
   @override
@@ -414,17 +525,23 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     if (_isLoading) {
       return Scaffold(
-          appBar: AppBar(),
-          body: const Center(child: CircularProgressIndicator()));
+        appBar: AppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
     if (_error != null || _budgetWithStatus == null) {
       return Scaffold(
-          appBar: AppBar(title: const Text("Error")),
-          body: Center(
-              child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(_error ?? "Budget could not be loaded.",
-                      style: TextStyle(color: theme.colorScheme.error)))));
+        appBar: AppBar(title: const Text("Error")),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              _error ?? "Budget could not be loaded.",
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
+          ),
+        ),
+      );
     }
 
     final budget = _budgetWithStatus!.budget;
@@ -433,18 +550,20 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final isAether = uiMode == UIMode.aether;
     final String? bgPath = isAether
         ? (Theme.of(context).brightness == Brightness.dark
-            ? modeTheme?.assets.mainBackgroundDark
-            : modeTheme?.assets.mainBackgroundLight)
+              ? modeTheme?.assets.mainBackgroundDark
+              : modeTheme?.assets.mainBackgroundLight)
         : null;
 
     Widget mainContent = ListView(
-      padding: modeTheme?.pagePadding.copyWith(
-              bottom: 80,
-              top: isAether
-                  ? (modeTheme.pagePadding.top +
+      padding:
+          modeTheme?.pagePadding.copyWith(
+            bottom: 80,
+            top: isAether
+                ? (modeTheme.pagePadding.top +
                       kToolbarHeight +
                       MediaQuery.of(context).padding.top)
-                  : modeTheme.pagePadding.top) ??
+                : modeTheme.pagePadding.top,
+          ) ??
           const EdgeInsets.all(16.0).copyWith(bottom: 80),
       children: [
         // Budget Status Header Card
@@ -456,8 +575,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                 budget.period == BudgetPeriodType.recurringMonthly
                     ? 'This Month\'s Progress'
                     : 'Period Progress (${DateFormatter.formatDate(budget.startDate!)} - ${DateFormatter.formatDate(budget.endDate!)})',
-                style: theme.textTheme.labelMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 12),
               _buildProgressBarWidget(context, modeTheme, uiMode),
@@ -466,13 +586,17 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                      'Spent: ${CurrencyFormatter.format(status.amountSpent, currency)}',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: status.statusColor)),
+                    'Spent: ${CurrencyFormatter.format(status.amountSpent, currency)}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: status.statusColor,
+                    ),
+                  ),
                   Text(
-                      'Target: ${CurrencyFormatter.format(budget.targetAmount, currency)}',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                    'Target: ${CurrencyFormatter.format(budget.targetAmount, currency)}',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
               Row(
@@ -483,10 +607,11 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                         ? '${CurrencyFormatter.format(status.amountRemaining, currency)} left'
                         : '${CurrencyFormatter.format(status.amountRemaining.abs(), currency)} over',
                     style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: status.amountRemaining >= 0
-                            ? theme.colorScheme.primary
-                            : status.statusColor),
+                      fontWeight: FontWeight.w500,
+                      color: status.amountRemaining >= 0
+                          ? theme.colorScheme.primary
+                          : status.statusColor,
+                    ),
                   ),
                 ],
               ),
@@ -494,14 +619,15 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                   budget.type == BudgetType.overall) ...[
                 const SizedBox(height: 10),
                 _buildCategoryChips(context, budget.categoryIds ?? []),
-              ]
+              ],
             ],
           ),
         ),
         const SizedBox(height: 20),
         // Transactions Section
         SectionHeader(
-            title: "Transactions in Period (${_relevantTransactions.length})"),
+          title: "Transactions in Period (${_relevantTransactions.length})",
+        ),
         _buildTransactionListWidget(context, modeTheme, uiMode),
       ],
     );
@@ -513,13 +639,15 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         elevation: isAether ? 0 : null,
         actions: [
           IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () => _navigateToEdit(context),
-              tooltip: "Edit Budget"),
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => _navigateToEdit(context),
+            tooltip: "Edit Budget",
+          ),
           IconButton(
-              icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
-              onPressed: () => _handleDelete(context),
-              tooltip: "Delete Budget"),
+            icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+            onPressed: () => _handleDelete(context),
+            tooltip: "Delete Budget",
+          ),
         ],
       ),
       extendBodyBehindAppBar: isAether,
@@ -527,7 +655,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           ? Stack(
               children: [
                 Positioned.fill(
-                    child: SvgPicture.asset(bgPath, fit: BoxFit.cover)),
+                  child: SvgPicture.asset(bgPath, fit: BoxFit.cover),
+                ),
                 mainContent,
               ],
             )
