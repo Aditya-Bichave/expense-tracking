@@ -43,26 +43,35 @@ class LogContributionBloc
   }
 
   void _onInitializeContribution(
-      InitializeContribution event, Emitter<LogContributionState> emit) {
+    InitializeContribution event,
+    Emitter<LogContributionState> emit,
+  ) {
     log.info(
-        "[LogContributionBloc] Initializing form for Goal ID: ${event.goalId}, Editing: ${event.initialContribution != null}");
+      "[LogContributionBloc] Initializing form for Goal ID: ${event.goalId}, Editing: ${event.initialContribution != null}",
+    );
     // Reset the state completely based on the initialization event
-    emit(LogContributionState(
-      goalId: event.goalId,
-      initialContribution: event.initialContribution,
-      status: LogContributionStatus.initial, // Ensure status is initial
-    ));
+    emit(
+      LogContributionState(
+        goalId: event.goalId,
+        initialContribution: event.initialContribution,
+        status: LogContributionStatus.initial, // Ensure status is initial
+      ),
+    );
   }
 
   Future<void> _onSaveContribution(
-      SaveContribution event, Emitter<LogContributionState> emit) async {
+    SaveContribution event,
+    Emitter<LogContributionState> emit,
+  ) async {
     final bool isEditing = state.isEditing;
     final String goalId =
         state.goalId; // Capture goalId before potential state changes
     log.info(
-        "[LogContributionBloc] SaveContribution received for Goal ID: $goalId. Editing: $isEditing");
-    emit(state.copyWith(
-        status: LogContributionStatus.loading, clearError: true));
+      "[LogContributionBloc] SaveContribution received for Goal ID: $goalId. Editing: $isEditing",
+    );
+    emit(
+      state.copyWith(status: LogContributionStatus.loading, clearError: true),
+    );
 
     // Construct the contribution object
     final contributionData = GoalContribution(
@@ -79,123 +88,157 @@ class LogContributionBloc
     // Call the appropriate use case
     final result = isEditing
         ? await _updateContributionUseCase(
-            UpdateContributionParams(contribution: contributionData))
-        : await _addContributionUseCase(AddContributionParams(
-            // Add params remain same
-            goalId: contributionData.goalId,
-            amount: contributionData.amount,
-            date: contributionData.date,
-            note: contributionData.note,
-          ));
+            UpdateContributionParams(contribution: contributionData),
+          )
+        : await _addContributionUseCase(
+            AddContributionParams(
+              // Add params remain same
+              goalId: contributionData.goalId,
+              amount: contributionData.amount,
+              date: contributionData.date,
+              note: contributionData.note,
+            ),
+          );
 
-    await result.fold((failure) async {
-      log.warning("[LogContributionBloc] Save failed: ${failure.message}");
-      emit(state.copyWith(
-          status: LogContributionStatus.error,
-          errorMessage: _mapFailureToMessage(failure)));
-      // Don't reset status immediately, let UI show error then clear
-      // emit(state.copyWith(status: LogContributionStatus.initial));
-    }, (savedContribution) async {
-      // Make lambda async
-      log.info(
-          "[LogContributionBloc] Contribution saved/updated successfully (ID: ${savedContribution.id}). Checking goal achievement...");
-      emit(state.copyWith(
-          status: LogContributionStatus
-              .success)); // Emit success FIRST for sheet closing
+    await result.fold(
+      (failure) async {
+        log.warning("[LogContributionBloc] Save failed: ${failure.message}");
+        emit(
+          state.copyWith(
+            status: LogContributionStatus.error,
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
+      },
+      (savedContribution) async {
+        log.info(
+          "[LogContributionBloc] Contribution saved/updated successfully (ID: ${savedContribution.id}). Checking goal achievement...",
+        );
 
-      // Publish data changed event
-      publishDataChangedEvent(
+        publishDataChangedEvent(
           type: DataChangeType.goalContribution,
-          reason:
-              isEditing ? DataChangeReason.updated : DataChangeReason.added);
+          reason: isEditing ? DataChangeReason.updated : DataChangeReason.added,
+        );
 
-      // Check Achievement Status AFTER saving contribution
-      final checkResult =
-          await _checkGoalAchievementUseCase(CheckGoalParams(goalId: goalId));
-      checkResult.fold(
+        final checkResult = await _checkGoalAchievementUseCase(
+          CheckGoalParams(goalId: goalId),
+        );
+        checkResult.fold(
           (failure) => log.warning(
-              "[LogContributionBloc] Achievement check failed after saving contribution: ${failure.message}"),
+            "[LogContributionBloc] Achievement check failed after saving contribution: ${failure.message}",
+          ),
           (didAchieve) {
-        if (didAchieve) {
-          log.info("[LogContributionBloc] Goal $goalId was newly achieved!");
-          // Publish Goal update event as well to trigger confetti etc. in GoalDetailBloc/Page
-          publishDataChangedEvent(
-              type: DataChangeType.goal, reason: DataChangeReason.updated);
-        }
-      });
-    });
+            if (didAchieve) {
+              log.info(
+                "[LogContributionBloc] Goal $goalId was newly achieved!",
+              );
+              publishDataChangedEvent(
+                type: DataChangeType.goal,
+                reason: DataChangeReason.updated,
+              );
+            }
+          },
+        );
+
+        emit(state.copyWith(status: LogContributionStatus.success));
+      },
+    );
   }
 
   Future<void> _onDeleteContribution(
-      DeleteContribution event, Emitter<LogContributionState> emit) async {
+    DeleteContribution event,
+    Emitter<LogContributionState> emit,
+  ) async {
     // This event should only be called when editing an existing contribution
     if (!state.isEditing || state.initialContribution == null) {
       log.warning(
-          "[LogContributionBloc] DeleteContribution called but not in editing state or initialContribution is null.");
-      emit(state.copyWith(
+        "[LogContributionBloc] DeleteContribution called but not in editing state or initialContribution is null.",
+      );
+      emit(
+        state.copyWith(
           status: LogContributionStatus.error,
-          errorMessage: "Cannot delete unsaved contribution."));
+          errorMessage: "Cannot delete unsaved contribution.",
+        ),
+      );
       return;
     }
     final contributionId = state.initialContribution!.id;
     final goalId =
         state.initialContribution!.goalId; // Need goalId for achievement check
     log.info(
-        "[LogContributionBloc] DeleteContribution received for Contribution ID: $contributionId");
-    emit(state.copyWith(
-        status: LogContributionStatus.loading, clearError: true));
+      "[LogContributionBloc] DeleteContribution received for Contribution ID: $contributionId",
+    );
+    emit(
+      state.copyWith(status: LogContributionStatus.loading, clearError: true),
+    );
 
     final result = await _deleteContributionUseCase(
-        DeleteContributionParams(id: contributionId));
+      DeleteContributionParams(id: contributionId),
+    );
 
-    await result.fold((failure) async {
-      log.warning("[LogContributionBloc] Delete failed: ${failure.message}");
-      emit(state.copyWith(
-          status: LogContributionStatus.error,
-          errorMessage: _mapFailureToMessage(failure,
-              context: "Failed to delete contribution")));
-      // Don't reset status immediately
-    }, (_) async {
-      // Make lambda async
-      log.info(
-          "[LogContributionBloc] Contribution deleted successfully (ID: $contributionId). Checking goal status...");
-      emit(state.copyWith(
-          status: LogContributionStatus
-              .success)); // Indicate success for sheet closing
+    await result.fold(
+      (failure) async {
+        log.warning("[LogContributionBloc] Delete failed: ${failure.message}");
+        emit(
+          state.copyWith(
+            status: LogContributionStatus.error,
+            errorMessage: _mapFailureToMessage(
+              failure,
+              context: "Failed to delete contribution",
+            ),
+          ),
+        );
+      },
+      (_) async {
+        log.info(
+          "[LogContributionBloc] Contribution deleted successfully (ID: $contributionId). Checking goal status...",
+        );
 
-      // Publish data changed event FIRST
-      publishDataChangedEvent(
-          type: DataChangeType.goalContribution,
-          reason: DataChangeReason.deleted);
-
-      // Check Achievement Status AFTER deleting contribution (could revert achievement)
-      final checkResult =
-          await _checkGoalAchievementUseCase(CheckGoalParams(goalId: goalId));
-      checkResult.fold(
-          (failure) => log.warning(
-              "[LogContributionBloc] Achievement check failed after deleting contribution: ${failure.message}"),
-          (_) {
-        log.fine(
-            "[LogContributionBloc] Goal status potentially updated after contribution deletion.");
-        // If status changed from achieved -> active, publish goal update event
-        // This logic might be better placed elsewhere if GoalDetailBloc handles its own state update
         publishDataChangedEvent(
-            type: DataChangeType.goal, reason: DataChangeReason.updated);
-      });
-    });
+          type: DataChangeType.goalContribution,
+          reason: DataChangeReason.deleted,
+        );
+
+        final checkResult = await _checkGoalAchievementUseCase(
+          CheckGoalParams(goalId: goalId),
+        );
+        checkResult.fold(
+          (failure) => log.warning(
+            "[LogContributionBloc] Achievement check failed after deleting contribution: ${failure.message}",
+          ),
+          (_) {
+            log.fine(
+              "[LogContributionBloc] Goal status potentially updated after contribution deletion.",
+            );
+            publishDataChangedEvent(
+              type: DataChangeType.goal,
+              reason: DataChangeReason.updated,
+            );
+          },
+        );
+
+        emit(state.copyWith(status: LogContributionStatus.success));
+      },
+    );
   }
 
   void _onClearMessage(
-      ClearContributionMessage event, Emitter<LogContributionState> emit) {
+    ClearContributionMessage event,
+    Emitter<LogContributionState> emit,
+  ) {
     // Always reset to initial status when clearing message
-    emit(state.copyWith(
-        status: LogContributionStatus.initial, clearError: true));
+    emit(
+      state.copyWith(status: LogContributionStatus.initial, clearError: true),
+    );
   }
 
-  String _mapFailureToMessage(Failure failure,
-      {String context = "An error occurred"}) {
+  String _mapFailureToMessage(
+    Failure failure, {
+    String context = "An error occurred",
+  }) {
     log.warning(
-        "[LogContributionBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
+      "[LogContributionBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
+    );
     switch (failure.runtimeType) {
       case ValidationFailure:
         return failure.message;
