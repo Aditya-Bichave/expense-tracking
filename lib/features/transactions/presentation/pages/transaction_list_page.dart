@@ -18,7 +18,7 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_calendar_view.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:flutter/foundation.dart' hide Category; // For listEquals
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart'; // Hide the conflicting Category
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -44,9 +44,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<TransactionEntity> _selectedDayTransactions = [];
-  List<TransactionEntity> _currentTransactionsForCalendar = [];
-  StreamSubscription? _blocSubscription;
+  // Transactions for selected day are derived directly from bloc state
 
   @override
   void initState() {
@@ -75,8 +73,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       _setupInitialCalendarData();
     }
     // --- END MODIFICATION ---
-
-    _listenToBlocChanges();
   }
 
   @override
@@ -84,56 +80,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _debounce?.cancel();
-    _blocSubscription?.cancel();
     super.dispose();
   }
 
-  void _listenToBlocChanges() {
-    _blocSubscription = context.read<TransactionListBloc>().stream.listen((
-      state,
-    ) {
-      if (state.status == ListStatus.success && mounted) {
-        if (!listEquals(_currentTransactionsForCalendar, state.transactions)) {
-          log.fine(
-            "[TxnListPage] BLoC state updated, refreshing calendar data cache.",
-          );
-          setState(() {
-            _currentTransactionsForCalendar = state.transactions;
-            _updateSelectedDayTransactions(); // Refresh selected day's list too
-          });
-        }
-      } else if (state.status != ListStatus.success &&
-          mounted &&
-          _currentTransactionsForCalendar.isNotEmpty) {
-        log.fine(
-          "[TxnListPage] BLoC state not success, clearing calendar data cache.",
-        );
-        setState(() {
-          _currentTransactionsForCalendar = [];
-          _selectedDayTransactions = [];
-        });
-      }
-    });
-  }
-
   void _setupInitialCalendarData() {
-    // Check initial BLoC state and populate calendar data if ready
     final bloc = context.read<TransactionListBloc>();
     if (bloc.state.status == ListStatus.initial) {
       bloc.add(const LoadTransactions()); // Trigger load if initial
-    } else if (bloc.state.status == ListStatus.success) {
-      // Ensure calendar uses the current state's transactions
-      if (!listEquals(
-        _currentTransactionsForCalendar,
-        bloc.state.transactions,
-      )) {
-        setState(() {
-          _currentTransactionsForCalendar = bloc.state.transactions;
-          _updateSelectedDayTransactions(); // Update list for initially selected day
-        });
-      } else {
-        _updateSelectedDayTransactions(); // Update list for initially selected day even if txns haven't changed
-      }
     }
   }
 
@@ -320,7 +273,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
     );
   }
 
-  // --- Calendar Specific Logic (Keep as is) ---
+  // --- Calendar Specific Logic ---
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     final normalizedSelectedDay = DateTime(
       selectedDay.year,
@@ -332,7 +285,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       setState(() {
         _selectedDay = normalizedSelectedDay;
         _focusedDay = focusedDay; // Keep focusedDay in sync
-        _updateSelectedDayTransactions();
       });
     }
   }
@@ -351,9 +303,12 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _focusedDay = focusedDay;
   }
 
-  List<TransactionEntity> _getEventsForDay(DateTime day) {
+  List<TransactionEntity> _getEventsForDay(
+    DateTime day,
+    List<TransactionEntity> transactions,
+  ) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
-    return _currentTransactionsForCalendar.where((txn) {
+    return transactions.where((txn) {
       final normalizedTxnDate = DateTime(
         txn.date.year,
         txn.date.month,
@@ -361,21 +316,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       );
       return isSameDay(normalizedTxnDate, normalizedDay);
     }).toList();
-  }
-
-  void _updateSelectedDayTransactions() {
-    if (_selectedDay != null && mounted) {
-      setState(() {
-        _selectedDayTransactions = _getEventsForDay(_selectedDay!);
-      });
-    } else if (mounted) {
-      setState(() {
-        _selectedDayTransactions = [];
-      });
-    }
-    log.fine(
-      "[TxnListPage] Updated selected day transactions for $_selectedDay. Count: ${_selectedDayTransactions.length}",
-    );
   }
 
   // --- Main Build Method (Keep as is) ---
@@ -413,12 +353,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 }
               },
               builder: (context, state) {
+                final selectedTransactions = _selectedDay == null
+                    ? <TransactionEntity>[]
+                    : _getEventsForDay(_selectedDay!, state.transactions);
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionListBloc>().add(
                       const LoadTransactions(forceReload: true),
                     );
-                    // Wait for the loading state to finish
                     await context.read<TransactionListBloc>().stream.firstWhere(
                       (s) =>
                           s.status != ListStatus.loading &&
@@ -438,10 +380,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
                               calendarFormat: _calendarFormat,
                               focusedDay: _focusedDay,
                               selectedDay: _selectedDay,
-                              selectedDayTransactions: _selectedDayTransactions,
+                              selectedDayTransactions: selectedTransactions,
                               currentTransactionsForCalendar:
-                                  _currentTransactionsForCalendar,
-                              getEventsForDay: _getEventsForDay,
+                                  state.transactions,
+                              getEventsForDay: (day) =>
+                                  _getEventsForDay(day, state.transactions),
                               onDaySelected: _onDaySelected,
                               onFormatChanged: _onFormatChanged,
                               onPageChanged: _onPageChanged,

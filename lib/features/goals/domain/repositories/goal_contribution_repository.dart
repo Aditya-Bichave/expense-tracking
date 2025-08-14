@@ -5,12 +5,17 @@ import 'package:expense_tracker/features/goals/domain/entities/goal_contribution
 
 abstract class GoalContributionRepository {
   Future<Either<Failure, List<GoalContribution>>> getContributionsForGoal(
-      String goalId);
+    String goalId,
+  );
+  Future<Either<Failure, List<GoalContribution>>> getAllContributions();
   Future<Either<Failure, GoalContribution>> addContribution(
-      GoalContribution contribution);
+    GoalContribution contribution,
+  );
   Future<Either<Failure, GoalContribution>> updateContribution(
-      GoalContribution contribution);
+    GoalContribution contribution,
+  );
   Future<Either<Failure, void>> deleteContribution(String contributionId);
+
   /// Audits all goals and recalculates the cached total saved amount.
   ///
   /// This can be used by a periodic background task to ensure that the

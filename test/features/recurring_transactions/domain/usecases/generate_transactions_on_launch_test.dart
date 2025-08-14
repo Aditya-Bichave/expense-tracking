@@ -6,7 +6,6 @@ import 'package:expense_tracker/features/categories/domain/entities/category_typ
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
@@ -271,7 +270,8 @@ void main() {
         () => mockRecurringTransactionRepository.updateRecurringRule(any()));
   });
 
-  test('should handle monthly rule without dayOfMonth by defaulting to current day',
+  test(
+      'should handle monthly rule without dayOfMonth by defaulting to current day',
       () async {
     // Arrange
     final ruleWithoutDayOfMonth = RecurringRule(
@@ -306,10 +306,8 @@ void main() {
     await usecase(const NoParams());
 
     // Assert
-    final captured = verify(() =>
-            mockRecurringTransactionRepository.updateRecurringRule(captureAny()))
-        .captured
-        .single as RecurringRule;
+    final captured = verify(() => mockRecurringTransactionRepository
+        .updateRecurringRule(captureAny())).captured.single as RecurringRule;
     expect(captured.nextOccurrenceDate, expectedNextDate);
   });
 
@@ -349,10 +347,8 @@ void main() {
     await usecase(const NoParams());
 
     // Assert
-    final captured = verify(() =>
-            mockRecurringTransactionRepository.updateRecurringRule(captureAny()))
-        .captured
-        .single as RecurringRule;
+    final captured = verify(() => mockRecurringTransactionRepository
+        .updateRecurringRule(captureAny())).captured.single as RecurringRule;
     expect(captured.nextOccurrenceDate, expectedNextDate);
   });
 }
