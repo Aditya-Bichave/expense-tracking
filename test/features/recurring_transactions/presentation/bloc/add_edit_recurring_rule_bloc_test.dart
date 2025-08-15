@@ -152,15 +152,13 @@ void main() {
       },
       build: () => bloc,
       act: (bloc) {
-        bloc.add(const DescriptionChanged('Test'));
-        bloc.add(const AmountChanged('100'));
         bloc.add(const AccountChanged('acc1'));
         bloc.add(CategoryChanged(tCategory));
         bloc.add(StartDateChanged(DateTime(2024, 1, 1)));
         bloc.add(TimeChanged(const TimeOfDay(hour: 9, minute: 30)));
-        bloc.add(FormSubmitted(description: '', amount: ''));
+        bloc.add(FormSubmitted(description: 'Test', amount: '100'));
       },
-      skip: 6,
+      skip: 4,
       expect: () => [
         isA<AddEditRecurringRuleState>().having(
           (s) => s.status,
@@ -198,7 +196,8 @@ void main() {
         description: tRule.description,
         amount: tRule.amount,
       ),
-      act: (bloc) => bloc.add(FormSubmitted(description: '', amount: '')),
+      act: (bloc) =>
+          bloc.add(FormSubmitted(description: 'Netflix', amount: '15.99')),
       expect: () => [
         isA<AddEditRecurringRuleState>().having(
           (s) => s.status,
@@ -214,6 +213,37 @@ void main() {
       verify: (_) {
         verify(() => mockUpdateRecurringRule(any())).called(1);
       },
+    );
+
+    blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
+      'emits failure when amount is invalid',
+      build: () => bloc,
+      act: (bloc) {
+        bloc.add(const AccountChanged('acc1'));
+        bloc.add(CategoryChanged(tCategory));
+        bloc.add(StartDateChanged(DateTime(2024, 1, 1)));
+        bloc.add(TimeChanged(const TimeOfDay(hour: 9, minute: 30)));
+        bloc.add(FormSubmitted(description: 'Test', amount: '0'));
+      },
+      skip: 4,
+      expect: () => [
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
+        isA<AddEditRecurringRuleState>()
+            .having(
+              (s) => s.status,
+              'status',
+              FormStatus.failure,
+            )
+            .having(
+              (s) => s.errorMessage,
+              'errorMessage',
+              'Please enter a valid, positive amount.',
+            ),
+      ],
     );
   });
 }
