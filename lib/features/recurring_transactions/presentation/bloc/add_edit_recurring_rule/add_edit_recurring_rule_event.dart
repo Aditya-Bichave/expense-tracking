@@ -91,4 +91,3 @@ class FormSubmitted extends AddEditRecurringRuleEvent {
   @override
   List<Object> get props => [description, amount];
 }
-

@@ -1,0 +1,174 @@
+name: Build on Demand
+
+on:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: "What to build?"
+        type: choice
+        options: [android, ios, both]
+        default: android
+        required: true
+      android_target:
+        description: "Android artifact"
+        type: choice
+        options: [apk, aab]
+        default: apk
+        required: true
+      mode:
+        description: "Build mode"
+        type: choice
+        options: [debug, release]
+        default: release
+        required: true
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---- ALWAYS RUN FIRST; BUILDS DEPEND ON THIS ----
+  quality-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - run: flutter pub get
+        name: flutter pub get
+
+      - name: Format gate
+        run: dart format . --output=none --set-exit-if-changed
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Tests (unit + widget) with coverage
+        run: flutter test --coverage --test-randomize-ordering-seed=random --concurrency 4
+
+      - name: Enforce 90% coverage
+        run: |
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<90) { print "Coverage below 90%!"; exit 1 } }' coverage/lcov.info
+
+  build-android:
+    if: ${{ inputs.platforms == 'android' || inputs.platforms == 'both' }}
+    needs: quality-gates   # <-- ONLY RUNS IF quality-gates SUCCEEDS
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java (for Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - run: flutter pub get
+        name: flutter pub get
+
+      - name: Build Android
+        env:
+          MODE: ${{ inputs.mode }}          # debug | release
+          TARGET: ${{ inputs.android_target }}  # apk | aab
+        run: |
+          if [ "$TARGET" = "apk" ]; then
+            flutter build apk --$MODE
+          else
+            flutter build appbundle --$MODE
+          fi
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-${{ inputs.android_target }}-${{ inputs.mode }}
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/**/app-*.aab
+          retention-days: 7
+
+  build-ios:
+    if: ${{ inputs.platforms == 'ios' || inputs.platforms == 'both' }}
+    needs: quality-gates   # <-- ONLY RUNS IF quality-gates SUCCEEDS
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods
+          pod --version
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: |
+            ios/Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: ${{ runner.os }}-pods-
+
+      - run: flutter pub get
+        name: flutter pub get
+
+      # Unsigned compilation check; .ipa requires signing
+      - name: Build iOS (no codesign)
+        run: flutter build ios --no-codesign
+
+      - name: Zip Runner.app
+        run: |
+          cd build/ios/iphoneos
+          ditto -c -k --sequesterRsrc --keepParent Runner.app Runner_${{ inputs.mode }}.zip
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-runner-${{ inputs.mode }}-unsigned
+          path: build/ios/iphoneos/Runner_${{ inputs.mode }}.zip
+          retention-days: 7

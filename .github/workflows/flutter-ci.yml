@@ -1,0 +1,68 @@
+name: Flutter CI (tests only)
+
+on:
+  pull_request:
+    paths:
+      - "lib/**"
+      - "test/**"
+      - "pubspec.yaml"
+      - "analysis_options.yaml"
+      - ".github/workflows/**"
+      - "ios/**"
+      - "android/**"
+  push:
+    branches: [ main ]
+    paths:
+      - "lib/**"
+      - "test/**"
+      - "pubspec.yaml"
+      - "analysis_options.yaml"
+      - ".github/workflows/**"
+      - "ios/**"
+      - "android/**"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: ${{ runner.os }}-pub-
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: Format gate
+        run: dart format . --output=none --set-exit-if-changed
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Unit tests
+        run: flutter test test/ --test-randomize-ordering-seed=random --concurrency 4
+
+      - name: Enforce 90% coverage
+        run: |
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<90) { print "Coverage below 90%!"; exit 1 } }' coverage/lcov.info
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lcov
+          path: coverage/lcov.info
+          retention-days: 5
