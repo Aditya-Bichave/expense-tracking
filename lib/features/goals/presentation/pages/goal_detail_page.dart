@@ -558,12 +558,14 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         actions: [
           if (!goal.isArchived)
             IconButton(
+              key: const ValueKey('button_edit'),
               icon: const Icon(Icons.edit_outlined),
               onPressed: () => _navigateToEdit(context),
               tooltip: "Edit Goal",
             ),
           if (!goal.isArchived)
             IconButton(
+              key: const ValueKey('button_archive'),
               icon: const Icon(Icons.archive_outlined),
               onPressed: () => _handleArchive(context),
               tooltip: "Archive Goal",
@@ -600,9 +602,10 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           ),
         ],
       ),
-      floatingActionButton: goal.isAchieved || goal.isArchived
+      floatingActionButton: goal.isAchived || goal.isArchived
           ? null
           : FloatingActionButton.extended(
+              key: const ValueKey('fab_add_contribution'),
               heroTag: 'add_contribution_fab',
               icon: const Icon(Icons.add),
               label: const Text("Log Contribution"),

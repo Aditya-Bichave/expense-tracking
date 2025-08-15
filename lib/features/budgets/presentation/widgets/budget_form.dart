@@ -405,6 +405,7 @@ class _BudgetFormState extends State<BudgetForm> {
 
           // Submit Button
           ElevatedButton.icon(
+            key: const ValueKey('button_submit'),
             icon: Icon(widget.initialBudget == null
                 ? Icons.add_circle_outline
                 : Icons.save_outlined),

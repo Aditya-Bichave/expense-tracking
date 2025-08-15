@@ -34,6 +34,7 @@ class TransactionListHeader extends StatelessWidget {
           child: Column(
             children: [
               TextField(
+                key: const ValueKey('textField_transactionSearch'),
                 controller: searchController,
                 decoration: InputDecoration(
                   hintText: "Search title, category, amount...",
@@ -66,6 +67,7 @@ class TransactionListHeader extends StatelessWidget {
                   Row(
                     children: [
                       TextButton.icon(
+                        key: const ValueKey('button_show_filter'),
                         icon: Icon(Icons.filter_list_rounded,
                             size: 18,
                             color: state.filtersApplied
@@ -81,6 +83,7 @@ class TransactionListHeader extends StatelessWidget {
                             visualDensity: VisualDensity.compact),
                       ),
                       TextButton.icon(
+                        key: const ValueKey('button_show_sort'),
                         icon: const Icon(Icons.sort_rounded, size: 18),
                         label: Text("Sort", style: theme.textTheme.labelMedium),
                         onPressed: () => showSortDialog(context, state),
@@ -92,6 +95,7 @@ class TransactionListHeader extends StatelessWidget {
                   Row(
                     children: [
                       IconButton(
+                        key: const ValueKey('button_toggle_view'),
                         icon: Icon(
                             isCalendarViewShown
                                 ? Icons.view_list_rounded
@@ -102,6 +106,7 @@ class TransactionListHeader extends StatelessWidget {
                         onPressed: onToggleCalendarView,
                       ),
                       IconButton(
+                        key: const ValueKey('button_toggle_batchEdit'),
                         icon: Icon(
                             isInBatchMode
                                 ? Icons.cancel_outlined

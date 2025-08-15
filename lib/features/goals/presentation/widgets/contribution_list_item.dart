@@ -50,6 +50,7 @@ class ContributionListItem extends StatelessWidget {
         ],
       ),
       trailing: IconButton(
+        key: const ValueKey('button_edit_contribution'),
         icon: const Icon(Icons.edit_outlined, size: 20),
         tooltip: 'Edit Contribution',
         onPressed: () {

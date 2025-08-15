@@ -368,6 +368,7 @@ class TransactionFormState extends State<TransactionForm> {
 
           // Submit Button
           ElevatedButton.icon(
+            key: const ValueKey('button_transactionForm_submit'),
             icon: Icon(
               widget.initialTransaction == null
                   ? Icons.add_circle_outline

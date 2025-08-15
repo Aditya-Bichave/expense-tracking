@@ -207,6 +207,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
           onPressed: () => Navigator.of(context).pop(), // Return null
         ),
         TextButton(
+          key: const ValueKey('button_select'),
           child: const Text('Select'),
           onPressed: () => Navigator.of(context)
               .pop(_selectedIconName), // Return selected name

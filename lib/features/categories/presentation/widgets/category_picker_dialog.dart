@@ -188,6 +188,7 @@ class _CategoryPickerDialogContentState
             padding: const EdgeInsets.symmetric(vertical: 12.0),
             child: Center(
               child: ElevatedButton.icon(
+                key: const ValueKey('button_add_new_category'),
                 icon: const Icon(Icons.add_circle_outline, size: 18),
                 label: const Text("Add New Category"),
                 style: ElevatedButton.styleFrom(

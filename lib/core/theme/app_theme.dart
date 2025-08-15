@@ -1,5 +1,6 @@
 // lib/core/theme/app_theme.dart
 // ignore_for_file: deprecated_member_use
+// Forcing a cache invalidation
 
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import UIMode

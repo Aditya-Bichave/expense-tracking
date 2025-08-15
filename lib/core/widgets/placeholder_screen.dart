@@ -14,6 +14,7 @@ class PlaceholderScreen extends StatelessWidget {
         // Ensure a way back if pushed onto stack
         leading: context.canPop()
             ? IconButton(
+                key: const ValueKey('button_placeholder_back'),
                 icon: const Icon(Icons.arrow_back),
                 tooltip: 'Back',
                 onPressed: () => context.pop(),

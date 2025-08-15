@@ -58,6 +58,7 @@ class BudgetsSubTab extends StatelessWidget {
                           const SizedBox(height: 24),
                           // --- FIX: Added back Empty State Button ---
                           ElevatedButton.icon(
+                            key: const ValueKey('button_budgetList_addFirst'),
                             icon: const Icon(Icons.add),
                             label: const Text('Add First Budget'),
                             onPressed: () =>
@@ -98,6 +99,7 @@ class BudgetsSubTab extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('fab_budgetList_add'),
         heroTag: 'add_budget_fab_sub',
         tooltip: 'Add Budget',
         onPressed: () => context.pushNamed(RouteNames.addBudget),
