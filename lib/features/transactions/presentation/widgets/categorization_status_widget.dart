@@ -50,6 +50,7 @@ class CategorizationStatusWidget extends StatelessWidget {
             SizedBox(
               height: 28,
               child: OutlinedButton.icon(
+                key: const ValueKey('button_categorization_confirm'),
                 icon: Icon(Icons.check, size: 16, color: successColor),
                 label: Text(
                   'Confirm',
@@ -78,6 +79,7 @@ class CategorizationStatusWidget extends StatelessWidget {
             SizedBox(
               height: 28,
               child: TextButton.icon(
+                key: const ValueKey('button_categorization_change'),
                 icon: Icon(Icons.edit_outlined, size: 16, color: primaryColor),
                 label: Text(
                   'Change',
@@ -100,6 +102,7 @@ class CategorizationStatusWidget extends StatelessWidget {
         );
       case CategorizationStatus.uncategorized:
         return TextButton.icon(
+          key: const ValueKey('button_categorization_categorize'),
           icon: Icon(Icons.label_off_outlined, size: 16, color: errorColor),
           label: Text(
             'Categorize',
@@ -119,6 +122,7 @@ class CategorizationStatusWidget extends StatelessWidget {
         );
       case CategorizationStatus.categorized:
         return InkWell(
+          key: const ValueKey('inkwell_categorization_change_categorized'),
           onTap: () {
             log.info(
               '[CategorizationStatus] Change requested for categorized ${transaction.id}',

@@ -57,6 +57,7 @@ class GoalsSubTab extends StatelessWidget {
                           const SizedBox(height: 24),
                           // --- FIX: Added back Empty State Button ---
                           ElevatedButton.icon(
+                            key: const ValueKey('button_addFirst'),
                             icon: const Icon(Icons.add),
                             label: const Text('Add First Goal'),
                             onPressed: () =>
@@ -97,6 +98,7 @@ class GoalsSubTab extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('fab_goals_add'),
         heroTag: 'add_goal_fab_sub',
         tooltip: 'Create New Goal',
         onPressed: () => context.pushNamed(RouteNames.addGoal),

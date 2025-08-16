@@ -82,6 +82,7 @@ class RecentTransactionsSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Center(
             child: TextButton.icon(
+              key: const ValueKey('button_recentTransactions_viewAll'),
               icon: const Icon(Icons.arrow_forward, size: 18),
               label: const Text('View All Transactions'),
               onPressed: () => context.go(RouteNames.transactionsList),

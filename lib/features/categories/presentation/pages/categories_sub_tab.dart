@@ -129,6 +129,7 @@ class CategoriesSubTab extends StatelessWidget {
               32.0, // INCREASED Bottom padding (adjust if needed based on FAB size/position)
             ),
             child: ElevatedButton.icon(
+              key: const ValueKey('button_manage_categories'),
               icon: const Icon(Icons.settings_outlined),
               label: const Text("Manage Categories"),
               onPressed: () => context.pushNamed(RouteNames.manageCategories),

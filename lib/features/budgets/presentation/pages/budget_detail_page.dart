@@ -604,6 +604,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         elevation: isAether ? 0 : null,
         actions: [
           IconButton(
+            key: const ValueKey('button_prev_month'),
             icon: const Icon(Icons.chevron_left),
             tooltip: 'Previous Month',
             onPressed: () => _changeMonth(-1),
@@ -611,16 +612,19 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           if (_selectedMonth.year != DateTime.now().year ||
               _selectedMonth.month != DateTime.now().month)
             IconButton(
+              key: const ValueKey('button_next_month'),
               icon: const Icon(Icons.chevron_right),
               tooltip: 'Next Month',
               onPressed: () => _changeMonth(1),
             ),
           IconButton(
+            key: const ValueKey('button_edit'),
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => _navigateToEdit(context),
             tooltip: "Edit Budget",
           ),
           IconButton(
+            key: const ValueKey('button_delete'),
             icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
             onPressed: () => _handleDelete(context),
             tooltip: "Delete Budget",
