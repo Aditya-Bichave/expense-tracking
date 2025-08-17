@@ -8,15 +8,8 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/pump_app.dart';
 
 class MockOnSubmit extends Mock {
-  void call(
-      String name,
-      BudgetType type,
-      double targetAmount,
-      BudgetPeriodType period,
-      DateTime? startDate,
-      DateTime? endDate,
-      List<String>? categoryIds,
-      String? notes);
+  void call(String name, BudgetType type, double targetAmount, BudgetPeriodType period,
+      DateTime? startDate, DateTime? endDate, List<String>? categoryIds, String? notes);
 }
 
 void main() {
@@ -24,9 +17,7 @@ void main() {
 
   setUp(() {
     mockOnSubmit = MockOnSubmit();
-    when(() => mockOnSubmit.call(
-            any(), any(), any(), any(), any(), any(), any(), any()))
-        .thenAnswer((_) {});
+    when(() => mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any(), any())).thenAnswer((_) {});
   });
 
   final mockBudget = Budget(
@@ -41,8 +32,7 @@ void main() {
     testWidgets('initializes correctly in "add" mode', (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: BudgetForm(
-            onSubmit: mockOnSubmit.call, availableCategories: const []),
+        widget: BudgetForm(onSubmit: mockOnSubmit.call, availableCategories: const []),
       );
       expect(find.text('Add Budget'), findsOneWidget);
     });
@@ -61,40 +51,34 @@ void main() {
       expect(find.text('500.00'), findsOneWidget);
     });
 
-    testWidgets('onSubmit is called with correct data when form is valid',
-        (tester) async {
+    testWidgets('onSubmit is called with correct data when form is valid', (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: BudgetForm(
-            onSubmit: mockOnSubmit.call, availableCategories: const []),
+        widget: BudgetForm(onSubmit: mockOnSubmit.call, availableCategories: const []),
       );
 
-      await tester.enterText(
-          find.widgetWithText(TextFormField, 'Budget Name'), 'Test Budget');
-      await tester.enterText(
-          find.widgetWithText(TextFormField, 'Target Amount'), '1000');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Budget Name'), 'Test Budget');
+      await tester.enterText(find.widgetWithText(TextFormField, 'Target Amount'), '1000');
 
       await tester.tap(find.byKey(const ValueKey('button_submit')));
       await tester.pump();
 
       verify(() => mockOnSubmit.call(
-            'Test Budget',
-            BudgetType.overall,
-            1000.0,
-            BudgetPeriodType.recurringMonthly,
-            null,
-            null,
-            null,
-            null,
-          )).called(1);
+        'Test Budget',
+        BudgetType.overall,
+        1000.0,
+        BudgetPeriodType.recurringMonthly,
+        null,
+        null,
+        null,
+        null,
+      )).called(1);
     });
 
-    testWidgets('shows error if category is required but not selected',
-        (tester) async {
+    testWidgets('shows error if category is required but not selected', (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: BudgetForm(
-            onSubmit: mockOnSubmit.call, availableCategories: const []),
+        widget: BudgetForm(onSubmit: mockOnSubmit.call, availableCategories: const []),
       );
 
       // Change type to category specific
@@ -107,8 +91,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Please select at least one category.'), findsOneWidget);
-      verifyNever(() => mockOnSubmit.call(
-          any(), any(), any(), any(), any(), any(), any(), any()));
+      verifyNever(() => mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any(), any()));
     });
   });
 }

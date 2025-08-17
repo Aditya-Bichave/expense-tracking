@@ -51,14 +51,12 @@ void main() {
       await tester.pumpAndSettle(); // Wait for animation
 
       // ASSERT
-      expect(find.text('Item 1'),
-          findsWidgets); // The selected item and the item in the list
+      expect(find.text('Item 1'), findsWidgets); // The selected item and the item in the list
       expect(find.text('Item 2'), findsOneWidget);
       expect(find.text('Item 3'), findsOneWidget);
     });
 
-    testWidgets('calls onChanged with correct value when item is selected',
-        (tester) async {
+    testWidgets('calls onChanged with correct value when item is selected', (tester) async {
       // ARRANGE
       String? selectedValue;
       await pumpWidgetWithProviders(
@@ -85,8 +83,7 @@ void main() {
       expect(selectedValue, 'item2');
     });
 
-    testWidgets('displays validation error when validator fails',
-        (tester) async {
+    testWidgets('displays validation error when validator fails', (tester) async {
       // ARRANGE
       final formKey = GlobalKey<FormState>();
       await pumpWidgetWithProviders(
@@ -111,8 +108,7 @@ void main() {
       expect(find.text('Cannot be empty'), findsOneWidget);
     });
 
-    testWidgets('does not display validation error when validator passes',
-        (tester) async {
+    testWidgets('does not display validation error when validator passes', (tester) async {
       // ARRANGE
       final formKey = GlobalKey<FormState>();
       await pumpWidgetWithProviders(

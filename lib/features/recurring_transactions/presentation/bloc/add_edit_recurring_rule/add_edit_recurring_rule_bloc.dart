@@ -186,9 +186,9 @@ class AddEditRecurringRuleBloc
 
 // After
   Future<void> _onFormSubmitted(
-    FormSubmitted event,
-    Emitter<AddEditRecurringRuleState> emit,
-  ) async {
+      FormSubmitted event,
+      Emitter<AddEditRecurringRuleState> emit,
+      ) async {
     emit(state.copyWith(status: FormStatus.inProgress));
 
     // --- PARSE AND VALIDATE THE AMOUNT HERE ---
@@ -227,7 +227,7 @@ class AddEditRecurringRuleBloc
     final ruleToSave = RecurringRule(
       id: state.isEditMode ? state.initialRule!.id : uuid.v4(),
       description: event.description, // Use fresh data from the event
-      amount: amount, // Use the newly parsed amount
+      amount: amount,                 // Use the newly parsed amount
       transactionType: state.transactionType,
       accountId: state.accountId!,
       categoryId: state.categoryId!,
@@ -244,7 +244,7 @@ class AddEditRecurringRuleBloc
           ? state.initialRule!.nextOccurrenceDate
           : startDateTime,
       occurrencesGenerated:
-          state.isEditMode ? state.initialRule!.occurrencesGenerated : 0,
+      state.isEditMode ? state.initialRule!.occurrencesGenerated : 0,
     );
 
     final result = state.isEditMode
@@ -252,13 +252,13 @@ class AddEditRecurringRuleBloc
         : await addRecurringRule(ruleToSave);
 
     result.fold(
-      (failure) => emit(
+          (failure) => emit(
         state.copyWith(
           status: FormStatus.failure,
           errorMessage: failure.message,
         ),
       ),
-      (_) {
+          (_) {
         publishDataChangedEvent(
           type: DataChangeType.recurringRule,
           reason: state.isEditMode

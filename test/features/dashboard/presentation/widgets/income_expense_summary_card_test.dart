@@ -35,8 +35,7 @@ void main() {
       expect(find.text('\$2,500.00'), findsOneWidget);
     });
 
-    testWidgets('renders correct colors and icons for income and expenses',
-        (tester) async {
+    testWidgets('renders correct colors and icons for income and expenses', (tester) async {
       when(() => mockOverview.totalIncome).thenReturn(1.0);
       when(() => mockOverview.totalExpenses).thenReturn(1.0);
 
@@ -46,35 +45,26 @@ void main() {
         widget: buildTestWidget(),
       );
 
-      final theme =
-          Theme.of(tester.element(find.byType(IncomeExpenseSummaryCard)));
+      final theme = Theme.of(tester.element(find.byType(IncomeExpenseSummaryCard)));
 
       // Find Income Column
       final incomeTitleFinder = find.text('Income');
-      final incomeColumnFinder =
-          find.ancestor(of: incomeTitleFinder, matching: find.byType(Column));
+      final incomeColumnFinder = find.ancestor(of: incomeTitleFinder, matching: find.byType(Column));
 
-      final incomeAmountText = tester.widget<Text>(find.descendant(
-          of: incomeColumnFinder, matching: find.text('\$1.00')));
+      final incomeAmountText = tester.widget<Text>(find.descendant(of: incomeColumnFinder, matching: find.text('\$1.00')));
       expect(incomeAmountText.style?.color, Colors.green.shade700);
 
-      final incomeIcon = tester.widget<Icon>(find.descendant(
-          of: incomeColumnFinder,
-          matching: find.byIcon(Icons.arrow_circle_up_outlined)));
+      final incomeIcon = tester.widget<Icon>(find.descendant(of: incomeColumnFinder, matching: find.byIcon(Icons.arrow_circle_up_outlined)));
       expect(incomeIcon.color, Colors.green.shade700);
 
       // Find Expenses Column
       final expenseTitleFinder = find.text('Expenses');
-      final expenseColumnFinder =
-          find.ancestor(of: expenseTitleFinder, matching: find.byType(Column));
+      final expenseColumnFinder = find.ancestor(of: expenseTitleFinder, matching: find.byType(Column));
 
-      final expenseAmountText = tester.widget<Text>(find.descendant(
-          of: expenseColumnFinder, matching: find.text('\$1.00')));
+      final expenseAmountText = tester.widget<Text>(find.descendant(of: expenseColumnFinder, matching: find.text('\$1.00')));
       expect(expenseAmountText.style?.color, theme.colorScheme.error);
 
-      final expenseIcon = tester.widget<Icon>(find.descendant(
-          of: expenseColumnFinder,
-          matching: find.byIcon(Icons.arrow_circle_down_outlined)));
+      final expenseIcon = tester.widget<Icon>(find.descendant(of: expenseColumnFinder, matching: find.byIcon(Icons.arrow_circle_down_outlined)));
       expect(expenseIcon.color, theme.colorScheme.error);
     });
   });

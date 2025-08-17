@@ -15,8 +15,7 @@ void main() {
     mockOnApplySort = MockApplySortCallback();
   });
 
-  Future<void> pumpSheet(
-    WidgetTester tester, {
+  Future<void> pumpSheet(WidgetTester tester, {
     required TransactionSortBy currentSortBy,
     required SortDirection currentSortDirection,
   }) async {
@@ -35,8 +34,7 @@ void main() {
   }
 
   group('TransactionSortSheet', () {
-    testWidgets('renders all options and highlights the current one',
-        (tester) async {
+    testWidgets('renders all options and highlights the current one', (tester) async {
       await pumpSheet(
         tester,
         currentSortBy: TransactionSortBy.amount,
@@ -48,19 +46,15 @@ void main() {
       expect(find.text('Title'), findsOneWidget);
       expect(find.text('Category'), findsOneWidget);
 
-      final amountTile =
-          tester.widget<RadioListTile<TransactionSortBy>>(find.ancestor(
+      final amountTile = tester.widget<RadioListTile<TransactionSortBy>>(find.ancestor(
         of: find.text('Amount'),
         matching: find.byType(RadioListTile<TransactionSortBy>),
       ));
       expect(amountTile.groupValue, TransactionSortBy.amount);
-      expect(find.byIcon(Icons.arrow_downward_rounded),
-          findsNWidgets(2)); // Date & Amount
+      expect(find.byIcon(Icons.arrow_downward_rounded), findsNWidgets(2)); // Date & Amount
     });
 
-    testWidgets(
-        'tapping a new sort option calls onApplySort with new option and default direction',
-        (tester) async {
+    testWidgets('tapping a new sort option calls onApplySort with new option and default direction', (tester) async {
       when(() => mockOnApplySort.call(any(), any())).thenAnswer((_) {});
       await pumpSheet(
         tester,
@@ -70,13 +64,10 @@ void main() {
 
       await tester.tap(find.text('Title'));
 
-      verify(() => mockOnApplySort.call(
-          TransactionSortBy.title, SortDirection.ascending)).called(1);
+      verify(() => mockOnApplySort.call(TransactionSortBy.title, SortDirection.ascending)).called(1);
     });
 
-    testWidgets(
-        'tapping the current sort option calls onApplySort with toggled direction',
-        (tester) async {
+    testWidgets('tapping the current sort option calls onApplySort with toggled direction', (tester) async {
       when(() => mockOnApplySort.call(any(), any())).thenAnswer((_) {});
       await pumpSheet(
         tester,
@@ -86,8 +77,7 @@ void main() {
 
       await tester.tap(find.text('Date'));
 
-      verify(() => mockOnApplySort.call(
-          TransactionSortBy.date, SortDirection.ascending)).called(1);
+      verify(() => mockOnApplySort.call(TransactionSortBy.date, SortDirection.ascending)).called(1);
     });
   });
 }

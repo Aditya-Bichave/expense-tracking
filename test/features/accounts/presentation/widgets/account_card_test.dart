@@ -39,8 +39,7 @@ void main() {
       expect(find.text('\$1,500.75'), findsOneWidget);
     });
 
-    testWidgets('balance color is primary for positive balance',
-        (tester) async {
+    testWidgets('balance color is primary for positive balance', (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: AccountCard(account: mockAccountPositive),
@@ -70,8 +69,7 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget:
-            AccountCard(account: mockAccountPositive, onTap: mockOnTap.call),
+        widget: AccountCard(account: mockAccountPositive, onTap: mockOnTap.call),
       );
 
       await tester.tap(find.byType(AppCard));

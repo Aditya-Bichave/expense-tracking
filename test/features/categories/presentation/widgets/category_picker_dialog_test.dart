@@ -44,16 +44,14 @@ void main() {
       expect(find.text('Shopping'), findsOneWidget);
     });
 
-    testWidgets('tapping a category pops with the selected category',
-        (tester) async {
+    testWidgets('tapping a category pops with the selected category', (tester) async {
       Category? result;
       await tester.pumpWidget(MaterialApp(
         home: Builder(builder: (context) {
           return Scaffold(
             body: ElevatedButton(
               onPressed: () async {
-                result = await showCategoryPicker(
-                    context, CategoryTypeFilter.expense, mockCategories);
+                result = await showCategoryPicker(context, CategoryTypeFilter.expense, mockCategories);
               },
               child: const Text('Show'),
             ),
@@ -88,8 +86,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('button_add_new_category')));
 
-      verify(() => mockGoRouter.push(any(that: contains('add-category'))))
-          .called(1);
+      verify(() => mockGoRouter.push(any(that: contains('add-category')))).called(1);
     });
   });
 }

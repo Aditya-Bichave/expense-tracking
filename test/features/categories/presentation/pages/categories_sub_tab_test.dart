@@ -10,10 +10,8 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockCategoryManagementBloc
-    extends MockBloc<CategoryManagementEvent, CategoryManagementState>
+class MockCategoryManagementBloc extends MockBloc<CategoryManagementEvent, CategoryManagementState>
     implements CategoryManagementBloc {}
-
 class MockGoRouter extends Mock implements GoRouter {}
 
 void main() {
@@ -21,20 +19,10 @@ void main() {
   late MockGoRouter mockGoRouter;
 
   final mockExpenseCategories = [
-    Category(
-        id: 'e1',
-        name: 'Expense Cat',
-        iconName: 'test',
-        color: 0,
-        type: CategoryType.expense),
+    Category(id: 'e1', name: 'Expense Cat', iconName: 'test', color: 0, type: CategoryType.expense),
   ];
   final mockIncomeCategories = [
-    Category(
-        id: 'i1',
-        name: 'Income Cat',
-        iconName: 'test',
-        color: 0,
-        type: CategoryType.income),
+    Category(id: 'i1', name: 'Income Cat', iconName: 'test', color: 0, type: CategoryType.income),
   ];
 
   setUp(() {
@@ -51,14 +39,12 @@ void main() {
 
   group('CategoriesSubTab', () {
     testWidgets('shows loading indicator', (tester) async {
-      when(() => mockBloc.state).thenReturn(const CategoryManagementState(
-          status: CategoryManagementStatus.loading));
+      when(() => mockBloc.state).thenReturn(const CategoryManagementState(status: CategoryManagementStatus.loading));
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('renders category lists in their respective tabs',
-        (tester) async {
+    testWidgets('renders category lists in their respective tabs', (tester) async {
       when(() => mockBloc.state).thenReturn(CategoryManagementState(
         status: CategoryManagementStatus.loaded,
         customExpenseCategories: mockExpenseCategories,
@@ -79,18 +65,14 @@ void main() {
     });
 
     testWidgets('"Manage Categories" button navigates', (tester) async {
-      when(() => mockBloc.state).thenReturn(const CategoryManagementState(
-          status: CategoryManagementStatus.loaded));
-      when(() => mockGoRouter.pushNamed(RouteNames.manageCategories))
-          .thenAnswer((_) async => {});
+      when(() => mockBloc.state).thenReturn(const CategoryManagementState(status: CategoryManagementStatus.loaded));
+      when(() => mockGoRouter.pushNamed(RouteNames.manageCategories)).thenAnswer((_) async => {});
 
-      await pumpWidgetWithProviders(
-          tester: tester, router: mockGoRouter, widget: buildTestWidget());
+      await pumpWidgetWithProviders(tester: tester, router: mockGoRouter, widget: buildTestWidget());
 
       await tester.tap(find.byKey(const ValueKey('button_manage_categories')));
 
-      verify(() => mockGoRouter.pushNamed(RouteNames.manageCategories))
-          .called(1);
+      verify(() => mockGoRouter.pushNamed(RouteNames.manageCategories)).called(1);
     });
   });
 }

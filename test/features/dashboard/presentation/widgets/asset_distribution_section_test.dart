@@ -34,9 +34,7 @@ void main() {
       expect(find.byType(DataTable), findsNothing);
     });
 
-    testWidgets(
-        'renders Pie Chart for Quantum mode when preferDataTableForLists is false',
-        (tester) async {
+    testWidgets('renders Pie Chart for Quantum mode when preferDataTableForLists is false', (tester) async {
       // The default Quantum theme in the app has preferDataTableForLists = false
       await pumpWidgetWithProviders(
         tester: tester,
@@ -48,9 +46,7 @@ void main() {
       expect(find.byType(DataTable), findsNothing);
     });
 
-    testWidgets(
-        'renders DataTable for Quantum mode when preferDataTableForLists is true',
-        (tester) async {
+    testWidgets('renders DataTable for Quantum mode when preferDataTableForLists is true', (tester) async {
       // To test this, we need to inject a custom AppModeTheme.
       // We can wrap our widget in a Theme with a specific extension.
       await pumpWidgetWithProviders(
@@ -64,8 +60,7 @@ void main() {
                   TestAppModeTheme(preferTables: true),
                 ],
               ),
-              child: const AssetDistributionSection(
-                  accountBalances: {'Bank': 100}),
+              child: const AssetDistributionSection(accountBalances: {'Bank': 100}),
             );
           },
         ),

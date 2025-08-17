@@ -8,18 +8,15 @@ import '../../../../helpers/pump_app.dart';
 
 void main() {
   group('AssetDistributionPieChart', () {
-    testWidgets('renders empty state message when no positive balances exist',
-        (tester) async {
+    testWidgets('renders empty state message when no positive balances exist', (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: const AssetDistributionPieChart(
-            accountBalances: {'Bank': 0, 'Cash': -10}),
+        widget: const AssetDistributionPieChart(accountBalances: {'Bank': 0, 'Cash': -10}),
       );
       expect(find.text('No positive asset balances to chart.'), findsOneWidget);
     });
 
-    testWidgets('renders PieChart and legends when positive balances exist',
-        (tester) async {
+    testWidgets('renders PieChart and legends when positive balances exist', (tester) async {
       final data = {'Bank': 1000.0, 'Stocks': 500.0};
       await pumpWidgetWithProviders(
         tester: tester,
@@ -34,15 +31,13 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         settingsState: const SettingsState(uiMode: UIMode.quantum),
-        widget:
-            const AssetDistributionPieChart(accountBalances: {'Bank': 1000}),
+        widget: const AssetDistributionPieChart(accountBalances: {'Bank': 1000}),
       );
       expect(find.byType(PieChart), findsNothing);
       expect(find.byType(Card), findsNothing);
     });
 
-    testWidgets('tapping a chart section updates the touchedIndex',
-        (tester) async {
+    testWidgets('tapping a chart section updates the touchedIndex', (tester) async {
       final data = {'Bank': 1000.0, 'Stocks': 500.0};
       await pumpWidgetWithProviders(
         tester: tester,
@@ -51,13 +46,11 @@ void main() {
 
       // Before tap, check the radius of the first section
       var pieChart = tester.widget<PieChart>(find.byType(PieChart));
-      var initialRadius =
-          (pieChart.data.sections[0] as PieChartSectionData).radius;
+      var initialRadius = (pieChart.data.sections[0] as PieChartSectionData).radius;
       expect(initialRadius, 60.0);
 
       // Simulate a touch event on the first section (index 0)
-      final state = tester.state<AssetDistributionPieChartState>(
-          find.byType(AssetDistributionPieChart));
+      final state = tester.state<AssetDistributionPieChartState>(find.byType(AssetDistributionPieChart));
       final touchCallback = pieChart.data.pieTouchData!.touchCallback!;
       final event = FlTapDownEvent(const Offset(0, 0), const Offset(0, 0));
       final response = PieTouchResponse(
@@ -73,8 +66,7 @@ void main() {
 
       // After tap, verify the radius has increased
       pieChart = tester.widget<PieChart>(find.byType(PieChart));
-      var touchedRadius =
-          (pieChart.data.sections[0] as PieChartSectionData).radius;
+      var touchedRadius = (pieChart.data.sections[0] as PieChartSectionData).radius;
       expect(touchedRadius, 70.0);
     });
   });
@@ -82,14 +74,12 @@ void main() {
   group('AssetDistributionPieChartState (Unit Tests)', () {
     test('generateColorMap assigns colors correctly and sequentially', () {
       final accounts = ['Bank', 'Cash', 'Stocks'];
-      final colorMap =
-          AssetDistributionPieChartState.generateColorMap(accounts);
+      final colorMap = AssetDistributionPieChartState.generateColorMap(accounts);
 
       expect(colorMap.length, 3);
       expect(colorMap['Bank'], AssetDistributionPieChartState.colorPalette[0]);
       expect(colorMap['Cash'], AssetDistributionPieChartState.colorPalette[1]);
-      expect(
-          colorMap['Stocks'], AssetDistributionPieChartState.colorPalette[2]);
+      expect(colorMap['Stocks'], AssetDistributionPieChartState.colorPalette[2]);
       expect(colorMap['Bank'] != colorMap['Cash'], isTrue);
     });
   });

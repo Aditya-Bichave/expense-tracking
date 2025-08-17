@@ -13,8 +13,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockTransactionListBloc
-    extends MockBloc<TransactionListEvent, TransactionListState>
+class MockTransactionListBloc extends MockBloc<TransactionListEvent, TransactionListState>
     implements TransactionListBloc {}
 
 class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
@@ -43,15 +42,13 @@ void main() {
     title: 'Coffee',
     amount: 4.50,
     date: DateTime(2023, 1, 1),
-    category:
-        Category(id: 'cat1', name: 'Food', iconName: 'food', color: 0xFFFFFF00),
+    category: Category(id: 'cat1', name: 'Food', iconName: 'food', color: 0xFFFFFF00),
     accountId: 'acc1',
     type: TransactionType.expense,
     notes: 'Morning coffee',
   );
 
-  final mockAccount =
-      AssetAccount(id: 'acc1', name: 'Main Bank', balance: 1000);
+  final mockAccount = AssetAccount(id: 'acc1', name: 'Main Bank', balance: 1000);
 
   Widget buildTestWidget() {
     return MultiBlocProvider(
@@ -66,8 +63,7 @@ void main() {
   group('TransactionDetailPage', () {
     testWidgets('renders all transaction details correctly', (tester) async {
       // ARRANGE
-      when(() => mockAccountListBloc.state)
-          .thenReturn(AccountListLoaded([mockAccount]));
+      when(() => mockAccountListBloc.state).thenReturn(AccountListLoaded([mockAccount]));
 
       // ACT
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
@@ -83,38 +79,29 @@ void main() {
 
     testWidgets('tapping Edit button navigates to edit page', (tester) async {
       // ARRANGE
-      when(() => mockAccountListBloc.state)
-          .thenReturn(const AccountListState());
-      when(() => mockGoRouter.pushNamed(any(),
-          pathParameters: any(named: 'pathParameters'),
-          extra: any(named: 'extra'))).thenAnswer((_) async => {});
+      when(() => mockAccountListBloc.state).thenReturn(const AccountListState());
+      when(() => mockGoRouter.pushNamed(any(), pathParameters: any(named: 'pathParameters'), extra: any(named: 'extra'))).thenAnswer((_) async => {});
 
       // ACT
-      await pumpWidgetWithProviders(
-          tester: tester, widget: buildTestWidget(), router: mockGoRouter);
-      await tester
-          .tap(find.byKey(const ValueKey('button_transactionDetail_edit')));
+      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(), router: mockGoRouter);
+      await tester.tap(find.byKey(const ValueKey('button_transactionDetail_edit')));
 
       // ASSERT
       verify(() => mockGoRouter.pushNamed(
-            RouteNames.editTransaction,
-            pathParameters: {'tid': mockTransaction.id},
-            extra: mockTransaction,
-          )).called(1);
+        RouteNames.editTransaction,
+        pathParameters: {'tid': mockTransaction.id},
+        extra: mockTransaction,
+      )).called(1);
     });
 
-    testWidgets('tapping Delete button shows dialog and dispatches event',
-        (tester) async {
+    testWidgets('tapping Delete button shows dialog and dispatches event', (tester) async {
       // ARRANGE
-      when(() => mockAccountListBloc.state)
-          .thenReturn(const AccountListState());
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState());
+      when(() => mockAccountListBloc.state).thenReturn(const AccountListState());
+      when(() => mockTransactionListBloc.state).thenReturn(const TransactionListState());
 
       // ACT
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
-      await tester
-          .tap(find.byKey(const ValueKey('button_transactionDetail_delete')));
+      await tester.tap(find.byKey(const ValueKey('button_transactionDetail_delete')));
       await tester.pumpAndSettle();
 
       // ASSERT
@@ -125,9 +112,7 @@ void main() {
       await tester.pump();
 
       // ASSERT
-      verify(() =>
-              mockTransactionListBloc.add(DeleteTransaction(mockTransaction)))
-          .called(1);
+      verify(() => mockTransactionListBloc.add(DeleteTransaction(mockTransaction))).called(1);
     });
   });
 }

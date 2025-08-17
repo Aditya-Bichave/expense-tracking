@@ -12,9 +12,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockBudgetListBloc extends MockBloc<BudgetListEvent, BudgetListState>
-    implements BudgetListBloc {}
-
+class MockBudgetListBloc extends MockBloc<BudgetListEvent, BudgetListState> implements BudgetListBloc {}
 class MockGoRouter extends Mock implements GoRouter {}
 
 void main() {
@@ -22,11 +20,7 @@ void main() {
   late MockGoRouter mockGoRouter;
 
   final mockBudgets = [
-    BudgetWithStatus(
-        budget: Budget(id: '1', name: 'Groceries', targetAmount: 500),
-        amountSpent: 250,
-        percentageUsed: 0.5,
-        health: BudgetHealth.healthy),
+    BudgetWithStatus(budget: Budget(id: '1', name: 'Groceries', targetAmount: 500), amountSpent: 250, percentageUsed: 0.5, health: BudgetHealth.healthy),
   ];
 
   setUp(() {
@@ -43,47 +37,37 @@ void main() {
 
   group('BudgetsSubTab', () {
     testWidgets('shows loading indicator', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const BudgetListState(status: BudgetListStatus.loading));
+      when(() => mockBloc.state).thenReturn(const BudgetListState(status: BudgetListStatus.loading));
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('shows empty state and handles add button tap', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const BudgetListState(status: BudgetListStatus.loaded));
-      when(() => mockGoRouter.pushNamed(RouteNames.addBudget))
-          .thenAnswer((_) async => {});
-      await pumpWidgetWithProviders(
-          tester: tester, router: mockGoRouter, widget: buildTestWidget());
+      when(() => mockBloc.state).thenReturn(const BudgetListState(status: BudgetListStatus.loaded));
+      when(() => mockGoRouter.pushNamed(RouteNames.addBudget)).thenAnswer((_) async => {});
+      await pumpWidgetWithProviders(tester: tester, router: mockGoRouter, widget: buildTestWidget());
 
       expect(find.text('No Budgets Created Yet'), findsOneWidget);
-      await tester
-          .tap(find.byKey(const ValueKey('button_budgetList_addFirst')));
+      await tester.tap(find.byKey(const ValueKey('button_budgetList_addFirst')));
       verify(() => mockGoRouter.pushNamed(RouteNames.addBudget)).called(1);
     });
 
     testWidgets('shows error message', (tester) async {
-      when(() => mockBloc.state).thenReturn(const BudgetListState(
-          status: BudgetListStatus.error, errorMessage: 'Failed'));
+      when(() => mockBloc.state).thenReturn(const BudgetListState(status: BudgetListStatus.error, errorMessage: 'Failed'));
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       expect(find.text('Error loading budgets: Failed'), findsOneWidget);
     });
 
     testWidgets('renders a list of BudgetCards', (tester) async {
-      when(() => mockBloc.state).thenReturn(BudgetListState(
-          status: BudgetListStatus.loaded, budgetsWithStatus: mockBudgets));
+      when(() => mockBloc.state).thenReturn(BudgetListState(status: BudgetListStatus.loaded, budgetsWithStatus: mockBudgets));
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       expect(find.byType(BudgetCard), findsOneWidget);
     });
 
     testWidgets('tapping FAB navigates to add page', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const BudgetListState(status: BudgetListStatus.loaded));
-      when(() => mockGoRouter.pushNamed(RouteNames.addBudget))
-          .thenAnswer((_) async => {});
-      await pumpWidgetWithProviders(
-          tester: tester, router: mockGoRouter, widget: buildTestWidget());
+      when(() => mockBloc.state).thenReturn(const BudgetListState(status: BudgetListStatus.loaded));
+      when(() => mockGoRouter.pushNamed(RouteNames.addBudget)).thenAnswer((_) async => {});
+      await pumpWidgetWithProviders(tester: tester, router: mockGoRouter, widget: buildTestWidget());
 
       await tester.tap(find.byKey(const ValueKey('fab_budgetList_add')));
       verify(() => mockGoRouter.pushNamed(RouteNames.addBudget)).called(1);

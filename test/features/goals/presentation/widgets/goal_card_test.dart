@@ -29,8 +29,7 @@ void main() {
 
       expect(find.text('New Laptop'), findsOneWidget);
       expect(find.textContaining('Saved'), findsOneWidget);
-      expect(find.textContaining('Target'),
-          findsNWidgets(2)); // Target amount and target date
+      expect(find.textContaining('Target'), findsNWidgets(2)); // Target amount and target date
       expect(find.textContaining('Remaining'), findsOneWidget);
     });
 
@@ -40,8 +39,7 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget:
-            Material(child: GoalCard(goal: mockGoal, onTap: mockOnTap.call)),
+        widget: Material(child: GoalCard(goal: mockGoal, onTap: mockOnTap.call)),
       );
 
       await tester.tap(find.byType(AppCard));

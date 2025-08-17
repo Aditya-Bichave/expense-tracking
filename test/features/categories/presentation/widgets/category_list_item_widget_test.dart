@@ -15,14 +15,8 @@ class MockCallbacks extends Mock {
 void main() {
   late MockCallbacks mockCallbacks;
 
-  final customCategory = Category(
-      id: 'c1', name: 'Custom', iconName: 'test', color: 0, isCustom: true);
-  final predefinedCategory = Category(
-      id: 'p1',
-      name: 'Predefined',
-      iconName: 'test',
-      color: 0,
-      isCustom: false);
+  final customCategory = Category(id: 'c1', name: 'Custom', iconName: 'test', color: 0, isCustom: true);
+  final predefinedCategory = Category(id: 'p1', name: 'Predefined', iconName: 'test', color: 0, isCustom: false);
 
   setUp(() {
     mockCallbacks = MockCallbacks();
@@ -30,42 +24,29 @@ void main() {
 
   group('CategoryListItemWidget', () {
     testWidgets('renders category name and icon', (tester) async {
-      await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Material(
-              child: CategoryListItemWidget(category: customCategory)));
+      await pumpWidgetWithProviders(tester: tester, widget: Material(child: CategoryListItemWidget(category: customCategory)));
       expect(find.text('Custom'), findsOneWidget);
       expect(find.byType(CircleAvatar), findsOneWidget);
     });
 
-    testWidgets('shows Edit and Delete buttons for custom categories',
-        (tester) async {
-      await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Material(
-              child: CategoryListItemWidget(category: customCategory)));
+    testWidgets('shows Edit and Delete buttons for custom categories', (tester) async {
+      await pumpWidgetWithProviders(tester: tester, widget: Material(child: CategoryListItemWidget(category: customCategory)));
       expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
     });
 
-    testWidgets('shows Personalize button for predefined categories',
-        (tester) async {
-      await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Material(
-              child: CategoryListItemWidget(category: predefinedCategory)));
+    testWidgets('shows Personalize button for predefined categories', (tester) async {
+      await pumpWidgetWithProviders(tester: tester, widget: Material(child: CategoryListItemWidget(category: predefinedCategory)));
       expect(find.byIcon(Icons.palette_outlined), findsOneWidget);
     });
 
-    testWidgets('calls onEdit and onDelete callbacks for custom categories',
-        (tester) async {
+    testWidgets('calls onEdit and onDelete callbacks for custom categories', (tester) async {
       when(() => mockCallbacks.onEdit()).thenAnswer((_) {});
       when(() => mockCallbacks.onDelete()).thenAnswer((_) {});
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: Material(
-            child: CategoryListItemWidget(
+        widget: Material(child: CategoryListItemWidget(
           category: customCategory,
           onEdit: mockCallbacks.onEdit,
           onDelete: mockCallbacks.onDelete,
