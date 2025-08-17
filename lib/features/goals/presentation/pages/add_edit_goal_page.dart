@@ -49,6 +49,7 @@ class AddEditGoalPage extends StatelessWidget {
           appBar: AppBar(
             title: Text(isEditing ? 'Edit Goal' : 'Add Goal'),
             leading: IconButton(
+              key: const ValueKey('button_close'),
               icon: const Icon(Icons.close),
               tooltip: 'Cancel',
               onPressed: () => context.pop(), // Close screen

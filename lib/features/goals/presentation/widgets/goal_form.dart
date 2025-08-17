@@ -188,6 +188,7 @@ class _GoalFormState extends State<GoalForm> {
 
           // Submit Button
           ElevatedButton.icon(
+            key: const ValueKey('button_submit'),
             icon: Icon(
                 isEditing ? Icons.save_outlined : Icons.add_circle_outline),
             label: Text(isEditing ? 'Update Goal' : 'Add Goal'),

@@ -7,7 +7,7 @@ set -e
 echo "--- Setting up Android SDK ---"
 # Define paths within the user's home directory (no sudo required)
 export ANDROID_HOME="$HOME/android-sdk"
-ANDROID_CMDLINE_TOOLS_VERSION="11076708" 
+ANDROID_CMDLINE_TOOLS_VERSION="11076708"
 
 # Create directories for the SDK
 mkdir -p "$ANDROID_HOME/cmdline-tools"

@@ -194,6 +194,7 @@ class _AccountFormState extends State<AccountForm> {
 
           // Submit Button
           ElevatedButton.icon(
+            key: const ValueKey('button_accountForm_submit'),
             icon: Icon(
               widget.initialAccount == null
                   ? Icons.add_circle_outline
