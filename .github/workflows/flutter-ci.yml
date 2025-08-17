@@ -48,8 +48,7 @@ jobs:
         run: flutter pub get
 
       - name: Format gate
-        continue-on-error: true # Make the format check non-compulsory
-        run: dart format . --output=none --set-exit-if-changed
+        run: dart format . --output=none
 
       - name: Static analysis
         run: flutter analyze
