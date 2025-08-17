@@ -41,8 +41,10 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.ready)]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.ready),
+        Stream.fromIterable(
+            [const AddEditTransactionState(status: AddEditStatus.ready)]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.ready),
       );
 
       // ACT
@@ -60,8 +62,12 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([AddEditTransactionState(status: AddEditStatus.ready, transactionId: mockTransaction.id)]),
-        initialState: AddEditTransactionState(status: AddEditStatus.ready, transactionId: mockTransaction.id),
+        Stream.fromIterable([
+          AddEditTransactionState(
+              status: AddEditStatus.ready, transactionId: mockTransaction.id)
+        ]),
+        initialState: AddEditTransactionState(
+            status: AddEditStatus.ready, transactionId: mockTransaction.id),
       );
 
       // ACT
@@ -78,8 +84,10 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.saving)]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.saving),
+        Stream.fromIterable(
+            [const AddEditTransactionState(status: AddEditStatus.saving)]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.saving),
       );
 
       // ACT
@@ -96,8 +104,10 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.success)]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.ready),
+        Stream.fromIterable(
+            [const AddEditTransactionState(status: AddEditStatus.success)]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.ready),
       );
 
       // ACT
@@ -115,8 +125,12 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.error, errorMessage: 'Oh no!')]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.ready),
+        Stream.fromIterable([
+          const AddEditTransactionState(
+              status: AddEditStatus.error, errorMessage: 'Oh no!')
+        ]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.ready),
       );
 
       // ACT

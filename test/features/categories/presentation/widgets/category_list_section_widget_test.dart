@@ -25,10 +25,12 @@ void main() {
   });
 
   group('CategoryListSectionWidget', () {
-    testWidgets('shows empty message when categories list is empty', (tester) async {
+    testWidgets('shows empty message when categories list is empty',
+        (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: Material(child: CategoryListSectionWidget(
+        widget: Material(
+            child: CategoryListSectionWidget(
           categories: const [],
           emptyMessage: 'No categories here',
           onEditCategory: mockCallbacks.onEdit,
@@ -39,10 +41,12 @@ void main() {
       expect(find.text('No categories here'), findsOneWidget);
     });
 
-    testWidgets('renders a sorted list of CategoryListItemWidgets', (tester) async {
+    testWidgets('renders a sorted list of CategoryListItemWidgets',
+        (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: Material(child: CategoryListSectionWidget(
+        widget: Material(
+            child: CategoryListSectionWidget(
           categories: mockCategories.reversed.toList(), // Provide unsorted list
           emptyMessage: '',
           onEditCategory: mockCallbacks.onEdit,
@@ -57,8 +61,10 @@ void main() {
       final firstCategoryText = tester.widget<Text>(find.text('A Category'));
       final secondCategoryText = tester.widget<Text>(find.text('B Category'));
 
-      final firstCategoryPos = tester.getTopLeft(find.byWidget(firstCategoryText));
-      final secondCategoryPos = tester.getTopLeft(find.byWidget(secondCategoryText));
+      final firstCategoryPos =
+          tester.getTopLeft(find.byWidget(firstCategoryText));
+      final secondCategoryPos =
+          tester.getTopLeft(find.byWidget(secondCategoryText));
 
       expect(firstCategoryPos.dy < secondCategoryPos.dy, isTrue);
     });

@@ -20,7 +20,9 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         settingsState: const SettingsState(selectedCountryCode: 'US'),
-        widget: Material(child: ContributionListItem(contribution: mockContribution, goalId: 'g1')),
+        widget: Material(
+            child: ContributionListItem(
+                contribution: mockContribution, goalId: 'g1')),
       );
 
       expect(find.text('\$100.00'), findsOneWidget);
@@ -33,10 +35,13 @@ void main() {
       // Testing that it opens the sheet is better done in the page-level test.
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: Material(child: ContributionListItem(contribution: mockContribution, goalId: 'g1')),
+        widget: Material(
+            child: ContributionListItem(
+                contribution: mockContribution, goalId: 'g1')),
       );
 
-      expect(find.byKey(const ValueKey('button_edit_contribution')), findsOneWidget);
+      expect(find.byKey(const ValueKey('button_edit_contribution')),
+          findsOneWidget);
     });
   });
 }

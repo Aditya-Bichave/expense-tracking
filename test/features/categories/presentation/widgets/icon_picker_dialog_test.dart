@@ -35,17 +35,20 @@ void main() {
       await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
       await tester.pump();
 
-      final container = tester.widget<Container>(find.ancestor(
-        of: find.byIcon(Icons.shopping_cart_outlined),
-        matching: find.byType(Container),
-      ).first);
+      final container = tester.widget<Container>(find
+          .ancestor(
+            of: find.byIcon(Icons.shopping_cart_outlined),
+            matching: find.byType(Container),
+          )
+          .first);
 
       final border = container.decoration as BoxDecoration;
       expect(border.border, isNotNull);
       expect(border.border!.isUniform, isTrue);
     });
 
-    testWidgets('tapping Select button pops with selected icon', (tester) async {
+    testWidgets('tapping Select button pops with selected icon',
+        (tester) async {
       String? result;
       await tester.pumpWidget(MaterialApp(
         home: Builder(builder: (context) {

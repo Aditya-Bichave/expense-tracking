@@ -12,14 +12,17 @@ class MockOnTap extends Mock {
 
 void main() {
   final mockCategories = [
-    Category(id: '1', name: 'Groceries', iconName: 'groceries', color: 0xFF00FF00),
-    Category(id: '2', name: 'Transport', iconName: 'transport', color: 0xFFFF0000),
+    Category(
+        id: '1', name: 'Groceries', iconName: 'groceries', color: 0xFF00FF00),
+    Category(
+        id: '2', name: 'Transport', iconName: 'transport', color: 0xFFFF0000),
     Category(id: '3', name: 'Bills', iconName: 'bills', color: 0xFF0000FF),
     Category(id: '4', name: 'Fun', iconName: 'fun', color: 0xFFFFFF00),
   ];
 
   group('CategorySelectorMultiTile', () {
-    testWidgets('renders hint text when no categories are selected', (tester) async {
+    testWidgets('renders hint text when no categories are selected',
+        (tester) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
@@ -38,7 +41,8 @@ void main() {
       expect(find.byIcon(Icons.category_outlined), findsOneWidget);
     });
 
-    testWidgets('renders count and icons when 1 category is selected', (tester) async {
+    testWidgets('renders count and icons when 1 category is selected',
+        (tester) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
@@ -61,7 +65,9 @@ void main() {
       expect(iconRow, findsOneWidget);
     });
 
-    testWidgets('displays more indicator when more than 3 categories are selected', (tester) async {
+    testWidgets(
+        'displays more indicator when more than 3 categories are selected',
+        (tester) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
@@ -101,7 +107,8 @@ void main() {
       verify(() => mockOnTap.call()).called(1);
     });
 
-    testWidgets('displays error text and styling when errorText is provided', (tester) async {
+    testWidgets('displays error text and styling when errorText is provided',
+        (tester) async {
       // ARRANGE
       const errorText = 'This is an error';
       await pumpWidgetWithProviders(

@@ -26,8 +26,10 @@ Future<void> pumpWidgetWithProviders({
   required Widget widget,
   // --- Mocks & Stubs ---
   SettingsState? settingsState, // Easily provide a specific settings state
-  List<BlocProvider> blocProviders = const [], // For other feature-specific Blocs
-  List<SingleChildWidget> providers = const [], // For any other type of provider
+  List<BlocProvider> blocProviders =
+      const [], // For other feature-specific Blocs
+  List<SingleChildWidget> providers =
+      const [], // For any other type of provider
   GetIt? getIt, // Pass a pre-configured service locator if needed
   GoRouter? router, // Pass a mock router
 }) async {
@@ -38,7 +40,9 @@ Future<void> pumpWidgetWithProviders({
   final mockSettingsBloc = MockSettingsBloc();
   whenListen(
     mockSettingsBloc,
-    Stream.fromIterable([settingsState ?? const SettingsState()]), // Use provided state or default
+    Stream.fromIterable([
+      settingsState ?? const SettingsState()
+    ]), // Use provided state or default
     initialState: settingsState ?? const SettingsState(),
   );
 
@@ -73,7 +77,8 @@ Future<void> pumpWidgetWithProviders({
           routes: [
             GoRoute(
               path: '/',
-              builder: (context, state) => Scaffold(body: widget), // The widget under test
+              builder: (context, state) =>
+                  Scaffold(body: widget), // The widget under test
             ),
           ],
         ),

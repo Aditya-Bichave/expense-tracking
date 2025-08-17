@@ -12,7 +12,8 @@ import 'package:toggle_switch/toggle_switch.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockAddEditTransactionBloc extends MockBloc<AddEditTransactionEvent, AddEditTransactionState>
+class MockAddEditTransactionBloc
+    extends MockBloc<AddEditTransactionEvent, AddEditTransactionState>
     implements AddEditTransactionBloc {}
 
 class MockOnSubmit extends Mock {
@@ -52,40 +53,55 @@ void main() {
   }
 
   group('TransactionForm', () {
-    testWidgets('initializes fields with initialTransaction data', (tester) async {
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(initialTransaction: mockTransaction));
+    testWidgets('initializes fields with initialTransaction data',
+        (tester) async {
+      await pumpWidgetWithProviders(
+          tester: tester,
+          widget: buildTestWidget(initialTransaction: mockTransaction));
 
       expect(find.text('Initial Title'), findsOneWidget);
       expect(find.text('123.45'), findsOneWidget);
       expect(find.text('Initial notes'), findsOneWidget);
     });
 
-    testWidgets('toggling transaction type clears category and dispatches event', (tester) async {
+    testWidgets(
+        'toggling transaction type clears category and dispatches event',
+        (tester) async {
       when(() => mockBloc.add(any())).thenAnswer((_) async {});
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(initialTransaction: mockTransaction));
+      await pumpWidgetWithProviders(
+          tester: tester,
+          widget: buildTestWidget(initialTransaction: mockTransaction));
 
       await tester.tap(find.byType(ToggleSwitch));
       await tester.pumpAndSettle();
 
-      verify(() => mockBloc.add(const TransactionTypeChanged(TransactionType.income))).called(1);
+      verify(() => mockBloc
+          .add(const TransactionTypeChanged(TransactionType.income))).called(1);
     });
 
-    testWidgets('onSubmit is called with correct data when form is valid', (tester) async {
-      when(() => mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any())).thenAnswer((_) {});
+    testWidgets('onSubmit is called with correct data when form is valid',
+        (tester) async {
+      when(() => mockOnSubmit.call(
+          any(), any(), any(), any(), any(), any(), any())).thenAnswer((_) {});
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
-      await tester.enterText(find.widgetWithText(TextFormField, 'Title / Description'), 'Test Title');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Amount'), '50.00');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Title / Description'),
+          'Test Title');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Amount'), '50.00');
 
       // Can't easily select from dropdowns in test, so we assume a value is set.
       // In a real scenario, you would need to mock the dropdown's state or interaction.
-      final formState = tester.state<TransactionFormState>(find.byType(TransactionForm));
+      final formState =
+          tester.state<TransactionFormState>(find.byType(TransactionForm));
       formState.setState(() {
         formState.selectedCategory = Category.uncategorized;
         formState.currentAccountId = 'acc1';
       });
 
-      await tester.tap(find.byKey(const ValueKey('button_transactionForm_submit')));
+      await tester
+          .tap(find.byKey(const ValueKey('button_transactionForm_submit')));
       await tester.pump();
 
       verify(() => mockOnSubmit.call(
@@ -102,11 +118,14 @@ void main() {
     testWidgets('onSubmit is not called when form is invalid', (tester) async {
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
-      await tester.tap(find.byKey(const ValueKey('button_transactionForm_submit')));
+      await tester
+          .tap(find.byKey(const ValueKey('button_transactionForm_submit')));
       await tester.pump();
 
-      verifyNever(() => mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any()));
-      expect(find.text('Please correct the errors in the form.'), findsOneWidget);
+      verifyNever(() =>
+          mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any()));
+      expect(
+          find.text('Please correct the errors in the form.'), findsOneWidget);
     });
   });
 }

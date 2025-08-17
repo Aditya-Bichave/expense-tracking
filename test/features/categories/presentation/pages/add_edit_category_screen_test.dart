@@ -8,7 +8,8 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockCategoryManagementBloc extends MockBloc<CategoryManagementEvent, CategoryManagementState>
+class MockCategoryManagementBloc
+    extends MockBloc<CategoryManagementEvent, CategoryManagementState>
     implements CategoryManagementBloc {}
 
 void main() {
@@ -19,7 +20,8 @@ void main() {
   });
 
   group('AddEditCategoryScreen', () {
-    testWidgets('renders CategoryForm and correct title for "Add" mode', (tester) async {
+    testWidgets('renders CategoryForm and correct title for "Add" mode',
+        (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: BlocProvider.value(
           value: mockBloc,
@@ -34,7 +36,9 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: BlocProvider.value(
           value: mockBloc,
-          child: AddEditCategoryScreen(initialCategory: Category(id: '1', name: 'Test', color: 0, iconName: 'test')),
+          child: AddEditCategoryScreen(
+              initialCategory:
+                  Category(id: '1', name: 'Test', color: 0, iconName: 'test')),
         ),
       ));
       expect(find.text('Edit Category'), findsOneWidget);
@@ -49,7 +53,8 @@ void main() {
         ),
       ));
 
-      await tester.enterText(find.widgetWithText(TextFormField, 'Category Name'), 'New Category');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Category Name'), 'New Category');
       await tester.tap(find.byKey(const ValueKey('button_submit')));
       await tester.pump();
 

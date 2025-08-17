@@ -39,7 +39,8 @@ void main() {
         expect(find.text('Please enter a value'), findsOneWidget);
       });
 
-      testWidgets('validator shows error for invalid characters', (tester) async {
+      testWidgets('validator shows error for invalid characters',
+          (tester) async {
         controller.text = 'Invalid@Name';
         await pumpWidgetWithProviders(
           tester: tester,
@@ -60,7 +61,8 @@ void main() {
 
     group('buildAmountField', () {
       final formKey = GlobalKey<FormState>();
-      testWidgets('validator shows error for non-positive number', (tester) async {
+      testWidgets('validator shows error for non-positive number',
+          (tester) async {
         controller.text = '0';
         await pumpWidgetWithProviders(
           tester: tester,
@@ -83,7 +85,8 @@ void main() {
 
     group('buildDatePickerTile', () {
       final mockCallbacks = MockCallbacks();
-      testWidgets('shows formatted date and clear button when date is selected', (tester) async {
+      testWidgets('shows formatted date and clear button when date is selected',
+          (tester) async {
         final date = DateTime(2023, 10, 26);
         await pumpWidgetWithProviders(
           tester: tester,
@@ -131,7 +134,10 @@ void main() {
               context: tester.element(find.byType(SizedBox)),
               initialIndex: 0,
               labels: const ['Expense', 'Income'],
-              activeBgColors: const [[Colors.red], [Colors.green]],
+              activeBgColors: const [
+                [Colors.red],
+                [Colors.green]
+              ],
               onToggle: mockCallbacks.onToggle,
             ),
           ),
@@ -152,13 +158,17 @@ void main() {
               context: tester.element(find.byType(SizedBox)),
               initialIndex: 0,
               labels: const ['Expense', 'Income'],
-              activeBgColors: const [[Colors.red], [Colors.green]],
+              activeBgColors: const [
+                [Colors.red],
+                [Colors.green]
+              ],
               onToggle: mockCallbacks.onToggle,
               disabled: true,
             ),
           ),
         );
-        final toggleSwitch = tester.widget<ToggleSwitch>(find.byType(ToggleSwitch));
+        final toggleSwitch =
+            tester.widget<ToggleSwitch>(find.byType(ToggleSwitch));
         expect(toggleSwitch.onToggle, isNull);
         expect(find.byType(IgnorePointer), findsOneWidget);
       });

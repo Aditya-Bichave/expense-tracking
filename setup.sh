@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
@@ -7,7 +5,7 @@ set -e
 echo "--- Setting up Android SDK ---"
 # Define paths within the user's home directory (no sudo required)
 export ANDROID_HOME="$HOME/android-sdk"
-ANDROID_CMDLINE_TOOLS_VERSION="11076708" 
+ANDROID_CMDLINE_TOOLS_VERSION="11076708"
 
 # Create directories for the SDK
 mkdir -p "$ANDROID_HOME/cmdline-tools"
@@ -33,16 +31,20 @@ sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/n
 
 # --- 2. INSTALL FLUTTER SDK ---
 echo "--- Setting up Flutter SDK ---"
+echo "--- Setting up Flutter SDK ---"
 FLUTTER_VERSION="3.22.2"
 FLUTTER_HOME="$HOME/flutter"
 
 # Clone the Flutter repository from GitHub
 if [ ! -d "$FLUTTER_HOME" ]; then
-  git clone https://github.com/flutter/flutter.git --branch "$FLUTTER_VERSION" "$FLUTTER_HOME"
+  git clone --depth 1 --branch stable https://github.com/flutter/flutter.git /opt/flutter
 fi
 
 # Add Flutter to the shell's PATH for this session
-export PATH="$PATH:$FLUTTER_HOME/bin"
+echo 'export FLUTTER_HOME=/opt/flutter' | sudo tee /etc/profile.d/flutter.sh
+echo 'export PATH="$PATH:$FLUTTER_HOME/bin"' | sudo tee -a /etc/profile.d/flutter.sh
+sudo chmod +x /etc/profile.d/flutter.sh
+source /etc/profile.d/flutter.sh
 
 # Switch to the stable channel to ensure consistency
 echo "--- Configuring Flutter channel ---"

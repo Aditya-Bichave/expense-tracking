@@ -15,7 +15,8 @@ class MockCallbacks extends Mock {
 
 void main() {
   late MockCallbacks mockCallbacks;
-  final mockCategory = Category(id: 'cat1', name: 'Suggested', iconName: 'test', color: 0);
+  final mockCategory =
+      Category(id: 'cat1', name: 'Suggested', iconName: 'test', color: 0);
   final mockTransaction = TransactionEntity(
     id: '1',
     title: 'Test',
@@ -38,61 +39,90 @@ void main() {
   }
 
   group('CategorizationStatusWidget', () {
-    testWidgets('renders "needsReview" state and buttons correctly', (tester) async {
-      final tx = mockTransaction.copyWith(status: CategorizationStatus.needsReview);
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(tx));
+    testWidgets('renders "needsReview" state and buttons correctly',
+        (tester) async {
+      final tx =
+          mockTransaction.copyWith(status: CategorizationStatus.needsReview);
+      await pumpWidgetWithProviders(
+          tester: tester, widget: buildTestWidget(tx));
 
       expect(find.text('Suggest: Suggested'), findsOneWidget);
-      expect(find.byKey(const ValueKey('button_categorization_confirm')), findsOneWidget);
-      expect(find.byKey(const ValueKey('button_categorization_change')), findsOneWidget);
+      expect(find.byKey(const ValueKey('button_categorization_confirm')),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('button_categorization_change')),
+          findsOneWidget);
     });
 
-    testWidgets('renders "uncategorized" state and button correctly', (tester) async {
-      final tx = mockTransaction.copyWith(status: CategorizationStatus.uncategorized);
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(tx));
+    testWidgets('renders "uncategorized" state and button correctly',
+        (tester) async {
+      final tx =
+          mockTransaction.copyWith(status: CategorizationStatus.uncategorized);
+      await pumpWidgetWithProviders(
+          tester: tester, widget: buildTestWidget(tx));
 
-      expect(find.byKey(const ValueKey('button_categorization_categorize')), findsOneWidget);
+      expect(find.byKey(const ValueKey('button_categorization_categorize')),
+          findsOneWidget);
     });
 
     testWidgets('renders "categorized" state correctly', (tester) async {
-      final tx = mockTransaction.copyWith(status: CategorizationStatus.categorized);
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(tx));
+      final tx =
+          mockTransaction.copyWith(status: CategorizationStatus.categorized);
+      await pumpWidgetWithProviders(
+          tester: tester, widget: buildTestWidget(tx));
 
       expect(find.text('Suggested'), findsOneWidget);
     });
 
     testWidgets('"Confirm" button calls onUserCategorized', (tester) async {
-      when(() => mockCallbacks.onUserCategorized(any(), any())).thenAnswer((_) {});
-      final tx = mockTransaction.copyWith(status: CategorizationStatus.needsReview);
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(tx));
+      when(() => mockCallbacks.onUserCategorized(any(), any()))
+          .thenAnswer((_) {});
+      final tx =
+          mockTransaction.copyWith(status: CategorizationStatus.needsReview);
+      await pumpWidgetWithProviders(
+          tester: tester, widget: buildTestWidget(tx));
 
-      await tester.tap(find.byKey(const ValueKey('button_categorization_confirm')));
+      await tester
+          .tap(find.byKey(const ValueKey('button_categorization_confirm')));
 
       verify(() => mockCallbacks.onUserCategorized(tx, mockCategory)).called(1);
     });
 
-    testWidgets('"Change" and "Categorize" buttons call onChangeCategoryRequest', (tester) async {
-      when(() => mockCallbacks.onChangeCategoryRequest(any())).thenAnswer((_) {});
+    testWidgets(
+        '"Change" and "Categorize" buttons call onChangeCategoryRequest',
+        (tester) async {
+      when(() => mockCallbacks.onChangeCategoryRequest(any()))
+          .thenAnswer((_) {});
 
       // Test "Change" button
-      final txReview = mockTransaction.copyWith(status: CategorizationStatus.needsReview);
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(txReview));
-      await tester.tap(find.byKey(const ValueKey('button_categorization_change')));
+      final txReview =
+          mockTransaction.copyWith(status: CategorizationStatus.needsReview);
+      await pumpWidgetWithProviders(
+          tester: tester, widget: buildTestWidget(txReview));
+      await tester
+          .tap(find.byKey(const ValueKey('button_categorization_change')));
       verify(() => mockCallbacks.onChangeCategoryRequest(txReview)).called(1);
 
       // Test "Categorize" button
-      final txUncat = mockTransaction.copyWith(status: CategorizationStatus.uncategorized);
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(txUncat));
-      await tester.tap(find.byKey(const ValueKey('button_categorization_categorize')));
+      final txUncat =
+          mockTransaction.copyWith(status: CategorizationStatus.uncategorized);
+      await pumpWidgetWithProviders(
+          tester: tester, widget: buildTestWidget(txUncat));
+      await tester
+          .tap(find.byKey(const ValueKey('button_categorization_categorize')));
       verify(() => mockCallbacks.onChangeCategoryRequest(txUncat)).called(1);
     });
 
-    testWidgets('Tapping categorized text calls onChangeCategoryRequest', (tester) async {
-      when(() => mockCallbacks.onChangeCategoryRequest(any())).thenAnswer((_) {});
-      final tx = mockTransaction.copyWith(status: CategorizationStatus.categorized);
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(tx));
+    testWidgets('Tapping categorized text calls onChangeCategoryRequest',
+        (tester) async {
+      when(() => mockCallbacks.onChangeCategoryRequest(any()))
+          .thenAnswer((_) {});
+      final tx =
+          mockTransaction.copyWith(status: CategorizationStatus.categorized);
+      await pumpWidgetWithProviders(
+          tester: tester, widget: buildTestWidget(tx));
 
-      await tester.tap(find.byKey(const ValueKey('inkwell_categorization_change_categorized')));
+      await tester.tap(find
+          .byKey(const ValueKey('inkwell_categorization_change_categorized')));
 
       verify(() => mockCallbacks.onChangeCategoryRequest(tx)).called(1);
     });

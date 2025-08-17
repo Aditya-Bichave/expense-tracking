@@ -48,7 +48,7 @@ jobs:
         run: flutter pub get
 
       - name: Format gate
-        run: dart format . --output=none
+        run: dart format . --output=none --set-exit-if-changed
 
       - name: Static analysis
         run: flutter analyze

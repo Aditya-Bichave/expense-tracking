@@ -15,7 +15,8 @@ class MockOnTap extends Mock {
 }
 
 void main() {
-  final mockCategory = Category(id: 'cat1', name: 'Food', iconName: 'food', color: 0xFFFFFF00);
+  final mockCategory =
+      Category(id: 'cat1', name: 'Food', iconName: 'food', color: 0xFFFFFF00);
   final mockDate = DateTime(2023, 1, 15);
 
   final mockExpense = TransactionEntity(
@@ -50,7 +51,10 @@ void main() {
 
       // ASSERT
       expect(find.text('Groceries'), findsOneWidget);
-      expect(find.text('${mockCategory.name} • ${DateFormatter.formatDate(mockDate)}'), findsOneWidget);
+      expect(
+          find.text(
+              '${mockCategory.name} • ${DateFormatter.formatDate(mockDate)}'),
+          findsOneWidget);
       expect(find.text('- \$123.45'), findsOneWidget);
 
       final amountText = tester.widget<Text>(find.text('- \$123.45'));
@@ -80,7 +84,8 @@ void main() {
       expect(amountText.style?.color, theme.colorScheme.primary);
     });
 
-    testWidgets('renders recurring icon when isRecurring is true', (tester) async {
+    testWidgets('renders recurring icon when isRecurring is true',
+        (tester) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
