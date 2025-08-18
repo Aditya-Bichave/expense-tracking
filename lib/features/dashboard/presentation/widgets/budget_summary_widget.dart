@@ -62,6 +62,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                         style: theme.textTheme.bodyMedium,
                       ),
                       TextButton(
+                        key: const ValueKey('button_budgetSummary_create'),
                         onPressed: () =>
                             context.pushNamed(RouteNames.addBudget),
                         child: const Text('Create Budget'),
@@ -190,6 +191,7 @@ class BudgetSummaryWidget extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4.0),
             child: Center(
               child: TextButton(
+                key: const ValueKey('button_budgetSummary_viewAll'),
                 onPressed: () => context.go(
                   RouteNames.budgetsAndCats,
                   extra: {

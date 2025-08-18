@@ -87,11 +87,13 @@ class TransactionDetailPage extends StatelessWidget {
         title: Text(isExpense ? 'Expense Details' : 'Income Details'),
         actions: [
           IconButton(
+            key: const ValueKey('button_transactionDetail_edit'),
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Edit',
             onPressed: () => _navigateToEdit(context),
           ),
           IconButton(
+            key: const ValueKey('button_transactionDetail_delete'),
             icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
             tooltip: 'Delete',
             onPressed: () => _handleDelete(context),

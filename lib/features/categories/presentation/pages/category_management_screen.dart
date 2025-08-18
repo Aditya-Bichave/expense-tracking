@@ -142,6 +142,7 @@ class CategoryManagementScreen extends StatelessWidget {
             },
           ),
           floatingActionButton: FloatingActionButton.extended(
+            key: const ValueKey('fab_add_custom'),
             heroTag: 'add_category_fab',
             icon: const Icon(Icons.add),
             label: const Text("Add Custom"),

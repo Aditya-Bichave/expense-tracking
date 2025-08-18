@@ -30,14 +30,10 @@ void main() {
   });
 
   test('redirects skipped setup to dashboard', () {
-    final redirect = app_router.AppRouter.router.configuration.topRedirect;
+    final config = app_router.AppRouter.router.configuration;
+    final redirect = config.topRedirect;
     final routeState = GoRouterState(
-      RouteConfiguration(
-        routes: const [],
-        redirectLimit: 20,
-        topRedirect: (_, __) => null,
-        navigatorKey: GlobalKey<NavigatorState>(),
-      ),
+      config,
       uri: Uri.parse(RouteNames.initialSetup),
       matchedLocation: RouteNames.initialSetup,
       fullPath: RouteNames.initialSetup,

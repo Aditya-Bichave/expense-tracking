@@ -44,6 +44,7 @@ class CategoryListItemWidget extends StatelessWidget {
                     width: 48,
                     height: 48,
                     child: IconButton(
+                      key: ValueKey('button_edit_${category.id}'),
                       icon: const Icon(Icons.edit_outlined),
                       iconSize: 20,
                       color: theme.colorScheme.secondary,
@@ -56,6 +57,7 @@ class CategoryListItemWidget extends StatelessWidget {
                     width: 48,
                     height: 48,
                     child: IconButton(
+                      key: ValueKey('button_delete_${category.id}'),
                       icon: const Icon(Icons.delete_outline),
                       iconSize: 20,
                       color: theme.colorScheme.error,

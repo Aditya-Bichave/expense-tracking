@@ -64,6 +64,7 @@ class DemoIndicatorWidget extends StatelessWidget {
                               .add(const ExitDemoMode());
                         }
                       },
+                      key: const ValueKey('button_demoIndicator_exit'),
                       child: const Text('Exit Demo'),
                     ),
                   ],

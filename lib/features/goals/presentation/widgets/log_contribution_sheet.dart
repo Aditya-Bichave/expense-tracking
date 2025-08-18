@@ -299,6 +299,7 @@ class _LogContributionSheetContentState
                         BlocBuilder<LogContributionBloc, LogContributionState>(
                       builder: (context, state) {
                         return ElevatedButton.icon(
+                          key: const ValueKey('button_submit_contribution'),
                           icon: state.status == LogContributionStatus.loading
                               ? Container(
                                   width: 20,

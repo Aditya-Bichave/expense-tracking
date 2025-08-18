@@ -273,6 +273,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           appBar: AppBar(
             title: Text(isEditing ? 'Edit Transaction' : 'Add Transaction'),
             leading: IconButton(
+              key: const ValueKey('button_addEditTransaction_close'),
               icon: const Icon(Icons.close),
               tooltip: 'Cancel',
               onPressed: () {

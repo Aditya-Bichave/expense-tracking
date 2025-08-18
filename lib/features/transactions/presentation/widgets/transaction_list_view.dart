@@ -84,6 +84,7 @@ class TransactionListView extends StatelessWidget {
                     if (!state
                         .filtersApplied) // Show add button only if no filters applied
                       ElevatedButton.icon(
+                        key: const ValueKey('button_listView_addFirst'),
                         icon: const Icon(Icons.add),
                         label: const Text('Add First Transaction'),
                         onPressed: () =>

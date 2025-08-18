@@ -186,6 +186,7 @@ class _DashboardPageState extends State<DashboardPage> {
         alignment: WrapAlignment.center,
         children: [
           ActionChip(
+            key: const ValueKey('button_dashboard_to_spendingCategoryReport'),
             avatar: Icon(
               Icons.pie_chart_outline,
               size: 16,
@@ -198,6 +199,7 @@ class _DashboardPageState extends State<DashboardPage> {
             visualDensity: VisualDensity.compact,
           ),
           ActionChip(
+            key: const ValueKey('button_dashboard_to_spendingTimeReport'),
             avatar: Icon(
               Icons.timeline_outlined,
               size: 16,
@@ -210,6 +212,7 @@ class _DashboardPageState extends State<DashboardPage> {
             visualDensity: VisualDensity.compact,
           ),
           ActionChip(
+            key: const ValueKey('button_dashboard_to_incomeExpenseReport'),
             avatar: Icon(
               Icons.compare_arrows_outlined,
               size: 16,
@@ -225,6 +228,7 @@ class _DashboardPageState extends State<DashboardPage> {
             visualDensity: VisualDensity.compact,
           ),
           ActionChip(
+            key: const ValueKey('button_dashboard_to_budgetPerformanceReport'),
             avatar: Icon(
               Icons.assignment_turned_in_outlined,
               size: 16,
@@ -237,6 +241,7 @@ class _DashboardPageState extends State<DashboardPage> {
             visualDensity: VisualDensity.compact,
           ),
           ActionChip(
+            key: const ValueKey('button_dashboard_to_goalProgressReport'),
             avatar: Icon(
               Icons.track_changes_outlined,
               size: 16,
@@ -334,6 +339,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
+                      key: const ValueKey('button_dashboard_retry'),
                       onPressed: _refreshDashboard,
                       icon: const Icon(Icons.refresh),
                       label: const Text("Retry"),

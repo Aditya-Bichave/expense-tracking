@@ -62,6 +62,7 @@ class GoalSummaryWidget extends StatelessWidget {
                         style: theme.textTheme.bodyMedium,
                       ),
                       TextButton(
+                        key: const ValueKey('button_goalSummary_create'),
                         onPressed: () => context.pushNamed(RouteNames.addGoal),
                         child: const Text('Create Goal'),
                       ),
@@ -185,6 +186,7 @@ class GoalSummaryWidget extends StatelessWidget {
             padding: const EdgeInsets.only(top: 4.0),
             child: Center(
               child: TextButton(
+                key: const ValueKey('button_goalSummary_viewAll'),
                 onPressed: () => context.go(
                   RouteNames.budgetsAndCats,
                   extra: {

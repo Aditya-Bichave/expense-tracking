@@ -92,6 +92,7 @@ class AccountListPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
+              key: const ValueKey('button_accountList_addFirst'),
               icon: const Icon(Icons.add),
               label: Text(AppLocalizations.of(context)!.addFirstAccount),
               onPressed: () => context.pushNamed(RouteNames.addAccount),
@@ -241,6 +242,7 @@ class AccountListPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
+                        key: const ValueKey('button_accountList_retry'),
                         icon: const Icon(Icons.refresh),
                         label: Text(AppLocalizations.of(context)!.retry),
                         onPressed: () => context.read<AccountListBloc>().add(
@@ -272,6 +274,7 @@ class AccountListPage extends StatelessWidget {
           },
         ),
         floatingActionButton: FloatingActionButton(
+          key: const ValueKey('fab_accountList_add'),
           heroTag: 'fab_accounts',
           onPressed: () => context.pushNamed(RouteNames.addAccount),
           tooltip: AppLocalizations.of(context)!.addAccount,
