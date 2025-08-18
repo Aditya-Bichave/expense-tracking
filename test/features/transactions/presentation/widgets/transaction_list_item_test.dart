@@ -1,30 +1,40 @@
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/transaction_list_item.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package.expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../helpers/pump_app.dart';
-import '../../helpers/test_data.dart';
+import '../../../../helpers/pump_app.dart';
+import '../../../../helpers/test_data.dart';
 
 class MockOnTap extends Mock {
   void call();
 }
 
 void main() {
-  final mockCategory = Category(id: 'cat1', name: 'Food', iconName: 'food', color: 0xFFFFFF00);
+  setupFaker();
+
+  final mockCategory = const Category(
+    id: 'cat1',
+    name: 'Food',
+    iconName: 'food',
+    colorHex: '#FFFF00',
+    type: CategoryType.expense,
+    isCustom: true,
+  );
   final mockDate = DateTime(2023, 1, 15);
 
   final mockExpense = TransactionEntity(
     id: faker.guid.guid(),
+    type: TransactionType.expense,
     title: 'Groceries',
     amount: 123.45,
     date: mockDate,
     category: mockCategory,
-    type: TransactionType.expense,
     isRecurring: false,
   );
 
@@ -50,7 +60,10 @@ void main() {
 
       // ASSERT
       expect(find.text('Groceries'), findsOneWidget);
-      expect(find.text('${mockCategory.name} • ${DateFormatter.formatDate(mockDate)}'), findsOneWidget);
+      expect(
+          find.text(
+              '${mockCategory.name} • ${DateFormatter.formatDate(mockDate)}'),
+          findsOneWidget);
       expect(find.text('- \$123.45'), findsOneWidget);
 
       final amountText = tester.widget<Text>(find.text('- \$123.45'));
@@ -80,7 +93,8 @@ void main() {
       expect(amountText.style?.color, theme.colorScheme.primary);
     });
 
-    testWidgets('renders recurring icon when isRecurring is true', (tester) async {
+    testWidgets('renders recurring icon when isRecurring is true',
+        (tester) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,

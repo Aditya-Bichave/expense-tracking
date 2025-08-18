@@ -1,15 +1,18 @@
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/presentation/widgets/budget_card.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:bloc_test/bloc_test.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockCategoryManagementBloc extends MockBloc<CategoryManagementEvent, CategoryManagementState>
+class MockCategoryManagementBloc
+    extends MockBloc<CategoryManagementEvent, CategoryManagementState>
     implements CategoryManagementBloc {}
 
 class MockOnTap extends Mock {
@@ -19,19 +22,29 @@ class MockOnTap extends Mock {
 void main() {
   late CategoryManagementBloc mockCategoryBloc;
   final mockBudgetStatus = BudgetWithStatus(
-    budget: Budget(id: '1', name: 'Groceries', targetAmount: 500, type: BudgetType.overall, period: BudgetPeriodType.recurringMonthly),
+    budget: Budget(
+      id: '1',
+      name: 'Groceries',
+      targetAmount: 500,
+      type: BudgetType.overall,
+      period: BudgetPeriodType.recurringMonthly,
+      createdAt: DateTime(2023),
+    ),
     amountSpent: 250,
+    amountRemaining: 250,
     percentageUsed: 0.5,
-    health: BudgetHealth.healthy,
+    health: BudgetHealth.thriving,
     statusColor: Colors.green,
   );
 
   setUp(() {
     mockCategoryBloc = MockCategoryManagementBloc();
-    when(() => mockCategoryBloc.state).thenReturn(const CategoryManagementState());
+    when(() => mockCategoryBloc.state)
+        .thenReturn(const CategoryManagementState());
   });
 
-  Widget buildTestWidget({required BudgetWithStatus budgetStatus, VoidCallback? onTap}) {
+  Widget buildTestWidget(
+      {required BudgetWithStatus budgetStatus, VoidCallback? onTap}) {
     return BlocProvider.value(
       value: mockCategoryBloc,
       child: BudgetCard(budgetStatus: budgetStatus, onTap: onTap),
@@ -40,7 +53,9 @@ void main() {
 
   group('BudgetCard', () {
     testWidgets('renders budget name, period, and amounts', (tester) async {
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget(budgetStatus: mockBudgetStatus));
+      await pumpWidgetWithProviders(
+          tester: tester,
+          widget: buildTestWidget(budgetStatus: mockBudgetStatus));
 
       expect(find.text('Groceries'), findsOneWidget);
       expect(find.text('Monthly'), findsOneWidget);
@@ -55,7 +70,8 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: buildTestWidget(budgetStatus: mockBudgetStatus, onTap: mockOnTap.call),
+        widget: buildTestWidget(
+            budgetStatus: mockBudgetStatus, onTap: mockOnTap.call),
       );
 
       await tester.tap(find.byType(InkWell));

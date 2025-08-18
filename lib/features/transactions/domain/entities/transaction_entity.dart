@@ -24,7 +24,23 @@ class TransactionEntity extends Equatable {
   final Expense? expense;
   final Income? income;
 
-  // Private constructor
+  // Public constructor for general use and testing
+  const TransactionEntity({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.amount,
+    required this.date,
+    this.category,
+    this.accountId = '',
+    this.notes,
+    this.status = CategorizationStatus.categorized,
+    this.confidenceScore,
+    this.isRecurring = false,
+  })  : expense = null,
+        income = null;
+
+  // Private constructor used by specialized factories
   const TransactionEntity._({
     required this.id,
     required this.type,
@@ -76,6 +92,34 @@ class TransactionEntity extends Equatable {
       isRecurring: income.isRecurring,
       expense: null,
       income: income,
+    );
+  }
+
+  TransactionEntity copyWith({
+    String? id,
+    TransactionType? type,
+    String? title,
+    double? amount,
+    DateTime? date,
+    Category? category,
+    String? accountId,
+    String? notes,
+    CategorizationStatus? status,
+    double? confidenceScore,
+    bool? isRecurring,
+  }) {
+    return TransactionEntity(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      title: title ?? this.title,
+      amount: amount ?? this.amount,
+      date: date ?? this.date,
+      category: category ?? this.category,
+      accountId: accountId ?? this.accountId,
+      notes: notes ?? this.notes,
+      status: status ?? this.status,
+      confidenceScore: confidenceScore ?? this.confidenceScore,
+      isRecurring: isRecurring ?? this.isRecurring,
     );
   }
 

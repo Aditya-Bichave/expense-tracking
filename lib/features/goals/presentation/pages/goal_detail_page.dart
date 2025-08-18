@@ -62,8 +62,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     );
     _loadData();
     _goalListSubscription = context.read<GoalListBloc>().stream.listen(
-          _handleBlocStateChange,
-        );
+      _handleBlocStateChange,
+    );
   }
 
   @override
@@ -73,13 +73,17 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     super.dispose();
   }
 
-// In _GoalDetailPageState
+  // In _GoalDetailPageState
   void _handleBlocStateChange(GoalListState state) {
     if (mounted && _isLoadingGoal) {
       // Find the updated goal directly from the new state
-      final updatedGoal = state.goals.firstWhereOrNull((g) => g.id == widget.goalId);
+      final updatedGoal = state.goals.firstWhereOrNull(
+        (g) => g.id == widget.goalId,
+      );
       if (updatedGoal != null && updatedGoal != _currentGoal) {
-        log.fine("[GoalDetail] Bloc update detected, updating UI from new state.");
+        log.fine(
+          "[GoalDetail] Bloc update detected, updating UI from new state.",
+        );
         // Update the local state with the new data from the BLoC
         // This avoids another round trip to the database.
         setState(() {
@@ -272,15 +276,17 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     if (_currentGoal == null) return const SizedBox(height: 90);
     final goal = _currentGoal!;
     final progress = goal.percentageComplete;
-    final color =
-        goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
-    final backgroundColor =
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.5);
+    final color = goal.isAchieved
+        ? Colors.green.shade600
+        : theme.colorScheme.primary;
+    final backgroundColor = theme.colorScheme.surfaceContainerHighest
+        .withOpacity(0.5);
     final bool isQuantum = uiMode == UIMode.quantum;
 
     final double radius = isQuantum ? 60.0 : 70.0;
     final double lineWidth = isQuantum ? 8.0 : 12.0;
-    final TextStyle centerTextStyle = (isQuantum
+    final TextStyle centerTextStyle =
+        (isQuantum
                 ? theme.textTheme.headlineSmall
                 : theme.textTheme.headlineMedium)
             ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
@@ -370,10 +376,12 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
   Widget _buildContributionList(BuildContext context, SettingsState settings) {
     final bool isAether = settings.uiMode == UIMode.aether;
     final modeTheme = context.modeTheme;
-    final itemDelay =
-        isAether ? (modeTheme?.listAnimationDelay ?? 80.ms) : 50.ms;
-    final itemDuration =
-        isAether ? (modeTheme?.listAnimationDuration ?? 450.ms) : 300.ms;
+    final itemDelay = isAether
+        ? (modeTheme?.listAnimationDelay ?? 80.ms)
+        : 50.ms;
+    final itemDuration = isAether
+        ? (modeTheme?.listAnimationDuration ?? 450.ms)
+        : 300.ms;
     final theme = Theme.of(context);
 
     return ListView.separated(
@@ -464,17 +472,18 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     final isAether = uiMode == UIMode.aether;
     final String? bgPath = isAether
         ? (Theme.of(context).brightness == Brightness.dark
-            ? modeTheme?.assets.mainBackgroundDark
-            : modeTheme?.assets.mainBackgroundLight)
+              ? modeTheme?.assets.mainBackgroundDark
+              : modeTheme?.assets.mainBackgroundLight)
         : null;
 
     Widget mainContent = ListView(
-      padding: modeTheme?.pagePadding.copyWith(
+      padding:
+          modeTheme?.pagePadding.copyWith(
             bottom: 100, // Increased padding for FAB
             top: isAether
                 ? (modeTheme.pagePadding.top +
-                    kToolbarHeight +
-                    MediaQuery.of(context).padding.top)
+                      kToolbarHeight +
+                      MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
           const EdgeInsets.all(16.0).copyWith(bottom: 100),
@@ -602,7 +611,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           ),
         ],
       ),
-      floatingActionButton: goal.isAchived || goal.isArchived
+      floatingActionButton: goal.isAchieved || goal.isArchived
           ? null
           : FloatingActionButton.extended(
               key: const ValueKey('fab_add_contribution'),

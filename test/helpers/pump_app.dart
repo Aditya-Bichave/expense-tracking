@@ -8,11 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:provider/single_child_widget.dart';
-
-// The user did not provide l10n files, so I cannot generate AppLocalizations.
-// I will create a mock for it.
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 // Helper class for mocking GoRouter
 class MockGoRouter extends Mock implements GoRouter {}
@@ -26,19 +21,31 @@ Future<void> pumpWidgetWithProviders({
   required Widget widget,
   // --- Mocks & Stubs ---
   SettingsState? settingsState, // Easily provide a specific settings state
-  List<BlocProvider> blocProviders = const [], // For other feature-specific Blocs
-  List<SingleChildWidget> providers = const [], // For any other type of provider
+  List<BlocProvider> blocProviders =
+      const [], // For other feature-specific Blocs
   GetIt? getIt, // Pass a pre-configured service locator if needed
-  GoRouter? router, // Pass a mock router
+  GoRouter? router, // Optional router configuration
 }) async {
-  // 1. Ensure a mock GoRouter is available
-  final mockRouter = router ?? MockGoRouter();
+  // 1. Determine router configuration
+  final routerConfig = router ??
+      GoRouter(
+        navigatorKey: GlobalKey<NavigatorState>(),
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => Scaffold(body: widget),
+          ),
+        ],
+      );
 
   // 2. Prepare the settings state and mock SettingsBloc
   final mockSettingsBloc = MockSettingsBloc();
   whenListen(
     mockSettingsBloc,
-    Stream.fromIterable([settingsState ?? const SettingsState()]), // Use provided state or default
+    Stream.fromIterable([
+      settingsState ?? const SettingsState()
+    ]), // Use provided state or default
     initialState: settingsState ?? const SettingsState(),
   );
 
@@ -53,8 +60,8 @@ Future<void> pumpWidgetWithProviders({
       ],
       child: MaterialApp.router(
         // Use MaterialApp.router to satisfy GoRouter context
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [],
+        supportedLocales: const [Locale('en')],
         // Build the theme dynamically based on the provided settingsState
         theme: AppTheme.buildTheme(
           settingsState?.uiMode ?? UIMode.elemental,
@@ -66,17 +73,8 @@ Future<void> pumpWidgetWithProviders({
         ).dark,
         themeMode: settingsState?.themeMode ?? ThemeMode.system,
 
-        // Provide the mock router configuration
-        routerConfig: GoRouter(
-          navigatorKey: GlobalKey<NavigatorState>(),
-          initialLocation: '/',
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (context, state) => Scaffold(body: widget), // The widget under test
-            ),
-          ],
-        ),
+        // Provide the router configuration
+        routerConfig: routerConfig,
       ),
     ),
   );

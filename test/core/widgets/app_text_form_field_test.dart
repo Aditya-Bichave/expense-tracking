@@ -50,7 +50,10 @@ void main() {
       );
 
       // ACT
-      await tester.enterText(find.byKey(const ValueKey('my_text_field')), 'New Text');
+      await tester.enterText(
+        find.byKey(const ValueKey('my_text_field')),
+        'New Text',
+      );
       await tester.pump();
 
       // ASSERT
@@ -58,16 +61,15 @@ void main() {
       expect(changedValue, 'New Text');
     });
 
-    testWidgets('shows clear button when text is present and not readOnly', (tester) async {
+    testWidgets('shows clear button when text is present and not readOnly', (
+      tester,
+    ) async {
       // ARRANGE
       controller.text = 'Some Text';
       await pumpWidgetWithProviders(
         tester: tester,
         widget: Material(
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'Test',
-          ),
+          child: AppTextFormField(controller: controller, labelText: 'Test'),
         ),
       );
 
@@ -80,10 +82,7 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: Material(
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'Test',
-          ),
+          child: AppTextFormField(controller: controller, labelText: 'Test'),
         ),
       );
 
@@ -109,16 +108,15 @@ void main() {
       expect(find.byIcon(Icons.clear), findsNothing);
     });
 
-    testWidgets('clear button clears the text in the controller', (tester) async {
+    testWidgets('clear button clears the text in the controller', (
+      tester,
+    ) async {
       // ARRANGE
       controller.text = 'Some Text';
       await pumpWidgetWithProviders(
         tester: tester,
         widget: Material(
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'Test',
-          ),
+          child: AppTextFormField(controller: controller, labelText: 'Test'),
         ),
       );
       expect(find.byIcon(Icons.clear), findsOneWidget);
@@ -132,7 +130,9 @@ void main() {
       expect(find.byIcon(Icons.clear), findsNothing);
     });
 
-    testWidgets('displays validation error when validator fails', (tester) async {
+    testWidgets('displays validation error when validator fails', (
+      tester,
+    ) async {
       // ARRANGE
       final formKey = GlobalKey<FormState>();
       await pumpWidgetWithProviders(
@@ -169,10 +169,10 @@ void main() {
       );
 
       // ACT
-      final textFormField = tester.widget<TextFormField>(find.byType(TextFormField));
+      final textField = tester.widget<TextField>(find.byType(TextField));
 
       // ASSERT
-      expect(textFormField.obscureText, isTrue);
+      expect(textField.obscureText, isTrue);
     });
   });
 }

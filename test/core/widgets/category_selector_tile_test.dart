@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/widgets/category_selector_tile.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -11,11 +12,20 @@ class MockOnTap extends Mock {
 }
 
 void main() {
-  final uncategorized = Category(id: 'uncat', name: 'Uncategorized', iconName: 'help', color: 0xFF888888);
-  final mockCategory = Category(id: '1', name: 'Groceries', iconName: 'groceries', color: 0xFF00FF00);
+  final uncategorized = Category.uncategorized;
+  final mockCategory = const Category(
+    id: '1',
+    name: 'Groceries',
+    iconName: 'groceries',
+    colorHex: '#00FF00',
+    type: CategoryType.expense,
+    isCustom: true,
+  );
 
   group('CategorySelectorTile', () {
-    testWidgets('renders hint text and uncategorized icon when no category is selected', (tester) async {
+    testWidgets(
+        'renders hint text and uncategorized icon when no category is selected',
+        (tester) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
@@ -79,7 +89,8 @@ void main() {
       verify(() => mockOnTap.call()).called(1);
     });
 
-    testWidgets('displays error text and styling when errorText is provided', (tester) async {
+    testWidgets('displays error text and styling when errorText is provided',
+        (tester) async {
       // ARRANGE
       const errorText = 'Category is required';
       await pumpWidgetWithProviders(

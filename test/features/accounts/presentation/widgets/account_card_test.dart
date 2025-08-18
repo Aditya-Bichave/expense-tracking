@@ -16,14 +16,16 @@ void main() {
   final mockAccountPositive = AssetAccount(
     id: '1',
     name: 'Main Bank',
-    balance: 1500.75,
-    type: AccountType.bank,
+    type: AssetType.bank,
+    initialBalance: 1500.75,
+    currentBalance: 1500.75,
   );
   final mockAccountNegative = AssetAccount(
     id: '2',
     name: 'Credit Card',
-    balance: -300.50,
-    type: AccountType.bank,
+    type: AssetType.bank,
+    initialBalance: -300.50,
+    currentBalance: -300.50,
   );
 
   group('AccountCard', () {
@@ -39,7 +41,8 @@ void main() {
       expect(find.text('\$1,500.75'), findsOneWidget);
     });
 
-    testWidgets('balance color is primary for positive balance', (tester) async {
+    testWidgets('balance color is primary for positive balance',
+        (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: AccountCard(account: mockAccountPositive),
@@ -69,7 +72,8 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: AccountCard(account: mockAccountPositive, onTap: mockOnTap.call),
+        widget:
+            AccountCard(account: mockAccountPositive, onTap: mockOnTap.call),
       );
 
       await tester.tap(find.byType(AppCard));

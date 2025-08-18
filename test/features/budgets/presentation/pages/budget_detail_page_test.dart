@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
 import 'package:expense_tracker/features/budgets/presentation/pages/budget_detail_page.dart';
@@ -11,11 +12,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:dartz/dartz.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockBudgetListBloc extends MockBloc<BudgetListEvent, BudgetListState> implements BudgetListBloc {}
-class MockGetTransactionsUseCase extends Mock implements GetTransactionsUseCase {}
+class MockBudgetListBloc extends MockBloc<BudgetListEvent, BudgetListState>
+    implements BudgetListBloc {}
+
+class MockGetTransactionsUseCase extends Mock
+    implements GetTransactionsUseCase {}
+
 class MockGoRouter extends Mock implements GoRouter {}
 
 void main() {
@@ -23,12 +29,20 @@ void main() {
   late MockGetTransactionsUseCase mockGetTransactionsUseCase;
   late MockGoRouter mockGoRouter;
 
-  final mockBudget = Budget(id: '1', name: 'Groceries', targetAmount: 500);
+  final mockBudget = Budget(
+    id: '1',
+    name: 'Groceries',
+    type: BudgetType.overall,
+    targetAmount: 500,
+    period: BudgetPeriodType.recurringMonthly,
+    createdAt: DateTime(2024),
+  );
   final mockBudgetWithStatus = BudgetWithStatus(
     budget: mockBudget,
     amountSpent: 250,
+    amountRemaining: 250,
     percentageUsed: 0.5,
-    health: BudgetHealth.healthy,
+    health: BudgetHealth.thriving,
     statusColor: Colors.green,
   );
 
@@ -55,9 +69,12 @@ void main() {
   }
 
   group('BudgetDetailPage', () {
-    testWidgets('shows loading indicator and then displays details', (tester) async {
-      when(() => mockBudgetListBloc.state).thenReturn(BudgetListState(budgetsWithStatus: [mockBudgetWithStatus]));
-      when(() => mockGetTransactionsUseCase.call(any())).thenAnswer((_) async => const Right([]));
+    testWidgets('shows loading indicator and then displays details',
+        (tester) async {
+      when(() => mockBudgetListBloc.state).thenReturn(
+          BudgetListState(budgetsWithStatus: [mockBudgetWithStatus]));
+      when(() => mockGetTransactionsUseCase.call(any()))
+          .thenAnswer((_) async => const Right([]));
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -72,25 +89,33 @@ void main() {
     });
 
     testWidgets('tapping Edit button navigates to edit page', (tester) async {
-      when(() => mockBudgetListBloc.state).thenReturn(BudgetListState(budgetsWithStatus: [mockBudgetWithStatus]));
-      when(() => mockGetTransactionsUseCase.call(any())).thenAnswer((_) async => const Right([]));
-      when(() => mockGoRouter.pushNamed(RouteNames.editBudget, pathParameters: any(named: 'pathParameters'), extra: any(named: 'extra'))).thenAnswer((_) async => {});
+      when(() => mockBudgetListBloc.state).thenReturn(
+          BudgetListState(budgetsWithStatus: [mockBudgetWithStatus]));
+      when(() => mockGetTransactionsUseCase.call(any()))
+          .thenAnswer((_) async => const Right([]));
+      when(() => mockGoRouter.pushNamed(RouteNames.editBudget,
+          pathParameters: any(named: 'pathParameters'),
+          extra: any(named: 'extra'))).thenAnswer((_) async => {});
 
-      await pumpWidgetWithProviders(tester: tester, router: mockGoRouter, widget: buildTestWidget());
+      await pumpWidgetWithProviders(
+          tester: tester, router: mockGoRouter, widget: buildTestWidget());
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const ValueKey('button_edit')));
 
       verify(() => mockGoRouter.pushNamed(
-        RouteNames.editBudget,
-        pathParameters: {'id': '1'},
-        extra: mockBudget,
-      )).called(1);
+            RouteNames.editBudget,
+            pathParameters: {'id': '1'},
+            extra: mockBudget,
+          )).called(1);
     });
 
-    testWidgets('tapping Delete button shows dialog and dispatches event', (tester) async {
-      when(() => mockBudgetListBloc.state).thenReturn(BudgetListState(budgetsWithStatus: [mockBudgetWithStatus]));
-      when(() => mockGetTransactionsUseCase.call(any())).thenAnswer((_) async => const Right([]));
+    testWidgets('tapping Delete button shows dialog and dispatches event',
+        (tester) async {
+      when(() => mockBudgetListBloc.state).thenReturn(
+          BudgetListState(budgetsWithStatus: [mockBudgetWithStatus]));
+      when(() => mockGetTransactionsUseCase.call(any()))
+          .thenAnswer((_) async => const Right([]));
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       await tester.pumpAndSettle();
@@ -103,7 +128,8 @@ void main() {
       await tester.tap(find.text('Delete'));
       await tester.pump();
 
-      verify(() => mockBudgetListBloc.add(const DeleteBudget(budgetId: '1'))).called(1);
+      verify(() => mockBudgetListBloc.add(const DeleteBudget(budgetId: '1')))
+          .called(1);
     });
   });
 }

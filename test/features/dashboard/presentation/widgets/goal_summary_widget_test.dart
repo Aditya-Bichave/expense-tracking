@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,9 +12,30 @@ void main() {
   late MockGoRouter mockGoRouter;
 
   final mockGoals = [
-    Goal(id: '1', name: 'New Car', targetAmount: 20000, totalSaved: 5000),
-    Goal(id: '2', name: 'Vacation', targetAmount: 3000, totalSaved: 1500),
-    Goal(id: '3', name: 'Laptop', targetAmount: 1500, totalSaved: 750),
+    Goal(
+      id: '1',
+      name: 'New Car',
+      targetAmount: 20000,
+      totalSaved: 5000,
+      createdAt: DateTime(2023),
+      status: GoalStatus.active,
+    ),
+    Goal(
+      id: '2',
+      name: 'Vacation',
+      targetAmount: 3000,
+      totalSaved: 1500,
+      createdAt: DateTime(2023),
+      status: GoalStatus.active,
+    ),
+    Goal(
+      id: '3',
+      name: 'Laptop',
+      targetAmount: 1500,
+      totalSaved: 750,
+      createdAt: DateTime(2023),
+      status: GoalStatus.active,
+    ),
   ];
 
   setUp(() {
@@ -22,7 +44,8 @@ void main() {
 
   group('GoalSummaryWidget', () {
     testWidgets('renders empty state when goals list is empty', (tester) async {
-      when(() => mockGoRouter.pushNamed(RouteNames.addGoal)).thenAnswer((_) async => {});
+      when(() => mockGoRouter.pushNamed(RouteNames.addGoal))
+          .thenAnswer((_) async => {});
 
       await pumpWidgetWithProviders(
         tester: tester,
@@ -31,7 +54,8 @@ void main() {
       );
 
       expect(find.text('No savings goals set yet.'), findsOneWidget);
-      final createButton = find.byKey(const ValueKey('button_goalSummary_create'));
+      final createButton =
+          find.byKey(const ValueKey('button_goalSummary_create'));
       expect(createButton, findsOneWidget);
 
       await tester.tap(createButton);
@@ -41,7 +65,8 @@ void main() {
     testWidgets('renders a list of goals', (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: GoalSummaryWidget(goals: [mockGoals.first], recentContributionData: []),
+        widget: GoalSummaryWidget(
+            goals: [mockGoals.first], recentContributionData: []),
       );
 
       expect(find.byType(Card), findsOneWidget);
@@ -51,28 +76,31 @@ void main() {
 
     testWidgets('tapping a goal card navigates to detail page', (tester) async {
       when(() => mockGoRouter.pushNamed(
-        RouteNames.goalDetail,
-        pathParameters: {'id': '1'},
-        extra: any(named: 'extra'),
-      )).thenAnswer((_) async => {});
+            RouteNames.goalDetail,
+            pathParameters: {'id': '1'},
+            extra: any(named: 'extra'),
+          )).thenAnswer((_) async => {});
 
       await pumpWidgetWithProviders(
         tester: tester,
         router: mockGoRouter,
-        widget: GoalSummaryWidget(goals: [mockGoals.first], recentContributionData: []),
+        widget: GoalSummaryWidget(
+            goals: [mockGoals.first], recentContributionData: []),
       );
 
       await tester.tap(find.byType(InkWell));
 
       verify(() => mockGoRouter.pushNamed(
-        RouteNames.goalDetail,
-        pathParameters: {'id': '1'},
-        extra: mockGoals.first,
-      )).called(1);
+            RouteNames.goalDetail,
+            pathParameters: {'id': '1'},
+            extra: mockGoals.first,
+          )).called(1);
     });
 
-    testWidgets('shows "View All" button when there are 3 or more goals', (tester) async {
-      when(() => mockGoRouter.go(RouteNames.budgetsAndCats, extra: any(named: 'extra'))).thenAnswer((_) {});
+    testWidgets('shows "View All" button when there are 3 or more goals',
+        (tester) async {
+      when(() => mockGoRouter.go(RouteNames.budgetsAndCats,
+          extra: any(named: 'extra'))).thenAnswer((_) {});
 
       await pumpWidgetWithProviders(
         tester: tester,
@@ -80,11 +108,13 @@ void main() {
         widget: GoalSummaryWidget(goals: mockGoals, recentContributionData: []),
       );
 
-      final viewAllButton = find.byKey(const ValueKey('button_goalSummary_viewAll'));
+      final viewAllButton =
+          find.byKey(const ValueKey('button_goalSummary_viewAll'));
       expect(viewAllButton, findsOneWidget);
 
       await tester.tap(viewAllButton);
-      verify(() => mockGoRouter.go(RouteNames.budgetsAndCats, extra: {'initialTabIndex': 1})).called(1);
+      verify(() => mockGoRouter.go(RouteNames.budgetsAndCats,
+          extra: {'initialTabIndex': 1})).called(1);
     });
   });
 }

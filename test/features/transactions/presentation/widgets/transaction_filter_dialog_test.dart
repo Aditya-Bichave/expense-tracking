@@ -6,14 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:bloc_test/bloc_test.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState> implements AccountListBloc {}
+class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
+    implements AccountListBloc {}
 
 class MockCallbacks extends Mock {
-  void onApplyFilter(DateTime? startDate, DateTime? endDate, TransactionType? transactionType,
-      String? accountId, String? categoryId);
+  void onApplyFilter(DateTime? startDate, DateTime? endDate,
+      TransactionType? transactionType, String? accountId, String? categoryId);
   void onClearFilter();
 }
 
@@ -24,10 +26,12 @@ void main() {
   setUp(() {
     mockAccountListBloc = MockAccountListBloc();
     mockCallbacks = MockCallbacks();
-    when(() => mockAccountListBloc.state).thenReturn(const AccountListLoaded([]));
+    when(() => mockAccountListBloc.state)
+        .thenReturn(const AccountListLoaded(accounts: []));
   });
 
-  Future<void> pumpDialog(WidgetTester tester, {
+  Future<void> pumpDialog(
+    WidgetTester tester, {
     DateTime? startDate,
     TransactionType? type,
   }) async {
@@ -74,8 +78,10 @@ void main() {
       expect(find.text('Expenses Only'), findsOneWidget);
     });
 
-    testWidgets('calls onApplyFilter with updated values when Apply is tapped', (tester) async {
-      when(() => mockCallbacks.onApplyFilter(any(), any(), any(), any(), any())).thenAnswer((_) {});
+    testWidgets('calls onApplyFilter with updated values when Apply is tapped',
+        (tester) async {
+      when(() => mockCallbacks.onApplyFilter(any(), any(), any(), any(), any()))
+          .thenAnswer((_) {});
       await pumpDialog(tester);
 
       // Change a value
@@ -87,12 +93,12 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('button_filterDialog_apply')));
 
       verify(() => mockCallbacks.onApplyFilter(
-        null,
-        null,
-        TransactionType.income,
-        null,
-        null,
-      )).called(1);
+            null,
+            null,
+            TransactionType.income,
+            null,
+            null,
+          )).called(1);
     });
 
     testWidgets('calls onClearFilter when Clear All is tapped', (tester) async {
@@ -105,7 +111,8 @@ void main() {
     });
 
     testWidgets('dialog is dismissed after applying filters', (tester) async {
-      when(() => mockCallbacks.onApplyFilter(any(), any(), any(), any(), any())).thenAnswer((_) {});
+      when(() => mockCallbacks.onApplyFilter(any(), any(), any(), any(), any()))
+          .thenAnswer((_) {});
       await pumpDialog(tester);
       expect(find.byType(TransactionFilterDialog), findsOneWidget);
 

@@ -1,4 +1,5 @@
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/presentation/widgets/goal_form.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,7 +8,8 @@ import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/pump_app.dart';
 
 class MockOnSubmit extends Mock {
-  void call(String name, double targetAmount, DateTime? targetDate, String? iconName, String? description);
+  void call(String name, double targetAmount, DateTime? targetDate,
+      String? iconName, String? description);
 }
 
 void main() {
@@ -21,16 +23,20 @@ void main() {
     targetDate: DateTime(2025),
     iconName: 'savings',
     description: 'Initial description',
+    status: GoalStatus.active,
+    createdAt: DateTime(2023),
   );
 
   setUp(() {
     mockOnSubmit = MockOnSubmit();
-    when(() => mockOnSubmit.call(any(), any(), any(), any(), any())).thenAnswer((_) {});
+    when(() => mockOnSubmit.call(any(), any(), any(), any(), any()))
+        .thenAnswer((_) {});
   });
 
   group('GoalForm', () {
     testWidgets('initializes correctly in "add" mode', (tester) async {
-      await pumpWidgetWithProviders(tester: tester, widget: GoalForm(onSubmit: mockOnSubmit.call));
+      await pumpWidgetWithProviders(
+          tester: tester, widget: GoalForm(onSubmit: mockOnSubmit.call));
       expect(find.text('Add Goal'), findsOneWidget);
     });
 
@@ -45,25 +51,28 @@ void main() {
       expect(find.text('Initial description'), findsOneWidget);
     });
 
-    testWidgets('onSubmit is called with correct data when form is valid', (tester) async {
+    testWidgets('onSubmit is called with correct data when form is valid',
+        (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: GoalForm(onSubmit: mockOnSubmit.call),
       );
 
-      await tester.enterText(find.widgetWithText(TextFormField, 'Goal Name'), 'New Goal');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Target Amount'), '3000');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Goal Name'), 'New Goal');
+      await tester.enterText(
+          find.widgetWithText(TextFormField, 'Target Amount'), '3000');
 
       await tester.tap(find.byKey(const ValueKey('button_submit')));
       await tester.pump();
 
       verify(() => mockOnSubmit.call(
-        'New Goal',
-        3000.0,
-        any(named: 'targetDate'),
-        any(named: 'iconName'),
-        any(named: 'description'),
-      )).called(1);
+            'New Goal',
+            3000.0,
+            any(named: 'targetDate'),
+            any(named: 'iconName'),
+            any(named: 'description'),
+          )).called(1);
     });
   });
 }

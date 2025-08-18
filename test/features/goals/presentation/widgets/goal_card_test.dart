@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/presentation/widgets/goal_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +19,8 @@ void main() {
     targetAmount: 1500,
     totalSaved: 750,
     targetDate: DateTime.now().add(const Duration(days: 100)),
+    status: GoalStatus.active,
+    createdAt: DateTime(2023),
   );
 
   group('GoalCard', () {
@@ -29,7 +32,8 @@ void main() {
 
       expect(find.text('New Laptop'), findsOneWidget);
       expect(find.textContaining('Saved'), findsOneWidget);
-      expect(find.textContaining('Target'), findsNWidgets(2)); // Target amount and target date
+      expect(find.textContaining('Target'),
+          findsNWidgets(2)); // Target amount and target date
       expect(find.textContaining('Remaining'), findsOneWidget);
     });
 
@@ -39,7 +43,8 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: Material(child: GoalCard(goal: mockGoal, onTap: mockOnTap.call)),
+        widget:
+            Material(child: GoalCard(goal: mockGoal, onTap: mockOnTap.call)),
       );
 
       await tester.tap(find.byType(AppCard));
