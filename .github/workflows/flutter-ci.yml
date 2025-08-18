@@ -54,11 +54,8 @@ jobs:
       - name: Static analysis
         run: flutter analyze
 
-      - name: Unit tests
-        run: flutter test test/unit --test-randomize-ordering-seed=random --concurrency 4
-
-      - name: Widget tests + coverage
-        run: flutter test test/widget --coverage --test-randomize-ordering-seed=random --concurrency 4
+      - name: Tests with coverage
+        run: flutter test --coverage --test-randomize-ordering-seed=random --concurrency 4
 
       - name: Enforce 90% coverage
         run: |
