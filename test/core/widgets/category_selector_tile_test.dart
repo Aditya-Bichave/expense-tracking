@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category_typ
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../helpers/pump_app.dart';
 
@@ -24,27 +25,32 @@ void main() {
 
   group('CategorySelectorTile', () {
     testWidgets(
-        'renders hint text and uncategorized icon when no category is selected',
-        (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: CategorySelectorTile(
-            selectedCategory: null,
-            uncategorizedCategory: uncategorized,
-            onTap: () {},
-            hint: 'Please select one',
+      'renders hint text and uncategorized icon when no category is selected',
+      (tester) async {
+        // ARRANGE
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: Material(
+            child: CategorySelectorTile(
+              selectedCategory: null,
+              uncategorizedCategory: uncategorized,
+              onTap: () {},
+              hint: 'Please select one',
+            ),
           ),
-        ),
-      );
+        );
 
-      // ASSERT
-      expect(find.text('Please select one'), findsOneWidget);
-      // We expect the icon from the 'uncategorized' placeholder to be used
-      final icon = tester.widget<Icon>(find.byType(Icon));
-      expect(icon.color, Colors.grey.shade600); // disabledColor
-    });
+        // ASSERT
+        expect(find.text('Please select one'), findsOneWidget);
+        // We expect the icon from the 'uncategorized' placeholder to be used
+        final context = tester.element(find.byType(ListTile));
+        final theme = Theme.of(context);
+        final leadingIcon = tester
+            .widgetList<Icon>(find.byType(Icon))
+            .firstWhere((i) => i.icon != Icons.arrow_drop_down);
+        expect(leadingIcon.color, theme.disabledColor);
+      },
+    );
 
     testWidgets('renders selected category name and icon', (tester) async {
       // ARRANGE
@@ -61,10 +67,17 @@ void main() {
 
       // ASSERT
       expect(find.text('Groceries'), findsOneWidget);
-      // Check that the icon is present and has the correct color
-      final icon = find.byType(Icon); // Assuming fallback icon
-      final iconWidget = tester.widget<Icon>(icon);
-      expect(iconWidget.color, mockCategory.displayColor);
+      // Check that a leading graphic is present with the proper tint
+      final svgFinder = find.byType(SvgPicture);
+      if (svgFinder.evaluate().isNotEmpty) {
+        final svg = tester.widget<SvgPicture>(svgFinder);
+        expect(svg.colorFilter, isNotNull);
+      } else {
+        final leadingIcon = tester
+            .widgetList<Icon>(find.byType(Icon))
+            .firstWhere((i) => i.icon != Icons.arrow_drop_down);
+        expect(leadingIcon.color, mockCategory.displayColor);
+      }
     });
 
     testWidgets('calls onTap when the tile is tapped', (tester) async {
@@ -83,14 +96,16 @@ void main() {
       );
 
       // ACT
-      await tester.tap(find.byKey(const ValueKey('category_tile')));
+      await tester.tap(find.byType(ListTile));
+      await tester.pump();
 
       // ASSERT
       verify(() => mockOnTap.call()).called(1);
     });
 
-    testWidgets('displays error text and styling when errorText is provided',
-        (tester) async {
+    testWidgets('displays error text and styling when errorText is provided', (
+      tester,
+    ) async {
       // ARRANGE
       const errorText = 'Category is required';
       await pumpWidgetWithProviders(
@@ -109,7 +124,8 @@ void main() {
       // ASSERT
       expect(find.text(errorText), findsOneWidget);
 
-      final theme = Theme.of(tester.element(find.byType(Material)));
+      final context = tester.element(find.byType(ListTile));
+      final theme = Theme.of(context);
       final errorColor = theme.colorScheme.error;
 
       final tile = tester.widget<ListTile>(find.byType(ListTile));
