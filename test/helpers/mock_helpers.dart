@@ -113,6 +113,7 @@ void registerFallbackValues() {
   registerFallbackValue(Category.uncategorized);
   registerFallbackValue(TransactionType.expense);
   registerFallbackValue(TransactionSortBy.date);
+  registerFallbackValue(SortDirection.ascending);
   registerFallbackValue(BudgetType.overall);
   registerFallbackValue(BudgetPeriodType.recurringMonthly);
 }

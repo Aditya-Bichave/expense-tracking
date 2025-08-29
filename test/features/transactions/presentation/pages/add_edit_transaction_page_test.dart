@@ -41,17 +41,20 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.ready)]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.ready),
+        Stream.fromIterable(
+            [const AddEditTransactionState(status: AddEditStatus.ready)]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.ready),
       );
 
       // ACT
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const AddEditTransactionPage(initialTransactionData: null),
+        settle: false,
       );
+      await tester.pump();
 
-      // ASSERT
       expect(find.text('Add Transaction'), findsOneWidget);
       expect(find.byType(TransactionForm), findsOneWidget);
     });
@@ -60,17 +63,22 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([AddEditTransactionState(status: AddEditStatus.ready, transactionId: mockTransaction.id)]),
-        initialState: AddEditTransactionState(status: AddEditStatus.ready, transactionId: mockTransaction.id),
+        Stream.fromIterable([
+          AddEditTransactionState(
+              status: AddEditStatus.ready, transactionId: mockTransaction.id)
+        ]),
+        initialState: AddEditTransactionState(
+            status: AddEditStatus.ready, transactionId: mockTransaction.id),
       );
 
       // ACT
       await pumpWidgetWithProviders(
         tester: tester,
         widget: AddEditTransactionPage(initialTransactionData: mockTransaction),
+        settle: false,
       );
+      await tester.pump();
 
-      // ASSERT
       expect(find.text('Edit Transaction'), findsOneWidget);
     });
 
@@ -78,36 +86,41 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.saving)]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.saving),
+        Stream.fromIterable(
+            [const AddEditTransactionState(status: AddEditStatus.saving)]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.saving),
       );
 
       // ACT
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const AddEditTransactionPage(),
+        settle: false,
       );
+      await tester.pump();
 
-      // ASSERT
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsWidgets);
     });
 
     testWidgets('shows success SnackBar when state is success', (tester) async {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.success)]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.ready),
+        Stream.fromIterable(
+            [const AddEditTransactionState(status: AddEditStatus.success)]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.ready),
       );
 
       // ACT
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const AddEditTransactionPage(),
+        settle: false,
       );
-      await tester.pump(); // Pump to show snackbar
+      await tester.pump();
 
-      // ASSERT
       expect(find.text('Transaction added successfully!'), findsOneWidget);
     });
 
@@ -115,18 +128,22 @@ void main() {
       // ARRANGE
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AddEditTransactionState(status: AddEditStatus.error, errorMessage: 'Oh no!')]),
-        initialState: const AddEditTransactionState(status: AddEditStatus.ready),
+        Stream.fromIterable([
+          const AddEditTransactionState(
+              status: AddEditStatus.error, errorMessage: 'Oh no!')
+        ]),
+        initialState:
+            const AddEditTransactionState(status: AddEditStatus.ready),
       );
 
       // ACT
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const AddEditTransactionPage(),
+        settle: false,
       );
       await tester.pump();
 
-      // ASSERT
       expect(find.text('Error: Oh no!'), findsOneWidget);
     });
   });

@@ -23,6 +23,7 @@ class TransactionListView extends StatelessWidget {
   // --- ADD Handlers ---
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
   final Function(BuildContext, TransactionEntity) confirmDeletion;
+  final bool enableAnimations;
   // --- END Handlers ---
 
   const TransactionListView({
@@ -33,6 +34,7 @@ class TransactionListView extends StatelessWidget {
     // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
     required this.confirmDeletion,
+    this.enableAnimations = true,
     // --- End Add ---
   });
 
@@ -165,6 +167,13 @@ class TransactionListView extends StatelessWidget {
         }
         // --- END USE ---
 
+        final animatedCard = enableAnimations
+            ? cardItem
+                .animate()
+                .fadeIn(delay: (20 * index).ms)
+                .slideY(begin: 0.1)
+            : cardItem;
+
         return Dismissible(
           key: Key("${transaction.id}_dismissible"), // More specific key
           direction: DismissDirection.endToStart,
@@ -184,9 +193,9 @@ class TransactionListView extends StatelessWidget {
             color: isSelected
                 ? theme.colorScheme.primaryContainer.withOpacity(0.3)
                 : Colors.transparent,
-            child: cardItem, // Use the determined ExpenseCard or IncomeCard
+            child: animatedCard, // Use the determined ExpenseCard or IncomeCard
           ),
-        ).animate().fadeIn(delay: (20 * index).ms).slideY(begin: 0.1);
+        );
       },
     );
   }
