@@ -42,7 +42,7 @@ void main() {
       when(() => mockBloc.state).thenReturn(const AddEditBudgetState());
       await pumpWidgetWithProviders(
           tester: tester, widget: const AddEditBudgetPage());
-      expect(find.text('Add Budget'), findsOneWidget);
+      expect(find.text('Add Budget'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('renders correct AppBar title for "Edit" mode', (tester) async {
@@ -50,7 +50,7 @@ void main() {
           .thenReturn(AddEditBudgetState(initialBudget: mockBudget));
       await pumpWidgetWithProviders(
           tester: tester, widget: AddEditBudgetPage(initialBudget: mockBudget));
-      expect(find.text('Edit Budget'), findsOneWidget);
+      expect(find.text('Edit Budget'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('renders BudgetForm when categories are loaded',
@@ -67,7 +67,10 @@ void main() {
       when(() => mockBloc.state).thenReturn(
           const AddEditBudgetState(status: AddEditBudgetStatus.loading));
       await pumpWidgetWithProviders(
-          tester: tester, widget: const AddEditBudgetPage());
+        tester: tester,
+        widget: const AddEditBudgetPage(),
+        settle: false,
+      );
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 

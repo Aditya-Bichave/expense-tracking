@@ -53,7 +53,8 @@ void main() {
     });
 
     testWidgets('shows achieved chip when goal is achieved', (tester) async {
-      final achievedGoal = mockGoal.copyWith(totalSaved: 1500);
+      final achievedGoal =
+          mockGoal.copyWith(totalSaved: 1500, status: GoalStatus.achieved);
       await pumpWidgetWithProviders(
         tester: tester,
         widget: Material(child: GoalCard(goal: achievedGoal)),

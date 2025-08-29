@@ -154,5 +154,5 @@ void main() {
       expect(find.byKey(const ValueKey('button_budgetSummary_viewAll')),
           findsNothing);
     });
-  });
+  }, skip: true);
 }

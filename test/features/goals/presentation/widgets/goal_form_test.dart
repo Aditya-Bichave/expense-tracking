@@ -69,9 +69,9 @@ void main() {
       verify(() => mockOnSubmit.call(
             'New Goal',
             3000.0,
-            any(named: 'targetDate'),
-            any(named: 'iconName'),
-            any(named: 'description'),
+            any(),
+            any(),
+            any(),
           )).called(1);
     });
   });

@@ -35,17 +35,20 @@ void main() {
       await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
       await tester.pump();
 
-      final container = tester.widget<Container>(find.ancestor(
-        of: find.byIcon(Icons.shopping_cart_outlined),
-        matching: find.byType(Container),
-      ).first);
+      final container = tester.widget<Container>(find
+          .ancestor(
+            of: find.byIcon(Icons.shopping_cart_outlined),
+            matching: find.byType(Container),
+          )
+          .first);
 
       final border = container.decoration as BoxDecoration;
       expect(border.border, isNotNull);
       expect(border.border!.isUniform, isTrue);
     });
 
-    testWidgets('tapping Select button pops with selected icon', (tester) async {
+    testWidgets('tapping Select button pops with selected icon',
+        (tester) async {
       String? result;
       await tester.pumpWidget(MaterialApp(
         home: Builder(builder: (context) {
@@ -64,7 +67,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(IconPickerDialogContent), findsOneWidget);
-
+      await tester.dragUntilVisible(
+        find.byIcon(Icons.credit_card_outlined),
+        find.byType(GridView),
+        const Offset(0, -200),
+      );
       await tester.tap(find.byIcon(Icons.credit_card_outlined));
       await tester.tap(find.byKey(const ValueKey('button_select')));
       await tester.pumpAndSettle();

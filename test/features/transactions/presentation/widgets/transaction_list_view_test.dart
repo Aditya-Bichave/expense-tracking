@@ -1,6 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -31,18 +33,22 @@ void main() {
   late MockCallbacks mockCallbacks;
 
   final mockTransactions = [
-    TransactionEntity(
-        id: '1',
-        title: 'Expense 1',
-        amount: 50,
-        date: DateTime.now(),
-        type: TransactionType.expense),
-    TransactionEntity(
-        id: '2',
-        title: 'Income 1',
-        amount: 200,
-        date: DateTime.now(),
-        type: TransactionType.income),
+    TransactionEntity.fromExpense(
+      Expense(
+          id: '1',
+          title: 'Expense 1',
+          amount: 50,
+          date: DateTime.now(),
+          accountId: 'a1'),
+    ),
+    TransactionEntity.fromIncome(
+      Income(
+          id: '2',
+          title: 'Income 1',
+          amount: 200,
+          date: DateTime.now(),
+          accountId: 'a1'),
+    ),
   ];
 
   setUp(() {
@@ -59,6 +65,7 @@ void main() {
         navigateToDetailOrEdit: mockCallbacks.navigateToDetailOrEdit,
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,
+        enableAnimations: false,
       ),
     );
   }
@@ -69,7 +76,9 @@ void main() {
       await pumpWidgetWithProviders(
           tester: tester,
           widget: buildTestWidget(
-              const TransactionListState(status: ListStatus.loading)));
+              const TransactionListState(status: ListStatus.loading)),
+          settle: false);
+      await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
@@ -119,7 +128,9 @@ void main() {
               status: ListStatus.success,
               transactions: mockTransactions,
             ),
-          ));
+          ),
+          settle: false);
+      await tester.pump();
       expect(find.byType(ExpenseCard), findsOneWidget);
       expect(find.byType(IncomeCard), findsOneWidget);
     });
@@ -136,9 +147,13 @@ void main() {
               transactions: mockTransactions,
               isInBatchEditMode: false,
             ),
-          ));
+          ),
+          settle: false);
+      await tester.pump();
 
       await tester.tap(find.byType(ExpenseCard));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       verify(() => mockCallbacks.navigateToDetailOrEdit(
           any(), mockTransactions.first)).called(1);
@@ -154,9 +169,13 @@ void main() {
               transactions: mockTransactions,
               isInBatchEditMode: true,
             ),
-          ));
+          ),
+          settle: false);
+      await tester.pump();
 
       await tester.tap(find.byType(IncomeCard));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       verify(() => mockBloc.add(SelectTransaction(mockTransactions.last.id)))
           .called(1);
@@ -172,10 +191,13 @@ void main() {
               status: ListStatus.success,
               transactions: mockTransactions,
             ),
-          ));
+          ),
+          settle: false);
+      await tester.pump();
 
       await tester.drag(find.byType(ExpenseCard), const Offset(-500, 0));
       await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 100));
 
       verify(() => mockCallbacks.confirmDeletion(any(), mockTransactions.first))
           .called(1);

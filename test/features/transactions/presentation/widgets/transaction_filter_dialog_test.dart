@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
 
 import '../../../../helpers/pump_app.dart';
 
@@ -74,7 +75,7 @@ void main() {
       await pumpDialog(tester, startDate: date, type: TransactionType.expense);
 
       expect(find.byType(TransactionFilterDialog), findsOneWidget);
-      expect(find.text('Jan 1, 2023'), findsOneWidget);
+      expect(find.text(DateFormatter.formatDate(date)), findsOneWidget);
       expect(find.text('Expenses Only'), findsOneWidget);
     });
 

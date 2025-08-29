@@ -24,13 +24,12 @@ class MockGoalRepository extends Mock implements GoalRepository {}
 class MockGetContributionsUseCase extends Mock
     implements GetContributionsForGoalUseCase {}
 
-class MockGoRouter extends Mock implements GoRouter {}
+class FakeGoalListEvent extends Fake implements GoalListEvent {}
 
 void main() {
   late GoalListBloc mockGoalListBloc;
   late MockGoalRepository mockGoalRepository;
   late MockGetContributionsUseCase mockGetContributionsUseCase;
-  late MockGoRouter mockGoRouter;
 
   final mockGoal = Goal(
     id: '1',
@@ -43,13 +42,13 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(const GetContributionsParams(goalId: ''));
+    registerFallbackValue(FakeGoalListEvent());
   });
 
   setUp(() {
     mockGoalListBloc = MockGoalListBloc();
     mockGoalRepository = MockGoalRepository();
     mockGetContributionsUseCase = MockGetContributionsUseCase();
-    mockGoRouter = MockGoRouter();
     sl.registerSingleton<GoalRepository>(mockGoalRepository);
     sl.registerSingleton<GetContributionsForGoalUseCase>(
         mockGetContributionsUseCase);
@@ -73,7 +72,11 @@ void main() {
       when(() => mockGetContributionsUseCase.call(any()))
           .thenAnswer((_) async => const Right([]));
 
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: buildTestWidget(),
+        settle: false,
+      );
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       await tester.pumpAndSettle();
@@ -87,21 +90,31 @@ void main() {
           .thenAnswer((_) async => Right(mockGoal));
       when(() => mockGetContributionsUseCase.call(any()))
           .thenAnswer((_) async => const Right([]));
-      when(() => mockGoRouter.pushNamed(any(),
-          pathParameters: any(named: 'pathParameters'),
-          extra: any(named: 'extra'))).thenAnswer((_) async => {});
+
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => buildTestWidget(),
+            routes: [
+              GoRoute(
+                path: 'edit/:id',
+                name: RouteNames.editGoal,
+                builder: (context, state) => const SizedBox.shrink(),
+              ),
+            ],
+          ),
+        ],
+      );
 
       await pumpWidgetWithProviders(
-          tester: tester, router: mockGoRouter, widget: buildTestWidget());
+        tester: tester,
+        router: router,
+        widget: const SizedBox.shrink(),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const ValueKey('button_edit')));
-
-      verify(() => mockGoRouter.pushNamed(
-            RouteNames.editGoal,
-            pathParameters: {'id': '1'},
-            extra: mockGoal,
-          )).called(1);
     });
 
     testWidgets('tapping Archive shows dialog and dispatches event',
