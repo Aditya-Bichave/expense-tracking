@@ -2,8 +2,10 @@ import 'package:expense_tracker/features/accounts/domain/repositories/asset_acco
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/merchant_category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/user_history_repository.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
@@ -17,6 +19,7 @@ import 'package:expense_tracker/features/settings/domain/repositories/data_manag
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
@@ -63,6 +66,30 @@ class _FakeTransactionEntity extends Fake implements TransactionEntity {}
 
 class _FakeLogContributionEvent extends Fake implements LogContributionEvent {}
 
+class _FakeCategoryManagementEvent extends Fake
+    implements CategoryManagementEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+class _FakeCategoryManagementState extends Fake
+    implements CategoryManagementState {
+  @override
+  List<Object?> get props => [];
+}
+
+class _FakeAddEditTransactionEvent extends Fake
+    implements AddEditTransactionEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+class _FakeAddEditTransactionState extends Fake
+    implements AddEditTransactionState {
+  @override
+  List<Object?> get props => [];
+}
+
 class _FakeAccountListEvent extends Fake implements AccountListEvent {
   @override
   List<Object> get props => [];
@@ -79,6 +106,12 @@ void registerFallbackValues() {
   registerFallbackValue(_FakeLogContributionEvent());
   registerFallbackValue(_FakeAccountListEvent());
   registerFallbackValue(_FakeAccountListState());
+  registerFallbackValue(_FakeCategoryManagementEvent());
+  registerFallbackValue(_FakeCategoryManagementState());
+  registerFallbackValue(_FakeAddEditTransactionEvent());
+  registerFallbackValue(_FakeAddEditTransactionState());
+  registerFallbackValue(Category.uncategorized);
+  registerFallbackValue(TransactionType.expense);
   registerFallbackValue(TransactionSortBy.date);
   registerFallbackValue(BudgetType.overall);
   registerFallbackValue(BudgetPeriodType.recurringMonthly);

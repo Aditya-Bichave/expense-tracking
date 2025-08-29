@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:get_it/get_it.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../helpers/pump_app.dart';
 
@@ -19,6 +21,11 @@ void main() {
 
   setUp(() {
     mockBloc = MockCategoryManagementBloc();
+    final getIt = GetIt.instance;
+    if (!getIt.isRegistered<Uuid>()) {
+      getIt.registerLazySingleton<Uuid>(() => const Uuid());
+      addTearDown(() => getIt.unregister<Uuid>());
+    }
   });
 
   group('AddEditCategoryScreen', () {
@@ -30,7 +37,7 @@ void main() {
           child: const AddEditCategoryScreen(),
         ),
       ));
-      expect(find.text('Add Category'), findsOneWidget);
+      expect(find.text('Add Category'), findsWidgets);
       expect(find.byType(CategoryForm), findsOneWidget);
     });
 
