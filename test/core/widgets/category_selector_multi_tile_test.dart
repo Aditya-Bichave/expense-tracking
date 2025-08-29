@@ -128,7 +128,13 @@ void main() {
       );
 
       // ACT
-      await tester.tap(find.byKey(const ValueKey('category_selector')));
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('category_selector')),
+          matching: find.byType(ListTile),
+        ),
+      );
+      await tester.pumpAndSettle();
 
       // ASSERT
       verify(() => mockOnTap.call()).called(1);
@@ -142,6 +148,7 @@ void main() {
         tester: tester,
         widget: Material(
           child: CategorySelectorMultiTile(
+            key: const ValueKey('category_selector'),
             selectedCategoryIds: const [],
             availableCategories: mockCategories,
             onTap: () {},
@@ -153,15 +160,23 @@ void main() {
       // ASSERT
       expect(find.text(errorText), findsOneWidget);
 
-      final tile = tester.widget<ListTile>(find.byType(ListTile));
+      final listTileFinder = find.descendant(
+        of: find.byKey(const ValueKey('category_selector')),
+        matching: find.byType(ListTile),
+      );
+      final tile = tester.widget<ListTile>(listTileFinder);
       final tileShape = tile.shape as OutlineInputBorder;
-      final titleWidget = tester.widget<Text>(find.descendant(
-        of: find.byType(ListTile),
-        matching: find.text('Select Categories'),
-      ));
+      final titleWidget = tester.widget<Text>(
+        find
+            .descendant(
+              of: listTileFinder,
+              matching: find.text('Select Categories'),
+            )
+            .first,
+      );
       final errorWidget = tester.widget<Text>(find.text(errorText));
 
-      final theme = Theme.of(tester.element(find.byType(Material)));
+      final theme = Theme.of(tester.element(listTileFinder));
       final errorColor = theme.colorScheme.error;
 
       expect(tileShape.borderSide.color, errorColor);

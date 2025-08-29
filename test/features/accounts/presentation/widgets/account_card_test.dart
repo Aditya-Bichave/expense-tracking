@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 
 import '../../../../helpers/pump_app.dart';
 
@@ -48,10 +49,24 @@ void main() {
         widget: AccountCard(account: mockAccountPositive),
       );
 
-      final balanceText = tester.widget<Text>(find.textContaining('\$'));
-      final theme = Theme.of(tester.element(find.byType(AccountCard)));
+      final element = tester.element(find.byType(AccountCard));
+      final theme = Theme.of(element);
+      final modeTheme = element.modeTheme;
+      final balanceStyle = tester
+          .widget<AnimatedDefaultTextStyle>(
+            find
+                .ancestor(
+                  of: find.textContaining('\$'),
+                  matching: find.byType(AnimatedDefaultTextStyle),
+                )
+                .first,
+          )
+          .style;
 
-      expect(balanceText.style?.color, theme.colorScheme.primary);
+      expect(
+        balanceStyle.color,
+        modeTheme?.incomeGlowColor ?? theme.colorScheme.primary,
+      );
     });
 
     testWidgets('balance color is error for negative balance', (tester) async {
@@ -60,10 +75,24 @@ void main() {
         widget: AccountCard(account: mockAccountNegative),
       );
 
-      final balanceText = tester.widget<Text>(find.textContaining('\$'));
-      final theme = Theme.of(tester.element(find.byType(AccountCard)));
+      final element = tester.element(find.byType(AccountCard));
+      final theme = Theme.of(element);
+      final modeTheme = element.modeTheme;
+      final balanceStyle = tester
+          .widget<AnimatedDefaultTextStyle>(
+            find
+                .ancestor(
+                  of: find.textContaining('\$'),
+                  matching: find.byType(AnimatedDefaultTextStyle),
+                )
+                .first,
+          )
+          .style;
 
-      expect(balanceText.style?.color, theme.colorScheme.error);
+      expect(
+        balanceStyle.color,
+        modeTheme?.expenseGlowColor ?? theme.colorScheme.error,
+      );
     });
 
     testWidgets('onTap callback is called when tapped', (tester) async {

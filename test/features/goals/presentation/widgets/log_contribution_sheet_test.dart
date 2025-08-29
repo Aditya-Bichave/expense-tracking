@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/goals/presentation/widgets/log_contribu
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../helpers/pump_app.dart';
 
@@ -33,7 +34,12 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const LogContributionSheetContent(),
+        blocProviders: [
+          BlocProvider<LogContributionBloc>.value(value: mockBloc),
+        ],
+        settle: false,
       );
+      await tester.pump();
 
       expect(find.text('Log Contribution'), findsOneWidget);
       expect(find.text('Add'), findsOneWidget);
@@ -59,10 +65,16 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const LogContributionSheetContent(),
+        blocProviders: [
+          BlocProvider<LogContributionBloc>.value(value: mockBloc),
+        ],
+        settle: false,
       );
+      await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      final button = tester.widget<ElevatedButton>(
+          find.byKey(const ValueKey('button_submit_contribution')));
       expect(button.onPressed, isNull);
     });
   });
