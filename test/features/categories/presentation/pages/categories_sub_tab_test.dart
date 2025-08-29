@@ -54,7 +54,11 @@ void main() {
     testWidgets('shows loading indicator', (tester) async {
       when(() => mockBloc.state).thenReturn(const CategoryManagementState(
           status: CategoryManagementStatus.loading));
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: buildTestWidget(),
+        settle: false,
+      );
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 

@@ -43,19 +43,25 @@ void main() {
       when(() => mockBloc.state).thenReturn(const CategoryManagementState(
           status: CategoryManagementStatus.loading));
       await pumpWidgetWithProviders(
-          tester: tester, widget: const CategoryManagementScreen());
+        tester: tester,
+        widget: const CategoryManagementScreen(),
+        settle: false,
+      );
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('renders two CategoryListSectionWidgets when loaded',
+    testWidgets('renders CategoryListSectionWidget when loaded',
         (tester) async {
       when(() => mockBloc.state).thenReturn(CategoryManagementState(
         status: CategoryManagementStatus.loaded,
         customExpenseCategories: mockCategories,
+        customIncomeCategories: mockCategories,
       ));
       await pumpWidgetWithProviders(
-          tester: tester, widget: const CategoryManagementScreen());
-      expect(find.byType(CategoryListSectionWidget), findsNWidgets(2));
+        tester: tester,
+        widget: const CategoryManagementScreen(),
+      );
+      expect(find.byType(CategoryListSectionWidget), findsOneWidget);
     });
 
     testWidgets('FAB navigates to add page', (tester) async {
