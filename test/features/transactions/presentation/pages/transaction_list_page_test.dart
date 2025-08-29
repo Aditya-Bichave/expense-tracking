@@ -1,6 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_dialog.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_header.dart';
@@ -30,20 +35,34 @@ class FakeCategoryManagementEvent extends Fake
 class FakeCategoryManagementState extends Fake
     implements CategoryManagementState {}
 
+class MockGetCategoriesUseCase extends Mock implements GetCategoriesUseCase {}
+
 void main() {
   late TransactionListBloc mockTransactionListBloc;
   late CategoryManagementBloc mockCategoryManagementBloc;
+  late GetCategoriesUseCase mockGetCategoriesUseCase;
 
   setUpAll(() {
     registerFallbackValue(FakeTransactionListEvent());
     registerFallbackValue(FakeTransactionListState());
     registerFallbackValue(FakeCategoryManagementState());
     registerFallbackValue(FakeCategoryManagementEvent());
+    registerFallbackValue(NoParams());
   });
 
   setUp(() {
     mockTransactionListBloc = MockTransactionListBloc();
     mockCategoryManagementBloc = MockCategoryManagementBloc();
+    mockGetCategoriesUseCase = MockGetCategoriesUseCase();
+    sl.registerSingleton<GetCategoriesUseCase>(mockGetCategoriesUseCase);
+    when(() => mockGetCategoriesUseCase.call(any()))
+        .thenAnswer((_) async => const Right(<Category>[]));
+  });
+
+  tearDown(() {
+    if (sl.isRegistered<GetCategoriesUseCase>()) {
+      sl.unregister<GetCategoriesUseCase>();
+    }
   });
 
   Widget buildTestWidget() {
@@ -97,12 +116,21 @@ void main() {
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
       await tester.tap(find.byKey(const ValueKey('button_show_filter')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.byType(TransactionFilterDialog), findsOneWidget);
     });
 
     testWidgets('shows SortSheet when sort button is tapped', (tester) async {
+      final binding = tester.binding;
+      binding.window.physicalSizeTestValue = const Size(800, 1000);
+      binding.window.devicePixelRatioTestValue = 1.0;
+      addTearDown(() {
+        binding.window.clearPhysicalSizeTestValue();
+        binding.window.clearDevicePixelRatioTestValue();
+      });
+
       when(() => mockTransactionListBloc.state)
           .thenReturn(const TransactionListState());
       when(() => mockCategoryManagementBloc.state)
