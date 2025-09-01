@@ -68,23 +68,24 @@ class TransactionSortSheet extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min, // Fit content
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 8.0,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: Text(
+                'Sort Transactions By',
+                style: theme.textTheme.titleLarge,
+              ),
             ),
-            child: Text(
-              'Sort Transactions By',
-              style: theme.textTheme.titleLarge,
-            ),
-          ),
-          ...sortOptions,
-          const SizedBox(height: 8), // Padding at bottom
-        ],
+            ...sortOptions,
+            const SizedBox(height: 8), // Padding at bottom
+          ],
+        ),
       ),
     );
   }

@@ -1,28 +1,24 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
+import 'package:expense_tracker/core/di/service_configurations/goal_dependencies.dart';
 import 'package:expense_tracker/features/goals/presentation/widgets/log_contribution_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../helpers/pump_app.dart';
-
-class MockLogContributionBloc
-    extends MockBloc<LogContributionEvent, LogContributionState>
-    implements LogContributionBloc {}
+import '../../../../helpers/test_helpers.dart';
 
 void main() {
-  late LogContributionBloc mockBloc;
+  late MockLogContributionBloc mockBloc;
+
+  setUpAll(() {
+    Testhelpers.registerFallbacks();
+    GoalDependencies.register();
+  });
 
   setUp(() {
     mockBloc = MockLogContributionBloc();
-    sl.registerFactory<LogContributionBloc>(() => mockBloc);
-  });
-
-  tearDown(() {
-    sl.reset();
   });
 
   group('LogContributionSheetContent', () {
@@ -33,10 +29,8 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: const LogContributionSheetContent(),
-        blocProviders: [
-          BlocProvider<LogContributionBloc>.value(value: mockBloc),
-        ],
+        logContributionBloc: mockBloc,
+        widget: const LogContributionSheetContent(goalId: '1'),
         settle: false,
       );
       await tester.pump();
@@ -55,8 +49,15 @@ void main() {
 
     testWidgets('shows loading state on button when submitting',
         (tester) async {
-      when(() => mockBloc.state).thenReturn(
-        const LogContributionState(
+      whenListen(
+        mockBloc,
+        Stream.fromIterable([
+          const LogContributionState(
+            status: LogContributionStatus.loading,
+            goalId: '1',
+          )
+        ]),
+        initialState: const LogContributionState(
           status: LogContributionStatus.loading,
           goalId: '1',
         ),
@@ -64,13 +65,9 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: const LogContributionSheetContent(),
-        blocProviders: [
-          BlocProvider<LogContributionBloc>.value(value: mockBloc),
-        ],
-        settle: false,
+        logContributionBloc: mockBloc,
+        widget: const LogContributionSheetContent(goalId: '1'),
       );
-      await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       final button = tester.widget<ElevatedButton>(

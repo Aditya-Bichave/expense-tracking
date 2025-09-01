@@ -27,8 +27,10 @@ void main() {
       ),
     );
 
-    final editFinder = find.byTooltip('Edit Category');
-    final deleteFinder = find.byTooltip('Delete Category');
+    final editFinder = find.byWidgetPredicate(
+        (w) => w is RawMaterialButton && w.tooltip == 'Edit Category');
+    final deleteFinder = find.byWidgetPredicate(
+        (w) => w is RawMaterialButton && w.tooltip == 'Delete Category');
 
     expect(tester.getSize(editFinder).width, greaterThanOrEqualTo(48));
     expect(tester.getSize(editFinder).height, greaterThanOrEqualTo(48));

@@ -64,7 +64,7 @@ void main() {
           tester: tester,
           widget: buildTestWidget(selectedDayTransactions: mockTransactions));
 
-      expect(find.byWidgetPredicate((w) => w is TableCalendar), findsOneWidget);
+      expect(find.byType(TableCalendar), findsOneWidget);
       expect(find.byType(ListView), findsOneWidget);
       expect(find.byType(TransactionListItem), findsOneWidget);
     });

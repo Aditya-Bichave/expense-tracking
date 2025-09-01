@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
+import '../../../../helpers/test_helpers.dart';
 
 class MockOnSubmit extends Mock {
   void call(
@@ -22,10 +23,15 @@ class MockOnSubmit extends Mock {
 void main() {
   late MockOnSubmit mockOnSubmit;
 
+  setUpAll(() {
+    Testhelpers.registerFallbacks();
+    registerFallbackValue(BudgetType.overall);
+  });
+
   setUp(() {
     mockOnSubmit = MockOnSubmit();
     when(() => mockOnSubmit.call(
-            any(), any(), any(), any(), any(), any(), any(), any()))
+            any(), any(named: 'type'), any(), any(), any(), any(), any(), any()))
         .thenAnswer((_) {});
   });
 

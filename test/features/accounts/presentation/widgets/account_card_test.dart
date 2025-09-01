@@ -52,19 +52,11 @@ void main() {
       final element = tester.element(find.byType(AccountCard));
       final theme = Theme.of(element);
       final modeTheme = element.modeTheme;
-      final balanceStyle = tester
-          .widget<AnimatedDefaultTextStyle>(
-            find
-                .ancestor(
-                  of: find.textContaining('\$'),
-                  matching: find.byType(AnimatedDefaultTextStyle),
-                )
-                .first,
-          )
-          .style;
+      final balanceText = tester.widget<Text>(find.textContaining('\$'));
+      final balanceStyle = balanceText.style;
 
       expect(
-        balanceStyle.color,
+        balanceStyle?.color,
         modeTheme?.incomeGlowColor ?? theme.colorScheme.primary,
       );
     });
@@ -78,19 +70,11 @@ void main() {
       final element = tester.element(find.byType(AccountCard));
       final theme = Theme.of(element);
       final modeTheme = element.modeTheme;
-      final balanceStyle = tester
-          .widget<AnimatedDefaultTextStyle>(
-            find
-                .ancestor(
-                  of: find.textContaining('\$'),
-                  matching: find.byType(AnimatedDefaultTextStyle),
-                )
-                .first,
-          )
-          .style;
+      final balanceText = tester.widget<Text>(find.textContaining('\$'));
+      final balanceStyle = balanceText.style;
 
       expect(
-        balanceStyle.color,
+        balanceStyle?.color,
         modeTheme?.expenseGlowColor ?? theme.colorScheme.error,
       );
     });

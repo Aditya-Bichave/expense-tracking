@@ -25,12 +25,16 @@ import 'package:expense_tracker/core/di/service_configurations/budget_dependenci
 import 'package:expense_tracker/core/di/service_configurations/goal_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/recurring_transactions_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/report_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/liabilities_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/transfers_dependencies.dart';
 import 'package:expense_tracker/core/services/downloader_service_locator.dart';
 import 'package:expense_tracker/core/services/clock.dart';
 
 // Import models only needed for Box types here
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
+import 'package:expense_tracker/features/liabilities/data/models/liability_model.dart';
+import 'package:expense_tracker/features/transfers/data/models/transfer_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
@@ -47,6 +51,8 @@ import 'package:expense_tracker/features/accounts/data/datasources/asset_account
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
+import 'package:expense_tracker/features/liabilities/data/datasources/liability_local_data_source.dart';
+import 'package:expense_tracker/features/transfers/data/datasources/transfer_local_data_source.dart';
 // --- END MODIFIED ---
 
 final sl = GetIt.instance;
@@ -55,6 +61,8 @@ Future<void> initLocator({
   required SharedPreferences prefs,
   required Box<ExpenseModel> expenseBox,
   required Box<AssetAccountModel> accountBox,
+  required Box<LiabilityModel> liabilityBox,
+  required Box<TransferModel> transferBox,
   required Box<IncomeModel> incomeBox,
   required Box<CategoryModel> categoryBox,
   required Box<UserHistoryRuleModel> userHistoryBox,
@@ -99,6 +107,12 @@ Future<void> initLocator({
   }
   if (!sl.isRegistered<Box<AssetAccountModel>>()) {
     sl.registerLazySingleton<Box<AssetAccountModel>>(() => accountBox);
+  }
+  if (!sl.isRegistered<Box<LiabilityModel>>()) {
+    sl.registerLazySingleton<Box<LiabilityModel>>(() => liabilityBox);
+  }
+  if (!sl.isRegistered<Box<TransferModel>>()) {
+    sl.registerLazySingleton<Box<TransferModel>>(() => transferBox);
   }
   if (!sl.isRegistered<Box<IncomeModel>>()) {
     sl.registerLazySingleton<Box<IncomeModel>>(() => incomeBox);
@@ -171,6 +185,8 @@ Future<void> initLocator({
     ExpensesDependencies.register();
     CategoriesDependencies.register();
     AccountDependencies.register();
+    LiabilitiesDependencies.register();
+    TransfersDependencies.register();
     BudgetDependencies.register();
     GoalDependencies.register();
     TransactionsDependencies.register();

@@ -193,7 +193,7 @@ class AddEditRecurringRuleBloc
 
     // --- PARSE AND VALIDATE THE AMOUNT HERE ---
     final locale = sl<SettingsBloc>().state.selectedCountryCode;
-    final amount = parseCurrency(event.amount, locale);
+    final amount = state.amount;
 
     if (amount.isNaN || amount <= 0) {
       emit(

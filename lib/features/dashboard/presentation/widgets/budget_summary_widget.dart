@@ -58,7 +58,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "No active budgets found.",
+                        "No budgets here.",
                         style: theme.textTheme.bodyMedium,
                       ),
                       TextButton(

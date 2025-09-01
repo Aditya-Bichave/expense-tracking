@@ -53,7 +53,7 @@ void main() {
         widget: const GoalSummaryWidget(goals: [], recentContributionData: []),
       );
 
-      expect(find.text('No savings goals set yet.'), findsOneWidget);
+      expect(find.text('No goals here.'), findsOneWidget);
       final createButton =
           find.byKey(const ValueKey('button_goalSummary_create'));
       expect(createButton, findsOneWidget);
@@ -105,7 +105,10 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         router: mockGoRouter,
-        widget: GoalSummaryWidget(goals: mockGoals, recentContributionData: []),
+        widget: SingleChildScrollView(
+          child:
+              GoalSummaryWidget(goals: mockGoals, recentContributionData: []),
+        ),
       );
 
       final viewAllButton =
@@ -116,5 +119,5 @@ void main() {
       verify(() => mockGoRouter.go(RouteNames.budgetsAndCats,
           extra: {'initialTabIndex': 1})).called(1);
     });
-  }, skip: true);
+  });
 }

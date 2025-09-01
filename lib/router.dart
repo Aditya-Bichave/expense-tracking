@@ -20,6 +20,8 @@ import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/add_edit_goal_page.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/goal_detail_page.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/features/liabilities/presentation/pages/add_account_type_selection_page.dart';
+import 'package:expense_tracker/features/liabilities/presentation/pages/add_edit_liability_page.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/pages/add_edit_recurring_rule_page.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/pages/recurring_rule_list_page.dart';
@@ -217,7 +219,7 @@ class AppRouter {
                   },
                   routes: [
                     GoRoute(
-                        path: RouteNames.addTransaction,
+                        path: 'add',
                         name: RouteNames.addTransaction,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) =>
@@ -225,13 +227,13 @@ class AppRouter {
                                 initialTransactionData: null)),
                     GoRoute(
                         path:
-                            '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}',
+                            'edit/:${RouteNames.paramTransactionId}',
                         name: RouteNames.editTransaction,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildEditTransactionPage),
                     GoRoute(
                         path:
-                            '${RouteNames.transactionDetail}/:${RouteNames.paramTransactionId}',
+                            'detail/:${RouteNames.paramTransactionId}',
                         name: RouteNames.transactionDetail,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildTransactionDetailPage),
@@ -250,14 +252,14 @@ class AppRouter {
                       const NoTransitionPage(child: BudgetsAndCatsTabPage()),
                   routes: [
                     GoRoute(
-                      path: RouteNames.manageCategories,
+                      path: 'categories',
                       name: RouteNames.manageCategories,
                       parentNavigatorKey: _rootNavigatorKey,
                       builder: (context, state) =>
                           const CategoryManagementScreen(),
                       routes: [
                         GoRoute(
-                            path: RouteNames.addCategory,
+                            path: 'add',
                             name: RouteNames.addCategory,
                             parentNavigatorKey: _rootNavigatorKey,
                             builder: (context, state) {
@@ -270,42 +272,42 @@ class AppRouter {
                             }),
                         GoRoute(
                             path:
-                                '${RouteNames.editCategory}/:${RouteNames.paramId}',
+                                'edit/:${RouteNames.paramId}',
                             name: RouteNames.editCategory,
                             parentNavigatorKey: _rootNavigatorKey,
                             builder: _buildEditCategoryPage),
                       ],
                     ),
                     GoRoute(
-                        path: RouteNames.addBudget,
+                        path: 'budgets/add',
                         name: RouteNames.addBudget,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) =>
                             const AddEditBudgetPage(initialBudget: null)),
                     GoRoute(
-                        path: '${RouteNames.editBudget}/:${RouteNames.paramId}',
+                        path: 'budgets/edit/:${RouteNames.paramId}',
                         name: RouteNames.editBudget,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildEditBudgetPage),
                     GoRoute(
                         path:
-                            '${RouteNames.budgetDetail}/:${RouteNames.paramId}',
+                            'budgets/detail/:${RouteNames.paramId}',
                         name: RouteNames.budgetDetail,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildBudgetDetailPage),
                     GoRoute(
-                        path: RouteNames.addGoal,
+                        path: 'goals/add',
                         name: RouteNames.addGoal,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) =>
                             const AddEditGoalPage(initialGoal: null)),
                     GoRoute(
-                        path: '${RouteNames.editGoal}/:${RouteNames.paramId}',
+                        path: 'goals/edit/:${RouteNames.paramId}',
                         name: RouteNames.editGoal,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildEditGoalPage),
                     GoRoute(
-                        path: '${RouteNames.goalDetail}/:${RouteNames.paramId}',
+                        path: 'goals/detail/:${RouteNames.paramId}',
                         name: RouteNames.goalDetail,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildGoalDetailPage),
@@ -324,17 +326,35 @@ class AppRouter {
                       const NoTransitionPage(child: AccountsTabPage()),
                   routes: [
                     GoRoute(
-                        path: RouteNames.addAccount,
+                        path: RouteNames.addAccountTypeSelection,
+                        name: RouteNames.addAccountTypeSelection,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) => const AddAccountTypeSelectionPage()),
+                    GoRoute(
+                        path: 'add-asset',
                         name: RouteNames.addAccount,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) =>
                             const AddEditAccountPage()),
+                     GoRoute(
+                        path: RouteNames.addLiability,
+                        name: RouteNames.addLiability,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) =>
+                            const AddEditLiabilityPage()),
                     GoRoute(
                         path:
-                            '${RouteNames.editAccount}/:${RouteNames.paramAccountId}',
+                            'edit-asset/:${RouteNames.paramAccountId}',
                         name: RouteNames.editAccount,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildEditAccountPage),
+                    GoRoute(
+                        path:
+                            'edit-liability/:${RouteNames.paramAccountId}',
+                        name: RouteNames.editLiability,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) => const AddEditLiabilityPage()
+                    ),
                   ],
                 ),
               ],
@@ -350,7 +370,7 @@ class AppRouter {
                       const NoTransitionPage(child: RecurringRuleListPage()),
                   routes: [
                     GoRoute(
-                      path: RouteNames.addRecurring,
+                      path: 'add',
                       name: RouteNames.addRecurring,
                       parentNavigatorKey: _rootNavigatorKey,
                       builder: (context, state) =>
@@ -358,7 +378,7 @@ class AppRouter {
                     ),
                     GoRoute(
                       path:
-                          '${RouteNames.editRecurring}/:${RouteNames.paramId}',
+                          'edit/:${RouteNames.paramId}',
                       name: RouteNames.editRecurring,
                       parentNavigatorKey: _rootNavigatorKey,
                       builder: (context, state) {

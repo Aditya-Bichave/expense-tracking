@@ -40,45 +40,39 @@ class CategoryListItemWidget extends StatelessWidget {
             ? Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: IconButton(
-                      key: ValueKey('button_edit_${category.id}'),
-                      icon: const Icon(Icons.edit_outlined),
-                      iconSize: 20,
+                  RawMaterialButton(
+                    onPressed: onEdit,
+                    tooltip: 'Edit Category',
+                    constraints:
+                        const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
+                    child: Icon(
+                      Icons.edit_outlined,
+                      size: 20,
                       color: theme.colorScheme.secondary,
-                      padding: EdgeInsets.zero,
-                      tooltip: 'Edit Category',
-                      onPressed: onEdit, // Use callback
                     ),
                   ),
-                  SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: IconButton(
-                      key: ValueKey('button_delete_${category.id}'),
-                      icon: const Icon(Icons.delete_outline),
-                      iconSize: 20,
+                  RawMaterialButton(
+                    onPressed: onDelete,
+                    tooltip: 'Delete Category',
+                    constraints:
+                        const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
+                    child: Icon(
+                      Icons.delete_outline,
+                      size: 20,
                       color: theme.colorScheme.error,
-                      padding: EdgeInsets.zero,
-                      tooltip: 'Delete Category',
-                      onPressed: onDelete, // Use callback
                     ),
                   ),
                 ],
               )
-            : SizedBox(
-                width: 48,
-                height: 48,
-                child: IconButton(
-                  // Action for predefined (personalize icon)
-                  icon: const Icon(Icons.palette_outlined),
-                  iconSize: 20,
+            : RawMaterialButton(
+                onPressed: onPersonalize,
+                tooltip: 'Personalize Icon/Color (Coming Soon)',
+                constraints:
+                    const BoxConstraints(minWidth: 48.0, minHeight: 48.0),
+                child: Icon(
+                  Icons.palette_outlined,
+                  size: 20,
                   color: theme.colorScheme.secondary,
-                  padding: EdgeInsets.zero,
-                  tooltip: 'Personalize Icon/Color (Coming Soon)',
-                  onPressed: onPersonalize, // Use callback
                 ),
               ),
       ),

@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/di/service_configurations/transactions_dependencies.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -50,6 +51,10 @@ void main() {
           accountId: 'a1'),
     ),
   ];
+
+  setUpAll(() {
+    TransactionDependencies.register();
+  });
 
   setUp(() {
     mockBloc = MockTransactionListBloc();

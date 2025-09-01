@@ -4,32 +4,30 @@ import 'package:expense_tracker/features/dashboard/domain/entities/financial_ove
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_section.dart';
+import 'package:expense_tracker/core/di/service_configurations/dashboard_dependencies.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
 
-class MockDashboardBloc extends MockBloc<DashboardEvent, DashboardState>
-    implements DashboardBloc {}
-
-class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
-    implements SettingsBloc {}
-
-class MockFinancialOverview extends Mock implements FinancialOverview {}
-
 void main() {
-  late DashboardBloc mockDashboardBloc;
-  late SettingsBloc mockSettingsBloc;
+  late MockDashboardBloc mockDashboardBloc;
+  late MockSettingsBloc mockSettingsBloc;
+  late MockTransactionListBloc mockTransactionListBloc;
   late MockGoRouter mockGoRouter;
   late FinancialOverview mockOverview;
+
+  setUpAll(() {
+    DashboardDependencies.register();
+  });
 
   setUp(() {
     mockDashboardBloc = MockDashboardBloc();
     mockSettingsBloc = MockSettingsBloc();
+    mockTransactionListBloc = MockTransactionListBloc();
     mockGoRouter = MockGoRouter();
     mockOverview = MockFinancialOverview();
 
@@ -41,24 +39,15 @@ void main() {
     when(() => mockOverview.overallBalance).thenReturn(0);
   });
 
-  Widget buildTestWidget() {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: mockDashboardBloc),
-        BlocProvider.value(value: mockSettingsBloc),
-      ],
-      child: const DashboardPage(),
-    );
-  }
-
   group('DashboardPage', () {
     testWidgets('shows loading indicator when state is DashboardLoading',
         (tester) async {
-      when(() => mockDashboardBloc.state).thenReturn(DashboardLoading());
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: buildTestWidget(),
+        dashboardBloc: mockDashboardBloc,
+        settingsBloc: mockSettingsBloc,
+        transactionListBloc: mockTransactionListBloc,
+        widget: const DashboardPage(),
         settle: false,
       );
       await tester.pump();
@@ -69,8 +58,13 @@ void main() {
         (tester) async {
       when(() => mockDashboardBloc.state)
           .thenReturn(const DashboardError('Failed'));
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        dashboardBloc: mockDashboardBloc,
+        settingsBloc: mockSettingsBloc,
+        transactionListBloc: mockTransactionListBloc,
+        widget: const DashboardPage(),
+      );
 
       expect(find.text('Error loading dashboard: Failed'), findsOneWidget);
       final retryButton = find.byKey(const ValueKey('button_dashboard_retry'));
@@ -86,8 +80,13 @@ void main() {
         (tester) async {
       when(() => mockDashboardBloc.state)
           .thenReturn(DashboardLoaded(mockOverview));
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        dashboardBloc: mockDashboardBloc,
+        settingsBloc: mockSettingsBloc,
+        transactionListBloc: mockTransactionListBloc,
+        widget: const DashboardPage(),
+      );
 
       expect(find.byType(AssetDistributionSection), findsOneWidget);
       expect(find.byType(BudgetSummaryWidget), findsOneWidget);
@@ -97,11 +96,16 @@ void main() {
         (tester) async {
       when(() => mockDashboardBloc.state)
           .thenReturn(DashboardLoaded(mockOverview));
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
       when(() => mockGoRouter.push(any())).thenAnswer((_) async => null);
 
       await pumpWidgetWithProviders(
-          tester: tester, widget: buildTestWidget(), router: mockGoRouter);
+        tester: tester,
+        dashboardBloc: mockDashboardBloc,
+        settingsBloc: mockSettingsBloc,
+        transactionListBloc: mockTransactionListBloc,
+        router: mockGoRouter,
+        widget: const DashboardPage(),
+      );
 
       final button = find
           .byKey(const ValueKey('button_dashboard_to_spendingCategoryReport'));
@@ -113,5 +117,5 @@ void main() {
               '${RouteNames.dashboard}/${RouteNames.reportSpendingCategory}'))
           .called(1);
     });
-  }, skip: true);
+  });
 }

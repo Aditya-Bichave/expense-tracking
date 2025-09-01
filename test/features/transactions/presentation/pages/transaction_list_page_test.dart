@@ -1,11 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/features/categories/domain/usecases/get_categories_usecase.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/core/usecases/usecase.dart';
+import 'package:expense_tracker/core/di/service_configurations/accounts_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/categories_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/liabilities_dependencies.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_dialog.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_header.dart';
@@ -25,6 +25,8 @@ class MockCategoryManagementBloc
     extends MockBloc<CategoryManagementEvent, CategoryManagementState>
     implements CategoryManagementBloc {}
 
+class MockGetCategoriesUseCase extends Mock implements GetCategoriesUseCase {}
+
 class FakeTransactionListEvent extends Fake implements TransactionListEvent {}
 
 class FakeTransactionListState extends Fake implements TransactionListState {}
@@ -35,34 +37,31 @@ class FakeCategoryManagementEvent extends Fake
 class FakeCategoryManagementState extends Fake
     implements CategoryManagementState {}
 
-class MockGetCategoriesUseCase extends Mock implements GetCategoriesUseCase {}
-
 void main() {
-  late TransactionListBloc mockTransactionListBloc;
-  late CategoryManagementBloc mockCategoryManagementBloc;
-  late GetCategoriesUseCase mockGetCategoriesUseCase;
+  late MockTransactionListBloc mockTransactionListBloc;
+  late MockCategoryManagementBloc mockCategoryManagementBloc;
+  late MockGetCategoriesUseCase mockGetCategoriesUseCase;
 
   setUpAll(() {
     registerFallbackValue(FakeTransactionListEvent());
     registerFallbackValue(FakeTransactionListState());
     registerFallbackValue(FakeCategoryManagementState());
     registerFallbackValue(FakeCategoryManagementEvent());
-    registerFallbackValue(NoParams());
+
+    CategoriesDependencies.register();
+    AccountDependencies.register();
+    LiabilitiesDependencies.register();
   });
 
   setUp(() {
     mockTransactionListBloc = MockTransactionListBloc();
     mockCategoryManagementBloc = MockCategoryManagementBloc();
     mockGetCategoriesUseCase = MockGetCategoriesUseCase();
-    sl.registerSingleton<GetCategoriesUseCase>(mockGetCategoriesUseCase);
-    when(() => mockGetCategoriesUseCase.call(any()))
-        .thenAnswer((_) async => const Right(<Category>[]));
+    sl.registerLazySingleton<GetCategoriesUseCase>(() => mockGetCategoriesUseCase);
   });
 
   tearDown(() {
-    if (sl.isRegistered<GetCategoriesUseCase>()) {
-      sl.unregister<GetCategoriesUseCase>();
-    }
+    sl.unregister<GetCategoriesUseCase>();
   });
 
   Widget buildTestWidget() {
@@ -124,7 +123,7 @@ void main() {
 
     testWidgets('shows SortSheet when sort button is tapped', (tester) async {
       final binding = tester.binding;
-      binding.window.physicalSizeTestValue = const Size(800, 1000);
+      binding.window.physicalSizeTestValue = const Size(800, 1200);
       binding.window.devicePixelRatioTestValue = 1.0;
       addTearDown(() {
         binding.window.clearPhysicalSizeTestValue();

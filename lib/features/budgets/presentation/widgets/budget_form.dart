@@ -410,7 +410,7 @@ class _BudgetFormState extends State<BudgetForm> {
                 ? Icons.add_circle_outline
                 : Icons.save_outlined),
             label: Text(
-                widget.initialBudget == null ? 'Add Budget' : 'Update Budget'),
+                widget.initialBudget == null ? 'Create' : 'Update'),
             style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 textStyle: theme.textTheme.titleMedium),

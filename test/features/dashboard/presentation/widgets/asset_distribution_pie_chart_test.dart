@@ -12,8 +12,11 @@ void main() {
         (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: const AssetDistributionPieChart(
-            accountBalances: {'Bank': 0, 'Cash': -10}),
+        widget: const SizedBox(
+          height: 500,
+          child: AssetDistributionPieChart(
+              accountBalances: {'Bank': 0, 'Cash': -10}),
+        ),
       );
       expect(find.text('No positive asset balances to chart.'), findsOneWidget);
     });
@@ -23,7 +26,11 @@ void main() {
       final data = {'Bank': 1000.0, 'Stocks': 500.0};
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: AssetDistributionPieChart(accountBalances: data),
+        widget: const SingleChildScrollView(
+          child: SizedBox(
+              height: 500,
+              child: AssetDistributionPieChart(accountBalances: data)),
+        ),
       );
       expect(find.byType(PieChart), findsOneWidget);
       expect(find.text('Bank'), findsOneWidget);
@@ -34,8 +41,11 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         settingsState: const SettingsState(uiMode: UIMode.quantum),
-        widget:
-            const AssetDistributionPieChart(accountBalances: {'Bank': 1000}),
+        widget: const SizedBox(
+          height: 500,
+          child:
+              AssetDistributionPieChart(accountBalances: {'Bank': 1000}),
+        ),
       );
       expect(find.byType(PieChart), findsNothing);
       expect(find.byType(Card), findsNothing);
@@ -46,7 +56,11 @@ void main() {
       final data = {'Bank': 1000.0, 'Stocks': 500.0};
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: AssetDistributionPieChart(accountBalances: data),
+        widget: const SingleChildScrollView(
+          child: SizedBox(
+              height: 500,
+              child: AssetDistributionPieChart(accountBalances: data)),
+        ),
       );
 
       // Before tap, check the radius of the first section
@@ -61,6 +75,7 @@ void main() {
       );
       final response = PieTouchResponse(
         PieTouchedSection(pieChart.data.sections[0], 0, 0, 0),
+        event,
       );
 
       // Invoke the callback to trigger internal state change
@@ -72,7 +87,7 @@ void main() {
       var touchedRadius = pieChart.data.sections[0].radius;
       expect(touchedRadius, 70.0);
     });
-  }, skip: true);
+  });
 
   group('AssetDistributionPieChartState (Unit Tests)', () {
     test('generateColorMap assigns colors correctly and sequentially', () {
@@ -87,5 +102,5 @@ void main() {
           colorMap['Stocks'], AssetDistributionPieChartState.colorPalette[2]);
       expect(colorMap['Bank'] != colorMap['Cash'], isTrue);
     });
-  }, skip: true);
+  });
 }

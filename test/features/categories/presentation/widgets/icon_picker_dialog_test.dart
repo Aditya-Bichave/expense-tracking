@@ -67,11 +67,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(IconPickerDialogContent), findsOneWidget);
-      await tester.dragUntilVisible(
-        find.byIcon(Icons.credit_card_outlined),
-        find.byType(GridView),
-        const Offset(0, -200),
-      );
+
+      // Filter the icons
+      await tester.enterText(find.byType(TextField), 'credit');
+      await tester.pump();
+
       await tester.tap(find.byIcon(Icons.credit_card_outlined));
       await tester.tap(find.byKey(const ValueKey('button_select')));
       await tester.pumpAndSettle();

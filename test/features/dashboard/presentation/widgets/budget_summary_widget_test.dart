@@ -76,7 +76,7 @@ void main() {
         widget: const BudgetSummaryWidget(budgets: [], recentSpendingData: []),
       );
 
-      expect(find.text('No active budgets found.'), findsOneWidget);
+      expect(find.text('No budgets here.'), findsOneWidget);
       final createButton =
           find.byKey(const ValueKey('button_budgetSummary_create'));
       expect(createButton, findsOneWidget);
@@ -129,8 +129,10 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         router: mockGoRouter,
-        widget:
-            BudgetSummaryWidget(budgets: mockBudgets, recentSpendingData: []),
+        widget: SingleChildScrollView(
+          child: BudgetSummaryWidget(
+              budgets: mockBudgets, recentSpendingData: []),
+        ),
       );
 
       final viewAllButton =
@@ -154,5 +156,5 @@ void main() {
       expect(find.byKey(const ValueKey('button_budgetSummary_viewAll')),
           findsNothing);
     });
-  }, skip: true);
+  });
 }

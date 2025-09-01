@@ -88,7 +88,7 @@ void main() {
         accountListBloc: mockBloc,
       );
 
-      expect(find.text('No accounts yet'), findsOneWidget);
+      expect(find.text('No accounts yet.'), findsOneWidget);
       await tester.tap(
         find.byKey(const ValueKey('button_accountList_addFirst')),
       );
@@ -147,5 +147,5 @@ void main() {
         '/add',
       );
     });
-  }, skip: true);
+  });
 }

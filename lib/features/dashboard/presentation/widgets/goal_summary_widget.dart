@@ -58,7 +58,7 @@ class GoalSummaryWidget extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        "No savings goals set yet.",
+                        "No goals here.",
                         style: theme.textTheme.bodyMedium,
                       ),
                       TextButton(
