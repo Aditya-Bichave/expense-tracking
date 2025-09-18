@@ -279,7 +279,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         Color changeColor = theme.disabledColor;
         String changeText = "";
 
-        if (showComparison && changePercent != null) {
+        if (showComparison) {
           if (changePercent.isInfinite) {
             changeText = changePercent.isNegative ? '-∞' : '+∞';
             // Spending increase is bad (red)

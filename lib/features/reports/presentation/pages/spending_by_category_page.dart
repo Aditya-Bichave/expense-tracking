@@ -243,7 +243,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
           Color changeColor = theme.disabledColor;
           String changeText = "N/A";
 
-          if (showComparison && changePercent != null) {
+          if (showComparison) {
             if (changePercent.isInfinite) {
               changeText = changePercent.isNegative ? '-∞' : '+∞';
               // Spending increase is bad (red), decrease is good (green)

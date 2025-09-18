@@ -246,6 +246,7 @@ class TimeSeriesLineChart extends StatelessWidget {
         if (months <= divisions) return null;
         return durationMs / divisions;
     }
+    return null;
   }
 
   String _formatTooltipDate(DateTime date, TimeSeriesGranularity granularity) {

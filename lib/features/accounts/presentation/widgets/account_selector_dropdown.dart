@@ -75,14 +75,14 @@ class AccountSelectorDropdown extends StatelessWidget {
                   )
                 : null,
           ),
-          onChanged: (isLoading || errorMessage != null)
+          onChanged: (isLoading)
               ? null
               : (String? newValue) {
                   log.info(
                       "[AccountSelector] Dropdown changed. New value: $newValue");
                   onChanged(newValue);
                 },
-          items: (isLoading || errorMessage != null)
+          items: (isLoading)
               ? []
               : accounts.map((AssetAccount account) {
                   return DropdownMenuItem<String>(
@@ -106,7 +106,7 @@ class AccountSelectorDropdown extends StatelessWidget {
                 }
                 return null;
               },
-          hint: accounts.isEmpty && !isLoading && errorMessage == null
+          hint: accounts.isEmpty && !isLoading
               ? const Text('No accounts available')
               : Text(hintText),
         );

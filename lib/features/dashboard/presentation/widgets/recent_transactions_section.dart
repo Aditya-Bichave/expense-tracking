@@ -45,7 +45,7 @@ class RecentTransactionsSection extends StatelessWidget {
               child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 24.0),
                   child: CircularProgressIndicator(strokeWidth: 2)))
-        else if (errorMsg != null && recentItems.isEmpty)
+        else if (recentItems.isEmpty)
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
