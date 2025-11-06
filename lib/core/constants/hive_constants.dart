@@ -2,6 +2,8 @@
 abstract class HiveConstants {
   static const String expenseBoxName = 'expenses';
   static const String accountBoxName = 'asset_accounts';
+  static const String liabilityBoxName = 'liability_accounts';
+  static const String transactionBoxName = 'transactions';
   static const String incomeBoxName = 'incomes';
   static const String categoryBoxName = 'categories_v1';
   static const String userHistoryRuleBoxName = 'user_history_rules_v1';

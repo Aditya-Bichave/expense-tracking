@@ -8,16 +8,19 @@ import 'package:expense_tracker/features/categories/domain/entities/categorizati
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 // Use Cases
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/update_income.dart';
+import 'package:expense_tracker/features/transactions/domain/usecases/add_transfer.dart';
+import 'package:expense_tracker/features/transactions/domain/usecases/update_transfer.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/categorize_transaction.dart';
 // Repositories
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+import 'package:expense_tracker/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 // Helpers
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -35,6 +38,8 @@ class AddEditTransactionBloc
   final UpdateExpenseUseCase _updateExpenseUseCase;
   final AddIncomeUseCase _addIncomeUseCase;
   final UpdateIncomeUseCase _updateIncomeUseCase;
+  final AddTransferUseCase _addTransferUseCase;
+  final UpdateTransferUseCase _updateTransferUseCase;
   final CategorizeTransactionUseCase _categorizeTransactionUseCase;
   final CategoryRepository _categoryRepository;
   final Uuid _uuid;
@@ -44,14 +49,19 @@ class AddEditTransactionBloc
     required UpdateExpenseUseCase updateExpenseUseCase,
     required AddIncomeUseCase addIncomeUseCase,
     required UpdateIncomeUseCase updateIncomeUseCase,
+    required AddTransferUseCase addTransferUseCase,
+    required UpdateTransferUseCase updateTransferUseCase,
     required CategorizeTransactionUseCase categorizeTransactionUseCase,
     required ExpenseRepository expenseRepository,
     required IncomeRepository incomeRepository,
+    required TransactionRepository transactionRepository,
     required CategoryRepository categoryRepository,
   })  : _addExpenseUseCase = addExpenseUseCase,
         _updateExpenseUseCase = updateExpenseUseCase,
         _addIncomeUseCase = addIncomeUseCase,
         _updateIncomeUseCase = updateIncomeUseCase,
+        _addTransferUseCase = addTransferUseCase,
+        _updateTransferUseCase = updateTransferUseCase,
         _categorizeTransactionUseCase = categorizeTransactionUseCase,
         _categoryRepository = categoryRepository,
         _uuid = const Uuid(),
@@ -129,7 +139,7 @@ class AddEditTransactionBloc
     Emitter<AddEditTransactionState> emit,
   ) async {
     log.info(
-      "[AddEditTransactionBloc] SaveRequested. Category selected: ${event.category.name} (ID: ${event.category.id})",
+      "[AddEditTransactionBloc] SaveRequested. Category selected: ${event.category?.name} (ID: ${event.category?.id})",
     );
 
     // Store form data in temp fields before potentially async operations
@@ -139,7 +149,8 @@ class AddEditTransactionBloc
         tempTitle: event.title,
         tempAmount: event.amount,
         tempDate: event.date,
-        tempAccountId: event.accountId,
+        tempAccountId: event.fromAccountId,
+        tempToAccountId: event.toAccountId,
         tempNotes: () => event.notes,
         clearErrorMessage: true,
         clearSuggestion: true,
@@ -147,14 +158,19 @@ class AddEditTransactionBloc
       ),
     );
 
-    if (event.category.id == Category.uncategorized.id) {
+    if (state.transactionType == TransactionType.transfer) {
+      await _performSave(
+        null,
+        emit,
+      );
+    } else if (event.category?.id == Category.uncategorized.id) {
       log.info(
         "[AddEditTransactionBloc] No specific category selected. Attempting auto-categorization...",
       );
       await _handleAutoCategorization(emit);
     } else {
       log.info(
-        "[AddEditTransactionBloc] User selected specific category '${event.category.name}'. Saving.",
+        "[AddEditTransactionBloc] User selected specific category '${event.category?.name}'. Saving.",
       );
       // Directly proceed to save with the user-selected category
       await _performSave(
@@ -295,13 +311,13 @@ class AddEditTransactionBloc
 
   // --- Central Save Logic ---
   Future<void> _performSave(
-    Category categoryToSave,
+    Category? categoryToSave,
     Emitter<AddEditTransactionState> emit, [
     CategorizationStatus status = CategorizationStatus.categorized,
     double? confidence = 1.0,
   ]) async {
     log.info(
-      "[AddEditTransactionBloc] _performSave called. Category To Use: ${categoryToSave.name}, Status: $status",
+      "[AddEditTransactionBloc] _performSave called. Category To Use: ${categoryToSave?.name}, Status: $status",
     );
     emit(state.copyWith(status: AddEditStatus.saving));
 
@@ -313,11 +329,12 @@ class AddEditTransactionBloc
     final title = state.tempTitle ?? '';
     final amount = state.tempAmount ?? 0.0;
     final date = state.tempDate ?? DateTime.now();
-    final accountId = state.tempAccountId ?? '';
+    final fromAccountId = state.tempAccountId;
+    final toAccountId = state.tempToAccountId;
     final notes = state.tempNotes;
 
     // Basic validation before proceeding
-    if (title.isEmpty || amount <= 0 || accountId.isEmpty) {
+    if ((transactionType != TransactionType.transfer && title.isEmpty) || amount <= 0 || (transactionType != TransactionType.transfer && fromAccountId == null) || (transactionType == TransactionType.transfer && (fromAccountId == null || toAccountId == null))) {
       log.warning(
         "[AddEditTransactionBloc] Invalid data during _performSave. Aborting.",
       );
@@ -332,7 +349,7 @@ class AddEditTransactionBloc
 
     // Determine final category object and status
     Category? finalCategoryForEntity =
-        categoryToSave.id == Category.uncategorized.id ? null : categoryToSave;
+        categoryToSave?.id == Category.uncategorized.id ? null : categoryToSave;
     if (finalCategoryForEntity == null) {
       status = CategorizationStatus.uncategorized;
       confidence = null;
@@ -349,7 +366,7 @@ class AddEditTransactionBloc
         amount: amount,
         date: date,
         category: finalCategoryForEntity,
-        accountId: accountId,
+        accountId: fromAccountId!,
         status: status,
         confidenceScore: confidence,
       );
@@ -359,7 +376,7 @@ class AddEditTransactionBloc
       saveResult = isEditing
           ? await _updateExpenseUseCase(UpdateExpenseParams(entityToSave))
           : await _addExpenseUseCase(AddExpenseParams(entityToSave));
-    } else {
+    } else if (transactionType == TransactionType.income) {
       // Income
       entityToSave = Income(
         id: id,
@@ -367,7 +384,7 @@ class AddEditTransactionBloc
         amount: amount,
         date: date,
         category: finalCategoryForEntity,
-        accountId: accountId,
+        accountId: fromAccountId!,
         notes: notes,
         status: status,
         confidenceScore: confidence,
@@ -378,6 +395,22 @@ class AddEditTransactionBloc
       saveResult = isEditing
           ? await _updateIncomeUseCase(UpdateIncomeParams(entityToSave))
           : await _addIncomeUseCase(AddIncomeParams(entityToSave));
+    } else {
+      // Transfer
+      entityToSave = Transaction(
+        id: id,
+        type: TransactionType.transfer,
+        amount: amount,
+        date: date,
+        fromAccountId: fromAccountId,
+        toAccountId: toAccountId,
+      );
+      log.info(
+        "[AddEditTransactionBloc] Saving Transfer (ID: $id)",
+      );
+      saveResult = isEditing
+          ? await _updateTransferUseCase(UpdateTransferParams(entityToSave))
+          : await _addTransferUseCase(AddTransferParams(entityToSave));
     }
 
     // Handle Save Result

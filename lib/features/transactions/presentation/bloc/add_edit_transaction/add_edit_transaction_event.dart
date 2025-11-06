@@ -24,24 +24,26 @@ class TransactionTypeChanged extends AddEditTransactionEvent {
 
 // User saves the form
 class SaveTransactionRequested extends AddEditTransactionEvent {
-  final String title;
+  final String? title;
   final double amount;
   final DateTime date;
-  final Category category; // Use unified Category
-  final String accountId;
+  final Category? category; // Use unified Category
+  final String? fromAccountId;
+  final String? toAccountId;
   final String? notes; // Nullable for income
 
   const SaveTransactionRequested({
-    required this.title,
+    this.title,
     required this.amount,
     required this.date,
-    required this.category,
-    required this.accountId,
+    this.category,
+    this.fromAccountId,
+    this.toAccountId,
     this.notes,
   });
 
   @override
-  List<Object?> get props => [title, amount, date, category, accountId, notes];
+  List<Object?> get props => [title, amount, date, category, fromAccountId, toAccountId, notes];
 }
 
 // User confirmed a category suggestion

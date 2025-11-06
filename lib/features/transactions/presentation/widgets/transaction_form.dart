@@ -14,15 +14,16 @@ import 'package:expense_tracker/core/utils/currency_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-typedef TransactionSubmitCallback = void Function(
-  TransactionType type,
-  String title,
-  double amount,
-  DateTime date,
-  Category category,
-  String accountId,
-  String? notes,
-);
+typedef TransactionSubmitCallback = void Function({
+  required TransactionType type,
+  required String? title,
+  required double amount,
+  required DateTime date,
+  required Category? category,
+  required String? fromAccountId,
+  required String? toAccountId,
+  required String? notes,
+});
 
 class TransactionForm extends StatefulWidget {
   final TransactionEntity? initialTransaction;
@@ -60,6 +61,7 @@ class TransactionFormState extends State<TransactionForm> {
   late DateTime _selectedDate;
   Category? _selectedCategory;
   String? _selectedAccountId;
+  String? _selectedToAccountId;
   late TransactionType _transactionType;
 
   String get currentTitle => _titleController.text;
@@ -205,35 +207,41 @@ class TransactionFormState extends State<TransactionForm> {
   void _submitForm() {
     log.info("[TransactionForm] Submit button pressed.");
     if (_formKey.currentState!.validate()) {
-      final categoryToSubmit = _selectedCategory ?? Category.uncategorized;
-      if (_selectedAccountId == null) {
-        log.warning(
-          "[TransactionForm] Submit prevented: Account not selected.",
-        );
+      final isTransfer = _transactionType == TransactionType.transfer;
+      final categoryToSubmit = !isTransfer ? (_selectedCategory ?? Category.uncategorized) : null;
+
+      if (!isTransfer && _selectedAccountId == null) {
+        log.warning("[TransactionForm] Submit prevented: Account not selected for expense/income.");
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select an account.'),
-            backgroundColor: Colors.orange,
-          ),
+          const SnackBar(content: Text('Please select an account.'), backgroundColor: Colors.orange),
         );
         return;
       }
-      final title = _titleController.text.trim();
+      if (isTransfer && (_selectedAccountId == null || _selectedToAccountId == null)) {
+        log.warning("[TransactionForm] Submit prevented: From or To account not selected for transfer.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select both From and To accounts.'), backgroundColor: Colors.orange),
+        );
+        return;
+      }
+
+      final title = !isTransfer ? _titleController.text.trim() : 'Transfer';
       final locale = context.read<SettingsBloc>().state.selectedCountryCode;
       final amount = parseCurrency(_amountController.text, locale);
       final notes = _notesController.text.trim();
-      final accountId = _selectedAccountId!;
+
       log.info(
-        "[TransactionForm] Form fields validated. Calling onSubmit callback with Category: ${categoryToSubmit.name}",
+        "[TransactionForm] Form fields validated. Calling onSubmit callback.",
       );
       widget.onSubmit(
-        _transactionType,
-        title,
-        amount,
-        _selectedDate,
-        categoryToSubmit,
-        accountId,
-        notes.isEmpty ? null : notes,
+        type: _transactionType,
+        title: title,
+        amount: amount,
+        date: _selectedDate,
+        category: categoryToSubmit,
+        fromAccountId: _selectedAccountId,
+        toAccountId: _selectedToAccountId,
+        notes: notes.isEmpty ? null : notes,
       );
     } else {
       log.warning("[TransactionForm] Form validation failed.");
@@ -257,6 +265,7 @@ class TransactionFormState extends State<TransactionForm> {
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
     final isExpense = _transactionType == TransactionType.expense;
+    final isTransfer = _transactionType == TransactionType.transfer;
 
     final List<Color> expenseColors = [
       theme.colorScheme.errorContainer.withOpacity(0.7),
@@ -281,15 +290,15 @@ class TransactionFormState extends State<TransactionForm> {
           // Transaction Type Toggle
           CommonFormFields.buildTypeToggle(
             context: context,
-            initialIndex: isExpense ? 0 : 1,
-            labels: const ['Expense', 'Income'],
-            activeBgColors: [expenseColors, incomeColors],
+            initialIndex: _transactionType == TransactionType.expense ? 0 : (_transactionType == TransactionType.income ? 1 : 2),
+            labels: const ['Expense', 'Income', 'Transfer'],
+            activeBgColors: [expenseColors, incomeColors, [Colors.blue, Colors.blueAccent]],
             onToggle: (index) {
               if (index != null) {
                 log.info("[TransactionForm] Toggle switched to index: $index");
                 final newType = index == 0
                     ? TransactionType.expense
-                    : TransactionType.income;
+                    : (index == 1 ? TransactionType.income : TransactionType.transfer);
                 if (_transactionType != newType) {
                   setState(() {
                     _transactionType = newType;
@@ -305,15 +314,17 @@ class TransactionFormState extends State<TransactionForm> {
           const SizedBox(height: 16),
 
           // Title / Source
-          CommonFormFields.buildNameField(
-            context: context,
-            controller: _titleController,
-            labelText: isExpense ? 'Title / Description' : 'Title / Source',
-            fallbackIcon:
-                isExpense ? Icons.description_outlined : Icons.source_outlined,
-            textCapitalization: TextCapitalization.sentences,
-          ),
-          const SizedBox(height: 16),
+          if (!isTransfer)
+            CommonFormFields.buildNameField(
+              context: context,
+              controller: _titleController,
+              labelText: isExpense ? 'Title / Description' : 'Title / Source',
+              fallbackIcon:
+                  isExpense ? Icons.description_outlined : Icons.source_outlined,
+              textCapitalization: TextCapitalization.sentences,
+            ),
+          if (!isTransfer)
+            const SizedBox(height: 16),
 
           // Amount
           CommonFormFields.buildAmountField(
@@ -325,27 +336,57 @@ class TransactionFormState extends State<TransactionForm> {
           const SizedBox(height: 16),
 
           // Category Picker
-          CommonFormFields.buildCategorySelector(
-            context: context,
-            selectedCategory: _selectedCategory,
-            onTap: () async {
-              await _selectCategory(context);
-            },
-            transactionType: _transactionType,
-          ),
-          const SizedBox(height: 16),
+          if (!isTransfer)
+            CommonFormFields.buildCategorySelector(
+              context: context,
+              selectedCategory: _selectedCategory,
+              onTap: () async {
+                await _selectCategory(context);
+              },
+              transactionType: _transactionType,
+            ),
+          if (!isTransfer)
+            const SizedBox(height: 16),
 
           // Account Selector
-          CommonFormFields.buildAccountSelector(
-            context: context,
-            selectedAccountId: _selectedAccountId,
-            onChanged: (String? newValue) {
-              setState(() => _selectedAccountId = newValue);
-              log.info(
-                "[TransactionForm] Account selected: $_selectedAccountId",
-              );
-            },
-          ),
+          if (!isTransfer)
+            CommonFormFields.buildAccountSelector(
+              context: context,
+              selectedAccountId: _selectedAccountId,
+              onChanged: (String? newValue) {
+                setState(() => _selectedAccountId = newValue);
+                log.info(
+                  "[TransactionForm] Account selected: $_selectedAccountId",
+                );
+              },
+            ),
+          if (isTransfer)
+            CommonFormFields.buildAccountSelector(
+              context: context,
+              selectedAccountId: _selectedAccountId,
+              onChanged: (String? newValue) {
+                setState(() => _selectedAccountId = newValue);
+                log.info(
+                  "[TransactionForm] From Account selected: $_selectedAccountId",
+                );
+              },
+              label: 'From',
+              isAssetOnly: true,
+            ),
+          if (isTransfer)
+            const SizedBox(height: 16),
+          if (isTransfer)
+            CommonFormFields.buildAccountSelector(
+              context: context,
+              selectedAccountId: _selectedToAccountId,
+              onChanged: (String? newValue) {
+                setState(() => _selectedToAccountId = newValue);
+                log.info(
+                  "[TransactionForm] To Account selected: $_selectedToAccountId",
+                );
+              },
+              label: 'To',
+            ),
           const SizedBox(height: 16),
 
           // Date Picker
@@ -360,10 +401,11 @@ class TransactionFormState extends State<TransactionForm> {
           const SizedBox(height: 16),
 
           // Notes (Optional)
-          CommonFormFields.buildNotesField(
-            context: context,
-            controller: _notesController,
-          ),
+          if (!isTransfer)
+            CommonFormFields.buildNotesField(
+              context: context,
+              controller: _notesController,
+            ),
           const SizedBox(height: 32),
 
           // Submit Button

@@ -31,6 +31,8 @@ import 'package:expense_tracker/core/services/clock.dart';
 // Import models only needed for Box types here
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
+import 'package/expense_tracker/features/accounts/data/models/liability_model.dart';
+import 'package:expense_tracker/features/transactions/data/models/transaction_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
@@ -46,7 +48,8 @@ import 'package:expense_tracker/features/income/data/datasources/income_local_da
 import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source.dart';
-import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
+import 'package:expense_tracker/features/transactions/data/datasources/transaction_local_data_source.dart';
 // --- END MODIFIED ---
 
 final sl = GetIt.instance;
@@ -55,6 +58,8 @@ Future<void> initLocator({
   required SharedPreferences prefs,
   required Box<ExpenseModel> expenseBox,
   required Box<AssetAccountModel> accountBox,
+  required Box<LiabilityModel> liabilityBox,
+  required Box<TransactionModel> transactionBox,
   required Box<IncomeModel> incomeBox,
   required Box<CategoryModel> categoryBox,
   required Box<UserHistoryRuleModel> userHistoryBox,
@@ -100,6 +105,12 @@ Future<void> initLocator({
   if (!sl.isRegistered<Box<AssetAccountModel>>()) {
     sl.registerLazySingleton<Box<AssetAccountModel>>(() => accountBox);
   }
+  if (!sl.isRegistered<Box<LiabilityModel>>()) {
+    sl.registerLazySingleton<Box<LiabilityModel>>(() => liabilityBox);
+  }
+  if (!sl.isRegistered<Box<TransactionModel>>()) {
+    sl.registerLazySingleton<Box<TransactionModel>>(() => transactionBox);
+  }
   if (!sl.isRegistered<Box<IncomeModel>>()) {
     sl.registerLazySingleton<Box<IncomeModel>>(() => incomeBox);
   }
@@ -139,6 +150,12 @@ Future<void> initLocator({
   );
   sl.registerLazySingleton<HiveAssetAccountLocalDataSource>(
     () => HiveAssetAccountLocalDataSource(sl()),
+  );
+  sl.registerLazySingleton<HiveLiabilityLocalDataSource>(
+    () => HiveLiabilityLocalDataSource(sl()),
+  );
+  sl.registerLazySingleton<HiveTransactionLocalDataSource>(
+    () => HiveTransactionLocalDataSource(sl()),
   );
   sl.registerLazySingleton<HiveBudgetLocalDataSource>(
     () => HiveBudgetLocalDataSource(sl()),

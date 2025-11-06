@@ -18,7 +18,8 @@ import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
+import 'package:expense_tracker/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart'; // For Color
 import 'package:expense_tracker/core/di/service_locator.dart'; // For sl
@@ -31,6 +32,7 @@ class ReportRepositoryImpl implements ReportRepository {
   final BudgetRepository budgetRepository;
   final GoalRepository goalRepository;
   final GoalContributionRepository goalContributionRepository;
+  final TransactionRepository transactionRepository;
 
   ReportRepositoryImpl({
     required this.expenseRepository,
@@ -40,6 +42,7 @@ class ReportRepositoryImpl implements ReportRepository {
     required this.budgetRepository,
     required this.goalRepository,
     required this.goalContributionRepository,
+    required this.transactionRepository,
   });
 
   // --- Helper Functions (Refined/Unchanged) ---
@@ -63,7 +66,7 @@ class ReportRepositoryImpl implements ReportRepository {
     TransactionType? transactionType, // Can be null for both types
   }) async {
     log.fine(
-      "[ReportRepo:_fetchTransactions] Fetching: Type=${transactionType?.name ?? 'Both'}, Start=$startDate, End=$endDate, Accs=${accountIds?.length}, Cats=${categoryIds?.length}",
+      "[ReportRepo:_fetchTransactions] Fetching: Type=${transactionType?.toString().split('.').last ?? 'Both'}, Start=$startDate, End=$endDate, Accs=${accountIds?.length}, Cats=${categoryIds?.length}",
     );
     try {
       List<Future<Either<Failure, List<dynamic>>>> futures = [];
@@ -153,7 +156,7 @@ class ReportRepositoryImpl implements ReportRepository {
     bool compareToPrevious = false,
   }) async {
     log.info(
-      "[ReportRepo] getSpendingByCategory: Start=$startDate, End=$endDate, Type=${transactionType?.name}, Compare=$compareToPrevious",
+      "[ReportRepo] getSpendingByCategory: Start=$startDate, End=$endDate, Type=${transactionType.toString().split('.').last}, Compare=$compareToPrevious",
     );
     try {
       // Fetch Current Period Data
@@ -359,7 +362,7 @@ class ReportRepositoryImpl implements ReportRepository {
     bool compareToPrevious = false,
   }) async {
     log.info(
-      "[ReportRepo] getSpendingOverTime: Granularity=$granularity, Type=${transactionType?.name}, Compare=$compareToPrevious",
+      "[ReportRepo] getSpendingOverTime: Granularity=$granularity, Type=${transactionType.toString().split('.').last}, Compare=$compareToPrevious",
     );
     try {
       // Fetch Current Period Data

@@ -1,4 +1,5 @@
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/features/accounts/domain/entities/liability.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +11,8 @@ class AccountSelectorDropdown extends StatelessWidget {
   final String? Function(String?)? validator;
   final String labelText;
   final String hintText;
+  final bool isAssetOnly;
+  final bool isLiabilityOnly;
 
   const AccountSelectorDropdown({
     super.key,
@@ -18,6 +21,8 @@ class AccountSelectorDropdown extends StatelessWidget {
     this.validator,
     this.labelText = 'Account',
     this.hintText = 'Select Account',
+    this.isAssetOnly = false,
+    this.isLiabilityOnly = false,
   });
 
   @override
@@ -27,7 +32,7 @@ class AccountSelectorDropdown extends StatelessWidget {
       builder: (context, state) {
         log.info(
             "[AccountSelector] BlocBuilder running for state: ${state.runtimeType}");
-        List<AssetAccount> accounts = [];
+        List<dynamic> accounts = [];
         bool isLoading = false;
         String? errorMessage;
 
@@ -35,10 +40,16 @@ class AccountSelectorDropdown extends StatelessWidget {
           isLoading = true;
           final previousState = context.read<AccountListBloc>().state;
           if (previousState is AccountListLoaded) {
-            accounts = previousState.accounts;
+            accounts = [...previousState.accounts, ...previousState.liabilities];
           }
         } else if (state is AccountListLoaded) {
-          accounts = state.accounts;
+          if (isAssetOnly) {
+            accounts = state.accounts;
+          } else if (isLiabilityOnly) {
+            accounts = state.liabilities;
+          } else {
+            accounts = [...state.accounts, ...state.liabilities];
+          }
         } else if (state is AccountListError) {
           log.severe(
               "[AccountSelector] Error state detected: ${state.message}");
@@ -84,13 +95,17 @@ class AccountSelectorDropdown extends StatelessWidget {
                 },
           items: (isLoading || errorMessage != null)
               ? []
-              : accounts.map((AssetAccount account) {
+              : accounts.map((account) {
                   return DropdownMenuItem<String>(
                     value: account.id,
                     child: Row(
                       children: [
-                        Icon(account.iconData,
-                            size: 20, color: theme.colorScheme.secondary),
+                        Icon(
+                            account is AssetAccount
+                                ? account.iconData
+                                : Icons.credit_card,
+                            size: 20,
+                            color: theme.colorScheme.secondary),
                         const SizedBox(width: 8),
                         Expanded(
                             child: Text(account.name,

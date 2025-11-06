@@ -36,9 +36,10 @@ abstract class RouteNames {
   // --- Accounts Sub-Routes (Under '/accounts') ---
   static const String addAccount = 'add_account';
   static const String editAccount = 'edit_account';
+  static const String addLiability = 'add_liability';
+  static const String editLiability = 'edit_liability';
   static const String accountDetail =
       'account_detail'; // Keep for potential future use
-  static const String addLiabilityAccount = 'add_liability_account'; // Keep
 
   // --- Settings Sub-Routes (Keep if needed, but removed from main nav for now) ---
   // static const String settingsProfile = 'settings_profile';

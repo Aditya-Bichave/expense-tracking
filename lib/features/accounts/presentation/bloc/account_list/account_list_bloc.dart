@@ -8,8 +8,10 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/error/failure_extensions.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart'; // For NoParams
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/features/accounts/domain/entities/liability.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/delete_asset_account.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/get_asset_accounts.dart';
+import 'package:expense_tracker/features/accounts/domain/usecases/get_liabilities.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl helper
 import 'package:expense_tracker/core/events/data_change_event.dart'; // Import event
 
@@ -18,14 +20,17 @@ part 'account_list_state.dart';
 
 class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
   final GetAssetAccountsUseCase _getAssetAccountsUseCase;
+  final GetLiabilitiesUseCase _getLiabilitiesUseCase;
   final DeleteAssetAccountUseCase _deleteAssetAccountUseCase;
   late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
   AccountListBloc({
     required GetAssetAccountsUseCase getAssetAccountsUseCase,
+    required GetLiabilitiesUseCase getLiabilitiesUseCase,
     required DeleteAssetAccountUseCase deleteAssetAccountUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
   })  : _getAssetAccountsUseCase = getAssetAccountsUseCase,
+        _getLiabilitiesUseCase = getLiabilitiesUseCase,
         _deleteAssetAccountUseCase = deleteAssetAccountUseCase,
         super(const AccountListInitial()) {
     on<LoadAccounts>(_onLoadAccounts);
@@ -104,23 +109,37 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
     }
 
     try {
-      final result = await _getAssetAccountsUseCase(const NoParams());
+      final assetsResult = await _getAssetAccountsUseCase(const NoParams());
+      final liabilitiesResult = await _getLiabilitiesUseCase(const NoParams());
       log.info(
-        "[AccountListBloc] GetAssetAccountsUseCase returned. isLeft: ${result.isLeft()}",
+        "[AccountListBloc] GetAssetAccountsUseCase returned. isLeft: ${assetsResult.isLeft()}",
+      );
+      log.info(
+        "[AccountListBloc] GetLiabilitiesUseCase returned. isLeft: ${liabilitiesResult.isLeft()}",
       );
 
-      result.fold(
+      assetsResult.fold(
         (failure) {
           log.warning(
             "[AccountListBloc] Load failed: ${failure.message}. Emitting AccountListError.",
           );
           emit(AccountListError(failure.toDisplayMessage()));
         },
-        (accounts) {
-          log.info(
-            "[AccountListBloc] Load successful. Emitting AccountListLoaded with ${accounts.length} accounts.",
+        (assets) {
+          liabilitiesResult.fold(
+            (failure) {
+              log.warning(
+                "[AccountListBloc] Load failed: ${failure.message}. Emitting AccountListError.",
+              );
+              emit(AccountListError(failure.toDisplayMessage()));
+            },
+            (liabilities) {
+              log.info(
+                "[AccountListBloc] Load successful. Emitting AccountListLoaded with ${assets.length} assets and ${liabilities.length} liabilities.",
+              );
+              emit(AccountListLoaded(accounts: assets, liabilities: liabilities));
+            },
           );
-          emit(AccountListLoaded(accounts: accounts));
         },
       );
     } catch (e) {
@@ -152,7 +171,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
       log.info(
         "[AccountListBloc] Optimistic list size: ${optimisticList.length}. Emitting updated AccountListLoaded.",
       );
-      emit(AccountListLoaded(accounts: optimisticList));
+      emit(AccountListLoaded(accounts: optimisticList, liabilities: currentState.liabilities));
 
       try {
         final result = await _deleteAssetAccountUseCase(

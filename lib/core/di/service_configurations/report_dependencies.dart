@@ -20,6 +20,7 @@ import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helpe
 // --- ADDED Required UseCases for Filter Bloc ---
 import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/get_asset_accounts.dart';
+import 'package:expense_tracker/features/accounts/domain/usecases/get_liabilities.dart';
 import 'package:expense_tracker/features/budgets/domain/usecases/get_budgets.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart';
 
@@ -34,6 +35,7 @@ class ReportDependencies {
           budgetRepository: sl(),
           goalRepository: sl(),
           goalContributionRepository: sl(),
+          transactionRepository: sl(),
         ));
 
     // --- Use Cases ---
@@ -52,6 +54,7 @@ class ReportDependencies {
     sl.registerFactory<ReportFilterBloc>(() => ReportFilterBloc(
           categoryRepository: sl<GetCategoriesUseCase>(),
           accountRepository: sl<GetAssetAccountsUseCase>(),
+          liabilityRepository: sl<GetLiabilitiesUseCase>(),
           budgetRepository: sl<GetBudgetsUseCase>(),
           goalRepository: sl<GetGoalsUseCase>(),
         ));

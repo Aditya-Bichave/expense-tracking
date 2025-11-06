@@ -1,6 +1,7 @@
 // lib/features/dashboard/domain/entities/financial_overview.dart
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/features/accounts/domain/entities/liability.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart'; // For TimeSeriesDataPoint
@@ -9,8 +10,11 @@ class FinancialOverview extends Equatable {
   final double totalIncome;
   final double totalExpenses;
   final double netFlow;
-  final double overallBalance;
+  final double totalAssets;
+  final double totalLiabilities;
+  final double netWorth;
   final List<AssetAccount> accounts;
+  final List<Liability> liabilities;
   final Map<String, double> accountBalances;
   final List<BudgetWithStatus> activeBudgetsSummary;
   final List<Goal> activeGoalsSummary;
@@ -22,8 +26,11 @@ class FinancialOverview extends Equatable {
     required this.totalIncome,
     required this.totalExpenses,
     required this.netFlow,
-    required this.overallBalance,
+    required this.totalAssets,
+    required this.totalLiabilities,
+    required this.netWorth,
     required this.accounts,
+    required this.liabilities,
     required this.accountBalances,
     required this.activeBudgetsSummary,
     required this.activeGoalsSummary,
@@ -36,8 +43,11 @@ class FinancialOverview extends Equatable {
         totalIncome,
         totalExpenses,
         netFlow,
-        overallBalance,
+        totalAssets,
+        totalLiabilities,
+        netWorth,
         accounts,
+        liabilities,
         accountBalances,
         activeBudgetsSummary,
         activeGoalsSummary,

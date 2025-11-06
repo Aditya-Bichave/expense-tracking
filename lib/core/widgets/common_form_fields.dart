@@ -184,6 +184,8 @@ class CommonFormFields {
     String? Function(String?)? validator,
     String labelText = 'Account',
     String hintText = 'Select Account',
+    bool isAssetOnly = false,
+    bool isLiabilityOnly = false,
   }) {
     return AccountSelectorDropdown(
       selectedAccountId: selectedAccountId,
@@ -193,6 +195,8 @@ class CommonFormFields {
           (value) => value == null ? 'Please select an account' : null,
       labelText: labelText,
       hintText: hintText,
+      isAssetOnly: isAssetOnly,
+      isLiabilityOnly: isLiabilityOnly,
     );
   }
 

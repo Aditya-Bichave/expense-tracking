@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/features/accounts/domain/repositories/liability_repository.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
@@ -20,6 +21,7 @@ import 'package:expense_tracker/core/di/service_locator.dart'; // For sl
 class GetFinancialOverviewUseCase
     implements UseCase<FinancialOverview, GetFinancialOverviewParams> {
   final AssetAccountRepository accountRepository;
+  final LiabilityRepository liabilityRepository;
   final IncomeRepository incomeRepository;
   final ExpenseRepository expenseRepository;
   final BudgetRepository budgetRepository;
@@ -29,6 +31,7 @@ class GetFinancialOverviewUseCase
 
   GetFinancialOverviewUseCase({
     required this.accountRepository,
+    required this.liabilityRepository,
     required this.incomeRepository,
     required this.expenseRepository,
     required this.budgetRepository,
@@ -53,13 +56,26 @@ class GetFinancialOverviewUseCase
         "[GetFinancialOverviewUseCase] Fetched ${accounts.length} accounts.",
       );
 
-      // 2. Calculate overall balance
-      final double overallBalance = accounts.fold(
+      final liabilitiesEither = await liabilityRepository.getLiabilities();
+      if (liabilitiesEither.isLeft())
+        return _handleFailure("liabilities", liabilitiesEither);
+      final liabilities = liabilitiesEither.getOrElse(() => []);
+      log.fine(
+        "[GetFinancialOverviewUseCase] Fetched ${liabilities.length} liabilities.",
+      );
+
+      // 2. Calculate totals
+      final double totalAssets = accounts.fold(
         0.0,
         (sum, acc) => sum + acc.currentBalance,
       );
+      final double totalLiabilities = liabilities.fold(
+        0.0,
+        (sum, acc) => sum + acc.currentBalance,
+      );
+      final double netWorth = totalAssets - totalLiabilities;
       log.fine(
-        "[GetFinancialOverviewUseCase] Calculated overall balance: $overallBalance",
+        "[GetFinancialOverviewUseCase] Calculated totals: Assets=$totalAssets, Liabilities=$totalLiabilities, Net Worth=$netWorth",
       );
 
       // 3. Create account balances map
@@ -171,8 +187,11 @@ class GetFinancialOverviewUseCase
         totalIncome: totalIncome,
         totalExpenses: totalExpenses,
         netFlow: netFlow,
-        overallBalance: overallBalance,
+        totalAssets: totalAssets,
+        totalLiabilities: totalLiabilities,
+        netWorth: netWorth,
         accounts: accounts,
+        liabilities: liabilities,
         accountBalances: accountBalancesMap,
         activeBudgetsSummary: budgetSummary,
         activeGoalsSummary: goalSummary,

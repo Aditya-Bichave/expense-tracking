@@ -87,18 +87,26 @@ IncomeModel _$IncomeModelFromJson(Map<String, dynamic> json) => IncomeModel(
       isRecurring: json['isRecurring'] as bool? ?? false,
     );
 
-Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'title': instance.title,
-      'amount': instance.amount,
-      'date': instance.date.toIso8601String(),
-      if (instance.categoryId case final value?) 'categoryId': value,
-      'accountId': instance.accountId,
-      'notes': instance.notes,
-      'categorizationStatusValue': IncomeModel._categorizationStatusToJson(
-          instance.categorizationStatusValue),
-      if (instance.confidenceScoreValue case final value?)
-        'confidenceScoreValue': value,
-      'isRecurring': instance.isRecurring,
-    };
+Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) {
+  final val = <String, dynamic>{
+    'id': instance.id,
+    'title': instance.title,
+    'amount': instance.amount,
+    'date': instance.date.toIso8601String(),
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('categoryId', instance.categoryId);
+  val['accountId'] = instance.accountId;
+  val['notes'] = instance.notes;
+  val['categorizationStatusValue'] = IncomeModel._categorizationStatusToJson(
+      instance.categorizationStatusValue);
+  writeNotNull('confidenceScoreValue', instance.confidenceScoreValue);
+  val['isRecurring'] = instance.isRecurring;
+  return val;
+}

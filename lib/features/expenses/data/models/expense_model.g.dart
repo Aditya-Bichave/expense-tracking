@@ -83,17 +83,25 @@ ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
       isRecurring: json['isRecurring'] as bool? ?? false,
     );
 
-Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'title': instance.title,
-      'amount': instance.amount,
-      'date': instance.date.toIso8601String(),
-      if (instance.categoryId case final value?) 'categoryId': value,
-      'categorizationStatusValue': ExpenseModel._categorizationStatusToJson(
-          instance.categorizationStatusValue),
-      'accountId': instance.accountId,
-      if (instance.confidenceScoreValue case final value?)
-        'confidenceScoreValue': value,
-      'isRecurring': instance.isRecurring,
-    };
+Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) {
+  final val = <String, dynamic>{
+    'id': instance.id,
+    'title': instance.title,
+    'amount': instance.amount,
+    'date': instance.date.toIso8601String(),
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('categoryId', instance.categoryId);
+  val['categorizationStatusValue'] = ExpenseModel._categorizationStatusToJson(
+      instance.categorizationStatusValue);
+  val['accountId'] = instance.accountId;
+  writeNotNull('confidenceScoreValue', instance.confidenceScoreValue);
+  val['isRecurring'] = instance.isRecurring;
+  return val;
+}

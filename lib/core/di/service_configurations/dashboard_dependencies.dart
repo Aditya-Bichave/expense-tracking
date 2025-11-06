@@ -9,6 +9,7 @@ class DashboardDependencies {
     // Use Cases (Depends on Account, Income, Expense Repos)
     sl.registerLazySingleton(() => GetFinancialOverviewUseCase(
           accountRepository: sl(),
+          liabilityRepository: sl(),
           incomeRepository: sl(),
           expenseRepository: sl(),
           budgetRepository: sl(),

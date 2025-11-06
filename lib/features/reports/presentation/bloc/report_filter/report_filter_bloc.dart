@@ -5,14 +5,16 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
+import 'package:expense_tracker/features/accounts/domain/entities/liability.dart';
 import 'package:expense_tracker/features/accounts/domain/usecases/get_asset_accounts.dart';
+import 'package:expense_tracker/features/accounts/domain/usecases/get_liabilities.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart'; // Added
 import 'package:expense_tracker/features/budgets/domain/usecases/get_budgets.dart'; // Added
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/get_categories.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart'; // Added
 import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart'; // Added
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Added
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart'; // Added
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/foundation.dart' hide Category; // Added for ValueGetter
 
@@ -22,6 +24,7 @@ part 'report_filter_state.dart';
 class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
   final GetCategoriesUseCase _getCategoriesUseCase;
   final GetAssetAccountsUseCase _getAssetAccountsUseCase;
+  final GetLiabilitiesUseCase _getLiabilitiesUseCase;
   // --- ADDED Dependencies ---
   final GetBudgetsUseCase _getBudgetsUseCase;
   final GetGoalsUseCase _getGoalsUseCase;
@@ -32,10 +35,12 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
         categoryRepository, // Name kept for compatibility
     required GetAssetAccountsUseCase
         accountRepository, // Name kept for compatibility
+    required GetLiabilitiesUseCase liabilityRepository,
     required GetBudgetsUseCase budgetRepository, // Use correct type
     required GetGoalsUseCase goalRepository, // Use correct type
   })  : _getCategoriesUseCase = categoryRepository,
         _getAssetAccountsUseCase = accountRepository,
+        _getLiabilitiesUseCase = liabilityRepository,
         _getBudgetsUseCase = budgetRepository, // Assign
         _getGoalsUseCase = goalRepository, // Assign
         super(ReportFilterState.initial()) {
@@ -60,6 +65,7 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
     String? errorMsg;
     List<Category> categories = [];
     List<AssetAccount> accounts = [];
+    List<Liability> liabilities = [];
     List<Budget> budgets = []; // Added
     List<Goal> goals = []; // Added
 
@@ -67,6 +73,7 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
     final results = await Future.wait([
       _getCategoriesUseCase(const NoParams()),
       _getAssetAccountsUseCase(const NoParams()),
+      _getLiabilitiesUseCase(const NoParams()),
       _getBudgetsUseCase(const NoParams()), // Added
       _getGoalsUseCase(const NoParams()), // Added
     ]);
@@ -80,12 +87,16 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
       (f) => errorMsg = _appendError(errorMsg, "Failed to load accounts."),
       (a) => accounts = a,
     );
-    (results[2] as Either<Failure, List<Budget>>).fold(
+    (results[2] as Either<Failure, List<Liability>>).fold(
+      (f) => errorMsg = _appendError(errorMsg, "Failed to load liabilities."),
+      (l) => liabilities = l,
+    );
+    (results[3] as Either<Failure, List<Budget>>).fold(
       // Added
       (f) => errorMsg = _appendError(errorMsg, "Failed to load budgets."),
       (b) => budgets = b,
     );
-    (results[3] as Either<Failure, List<Goal>>).fold(
+    (results[4] as Either<Failure, List<Goal>>).fold(
       // Added
       (f) => errorMsg = _appendError(errorMsg, "Failed to load goals."),
       (g) => goals = g,
@@ -97,11 +108,12 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
           optionsStatus: FilterOptionsStatus.error, optionsError: errorMsg));
     } else {
       log.info(
-          "[ReportFilterBloc] Filter options loaded successfully (Cats: ${categories.length}, Accs: ${accounts.length}, Budgets: ${budgets.length}, Goals: ${goals.length}).");
+          "[ReportFilterBloc] Filter options loaded successfully (Cats: ${categories.length}, Accs: ${accounts.length}, Liabs: ${liabilities.length}, Budgets: ${budgets.length}, Goals: ${goals.length}).");
       emit(state.copyWith(
         optionsStatus: FilterOptionsStatus.loaded,
         availableCategories: categories,
         availableAccounts: accounts,
+        availableLiabilities: liabilities,
         availableBudgets: budgets, // Added
         availableGoals: goals, // Added
         optionsError: null, // Clear previous error

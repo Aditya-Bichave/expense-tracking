@@ -30,6 +30,7 @@ class AccountListLoaded extends AccountListState
     implements BaseListState<AssetAccount> {
   @override
   final List<AssetAccount> items; // The list of accounts
+  final List<Liability> liabilities;
   // Account list doesn't have filters yet, keep these null
   @override
   final DateTime? filterStartDate = null;
@@ -42,6 +43,7 @@ class AccountListLoaded extends AccountListState
 
   const AccountListLoaded({
     required List<AssetAccount> accounts, // Keep param name
+    required this.liabilities,
   })  : items = accounts, // Assign to base 'items'
         super();
 
@@ -59,6 +61,7 @@ class AccountListLoaded extends AccountListState
   List<Object?> get props => [
         // Need to explicitly list props here now
         items,
+        liabilities,
         filterStartDate,
         filterEndDate,
         filterCategory,

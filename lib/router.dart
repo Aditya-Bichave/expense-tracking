@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl
 import 'package:expense_tracker/core/screens/initial_setup_screen.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_account_page.dart';
+import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_liability_page.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/accounts_tab_page.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/presentation/pages/add_edit_budget_page.dart';
@@ -335,6 +336,12 @@ class AppRouter {
                         name: RouteNames.editAccount,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildEditAccountPage),
+                    GoRoute(
+                        path: RouteNames.addLiability,
+                        name: RouteNames.addLiability,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) =>
+                            const AddEditLiabilityPage()),
                   ],
                 ),
               ],

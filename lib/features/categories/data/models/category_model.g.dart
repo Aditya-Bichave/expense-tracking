@@ -85,14 +85,22 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'iconName': instance.iconName,
-      'colorHex': instance.colorHex,
-      'isCustom': instance.isCustom,
-      if (instance.parentCategoryId case final value?)
-        'parentCategoryId': value,
-      'typeIndex': instance.typeIndex,
-    };
+Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) {
+  final val = <String, dynamic>{
+    'id': instance.id,
+    'name': instance.name,
+    'iconName': instance.iconName,
+    'colorHex': instance.colorHex,
+    'isCustom': instance.isCustom,
+  };
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('parentCategoryId', instance.parentCategoryId);
+  val['typeIndex'] = instance.typeIndex;
+  return val;
+}

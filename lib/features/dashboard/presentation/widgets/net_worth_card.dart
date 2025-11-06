@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 
-class OverallBalanceCard extends StatelessWidget {
+class NetWorthCard extends StatelessWidget {
   final FinancialOverview overview;
 
-  const OverallBalanceCard({super.key, required this.overview});
+  const NetWorthCard({super.key, required this.overview});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class OverallBalanceCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     // Determine color based on balance
-    final balanceColor = overview.overallBalance >= 0
+    final balanceColor = overview.netWorth >= 0
         ? theme.colorScheme.primary // Use primary color for positive balance
         : theme.colorScheme.error; // Use error color for negative balance
 
@@ -32,13 +32,13 @@ class OverallBalanceCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Overall Balance',
+              'Net Worth',
               style: theme.textTheme.titleMedium
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 8),
             Text(
-              CurrencyFormatter.format(overview.overallBalance, currencySymbol),
+              CurrencyFormatter.format(overview.netWorth, currencySymbol),
               style: theme.textTheme.headlineMedium?.copyWith(
                 // Make balance stand out
                 fontWeight: FontWeight.bold,

@@ -9,6 +9,7 @@ class ReportFilterState extends Equatable {
   final String? optionsError;
   final List<Category> availableCategories;
   final List<AssetAccount> availableAccounts;
+  final List<Liability> availableLiabilities;
   // --- ADDED ---
   final List<Budget> availableBudgets;
   final List<Goal> availableGoals;
@@ -30,6 +31,7 @@ class ReportFilterState extends Equatable {
     this.optionsError,
     required this.availableCategories,
     required this.availableAccounts,
+    required this.availableLiabilities,
     required this.availableBudgets, // Added
     required this.availableGoals, // Added
     required this.startDate,
@@ -48,6 +50,7 @@ class ReportFilterState extends Equatable {
       optionsStatus: FilterOptionsStatus.initial,
       availableCategories: const [],
       availableAccounts: const [],
+      availableLiabilities: const [],
       availableBudgets: const [], // Added
       availableGoals: const [], // Added
       startDate: DateTime(now.year, now.month, 1),
@@ -65,6 +68,7 @@ class ReportFilterState extends Equatable {
     String? optionsError,
     List<Category>? availableCategories,
     List<AssetAccount>? availableAccounts,
+    List<Liability>? availableLiabilities,
     List<Budget>? availableBudgets, // Added
     List<Goal>? availableGoals, // Added
     DateTime? startDate,
@@ -92,6 +96,7 @@ class ReportFilterState extends Equatable {
           clearOptionsError ? null : optionsError ?? this.optionsError,
       availableCategories: availableCategories ?? this.availableCategories,
       availableAccounts: availableAccounts ?? this.availableAccounts,
+      availableLiabilities: availableLiabilities ?? this.availableLiabilities,
       availableBudgets: availableBudgets ?? this.availableBudgets, // Added
       availableGoals: availableGoals ?? this.availableGoals, // Added
       startDate: clearDates ? defaultStart : (startDate ?? this.startDate),
@@ -111,6 +116,7 @@ class ReportFilterState extends Equatable {
   @override
   List<Object?> get props => [
         optionsStatus, optionsError, availableCategories, availableAccounts,
+        availableLiabilities,
         availableBudgets, availableGoals, // Added
         startDate, endDate, selectedCategoryIds, selectedAccountIds,
         selectedBudgetIds, selectedGoalIds, selectedTransactionType, // Added

@@ -7,6 +7,8 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 // Removed DemoModeService import, not directly needed here
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
+import 'package:expense_tracker/features/accounts/data/models/liability_model.dart';
+import 'package:expense_tracker/features/transactions/data/models/transaction_model.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
@@ -92,6 +94,8 @@ Future<void> main() async {
     // Register All Adapters BEFORE opening boxes
     Hive.registerAdapter(ExpenseModelAdapter());
     Hive.registerAdapter(AssetAccountModelAdapter());
+    Hive.registerAdapter(LiabilityModelAdapter());
+    Hive.registerAdapter(TransactionModelAdapter());
     Hive.registerAdapter(IncomeModelAdapter());
     Hive.registerAdapter(CategoryModelAdapter());
     Hive.registerAdapter(UserHistoryRuleModelAdapter());
@@ -107,6 +111,12 @@ Future<void> main() async {
     );
     final accountBox = await Hive.openBox<AssetAccountModel>(
       HiveConstants.accountBoxName,
+    );
+    final liabilityBox = await Hive.openBox<LiabilityModel>(
+      HiveConstants.liabilityBoxName,
+    );
+    final transactionBox = await Hive.openBox<TransactionModel>(
+      HiveConstants.transactionBoxName,
     );
     final incomeBox = await Hive.openBox<IncomeModel>(
       HiveConstants.incomeBoxName,
@@ -138,6 +148,8 @@ Future<void> main() async {
       prefs: prefs,
       expenseBox: expenseBox,
       accountBox: accountBox,
+      liabilityBox: liabilityBox,
+      transactionBox: transactionBox,
       incomeBox: incomeBox,
       categoryBox: categoryBox,
       userHistoryBox: userHistoryBox,

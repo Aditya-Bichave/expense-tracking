@@ -4,8 +4,8 @@ import 'package:expense_tracker/features/aether_themes/presentation/widgets/fina
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/personal_constellation_widget.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/dashboard_header.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_section.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/net_worth_card.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/net_worth_composition_widget.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
@@ -84,9 +84,9 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
             const EdgeInsets.only(top: 8.0, bottom: 80.0),
         children: [
-          DashboardHeader(overview: overview),
+          NetWorthCard(overview: overview),
           const SizedBox(height: 8),
-          AssetDistributionSection(accountBalances: overview.accountBalances),
+          NetWorthComposition(overview: overview),
           const SizedBox(height: 16),
           BudgetSummaryWidget(
             budgets: overview.activeBudgetsSummary,
@@ -149,7 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: aetherContent,
               ),
               const SizedBox(height: 16),
-              DashboardHeader(overview: overview),
+              NetWorthCard(overview: overview),
               const SizedBox(height: 16),
               BudgetSummaryWidget(
                 budgets: overview.activeBudgetsSummary,
