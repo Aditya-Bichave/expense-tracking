@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 
 import '../../../../helpers/pump_app.dart';
 
@@ -91,10 +92,12 @@ void main() {
         Stream.fromIterable([const AccountListLoading()]),
         initialState: const AccountListLoading(),
       );
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: const AccountListPage(),
-        settle: false,
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       );
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
@@ -109,6 +112,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(
           routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
       );
       await tester.pumpAndSettle();
@@ -126,6 +131,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(
           routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
       );
       await tester.pumpAndSettle();
@@ -150,11 +157,13 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(
           routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
       );
       await tester.pumpAndSettle();
       expect(find.byType(AccountCard), findsNWidgets(2));
-      expect(find.byType(LiabilityCard), findsNWidgets(1));
+      expect(find.byType(LiabilityCard), findsOneWidget);
     });
 
     testWidgets('tapping FAB shows add account modal', (tester) async {
@@ -167,6 +176,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(
           routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
       );
       await tester.pumpAndSettle();
@@ -189,6 +200,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(
           routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
       );
       await tester.pumpAndSettle();
@@ -213,6 +226,8 @@ void main() {
       await tester.pumpWidget(
         MaterialApp.router(
           routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         ),
       );
       await tester.pumpAndSettle();

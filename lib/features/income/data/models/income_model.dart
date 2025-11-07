@@ -10,7 +10,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'income_model.g.dart';
 
 @JsonSerializable()
-@HiveType(typeId: 2) // Keep existing typeId
+@HiveType(typeId: 12) // Keep existing typeId
 class IncomeModel extends HiveObject {
   @HiveField(0)
   final String id;
