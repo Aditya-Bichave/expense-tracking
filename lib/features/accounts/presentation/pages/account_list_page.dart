@@ -114,9 +114,7 @@ class AccountListPage extends StatelessWidget {
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
 
-    return BlocProvider<AccountListBloc>(
-      create: (_) => sl<AccountListBloc>()..add(const LoadAccounts()),
-      child: Scaffold(
+    return Scaffold(
         appBar: AppBar(title: Text(AppLocalizations.of(context)!.accounts)),
         body: BlocConsumer<AccountListBloc, AccountListState>(
           listener: (context, state) {
@@ -280,7 +278,6 @@ class AccountListPage extends StatelessWidget {
           tooltip: AppLocalizations.of(context)!.addAccount,
           child: const Icon(Icons.add),
         ),
-      ),
     );
   }
 }

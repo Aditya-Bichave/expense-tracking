@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl
 import 'package:expense_tracker/core/screens/initial_setup_screen.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_account_page.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_liability_page.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/accounts_tab_page.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
@@ -321,8 +322,12 @@ class AppRouter {
                 GoRoute(
                   path: RouteNames.accounts,
                   name: RouteNames.accounts,
-                  pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: AccountsTabPage()),
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    child: BlocProvider(
+                      create: (_) => sl<AccountListBloc>()..add(const LoadAccounts()),
+                      child: const AccountsTabPage(),
+                    ),
+                  ),
                   routes: [
                     GoRoute(
                         path: RouteNames.addAccount,

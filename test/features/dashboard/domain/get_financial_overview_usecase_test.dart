@@ -59,6 +59,9 @@ void main() {
       () => accountRepo.getAssetAccounts(),
     ).thenAnswer((_) async => const Right([]));
     when(
+      () => liabilityRepo.getLiabilities(),
+    ).thenAnswer((_) async => const Right([]));
+    when(
       () => incomeRepo.getTotalIncomeForAccount(
         any(),
         startDate: any(named: 'startDate'),
