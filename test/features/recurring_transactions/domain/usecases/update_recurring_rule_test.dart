@@ -6,7 +6,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/repositor
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/add_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/get_recurring_rule_by_id.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/update_recurring_rule.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';

@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_calendar_view.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart';
@@ -11,19 +11,19 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../../../helpers/pump_app.dart';
 
 class MockCallbacks extends Mock {
-  List<TransactionEntity> getEventsForDay(DateTime day);
+  List<Transaction> getEventsForDay(DateTime day);
   void onDaySelected(DateTime selectedDay, DateTime focusedDay);
   void onFormatChanged(CalendarFormat format);
   void onPageChanged(DateTime focusedDay);
   void navigateToDetailOrEdit(
-      BuildContext context, TransactionEntity transaction);
+      BuildContext context, Transaction transaction);
 }
 
 void main() {
   late MockCallbacks mockCallbacks;
   final testDay = DateTime.now();
   final mockTransactions = [
-    TransactionEntity(
+    Transaction(
         id: '1',
         title: 'Transaction 1',
         amount: 10,
@@ -39,7 +39,7 @@ void main() {
   });
 
   Widget buildTestWidget({
-    List<TransactionEntity> selectedDayTransactions = const [],
+    List<Transaction> selectedDayTransactions = const [],
   }) {
     return TransactionCalendarView(
       state: const TransactionListState(),

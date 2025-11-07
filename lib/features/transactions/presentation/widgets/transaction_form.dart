@@ -7,7 +7,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/utils/currency_parser.dart';
@@ -26,7 +26,7 @@ typedef TransactionSubmitCallback = void Function({
 });
 
 class TransactionForm extends StatefulWidget {
-  final TransactionEntity? initialTransaction;
+  final Transaction? initialTransaction;
   final TransactionSubmitCallback onSubmit;
   final TransactionType initialType;
   final Category? initialCategory;
@@ -89,10 +89,10 @@ class TransactionFormState extends State<TransactionForm> {
       text: (widget.initialAmount ?? initial?.amount)?.toStringAsFixed(2) ?? '',
     );
     _notesController = TextEditingController(
-      text: widget.initialNotes ?? initial?.notes ?? '',
+      text: widget.initialNotes ?? '',
     );
     _selectedDate = widget.initialDate ?? initial?.date ?? DateTime.now();
-    _selectedAccountId = widget.initialAccountId ?? initial?.accountId;
+    _selectedAccountId = widget.initialAccountId ?? initial?.fromAccountId;
     _selectedCategory = widget.initialCategory ?? initial?.category;
 
     log.info(
@@ -241,7 +241,7 @@ class TransactionFormState extends State<TransactionForm> {
         category: categoryToSubmit,
         fromAccountId: _selectedAccountId,
         toAccountId: _selectedToAccountId,
-        notes: notes.isEmpty ? null : notes,
+        notes: null,
       );
     } else {
       log.warning("[TransactionForm] Form validation failed.");
@@ -370,7 +370,7 @@ class TransactionFormState extends State<TransactionForm> {
                   "[TransactionForm] From Account selected: $_selectedAccountId",
                 );
               },
-              label: 'From',
+              labelText: 'From',
               isAssetOnly: true,
             ),
           if (isTransfer)
@@ -385,7 +385,7 @@ class TransactionFormState extends State<TransactionForm> {
                   "[TransactionForm] To Account selected: $_selectedToAccountId",
                 );
               },
-              label: 'To',
+              labelText: 'To',
             ),
           const SizedBox(height: 16),
 

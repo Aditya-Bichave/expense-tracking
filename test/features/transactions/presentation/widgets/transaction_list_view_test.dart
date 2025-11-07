@@ -1,10 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
 import 'package:flutter/material.dart';
@@ -13,19 +11,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
-import '../../../../helpers/test_data.dart';
 
 class MockTransactionListBloc
     extends MockBloc<TransactionListEvent, TransactionListState>
     implements TransactionListBloc {}
 
 class MockCallbacks extends Mock {
-  void navigateToDetailOrEdit(
-      BuildContext context, TransactionEntity transaction);
-  void handleChangeCategoryRequest(
-      BuildContext context, TransactionEntity transaction);
-  Future<bool> confirmDeletion(
-      BuildContext context, TransactionEntity transaction);
+  void navigateToDetailOrEdit(BuildContext context, Transaction transaction);
+  void handleChangeCategoryRequest(BuildContext context, Transaction transaction);
+  Future<bool> confirmDeletion(BuildContext context, Transaction transaction);
 }
 
 void main() {
@@ -33,21 +27,21 @@ void main() {
   late MockCallbacks mockCallbacks;
 
   final mockTransactions = [
-    TransactionEntity.fromExpense(
-      Expense(
-          id: '1',
-          title: 'Expense 1',
-          amount: 50,
-          date: DateTime.now(),
-          accountId: 'a1'),
+    Transaction(
+      id: '1',
+      title: 'Expense 1',
+      amount: 50,
+      date: DateTime.now(),
+      fromAccountId: 'a1',
+      type: TransactionType.expense,
     ),
-    TransactionEntity.fromIncome(
-      Income(
-          id: '2',
-          title: 'Income 1',
-          amount: 200,
-          date: DateTime.now(),
-          accountId: 'a1'),
+    Transaction(
+      id: '2',
+      title: 'Income 1',
+      amount: 200,
+      date: DateTime.now(),
+      fromAccountId: 'a1',
+      type: TransactionType.income,
     ),
   ];
 
@@ -109,9 +103,9 @@ void main() {
       await pumpWidgetWithProviders(
           tester: tester,
           widget: buildTestWidget(
-            TransactionListState(
+            const TransactionListState(
               status: ListStatus.success,
-              transactions: const [],
+              transactions: [],
               categoryId: '1',
             ),
           ));

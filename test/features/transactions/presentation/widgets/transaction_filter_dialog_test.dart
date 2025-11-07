@@ -1,6 +1,6 @@
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,7 +28,7 @@ void main() {
     mockAccountListBloc = MockAccountListBloc();
     mockCallbacks = MockCallbacks();
     when(() => mockAccountListBloc.state)
-        .thenReturn(const AccountListLoaded(accounts: []));
+        .thenReturn(const AccountListLoaded(accounts: [], liabilities: []));
   });
 
   Future<void> pumpDialog(

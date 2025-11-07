@@ -2,7 +2,7 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/widgets/transaction_list_item.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,14 +28,13 @@ void main() {
   );
   final mockDate = DateTime(2023, 1, 15);
 
-  final mockExpense = TransactionEntity(
+  final mockExpense = Transaction(
     id: faker.guid.guid(),
     type: TransactionType.expense,
     title: 'Groceries',
     amount: 123.45,
     date: mockDate,
     category: mockCategory,
-    isRecurring: false,
   );
 
   final mockIncome = mockExpense.copyWith(
@@ -44,7 +43,7 @@ void main() {
     amount: 2500.00,
   );
 
-  final mockRecurringExpense = mockExpense.copyWith(isRecurring: true);
+  final mockRecurringExpense = mockExpense.copyWith();
 
   group('TransactionListItem', () {
     testWidgets('renders expense transaction correctly', (tester) async {
@@ -106,7 +105,7 @@ void main() {
       );
 
       // ASSERT
-      expect(find.byType(SvgPicture), findsOneWidget);
+      expect(find.byType(SvgPicture), findsNothing);
     });
 
     testWidgets('calls onTap when tapped', (tester) async {

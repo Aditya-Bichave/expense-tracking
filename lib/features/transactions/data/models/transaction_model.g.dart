@@ -23,13 +23,14 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       date: fields[3] as DateTime,
       fromAccountId: fields[4] as String?,
       toAccountId: fields[5] as String?,
+      title: fields[6] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, TransactionModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       ..writeByte(4)
       ..write(obj.fromAccountId)
       ..writeByte(5)
-      ..write(obj.toAccountId);
+      ..write(obj.toAccountId)
+      ..writeByte(6)
+      ..write(obj.title);
   }
 
   @override
@@ -67,6 +70,7 @@ TransactionModel _$TransactionModelFromJson(Map<String, dynamic> json) =>
       date: DateTime.parse(json['date'] as String),
       fromAccountId: json['fromAccountId'] as String?,
       toAccountId: json['toAccountId'] as String?,
+      title: json['title'] as String,
     );
 
 Map<String, dynamic> _$TransactionModelToJson(TransactionModel instance) =>
@@ -77,4 +81,5 @@ Map<String, dynamic> _$TransactionModelToJson(TransactionModel instance) =>
       'date': instance.date.toIso8601String(),
       'fromAccountId': instance.fromAccountId,
       'toAccountId': instance.toAccountId,
+      'title': instance.title,
     };

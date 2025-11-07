@@ -6,7 +6,7 @@ import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

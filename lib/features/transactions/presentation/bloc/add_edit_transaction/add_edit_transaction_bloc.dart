@@ -97,8 +97,7 @@ class AddEditTransactionBloc
           tempTitle: initial.title,
           tempAmount: initial.amount,
           tempDate: initial.date,
-          tempAccountId: initial.accountId,
-          tempNotes: () => initial.notes, // Use ValueGetter for nullable notes
+          tempAccountId: initial.fromAccountId,
           clearErrorMessage: true,
         ),
       );
@@ -151,7 +150,6 @@ class AddEditTransactionBloc
         tempDate: event.date,
         tempAccountId: event.fromAccountId,
         tempToAccountId: event.toAccountId,
-        tempNotes: () => event.notes,
         clearErrorMessage: true,
         clearSuggestion: true,
         clearNewlyCreated: true,
@@ -270,7 +268,6 @@ class AddEditTransactionBloc
         tempAmount: event.amount,
         tempDate: event.date,
         tempAccountId: event.accountId,
-        tempNotes: () => event.notes,
       ),
     );
   }
@@ -331,7 +328,6 @@ class AddEditTransactionBloc
     final date = state.tempDate ?? DateTime.now();
     final fromAccountId = state.tempAccountId;
     final toAccountId = state.tempToAccountId;
-    final notes = state.tempNotes;
 
     // Basic validation before proceeding
     if ((transactionType != TransactionType.transfer && title.isEmpty) || amount <= 0 || (transactionType != TransactionType.transfer && fromAccountId == null) || (transactionType == TransactionType.transfer && (fromAccountId == null || toAccountId == null))) {
@@ -385,7 +381,6 @@ class AddEditTransactionBloc
         date: date,
         category: finalCategoryForEntity,
         accountId: fromAccountId!,
-        notes: notes,
         status: status,
         confidenceScore: confidence,
       );
@@ -399,6 +394,7 @@ class AddEditTransactionBloc
       // Transfer
       entityToSave = Transaction(
         id: id,
+        title: title,
         type: TransactionType.transfer,
         amount: amount,
         date: date,

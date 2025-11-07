@@ -38,7 +38,7 @@ void main() {
     when(() => mockOverview.activeGoalsSummary).thenReturn([]);
     when(() => mockOverview.recentSpendingSparkline).thenReturn([]);
     when(() => mockOverview.recentContributionSparkline).thenReturn([]);
-    when(() => mockOverview.overallBalance).thenReturn(0);
+    when(() => mockOverview.netWorth).thenReturn(0);
   });
 
   Widget buildTestWidget() {

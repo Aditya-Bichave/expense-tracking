@@ -8,7 +8,7 @@ abstract class AddEditTransactionEvent extends Equatable {
 
 // Initial event when opening the page (determines add/edit mode)
 class InitializeTransaction extends AddEditTransactionEvent {
-  final TransactionEntity? initialTransaction;
+  final Transaction? initialTransaction;
   const InitializeTransaction({this.initialTransaction});
   @override
   List<Object?> get props => [initialTransaction];

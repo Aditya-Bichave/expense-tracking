@@ -11,7 +11,7 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_s
 import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
 // Removed Expense/Income entity imports as they are handled by TransactionEntity
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
@@ -59,7 +59,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _navigateToDetailOrEdit(
     BuildContext context,
-    TransactionEntity transaction,
+    Transaction transaction,
   ) {
     log.info(
       "[DashboardPage] Navigate to Edit requested for TXN ID: ${transaction.id}",

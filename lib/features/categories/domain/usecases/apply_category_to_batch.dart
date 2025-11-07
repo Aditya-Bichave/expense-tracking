@@ -5,13 +5,10 @@ import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 // --- END Import ---
 import 'package:expense_tracker/main.dart'; // logger
 
-// --- REMOVE the local enum definition ---
-// enum TransactionType { expense, income }
-// --- END REMOVE ---
 
 class ApplyCategoryToBatchParams extends Equatable {
   final List<String> transactionIds;

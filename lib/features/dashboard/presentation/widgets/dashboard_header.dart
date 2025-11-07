@@ -1,7 +1,7 @@
 // lib/features/dashboard/presentation/widgets/dashboard_header.dart
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/income_expense_summary_card.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/overall_balance_card.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/net_worth_card.dart';
 import 'package:flutter/material.dart';
 
 class DashboardHeader extends StatelessWidget {
@@ -14,7 +14,7 @@ class DashboardHeader extends StatelessWidget {
     // This widget combines the top cards
     return Column(
       children: [
-        OverallBalanceCard(overview: overview),
+        NetWorthCard(overview: overview),
         const SizedBox(height: 8), // Consistent spacing
         IncomeExpenseSummaryCard(overview: overview),
       ],

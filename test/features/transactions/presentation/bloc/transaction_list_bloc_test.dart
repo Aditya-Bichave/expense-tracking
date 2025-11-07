@@ -4,7 +4,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/delete_expense.dart';
 import 'package:expense_tracker/features/income/domain/usecases/delete_income.dart';
@@ -96,7 +96,7 @@ void main() {
           accountId: 'a',
           category: Category.uncategorized,
         );
-        final txn = TransactionEntity.fromExpense(expense);
+        final txn = Transaction.fromExpense(expense);
         return TransactionListState(
           status: ListStatus.success,
           transactions: [txn],
@@ -149,7 +149,7 @@ void main() {
         ).thenAnswer((_) async => const Right(null));
         when(() => getTransactions(any())).thenAnswer(
           (_) async => Right([
-            TransactionEntity.fromExpense(
+            Transaction.fromExpense(
               Expense(
                 id: '2',
                 title: 'n',
@@ -181,7 +181,7 @@ void main() {
           accountId: 'a',
           category: Category.uncategorized,
         );
-        final txn = TransactionEntity.fromExpense(expense);
+        final txn = Transaction.fromExpense(expense);
         return TransactionListState(
           status: ListStatus.success,
           transactions: [txn],

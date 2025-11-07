@@ -1,6 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/add_edit_transaction_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_form.dart';
@@ -28,7 +28,7 @@ void main() {
     sl.reset();
   });
 
-  final mockTransaction = TransactionEntity(
+  final mockTransaction = Transaction(
     id: '1',
     title: 'Test',
     amount: 100,

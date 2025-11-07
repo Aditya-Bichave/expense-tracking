@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/categories/domain/usecases/save_user_ca
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 // Keep this
 // --- Import Expense/Income Card Widgets ---
@@ -19,10 +19,10 @@ import 'package:go_router/go_router.dart';
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
   final SettingsState settings;
-  final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
+  final Function(BuildContext, Transaction) navigateToDetailOrEdit;
   // --- ADD Handlers ---
-  final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
-  final Function(BuildContext, TransactionEntity) confirmDeletion;
+  final Function(BuildContext, Transaction) handleChangeCategoryRequest;
+  final Function(BuildContext, Transaction) confirmDeletion;
   final bool enableAnimations;
   // --- END Handlers ---
 
@@ -111,7 +111,7 @@ class TransactionListView extends StatelessWidget {
         Widget cardItem;
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
-            expense: transaction.expense!,
+            expense: transaction.toExpense(),
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -139,7 +139,7 @@ class TransactionListView extends StatelessWidget {
         } else {
           // Income
           cardItem = IncomeCard(
-            income: transaction.income!,
+            income: transaction.toIncome(),
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {

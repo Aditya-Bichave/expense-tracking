@@ -37,7 +37,7 @@ import 'package:expense_tracker/features/reports/presentation/pages/spending_by_
 import 'package:expense_tracker/features/reports/presentation/pages/spending_over_time_page.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
 import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/add_edit_transaction_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
@@ -496,9 +496,9 @@ class AppRouter {
   static Widget _buildTransactionDetailPage(
       BuildContext context, GoRouterState state) {
     final id = state.pathParameters[RouteNames.paramTransactionId];
-    TransactionEntity? transaction;
-    if (state.extra is TransactionEntity) {
-      transaction = state.extra as TransactionEntity;
+    Transaction? transaction;
+    if (state.extra is Transaction) {
+      transaction = state.extra as Transaction;
     } else {
       log.warning(
           "[AppRouter] Txn Detail route received 'extra' of unexpected type or null. Extra: ${state.extra?.runtimeType}");
@@ -521,7 +521,7 @@ class AppRouter {
     if (initialData != null &&
         !(initialData is Expense ||
             initialData is Income ||
-            initialData is TransactionEntity)) {
+            initialData is Transaction)) {
       log.warning(
           "[AppRouter] Edit Txn route received 'extra' of unexpected type: ${state.extra?.runtimeType}. Ignoring.");
       initialData = null;

@@ -22,7 +22,7 @@ class LiabilityCard extends StatelessWidget {
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
 
-    final isCreditCard = liability.type == LiabilityType.CreditCard;
+    final isCreditCard = liability.type == LiabilityType.creditCard;
     final creditLimit = liability.creditLimit ?? 0;
     final utilization =
         creditLimit > 0 ? liability.currentBalance / creditLimit : 0.0;

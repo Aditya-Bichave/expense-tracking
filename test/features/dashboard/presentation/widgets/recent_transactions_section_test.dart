@@ -2,7 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ class MockTransactionListBloc
     implements TransactionListBloc {}
 
 class MockNavigateToDetail extends Mock {
-  void call(BuildContext context, TransactionEntity transaction);
+  void call(BuildContext context, Transaction transaction);
 }
 
 void main() {
@@ -26,13 +26,13 @@ void main() {
   late MockGoRouter mockGoRouter;
 
   final mockTransactions = [
-    TransactionEntity(
+    Transaction(
         id: '1',
         title: 'Txn 1',
         amount: 10,
         date: DateTime.now(),
         type: TransactionType.expense),
-    TransactionEntity(
+    Transaction(
         id: '2',
         title: 'Txn 2',
         amount: 20,

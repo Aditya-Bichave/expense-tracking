@@ -1,6 +1,6 @@
 enum LiabilityType {
-  CreditCard,
-  Loan,
-  Mortgage,
-  Other,
+  creditCard,
+  loan,
+  mortgage,
+  other,
 }

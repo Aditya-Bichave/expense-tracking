@@ -13,7 +13,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/usecases/
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/get_recurring_rules.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/pause_resume_recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/recurring_list/recurring_list_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class MockGetRecurringRules extends Mock implements GetRecurringRules {}

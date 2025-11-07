@@ -10,7 +10,7 @@ import 'package:expense_tracker/features/income/domain/usecases/add_income.dart'
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:uuid/uuid.dart';
 
 class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {

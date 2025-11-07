@@ -4,7 +4,7 @@ library transaction_form_test;
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_form.dart';
 import 'package:flutter/material.dart';
@@ -20,23 +20,30 @@ class MockAddEditTransactionBloc
     implements AddEditTransactionBloc {}
 
 class MockOnSubmit extends Mock {
-  void call(TransactionType type, String title, double amount, DateTime date,
-      Category category, String accountId, String? notes);
+  void call({
+    required TransactionType type,
+    required String? title,
+    required double amount,
+    required DateTime date,
+    required Category? category,
+    required String? fromAccountId,
+    required String? toAccountId,
+    required String? notes,
+  });
 }
 
 void main() {
   late AddEditTransactionBloc mockBloc;
   late MockOnSubmit mockOnSubmit;
 
-  final mockTransaction = TransactionEntity(
+  final mockTransaction = Transaction(
     id: '1',
     title: 'Initial Title',
     amount: 123.45,
     date: DateTime(2023),
-    accountId: 'acc1',
+    fromAccountId: 'acc1',
     category: Category.uncategorized,
     type: TransactionType.expense,
-    notes: 'Initial notes',
   );
 
   setUp(() {
@@ -46,7 +53,7 @@ void main() {
   });
 
   Widget buildTestWidget({
-    TransactionEntity? initialTransaction,
+    Transaction? initialTransaction,
     Category? initialCategory,
     String? initialAccountId,
   }) {
@@ -72,7 +79,6 @@ void main() {
       await tester.pump();
       expect(find.text('Initial Title'), findsOneWidget);
       expect(find.text('123.45'), findsOneWidget);
-      expect(find.text('Initial notes'), findsOneWidget);
     });
 
     testWidgets(
@@ -95,7 +101,15 @@ void main() {
     testWidgets('onSubmit is called with correct data when form is valid',
         (tester) async {
       when(() => mockOnSubmit.call(
-          any(), any(), any(), any(), any(), any(), any())).thenAnswer((_) {});
+            type: any(named: 'type'),
+            title: any(named: 'title'),
+            amount: any(named: 'amount'),
+            date: any(named: 'date'),
+            category: any(named: 'category'),
+            fromAccountId: any(named: 'fromAccountId'),
+            toAccountId: any(named: 'toAccountId'),
+            notes: any(named: 'notes'),
+          )).thenAnswer((_) {});
       await pumpWidgetWithProviders(
         tester: tester,
         widget: buildTestWidget(
@@ -117,13 +131,14 @@ void main() {
       await tester.pump();
 
       verify(() => mockOnSubmit.call(
-            TransactionType.expense,
-            'Test Title',
-            50.00,
-            any(named: 'date'),
-            Category.uncategorized,
-            'acc1',
-            any(named: 'notes'),
+            type: TransactionType.expense,
+            title: 'Test Title',
+            amount: 50.00,
+            date: any(named: 'date'),
+            category: Category.uncategorized,
+            fromAccountId: 'acc1',
+            toAccountId: null,
+            notes: null,
           )).called(1);
     });
 
@@ -139,8 +154,16 @@ void main() {
           .tap(find.byKey(const ValueKey('button_transactionForm_submit')));
       await tester.pump();
 
-      verifyNever(() =>
-          mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any()));
+      verifyNever(() => mockOnSubmit.call(
+            type: any(named: 'type'),
+            title: any(named: 'title'),
+            amount: any(named: 'amount'),
+            date: any(named: 'date'),
+            category: any(named: 'category'),
+            fromAccountId: any(named: 'fromAccountId'),
+            toAccountId: any(named: 'toAccountId'),
+            notes: any(named: 'notes'),
+          ));
       expect(
           find.text('Please correct the errors in the form.'), findsOneWidget);
     });

@@ -6,7 +6,7 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_form.dart';
 import 'package:expense_tracker/main.dart';
@@ -31,7 +31,7 @@ class AddEditTransactionPage extends StatefulWidget {
 
 class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   late final AddEditTransactionBloc _bloc;
-  TransactionEntity? _initialTransactionEntity;
+  Transaction? _initialTransaction;
   AddEditStatus? _previousStatus; // Track previous status
   final GlobalKey<TransactionFormState> _formKey =
       GlobalKey<TransactionFormState>();
@@ -42,16 +42,16 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     _bloc = sl<AddEditTransactionBloc>();
 
     if (widget.initialTransactionData is Expense) {
-      _initialTransactionEntity = TransactionEntity.fromExpense(
+      _initialTransaction = Transaction.fromExpense(
         widget.initialTransactionData as Expense,
       );
     } else if (widget.initialTransactionData is Income) {
-      _initialTransactionEntity = TransactionEntity.fromIncome(
+      _initialTransaction = Transaction.fromIncome(
         widget.initialTransactionData as Income,
       );
-    } else if (widget.initialTransactionData is TransactionEntity) {
-      _initialTransactionEntity =
-          widget.initialTransactionData as TransactionEntity;
+    } else if (widget.initialTransactionData is Transaction) {
+      _initialTransaction =
+          widget.initialTransactionData as Transaction;
     } else if (widget.initialTransactionData != null) {
       log.warning(
         "[AddEditTxnPage] Received unexpected initial data type: ${widget.initialTransactionData.runtimeType}",
@@ -59,11 +59,11 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     }
 
     _bloc.add(
-      InitializeTransaction(initialTransaction: _initialTransactionEntity),
+      InitializeTransaction(initialTransaction: _initialTransaction),
     );
     _previousStatus = _bloc.state.status;
     log.info(
-      "[AddEditTxnPage] initState complete. Initial Entity ID: ${_initialTransactionEntity?.id}",
+      "[AddEditTxnPage] initState complete. Initial Entity ID: ${_initialTransaction?.id}",
     );
   }
 
@@ -123,14 +123,12 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             final locale = settings.selectedCountryCode;
             final title = formState.currentTitle.trim();
             final amount = parseCurrency(formState.currentAmountRaw, locale);
-            final notesText = formState.currentNotes.trim();
             _bloc.add(
               CreateCustomCategoryRequested(
                 title: title,
                 amount: amount,
                 date: formState.currentDate,
                 accountId: formState.currentAccountId ?? '',
-                notes: notesText.isEmpty ? null : notesText,
               ),
             );
           }
@@ -192,7 +190,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isEditing = _initialTransactionEntity != null;
+    final bool isEditing = _initialTransaction != null;
 
     return BlocProvider.value(
       value: _bloc,
@@ -303,7 +301,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                     ),
                     initialTransaction: state.isEditing
                         ? (state.transactionType == TransactionType.expense
-                            ? TransactionEntity.fromExpense(
+                            ? Transaction.fromExpense(
                                 Expense(
                                   id: state.transactionId!,
                                   title: state.tempTitle ?? '',
@@ -313,7 +311,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                                   accountId: state.tempAccountId ?? '',
                                 ),
                               )
-                            : TransactionEntity.fromIncome(
+                            : Transaction.fromIncome(
                                 Income(
                                   id: state.transactionId!,
                                   title: state.tempTitle ?? '',
@@ -321,7 +319,6 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                                   date: state.tempDate ?? DateTime.now(),
                                   category: state.category,
                                   accountId: state.tempAccountId ?? '',
-                                  notes: state.tempNotes,
                                 ),
                               ))
                         : null,
@@ -331,27 +328,27 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                     initialAmount: state.tempAmount,
                     initialDate: state.tempDate,
                     initialAccountId: state.tempAccountId,
-                    initialNotes: state.tempNotes,
-                    onSubmit: (
-                      type,
-                      title,
-                      amount,
-                      date,
-                      category,
-                      accountId,
-                      notes,
-                    ) {
+                    onSubmit: ({
+                      required type,
+                      required title,
+                      required amount,
+                      required date,
+                      required category,
+                      required fromAccountId,
+                      required toAccountId,
+                      required notes,
+                    }) {
                       log.info(
                         "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.",
                       );
                       context.read<AddEditTransactionBloc>().add(
                             SaveTransactionRequested(
-                              title: title,
+                              title: title ?? '',
                               amount: amount,
                               date: date,
                               category: category,
-                              accountId: accountId,
-                              notes: notes,
+                              fromAccountId: fromAccountId,
+                              toAccountId: toAccountId,
                             ),
                           );
                     },

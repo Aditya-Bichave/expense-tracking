@@ -12,7 +12,7 @@ import 'package:expense_tracker/features/reports/presentation/bloc/spending_time
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/time_series_line_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart'; // For TransactionType
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';

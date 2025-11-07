@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'recurring_rule_enums.dart';
 
 class RecurringRule extends Equatable {

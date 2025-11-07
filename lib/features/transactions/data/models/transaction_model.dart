@@ -25,6 +25,9 @@ class TransactionModel extends HiveObject {
   @HiveField(5)
   final String? toAccountId;
 
+  @HiveField(6)
+  final String title;
+
   TransactionModel({
     required this.id,
     required this.typeIndex,
@@ -32,11 +35,13 @@ class TransactionModel extends HiveObject {
     required this.date,
     this.fromAccountId,
     this.toAccountId,
+    required this.title,
   });
 
   factory TransactionModel.fromEntity(Transaction entity) {
     return TransactionModel(
       id: entity.id,
+      title: entity.title,
       typeIndex: entity.type.index,
       amount: entity.amount,
       date: entity.date,
@@ -48,6 +53,7 @@ class TransactionModel extends HiveObject {
   Transaction toEntity() {
     return Transaction(
       id: id,
+      title: title,
       type: TransactionType.values[typeIndex],
       amount: amount,
       date: date,

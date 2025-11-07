@@ -11,7 +11,7 @@ import 'package:expense_tracker/features/categories/presentation/widgets/categor
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_dialog.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_sort_sheet.dart';
@@ -112,7 +112,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   void _navigateToDetailOrEdit(
     BuildContext context,
-    TransactionEntity transaction,
+    Transaction transaction,
   ) {
     log.info(
       "[TxnListPage] _navigateToDetailOrEdit called for ${transaction.type.name} ID: ${transaction.id}",
@@ -142,7 +142,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   void _handleChangeCategoryRequest(
     BuildContext context,
-    TransactionEntity transaction,
+    Transaction transaction,
   ) async {
     log.info(
       "[TxnListPage] Change category requested for item ID: ${transaction.id}",
@@ -185,7 +185,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   Future<bool> _confirmDeletion(
     BuildContext context,
-    TransactionEntity transaction,
+    Transaction transaction,
   ) async {
     return await AppDialogs.showConfirmation(
           context,
@@ -309,9 +309,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _focusedDay = focusedDay;
   }
 
-  List<TransactionEntity> _getEventsForDay(
+  List<Transaction> _getEventsForDay(
     DateTime day,
-    List<TransactionEntity> transactions,
+    List<Transaction> transactions,
   ) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
     return transactions.where((txn) {
@@ -360,7 +360,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
               },
               builder: (context, state) {
                 final selectedTransactions = _selectedDay == null
-                    ? <TransactionEntity>[]
+                    ? <Transaction>[]
                     : _getEventsForDay(_selectedDay!, state.transactions);
                 return RefreshIndicator(
                   onRefresh: () async {

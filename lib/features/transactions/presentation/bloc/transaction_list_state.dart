@@ -6,7 +6,7 @@ enum ListStatus { initial, loading, reloading, success, error }
 // --- Main State ---
 class TransactionListState extends Equatable {
   final ListStatus status;
-  final List<TransactionEntity> transactions;
+  final List<Transaction> transactions;
   // Filters
   final DateTime? startDate;
   final DateTime? endDate;
@@ -52,7 +52,7 @@ class TransactionListState extends Equatable {
 
   TransactionListState copyWith({
     ListStatus? status,
-    List<TransactionEntity>? transactions,
+    List<Transaction>? transactions,
     DateTime? startDate,
     DateTime? endDate,
     String? categoryId,

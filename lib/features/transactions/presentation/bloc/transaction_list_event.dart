@@ -82,7 +82,7 @@ class ApplyBatchCategory extends TransactionListEvent {
 
 // Delete a single transaction (requested from UI, e.g., swipe)
 class DeleteTransaction extends TransactionListEvent {
-  final TransactionEntity transaction; // Pass full entity to know type
+  final Transaction transaction; // Pass full entity to know type
   const DeleteTransaction(this.transaction);
   @override
   List<Object> get props => [transaction];

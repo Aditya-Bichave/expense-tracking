@@ -8,7 +8,7 @@ import 'package:expense_tracker/features/transactions/data/repositories/transact
 import 'package:expense_tracker/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/add_transfer.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/update_transfer.dart';
-import 'package.expense_tracker/features/transactions/data/datasources/transaction_local_data_source.dart';
+import 'package:expense_tracker/features/transactions/data/datasources/transaction_local_data_source.dart';
 import 'package:expense_tracker/features/transactions/data/datasources/transaction_local_data_source_proxy.dart';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
 

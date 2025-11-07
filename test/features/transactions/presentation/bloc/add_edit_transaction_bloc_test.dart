@@ -5,14 +5,17 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/update_income.dart';
+import 'package:expense_tracker/features/transactions/domain/usecases/add_transfer.dart';
+import 'package:expense_tracker/features/transactions/domain/usecases/update_transfer.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/categorize_transaction.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+import 'package:expense_tracker/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:mocktail/mocktail.dart';
@@ -34,6 +37,12 @@ class MockExpenseRepository extends Mock implements ExpenseRepository {}
 class MockIncomeRepository extends Mock implements IncomeRepository {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class MockAddTransferUseCase extends Mock implements AddTransferUseCase {}
+
+class MockUpdateTransferUseCase extends Mock implements UpdateTransferUseCase {}
+
+class MockTransactionRepository extends Mock implements TransactionRepository {}
 
 void main() {
   setUpAll(() {
@@ -95,6 +104,9 @@ void main() {
     late MockExpenseRepository expenseRepo;
     late MockIncomeRepository incomeRepo;
     late MockCategoryRepository categoryRepo;
+    late MockAddTransferUseCase addTransfer;
+    late MockUpdateTransferUseCase updateTransfer;
+    late MockTransactionRepository transactionRepo;
 
     setUp(() {
       addExpense = MockAddExpenseUseCase();
@@ -105,6 +117,9 @@ void main() {
       expenseRepo = MockExpenseRepository();
       incomeRepo = MockIncomeRepository();
       categoryRepo = MockCategoryRepository();
+      addTransfer = MockAddTransferUseCase();
+      updateTransfer = MockUpdateTransferUseCase();
+      transactionRepo = MockTransactionRepository();
     });
 
     blocTest<AddEditTransactionBloc, AddEditTransactionState>(
@@ -118,6 +133,9 @@ void main() {
           updateExpenseUseCase: updateExpense,
           addIncomeUseCase: addIncome,
           updateIncomeUseCase: updateIncome,
+          addTransferUseCase: addTransfer,
+          updateTransferUseCase: updateTransfer,
+          transactionRepository: transactionRepo,
           categorizeTransactionUseCase: categorize,
           expenseRepository: expenseRepo,
           incomeRepository: incomeRepo,
@@ -137,7 +155,7 @@ void main() {
             type: CategoryType.expense,
             isCustom: true,
           ),
-          accountId: 'a',
+          fromAccountId: 'a',
         ),
       ),
       expect: () => [
@@ -168,6 +186,9 @@ void main() {
     late MockExpenseRepository expenseRepo;
     late MockIncomeRepository incomeRepo;
     late MockCategoryRepository categoryRepo;
+    late MockAddTransferUseCase addTransfer;
+    late MockUpdateTransferUseCase updateTransfer;
+    late MockTransactionRepository transactionRepo;
 
     setUp(() {
       addExpense = MockAddExpenseUseCase();
@@ -178,6 +199,9 @@ void main() {
       expenseRepo = MockExpenseRepository();
       incomeRepo = MockIncomeRepository();
       categoryRepo = MockCategoryRepository();
+      addTransfer = MockAddTransferUseCase();
+      updateTransfer = MockUpdateTransferUseCase();
+      transactionRepo = MockTransactionRepository();
     });
 
     blocTest<AddEditTransactionBloc, AddEditTransactionState>(
@@ -187,6 +211,9 @@ void main() {
         updateExpenseUseCase: updateExpense,
         addIncomeUseCase: addIncome,
         updateIncomeUseCase: updateIncome,
+        addTransferUseCase: addTransfer,
+        updateTransferUseCase: updateTransfer,
+        transactionRepository: transactionRepo,
         categorizeTransactionUseCase: categorize,
         expenseRepository: expenseRepo,
         incomeRepository: incomeRepo,
@@ -203,7 +230,7 @@ void main() {
         );
         bloc.add(
           InitializeTransaction(
-            initialTransaction: TransactionEntity.fromExpense(expense),
+            initialTransaction: Transaction.fromExpense(expense),
           ),
         );
       },
@@ -225,6 +252,9 @@ void main() {
     late MockExpenseRepository expenseRepo;
     late MockIncomeRepository incomeRepo;
     late MockCategoryRepository categoryRepo;
+    late MockAddTransferUseCase addTransfer;
+    late MockUpdateTransferUseCase updateTransfer;
+    late MockTransactionRepository transactionRepo;
 
     setUp(() {
       addExpense = MockAddExpenseUseCase();
@@ -235,6 +265,9 @@ void main() {
       expenseRepo = MockExpenseRepository();
       incomeRepo = MockIncomeRepository();
       categoryRepo = MockCategoryRepository();
+      addTransfer = MockAddTransferUseCase();
+      updateTransfer = MockUpdateTransferUseCase();
+      transactionRepo = MockTransactionRepository();
     });
 
     blocTest<AddEditTransactionBloc, AddEditTransactionState>(
@@ -244,6 +277,9 @@ void main() {
         updateExpenseUseCase: updateExpense,
         addIncomeUseCase: addIncome,
         updateIncomeUseCase: updateIncome,
+        addTransferUseCase: addTransfer,
+        updateTransferUseCase: updateTransfer,
+        transactionRepository: transactionRepo,
         categorizeTransactionUseCase: categorize,
         expenseRepository: expenseRepo,
         incomeRepository: incomeRepo,
@@ -255,7 +291,6 @@ void main() {
           amount: 1.0,
           date: DateTime(2024, 1, 1),
           accountId: 'a',
-          notes: 'n',
         ),
       ),
       expect: () => [
@@ -267,8 +302,7 @@ void main() {
             )
             .having((s) => s.tempTitle, 'title', 't')
             .having((s) => s.tempAmount, 'amount', 1.0)
-            .having((s) => s.tempAccountId, 'account', 'a')
-            .having((s) => s.tempNotes, 'notes', 'n'),
+            .having((s) => s.tempAccountId, 'account', 'a'),
       ],
     );
   });

@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/pause_resume_recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/update_recurring_rule.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

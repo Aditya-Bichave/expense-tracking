@@ -11,6 +11,7 @@ import 'package:expense_tracker/features/goals/domain/repositories/goal_reposito
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/reports/data/repositories/report_repository_impl.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
+import 'package:expense_tracker/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -29,6 +30,8 @@ class MockGoalRepository extends Mock implements GoalRepository {}
 class MockGoalContributionRepository extends Mock
     implements GoalContributionRepository {}
 
+class MockTransactionRepository extends Mock implements TransactionRepository {}
+
 void main() {
   late ReportRepositoryImpl repository;
   late MockGoalRepository goalRepository;
@@ -38,6 +41,7 @@ void main() {
     repository = ReportRepositoryImpl(
       expenseRepository: MockExpenseRepository(),
       incomeRepository: MockIncomeRepository(),
+      transactionRepository: MockTransactionRepository(),
       categoryRepository: MockCategoryRepository(),
       accountRepository: MockAccountRepository(),
       budgetRepository: MockBudgetRepository(),

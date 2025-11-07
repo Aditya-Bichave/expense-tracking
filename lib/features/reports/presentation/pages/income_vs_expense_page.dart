@@ -12,7 +12,7 @@ import 'package:expense_tracker/features/reports/presentation/bloc/report_filter
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/income_expense_bar_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart'; // For TransactionType
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';

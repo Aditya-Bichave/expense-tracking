@@ -1,7 +1,7 @@
 // lib/features/transactions/presentation/widgets/transaction_list_item.dart
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For availableIcons map
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 
 // Common widget to display either an Expense or Income in a ListTile format
 class TransactionListItem extends StatelessWidget {
-  final TransactionEntity transaction; // Use the unified entity
+  final Transaction transaction; // Use the unified entity
   final String currencySymbol;
   final VoidCallback onTap;
   // final VoidCallback? onLongPress; // Optional: Add onLongPress if needed directly here

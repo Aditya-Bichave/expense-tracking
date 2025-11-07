@@ -7,7 +7,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/add_recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/update_recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:mocktail/mocktail.dart';

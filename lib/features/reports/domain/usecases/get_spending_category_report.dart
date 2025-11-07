@@ -5,7 +5,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/main.dart';
 
 class GetSpendingCategoryReportUseCase
@@ -24,6 +24,9 @@ class GetSpendingCategoryReportUseCase
       startDate: params.startDate,
       endDate: params.endDate,
       accountIds: params.accountIds,
+      categoryIds: params.categoryIds,
+      transactionType: params.transactionType,
+      compareToPrevious: params.compareToPrevious,
     );
   }
 }
@@ -32,16 +35,19 @@ class GetSpendingCategoryReportParams extends Equatable {
   final DateTime startDate;
   final DateTime endDate;
   final List<String>? accountIds;
+  final List<String>? categoryIds;
+  final TransactionType? transactionType;
+  final bool compareToPrevious;
 
   const GetSpendingCategoryReportParams({
     required this.startDate,
     required this.endDate,
     this.accountIds,
-    TransactionType? transactionType,
-    required bool compareToPrevious,
-    List<String>? categoryIds,
+    this.categoryIds,
+    this.transactionType,
+    required this.compareToPrevious,
   });
 
   @override
-  List<Object?> get props => [startDate, endDate, accountIds];
+  List<Object?> get props => [startDate, endDate, accountIds, categoryIds, transactionType, compareToPrevious];
 }

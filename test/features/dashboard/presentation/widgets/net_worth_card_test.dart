@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/overall_balance_card.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/net_worth_card.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,12 +17,12 @@ void main() {
   });
 
   Widget buildTestWidget() {
-    return OverallBalanceCard(overview: mockOverview);
+    return NetWorthCard(overview: mockOverview);
   }
 
-  group('OverallBalanceCard', () {
+  group('NetWorthCard', () {
     testWidgets('renders balance and net flow correctly', (tester) async {
-      when(() => mockOverview.overallBalance).thenReturn(1234.56);
+      when(() => mockOverview.netWorth).thenReturn(1234.56);
       when(() => mockOverview.netFlow).thenReturn(-78.90);
 
       await pumpWidgetWithProviders(
@@ -36,7 +36,7 @@ void main() {
     });
 
     testWidgets('shows primary color for positive or zero balance', (tester) async {
-      when(() => mockOverview.overallBalance).thenReturn(100.0);
+      when(() => mockOverview.netWorth).thenReturn(100.0);
       when(() => mockOverview.netFlow).thenReturn(0.0);
 
       await pumpWidgetWithProviders(
@@ -46,13 +46,13 @@ void main() {
       );
 
       final balanceText = tester.widget<Text>(find.text('\$100.00'));
-      final theme = Theme.of(tester.element(find.byType(OverallBalanceCard)));
+      final theme = Theme.of(tester.element(find.byType(NetWorthCard)));
 
       expect(balanceText.style?.color, theme.colorScheme.primary);
     });
 
     testWidgets('shows error color for negative balance', (tester) async {
-      when(() => mockOverview.overallBalance).thenReturn(-50.0);
+      when(() => mockOverview.netWorth).thenReturn(-50.0);
       when(() => mockOverview.netFlow).thenReturn(0.0);
 
       await pumpWidgetWithProviders(
@@ -62,7 +62,7 @@ void main() {
       );
 
       final balanceText = tester.widget<Text>(find.text('-\$50.00'));
-      final theme = Theme.of(tester.element(find.byType(OverallBalanceCard)));
+      final theme = Theme.of(tester.element(find.byType(NetWorthCard)));
 
       expect(balanceText.style?.color, theme.colorScheme.error);
     });

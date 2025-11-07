@@ -21,7 +21,7 @@ import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 
 class SpendingByCategoryPage extends StatefulWidget {
   const SpendingByCategoryPage({super.key});

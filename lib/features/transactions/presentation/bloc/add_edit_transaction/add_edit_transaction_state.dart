@@ -28,6 +28,7 @@ class AddEditTransactionState extends Equatable {
   final double? tempAmount;
   final DateTime? tempDate;
   final String? tempAccountId;
+  final String? tempToAccountId;
   final String? tempNotes;
 
   const AddEditTransactionState({
@@ -42,6 +43,7 @@ class AddEditTransactionState extends Equatable {
     this.tempAmount,
     this.tempDate,
     this.tempAccountId,
+    this.tempToAccountId,
     this.tempNotes,
   });
 
@@ -62,6 +64,7 @@ class AddEditTransactionState extends Equatable {
     double? tempAmount,
     DateTime? tempDate,
     String? tempAccountId,
+    String? tempToAccountId,
     ValueGetter<String?>? tempNotes,
     bool clearErrorMessage = false,
     bool clearSuggestion = false,
@@ -103,6 +106,8 @@ class AddEditTransactionState extends Equatable {
       tempDate: clearTempData ? null : (tempDate ?? this.tempDate),
       tempAccountId:
           clearTempData ? null : (tempAccountId ?? this.tempAccountId),
+      tempToAccountId:
+          clearTempData ? null : (tempToAccountId ?? this.tempToAccountId),
       tempNotes: clearTempData
           ? null
           : (tempNotes != null ? tempNotes() : this.tempNotes),
@@ -122,6 +127,7 @@ class AddEditTransactionState extends Equatable {
         tempAmount,
         tempDate,
         tempAccountId,
+        tempToAccountId,
         tempNotes,
       ];
 }

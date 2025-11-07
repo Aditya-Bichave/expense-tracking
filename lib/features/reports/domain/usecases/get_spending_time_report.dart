@@ -5,7 +5,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/main.dart';
 
 class GetSpendingTimeReportUseCase
@@ -25,6 +25,8 @@ class GetSpendingTimeReportUseCase
       granularity: params.granularity,
       accountIds: params.accountIds,
       categoryIds: params.categoryIds,
+      transactionType: params.transactionType,
+      compareToPrevious: params.compareToPrevious,
     );
   }
 }
@@ -35,6 +37,8 @@ class GetSpendingTimeReportParams extends Equatable {
   final TimeSeriesGranularity granularity;
   final List<String>? accountIds;
   final List<String>? categoryIds;
+  final TransactionType? transactionType;
+  final bool compareToPrevious;
 
   const GetSpendingTimeReportParams({
     required this.startDate,
@@ -42,11 +46,11 @@ class GetSpendingTimeReportParams extends Equatable {
     required this.granularity,
     this.accountIds,
     this.categoryIds,
-    TransactionType? transactionType,
-    required bool compareToPrevious,
+    this.transactionType,
+    required this.compareToPrevious,
   });
 
   @override
   List<Object?> get props =>
-      [startDate, endDate, granularity, accountIds, categoryIds];
+      [startDate, endDate, granularity, accountIds, categoryIds, transactionType, compareToPrevious];
 }

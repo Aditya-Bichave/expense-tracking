@@ -7,7 +7,7 @@ import 'package:expense_tracker/features/categories/presentation/bloc/category_m
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

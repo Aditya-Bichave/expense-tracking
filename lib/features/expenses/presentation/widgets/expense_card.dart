@@ -14,7 +14,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/categorization_status_widget.dart';
 
 class ExpenseCard extends StatelessWidget {
@@ -135,7 +135,7 @@ class ExpenseCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 CategorizationStatusWidget(
-                  transaction: TransactionEntity.fromExpense(expense),
+                  transaction: Transaction.fromExpense(expense),
                   onUserCategorized: onUserCategorized == null
                       ? null
                       : (tx, cat) => onUserCategorized!(expense, cat),

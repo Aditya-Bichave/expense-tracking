@@ -48,7 +48,7 @@ class DemoAwareLiabilityDataSource implements LiabilityLocalDataSource {
   @override
   Future<LiabilityModel> updateLiability(
       LiabilityModel liability) async {
-    if (demoMode-Service.isDemoActive) {
+    if (demoModeService.isDemoActive) {
       log.fine("[DemoAwareLiabilityDS] Updating demo liability: ${liability.name}");
       // return demoModeService.updateDemoLiability(liability);
       throw UnimplementedError();

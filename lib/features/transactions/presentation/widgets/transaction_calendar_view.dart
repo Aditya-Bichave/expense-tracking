@@ -1,7 +1,7 @@
 // lib/features/transactions/presentation/widgets/transaction_calendar_view.dart
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart'; // Updated path
 import 'package:flutter/material.dart';
@@ -14,13 +14,13 @@ class TransactionCalendarView extends StatelessWidget {
   final CalendarFormat calendarFormat;
   final DateTime focusedDay;
   final DateTime? selectedDay;
-  final List<TransactionEntity> selectedDayTransactions;
-  final List<TransactionEntity> currentTransactionsForCalendar;
+  final List<Transaction> selectedDayTransactions;
+  final List<Transaction> currentTransactionsForCalendar;
   final Function(DateTime) getEventsForDay;
   final Function(DateTime, DateTime) onDaySelected;
   final Function(CalendarFormat) onFormatChanged;
   final Function(DateTime) onPageChanged;
-  final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
+  final Function(BuildContext, Transaction) navigateToDetailOrEdit;
 
   const TransactionCalendarView({
     super.key,
@@ -59,7 +59,7 @@ class TransactionCalendarView extends StatelessWidget {
 
     return Column(
       children: [
-        TableCalendar<TransactionEntity>(
+        TableCalendar<Transaction>(
           firstDay: DateTime.utc(2010, 1, 1),
           lastDay: DateTime.utc(2040, 12, 31),
           focusedDay: focusedDay,

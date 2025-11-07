@@ -1,7 +1,6 @@
 // lib/core/di/service_locator.dart
 import 'dart:async';
 import 'package:expense_tracker/core/services/demo_mode_service.dart'; // Added
-import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:get_it/get_it.dart';
@@ -31,7 +30,7 @@ import 'package:expense_tracker/core/services/clock.dart';
 // Import models only needed for Box types here
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
-import 'package/expense_tracker/features/accounts/data/models/liability_model.dart';
+import 'package:expense_tracker/features/accounts/data/models/liability_model.dart';
 import 'package:expense_tracker/features/transactions/data/models/transaction_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
@@ -49,6 +48,7 @@ import 'package:expense_tracker/features/accounts/data/datasources/asset_account
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
+import 'package:expense_tracker/features/accounts/data/datasources/liability_local_data_source.dart';
 import 'package:expense_tracker/features/transactions/data/datasources/transaction_local_data_source.dart';
 // --- END MODIFIED ---
 

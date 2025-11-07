@@ -17,7 +17,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/repositor
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
 import 'package:flutter/widgets.dart';
@@ -62,7 +62,7 @@ class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
 // --- Fakes for registerFallbackValue ---
 class _FakeBuildContext extends Fake implements BuildContext {}
 
-class _FakeTransactionEntity extends Fake implements TransactionEntity {}
+class _FakeTransaction extends Fake implements Transaction {}
 
 class _FakeLogContributionEvent extends Fake implements LogContributionEvent {}
 
@@ -102,7 +102,7 @@ class _FakeAccountListState extends Fake implements AccountListState {
 
 void registerFallbackValues() {
   registerFallbackValue(_FakeBuildContext());
-  registerFallbackValue(_FakeTransactionEntity());
+  registerFallbackValue(_FakeTransaction());
   registerFallbackValue(_FakeLogContributionEvent());
   registerFallbackValue(_FakeAccountListEvent());
   registerFallbackValue(_FakeAccountListState());

@@ -10,7 +10,7 @@ import 'package:expense_tracker/features/expenses/domain/repositories/expense_re
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart'; // Import Category Repo
 // Import Entities
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // Import Category Entity
 // Import CategorizationStatus
 import 'package:expense_tracker/main.dart';
@@ -55,7 +55,7 @@ class GetTransactionsParams extends Equatable {
 }
 
 class GetTransactionsUseCase
-    implements UseCase<List<TransactionEntity>, GetTransactionsParams> {
+    implements UseCase<List<Transaction>, GetTransactionsParams> {
   final ExpenseRepository expenseRepository;
   final IncomeRepository incomeRepository;
   // --- Inject Category Repository ---
@@ -68,7 +68,7 @@ class GetTransactionsUseCase
   });
 
   @override
-  Future<Either<Failure, List<TransactionEntity>>> call(
+  Future<Either<Failure, List<Transaction>>> call(
     GetTransactionsParams params,
   ) async {
     log.info(
@@ -153,7 +153,7 @@ class GetTransactionsUseCase
         "[GetTransactionsUseCase] Category map created with ${categoryMap.length} entries.",
       );
 
-      List<TransactionEntity> combinedList = [];
+      List<Transaction> combinedList = [];
 
       for (final result in modelResults) {
         final models = result.getOrElse(() => []); // Should always succeed here
@@ -170,7 +170,7 @@ class GetTransactionsUseCase
               );
             }
             combinedList.add(
-              TransactionEntity.fromExpense(
+              Transaction.fromExpense(
                 model.toEntity().copyWith(
                       categoryOrNull: () => category,
                     ), // Hydrate here
@@ -190,7 +190,7 @@ class GetTransactionsUseCase
               );
             }
             combinedList.add(
-              TransactionEntity.fromIncome(
+              Transaction.fromIncome(
                 model.toEntity().copyWith(
                       categoryOrNull: () => category,
                     ), // Hydrate here
@@ -209,7 +209,7 @@ class GetTransactionsUseCase
       );
 
       // Apply Search Term Filter (Client-side)
-      List<TransactionEntity> filteredList = combinedList;
+      List<Transaction> filteredList = combinedList;
       if (params.searchTerm != null && params.searchTerm!.isNotEmpty) {
         final searchTermLower = params.searchTerm!.toLowerCase();
         filteredList = combinedList.where((txn) {

@@ -19,7 +19,7 @@ import 'package:expense_tracker/features/categories/presentation/bloc/category_m
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
@@ -118,8 +118,8 @@ final expense2 = Expense(
   status: CategorizationStatus.categorized,
 );
 
-final txn1 = TransactionEntity.fromExpense(expense1);
-final txn2 = TransactionEntity.fromExpense(expense2);
+final txn1 = Transaction.fromExpense(expense1);
+final txn2 = Transaction.fromExpense(expense2);
 
 final account1 = AssetAccount(
   id: 'a1',
@@ -217,7 +217,7 @@ void main() {
       when(() => transactionBloc.state).thenReturn(loadingState);
 
       when(() => settingsBloc.state).thenReturn(settingsState);
-      final accountsState = AccountListLoaded(accounts: [account1, account2]);
+      final accountsState = AccountListLoaded(accounts: [account1, account2], liabilities: []);
       when(() => accountBloc.state).thenReturn(accountsState);
       whenListen(
         accountBloc,
@@ -281,7 +281,7 @@ void main() {
     when(() => transactionBloc.state).thenReturn(emptyState);
 
     when(() => settingsBloc.state).thenReturn(settingsState);
-    final accountsState = AccountListLoaded(accounts: [account1, account2]);
+    final accountsState = AccountListLoaded(accounts: [account1, account2], liabilities: []);
     when(() => accountBloc.state).thenReturn(accountsState);
     whenListen(
       accountBloc,
@@ -334,7 +334,7 @@ void main() {
     when(() => transactionBloc.state).thenReturn(errorState);
 
     when(() => settingsBloc.state).thenReturn(settingsState);
-    final accountsState = AccountListLoaded(accounts: [account1, account2]);
+    final accountsState = AccountListLoaded(accounts: [account1, account2], liabilities: []);
     when(() => accountBloc.state).thenReturn(accountsState);
     whenListen(
       accountBloc,
@@ -380,7 +380,7 @@ void main() {
     when(() => transactionBloc.state).thenReturn(initialState);
 
     when(() => settingsBloc.state).thenReturn(settingsState);
-    final accountsState = AccountListLoaded(accounts: [account1, account2]);
+    final accountsState = AccountListLoaded(accounts: [account1, account2], liabilities: []);
     when(() => accountBloc.state).thenReturn(accountsState);
     whenListen(
       accountBloc,
@@ -465,7 +465,7 @@ void main() {
     when(() => transactionBloc.state).thenReturn(initialState);
 
     when(() => settingsBloc.state).thenReturn(settingsState);
-    final accountsState = AccountListLoaded(accounts: [account1, account2]);
+    final accountsState = AccountListLoaded(accounts: [account1, account2], liabilities: []);
     when(() => accountBloc.state).thenReturn(accountsState);
     whenListen(
       accountBloc,
@@ -610,7 +610,7 @@ void main() {
     when(() => transactionBloc.state).thenReturn(state);
 
     when(() => settingsBloc.state).thenReturn(settingsState);
-    final accountsState = AccountListLoaded(accounts: [account1]);
+    final accountsState = AccountListLoaded(accounts: [account1], liabilities: []);
     when(() => accountBloc.state).thenReturn(accountsState);
     whenListen(
       accountBloc,
@@ -657,7 +657,7 @@ void main() {
     when(() => transactionBloc.state).thenReturn(state);
 
     when(() => settingsBloc.state).thenReturn(settingsState);
-    final accountsState = AccountListLoaded(accounts: [account1]);
+    final accountsState = AccountListLoaded(accounts: [account1], liabilities: []);
     when(() => accountBloc.state).thenReturn(accountsState);
     whenListen(
       accountBloc,
@@ -703,7 +703,7 @@ void main() {
       );
 
       final state = TransactionListState(
-        transactions: [TransactionEntity.fromExpense(expense)],
+        transactions: [Transaction.fromExpense(expense)],
         selectedTransactionIds: const {'1', 'stale-id'},
       );
 

@@ -5,7 +5,7 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // To potentially get account name
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For icon lookup
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,7 +14,7 @@ import 'package:expense_tracker/main.dart';
 import 'package:collection/collection.dart';
 
 class TransactionDetailPage extends StatelessWidget {
-  final TransactionEntity transaction; // Passed via GoRouter 'extra'
+  final Transaction transaction; // Passed via GoRouter 'extra'
 
   const TransactionDetailPage({super.key, required this.transaction});
 
@@ -77,7 +77,7 @@ class TransactionDetailPage extends StatelessWidget {
     String accountName = 'Loading...'; // Default
     if (accountState is AccountListLoaded) {
       accountName = accountState.items
-              .firstWhereOrNull((acc) => acc.id == transaction.accountId)
+              .firstWhereOrNull((acc) => acc.id == transaction.fromAccountId)
               ?.name ??
           'Unknown/Deleted Account';
     }
@@ -158,14 +158,6 @@ class TransactionDetailPage extends StatelessWidget {
             label: 'Account',
             value: accountName, // Show fetched name
           ),
-          if (transaction.notes != null && transaction.notes!.isNotEmpty)
-            _buildDetailRow(
-              context,
-              icon: Icons.notes_outlined,
-              label: 'Notes',
-              value: transaction.notes!,
-              isMultiline: true,
-            ),
         ],
       ),
     );

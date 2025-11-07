@@ -1,6 +1,6 @@
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:hive/hive.dart';
 
 part 'recurring_rule_model.g.dart';

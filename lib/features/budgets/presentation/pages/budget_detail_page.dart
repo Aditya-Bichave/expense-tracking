@@ -17,7 +17,7 @@ import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/b
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -41,7 +41,7 @@ class BudgetDetailPage extends StatefulWidget {
 
 class _BudgetDetailPageState extends State<BudgetDetailPage> {
   BudgetWithStatus? _budgetWithStatus;
-  List<TransactionEntity> _relevantTransactions = [];
+  List<Transaction> _relevantTransactions = [];
   bool _isLoading = true;
   String? _error;
   StreamSubscription? _budgetSubscription;
@@ -113,7 +113,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
 
     // Find Transactions
-    List<TransactionEntity> foundTransactions = [];
+    List<Transaction> foundTransactions = [];
     final budget = budgetEntity;
     final (periodStart, periodEnd) = budget.getPeriodDatesFor(_selectedMonth);
 
@@ -215,7 +215,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
   void _navigateToTransactionDetail(
     BuildContext context,
-    TransactionEntity transaction,
+    Transaction transaction,
   ) {
     log.info(
       "[BudgetDetail] _navigateToTransactionDetail called for ${transaction.type.name} ID: ${transaction.id}",

@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/accounts/domain/entities/asset_account.
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +35,7 @@ void main() {
     mockGoRouter = MockGoRouter();
   });
 
-  final mockTransaction = TransactionEntity(
+  final mockTransaction = Transaction(
     id: '1',
     title: 'Coffee',
     amount: 4.50,
@@ -48,9 +48,8 @@ void main() {
       type: CategoryType.expense,
       isCustom: true,
     ),
-    accountId: 'acc1',
+    fromAccountId: 'acc1',
     type: TransactionType.expense,
-    notes: 'Morning coffee',
   );
 
   final mockAccount = AssetAccount(
@@ -75,7 +74,7 @@ void main() {
     testWidgets('renders all transaction details correctly', (tester) async {
       // ARRANGE
       when(() => mockAccountListBloc.state)
-          .thenReturn(AccountListLoaded(accounts: [mockAccount]));
+          .thenReturn(AccountListLoaded(accounts: [mockAccount], liabilities: []));
 
       // ACT
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
@@ -86,7 +85,6 @@ void main() {
       expect(find.text('Jan 1, 2023 12:00 AM'), findsOneWidget);
       expect(find.text('Food'), findsOneWidget);
       expect(find.text('Main Bank'), findsOneWidget);
-      expect(find.text('Morning coffee'), findsOneWidget);
     });
 
     testWidgets('tapping Edit button does not throw', (tester) async {

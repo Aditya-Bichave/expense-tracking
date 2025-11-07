@@ -12,7 +12,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/generate_transactions_on_launch.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';

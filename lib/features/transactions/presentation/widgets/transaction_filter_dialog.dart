@@ -2,7 +2,7 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart'; // Re-use account selector
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

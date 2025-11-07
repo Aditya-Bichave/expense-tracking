@@ -1,6 +1,6 @@
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

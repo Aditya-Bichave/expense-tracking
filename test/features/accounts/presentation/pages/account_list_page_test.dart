@@ -78,8 +78,8 @@ void main() {
     testWidgets('shows empty state', (tester) async {
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AccountListLoaded(accounts: [])]),
-        initialState: const AccountListLoaded(accounts: []),
+        Stream.fromIterable([const AccountListLoaded(accounts: [], liabilities: [])]),
+        initialState: const AccountListLoaded(accounts: [], liabilities: []),
       );
       await pumpWidgetWithProviders(
         tester: tester,
@@ -117,8 +117,8 @@ void main() {
     testWidgets('renders a list of AccountCards', (tester) async {
       whenListen(
         mockBloc,
-        Stream.fromIterable([AccountListLoaded(accounts: mockAccounts)]),
-        initialState: AccountListLoaded(accounts: mockAccounts),
+        Stream.fromIterable([AccountListLoaded(accounts: mockAccounts, liabilities: [])]),
+        initialState: AccountListLoaded(accounts: mockAccounts, liabilities: []),
       );
       await pumpWidgetWithProviders(
           tester: tester,
@@ -130,8 +130,8 @@ void main() {
     testWidgets('tapping FAB navigates to add page', (tester) async {
       whenListen(
         mockBloc,
-        Stream.fromIterable([const AccountListLoaded(accounts: [])]),
-        initialState: const AccountListLoaded(accounts: []),
+        Stream.fromIterable([const AccountListLoaded(accounts: [], liabilities: [])]),
+        initialState: const AccountListLoaded(accounts: [], liabilities: []),
       );
       await pumpWidgetWithProviders(
         tester: tester,
@@ -147,5 +147,5 @@ void main() {
         '/add',
       );
     });
-  }, skip: true);
+  });
 }

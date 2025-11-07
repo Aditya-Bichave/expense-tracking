@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/features/accounts/domain/repositories/liability_repository.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
@@ -23,6 +24,8 @@ class MockGoalRepo extends Mock implements GoalRepository {}
 
 class MockReportRepo extends Mock implements ReportRepository {}
 
+class MockLiabilityRepo extends Mock implements LiabilityRepository {}
+
 void main() {
   late MockAccountRepo accountRepo;
   late MockIncomeRepo incomeRepo;
@@ -30,6 +33,7 @@ void main() {
   late MockBudgetRepo budgetRepo;
   late MockGoalRepo goalRepo;
   late MockReportRepo reportRepo;
+  late MockLiabilityRepo liabilityRepo;
   late GetFinancialOverviewUseCase useCase;
 
   setUp(() {
@@ -39,8 +43,10 @@ void main() {
     budgetRepo = MockBudgetRepo();
     goalRepo = MockGoalRepo();
     reportRepo = MockReportRepo();
+    liabilityRepo = MockLiabilityRepo();
     useCase = GetFinancialOverviewUseCase(
       accountRepository: accountRepo,
+      liabilityRepository: liabilityRepo,
       incomeRepository: incomeRepo,
       expenseRepository: expenseRepo,
       budgetRepository: budgetRepo,

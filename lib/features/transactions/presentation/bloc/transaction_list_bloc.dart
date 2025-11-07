@@ -15,12 +15,13 @@ import 'package:expense_tracker/features/categories/domain/usecases/save_user_ca
 import 'package:expense_tracker/features/expenses/domain/usecases/delete_expense.dart';
 import 'package:expense_tracker/features/income/domain/usecases/delete_income.dart';
 // Import the primary TransactionType enum and related entity/usecase
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/main.dart';
 // Import repositories for direct updates
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+import 'package:expense_tracker/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 
@@ -471,7 +472,9 @@ class TransactionListBloc
 
     final deleteResult = txn.type == TransactionType.expense
         ? await _deleteExpenseUseCase(DeleteExpenseParams(txn.id))
-        : await _deleteIncomeUseCase(DeleteIncomeParams(txn.id));
+        : txn.type == TransactionType.income
+            ? await _deleteIncomeUseCase(DeleteIncomeParams(txn.id))
+            : await sl<TransactionRepository>().deleteTransaction(txn.id);
 
     deleteResult.fold(
       (failure) {
@@ -564,23 +567,10 @@ class TransactionListBloc
         );
         final updatedTransactions = state.transactions.map((t) {
           if (t.id == event.transactionId) {
-            if (event.transactionType == TransactionType.expense &&
-                t.expense != null) {
-              final updated = t.expense!.copyWith(
-                category: event.selectedCategory,
-                status: CategorizationStatus.categorized,
-                confidenceScore: 1.0,
-              );
-              return TransactionEntity.fromExpense(updated);
-            } else if (event.transactionType == TransactionType.income &&
-                t.income != null) {
-              final updated = t.income!.copyWith(
-                category: event.selectedCategory,
-                status: CategorizationStatus.categorized,
-                confidenceScore: 1.0,
-              );
-              return TransactionEntity.fromIncome(updated);
-            }
+            final updated = t.copyWith(
+              category: event.selectedCategory,
+            );
+            return updated;
           }
           return t;
         }).toList();

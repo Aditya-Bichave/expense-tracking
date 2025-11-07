@@ -2,7 +2,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart';
 
 abstract class ReportRepository {
   Future<Either<Failure, SpendingCategoryReportData>> getSpendingByCategory({

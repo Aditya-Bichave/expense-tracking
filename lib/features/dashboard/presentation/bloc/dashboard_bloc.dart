@@ -8,7 +8,7 @@ import 'package:expense_tracker/core/error/failure_extensions.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Import TransactionEntity for recent list
+import 'package:expense_tracker/features/transactions/domain/entities/transaction.dart'; // Import TransactionEntity for recent list
 
 part 'dashboard_event.dart';
 part 'dashboard_state.dart';
