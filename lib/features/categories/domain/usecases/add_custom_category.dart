@@ -36,7 +36,27 @@ class AddCustomCategoryUseCase
           "[AddCustomCategoryUseCase] Validation failed: Invalid color hex format.");
       return const Left(ValidationFailure("A valid color must be selected."));
     }
-    // TODO: Add check for unique category name within the same type/parent later
+    // --- Unique Name Check ---
+    final allCategoriesResult = await repository.getAllCategories();
+    if (allCategoriesResult.isLeft()) {
+      log.severe(
+          "[AddCustom-CategoryUseCase] Failed to get categories for validation.");
+      return Left(allCategoriesResult.fold((l) => l, (r) => ServerFailure()));
+    }
+    final allCategories = allCategoriesResult.getOrElse(() => []);
+    final trimmedName = params.name.trim();
+
+    final isDuplicate = allCategories.any((cat) =>
+        cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
+        cat.type == params.type &&
+        cat.parentCategoryId == params.parentCategoryId);
+
+    if (isDuplicate) {
+      log.warning(
+          "[AddCustomCategoryUseCase] Validation failed: A category with the name '$trimmedName' already exists for this type/parent.");
+      return const Left(ValidationFailure(
+          "A category with this name already exists in the selected category group."));
+    }
 
     // --- Create Category Entity ---
     final newCategory = Category(
