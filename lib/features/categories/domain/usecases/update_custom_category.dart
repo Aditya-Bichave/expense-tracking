@@ -42,7 +42,28 @@ class UpdateCustomCategoryUseCase
       return const Left(ValidationFailure("A valid color must be selected."));
     }
 
-    // TODO: Add check for unique category name (excluding itself)
+    // --- Unique Name Check (excluding itself) ---
+    final allCategoriesResult = await repository.getAllCategories();
+    if (allCategoriesResult.isLeft()) {
+      log.severe(
+          "[UpdateCustomCategoryUseCase] Failed to get categories for validation.");
+      return Left(allCategoriesResult.fold((l) => l, (r) => ServerFailure()));
+    }
+    final allCategories = allCategoriesResult.getOrElse(() => []);
+    final trimmedName = category.name.trim();
+
+    final isDuplicate = allCategories.any((cat) =>
+        cat.id != category.id && // Exclude the category itself
+        cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
+        cat.type == category.type &&
+        cat.parentCategoryId == category.parentCategoryId);
+
+    if (isDuplicate) {
+      log.warning(
+          "[UpdateCustomCategoryUseCase] Validation failed: A category with the name '$trimmedName' already exists for this type/parent.");
+      return const Left(ValidationFailure(
+          "A category with this name already exists in the selected category group."));
+    }
 
     // The repository handles distinguishing between updating custom vs predefined personalization
     log.info(
