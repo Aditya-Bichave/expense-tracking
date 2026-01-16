@@ -1,9 +1,12 @@
 import 'package:intl/intl.dart';
 
 class DateFormatter {
+  static final Map<String?, DateFormat> _dateTimeFormatters = {};
+  static final Map<String?, DateFormat> _dateFormatters = {};
+
   static String formatDateTime(DateTime dateTime, {String? locale}) {
     try {
-      final format = DateFormat.yMMMd(locale).add_jm();
+      final format = _getDateTimeFormatter(locale);
       return format.format(dateTime);
     } catch (e) {
       return dateTime.toIso8601String();
@@ -12,9 +15,24 @@ class DateFormatter {
 
   static String formatDate(DateTime dateTime, {String? locale}) {
     try {
-      return DateFormat.yMd(locale).format(dateTime);
+      final format = _getDateFormatter(locale);
+      return format.format(dateTime);
     } catch (e) {
       return "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}";
     }
+  }
+
+  static DateFormat _getDateTimeFormatter(String? locale) {
+    if (!_dateTimeFormatters.containsKey(locale)) {
+      _dateTimeFormatters[locale] = DateFormat.yMMMd(locale).add_jm();
+    }
+    return _dateTimeFormatters[locale]!;
+  }
+
+  static DateFormat _getDateFormatter(String? locale) {
+    if (!_dateFormatters.containsKey(locale)) {
+      _dateFormatters[locale] = DateFormat.yMd(locale);
+    }
+    return _dateFormatters[locale]!;
   }
 }
