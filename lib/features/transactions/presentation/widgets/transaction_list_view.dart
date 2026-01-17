@@ -1,5 +1,6 @@
 // lib/features/transactions/presentation/widgets/transaction_list_view.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
@@ -41,6 +42,16 @@ class TransactionListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Watch AccountListBloc once to get account names
+    final accountState = context.watch<AccountListBloc>().state;
+    final Map<String, String> accountNames = {};
+    if (accountState is AccountListLoaded) {
+      for (final account in accountState.items) {
+        accountNames[account.id] = account.name;
+      }
+    }
+    final currencySymbol = settings.currencySymbol;
 
     if (state.status == ListStatus.loading && state.transactions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -112,6 +123,8 @@ class TransactionListView extends StatelessWidget {
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            currencySymbol: currencySymbol,
+            accountName: accountNames[transaction.accountId] ?? 'Deleted',
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -140,6 +153,8 @@ class TransactionListView extends StatelessWidget {
           // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            currencySymbol: currencySymbol,
+            accountName: accountNames[transaction.accountId] ?? 'Deleted',
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {
