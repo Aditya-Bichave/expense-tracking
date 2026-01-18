@@ -329,6 +329,18 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
+    final accountState = context.watch<AccountListBloc>().state;
+
+    Map<String, String> accountMap = {};
+    bool isAccountsLoaded = false;
+    bool isAccountsError = false;
+
+    if (accountState is AccountListLoaded) {
+      isAccountsLoaded = true;
+      accountMap = {for (var item in accountState.items) item.id: item.name};
+    } else if (accountState is AccountListError) {
+      isAccountsError = true;
+    }
 
     return Scaffold(
       body: Column(
@@ -406,6 +418,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
                               handleChangeCategoryRequest:
                                   _handleChangeCategoryRequest,
                               confirmDeletion: _confirmDeletion,
+                              accountMap: accountMap,
+                              isAccountsLoaded: isAccountsLoaded,
+                              isAccountsError: isAccountsError,
                             ),
                           ),
                   ),

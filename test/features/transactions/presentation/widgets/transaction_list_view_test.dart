@@ -66,6 +66,8 @@ void main() {
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,
         enableAnimations: false,
+        accountMap: const {'a1': 'Test Account'},
+        isAccountsLoaded: true,
       ),
     );
   }
@@ -133,6 +135,8 @@ void main() {
       await tester.pump();
       expect(find.byType(ExpenseCard), findsOneWidget);
       expect(find.byType(IncomeCard), findsOneWidget);
+      expect(find.text('Acc: Test Account'),
+          findsNWidgets(2)); // Check if account name is rendered
     });
 
     testWidgets('tapping card navigates when not in batch mode',
