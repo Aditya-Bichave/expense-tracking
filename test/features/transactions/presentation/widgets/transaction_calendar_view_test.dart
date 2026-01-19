@@ -44,6 +44,7 @@ void main() {
     return TransactionCalendarView(
       state: const TransactionListState(),
       settings: const SettingsState(),
+      // accountNames: const {'1': 'Test Account'}, // Removed
       calendarFormat: CalendarFormat.month,
       focusedDay: testDay,
       selectedDay: testDay,

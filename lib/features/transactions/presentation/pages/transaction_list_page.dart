@@ -27,9 +27,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:collection/collection.dart';
 
 class TransactionListPage extends StatefulWidget {
-  // --- ADDED: Accept optional initial filters ---
   final Map<String, dynamic>? initialFilters;
-  // --- END ADD ---
   const TransactionListPage({super.key, this.initialFilters});
 
   @override
@@ -57,7 +55,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       _focusedDay.day,
     );
 
-    // --- MODIFIED: Apply initial filters if provided ---
     if (widget.initialFilters != null && widget.initialFilters!.isNotEmpty) {
       log.info(
         "[TxnListPage] Applying initial filters from route: ${widget.initialFilters}",
@@ -73,7 +70,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       // Load normally if no initial filters
       _setupInitialCalendarData();
     }
-    // --- END MODIFICATION ---
   }
 
   @override
@@ -329,6 +325,17 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
+    final accountState = context.watch<AccountListBloc>().state;
+    final Map<String, String> accountNames = {};
+    if (accountState is AccountListLoaded) {
+      for (final acc in accountState.items) {
+        accountNames[acc.id] = acc.name;
+      }
+    }
+
+    final bool isAccountsLoading = accountState is AccountListLoading ||
+        accountState is AccountListInitial;
+    final bool isAccountsError = accountState is AccountListError;
 
     return Scaffold(
       body: Column(
@@ -402,6 +409,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
                             child: TransactionListView(
                               state: state,
                               settings: settings,
+                              accountNames: accountNames,
+                              isAccountsLoading: isAccountsLoading,
+                              isAccountsError: isAccountsError,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
                               handleChangeCategoryRequest:
                                   _handleChangeCategoryRequest,

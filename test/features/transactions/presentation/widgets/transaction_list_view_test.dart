@@ -62,6 +62,7 @@ void main() {
       child: TransactionListView(
         state: state,
         settings: const SettingsState(),
+        accountNames: const {'a1': 'Account A'}, // Added mock account names
         navigateToDetailOrEdit: mockCallbacks.navigateToDetailOrEdit,
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,

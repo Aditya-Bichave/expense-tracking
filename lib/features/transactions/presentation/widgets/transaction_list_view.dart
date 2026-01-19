@@ -6,11 +6,8 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-// Keep this
-// --- Import Expense/Income Card Widgets ---
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
-// --- End Import ---
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,23 +16,25 @@ import 'package:go_router/go_router.dart';
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
   final SettingsState settings;
+  final Map<String, String> accountNames;
+  final bool isAccountsLoading;
+  final bool isAccountsError;
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
-  // --- ADD Handlers ---
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
   final Function(BuildContext, TransactionEntity) confirmDeletion;
   final bool enableAnimations;
-  // --- END Handlers ---
 
   const TransactionListView({
     super.key,
     required this.state,
     required this.settings,
+    required this.accountNames,
+    this.isAccountsLoading = false,
+    this.isAccountsError = false,
     required this.navigateToDetailOrEdit,
-    // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
     required this.confirmDeletion,
     this.enableAnimations = true,
-    // --- End Add ---
   });
 
   @override
@@ -107,13 +106,25 @@ class TransactionListView extends StatelessWidget {
         final isSelected =
             state.selectedTransactionIds.contains(transaction.id);
 
-        // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
+
+        String accountName;
+        if (accountNames.containsKey(transaction.accountId)) {
+          accountName = accountNames[transaction.accountId]!;
+        } else if (isAccountsLoading) {
+          accountName = '...';
+        } else if (isAccountsError) {
+          accountName = 'Error';
+        } else {
+          accountName = 'Deleted';
+        }
+
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            currencySymbol: settings.currencySymbol,
+            accountName: accountName,
             onCardTap: (exp) {
-              // Pass original Expense
               if (state.isInBatchEditMode) {
                 context
                     .read<TransactionListBloc>()
@@ -137,11 +148,11 @@ class TransactionListView extends StatelessWidget {
             },
           );
         } else {
-          // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            currencySymbol: settings.currencySymbol,
+            accountName: accountName,
             onCardTap: (inc) {
-              // Pass original Income
               if (state.isInBatchEditMode) {
                 context
                     .read<TransactionListBloc>()
@@ -165,7 +176,6 @@ class TransactionListView extends StatelessWidget {
             },
           );
         }
-        // --- END USE ---
 
         final animatedCard = enableAnimations
             ? cardItem
@@ -187,13 +197,12 @@ class TransactionListView extends StatelessWidget {
               await confirmDeletion(context, transaction),
           onDismissed: (direction) {
             // BLoC event is dispatched by confirmDismiss callback now
-            // context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
           },
           child: Container(
             color: isSelected
                 ? theme.colorScheme.primaryContainer.withOpacity(0.3)
                 : Colors.transparent,
-            child: animatedCard, // Use the determined ExpenseCard or IncomeCard
+            child: animatedCard,
           ),
         );
       },
