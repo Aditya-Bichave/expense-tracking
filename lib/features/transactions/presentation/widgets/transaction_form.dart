@@ -312,6 +312,7 @@ class TransactionFormState extends State<TransactionForm> {
             fallbackIcon:
                 isExpense ? Icons.description_outlined : Icons.source_outlined,
             textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
 
@@ -321,6 +322,7 @@ class TransactionFormState extends State<TransactionForm> {
             controller: _amountController,
             labelText: 'Amount',
             currencySymbol: currencySymbol,
+            textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 16),
 
@@ -363,6 +365,7 @@ class TransactionFormState extends State<TransactionForm> {
           CommonFormFields.buildNotesField(
             context: context,
             controller: _notesController,
+            textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 32),
 

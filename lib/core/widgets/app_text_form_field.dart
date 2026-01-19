@@ -20,6 +20,7 @@ class AppTextFormField extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final int? maxLines;
   final ValueChanged<String>? onChanged; // Added onChanged callback
+  final TextInputAction? textInputAction;
 
   const AppTextFormField({
     super.key,
@@ -39,6 +40,7 @@ class AppTextFormField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
     this.onChanged, // Added onChanged
+    this.textInputAction,
   });
 
   @override
@@ -51,8 +53,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   @override
   void initState() {
     super.initState();
-    _showClearButton =
-        widget.controller.text.isNotEmpty &&
+    _showClearButton = widget.controller.text.isNotEmpty &&
         !widget.readOnly; // Also check readOnly
     widget.controller.addListener(_handleTextChange);
   }
@@ -65,8 +66,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
 
   void _handleTextChange() {
     if (mounted) {
-      final shouldShow =
-          widget.controller.text.isNotEmpty &&
+      final shouldShow = widget.controller.text.isNotEmpty &&
           !widget.readOnly; // Check readOnly
       if (_showClearButton != shouldShow) {
         setState(() {
@@ -99,8 +99,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
         focusedErrorBorder: inputTheme.focusedErrorBorder,
         filled: inputTheme.filled,
         fillColor: inputTheme.fillColor,
-        contentPadding:
-            inputTheme.contentPadding ??
+        contentPadding: inputTheme.contentPadding ??
             modeTheme?.listItemPadding.copyWith(top: 14, bottom: 14),
         isDense: inputTheme.isDense,
         floatingLabelBehavior: inputTheme.floatingLabelBehavior,
@@ -126,6 +125,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
       textCapitalization: widget.textCapitalization,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
       onChanged: widget.onChanged, // Pass onChanged to TextFormField
+      textInputAction: widget.textInputAction,
     );
   }
 }

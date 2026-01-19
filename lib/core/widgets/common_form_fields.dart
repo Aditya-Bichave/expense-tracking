@@ -54,6 +54,7 @@ class CommonFormFields {
     IconData fallbackIcon = Icons.label_outline,
     TextCapitalization textCapitalization = TextCapitalization.words,
     String? Function(String?)? validator,
+    TextInputAction? textInputAction,
   }) {
     return AppTextFormField(
       controller: controller,
@@ -61,8 +62,8 @@ class CommonFormFields {
       hintText: hintText,
       prefixIcon: getPrefixIcon(context, iconKey, fallbackIcon),
       textCapitalization: textCapitalization,
-      validator:
-          validator ??
+      textInputAction: textInputAction,
+      validator: validator ??
           (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Please enter a value';
@@ -84,6 +85,7 @@ class CommonFormFields {
     IconData fallbackIcon = Icons.attach_money,
     String? Function(String?)? validator,
     ValueChanged<String>? onChanged,
+    TextInputAction? textInputAction,
   }) {
     return AppTextFormField(
       controller: controller,
@@ -94,14 +96,12 @@ class CommonFormFields {
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'^\d*[,.]?\d{0,2}')),
       ],
-      validator:
-          validator ??
+      textInputAction: textInputAction,
+      validator: validator ??
           (value) {
             if (value == null || value.isEmpty) return 'Enter amount';
-            final locale = context
-                .read<SettingsBloc>()
-                .state
-                .selectedCountryCode;
+            final locale =
+                context.read<SettingsBloc>().state.selectedCountryCode;
             final number = parseCurrency(value, locale);
             if (number.isNaN) return 'Invalid number';
             if (number <= 0) return 'Must be positive';
@@ -120,6 +120,7 @@ class CommonFormFields {
     int maxLines = 3,
     String iconKey = 'notes',
     IconData fallbackIcon = Icons.note_alt_outlined,
+    TextInputAction? textInputAction,
   }) {
     return AppTextFormField(
       controller: controller,
@@ -128,6 +129,7 @@ class CommonFormFields {
       prefixIcon: getPrefixIcon(context, iconKey, fallbackIcon),
       maxLines: maxLines,
       textCapitalization: TextCapitalization.sentences,
+      textInputAction: textInputAction,
       validator: null,
     );
   }
@@ -145,8 +147,7 @@ class CommonFormFields {
     final theme = Theme.of(context);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      shape:
-          theme.inputDecorationTheme.enabledBorder ??
+      shape: theme.inputDecorationTheme.enabledBorder ??
           OutlineInputBorder(
             borderRadius: BorderRadius.circular(8.0),
             borderSide: BorderSide(color: theme.dividerColor),
@@ -188,8 +189,7 @@ class CommonFormFields {
     return AccountSelectorDropdown(
       selectedAccountId: selectedAccountId,
       onChanged: onChanged,
-      validator:
-          validator ??
+      validator: validator ??
           (value) => value == null ? 'Please select an account' : null,
       labelText: labelText,
       hintText: hintText,

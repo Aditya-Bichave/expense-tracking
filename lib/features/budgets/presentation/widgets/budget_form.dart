@@ -232,6 +232,7 @@ class _BudgetFormState extends State<BudgetForm> {
             hintText: 'e.g., Monthly Groceries, Vacation Fund',
             iconKey: 'label',
             fallbackIcon: Icons.label_outline,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
 
@@ -243,6 +244,7 @@ class _BudgetFormState extends State<BudgetForm> {
             currencySymbol: currencySymbol,
             iconKey: 'target',
             fallbackIcon: Icons.track_changes_outlined,
+            textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 20),
 
@@ -400,7 +402,9 @@ class _BudgetFormState extends State<BudgetForm> {
 
           // Notes
           CommonFormFields.buildNotesField(
-              context: context, controller: _notesController),
+              context: context,
+              controller: _notesController,
+              textInputAction: TextInputAction.done),
           const SizedBox(height: 32),
 
           // Submit Button
