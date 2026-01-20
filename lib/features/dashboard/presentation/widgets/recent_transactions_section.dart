@@ -55,12 +55,32 @@ class RecentTransactionsSection extends StatelessWidget {
                     textAlign: TextAlign.center)),
           )
         else if (recentItems.isEmpty)
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: Center(
-                child: Text("No transactions recorded yet.",
-                    style: theme.textTheme.bodyMedium)),
+          Semantics(
+            label: "No recent transactions. You haven't added any expenses or income yet.",
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.history,
+                      size: 48,
+                      color: theme.colorScheme.outline.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "No recent activity",
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           )
         else
           ListView.builder(

@@ -1,0 +1,3 @@
+## 2024-05-23 - Testing Navigation with Content Rendering
+**Learning:** The `pumpWidgetWithProviders` test helper in this repo bypasses the default route builder when a mock router is provided. This causes widgets to not render when trying to verify navigation (resulting in "Page Not Found"), because the mock router lacks the route configuration to render the child widget.
+**Action:** When testing widgets that use `context.go` and need to be rendered, avoid passing a `mockGoRouter` that replaces the config entirely. Instead, create a test-specific router configuration or modify the helper to allow injecting a router delegate that still renders the test subject.
