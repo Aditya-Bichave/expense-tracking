@@ -13,9 +13,14 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 
 class IncomeRepositoryImpl implements IncomeRepository {
   final IncomeLocalDataSource localDataSource;
-  CategoryRepository get categoryRepository => sl<CategoryRepository>();
+  final CategoryRepository? _categoryRepository; // Optional to support constructor injection
 
-  IncomeRepositoryImpl({required this.localDataSource});
+  CategoryRepository get categoryRepository => _categoryRepository ?? sl<CategoryRepository>();
+
+  IncomeRepositoryImpl({
+    required this.localDataSource,
+    CategoryRepository? categoryRepository,
+  }) : _categoryRepository = categoryRepository;
 
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Income>> _hydrateSingleModel(IncomeModel model) async {
