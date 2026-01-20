@@ -54,39 +54,56 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
   }) async {
     try {
       final List<IncomeModel> results = [];
+
+      // Optimization: Pre-calculate date boundaries outside the loop
+      final DateTime? startDateOnly = startDate != null
+          ? DateTime(startDate.year, startDate.month, startDate.day)
+          : null;
+
+      final DateTime? endDateInclusive = endDate != null
+          ? DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            )
+          : null;
+
+      // Optimization: Pre-split ID strings into Sets for O(1) lookup
+      final Set<String>? accountIdSet =
+          (accountId != null && accountId.isNotEmpty)
+              ? accountId.split(',').toSet()
+              : null;
+
+      final Set<String>? categoryIdSet =
+          (categoryId != null && categoryId.isNotEmpty)
+              ? categoryId.split(',').toSet()
+              : null;
+
       for (final income in incomeBox.values) {
-        if (startDate != null) {
-          final incDateOnly = DateTime(
-            income.date.year,
-            income.date.month,
-            income.date.day,
-          );
-          final startDateOnly = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day,
-          );
-          if (incDateOnly.isBefore(startDateOnly)) continue;
+        // Date filtering
+        if (startDateOnly != null && income.date.isBefore(startDateOnly)) {
+          continue;
         }
-        if (endDate != null) {
-          final endDateInclusive = DateTime(
-            endDate.year,
-            endDate.month,
-            endDate.day,
-            23,
-            59,
-            59,
-          );
-          if (income.date.isAfter(endDateInclusive)) continue;
+        if (endDateInclusive != null &&
+            income.date.isAfter(endDateInclusive)) {
+          continue;
         }
-        if (accountId != null && accountId.isNotEmpty) {
-          final ids = accountId.split(',');
-          if (!ids.contains(income.accountId)) continue;
+
+        // Account filtering
+        if (accountIdSet != null &&
+            !accountIdSet.contains(income.accountId)) {
+          continue;
         }
-        if (categoryId != null && categoryId.isNotEmpty) {
-          final ids = categoryId.split(',');
-          if (!ids.contains(income.categoryId)) continue;
+
+        // Category filtering
+        if (categoryIdSet != null &&
+            !categoryIdSet.contains(income.categoryId)) {
+          continue;
         }
+
         results.add(income);
       }
       log.info(
