@@ -2,15 +2,15 @@
 // MODIFIED FILE (Implement interactive prompts)
 
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+// REMOVED: import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+// REMOVED: import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+// REMOVED: import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/main.dart';
@@ -19,6 +19,8 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/categ
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
+  final String accountName;
+  final String currencySymbol;
   final Function(Expense expense)? onCardTap;
   final Function(Expense expense, Category selectedCategory)? onUserCategorized;
   final Function(Expense expense)? onChangeCategoryRequest;
@@ -26,6 +28,8 @@ class ExpenseCard extends StatelessWidget {
   const ExpenseCard({
     super.key,
     required this.expense,
+    required this.accountName,
+    required this.currencySymbol,
     this.onCardTap,
     this.onUserCategorized,
     this.onChangeCategoryRequest,
@@ -96,23 +100,13 @@ class ExpenseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final settingsState = context.watch<SettingsBloc>().state;
-    final currencySymbol = settingsState.currencySymbol;
+    // OPTIMIZATION: Use passed parameters instead of watching Blocs
+    // final settingsState = context.watch<SettingsBloc>().state;
+    // final currencySymbol = settingsState.currencySymbol;
     final modeTheme = context.modeTheme;
     final category = expense.category ?? Category.uncategorized;
-    final accountState = context.watch<AccountListBloc>().state;
-    String accountName = '...';
-    if (accountState is AccountListLoaded) {
-      try {
-        accountName = accountState.items
-            .firstWhere((acc) => acc.id == expense.accountId)
-            .name;
-      } catch (_) {
-        accountName = 'Deleted';
-      }
-    } else if (accountState is AccountListError) {
-      accountName = 'Error';
-    }
+    // final accountState = context.watch<AccountListBloc>().state;
+
     return AppCard(
       onTap: () => onCardTap?.call(expense),
       child: Row(
