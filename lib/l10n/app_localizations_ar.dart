@@ -123,8 +123,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noAccountsYet => 'لا توجد حسابات بعد!';
 
   @override
-  String get addAccountEmptyDescription =>
-      'اضغط على زر \"+\" أدناه لإضافة أول حساب بنكي أو محفظة نقدية أو أصول أخرى.';
+  String get addAccountEmptyDescription => 'اضغط على زر \"+\" أدناه لإضافة أول حساب بنكي أو محفظة نقدية أو أصول أخرى.';
 
   @override
   String get addFirstAccount => 'أضف الحساب الأول';
@@ -148,4 +147,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addAccount => 'إضافة حساب';
+
+  @override
+  String a11yTransactionEntry(Object type, Object amount) {
+    return '$type بمبلغ $amount';
+  }
 }

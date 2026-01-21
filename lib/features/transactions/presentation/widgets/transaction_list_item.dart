@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/categories/presentation/widgets/icon_pi
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 // logger
 
@@ -45,16 +46,26 @@ class TransactionListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final isExpense = transaction.type == TransactionType.expense;
     final category = transaction.category ?? Category.uncategorized;
     final amountColor = isExpense
         ? theme.colorScheme.error
         : theme.colorScheme.primary; // Income as primary
 
+    final formattedAmount =
+        CurrencyFormatter.format(transaction.amount, currencySymbol);
+
+    final typeString = isExpense ? l10n.expense : l10n.income;
+    final semanticsLabel =
+        l10n.a11yTransactionEntry(typeString, formattedAmount);
+
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: category.displayColor.withOpacity(0.15),
-        child: _buildIcon(context, theme),
+      leading: ExcludeSemantics(
+        child: CircleAvatar(
+          backgroundColor: category.displayColor.withOpacity(0.15),
+          child: _buildIcon(context, theme),
+        ),
       ),
       title: Text(
         transaction.title,
@@ -68,12 +79,16 @@ class TransactionListItem extends StatelessWidget {
               ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           maxLines: 1,
           overflow: TextOverflow.ellipsis),
-      trailing: Text(
-        '${isExpense ? '-' : '+'} ${CurrencyFormatter.format(transaction.amount, currencySymbol)}',
-        style: theme.textTheme.bodyLarge?.copyWith(
-          color: amountColor,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.5,
+      trailing: Semantics(
+        label: semanticsLabel,
+        excludeSemantics: true,
+        child: Text(
+          '${isExpense ? '-' : '+'} $formattedAmount',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: amountColor,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
       onTap: onTap, // Use the passed onTap callback

@@ -50,6 +50,13 @@
   "delete": "Delete",
   "errorLoadingAccounts": "Error loading accounts",
   "retry": "Retry",
-  "addAccount": "Add Account"
+  "addAccount": "Add Account",
+  "a11yTransactionEntry": "{type} of {amount}",
+  "@a11yTransactionEntry": {
+    "placeholders": {
+      "type": {},
+      "amount": {}
+    }
+  }
 }
 

@@ -123,8 +123,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noAccountsYet => 'No accounts yet!';
 
   @override
-  String get addAccountEmptyDescription =>
-      'Tap the \"+\" button below to add your first bank account, cash wallet, or other assets.';
+  String get addAccountEmptyDescription => 'Tap the \"+\" button below to add your first bank account, cash wallet, or other assets.';
 
   @override
   String get addFirstAccount => 'Add First Account';
@@ -148,4 +147,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addAccount => 'Add Account';
+
+  @override
+  String a11yTransactionEntry(Object type, Object amount) {
+    return '$type of $amount';
+  }
 }
