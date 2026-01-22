@@ -62,6 +62,7 @@ void main() {
       child: TransactionListView(
         state: state,
         settings: const SettingsState(),
+        accountNames: const {'a1': 'Test Account'},
         navigateToDetailOrEdit: mockCallbacks.navigateToDetailOrEdit,
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,
@@ -133,6 +134,7 @@ void main() {
       await tester.pump();
       expect(find.byType(ExpenseCard), findsOneWidget);
       expect(find.byType(IncomeCard), findsOneWidget);
+      expect(find.text('Acc: Test Account'), findsWidgets); // Verify account name injection
     });
 
     testWidgets('tapping card navigates when not in batch mode',
