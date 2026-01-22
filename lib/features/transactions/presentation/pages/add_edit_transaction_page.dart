@@ -35,6 +35,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
   AddEditStatus? _previousStatus; // Track previous status
   final GlobalKey<TransactionFormState> _formKey =
       GlobalKey<TransactionFormState>();
+  bool _canPop = false;
 
   @override
   void initState() {
@@ -190,6 +191,84 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     }
   }
 
+  bool _hasUnsavedChanges() {
+    final formState = _formKey.currentState;
+    if (formState == null) return false;
+
+    // Get current values
+    final currentTitle = formState.currentTitle.trim();
+    final currentAmountRaw = formState.currentAmountRaw.trim();
+    final currentNotes = formState.currentNotes.trim();
+
+    // If Adding (no initial transaction)
+    if (_initialTransactionEntity == null) {
+      return currentTitle.isNotEmpty ||
+          currentAmountRaw.isNotEmpty ||
+          currentNotes.isNotEmpty;
+    }
+
+    // If Editing
+    final settings = context.read<SettingsBloc>().state;
+    final locale = settings.selectedCountryCode;
+    final currentAmount = parseCurrency(currentAmountRaw, locale);
+
+    final initialTitle = _initialTransactionEntity!.title;
+    final initialAmount = _initialTransactionEntity!.amount;
+    final initialNotes = _initialTransactionEntity!.notes ?? '';
+
+    if (currentTitle != initialTitle) return true;
+    if ((currentAmount - initialAmount).abs() > 0.001) return true;
+    if (currentNotes != initialNotes) return true;
+
+    // Check Category
+    final currentCatId = formState.selectedCategory?.id;
+    final initialCatId = _initialTransactionEntity!.category?.id;
+    if (currentCatId != initialCatId) return true;
+
+    // Check Account
+    final currentAccId = formState.currentAccountId;
+    final initialAccId = _initialTransactionEntity!.accountId;
+    if (currentAccId != initialAccId) return true;
+
+    return false;
+  }
+
+  Future<void> _confirmDiscard() async {
+    if (_hasUnsavedChanges()) {
+      final discard = await AppDialogs.showConfirmation(
+        context,
+        title: "Discard Changes?",
+        content:
+            "You have unsaved changes. Are you sure you want to discard them?",
+        confirmText: "Discard",
+        cancelText: "Keep Editing",
+        confirmColor: Theme.of(context).colorScheme.error,
+      );
+
+      if (discard == true) {
+        _proceedToPop();
+      }
+    } else {
+      _proceedToPop();
+    }
+  }
+
+  void _proceedToPop() {
+    if (!mounted) return;
+    setState(() {
+      _canPop = true;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        if (context.canPop()) {
+          context.pop();
+        } else {
+          context.go(RouteNames.transactionsList);
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isEditing = _initialTransactionEntity != null;
@@ -269,103 +348,103 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           // Update previous state tracking *after* handling transitions
           _previousStatus = state.status;
         },
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text(isEditing ? 'Edit Transaction' : 'Add Transaction'),
-            leading: IconButton(
-              key: const ValueKey('button_addEditTransaction_close'),
-              icon: const Icon(Icons.close),
-              tooltip: 'Cancel',
-              onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go(RouteNames.transactionsList);
-                }
+        child: PopScope(
+          canPop: _canPop,
+          onPopInvoked: (didPop) async {
+            if (didPop) return;
+            await _confirmDiscard();
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text(isEditing ? 'Edit Transaction' : 'Add Transaction'),
+              leading: IconButton(
+                key: const ValueKey('button_addEditTransaction_close'),
+                icon: const Icon(Icons.close),
+                tooltip: 'Cancel',
+                onPressed: _confirmDiscard,
+              ),
+            ),
+            body: BlocBuilder<AddEditTransactionBloc, AddEditTransactionState>(
+              builder: (context, state) {
+                log.fine(
+                    "[AddEditTxnPage] BlocBuilder: Status=${state.status}");
+
+                final bool isLoadingOverlayVisible = state.status ==
+                        AddEditStatus.saving ||
+                    state.status == AddEditStatus.loading ||
+                    state.status == AddEditStatus.navigatingToCreateCategory;
+
+                return Stack(
+                  children: [
+                    TransactionForm(
+                      key: _formKey,
+                      initialTransaction: state.isEditing
+                          ? (state.transactionType == TransactionType.expense
+                              ? TransactionEntity.fromExpense(
+                                  Expense(
+                                    id: state.transactionId!,
+                                    title: state.tempTitle ?? '',
+                                    amount: state.tempAmount ?? 0,
+                                    date: state.tempDate ?? DateTime.now(),
+                                    category: state.category,
+                                    accountId: state.tempAccountId ?? '',
+                                  ),
+                                )
+                              : TransactionEntity.fromIncome(
+                                  Income(
+                                    id: state.transactionId!,
+                                    title: state.tempTitle ?? '',
+                                    amount: state.tempAmount ?? 0,
+                                    date: state.tempDate ?? DateTime.now(),
+                                    category: state.category,
+                                    accountId: state.tempAccountId ?? '',
+                                    notes: state.tempNotes,
+                                  ),
+                                ))
+                          : null,
+                      initialType: state.transactionType,
+                      initialCategory: state.effectiveCategory,
+                      initialTitle: state.tempTitle,
+                      initialAmount: state.tempAmount,
+                      initialDate: state.tempDate,
+                      initialAccountId: state.tempAccountId,
+                      initialNotes: state.tempNotes,
+                      onSubmit: (
+                        type,
+                        title,
+                        amount,
+                        date,
+                        category,
+                        accountId,
+                        notes,
+                      ) {
+                        log.info(
+                          "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.",
+                        );
+                        context.read<AddEditTransactionBloc>().add(
+                              SaveTransactionRequested(
+                                title: title,
+                                amount: amount,
+                                date: date,
+                                category: category,
+                                accountId: accountId,
+                                notes: notes,
+                              ),
+                            );
+                      },
+                    ),
+                    if (isLoadingOverlayVisible)
+                      Positioned.fill(
+                        child: Container(
+                          color: Colors.black.withOpacity(0.1),
+                          child:
+                              const Center(child: CircularProgressIndicator()),
+                        ),
+                      ),
+                  ],
+                );
               },
             ),
-          ),
-          body: BlocBuilder<AddEditTransactionBloc, AddEditTransactionState>(
-            builder: (context, state) {
-              log.fine("[AddEditTxnPage] BlocBuilder: Status=${state.status}");
-
-              final bool isLoadingOverlayVisible =
-                  state.status == AddEditStatus.saving ||
-                      state.status == AddEditStatus.loading ||
-                      state.status == AddEditStatus.navigatingToCreateCategory;
-
-              return Stack(
-                children: [
-                  TransactionForm(
-                    key: ValueKey(
-                      state.transactionType.toString() +
-                          (state.transactionId ?? 'new'),
-                    ),
-                    initialTransaction: state.isEditing
-                        ? (state.transactionType == TransactionType.expense
-                            ? TransactionEntity.fromExpense(
-                                Expense(
-                                  id: state.transactionId!,
-                                  title: state.tempTitle ?? '',
-                                  amount: state.tempAmount ?? 0,
-                                  date: state.tempDate ?? DateTime.now(),
-                                  category: state.category,
-                                  accountId: state.tempAccountId ?? '',
-                                ),
-                              )
-                            : TransactionEntity.fromIncome(
-                                Income(
-                                  id: state.transactionId!,
-                                  title: state.tempTitle ?? '',
-                                  amount: state.tempAmount ?? 0,
-                                  date: state.tempDate ?? DateTime.now(),
-                                  category: state.category,
-                                  accountId: state.tempAccountId ?? '',
-                                  notes: state.tempNotes,
-                                ),
-                              ))
-                        : null,
-                    initialType: state.transactionType,
-                    initialCategory: state.effectiveCategory,
-                    initialTitle: state.tempTitle,
-                    initialAmount: state.tempAmount,
-                    initialDate: state.tempDate,
-                    initialAccountId: state.tempAccountId,
-                    initialNotes: state.tempNotes,
-                    onSubmit: (
-                      type,
-                      title,
-                      amount,
-                      date,
-                      category,
-                      accountId,
-                      notes,
-                    ) {
-                      log.info(
-                        "[AddEditTxnPage] Form submitted via callback. Dispatching SaveTransactionRequested.",
-                      );
-                      context.read<AddEditTransactionBloc>().add(
-                            SaveTransactionRequested(
-                              title: title,
-                              amount: amount,
-                              date: date,
-                              category: category,
-                              accountId: accountId,
-                              notes: notes,
-                            ),
-                          );
-                    },
-                  ),
-                  if (isLoadingOverlayVisible)
-                    Positioned.fill(
-                      child: Container(
-                        color: Colors.black.withOpacity(0.1),
-                        child: const Center(child: CircularProgressIndicator()),
-                      ),
-                    ),
-                ],
-              );
-            },
           ),
         ),
       ),

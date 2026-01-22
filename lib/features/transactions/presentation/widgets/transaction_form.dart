@@ -117,6 +117,8 @@ class TransactionFormState extends State<TransactionForm> {
       setState(() {
         _transactionType = widget.initialType;
         _selectedCategory = null;
+        // Reset transient state when type changes for new transaction
+        _selectedDate = DateTime.now();
       });
       context.read<AddEditTransactionBloc>().add(
             TransactionTypeChanged(_transactionType),
