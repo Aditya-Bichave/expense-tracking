@@ -329,6 +329,17 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
+    final accountState = context.watch<AccountListBloc>().state;
+
+    final Map<String, String> accountNames = {};
+    String fallbackAccountName = 'Deleted';
+    if (accountState is AccountListLoaded) {
+      for (final account in accountState.items) {
+        accountNames[account.id] = account.name;
+      }
+    } else if (accountState is AccountListError) {
+      fallbackAccountName = 'Error';
+    }
 
     return Scaffold(
       body: Column(
@@ -402,6 +413,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
                             child: TransactionListView(
                               state: state,
                               settings: settings,
+                              accountNames: accountNames,
+                              fallbackAccountName: fallbackAccountName,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
                               handleChangeCategoryRequest:
                                   _handleChangeCategoryRequest,
