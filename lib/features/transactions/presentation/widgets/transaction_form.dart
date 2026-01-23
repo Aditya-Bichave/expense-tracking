@@ -34,6 +34,7 @@ class TransactionForm extends StatefulWidget {
   final DateTime? initialDate;
   final String? initialAccountId;
   final String? initialNotes;
+  final bool isLoading;
 
   const TransactionForm({
     super.key,
@@ -46,6 +47,7 @@ class TransactionForm extends StatefulWidget {
     this.initialDate,
     this.initialAccountId,
     this.initialNotes,
+    this.isLoading = false,
   });
 
   @override
@@ -369,11 +371,22 @@ class TransactionFormState extends State<TransactionForm> {
           // Submit Button
           ElevatedButton.icon(
             key: const ValueKey('button_transactionForm_submit'),
-            icon: Icon(
-              widget.initialTransaction == null
-                  ? Icons.add_circle_outline
-                  : Icons.save_outlined,
-            ),
+            icon: widget.isLoading
+                ? Builder(
+                    builder: (context) => SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: IconTheme.of(context).color,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    widget.initialTransaction == null
+                        ? Icons.add_circle_outline
+                        : Icons.save_outlined,
+                  ),
             label: Text(
               widget.initialTransaction == null
                   ? 'Add Transaction'
@@ -383,7 +396,7 @@ class TransactionFormState extends State<TransactionForm> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               textStyle: theme.textTheme.titleMedium,
             ),
-            onPressed: _submitForm,
+            onPressed: widget.isLoading ? null : _submitForm,
           ),
         ],
       ),

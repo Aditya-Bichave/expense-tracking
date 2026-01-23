@@ -290,8 +290,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               log.fine("[AddEditTxnPage] BlocBuilder: Status=${state.status}");
 
               final bool isLoadingOverlayVisible =
-                  state.status == AddEditStatus.saving ||
-                      state.status == AddEditStatus.loading ||
+                  state.status == AddEditStatus.loading ||
                       state.status == AddEditStatus.navigatingToCreateCategory;
 
               return Stack(
@@ -301,6 +300,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                       state.transactionType.toString() +
                           (state.transactionId ?? 'new'),
                     ),
+                    isLoading: state.status == AddEditStatus.saving,
                     initialTransaction: state.isEditing
                         ? (state.transactionType == TransactionType.expense
                             ? TransactionEntity.fromExpense(
