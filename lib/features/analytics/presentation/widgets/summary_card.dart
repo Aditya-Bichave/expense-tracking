@@ -33,10 +33,7 @@ class SummaryCard extends StatelessWidget {
             (state is SummaryLoading && state.isReloading)) {
           log.info(
               "[SummaryCard UI] State is SummaryLoaded or reloading. Building card content.");
-          final summary = (state is SummaryLoaded)
-              ? state.summary
-              : (context.read<SummaryBloc>().state as SummaryLoaded?)
-                  ?.summary; // Use previous data if reloading
+          final summary = (state is SummaryLoaded) ? state.summary : null;
 
           if (summary == null) {
             // Should not happen if reloading logic is correct, but safety check
