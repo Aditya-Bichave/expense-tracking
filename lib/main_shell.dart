@@ -67,6 +67,21 @@ class MainShell extends StatelessWidget {
     }
   }
 
+  // Helper to get the tooltip for FAB based on tab index
+  String _getFabTooltip(int index) {
+    switch (index) {
+      case 0: // Dashboard
+      case 1: // Transactions
+        return 'Add Transaction';
+      case 3: // Accounts
+        return 'Add Account';
+      case 4: // Recurring
+        return 'Add Recurring';
+      default:
+        return 'Add';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -151,7 +166,7 @@ class MainShell extends StatelessWidget {
                     return; // Should not happen if showFab is false for other tabs
                 }
               },
-              tooltip: 'Add',
+              tooltip: _getFabTooltip(currentTabIndex),
               child: const Icon(Icons.add),
             )
           : null,
