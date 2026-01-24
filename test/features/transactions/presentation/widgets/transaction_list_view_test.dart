@@ -13,7 +13,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
-import '../../../../helpers/test_data.dart';
 
 class MockTransactionListBloc
     extends MockBloc<TransactionListEvent, TransactionListState>
@@ -62,6 +61,8 @@ void main() {
       child: TransactionListView(
         state: state,
         settings: const SettingsState(),
+        accountNameMap: const {'a1': 'Test Account'},
+        defaultAccountName: 'Deleted',
         navigateToDetailOrEdit: mockCallbacks.navigateToDetailOrEdit,
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,

@@ -344,71 +344,94 @@ class _TransactionListPageState extends State<TransactionListPage> {
           ),
           const Divider(height: 1, thickness: 1),
           Expanded(
-            child: BlocConsumer<TransactionListBloc, TransactionListState>(
-              listener: (context, state) {
-                if (state.status == ListStatus.error &&
-                    state.errorMessage != null) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(
-                        content: Text("Error: ${state.errorMessage!}"),
-                        backgroundColor: theme.colorScheme.error,
+            child: BlocBuilder<AccountListBloc, AccountListState>(
+              builder: (context, accountState) {
+                final Map<String, String> accountNameMap = {};
+                String defaultAccountName = '...';
+
+                if (accountState is AccountListLoaded) {
+                  for (final acc in accountState.items) {
+                    accountNameMap[acc.id] = acc.name;
+                  }
+                  defaultAccountName = 'Deleted';
+                } else if (accountState is AccountListError) {
+                  defaultAccountName = 'Error';
+                }
+
+                return BlocConsumer<TransactionListBloc, TransactionListState>(
+                  listener: (context, state) {
+                    if (state.status == ListStatus.error &&
+                        state.errorMessage != null) {
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Text("Error: ${state.errorMessage!}"),
+                            backgroundColor: theme.colorScheme.error,
+                          ),
+                        );
+                    }
+                  },
+                  builder: (context, state) {
+                    final selectedTransactions = _selectedDay == null
+                        ? <TransactionEntity>[]
+                        : _getEventsForDay(_selectedDay!, state.transactions);
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<TransactionListBloc>().add(
+                              const LoadTransactions(forceReload: true),
+                            );
+                        await context
+                            .read<TransactionListBloc>()
+                            .stream
+                            .firstWhere(
+                              (s) =>
+                                  s.status != ListStatus.loading &&
+                                  s.status != ListStatus.reloading,
+                            );
+                      },
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        transitionBuilder: (child, animation) =>
+                            FadeTransition(opacity: animation, child: child),
+                        child: _showCalendarView
+                            ? KeyedSubtree(
+                                key: const ValueKey('calendar_view'),
+                                child: TransactionCalendarView(
+                                  state: state,
+                                  settings: settings,
+                                  calendarFormat: _calendarFormat,
+                                  focusedDay: _focusedDay,
+                                  selectedDay: _selectedDay,
+                                  selectedDayTransactions: selectedTransactions,
+                                  currentTransactionsForCalendar:
+                                      state.transactions,
+                                  getEventsForDay: (day) =>
+                                      _getEventsForDay(day, state.transactions),
+                                  onDaySelected: _onDaySelected,
+                                  onFormatChanged: _onFormatChanged,
+                                  onPageChanged: _onPageChanged,
+                                  navigateToDetailOrEdit:
+                                      _navigateToDetailOrEdit,
+                                ),
+                              )
+                            : KeyedSubtree(
+                                key: const ValueKey('list_view'),
+                                child: TransactionListView(
+                                  state: state,
+                                  settings: settings,
+                                  accountNameMap: accountNameMap,
+                                  defaultAccountName: defaultAccountName,
+                                  navigateToDetailOrEdit:
+                                      _navigateToDetailOrEdit,
+                                  handleChangeCategoryRequest:
+                                      _handleChangeCategoryRequest,
+                                  confirmDeletion: _confirmDeletion,
+                                ),
+                              ),
                       ),
                     );
-                }
-              },
-              builder: (context, state) {
-                final selectedTransactions = _selectedDay == null
-                    ? <TransactionEntity>[]
-                    : _getEventsForDay(_selectedDay!, state.transactions);
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    context.read<TransactionListBloc>().add(
-                          const LoadTransactions(forceReload: true),
-                        );
-                    await context.read<TransactionListBloc>().stream.firstWhere(
-                          (s) =>
-                              s.status != ListStatus.loading &&
-                              s.status != ListStatus.reloading,
-                        );
                   },
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    transitionBuilder: (child, animation) =>
-                        FadeTransition(opacity: animation, child: child),
-                    child: _showCalendarView
-                        ? KeyedSubtree(
-                            key: const ValueKey('calendar_view'),
-                            child: TransactionCalendarView(
-                              state: state,
-                              settings: settings,
-                              calendarFormat: _calendarFormat,
-                              focusedDay: _focusedDay,
-                              selectedDay: _selectedDay,
-                              selectedDayTransactions: selectedTransactions,
-                              currentTransactionsForCalendar:
-                                  state.transactions,
-                              getEventsForDay: (day) =>
-                                  _getEventsForDay(day, state.transactions),
-                              onDaySelected: _onDaySelected,
-                              onFormatChanged: _onFormatChanged,
-                              onPageChanged: _onPageChanged,
-                              navigateToDetailOrEdit: _navigateToDetailOrEdit,
-                            ),
-                          )
-                        : KeyedSubtree(
-                            key: const ValueKey('list_view'),
-                            child: TransactionListView(
-                              state: state,
-                              settings: settings,
-                              navigateToDetailOrEdit: _navigateToDetailOrEdit,
-                              handleChangeCategoryRequest:
-                                  _handleChangeCategoryRequest,
-                              confirmDeletion: _confirmDeletion,
-                            ),
-                          ),
-                  ),
                 );
               },
             ),
