@@ -2,15 +2,12 @@
 // MODIFIED FILE (Implement interactive prompts)
 
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/main.dart';
@@ -22,10 +19,14 @@ class IncomeCard extends StatelessWidget {
   final Function(Income income)? onCardTap;
   final Function(Income income, Category selectedCategory)? onUserCategorized;
   final Function(Income income)? onChangeCategoryRequest;
+  final String accountName;
+  final String currencySymbol;
 
   const IncomeCard({
     super.key,
     required this.income,
+    required this.accountName,
+    required this.currencySymbol,
     this.onCardTap,
     this.onUserCategorized,
     this.onChangeCategoryRequest,
@@ -81,28 +82,12 @@ class IncomeCard extends StatelessWidget {
     }
   }
 
-  // Removed _buildStatusUI, replaced by CategorizationStatusWidget
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final settingsState = context.watch<SettingsBloc>().state;
-    final currencySymbol = settingsState.currencySymbol;
     final modeTheme = context.modeTheme;
     final category = income.category ?? Category.uncategorized;
-    final accountState = context.watch<AccountListBloc>().state;
-    String accountName = '...';
-    if (accountState is AccountListLoaded) {
-      try {
-        accountName = accountState.items
-            .firstWhere((acc) => acc.id == income.accountId)
-            .name;
-      } catch (_) {
-        accountName = 'Deleted';
-      }
-    } else if (accountState is AccountListError) {
-      accountName = 'Error';
-    }
+
     final Color incomeAmountColor =
         modeTheme?.incomeGlowColor ?? Colors.green.shade700;
     return AppCard(
