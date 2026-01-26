@@ -42,9 +42,14 @@ class RecentTransactionsSection extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(16, 24, 16, 8)),
         if (isLoading && recentItems.isEmpty)
           const Center(
-              child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.0),
-                  child: CircularProgressIndicator(strokeWidth: 2)))
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24.0),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                semanticsLabel: 'Loading recent transactions',
+              ),
+            ),
+          )
         else if (errorMsg != null && recentItems.isEmpty)
           Padding(
             padding:
@@ -59,8 +64,33 @@ class RecentTransactionsSection extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             child: Center(
-                child: Text("No transactions recorded yet.",
-                    style: theme.textTheme.bodyMedium)),
+              child: Column(
+                children: [
+                  Semantics(
+                    label: '',
+                    child: Icon(
+                      Icons.history_edu,
+                      size: 48,
+                      color: theme.colorScheme.secondary.withOpacity(0.5),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No recent activity",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Your recent transactions will appear here",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           )
         else
           ListView.builder(
