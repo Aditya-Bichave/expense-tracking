@@ -19,6 +19,9 @@ import 'package:go_router/go_router.dart';
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
   final SettingsState settings;
+  final Map<String, String> accountNameMap; // Map of AccountID -> AccountName
+  final bool isAccountLoading;
+  final bool isAccountError;
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
   // --- ADD Handlers ---
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
@@ -30,6 +33,9 @@ class TransactionListView extends StatelessWidget {
     super.key,
     required this.state,
     required this.settings,
+    required this.accountNameMap,
+    this.isAccountLoading = false,
+    this.isAccountError = false,
     required this.navigateToDetailOrEdit,
     // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
@@ -107,11 +113,22 @@ class TransactionListView extends StatelessWidget {
         final isSelected =
             state.selectedTransactionIds.contains(transaction.id);
 
+        String accountName;
+        if (isAccountLoading) {
+          accountName = '...';
+        } else if (isAccountError) {
+          accountName = 'Error';
+        } else {
+          accountName = accountNameMap[transaction.accountId] ?? 'Deleted';
+        }
+
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            currencySymbol: settings.currencySymbol,
+            accountName: accountName,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -140,6 +157,8 @@ class TransactionListView extends StatelessWidget {
           // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            currencySymbol: settings.currencySymbol,
+            accountName: accountName,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {

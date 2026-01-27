@@ -56,12 +56,16 @@ void main() {
     mockCallbacks = MockCallbacks();
   });
 
-  Widget buildTestWidget(TransactionListState state) {
+  Widget buildTestWidget(TransactionListState state,
+      {bool isAccountLoading = false, bool isAccountError = false}) {
     return BlocProvider.value(
       value: mockBloc,
       child: TransactionListView(
         state: state,
         settings: const SettingsState(),
+        accountNameMap: const {'a1': 'Test Account'},
+        isAccountLoading: isAccountLoading,
+        isAccountError: isAccountError,
         navigateToDetailOrEdit: mockCallbacks.navigateToDetailOrEdit,
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,
@@ -133,6 +137,23 @@ void main() {
       await tester.pump();
       expect(find.byType(ExpenseCard), findsOneWidget);
       expect(find.byType(IncomeCard), findsOneWidget);
+      expect(find.text('Acc: Test Account'), findsNWidgets(2));
+    });
+
+    testWidgets('shows ... for account name when accounts are loading',
+        (tester) async {
+      await pumpWidgetWithProviders(
+          tester: tester,
+          widget: buildTestWidget(
+            TransactionListState(
+              status: ListStatus.success,
+              transactions: mockTransactions,
+            ),
+            isAccountLoading: true,
+          ),
+          settle: false);
+      await tester.pump();
+      expect(find.text('Acc: ...'), findsNWidgets(2));
     });
 
     testWidgets('tapping card navigates when not in batch mode',
