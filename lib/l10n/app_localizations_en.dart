@@ -148,4 +148,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addAccount => 'Add Account';
+
+  @override
+  String get goalProgress => 'Goal Progress';
 }

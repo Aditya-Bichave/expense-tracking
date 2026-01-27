@@ -50,6 +50,7 @@
   "delete": "Delete",
   "errorLoadingAccounts": "Error loading accounts",
   "retry": "Retry",
-  "addAccount": "Add Account"
+  "addAccount": "Add Account",
+  "goalProgress": "Goal Progress"
 }
 

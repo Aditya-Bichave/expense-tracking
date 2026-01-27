@@ -148,4 +148,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get addAccount => 'إضافة حساب';
+
+  @override
+  String get goalProgress => 'تقدم الهدف';
 }

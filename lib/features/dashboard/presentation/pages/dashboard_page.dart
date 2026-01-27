@@ -187,6 +187,7 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           ActionChip(
             key: const ValueKey('button_dashboard_to_spendingCategoryReport'),
+            tooltip: AppLocalizations.of(context)!.spendingByCategory,
             avatar: Icon(
               Icons.pie_chart_outline,
               size: 16,
@@ -200,6 +201,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           ActionChip(
             key: const ValueKey('button_dashboard_to_spendingTimeReport'),
+            tooltip: AppLocalizations.of(context)!.spendingOverTime,
             avatar: Icon(
               Icons.timeline_outlined,
               size: 16,
@@ -213,6 +215,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           ActionChip(
             key: const ValueKey('button_dashboard_to_incomeExpenseReport'),
+            tooltip: AppLocalizations.of(context)!.incomeVsExpense,
             avatar: Icon(
               Icons.compare_arrows_outlined,
               size: 16,
@@ -229,6 +232,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           ActionChip(
             key: const ValueKey('button_dashboard_to_budgetPerformanceReport'),
+            tooltip: AppLocalizations.of(context)!.budgetPerformance,
             avatar: Icon(
               Icons.assignment_turned_in_outlined,
               size: 16,
@@ -242,6 +246,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           ActionChip(
             key: const ValueKey('button_dashboard_to_goalProgressReport'),
+            tooltip: AppLocalizations.of(context)!.goalProgress,
             avatar: Icon(
               Icons.track_changes_outlined,
               size: 16,

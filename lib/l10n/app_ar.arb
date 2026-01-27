@@ -50,5 +50,6 @@
   "delete": "حذف",
   "errorLoadingAccounts": "حدث خطأ أثناء تحميل الحسابات",
   "retry": "إعادة المحاولة",
-  "addAccount": "إضافة حساب"
+  "addAccount": "إضافة حساب",
+  "goalProgress": "تقدم الهدف"
 }
