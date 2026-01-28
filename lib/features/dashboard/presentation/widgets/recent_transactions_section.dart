@@ -57,10 +57,49 @@ class RecentTransactionsSection extends StatelessWidget {
         else if (recentItems.isEmpty)
           Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: Center(
-                child: Text("No transactions recorded yet.",
-                    style: theme.textTheme.bodyMedium)),
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: theme.colorScheme.outlineVariant,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.receipt_long_outlined,
+                        size: 48,
+                        color: theme.colorScheme.secondary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "No recent activity",
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Record your first transaction to see it here.",
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      FilledButton.tonal(
+                        onPressed: () =>
+                            context.pushNamed(RouteNames.addTransaction),
+                        child: const Text("Add Transaction"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           )
         else
           ListView.builder(

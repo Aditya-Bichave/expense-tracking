@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
@@ -50,8 +51,10 @@ void main() {
     when(() => mockTransactionListBloc.state).thenReturn(state);
     return BlocProvider.value(
       value: mockTransactionListBloc,
-      child: RecentTransactionsSection(
-          navigateToDetailOrEdit: mockNavigateToDetail.call),
+      child: SingleChildScrollView(
+        child: RecentTransactionsSection(
+            navigateToDetailOrEdit: mockNavigateToDetail.call),
+      ),
     );
   }
 
@@ -59,20 +62,72 @@ void main() {
     testWidgets('shows loading indicator', (tester) async {
       await pumpWidgetWithProviders(
           tester: tester,
+          settle: false,
           widget: buildTestWidget(
               const TransactionListState(status: ListStatus.loading)));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows empty message', (tester) async {
+    testWidgets('shows empty message with action button', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       await pumpWidgetWithProviders(
           tester: tester,
           widget: buildTestWidget(const TransactionListState(
               status: ListStatus.success, transactions: [])));
-      expect(find.text('No transactions recorded yet.'), findsOneWidget);
+
+      expect(find.text('No recent activity'), findsOneWidget);
+      expect(find.text('Record your first transaction to see it here.'),
+          findsOneWidget);
+      expect(find.text('Add Transaction'), findsOneWidget);
+      expect(find.byType(FilledButton), findsOneWidget);
+    });
+
+    testWidgets('tapping "Add Transaction" navigates', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      bool pushed = false;
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => buildTestWidget(
+                const TransactionListState(
+                    status: ListStatus.success, transactions: [])),
+          ),
+          GoRoute(
+            path: '/add',
+            name: RouteNames.addTransaction,
+            builder: (context, state) {
+              pushed = true;
+              return const SizedBox();
+            },
+          ),
+        ],
+      );
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        router: router,
+        widget: const SizedBox(), // Ignored
+      );
+
+      await tester.tap(find.text('Add Transaction'));
+      await tester.pumpAndSettle();
+
+      expect(pushed, isTrue);
     });
 
     testWidgets('renders a list of TransactionListItems', (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
       await pumpWidgetWithProviders(
           tester: tester,
           widget: buildTestWidget(TransactionListState(
@@ -81,18 +136,52 @@ void main() {
     });
 
     testWidgets('"View All" button navigates', (tester) async {
-      when(() => mockGoRouter.go(RouteNames.transactionsList))
-          .thenAnswer((_) {});
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      bool pushed = false;
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => buildTestWidget(
+                const TransactionListState(
+                    status: ListStatus.success, transactions: [])),
+          ),
+          GoRoute(
+            path: '/transactions',
+            // The code uses context.go(RouteNames.transactionsList)
+            // RouteNames.transactionsList is '/transactions'
+            // In GoRouter, context.go('/transactions') matches path.
+            // If it was pushNamed, it would match name.
+            // RouteNames defines transactionsList = '/transactions'.
+            builder: (context, state) {
+              pushed = true;
+              return const SizedBox();
+            },
+          ),
+        ],
+      );
+
       await pumpWidgetWithProviders(
-          tester: tester,
-          router: mockGoRouter,
-          widget: buildTestWidget(const TransactionListState(
-              status: ListStatus.success, transactions: [])));
+        tester: tester,
+        router: router,
+        widget: const SizedBox(), // Ignored
+      );
+
+      // Scroll to find the button
+      await tester.scrollUntilVisible(
+        find.byKey(const ValueKey('button_recentTransactions_viewAll')),
+        500.0,
+      );
 
       await tester
           .tap(find.byKey(const ValueKey('button_recentTransactions_viewAll')));
+      await tester.pumpAndSettle();
 
-      verify(() => mockGoRouter.go(RouteNames.transactionsList)).called(1);
+      expect(pushed, isTrue);
     });
 
     testWidgets('tapping a list item calls navigateToDetailOrEdit',
@@ -108,5 +197,5 @@ void main() {
       verify(() => mockNavigateToDetail.call(any(), mockTransactions.first))
           .called(1);
     });
-  }, skip: true);
+  });
 }
