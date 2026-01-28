@@ -66,6 +66,9 @@ void main() {
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,
         enableAnimations: false,
+        accountNameMap: const {},
+        isAccountLoading: false,
+        isAccountError: false,
       ),
     );
   }

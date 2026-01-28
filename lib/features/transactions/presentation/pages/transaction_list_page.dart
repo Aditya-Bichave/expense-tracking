@@ -329,6 +329,22 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
+    final accountState = context.watch<AccountListBloc>().state;
+
+    // Pre-calculate account map for performance (O(M) once, instead of O(M) per item)
+    final Map<String, String> accountNameMap = {};
+    bool isAccountLoading = false;
+    bool isAccountError = false;
+
+    if (accountState is AccountListLoaded) {
+      for (final acc in accountState.accounts) {
+        accountNameMap[acc.id] = acc.name;
+      }
+    } else if (accountState is AccountListLoading) {
+      isAccountLoading = true;
+    } else if (accountState is AccountListError) {
+      isAccountError = true;
+    }
 
     return Scaffold(
       body: Column(
@@ -406,6 +422,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
                               handleChangeCategoryRequest:
                                   _handleChangeCategoryRequest,
                               confirmDeletion: _confirmDeletion,
+                              accountNameMap: accountNameMap,
+                              isAccountLoading: isAccountLoading,
+                              isAccountError: isAccountError,
                             ),
                           ),
                   ),
