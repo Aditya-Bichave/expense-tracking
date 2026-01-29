@@ -33,13 +33,14 @@ class SummaryCard extends StatelessWidget {
             (state is SummaryLoading && state.isReloading)) {
           log.info(
               "[SummaryCard UI] State is SummaryLoaded or reloading. Building card content.");
+
           final summary = (state is SummaryLoaded)
               ? state.summary
-              : (context.read<SummaryBloc>().state as SummaryLoaded?)
-                  ?.summary; // Use previous data if reloading
+              : (state is SummaryLoading)
+                  ? state.previousSummary
+                  : null;
 
           if (summary == null) {
-            // Should not happen if reloading logic is correct, but safety check
             log.warning(
                 "[SummaryCard UI] Summary is null during Loaded/Reloading state.");
             content = const Padding(
@@ -51,10 +52,21 @@ class SummaryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Expense Summary', // Title for the card
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(color: theme.colorScheme.primary),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Expense Summary', // Title for the card
+                        style: theme.textTheme.titleLarge
+                            ?.copyWith(color: theme.colorScheme.primary),
+                      ),
+                      if (state is SummaryLoading)
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   Row(

@@ -12,10 +12,12 @@ class SummaryInitial extends SummaryState {}
 class SummaryLoading extends SummaryState {
   final bool
       isReloading; // True if loading triggered while data was already loaded
-  const SummaryLoading({this.isReloading = false});
+  final ExpenseSummary? previousSummary;
+
+  const SummaryLoading({this.isReloading = false, this.previousSummary});
 
   @override
-  List<Object> get props => [isReloading];
+  List<Object?> get props => [isReloading, previousSummary];
 }
 
 class SummaryLoaded extends SummaryState {
