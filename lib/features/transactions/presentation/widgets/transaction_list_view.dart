@@ -19,6 +19,9 @@ import 'package:go_router/go_router.dart';
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
   final SettingsState settings;
+  final Map<String, String> accountNameMap;
+  final bool isAccountLoading;
+  final bool isAccountError;
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
   // --- ADD Handlers ---
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
@@ -30,6 +33,9 @@ class TransactionListView extends StatelessWidget {
     super.key,
     required this.state,
     required this.settings,
+    required this.accountNameMap,
+    required this.isAccountLoading,
+    required this.isAccountError,
     required this.navigateToDetailOrEdit,
     // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
@@ -37,6 +43,12 @@ class TransactionListView extends StatelessWidget {
     this.enableAnimations = true,
     // --- End Add ---
   });
+
+  String _getAccountName(String accountId) {
+    if (isAccountError) return 'Error';
+    if (isAccountLoading && accountNameMap.isEmpty) return '...';
+    return accountNameMap[accountId] ?? 'Deleted';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,9 +121,12 @@ class TransactionListView extends StatelessWidget {
 
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
+        final accountName = _getAccountName(transaction.accountId);
+
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            accountName: accountName,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -140,6 +155,7 @@ class TransactionListView extends StatelessWidget {
           // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            accountName: accountName,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {
