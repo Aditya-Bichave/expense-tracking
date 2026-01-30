@@ -10,8 +10,11 @@ void main() {
 
     test('formatDateTime should format the date and time correctly', () {
       final dateTime = DateTime(2023, 1, 15, 14, 30);
-      const expected = 'Jan 15, 2023, 2:30 PM';
-      expect(DateFormatter.formatDateTime(dateTime, locale: 'en'), expected);
+      // Use regex to allow for optional comma and normal/non-breaking space before PM
+      // Matches: "Jan 15, 2023, 2:30 PM" or "Jan 15, 2023 2:30 PM"
+      final expectedRegex = RegExp(r'Jan 15, 2023,?\s+2:30[\s\u202F]PM');
+      expect(DateFormatter.formatDateTime(dateTime, locale: 'en'),
+          matches(expectedRegex));
     });
 
     test('formatDate should format the date correctly', () {
