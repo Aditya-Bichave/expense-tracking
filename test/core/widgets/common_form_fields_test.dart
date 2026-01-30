@@ -42,10 +42,10 @@ void main() {
         expect(find.text('Please enter a value'), findsOneWidget);
       });
 
-      testWidgets('validator shows error for invalid characters', (
+      testWidgets('validator allows special characters', (
         tester,
       ) async {
-        controller.text = 'Invalid@Name';
+        controller.text = 'Valid & Name!';
         await pumpWidgetWithProviders(
           tester: tester,
           widget: Builder(
@@ -61,7 +61,8 @@ void main() {
         );
         formKey.currentState!.validate();
         await tester.pump();
-        expect(find.text('Only letters and numbers allowed'), findsOneWidget);
+        // Should NOT find the error message
+        expect(find.text('Only letters and numbers allowed'), findsNothing);
       });
     });
 
