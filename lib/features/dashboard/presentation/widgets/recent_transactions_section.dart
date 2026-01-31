@@ -59,8 +59,35 @@ class RecentTransactionsSection extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
             child: Center(
-                child: Text("No transactions recorded yet.",
-                    style: theme.textTheme.bodyMedium)),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.receipt_long_outlined,
+                    size: 48,
+                    color: theme.colorScheme.secondary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "No transactions yet",
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "Start tracking your expenses.",
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.tonal(
+                    onPressed: () => context.push(
+                      '${RouteNames.transactionsList}/${RouteNames.addTransaction}',
+                    ),
+                    child: const Text("Add Transaction"),
+                  ),
+                ],
+              ),
+            ),
           )
         else
           ListView.builder(

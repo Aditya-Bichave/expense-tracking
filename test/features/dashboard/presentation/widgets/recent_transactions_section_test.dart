@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
@@ -59,6 +60,7 @@ void main() {
     testWidgets('shows loading indicator', (tester) async {
       await pumpWidgetWithProviders(
           tester: tester,
+          settle: false,
           widget: buildTestWidget(
               const TransactionListState(status: ListStatus.loading)));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -69,7 +71,39 @@ void main() {
           tester: tester,
           widget: buildTestWidget(const TransactionListState(
               status: ListStatus.success, transactions: [])));
-      expect(find.text('No transactions recorded yet.'), findsOneWidget);
+      expect(find.text('No transactions yet'), findsOneWidget);
+      expect(find.text('Start tracking your expenses.'), findsOneWidget);
+      expect(find.text('Add Transaction'), findsOneWidget);
+    });
+
+    testWidgets('"Add Transaction" button navigates', (tester) async {
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => Scaffold(
+              body: buildTestWidget(const TransactionListState(
+                  status: ListStatus.success, transactions: [])),
+            ),
+          ),
+          GoRoute(
+            path: '${RouteNames.transactionsList}/${RouteNames.addTransaction}',
+            builder: (context, state) =>
+                const Scaffold(body: Text('Add Txn Screen')),
+          ),
+        ],
+      );
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        router: router,
+        widget: const SizedBox(),
+      );
+
+      await tester.tap(find.text('Add Transaction'));
+      await tester.pumpAndSettle();
+      expect(find.text('Add Txn Screen'), findsOneWidget);
     });
 
     testWidgets('renders a list of TransactionListItems', (tester) async {
@@ -81,18 +115,35 @@ void main() {
     });
 
     testWidgets('"View All" button navigates', (tester) async {
-      when(() => mockGoRouter.go(RouteNames.transactionsList))
-          .thenAnswer((_) {});
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => Scaffold(
+              body: buildTestWidget(const TransactionListState(
+                  status: ListStatus.success, transactions: [])),
+            ),
+          ),
+          GoRoute(
+            path: RouteNames.transactionsList,
+            builder: (context, state) =>
+                const Scaffold(body: Text('Transactions List')),
+          ),
+        ],
+      );
+
       await pumpWidgetWithProviders(
-          tester: tester,
-          router: mockGoRouter,
-          widget: buildTestWidget(const TransactionListState(
-              status: ListStatus.success, transactions: [])));
+        tester: tester,
+        router: router,
+        widget: const SizedBox(),
+      );
 
       await tester
           .tap(find.byKey(const ValueKey('button_recentTransactions_viewAll')));
+      await tester.pumpAndSettle();
 
-      verify(() => mockGoRouter.go(RouteNames.transactionsList)).called(1);
+      expect(find.text('Transactions List'), findsOneWidget);
     });
 
     testWidgets('tapping a list item calls navigateToDetailOrEdit',
@@ -108,5 +159,5 @@ void main() {
       verify(() => mockNavigateToDetail.call(any(), mockTransactions.first))
           .called(1);
     });
-  }, skip: true);
+  });
 }
