@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/categories/domain/usecases/save_user_categorization_history.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -19,6 +20,7 @@ import 'package:go_router/go_router.dart';
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
   final SettingsState settings;
+  final AccountListState accountState;
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
   // --- ADD Handlers ---
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
@@ -30,6 +32,7 @@ class TransactionListView extends StatelessWidget {
     super.key,
     required this.state,
     required this.settings,
+    required this.accountState,
     required this.navigateToDetailOrEdit,
     // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
@@ -41,6 +44,12 @@ class TransactionListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final Map<String, String> accountNames = {};
+    if (accountState is AccountListLoaded) {
+      for (var acc in (accountState as AccountListLoaded).items) {
+        accountNames[acc.id] = acc.name;
+      }
+    }
 
     if (state.status == ListStatus.loading && state.transactions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
@@ -107,11 +116,16 @@ class TransactionListView extends StatelessWidget {
         final isSelected =
             state.selectedTransactionIds.contains(transaction.id);
 
+        final accountName = accountNames[transaction.accountId] ??
+            (accountState is AccountListLoaded ? 'Deleted' : '...');
+
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            accountName: accountName,
+            currencySymbol: settings.currencySymbol,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -140,6 +154,8 @@ class TransactionListView extends StatelessWidget {
           // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            accountName: accountName,
+            currencySymbol: settings.currencySymbol,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {

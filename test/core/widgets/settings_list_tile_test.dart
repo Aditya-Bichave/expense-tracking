@@ -97,7 +97,8 @@ void main() {
       final theme = Theme.of(tester.element(find.byType(SettingsListTile)));
       final tile = tester.widget<ListTile>(find.byType(ListTile));
       final titleText = tester.widget<Text>(find.text('Disabled Title'));
-      final leadingIcon = tester.widget<Icon>(find.byIcon(Icons.disabled_by_default));
+      final leadingIcon =
+          tester.widget<Icon>(find.byIcon(Icons.disabled_by_default));
 
       // ASSERT
       expect(tile.enabled, isFalse);
