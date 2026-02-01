@@ -329,6 +329,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
+    final accountState = context.watch<AccountListBloc>().state;
+    final accountNameMap =
+        accountState is AccountListLoaded
+            ? {for (var a in accountState.items) a.id: a.name}
+            : <String, String>{};
 
     return Scaffold(
       body: Column(
@@ -402,6 +407,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                             child: TransactionListView(
                               state: state,
                               settings: settings,
+                              accountNameMap: accountNameMap,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
                               handleChangeCategoryRequest:
                                   _handleChangeCategoryRequest,
