@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
@@ -62,6 +63,7 @@ void main() {
       child: TransactionListView(
         state: state,
         settings: const SettingsState(),
+        accountState: const AccountListInitial(),
         navigateToDetailOrEdit: mockCallbacks.navigateToDetailOrEdit,
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,

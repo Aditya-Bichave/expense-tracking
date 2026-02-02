@@ -1,0 +1,3 @@
+## 2026-02-02 - Transaction List Rendering Optimization
+**Learning:** Watching Blocs inside individual list items (e.g., `ExpenseCard`) causes O(N) subscriptions and triggers rebuilds of *all* items when the state changes, even if irrelevant to most. Additionally, performing iterative lookups (like `firstWhere`) inside a list item's build method creates unnecessary computational overhead (O(N*M)).
+**Action:** Lift shared state dependencies (like `AccountListBloc`) to the parent widget (`TransactionListView`). Pre-calculate derived data (like an Account ID -> Name map) once in the parent and pass simple values down to pure child widgets. This reduces subscriptions to O(1) and lookups to O(1).
