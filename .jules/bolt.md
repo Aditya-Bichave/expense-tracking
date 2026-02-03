@@ -1,0 +1,3 @@
+## 2026-02-03 - N+1 Bloc Lookups in List Items
+**Learning:** Watching a Bloc (e.g., `AccountListBloc`) inside every item of a list (e.g., `ExpenseCard`) causes O(N) re-renders when the Bloc state changes, and O(N) lookups during every build. In `TransactionListView`, this caused significant overhead as every scroll or account update triggered a full list re-evaluation of account names.
+**Action:** Hoist the Bloc subscription to the parent list widget (`TransactionListView`), pre-calculate necessary data (e.g., `Map<String, String>` for IDs to names), and pass the resolved values down to the list items as simple parameters.

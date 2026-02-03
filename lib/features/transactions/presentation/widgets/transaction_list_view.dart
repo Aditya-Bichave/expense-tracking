@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 // Keep this
 // --- Import Expense/Income Card Widgets ---
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
@@ -98,6 +99,16 @@ class TransactionListView extends StatelessWidget {
                   ])));
     }
 
+    // Optimization: Pre-calculate account map and currency symbol once
+    final accountState = context.watch<AccountListBloc>().state;
+    final Map<String, String> accountNameMap = {};
+    if (accountState is AccountListLoaded) {
+      for (final acc in accountState.accounts) {
+        accountNameMap[acc.id] = acc.name;
+      }
+    }
+    final currencySymbol = settings.currencySymbol;
+
     return ListView.builder(
       padding:
           const EdgeInsets.only(top: 0, bottom: 80), // Ensure padding for FAB
@@ -107,11 +118,16 @@ class TransactionListView extends StatelessWidget {
         final isSelected =
             state.selectedTransactionIds.contains(transaction.id);
 
+        final accountName = accountNameMap[transaction.accountId] ??
+            (accountState is AccountListError ? 'Error' : 'Deleted');
+
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            accountName: accountName,
+            currencySymbol: currencySymbol,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -140,6 +156,8 @@ class TransactionListView extends StatelessWidget {
           // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            accountName: accountName,
+            currencySymbol: currencySymbol,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {
