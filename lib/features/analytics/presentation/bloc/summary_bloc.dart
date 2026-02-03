@@ -85,7 +85,19 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
 
     // Emit loading state only if not already loaded or forced
     if (state is! SummaryLoaded || event.forceReload) {
-      emit(SummaryLoading(isReloading: state is SummaryLoaded));
+      ExpenseSummary? previousSummary;
+      final currentState = state;
+      if (currentState is SummaryLoaded) {
+        previousSummary = currentState.summary;
+      } else if (currentState is SummaryLoading) {
+        previousSummary = currentState.previousSummary;
+      }
+
+      emit(SummaryLoading(
+        isReloading: currentState is SummaryLoaded ||
+            (currentState is SummaryLoading && currentState.isReloading),
+        previousSummary: previousSummary,
+      ));
       log.info(
           "[SummaryBloc] Emitting SummaryLoading (isReloading: ${state is SummaryLoaded}).");
     } else {
