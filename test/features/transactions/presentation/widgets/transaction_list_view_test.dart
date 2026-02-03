@@ -99,7 +99,7 @@ void main() {
               transactions: [],
             ),
           ));
-      expect(find.text('No transactions recorded yet'), findsOneWidget);
+      expect(find.text('No transactions yet'), findsOneWidget);
       expect(find.byKey(const ValueKey('button_listView_addFirst')),
           findsOneWidget);
     });

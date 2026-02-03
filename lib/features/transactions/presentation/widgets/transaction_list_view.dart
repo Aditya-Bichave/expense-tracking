@@ -58,44 +58,82 @@ class TransactionListView extends StatelessWidget {
         state.status != ListStatus.loading &&
         state.status != ListStatus.reloading) {
       return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(30.0),
-              child: Column(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24.0),
+          child: Semantics(
+            container: true,
+            label: state.filtersApplied
+                ? "No matching transactions found"
+                : "No transactions recorded, list is empty",
+            child: Card(
+              elevation: 0,
+              color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 48.0, horizontal: 24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.receipt_long_outlined,
-                        size: 60,
-                        color: theme.colorScheme.secondary.withOpacity(0.7)),
-                    const SizedBox(height: 16),
-                    Text(
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer
+                            .withOpacity(0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
                         state.filtersApplied
-                            ? "No transactions match filters"
-                            : "No transactions recorded yet",
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(color: theme.colorScheme.secondary)),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.filtersApplied
-                          ? "Try adjusting or clearing the filters."
-                          : "Tap the '+' button to add your first expense or income.",
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                      textAlign: TextAlign.center,
+                            ? Icons.filter_list_off_outlined
+                            : Icons.receipt_long_outlined,
+                        size: 48,
+                        color: theme.colorScheme.secondary,
+                      ),
                     ),
                     const SizedBox(height: 24),
-                    if (!state
-                        .filtersApplied) // Show add button only if no filters applied
-                      ElevatedButton.icon(
+                    Text(
+                      state.filtersApplied
+                          ? "No transactions match filters"
+                          : "No transactions yet",
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      state.filtersApplied
+                          ? "Try adjusting or clearing the filters to see your records."
+                          : "Start tracking your finances by adding your first expense or income.",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    if (!state.filtersApplied)
+                      FilledButton.tonalIcon(
                         key: const ValueKey('button_listView_addFirst'),
                         icon: const Icon(Icons.add),
-                        label: const Text('Add First Transaction'),
+                        label: const Text('Add Transaction'),
                         onPressed: () =>
                             context.pushNamed(RouteNames.addTransaction),
-                        style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12)),
-                      )
-                  ])));
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 16),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
     }
 
     return ListView.builder(
