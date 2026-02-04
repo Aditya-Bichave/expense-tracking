@@ -55,12 +55,49 @@ class RecentTransactionsSection extends StatelessWidget {
                     textAlign: TextAlign.center)),
           )
         else if (recentItems.isEmpty)
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-            child: Center(
-                child: Text("No transactions recorded yet.",
-                    style: theme.textTheme.bodyMedium)),
+          Card(
+            elevation: 0,
+            color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            margin:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.receipt_long,
+                        size: 48, color: theme.colorScheme.primary),
+                    const SizedBox(height: 16),
+                    Text(
+                      "No transactions yet",
+                      style: theme.textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Start tracking your expenses and income.",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: theme.colorScheme.secondaryContainer,
+                        foregroundColor: theme.colorScheme.onSecondaryContainer,
+                      ),
+                      onPressed: () => context.push(
+                          '${RouteNames.transactionsList}/${RouteNames.addTransaction}'),
+                      icon: const Icon(Icons.add),
+                      label: const Text("Add Transaction"),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           )
         else
           ListView.builder(
