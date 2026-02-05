@@ -24,6 +24,8 @@ class TransactionListView extends StatelessWidget {
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
   final Function(BuildContext, TransactionEntity) confirmDeletion;
   final bool enableAnimations;
+  final Map<String, String> accountNameMap;
+  final String defaultAccountName;
   // --- END Handlers ---
 
   const TransactionListView({
@@ -34,6 +36,8 @@ class TransactionListView extends StatelessWidget {
     // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
     required this.confirmDeletion,
+    required this.accountNameMap,
+    this.defaultAccountName = 'Deleted',
     this.enableAnimations = true,
     // --- End Add ---
   });
@@ -109,9 +113,13 @@ class TransactionListView extends StatelessWidget {
 
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
+        final accountName =
+            accountNameMap[transaction.accountId] ?? defaultAccountName;
+
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            accountName: accountName,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -140,6 +148,7 @@ class TransactionListView extends StatelessWidget {
           // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            accountName: accountName,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {

@@ -2,7 +2,6 @@
 // MODIFIED FILE (Implement interactive prompts)
 
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +18,7 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/categ
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
+  final String accountName;
   final Function(Expense expense)? onCardTap;
   final Function(Expense expense, Category selectedCategory)? onUserCategorized;
   final Function(Expense expense)? onChangeCategoryRequest;
@@ -26,6 +26,7 @@ class ExpenseCard extends StatelessWidget {
   const ExpenseCard({
     super.key,
     required this.expense,
+    required this.accountName,
     this.onCardTap,
     this.onUserCategorized,
     this.onChangeCategoryRequest,
@@ -100,19 +101,7 @@ class ExpenseCard extends StatelessWidget {
     final currencySymbol = settingsState.currencySymbol;
     final modeTheme = context.modeTheme;
     final category = expense.category ?? Category.uncategorized;
-    final accountState = context.watch<AccountListBloc>().state;
-    String accountName = '...';
-    if (accountState is AccountListLoaded) {
-      try {
-        accountName = accountState.items
-            .firstWhere((acc) => acc.id == expense.accountId)
-            .name;
-      } catch (_) {
-        accountName = 'Deleted';
-      }
-    } else if (accountState is AccountListError) {
-      accountName = 'Error';
-    }
+
     return AppCard(
       onTap: () => onCardTap?.call(expense),
       child: Row(

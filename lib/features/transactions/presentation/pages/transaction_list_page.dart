@@ -399,13 +399,36 @@ class _TransactionListPageState extends State<TransactionListPage> {
                           )
                         : KeyedSubtree(
                             key: const ValueKey('list_view'),
-                            child: TransactionListView(
-                              state: state,
-                              settings: settings,
-                              navigateToDetailOrEdit: _navigateToDetailOrEdit,
-                              handleChangeCategoryRequest:
-                                  _handleChangeCategoryRequest,
-                              confirmDeletion: _confirmDeletion,
+                            child:
+                                BlocBuilder<AccountListBloc, AccountListState>(
+                              builder: (context, accountState) {
+                                final accountNameMap =
+                                    accountState is AccountListLoaded
+                                        ? {
+                                            for (var a in accountState.accounts)
+                                              a.id: a.name
+                                          }
+                                        : <String, String>{};
+
+                                String defaultAccountName = 'Deleted';
+                                if (accountState is AccountListLoading) {
+                                  defaultAccountName = '...';
+                                } else if (accountState is AccountListError) {
+                                  defaultAccountName = 'Error';
+                                }
+
+                                return TransactionListView(
+                                  state: state,
+                                  settings: settings,
+                                  accountNameMap: accountNameMap,
+                                  defaultAccountName: defaultAccountName,
+                                  navigateToDetailOrEdit:
+                                      _navigateToDetailOrEdit,
+                                  handleChangeCategoryRequest:
+                                      _handleChangeCategoryRequest,
+                                  confirmDeletion: _confirmDeletion,
+                                );
+                              },
                             ),
                           ),
                   ),

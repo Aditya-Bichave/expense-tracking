@@ -66,6 +66,7 @@ void main() {
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,
         enableAnimations: false,
+        accountNameMap: const {'a1': 'Test Account'},
       ),
     );
   }

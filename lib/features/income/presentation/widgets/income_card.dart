@@ -2,7 +2,6 @@
 // MODIFIED FILE (Implement interactive prompts)
 
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +18,7 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/categ
 
 class IncomeCard extends StatelessWidget {
   final Income income;
+  final String accountName;
   final Function(Income income)? onCardTap;
   final Function(Income income, Category selectedCategory)? onUserCategorized;
   final Function(Income income)? onChangeCategoryRequest;
@@ -26,6 +26,7 @@ class IncomeCard extends StatelessWidget {
   const IncomeCard({
     super.key,
     required this.income,
+    required this.accountName,
     this.onCardTap,
     this.onUserCategorized,
     this.onChangeCategoryRequest,
@@ -90,19 +91,7 @@ class IncomeCard extends StatelessWidget {
     final currencySymbol = settingsState.currencySymbol;
     final modeTheme = context.modeTheme;
     final category = income.category ?? Category.uncategorized;
-    final accountState = context.watch<AccountListBloc>().state;
-    String accountName = '...';
-    if (accountState is AccountListLoaded) {
-      try {
-        accountName = accountState.items
-            .firstWhere((acc) => acc.id == income.accountId)
-            .name;
-      } catch (_) {
-        accountName = 'Deleted';
-      }
-    } else if (accountState is AccountListError) {
-      accountName = 'Error';
-    }
+
     final Color incomeAmountColor =
         modeTheme?.incomeGlowColor ?? Colors.green.shade700;
     return AppCard(
