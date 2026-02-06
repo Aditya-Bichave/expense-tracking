@@ -170,4 +170,8 @@ class DemoModeService {
   Future<void> deleteDemoContribution(String id) async {
     _demoContributions.removeWhere((c) => c.id == id);
   }
+
+  Future<void> deleteDemoContributions(List<String> ids) async {
+    _demoContributions.removeWhere((c) => ids.contains(c.id));
+  }
 }
