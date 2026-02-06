@@ -6,7 +6,7 @@ import 'package:expense_tracker/core/services/downloader_service.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
-import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
