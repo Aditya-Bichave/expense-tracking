@@ -10,6 +10,7 @@ class AccountSelectorDropdown extends StatelessWidget {
   final String? Function(String?)? validator;
   final String labelText;
   final String hintText;
+  final bool isRequired;
 
   const AccountSelectorDropdown({
     super.key,
@@ -18,6 +19,7 @@ class AccountSelectorDropdown extends StatelessWidget {
     this.validator,
     this.labelText = 'Account',
     this.hintText = 'Select Account',
+    this.isRequired = false,
   });
 
   @override
@@ -56,11 +58,27 @@ class AccountSelectorDropdown extends StatelessWidget {
           displayValue = null;
         }
 
+        // Construct label with asterisk if required
+        final Widget? labelWidget = isRequired
+            ? Text.rich(
+                TextSpan(
+                  text: labelText,
+                  children: [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                  ],
+                ),
+              )
+            : null;
+
         return DropdownButtonFormField<String>(
           value: displayValue,
           isExpanded: true,
           decoration: InputDecoration(
-            labelText: labelText,
+            labelText: isRequired ? null : labelText,
+            label: labelWidget,
             hintText: isLoading && accounts.isEmpty ? 'Loading...' : hintText,
             border: const OutlineInputBorder(),
             errorText: errorMessage,
