@@ -35,7 +35,8 @@ void main() {
       expect(find.text('-\$78.90'), findsOneWidget);
     });
 
-    testWidgets('shows primary color for positive or zero balance', (tester) async {
+    testWidgets('shows primary color for positive or zero balance',
+        (tester) async {
       when(() => mockOverview.overallBalance).thenReturn(100.0);
       when(() => mockOverview.netFlow).thenReturn(0.0);
 
