@@ -20,6 +20,7 @@ class AppTextFormField extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final int? maxLines;
   final ValueChanged<String>? onChanged; // Added onChanged callback
+  final bool isRequired; // Added isRequired flag
 
   const AppTextFormField({
     super.key,
@@ -39,6 +40,7 @@ class AppTextFormField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
     this.onChanged, // Added onChanged
+    this.isRequired = false, // Default to false
   });
 
   @override
@@ -51,8 +53,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   @override
   void initState() {
     super.initState();
-    _showClearButton =
-        widget.controller.text.isNotEmpty &&
+    _showClearButton = widget.controller.text.isNotEmpty &&
         !widget.readOnly; // Also check readOnly
     widget.controller.addListener(_handleTextChange);
   }
@@ -65,8 +66,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
 
   void _handleTextChange() {
     if (mounted) {
-      final shouldShow =
-          widget.controller.text.isNotEmpty &&
+      final shouldShow = widget.controller.text.isNotEmpty &&
           !widget.readOnly; // Check readOnly
       if (_showClearButton != shouldShow) {
         setState(() {
@@ -87,10 +87,26 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
     final inputTheme = theme.inputDecorationTheme;
     final modeTheme = context.modeTheme;
 
+    // Construct label with asterisk if required
+    final Widget? labelWidget = widget.isRequired
+        ? Text.rich(
+            TextSpan(
+              text: widget.labelText,
+              children: [
+                TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ],
+            ),
+          )
+        : null;
+
     return TextFormField(
       controller: widget.controller,
       decoration: InputDecoration(
-        labelText: widget.labelText,
+        labelText: widget.isRequired ? null : widget.labelText,
+        label: labelWidget,
         hintText: widget.hintText,
         border: inputTheme.border ?? const OutlineInputBorder(),
         enabledBorder: inputTheme.enabledBorder,
@@ -99,8 +115,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
         focusedErrorBorder: inputTheme.focusedErrorBorder,
         filled: inputTheme.filled,
         fillColor: inputTheme.fillColor,
-        contentPadding:
-            inputTheme.contentPadding ??
+        contentPadding: inputTheme.contentPadding ??
             modeTheme?.listItemPadding.copyWith(top: 14, bottom: 14),
         isDense: inputTheme.isDense,
         floatingLabelBehavior: inputTheme.floatingLabelBehavior,

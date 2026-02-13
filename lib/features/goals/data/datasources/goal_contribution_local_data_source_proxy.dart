@@ -71,6 +71,17 @@ class DemoAwareGoalContributionDataSource
   }
 
   @override
+  Future<void> deleteContributions(List<String> ids) async {
+    if (demoModeService.isDemoActive) {
+      log.fine(
+          "[DemoAwareContribDS] Deleting ${ids.length} demo contributions.");
+      return demoModeService.deleteDemoContributions(ids);
+    } else {
+      return hiveDataSource.deleteContributions(ids);
+    }
+  }
+
+  @override
   Future<void> clearAllContributions() async {
     if (demoModeService.isDemoActive) {
       log.warning(

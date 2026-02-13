@@ -80,11 +80,8 @@ class GoalRepositoryImpl implements GoalRepository {
       );
       final contributions =
           await contributionDataSource.getContributionsForGoal(id);
-      List<Future<void>> deleteFutures = [];
-      for (var c in contributions) {
-        deleteFutures.add(contributionDataSource.deleteContribution(c.id));
-      }
-      await Future.wait(deleteFutures);
+      final contributionIds = contributions.map((c) => c.id).toList();
+      await contributionDataSource.deleteContributions(contributionIds);
       log.info(
         "[GoalRepo] Deleted ${contributions.length} associated contributions.",
       );

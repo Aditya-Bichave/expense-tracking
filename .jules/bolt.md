@@ -1,3 +1,0 @@
-## 2026-02-05 - Hoisting Bloc Subscriptions for List Items
-**Learning:** `ExpenseCard` and `IncomeCard` were each subscribing to `AccountListBloc` and performing a linear search to find the account name. In a list of N transactions, this created N listeners and O(N * M) lookup complexity (where M is accounts).
-**Action:** Always hoist shared data dependencies (like account names or currency settings) to the parent list widget (`TransactionListView`) and pass the resolved data down to the items. This makes the list item simpler (stateless regarding that data) and reduces the complexity to O(N) map lookups.

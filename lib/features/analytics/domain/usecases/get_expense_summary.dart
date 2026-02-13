@@ -4,7 +4,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class GetExpenseSummaryUseCase
     implements UseCase<ExpenseSummary, GetSummaryParams> {

@@ -36,8 +36,9 @@ import 'package:simple_logger/simple_logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
+export 'package:expense_tracker/core/utils/logger.dart';
 
-final log = SimpleLogger();
 File? _startupLogFile;
 
 Future<void> _initFileLogger() async {

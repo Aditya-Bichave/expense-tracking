@@ -312,6 +312,7 @@ class TransactionFormState extends State<TransactionForm> {
             fallbackIcon:
                 isExpense ? Icons.description_outlined : Icons.source_outlined,
             textCapitalization: TextCapitalization.sentences,
+            isRequired: true,
           ),
           const SizedBox(height: 16),
 
@@ -321,6 +322,7 @@ class TransactionFormState extends State<TransactionForm> {
             controller: _amountController,
             labelText: 'Amount',
             currencySymbol: currencySymbol,
+            isRequired: true,
           ),
           const SizedBox(height: 16),
 
@@ -345,6 +347,7 @@ class TransactionFormState extends State<TransactionForm> {
                 "[TransactionForm] Account selected: $_selectedAccountId",
               );
             },
+            isRequired: true,
           ),
           const SizedBox(height: 16),
 

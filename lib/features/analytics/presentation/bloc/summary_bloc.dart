@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
 import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';

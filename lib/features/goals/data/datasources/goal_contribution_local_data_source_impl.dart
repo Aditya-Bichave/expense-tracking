@@ -36,6 +36,19 @@ class HiveContributionLocalDataSource
   }
 
   @override
+  Future<void> deleteContributions(List<String> ids) async {
+    try {
+      await contributionBox.deleteAll(ids);
+      log.info("[ContributionDS] Batch deleted ${ids.length} contributions.");
+    } catch (e, s) {
+      log.severe(
+          "[ContributionDS] Failed to batch delete contributions: ${ids.length} items.$e$s");
+      throw CacheFailure(
+          'Failed to batch delete contributions: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<List<GoalContributionModel>> getAllContributions() async {
     try {
       final contributions = contributionBox.values.toList();
