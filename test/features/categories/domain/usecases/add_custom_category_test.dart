@@ -9,6 +9,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
 class MockUuid extends Mock implements Uuid {}
 
 void main() {
@@ -31,9 +32,11 @@ void main() {
     isCustom: true,
   );
 
-  test('should return validation failure when category with same name exists', () async {
+  test('should return validation failure when category with same name exists',
+      () async {
     // Arrange
-    when(() => mockCategoryRepository.getAllCategories()).thenAnswer((_) async => const Right([tCategory]));
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenAnswer((_) async => const Right([tCategory]));
     const params = AddCustomCategoryParams(
       name: 'Test',
       iconName: 'icon',
@@ -45,7 +48,10 @@ void main() {
     final result = await usecase(params);
 
     // Assert
-    expect(result, const Left(ValidationFailure('A category with this name already exists in the selected category group.')));
+    expect(
+        result,
+        const Left(ValidationFailure(
+            'A category with this name already exists in the selected category group.')));
     verify(() => mockCategoryRepository.getAllCategories()).called(1);
     verifyNoMoreInteractions(mockCategoryRepository);
   });
