@@ -20,6 +20,7 @@ class AppTextFormField extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final int? maxLines;
   final ValueChanged<String>? onChanged; // Added onChanged callback
+  final bool isRequired; // Added isRequired flag
 
   const AppTextFormField({
     super.key,
@@ -39,6 +40,7 @@ class AppTextFormField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
     this.onChanged, // Added onChanged
+    this.isRequired = false, // Default to false
   });
 
   @override
@@ -85,10 +87,26 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
     final inputTheme = theme.inputDecorationTheme;
     final modeTheme = context.modeTheme;
 
+    // Construct label with asterisk if required
+    final Widget? labelWidget = widget.isRequired
+        ? Text.rich(
+            TextSpan(
+              text: widget.labelText,
+              children: [
+                TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+              ],
+            ),
+          )
+        : null;
+
     return TextFormField(
       controller: widget.controller,
       decoration: InputDecoration(
-        labelText: widget.labelText,
+        labelText: widget.isRequired ? null : widget.labelText,
+        label: labelWidget,
         hintText: widget.hintText,
         border: inputTheme.border ?? const OutlineInputBorder(),
         enabledBorder: inputTheme.enabledBorder,

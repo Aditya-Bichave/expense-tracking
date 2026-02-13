@@ -54,6 +54,7 @@ class CommonFormFields {
     IconData fallbackIcon = Icons.label_outline,
     TextCapitalization textCapitalization = TextCapitalization.words,
     String? Function(String?)? validator,
+    bool isRequired = false,
   }) {
     return AppTextFormField(
       controller: controller,
@@ -70,6 +71,7 @@ class CommonFormFields {
             final isValid = RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(value.trim());
             return isValid ? null : 'Only letters and numbers allowed';
           },
+      isRequired: isRequired,
     );
   }
 
@@ -83,6 +85,7 @@ class CommonFormFields {
     IconData fallbackIcon = Icons.attach_money,
     String? Function(String?)? validator,
     ValueChanged<String>? onChanged,
+    bool isRequired = false,
   }) {
     return AppTextFormField(
       controller: controller,
@@ -104,6 +107,7 @@ class CommonFormFields {
             return null;
           },
       onChanged: onChanged,
+      isRequired: isRequired,
     );
   }
 
@@ -116,6 +120,7 @@ class CommonFormFields {
     int maxLines = 3,
     String iconKey = 'notes',
     IconData fallbackIcon = Icons.note_alt_outlined,
+    bool isRequired = false,
   }) {
     return AppTextFormField(
       controller: controller,
@@ -125,6 +130,7 @@ class CommonFormFields {
       maxLines: maxLines,
       textCapitalization: TextCapitalization.sentences,
       validator: null,
+      isRequired: isRequired,
     );
   }
 
@@ -179,6 +185,7 @@ class CommonFormFields {
     String? Function(String?)? validator,
     String labelText = 'Account',
     String hintText = 'Select Account',
+    bool isRequired = false,
   }) {
     return AccountSelectorDropdown(
       selectedAccountId: selectedAccountId,
@@ -187,6 +194,7 @@ class CommonFormFields {
           (value) => value == null ? 'Please select an account' : null,
       labelText: labelText,
       hintText: hintText,
+      isRequired: isRequired,
     );
   }
 

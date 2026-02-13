@@ -174,5 +174,23 @@ void main() {
       // ASSERT
       expect(textField.obscureText, isTrue);
     });
+
+    testWidgets('renders asterisk when isRequired is true', (tester) async {
+      // ARRANGE
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: Material(
+          child: AppTextFormField(
+            controller: controller,
+            labelText: 'Required Field',
+            isRequired: true,
+          ),
+        ),
+      );
+
+      // ASSERT
+      // The RichText should contain the label and the asterisk
+      expect(find.text('Required Field *', findRichText: true), findsOneWidget);
+    });
   });
 }
