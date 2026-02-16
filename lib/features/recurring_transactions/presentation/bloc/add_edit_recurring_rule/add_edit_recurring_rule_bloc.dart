@@ -184,7 +184,6 @@ class AddEditRecurringRuleBloc
     emit(state.copyWith(startTime: event.time));
   }
 
-// After
   Future<void> _onFormSubmitted(
     FormSubmitted event,
     Emitter<AddEditRecurringRuleState> emit,
