@@ -9,7 +9,7 @@ part of 'recurring_rule_audit_log_model.dart';
 class RecurringRuleAuditLogModelAdapter
     extends TypeAdapter<RecurringRuleAuditLogModel> {
   @override
-  final int typeId = 11;
+  final typeId = 11;
 
   @override
   RecurringRuleAuditLogModel read(BinaryReader reader) {

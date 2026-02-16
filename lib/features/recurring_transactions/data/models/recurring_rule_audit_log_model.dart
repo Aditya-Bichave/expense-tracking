@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 part 'recurring_rule_audit_log_model.g.dart';
 

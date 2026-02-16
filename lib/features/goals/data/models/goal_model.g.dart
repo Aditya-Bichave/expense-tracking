@@ -8,7 +8,7 @@ part of 'goal_model.dart';
 
 class GoalModelAdapter extends TypeAdapter<GoalModel> {
   @override
-  final int typeId = 6;
+  final typeId = 6;
 
   @override
   GoalModel read(BinaryReader reader) {
@@ -19,12 +19,12 @@ class GoalModelAdapter extends TypeAdapter<GoalModel> {
     return GoalModel(
       id: fields[0] as String,
       name: fields[1] as String,
-      targetAmount: fields[2] as double,
+      targetAmount: (fields[2] as num).toDouble(),
       targetDate: fields[3] as DateTime?,
       iconName: fields[4] as String?,
       description: fields[5] as String?,
-      statusIndex: fields[6] as int,
-      totalSavedCache: fields[7] as double,
+      statusIndex: (fields[6] as num).toInt(),
+      totalSavedCache: (fields[7] as num).toDouble(),
       createdAt: fields[8] as DateTime,
       achievedAt: fields[9] as DateTime?,
     );

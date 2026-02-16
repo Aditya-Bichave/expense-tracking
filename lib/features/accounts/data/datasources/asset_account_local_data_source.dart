@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger

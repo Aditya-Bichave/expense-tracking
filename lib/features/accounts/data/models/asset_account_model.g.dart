@@ -8,7 +8,7 @@ part of 'asset_account_model.dart';
 
 class AssetAccountModelAdapter extends TypeAdapter<AssetAccountModel> {
   @override
-  final int typeId = 1;
+  final typeId = 1;
 
   @override
   AssetAccountModel read(BinaryReader reader) {
@@ -19,8 +19,8 @@ class AssetAccountModelAdapter extends TypeAdapter<AssetAccountModel> {
     return AssetAccountModel(
       id: fields[0] as String,
       name: fields[1] as String,
-      typeIndex: fields[2] as int,
-      initialBalance: fields[3] as double,
+      typeIndex: (fields[2] as num).toInt(),
+      initialBalance: (fields[3] as num).toDouble(),
     );
   }
 

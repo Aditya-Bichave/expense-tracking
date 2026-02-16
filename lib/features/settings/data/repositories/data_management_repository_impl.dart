@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/accounts/data/models/asset_account_mode
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 
 class DataManagementRepositoryImpl implements DataManagementRepository {

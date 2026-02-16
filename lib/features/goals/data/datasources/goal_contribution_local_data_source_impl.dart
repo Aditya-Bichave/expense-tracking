@@ -3,7 +3,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 class HiveContributionLocalDataSource
     implements GoalContributionLocalDataSource {

@@ -8,7 +8,7 @@ part of 'budget_model.dart';
 
 class BudgetModelAdapter extends TypeAdapter<BudgetModel> {
   @override
-  final int typeId = 5;
+  final typeId = 5;
 
   @override
   BudgetModel read(BinaryReader reader) {
@@ -19,9 +19,9 @@ class BudgetModelAdapter extends TypeAdapter<BudgetModel> {
     return BudgetModel(
       id: fields[0] as String,
       name: fields[1] as String,
-      budgetTypeIndex: fields[2] as int,
-      targetAmount: fields[3] as double,
-      periodTypeIndex: fields[4] as int,
+      budgetTypeIndex: (fields[2] as num).toInt(),
+      targetAmount: (fields[3] as num).toDouble(),
+      periodTypeIndex: (fields[4] as num).toInt(),
       startDate: fields[5] as DateTime?,
       endDate: fields[6] as DateTime?,
       categoryIds: (fields[7] as List?)?.cast<String>(),

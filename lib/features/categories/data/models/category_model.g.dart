@@ -8,7 +8,7 @@ part of 'category_model.dart';
 
 class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
   @override
-  final int typeId = 3;
+  final typeId = 3;
 
   @override
   CategoryModel read(BinaryReader reader) {
@@ -23,7 +23,7 @@ class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
       colorHex: fields[3] as String,
       isCustom: fields[4] as bool,
       parentCategoryId: fields[5] as String?,
-      typeIndex: fields[6] as int,
+      typeIndex: (fields[6] as num).toInt(),
     );
   }
 
@@ -71,7 +71,7 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) {
       'iconName',
       'colorHex',
       'isCustom',
-      'typeIndex'
+      'typeIndex',
     ],
   );
   return CategoryModel(
@@ -92,7 +92,6 @@ Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
       'iconName': instance.iconName,
       'colorHex': instance.colorHex,
       'isCustom': instance.isCustom,
-      if (instance.parentCategoryId case final value?)
-        'parentCategoryId': value,
+      'parentCategoryId': ?instance.parentCategoryId,
       'typeIndex': instance.typeIndex,
     };

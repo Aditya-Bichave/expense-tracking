@@ -8,7 +8,7 @@ part of 'recurring_rule_model.dart';
 
 class RecurringRuleModelAdapter extends TypeAdapter<RecurringRuleModel> {
   @override
-  final int typeId = 10;
+  final typeId = 10;
 
   @override
   RecurringRuleModel read(BinaryReader reader) {
@@ -19,22 +19,22 @@ class RecurringRuleModelAdapter extends TypeAdapter<RecurringRuleModel> {
     return RecurringRuleModel(
       id: fields[0] as String,
       userId: fields[1] as String?,
-      amount: fields[2] as double,
+      amount: (fields[2] as num).toDouble(),
       description: fields[3] as String,
       categoryId: fields[4] as String,
       accountId: fields[5] as String,
-      transactionTypeIndex: fields[6] as int,
-      frequencyIndex: fields[7] as int,
-      interval: fields[8] as int,
+      transactionTypeIndex: (fields[6] as num).toInt(),
+      frequencyIndex: (fields[7] as num).toInt(),
+      interval: (fields[8] as num).toInt(),
       startDate: fields[9] as DateTime,
-      dayOfWeek: fields[10] as int?,
-      dayOfMonth: fields[11] as int?,
-      endConditionTypeIndex: fields[12] as int,
+      dayOfWeek: (fields[10] as num?)?.toInt(),
+      dayOfMonth: (fields[11] as num?)?.toInt(),
+      endConditionTypeIndex: (fields[12] as num).toInt(),
       endDate: fields[13] as DateTime?,
-      totalOccurrences: fields[14] as int?,
-      statusIndex: fields[15] as int,
+      totalOccurrences: (fields[14] as num?)?.toInt(),
+      statusIndex: (fields[15] as num).toInt(),
       nextOccurrenceDate: fields[16] as DateTime,
-      occurrencesGenerated: fields[17] as int,
+      occurrencesGenerated: (fields[17] as num).toInt(),
     );
   }
 

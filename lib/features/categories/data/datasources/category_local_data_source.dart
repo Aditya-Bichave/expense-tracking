@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
-import 'package:hive/hive.dart'; // Needed by implementation
+import 'package:hive_ce/hive.dart'; // Needed by implementation
 import 'package:expense_tracker/core/error/failure.dart'; // Needed by implementation
 import 'package:expense_tracker/main.dart'; // Needed by implementation (logger)
 // --- END MOVED IMPORTS ---

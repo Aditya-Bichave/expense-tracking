@@ -1,6 +1,6 @@
 // lib/features/goals/data/models/goal_contribution_model.dart
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 part 'goal_contribution_model.g.dart'; // Generate this
 

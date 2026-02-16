@@ -29,7 +29,7 @@ import 'package:expense_tracker/router.dart';
 // Removed InitialSetupScreen import, handled by router
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simple_logger/simple_logger.dart';

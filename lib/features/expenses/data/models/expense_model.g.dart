@@ -8,7 +8,7 @@ part of 'expense_model.dart';
 
 class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
   @override
-  final int typeId = 0;
+  final typeId = 0;
 
   @override
   ExpenseModel read(BinaryReader reader) {
@@ -19,13 +19,15 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
     return ExpenseModel(
       id: fields[0] as String,
       title: fields[1] as String,
-      amount: fields[2] as double,
+      amount: (fields[2] as num).toDouble(),
       date: fields[3] as DateTime,
       categoryId: fields[4] as String?,
-      categorizationStatusValue: fields[5] as String,
+      categorizationStatusValue: fields[5] == null
+          ? 'uncategorized'
+          : fields[5] as String,
       accountId: fields[6] as String,
-      confidenceScoreValue: fields[7] as double?,
-      isRecurring: fields[8] as bool,
+      confidenceScoreValue: (fields[7] as num?)?.toDouble(),
+      isRecurring: fields[8] == null ? false : fields[8] as bool,
     );
   }
 
@@ -69,19 +71,20 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
 // **************************************************************************
 
 ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      date: DateTime.parse(json['date'] as String),
-      categoryId: json['categoryId'] as String?,
-      categorizationStatusValue: json['categorizationStatusValue'] == null
-          ? 'uncategorized'
-          : ExpenseModel._categorizationStatusFromJson(
-              json['categorizationStatusValue'] as String?),
-      accountId: json['accountId'] as String,
-      confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
-      isRecurring: json['isRecurring'] as bool? ?? false,
-    );
+  id: json['id'] as String,
+  title: json['title'] as String,
+  amount: (json['amount'] as num).toDouble(),
+  date: DateTime.parse(json['date'] as String),
+  categoryId: json['categoryId'] as String?,
+  categorizationStatusValue: json['categorizationStatusValue'] == null
+      ? 'uncategorized'
+      : ExpenseModel._categorizationStatusFromJson(
+          json['categorizationStatusValue'] as String?,
+        ),
+  accountId: json['accountId'] as String,
+  confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
+  isRecurring: json['isRecurring'] as bool? ?? false,
+);
 
 Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
     <String, dynamic>{
@@ -89,11 +92,11 @@ Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
       'title': instance.title,
       'amount': instance.amount,
       'date': instance.date.toIso8601String(),
-      if (instance.categoryId case final value?) 'categoryId': value,
+      'categoryId': ?instance.categoryId,
       'categorizationStatusValue': ExpenseModel._categorizationStatusToJson(
-          instance.categorizationStatusValue),
+        instance.categorizationStatusValue,
+      ),
       'accountId': instance.accountId,
-      if (instance.confidenceScoreValue case final value?)
-        'confidenceScoreValue': value,
+      'confidenceScoreValue': ?instance.confidenceScoreValue,
       'isRecurring': instance.isRecurring,
     };

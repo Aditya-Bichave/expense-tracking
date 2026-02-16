@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/core/error/failure.dart';

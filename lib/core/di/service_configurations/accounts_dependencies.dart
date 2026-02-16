@@ -16,7 +16,7 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_account/add_edit_account_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart'; // Dependency
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart'; // Dependency
-import 'package:hive/hive.dart'; // Needed for HiveAssetAccountLocalDataSource
+import 'package:hive_ce/hive.dart'; // Needed for HiveAssetAccountLocalDataSource
 
 class AccountDependencies {
   static void register() {

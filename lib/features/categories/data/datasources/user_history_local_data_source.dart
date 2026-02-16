@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 

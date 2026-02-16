@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 
