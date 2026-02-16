@@ -10,5 +10,6 @@ abstract class GoalContributionLocalDataSource {
   Future<void> saveContribution(
       GoalContributionModel contribution); // Add/Update
   Future<void> deleteContribution(String id);
+  Future<void> deleteContributions(List<String> ids); // Batch delete
   Future<void> clearAllContributions();
 }

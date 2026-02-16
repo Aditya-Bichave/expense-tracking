@@ -225,8 +225,8 @@ class AddEditRecurringRuleBloc
 
     final ruleToSave = RecurringRule(
       id: state.isEditMode ? state.initialRule!.id : uuid.v4(),
-      description: event.description,
-      amount: amount,
+      description: event.description, // Use fresh data from the event
+      amount: amount, // Use the newly parsed amount
       transactionType: state.transactionType,
       accountId: state.accountId!,
       categoryId: state.categoryId!,
