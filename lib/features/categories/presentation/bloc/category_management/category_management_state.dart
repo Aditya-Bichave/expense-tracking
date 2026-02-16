@@ -15,10 +15,14 @@ class CategoryManagementState extends Equatable {
   final String? errorMessage;
 
   // Helper getters for convenience
-  List<Category> get allExpenseCategories =>
-      [...predefinedExpenseCategories, ...customExpenseCategories];
-  List<Category> get allIncomeCategories =>
-      [...predefinedIncomeCategories, ...customIncomeCategories];
+  List<Category> get allExpenseCategories => [
+    ...predefinedExpenseCategories,
+    ...customExpenseCategories,
+  ];
+  List<Category> get allIncomeCategories => [
+    ...predefinedIncomeCategories,
+    ...customIncomeCategories,
+  ];
 
   const CategoryManagementState({
     this.status = CategoryManagementStatus.initial,
@@ -54,10 +58,10 @@ class CategoryManagementState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        customExpenseCategories,
-        customIncomeCategories, // Use specific lists in props
-        predefinedExpenseCategories, predefinedIncomeCategories,
-        errorMessage
-      ];
+    status,
+    customExpenseCategories,
+    customIncomeCategories, // Use specific lists in props
+    predefinedExpenseCategories, predefinedIncomeCategories,
+    errorMessage,
+  ];
 }

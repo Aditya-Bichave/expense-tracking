@@ -14,16 +14,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 
-typedef BudgetSubmitCallback = Function(
-  String name,
-  BudgetType type,
-  double targetAmount,
-  BudgetPeriodType period,
-  DateTime? startDate,
-  DateTime? endDate,
-  List<String>? categoryIds,
-  String? notes,
-);
+typedef BudgetSubmitCallback =
+    Function(
+      String name,
+      BudgetType type,
+      double targetAmount,
+      BudgetPeriodType period,
+      DateTime? startDate,
+      DateTime? endDate,
+      List<String>? categoryIds,
+      String? notes,
+    );
 
 class BudgetForm extends StatefulWidget {
   final Budget? initialBudget;
@@ -60,19 +61,23 @@ class _BudgetFormState extends State<BudgetForm> {
     final initial = widget.initialBudget;
     _nameController = TextEditingController(text: initial?.name ?? '');
     _amountController = TextEditingController(
-        text: initial?.targetAmount.toStringAsFixed(2) ?? '');
+      text: initial?.targetAmount.toStringAsFixed(2) ?? '',
+    );
     _notesController = TextEditingController(text: initial?.notes ?? '');
     _selectedType = initial?.type ?? BudgetType.overall;
     _selectedPeriod = initial?.period ?? BudgetPeriodType.recurringMonthly;
     _selectedStartDate = initial?.startDate;
     _selectedEndDate = initial?.endDate;
-    _selectedCategoryIds = initial?.categoryIds
+    _selectedCategoryIds =
+        initial?.categoryIds
             ?.where(
-                (id) => widget.availableCategories.any((cat) => cat.id == id))
+              (id) => widget.availableCategories.any((cat) => cat.id == id),
+            )
             .toList() ??
         [];
     log.info(
-        "[BudgetForm] initState. Type: $_selectedType, Period: $_selectedPeriod, Initial Categories: ${_selectedCategoryIds.length}");
+      "[BudgetForm] initState. Type: $_selectedType, Period: $_selectedPeriod, Initial Categories: ${_selectedCategoryIds.length}",
+    );
   }
 
   @override
@@ -87,10 +92,11 @@ class _BudgetFormState extends State<BudgetForm> {
     final DateTime initial =
         (isStartDate ? _selectedStartDate : _selectedEndDate) ?? DateTime.now();
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: initial,
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2101));
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
     if (picked != null && mounted) {
       setState(() {
         if (isStartDate) {
@@ -100,8 +106,14 @@ class _BudgetFormState extends State<BudgetForm> {
             _selectedEndDate = _selectedStartDate;
           }
         } else {
-          _selectedEndDate =
-              DateTime(picked.year, picked.month, picked.day, 23, 59, 59);
+          _selectedEndDate = DateTime(
+            picked.year,
+            picked.month,
+            picked.day,
+            23,
+            59,
+            59,
+          );
           if (_selectedStartDate != null &&
               _selectedStartDate!.isAfter(_selectedEndDate!)) {
             _selectedStartDate = _selectedEndDate;
@@ -115,9 +127,11 @@ class _BudgetFormState extends State<BudgetForm> {
   void _showCategoryMultiSelect(BuildContext context) {
     final theme = Theme.of(context);
     final expenseCategories = widget.availableCategories
-        .where((cat) =>
-            cat.type == CategoryType.expense &&
-            cat.id != Category.uncategorized.id)
+        .where(
+          (cat) =>
+              cat.type == CategoryType.expense &&
+              cat.id != Category.uncategorized.id,
+        )
         .toList();
     final items = expenseCategories
         .map((category) => MultiSelectItem<String>(category.id, category.name))
@@ -127,44 +141,55 @@ class _BudgetFormState extends State<BudgetForm> {
         .toList();
 
     showModalBottomSheet(
-        isScrollControlled: true,
-        context: context,
-        builder: (ctx) {
-          return MultiSelectBottomSheet<String>(
-            items: items,
-            initialValue: validInitialValue,
-            title: const Text("Select Expense Categories"),
-            selectedColor: theme.colorScheme.primary,
-            selectedItemsTextStyle: theme.textTheme.bodyMedium
-                ?.copyWith(color: theme.colorScheme.primary),
-            itemsTextStyle: theme.textTheme.bodyMedium,
-            searchHint: "Search Categories",
-            searchIcon:
-                Icon(Icons.search, color: theme.colorScheme.onSurfaceVariant),
-            searchTextStyle: theme.textTheme.bodyMedium,
-            confirmText: Text('CONFIRM',
-                style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold)),
-            cancelText: Text('CANCEL',
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
-            searchable: true,
-            onConfirm: (values) {
-              final newSelection = values.map((e) => e.toString()).toList();
-              setState(() {
-                _selectedCategoryIds = newSelection;
-                if (_selectedCategoryIds.isNotEmpty) {
-                  _categoryErrorText = null;
-                }
-              });
-              log.info(
-                  "[BudgetForm] Selected Category IDs: $_selectedCategoryIds");
-              WidgetsBinding.instance.addPostFrameCallback(
-                  (_) => _formKey.currentState?.validate());
-            },
-            maxChildSize: 0.7,
-          );
-        });
+      isScrollControlled: true,
+      context: context,
+      builder: (ctx) {
+        return MultiSelectBottomSheet<String>(
+          items: items,
+          initialValue: validInitialValue,
+          title: const Text("Select Expense Categories"),
+          selectedColor: theme.colorScheme.primary,
+          selectedItemsTextStyle: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.primary,
+          ),
+          itemsTextStyle: theme.textTheme.bodyMedium,
+          searchHint: "Search Categories",
+          searchIcon: Icon(
+            Icons.search,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          searchTextStyle: theme.textTheme.bodyMedium,
+          confirmText: Text(
+            'CONFIRM',
+            style: TextStyle(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          cancelText: Text(
+            'CANCEL',
+            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          searchable: true,
+          onConfirm: (values) {
+            final newSelection = values.map((e) => e.toString()).toList();
+            setState(() {
+              _selectedCategoryIds = newSelection;
+              if (_selectedCategoryIds.isNotEmpty) {
+                _categoryErrorText = null;
+              }
+            });
+            log.info(
+              "[BudgetForm] Selected Category IDs: $_selectedCategoryIds",
+            );
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _formKey.currentState?.validate(),
+            );
+          },
+          maxChildSize: 0.7,
+        );
+      },
+    );
   }
 
   void _submitForm() {
@@ -202,10 +227,12 @@ class _BudgetFormState extends State<BudgetForm> {
       );
     } else {
       log.warning(
-          "[BudgetForm] Form validation failed (Form valid: $isFormValid, Category valid: $isCategoryValid).");
+        "[BudgetForm] Form validation failed (Form valid: $isFormValid, Category valid: $isCategoryValid).",
+      );
       if (!isFormValid) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Please correct the errors.")));
+          const SnackBar(content: Text("Please correct the errors.")),
+        );
       }
     }
   }
@@ -220,8 +247,13 @@ class _BudgetFormState extends State<BudgetForm> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding
-                .copyWith(left: 16, right: 16, bottom: 40, top: 16) ??
+        padding:
+            modeTheme?.pagePadding.copyWith(
+              left: 16,
+              right: 16,
+              bottom: 40,
+              top: 16,
+            ) ??
             const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Name
@@ -251,10 +283,17 @@ class _BudgetFormState extends State<BudgetForm> {
             value: _selectedType,
             labelText: 'Budget Type',
             prefixIcon: CommonFormFields.getPrefixIcon(
-                context, 'type', Icons.merge_type_outlined),
+              context,
+              'type',
+              Icons.merge_type_outlined,
+            ),
             items: BudgetType.values
-                .map((BudgetType type) => DropdownMenuItem<BudgetType>(
-                    value: type, child: Text(type.displayName)))
+                .map(
+                  (BudgetType type) => DropdownMenuItem<BudgetType>(
+                    value: type,
+                    child: Text(type.displayName),
+                  ),
+                )
                 .toList(),
             onChanged: (BudgetType? newValue) {
               if (newValue != null) {
@@ -284,18 +323,23 @@ class _BudgetFormState extends State<BudgetForm> {
             ),
             if (_selectedCategoryIds.isNotEmpty)
               Padding(
-                padding:
-                    const EdgeInsetsDirectional.only(start: 16.0, top: 4.0),
+                padding: const EdgeInsetsDirectional.only(
+                  start: 16.0,
+                  top: 4.0,
+                ),
                 child: Text(
                   _selectedCategoryIds
-                      .map((id) =>
-                          widget.availableCategories
-                              .firstWhereOrNull((c) => c.id == id)
-                              ?.name ??
-                          '?')
+                      .map(
+                        (id) =>
+                            widget.availableCategories
+                                .firstWhereOrNull((c) => c.id == id)
+                                ?.name ??
+                            '?',
+                      )
                       .join(', '),
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -308,11 +352,17 @@ class _BudgetFormState extends State<BudgetForm> {
             value: _selectedPeriod,
             labelText: 'Period',
             prefixIcon: CommonFormFields.getPrefixIcon(
-                context, 'repeat', Icons.repeat_outlined),
+              context,
+              'repeat',
+              Icons.repeat_outlined,
+            ),
             items: BudgetPeriodType.values
-                .map((BudgetPeriodType type) =>
-                    DropdownMenuItem<BudgetPeriodType>(
-                        value: type, child: Text(type.displayName)))
+                .map(
+                  (BudgetPeriodType type) => DropdownMenuItem<BudgetPeriodType>(
+                    value: type,
+                    child: Text(type.displayName),
+                  ),
+                )
                 .toList(),
             onChanged: (BudgetPeriodType? newValue) {
               if (newValue != null) {
@@ -335,7 +385,8 @@ class _BudgetFormState extends State<BudgetForm> {
           if (_selectedPeriod == BudgetPeriodType.oneTime) ...[
             FormField<bool>(
               key: ValueKey('date_picker_validator_$_selectedPeriod'),
-              initialValue: _selectedStartDate != null &&
+              initialValue:
+                  _selectedStartDate != null &&
                   _selectedEndDate != null &&
                   !_selectedEndDate!.isBefore(_selectedStartDate!),
               validator: (value) {
@@ -352,45 +403,57 @@ class _BudgetFormState extends State<BudgetForm> {
               builder: (formFieldState) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    Expanded(
-                      child: CommonFormFields.buildDatePickerTile(
-                        context: context,
-                        selectedDate: _selectedStartDate,
-                        label: 'Start Date *',
-                        onTap: () => _selectDate(context, true)
-                            .then((_) => formFieldState.didChange(true)),
-                        onClear: () => setState(() {
-                          _selectedStartDate = null;
-                          formFieldState.didChange(false);
-                        }),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CommonFormFields.buildDatePickerTile(
+                          context: context,
+                          selectedDate: _selectedStartDate,
+                          label: 'Start Date *',
+                          onTap: () => _selectDate(
+                            context,
+                            true,
+                          ).then((_) => formFieldState.didChange(true)),
+                          onClear: () => setState(() {
+                            _selectedStartDate = null;
+                            formFieldState.didChange(false);
+                          }),
+                        ),
                       ),
-                    ),
-                    const Padding(
+                      const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text('-', style: TextStyle(fontSize: 16))),
-                    Expanded(
-                      child: CommonFormFields.buildDatePickerTile(
-                        context: context,
-                        selectedDate: _selectedEndDate,
-                        label: 'End Date *',
-                        onTap: () => _selectDate(context, false)
-                            .then((_) => formFieldState.didChange(true)),
-                        onClear: () => setState(() {
-                          _selectedEndDate = null;
-                          formFieldState.didChange(false);
-                        }),
+                        child: Text('-', style: TextStyle(fontSize: 16)),
                       ),
-                    ),
-                  ]),
+                      Expanded(
+                        child: CommonFormFields.buildDatePickerTile(
+                          context: context,
+                          selectedDate: _selectedEndDate,
+                          label: 'End Date *',
+                          onTap: () => _selectDate(
+                            context,
+                            false,
+                          ).then((_) => formFieldState.didChange(true)),
+                          onClear: () => setState(() {
+                            _selectedEndDate = null;
+                            formFieldState.didChange(false);
+                          }),
+                        ),
+                      ),
+                    ],
+                  ),
                   // Error Text display for Date Range FormField
                   if (formFieldState.hasError)
                     Padding(
                       padding: const EdgeInsetsDirectional.only(
-                          start: 12.0, top: 8.0),
-                      child: Text(formFieldState.errorText!,
-                          style: theme.textTheme.bodySmall
-                              ?.copyWith(color: theme.colorScheme.error)),
+                        start: 12.0,
+                        top: 8.0,
+                      ),
+                      child: Text(
+                        formFieldState.errorText!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -400,20 +463,26 @@ class _BudgetFormState extends State<BudgetForm> {
 
           // Notes
           CommonFormFields.buildNotesField(
-              context: context, controller: _notesController),
+            context: context,
+            controller: _notesController,
+          ),
           const SizedBox(height: 32),
 
           // Submit Button
           ElevatedButton.icon(
             key: const ValueKey('button_submit'),
-            icon: Icon(widget.initialBudget == null
-                ? Icons.add_circle_outline
-                : Icons.save_outlined),
+            icon: Icon(
+              widget.initialBudget == null
+                  ? Icons.add_circle_outline
+                  : Icons.save_outlined,
+            ),
             label: Text(
-                widget.initialBudget == null ? 'Add Budget' : 'Update Budget'),
+              widget.initialBudget == null ? 'Add Budget' : 'Update Budget',
+            ),
             style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: theme.textTheme.titleMedium),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: theme.textTheme.titleMedium,
+            ),
             onPressed: _submitForm,
           ),
         ],

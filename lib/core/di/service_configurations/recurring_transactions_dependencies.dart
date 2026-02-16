@@ -36,40 +36,50 @@ class RecurringTransactionsDependencies {
     sl.registerLazySingleton(() => AddRecurringRule(sl()));
     sl.registerLazySingleton(() => GetRecurringRules(sl()));
     sl.registerLazySingleton(() => GetRecurringRuleById(sl()));
-    sl.registerLazySingleton(() => UpdateRecurringRule(
-          repository: sl(),
-          getRecurringRuleById: sl(),
-          addAuditLog: sl(),
-          uuid: sl<Uuid>(),
-          userId: 'demo-user-id', // Replace with authenticated user ID
-        ));
+    sl.registerLazySingleton(
+      () => UpdateRecurringRule(
+        repository: sl(),
+        getRecurringRuleById: sl(),
+        addAuditLog: sl(),
+        uuid: sl<Uuid>(),
+        userId: 'demo-user-id', // Replace with authenticated user ID
+      ),
+    );
     sl.registerLazySingleton(() => DeleteRecurringRule(sl()));
     sl.registerLazySingleton(() => AddAuditLog(sl()));
     sl.registerLazySingleton(() => GetAuditLogsForRule(sl()));
-    sl.registerLazySingleton(() =>
-        PauseResumeRecurringRule(repository: sl(), updateRecurringRule: sl()));
-    sl.registerLazySingleton(() => GenerateTransactionsOnLaunch(
-          recurringTransactionRepository: sl(),
-          categoryRepository: sl(),
-          addExpense: sl(),
-          addIncome: sl(),
-          uuid: sl<Uuid>(),
-        ));
+    sl.registerLazySingleton(
+      () =>
+          PauseResumeRecurringRule(repository: sl(), updateRecurringRule: sl()),
+    );
+    sl.registerLazySingleton(
+      () => GenerateTransactionsOnLaunch(
+        recurringTransactionRepository: sl(),
+        categoryRepository: sl(),
+        addExpense: sl(),
+        addIncome: sl(),
+        uuid: sl<Uuid>(),
+      ),
+    );
 
     // Services
     sl.registerLazySingleton(() => TransactionGenerationService(sl()));
 
     // BLoCs
-    sl.registerFactory(() => RecurringListBloc(
-          getRecurringRules: sl(),
-          pauseResumeRecurringRule: sl(),
-          deleteRecurringRule: sl(),
-          dataChangedEventStream: sl(),
-        ));
-    sl.registerFactory(() => AddEditRecurringRuleBloc(
-          addRecurringRule: sl(),
-          updateRecurringRule: sl(),
-          uuid: sl<Uuid>(),
-        ));
+    sl.registerFactory(
+      () => RecurringListBloc(
+        getRecurringRules: sl(),
+        pauseResumeRecurringRule: sl(),
+        deleteRecurringRule: sl(),
+        dataChangedEventStream: sl(),
+      ),
+    );
+    sl.registerFactory(
+      () => AddEditRecurringRuleBloc(
+        addRecurringRule: sl(),
+        updateRecurringRule: sl(),
+        uuid: sl<Uuid>(),
+      ),
+    );
   }
 }

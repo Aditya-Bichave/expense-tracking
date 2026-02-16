@@ -37,8 +37,8 @@ class TransactionEntity extends Equatable {
     this.status = CategorizationStatus.categorized,
     this.confidenceScore,
     this.isRecurring = false,
-  })  : expense = null,
-        income = null;
+  }) : expense = null,
+       income = null;
 
   // Private constructor used by specialized factories
   const TransactionEntity._({
@@ -125,16 +125,16 @@ class TransactionEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        type,
-        title,
-        amount,
-        date,
-        category,
-        accountId,
-        notes,
-        status,
-        confidenceScore,
-        isRecurring,
-      ];
+    id,
+    type,
+    title,
+    amount,
+    date,
+    category,
+    accountId,
+    notes,
+    status,
+    confidenceScore,
+    isRecurring,
+  ];
 }

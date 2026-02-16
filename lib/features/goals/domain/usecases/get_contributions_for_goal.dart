@@ -15,9 +15,11 @@ class GetContributionsForGoalUseCase
 
   @override
   Future<Either<Failure, List<GoalContribution>>> call(
-      GetContributionsParams params) async {
+    GetContributionsParams params,
+  ) async {
     log.info(
-        "[GetContributionsUseCase] Fetching contributions for Goal ID: ${params.goalId}");
+      "[GetContributionsUseCase] Fetching contributions for Goal ID: ${params.goalId}",
+    );
     return await repository.getContributionsForGoal(params.goalId);
   }
 }

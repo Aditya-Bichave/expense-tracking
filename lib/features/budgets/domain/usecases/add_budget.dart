@@ -28,20 +28,27 @@ class AddBudgetUseCase implements UseCase<Budget, AddBudgetParams> {
     }
     if (params.type == BudgetType.categorySpecific &&
         (params.categoryIds == null || params.categoryIds!.isEmpty)) {
-      return const Left(ValidationFailure(
-          "Please select at least one category for a category-specific budget."));
+      return const Left(
+        ValidationFailure(
+          "Please select at least one category for a category-specific budget.",
+        ),
+      );
     }
     if (params.period == BudgetPeriodType.oneTime &&
         (params.startDate == null || params.endDate == null)) {
-      return const Left(ValidationFailure(
-          "Start and end dates are required for a one-time budget."));
+      return const Left(
+        ValidationFailure(
+          "Start and end dates are required for a one-time budget.",
+        ),
+      );
     }
     if (params.period == BudgetPeriodType.oneTime &&
         params.startDate != null &&
         params.endDate != null &&
         params.endDate!.isBefore(params.startDate!)) {
       return const Left(
-          ValidationFailure("End date cannot be before start date."));
+        ValidationFailure("End date cannot be before start date."),
+      );
     }
 
     final newBudget = Budget(
@@ -50,10 +57,12 @@ class AddBudgetUseCase implements UseCase<Budget, AddBudgetParams> {
       type: params.type,
       targetAmount: params.targetAmount,
       period: params.period,
-      startDate:
-          params.period == BudgetPeriodType.oneTime ? params.startDate : null,
-      endDate:
-          params.period == BudgetPeriodType.oneTime ? params.endDate : null,
+      startDate: params.period == BudgetPeriodType.oneTime
+          ? params.startDate
+          : null,
+      endDate: params.period == BudgetPeriodType.oneTime
+          ? params.endDate
+          : null,
       categoryIds: params.type == BudgetType.categorySpecific
           ? params.categoryIds
           : null,
@@ -88,13 +97,13 @@ class AddBudgetParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        name,
-        type,
-        targetAmount,
-        period,
-        startDate,
-        endDate,
-        categoryIds,
-        notes
-      ];
+    name,
+    type,
+    targetAmount,
+    period,
+    startDate,
+    endDate,
+    categoryIds,
+    notes,
+  ];
 }

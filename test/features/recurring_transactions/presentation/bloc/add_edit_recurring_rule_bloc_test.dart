@@ -200,7 +200,9 @@ void main() {
       ),
       act: (bloc) => bloc.add(
         FormSubmitted(
-            description: tRule.description, amount: tRule.amount.toString()),
+          description: tRule.description,
+          amount: tRule.amount.toString(),
+        ),
       ),
       expect: () => [
         isA<AddEditRecurringRuleState>().having(

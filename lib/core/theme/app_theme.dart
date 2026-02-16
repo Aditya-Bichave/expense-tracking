@@ -66,20 +66,30 @@ class AppTheme {
   // --- Central Factory Method (Refactored) ---
   static AppThemeDataPair buildTheme(UIMode mode, String paletteIdentifier) {
     // 1. Get the configuration object for the mode and palette
-    final IThemePaletteConfig config =
-        _getConfigForMode(mode, paletteIdentifier);
+    final IThemePaletteConfig config = _getConfigForMode(
+      mode,
+      paletteIdentifier,
+    );
 
     // 2. Build the custom theme extensions
-    final AppModeTheme lightModeTheme =
-        _buildModeThemeExtension(config, Brightness.light);
-    final AppModeTheme darkModeTheme =
-        _buildModeThemeExtension(config, Brightness.dark);
+    final AppModeTheme lightModeTheme = _buildModeThemeExtension(
+      config,
+      Brightness.light,
+    );
+    final AppModeTheme darkModeTheme = _buildModeThemeExtension(
+      config,
+      Brightness.dark,
+    );
 
     // 3. Build the final ThemeData using the SINGLE base builder
-    final ThemeData lightTheme =
-        _buildBaseThemeData(config.lightColorScheme, lightModeTheme);
-    final ThemeData darkTheme =
-        _buildBaseThemeData(config.darkColorScheme, darkModeTheme);
+    final ThemeData lightTheme = _buildBaseThemeData(
+      config.lightColorScheme,
+      lightModeTheme,
+    );
+    final ThemeData darkTheme = _buildBaseThemeData(
+      config.darkColorScheme,
+      darkModeTheme,
+    );
 
     return AppThemeDataPair(light: lightTheme, dark: darkTheme);
   }
@@ -115,9 +125,12 @@ class AppTheme {
 
   // --- Helper to build AppModeTheme from Config (Remains the same) ---
   static AppModeTheme _buildModeThemeExtension(
-      IThemePaletteConfig config, Brightness brightness) {
-    final assets =
-        brightness == Brightness.light ? config.lightAssets : config.darkAssets;
+    IThemePaletteConfig config,
+    Brightness brightness,
+  ) {
+    final assets = brightness == Brightness.light
+        ? config.lightAssets
+        : config.darkAssets;
     final incomeGlow = brightness == Brightness.light
         ? config.incomeGlowColorLight
         : config.incomeGlowColorDark;
@@ -140,7 +153,9 @@ class AppTheme {
 
   // --- SINGLE Base Theme Builder (Consolidated) ---
   static ThemeData _buildBaseThemeData(
-      ColorScheme colorScheme, AppModeTheme modeTheme) {
+    ColorScheme colorScheme,
+    AppModeTheme modeTheme,
+  ) {
     // Determine Font based on mode or config (Example using modeTheme)
     TextTheme baseTextTheme;
     // Infer mode from palette ID prefix
@@ -169,11 +184,13 @@ class AppTheme {
     final textTheme = baseTextTheme
         .copyWith(
           // Common tweaks
-          titleLarge:
-              baseTextTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+          titleLarge: baseTextTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
           bodyMedium: baseTextTheme.bodyMedium?.copyWith(fontSize: 14),
-          labelLarge:
-              baseTextTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+          labelLarge: baseTextTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
           // Mode-specific tweaks (example for Quantum)
           bodySmall: modePrefix == 'quantum'
               ? baseTextTheme.bodySmall?.copyWith(fontSize: 11)
@@ -227,8 +244,8 @@ class AppTheme {
         color: modePrefix == 'aether'
             ? colorScheme.surfaceVariant.withOpacity(0.85)
             : (modePrefix == 'quantum'
-                ? colorScheme.surface
-                : colorScheme.surfaceContainer),
+                  ? colorScheme.surface
+                  : colorScheme.surfaceContainer),
         clipBehavior: modePrefix == 'aether' ? Clip.antiAlias : Clip.none,
       ),
 
@@ -237,37 +254,45 @@ class AppTheme {
             ? const EdgeInsets.symmetric(horizontal: 12, vertical: 2)
             : const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         dense: modeTheme.layoutDensity == LayoutDensity.compact,
-        minVerticalPadding:
-            modeTheme.layoutDensity == LayoutDensity.compact ? 8 : 12,
-        horizontalTitleGap:
-            modeTheme.layoutDensity == LayoutDensity.compact ? 8 : 16,
+        minVerticalPadding: modeTheme.layoutDensity == LayoutDensity.compact
+            ? 8
+            : 12,
+        horizontalTitleGap: modeTheme.layoutDensity == LayoutDensity.compact
+            ? 8
+            : 16,
         iconColor: colorScheme.onSurfaceVariant, // Default icon color
         titleTextStyle: textTheme.bodyLarge, // Default title style
         subtitleTextStyle: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant), // Default subtitle style
+          color: colorScheme.onSurfaceVariant,
+        ), // Default subtitle style
       ),
 
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(modePrefix == 'quantum' ? 6 : 12)),
+          borderRadius: BorderRadius.circular(modePrefix == 'quantum' ? 6 : 12),
+        ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-              color: modePrefix == 'aether'
-                  ? Colors.transparent
-                  : colorScheme.outlineVariant,
-              width: 0.8),
+            color: modePrefix == 'aether'
+                ? Colors.transparent
+                : colorScheme.outlineVariant,
+            width: 0.8,
+          ),
           borderRadius: BorderRadius.circular(
-              modePrefix == 'quantum' ? 6 : (modePrefix == 'aether' ? 16 : 12)),
+            modePrefix == 'quantum' ? 6 : (modePrefix == 'aether' ? 16 : 12),
+          ),
         ),
         focusedBorder: modePrefix == 'aether'
             ? OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: colorScheme.primary, width: 1.5))
+                borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
+              )
             : OutlineInputBorder(
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
-                borderRadius:
-                    BorderRadius.circular(modePrefix == 'quantum' ? 6 : 12)),
+                borderRadius: BorderRadius.circular(
+                  modePrefix == 'quantum' ? 6 : 12,
+                ),
+              ),
         filled: modePrefix == 'aether',
         fillColor: modePrefix == 'aether'
             ? colorScheme.surfaceVariant.withOpacity(0.7)
@@ -286,24 +311,27 @@ class AppTheme {
       ),
 
       elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-        backgroundColor: modePrefix == 'aether'
-            ? colorScheme.primaryContainer
-            : colorScheme.primary,
-        foregroundColor: modePrefix == 'aether'
-            ? colorScheme.onPrimaryContainer
-            : colorScheme.onPrimary,
-        padding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
-            : const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-        textStyle: textTheme.labelLarge,
-        shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(modePrefix == 'quantum' ? 6 : 12)),
-        elevation: modeTheme.cardStyle == CardStyle.flat
-            ? 0
-            : (modePrefix == 'aether' ? 4 : 2),
-      )),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: modePrefix == 'aether'
+              ? colorScheme.primaryContainer
+              : colorScheme.primary,
+          foregroundColor: modePrefix == 'aether'
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.onPrimary,
+          padding: modeTheme.layoutDensity == LayoutDensity.compact
+              ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
+              : const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          textStyle: textTheme.labelLarge,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              modePrefix == 'quantum' ? 6 : 12,
+            ),
+          ),
+          elevation: modeTheme.cardStyle == CardStyle.flat
+              ? 0
+              : (modePrefix == 'aether' ? 4 : 2),
+        ),
+      ),
 
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: modePrefix == 'aether'
@@ -316,8 +344,8 @@ class AppTheme {
             ? 0
             : (modePrefix == 'aether' ? 6 : 4),
         shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(modePrefix == 'aether' ? 20 : 16)),
+          borderRadius: BorderRadius.circular(modePrefix == 'aether' ? 20 : 16),
+        ),
       ),
 
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -326,17 +354,20 @@ class AppTheme {
             ? colorScheme.surfaceVariant.withOpacity(0.9)
             : colorScheme.surfaceContainerHighest, // Adjusted BG
         selectedItemColor: colorScheme.primary,
-        unselectedItemColor: colorScheme.onSurfaceVariant
-            .withOpacity(modePrefix == 'quantum' ? 0.6 : 0.7),
+        unselectedItemColor: colorScheme.onSurfaceVariant.withOpacity(
+          modePrefix == 'quantum' ? 0.6 : 0.7,
+        ),
         elevation: modeTheme.cardStyle == CardStyle.flat ? 0 : 2,
         selectedLabelStyle: modePrefix == 'quantum'
             ? textTheme.labelSmall
             : textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w500),
         unselectedLabelStyle: textTheme.labelSmall,
         selectedIconTheme: IconThemeData(
-            size: modePrefix == 'quantum' ? 20 : 24), // Adjusted size
+          size: modePrefix == 'quantum' ? 20 : 24,
+        ), // Adjusted size
         unselectedIconTheme: IconThemeData(
-            size: modePrefix == 'quantum' ? 20 : 24), // Adjusted size
+          size: modePrefix == 'quantum' ? 20 : 24,
+        ), // Adjusted size
       ),
 
       dividerTheme: DividerThemeData(
@@ -356,13 +387,16 @@ class AppTheme {
               dataRowMinHeight: 36,
               dataRowMaxHeight: 40,
               headingTextStyle: textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.onSurfaceVariant),
-              dataTextStyle:
-                  textTheme.bodySmall?.copyWith(color: colorScheme.onSurface),
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              dataTextStyle: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface,
+              ),
               dividerThickness: 0.8,
-              dataRowColor: MaterialStateProperty.resolveWith<Color?>(
-                  (Set<MaterialState> states) {
+              dataRowColor: MaterialStateProperty.resolveWith<Color?>((
+                Set<MaterialState> states,
+              ) {
                 if (states.contains(MaterialState.selected)) {
                   return colorScheme.primaryContainer.withOpacity(0.2);
                 }
@@ -372,9 +406,7 @@ class AppTheme {
           : null,
 
       // Add the AppModeTheme extension
-      extensions: <ThemeExtension<dynamic>>[
-        modeTheme,
-      ],
+      extensions: <ThemeExtension<dynamic>>[modeTheme],
     );
   }
 }

@@ -29,9 +29,11 @@ class SaveUserCategorizationHistoryUseCase
 
   @override
   Future<Either<Failure, void>> call(
-      SaveUserCategorizationHistoryParams params) async {
+    SaveUserCategorizationHistoryParams params,
+  ) async {
     log.info(
-        "[SaveUserHistoryUseCase] Executing. Category: ${params.selectedCategory.name}");
+      "[SaveUserHistoryUseCase] Executing. Category: ${params.selectedCategory.name}",
+    );
 
     // Determine RuleType and Matcher based on transaction data
     // Prioritize merchant match if available
@@ -43,23 +45,29 @@ class SaveUserCategorizationHistoryUseCase
       ruleType = RuleType.merchant;
       matcher = params.transactionData.merchantId!;
       log.info(
-          "[SaveUserHistoryUseCase] Creating rule based on Merchant ID: $matcher");
+        "[SaveUserHistoryUseCase] Creating rule based on Merchant ID: $matcher",
+      );
     } else {
       ruleType = RuleType.description;
       // Use the description directly, or a simplified/hashed version
       // Hashing reduces storage but prevents easy debugging/viewing of rules.
       // Let's use the raw description for now, truncated if needed.
-      matcher =
-          params.transactionData.description.trim(); // Consider lowercasing?
+      matcher = params.transactionData.description
+          .trim(); // Consider lowercasing?
       // Optional: Implement hashing or pattern simplification here
       // matcher = _simplifyDescription(params.transactionData.description);
       log.info(
-          "[SaveUserHistoryUseCase] Creating rule based on Description: $matcher");
+        "[SaveUserHistoryUseCase] Creating rule based on Description: $matcher",
+      );
       if (matcher.isEmpty) {
         log.warning(
-            "[SaveUserHistoryUseCase] Cannot save history rule: Both merchant and description are empty.");
-        return const Left(ValidationFailure(
-            "Cannot learn from transaction with empty merchant and description."));
+          "[SaveUserHistoryUseCase] Cannot save history rule: Both merchant and description are empty.",
+        );
+        return const Left(
+          ValidationFailure(
+            "Cannot learn from transaction with empty merchant and description.",
+          ),
+        );
       }
     }
 
@@ -73,7 +81,8 @@ class SaveUserCategorizationHistoryUseCase
     );
 
     log.info(
-        "[SaveUserHistoryUseCase] Calling repository to save rule ID: ${newRule.id}");
+      "[SaveUserHistoryUseCase] Calling repository to save rule ID: ${newRule.id}",
+    );
     return await repository.saveRule(newRule);
   }
 
@@ -87,7 +96,7 @@ class SaveUserCategorizationHistoryUseCase
 
 class SaveUserCategorizationHistoryParams extends Equatable {
   final TransactionMatchData
-      transactionData; // Relevant data from the transaction
+  transactionData; // Relevant data from the transaction
   final Category selectedCategory; // The category the user chose
 
   const SaveUserCategorizationHistoryParams({

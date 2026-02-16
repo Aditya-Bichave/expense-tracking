@@ -36,9 +36,11 @@ class HiveGoalLocalDataSource implements GoalLocalDataSource {
   Future<GoalModel?> getGoalById(String id) async {
     try {
       final goal = goalBox.get(id);
-      log.fine(goal != null
-          ? "[GoalDS] Retrieved goal by ID $id."
-          : "[GoalDS] Goal with ID $id not found.");
+      log.fine(
+        goal != null
+            ? "[GoalDS] Retrieved goal by ID $id."
+            : "[GoalDS] Goal with ID $id not found.",
+      );
       return goal;
     } catch (e, s) {
       log.severe("[GoalDS] Failed to get goal by ID $id$e$s");

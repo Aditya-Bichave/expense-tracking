@@ -22,8 +22,10 @@ class SpendingCategoryReportLoaded extends SpendingCategoryReportState {
   final SpendingCategoryReportData reportData;
   // --- ADDED showComparison flag ---
   final bool showComparison;
-  const SpendingCategoryReportLoaded(this.reportData,
-      {required this.showComparison});
+  const SpendingCategoryReportLoaded(
+    this.reportData, {
+    required this.showComparison,
+  });
   @override
   List<Object?> get props => [reportData, showComparison];
   // --- END ADD ---

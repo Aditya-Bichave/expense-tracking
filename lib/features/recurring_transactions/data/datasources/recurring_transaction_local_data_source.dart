@@ -61,7 +61,8 @@ class RecurringTransactionLocalDataSourceImpl
 
   @override
   Future<List<RecurringRuleAuditLogModel>> getAuditLogsForRule(
-      String ruleId) async {
+    String ruleId,
+  ) async {
     return recurringRuleAuditLogBox.values
         .where((log) => log.ruleId == ruleId)
         .toList();

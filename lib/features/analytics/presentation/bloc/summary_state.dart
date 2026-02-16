@@ -11,7 +11,7 @@ class SummaryInitial extends SummaryState {}
 
 class SummaryLoading extends SummaryState {
   final bool
-      isReloading; // True if loading triggered while data was already loaded
+  isReloading; // True if loading triggered while data was already loaded
   const SummaryLoading({this.isReloading = false});
 
   @override

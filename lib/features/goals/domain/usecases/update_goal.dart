@@ -16,7 +16,8 @@ class UpdateGoalUseCase implements UseCase<Goal, UpdateGoalParams> {
   Future<Either<Failure, Goal>> call(UpdateGoalParams params) async {
     final goal = params.goal;
     log.info(
-        "[UpdateGoalUseCase] Updating goal: ${goal.name} (ID: ${goal.id})");
+      "[UpdateGoalUseCase] Updating goal: ${goal.name} (ID: ${goal.id})",
+    );
 
     // Validation (mirroring AddGoalUseCase)
     if (goal.name.trim().isEmpty) {

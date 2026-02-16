@@ -7,18 +7,26 @@ import '../../../../helpers/pump_app.dart';
 void main() {
   group('IconPickerDialogContent', () {
     testWidgets('renders grid of icons', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: IconPickerDialogContent(currentIconName: 'food')),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IconPickerDialogContent(currentIconName: 'food'),
+          ),
+        ),
+      );
 
       expect(find.byType(GridView), findsOneWidget);
       expect(find.byIcon(Icons.restaurant_menu_outlined), findsOneWidget);
     });
 
     testWidgets('filters icons based on search query', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: IconPickerDialogContent(currentIconName: 'food')),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IconPickerDialogContent(currentIconName: 'food'),
+          ),
+        ),
+      );
 
       await tester.enterText(find.byType(TextField), 'salary');
       await tester.pump();
@@ -28,40 +36,51 @@ void main() {
     });
 
     testWidgets('tapping an icon selects it', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: IconPickerDialogContent(currentIconName: 'food')),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: IconPickerDialogContent(currentIconName: 'food'),
+          ),
+        ),
+      );
 
       await tester.tap(find.byIcon(Icons.shopping_cart_outlined));
       await tester.pump();
 
-      final container = tester.widget<Container>(find
-          .ancestor(
-            of: find.byIcon(Icons.shopping_cart_outlined),
-            matching: find.byType(Container),
-          )
-          .first);
+      final container = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.byIcon(Icons.shopping_cart_outlined),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
 
       final border = container.decoration as BoxDecoration;
       expect(border.border, isNotNull);
       expect(border.border!.isUniform, isTrue);
     });
 
-    testWidgets('tapping Select button pops with selected icon',
-        (tester) async {
+    testWidgets('tapping Select button pops with selected icon', (
+      tester,
+    ) async {
       String? result;
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (context) {
-          return Scaffold(
-            body: ElevatedButton(
-              onPressed: () async {
-                result = await showIconPicker(context, 'food');
-              },
-              child: const Text('Show'),
-            ),
-          );
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: ElevatedButton(
+                  onPressed: () async {
+                    result = await showIconPicker(context, 'food');
+                  },
+                  child: const Text('Show'),
+                ),
+              );
+            },
+          ),
+        ),
+      );
 
       await tester.tap(find.text('Show'));
       await tester.pumpAndSettle();

@@ -71,7 +71,7 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) {
       'iconName',
       'colorHex',
       'isCustom',
-      'typeIndex'
+      'typeIndex',
     ],
   );
   return CategoryModel(
@@ -85,14 +85,14 @@ CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) {
   );
 }
 
-Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'name': instance.name,
-      'iconName': instance.iconName,
-      'colorHex': instance.colorHex,
-      'isCustom': instance.isCustom,
-      if (instance.parentCategoryId case final value?)
-        'parentCategoryId': value,
-      'typeIndex': instance.typeIndex,
-    };
+Map<String, dynamic> _$CategoryModelToJson(
+  CategoryModel instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'iconName': instance.iconName,
+  'colorHex': instance.colorHex,
+  'isCustom': instance.isCustom,
+  if (instance.parentCategoryId case final value?) 'parentCategoryId': value,
+  'typeIndex': instance.typeIndex,
+};

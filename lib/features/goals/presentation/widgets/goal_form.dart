@@ -9,23 +9,20 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-typedef GoalSubmitCallback = Function(
-  String name,
-  double targetAmount,
-  DateTime? targetDate,
-  String? iconName,
-  String? description,
-);
+typedef GoalSubmitCallback =
+    Function(
+      String name,
+      double targetAmount,
+      DateTime? targetDate,
+      String? iconName,
+      String? description,
+    );
 
 class GoalForm extends StatefulWidget {
   final Goal? initialGoal;
   final GoalSubmitCallback onSubmit;
 
-  const GoalForm({
-    super.key,
-    this.initialGoal,
-    required this.onSubmit,
-  });
+  const GoalForm({super.key, this.initialGoal, required this.onSubmit});
 
   @override
   State<GoalForm> createState() => _GoalFormState();
@@ -45,13 +42,16 @@ class _GoalFormState extends State<GoalForm> {
     final initial = widget.initialGoal;
     _nameController = TextEditingController(text: initial?.name ?? '');
     _amountController = TextEditingController(
-        text: initial?.targetAmount.toStringAsFixed(2) ?? '');
-    _descriptionController =
-        TextEditingController(text: initial?.description ?? '');
+      text: initial?.targetAmount.toStringAsFixed(2) ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: initial?.description ?? '',
+    );
     _selectedTargetDate = initial?.targetDate;
     _selectedIconName = initial?.iconName ?? 'savings_outlined';
     log.info(
-        "[GoalForm] initState. Icon: $_selectedIconName, Date: $_selectedTargetDate");
+      "[GoalForm] initState. Icon: $_selectedIconName, Date: $_selectedTargetDate",
+    );
   }
 
   @override
@@ -66,20 +66,28 @@ class _GoalFormState extends State<GoalForm> {
     final DateTime initial =
         _selectedTargetDate ?? DateTime.now().add(const Duration(days: 90));
     final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: initial,
-        firstDate: DateTime(2000),
-        lastDate: DateTime(2101));
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
     if (picked != null && mounted) {
-      setState(() => _selectedTargetDate =
-          DateTime(picked.year, picked.month, picked.day));
+      setState(
+        () => _selectedTargetDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+        ),
+      );
       log.info("[GoalForm] Target Date selected: $_selectedTargetDate");
     }
   }
 
   void _showIconPicker(BuildContext context) async {
-    final String? selectedIcon =
-        await showIconPicker(context, _selectedIconName ?? 'savings_outlined');
+    final String? selectedIcon = await showIconPicker(
+      context,
+      _selectedIconName ?? 'savings_outlined',
+    );
     if (selectedIcon != null && mounted) {
       setState(() => _selectedIconName = selectedIcon);
       log.info("[GoalForm] Icon selected: $_selectedIconName");
@@ -101,7 +109,8 @@ class _GoalFormState extends State<GoalForm> {
     } else {
       log.warning("[GoalForm] Form validation failed.");
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please correct the errors.")));
+        const SnackBar(content: Text("Please correct the errors.")),
+      );
     }
   }
 
@@ -120,8 +129,13 @@ class _GoalFormState extends State<GoalForm> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding
-                .copyWith(left: 16, right: 16, bottom: 40, top: 16) ??
+        padding:
+            modeTheme?.pagePadding.copyWith(
+              left: 16,
+              right: 16,
+              bottom: 40,
+              top: 16,
+            ) ??
             const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Goal Name - Using Common Builder
@@ -163,10 +177,14 @@ class _GoalFormState extends State<GoalForm> {
           // Icon Picker - Kept Specific ListTile for now
           ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: theme.inputDecorationTheme.enabledBorder ??
+            shape:
+                theme.inputDecorationTheme.enabledBorder ??
                 const OutlineInputBorder(),
-            leading: Icon(displayIconData,
-                color: theme.colorScheme.primary, size: 28),
+            leading: Icon(
+              displayIconData,
+              color: theme.colorScheme.primary,
+              size: 28,
+            ),
             title: const Text('Goal Icon'),
             subtitle: Text(_selectedIconName ?? 'Default'),
             trailing: const Icon(Icons.arrow_drop_down),
@@ -190,11 +208,13 @@ class _GoalFormState extends State<GoalForm> {
           ElevatedButton.icon(
             key: const ValueKey('button_submit'),
             icon: Icon(
-                isEditing ? Icons.save_outlined : Icons.add_circle_outline),
+              isEditing ? Icons.save_outlined : Icons.add_circle_outline,
+            ),
             label: Text(isEditing ? 'Update Goal' : 'Add Goal'),
             style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: theme.textTheme.titleMedium),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: theme.textTheme.titleMedium,
+            ),
             onPressed: _submitForm,
           ),
         ],

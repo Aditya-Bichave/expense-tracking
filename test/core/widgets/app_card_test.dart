@@ -17,9 +17,7 @@ void main() {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: const AppCard(
-          child: Text('Hello World'),
-        ),
+        widget: const AppCard(child: Text('Hello World')),
       );
 
       // ASSERT
@@ -51,16 +49,16 @@ void main() {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: const AppCard(
-          child: Text('Not tappable'),
-        ),
+        widget: const AppCard(child: Text('Not tappable')),
       );
 
       // ASSERT
       expect(find.byType(InkWell), findsNothing);
     });
 
-    testWidgets('applies custom color and elevation properties', (tester) async {
+    testWidgets('applies custom color and elevation properties', (
+      tester,
+    ) async {
       // ARRANGE
       const customColor = Colors.amber;
       const customElevation = 10.0;
@@ -84,7 +82,9 @@ void main() {
 
     // Requirement 4.5: Test for theme adaptation
     for (final uiMode in UIMode.values) {
-      testWidgets('renders correctly in ${uiMode.name} UI mode', (tester) async {
+      testWidgets('renders correctly in ${uiMode.name} UI mode', (
+        tester,
+      ) async {
         // ARRANGE
         await pumpWidgetWithProviders(
           tester: tester,

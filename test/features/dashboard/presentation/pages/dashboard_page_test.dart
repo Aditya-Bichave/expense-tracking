@@ -52,8 +52,9 @@ void main() {
   }
 
   group('DashboardPage', () {
-    testWidgets('shows loading indicator when state is DashboardLoading',
-        (tester) async {
+    testWidgets('shows loading indicator when state is DashboardLoading', (
+      tester,
+    ) async {
       when(() => mockDashboardBloc.state).thenReturn(DashboardLoading());
       when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
       await pumpWidgetWithProviders(
@@ -65,10 +66,12 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows error and retry button when state is DashboardError',
-        (tester) async {
-      when(() => mockDashboardBloc.state)
-          .thenReturn(const DashboardError('Failed'));
+    testWidgets('shows error and retry button when state is DashboardError', (
+      tester,
+    ) async {
+      when(
+        () => mockDashboardBloc.state,
+      ).thenReturn(const DashboardError('Failed'));
       when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -77,15 +80,17 @@ void main() {
       expect(retryButton, findsOneWidget);
 
       await tester.tap(retryButton);
-      verify(() =>
-              mockDashboardBloc.add(const LoadDashboard(forceReload: true)))
-          .called(1);
+      verify(
+        () => mockDashboardBloc.add(const LoadDashboard(forceReload: true)),
+      ).called(1);
     });
 
-    testWidgets('renders dashboard sections when state is DashboardLoaded',
-        (tester) async {
-      when(() => mockDashboardBloc.state)
-          .thenReturn(DashboardLoaded(mockOverview));
+    testWidgets('renders dashboard sections when state is DashboardLoaded', (
+      tester,
+    ) async {
+      when(
+        () => mockDashboardBloc.state,
+      ).thenReturn(DashboardLoaded(mockOverview));
       when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -93,25 +98,33 @@ void main() {
       expect(find.byType(BudgetSummaryWidget), findsOneWidget);
     });
 
-    testWidgets('report navigation buttons push correct routes',
-        (tester) async {
-      when(() => mockDashboardBloc.state)
-          .thenReturn(DashboardLoaded(mockOverview));
+    testWidgets('report navigation buttons push correct routes', (
+      tester,
+    ) async {
+      when(
+        () => mockDashboardBloc.state,
+      ).thenReturn(DashboardLoaded(mockOverview));
       when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
       when(() => mockGoRouter.push(any())).thenAnswer((_) async => null);
 
       await pumpWidgetWithProviders(
-          tester: tester, widget: buildTestWidget(), router: mockGoRouter);
+        tester: tester,
+        widget: buildTestWidget(),
+        router: mockGoRouter,
+      );
 
-      final button = find
-          .byKey(const ValueKey('button_dashboard_to_spendingCategoryReport'));
+      final button = find.byKey(
+        const ValueKey('button_dashboard_to_spendingCategoryReport'),
+      );
       expect(button, findsOneWidget);
 
       await tester.tap(button);
 
-      verify(() => mockGoRouter.push(
-              '${RouteNames.dashboard}/${RouteNames.reportSpendingCategory}'))
-          .called(1);
+      verify(
+        () => mockGoRouter.push(
+          '${RouteNames.dashboard}/${RouteNames.reportSpendingCategory}',
+        ),
+      ).called(1);
     });
   }, skip: true);
 }

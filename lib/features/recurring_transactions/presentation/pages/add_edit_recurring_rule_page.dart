@@ -364,13 +364,13 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     onPressed: state.status == FormStatus.inProgress
                         ? null
                         : () {
-                      context.read<AddEditRecurringRuleBloc>().add(
-                        FormSubmitted(
-                          description: _descriptionController.text,
-                          amount: _amountController.text,
-                        ),
-                      );
-                    },
+                            context.read<AddEditRecurringRuleBloc>().add(
+                              FormSubmitted(
+                                description: _descriptionController.text,
+                                amount: _amountController.text,
+                              ),
+                            );
+                          },
                     child: state.status == FormStatus.inProgress
                         ? const CircularProgressIndicator()
                         : Text(AppLocalizations.of(context)!.save),

@@ -11,8 +11,10 @@ class LoadIncomeExpenseReport extends IncomeExpenseReportEvent {
   final IncomeExpensePeriodType? periodType;
   // --- ADDED compareToPrevious flag ---
   final bool compareToPrevious;
-  const LoadIncomeExpenseReport(
-      {this.periodType, this.compareToPrevious = false});
+  const LoadIncomeExpenseReport({
+    this.periodType,
+    this.compareToPrevious = false,
+  });
   @override
   List<Object?> get props => [periodType, compareToPrevious];
   // --- END ADD ---

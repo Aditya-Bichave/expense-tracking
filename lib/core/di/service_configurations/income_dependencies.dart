@@ -15,14 +15,16 @@ class IncomeDependencies {
   static void register() {
     // --- MODIFIED: Register Proxy ---
     sl.registerLazySingleton<IncomeLocalDataSource>(
-        () => DemoAwareIncomeDataSource(
-              hiveDataSource: sl<HiveIncomeLocalDataSource>(), // Get real DS
-              demoModeService: sl<DemoModeService>(),
-            ));
+      () => DemoAwareIncomeDataSource(
+        hiveDataSource: sl<HiveIncomeLocalDataSource>(), // Get real DS
+        demoModeService: sl<DemoModeService>(),
+      ),
+    );
     // --- END MODIFIED ---
 
     sl.registerLazySingleton<IncomeRepository>(
-        () => IncomeRepositoryImpl(localDataSource: sl()));
+      () => IncomeRepositoryImpl(localDataSource: sl()),
+    );
     // Domain
     sl.registerLazySingleton(() => AddIncomeUseCase(sl()));
     sl.registerLazySingleton(() => UpdateIncomeUseCase(sl()));

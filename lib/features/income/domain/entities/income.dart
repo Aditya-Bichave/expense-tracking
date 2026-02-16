@@ -9,7 +9,7 @@ class Income extends Equatable {
   final double amount;
   final DateTime date;
   final Category?
-      category; // CHANGED: Now holds the full Category object, nullable initially
+  category; // CHANGED: Now holds the full Category object, nullable initially
   final String accountId; // Link to AssetAccount
   final String? notes;
   final CategorizationStatus status; // ADDED
@@ -67,15 +67,15 @@ class Income extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        title,
-        amount,
-        date,
-        category, // Updated
-        accountId,
-        notes,
-        status, // Added
-        confidenceScore, // Added
-        isRecurring,
-      ];
+    id,
+    title,
+    amount,
+    date,
+    category, // Updated
+    accountId,
+    notes,
+    status, // Added
+    confidenceScore, // Added
+    isRecurring,
+  ];
 }

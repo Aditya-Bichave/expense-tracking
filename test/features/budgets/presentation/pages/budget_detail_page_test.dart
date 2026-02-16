@@ -59,8 +59,9 @@ void main() {
     mockGetTransactionsUseCase = MockGetTransactionsUseCase();
     mockGoRouter = MockGoRouter();
     mockCategoryManagementBloc = MockCategoryManagementBloc();
-    when(() => mockCategoryManagementBloc.state)
-        .thenReturn(const CategoryManagementState());
+    when(
+      () => mockCategoryManagementBloc.state,
+    ).thenReturn(const CategoryManagementState());
     sl.registerSingleton<GetTransactionsUseCase>(mockGetTransactionsUseCase);
   });
 
@@ -73,23 +74,26 @@ void main() {
       providers: [
         BlocProvider<BudgetListBloc>.value(value: mockBudgetListBloc),
         BlocProvider<CategoryManagementBloc>.value(
-            value: mockCategoryManagementBloc),
+          value: mockCategoryManagementBloc,
+        ),
       ],
       child: const BudgetDetailPage(budgetId: '1'),
     );
   }
 
   group('BudgetDetailPage', () {
-    testWidgets('shows loading indicator and then displays details',
-        (tester) async {
+    testWidgets('shows loading indicator and then displays details', (
+      tester,
+    ) async {
       when(() => mockBudgetListBloc.state).thenReturn(
         BudgetListState(
           status: BudgetListStatus.success,
           budgetsWithStatus: [mockBudgetWithStatus],
         ),
       );
-      when(() => mockGetTransactionsUseCase.call(any()))
-          .thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGetTransactionsUseCase.call(any()),
+      ).thenAnswer((_) async => const Right([]));
 
       await pumpWidgetWithProviders(
         tester: tester,
@@ -114,36 +118,49 @@ void main() {
           budgetsWithStatus: [mockBudgetWithStatus],
         ),
       );
-      when(() => mockGetTransactionsUseCase.call(any()))
-          .thenAnswer((_) async => const Right([]));
-      when(() => mockGoRouter.pushNamed(RouteNames.editBudget,
+      when(
+        () => mockGetTransactionsUseCase.call(any()),
+      ).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGoRouter.pushNamed(
+          RouteNames.editBudget,
           pathParameters: any(named: 'pathParameters'),
-          extra: any(named: 'extra'))).thenAnswer((_) async => {});
+          extra: any(named: 'extra'),
+        ),
+      ).thenAnswer((_) async => {});
 
       await pumpWidgetWithProviders(
-          tester: tester, router: mockGoRouter, widget: buildTestWidget());
+        tester: tester,
+        router: mockGoRouter,
+        widget: buildTestWidget(),
+      );
       await tester.pumpAndSettle();
 
-      await tester
-          .tap(find.byKey(const ValueKey('button_edit'), skipOffstage: false));
+      await tester.tap(
+        find.byKey(const ValueKey('button_edit'), skipOffstage: false),
+      );
 
-      verify(() => mockGoRouter.pushNamed(
-            RouteNames.editBudget,
-            pathParameters: {'id': '1'},
-            extra: mockBudget,
-          )).called(1);
+      verify(
+        () => mockGoRouter.pushNamed(
+          RouteNames.editBudget,
+          pathParameters: {'id': '1'},
+          extra: mockBudget,
+        ),
+      ).called(1);
     }, skip: true);
 
-    testWidgets('tapping Delete button shows dialog and dispatches event',
-        (tester) async {
+    testWidgets('tapping Delete button shows dialog and dispatches event', (
+      tester,
+    ) async {
       when(() => mockBudgetListBloc.state).thenReturn(
         BudgetListState(
           status: BudgetListStatus.success,
           budgetsWithStatus: [mockBudgetWithStatus],
         ),
       );
-      when(() => mockGetTransactionsUseCase.call(any()))
-          .thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGetTransactionsUseCase.call(any()),
+      ).thenAnswer((_) async => const Right([]));
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       await tester.pumpAndSettle();
@@ -156,8 +173,9 @@ void main() {
       await tester.tap(find.text('Delete'));
       await tester.pump();
 
-      verify(() => mockBudgetListBloc.add(const DeleteBudget(budgetId: '1')))
-          .called(1);
+      verify(
+        () => mockBudgetListBloc.add(const DeleteBudget(budgetId: '1')),
+      ).called(1);
     });
   });
 }

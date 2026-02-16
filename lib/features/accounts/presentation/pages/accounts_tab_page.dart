@@ -29,21 +29,27 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
 
   void _navigateToAccountDetail(BuildContext context, AssetAccount account) {
     log.info(
-        "[AccountsTabPage] Navigating to Edit Account for ID: ${account.id}");
-    context.pushNamed(RouteNames.editAccount,
-        pathParameters: {RouteNames.paramAccountId: account.id},
-        extra: account);
+      "[AccountsTabPage] Navigating to Edit Account for ID: ${account.id}",
+    );
+    context.pushNamed(
+      RouteNames.editAccount,
+      pathParameters: {RouteNames.paramAccountId: account.id},
+      extra: account,
+    );
   }
 
   void _showLiabilityComingSoon(BuildContext context) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content:
-            const Text("Liability account features are under development."),
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        duration: const Duration(seconds: 2),
-      ));
+      ..showSnackBar(
+        SnackBar(
+          content: const Text(
+            "Liability account features are under development.",
+          ),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     // IMPORTANT: Reset toggle back to Assets immediately AFTER showing snackbar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -62,30 +68,34 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
     // Define gradient lists
     final assetGradientList = [
       theme.colorScheme.primaryContainer,
-      theme.colorScheme.primaryContainer.withOpacity(0.7)
+      theme.colorScheme.primaryContainer.withOpacity(0.7),
     ];
     final liabilityGradientList = [
       theme.colorScheme.errorContainer.withOpacity(0.7),
-      theme.colorScheme.errorContainer
+      theme.colorScheme.errorContainer,
     ];
 
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          context
-              .read<AccountListBloc>()
-              .add(const LoadAccounts(forceReload: true));
+          context.read<AccountListBloc>().add(
+            const LoadAccounts(forceReload: true),
+          );
           await context.read<AccountListBloc>().stream.firstWhere(
-              (state) => state is! AccountListLoading || !state.isReloading);
+            (state) => state is! AccountListLoading || !state.isReloading,
+          );
         },
         child: ListView(
-          padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+          padding:
+              modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
               const EdgeInsets.only(top: 8.0, bottom: 80.0),
           children: [
             // Add ToggleSwitch
             Padding(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(
+                vertical: 8.0,
+                horizontal: 16.0,
+              ),
               child: Center(
                 child: ToggleSwitch(
                   minWidth: 120.0,
@@ -99,8 +109,9 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       : theme.colorScheme.onErrorContainer,
                   inactiveBgColor: theme.colorScheme.surfaceContainerHighest,
                   inactiveFgColor: theme.colorScheme.onSurfaceVariant,
-                  initialLabelIndex:
-                      _selectedView == AccountViewType.assets ? 0 : 1,
+                  initialLabelIndex: _selectedView == AccountViewType.assets
+                      ? 0
+                      : 1,
                   totalSwitches: 2,
                   labels: const ['Assets', 'Liabilities'],
                   radiusStyle: true,
@@ -112,7 +123,8 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       if (_selectedView != newView) {
                         if (newView == AccountViewType.liabilities) {
                           _showLiabilityComingSoon(
-                              context); // Show message and revert
+                            context,
+                          ); // Show message and revert
                         } else {
                           setState(() {
                             _selectedView = newView;
@@ -144,7 +156,8 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             context.pushNamed(RouteNames.addAccount);
           } else {
             _showLiabilityComingSoon(
-                context); // Show coming soon if trying to add liability
+              context,
+            ); // Show coming soon if trying to add liability
           }
         }, // Unique tag
         child: const Icon(Icons.add),
@@ -153,7 +166,10 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
   }
 
   Widget _buildAssetContent(
-      BuildContext context, ThemeData theme, AppModeTheme? modeTheme) {
+    BuildContext context,
+    ThemeData theme,
+    AppModeTheme? modeTheme,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -162,28 +178,35 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
           builder: (context, state) {
             if (state is AccountListLoading && !state.isReloading) {
               return const Center(
-                  child: Padding(
-                      padding: EdgeInsets.all(32.0),
-                      child: CircularProgressIndicator()));
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: CircularProgressIndicator(),
+                ),
+              );
             }
             if (state is AccountListError) {
               return Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Center(
-                      child: Text('Error loading accounts: ${state.message}',
-                          style: TextStyle(color: theme.colorScheme.error))));
+                padding: const EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text(
+                    'Error loading accounts: ${state.message}',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                ),
+              );
             }
             if (state is AccountListLoaded ||
                 (state is AccountListLoading && state.isReloading)) {
               final accounts = (state is AccountListLoaded)
                   ? state.items
                   : (context.read<AccountListBloc>().state is AccountListLoaded)
-                      ? (context.read<AccountListBloc>().state
-                              as AccountListLoaded)
-                          .items
-                      : <AssetAccount>[];
-              final double totalAssets =
-                  accounts.fold(0.0, (sum, acc) => sum + acc.currentBalance);
+                  ? (context.read<AccountListBloc>().state as AccountListLoaded)
+                        .items
+                  : <AssetAccount>[];
+              final double totalAssets = accounts.fold(
+                0.0,
+                (sum, acc) => sum + acc.currentBalance,
+              );
               final settingsState = context.watch<SettingsBloc>().state;
               final currencySymbol = settingsState.currencySymbol;
 
@@ -192,17 +215,22 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 4.0),
+                      horizontal: 16.0,
+                      vertical: 4.0,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Total Assets:',
-                            style: theme.textTheme.titleMedium),
+                        Text(
+                          'Total Assets:',
+                          style: theme.textTheme.titleMedium,
+                        ),
                         Text(
                           CurrencyFormatter.format(totalAssets, currencySymbol),
                           style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary),
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                       ],
                     ),
@@ -211,12 +239,15 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                   if (accounts.isEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16.0, vertical: 24.0),
+                        horizontal: 16.0,
+                        vertical: 24.0,
+                      ),
                       child: Center(
                         child: Text(
                           'No asset accounts added yet.\nTap the "+" button below to add one.',
                           style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant),
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -229,15 +260,18 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       itemBuilder: (ctx, index) {
                         final account = accounts[index];
                         return AccountCard(
-                            account: account,
-                            onTap: () =>
-                                _navigateToAccountDetail(context, account));
+                          account: account,
+                          onTap: () =>
+                              _navigateToAccountDetail(context, account),
+                        );
                       },
                     ),
                   // --- ADDED: Add Asset Account Button ---
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0, vertical: 12.0),
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Add Asset Account'),
@@ -245,10 +279,12 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         textStyle: theme.textTheme.labelLarge,
-                        side:
-                            BorderSide(color: theme.colorScheme.outlineVariant),
+                        side: BorderSide(
+                          color: theme.colorScheme.outlineVariant,
+                        ),
                         minimumSize: const Size.fromHeight(
-                            45), // Make button full width like liability one
+                          45,
+                        ), // Make button full width like liability one
                       ),
                     ),
                   ),
@@ -258,9 +294,11 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             }
             // Fallback for Initial state
             return const Center(
-                child: Padding(
-                    padding: EdgeInsets.all(32.0),
-                    child: CircularProgressIndicator()));
+              child: Padding(
+                padding: EdgeInsets.all(32.0),
+                child: CircularProgressIndicator(),
+              ),
+            );
           },
         ),
       ],
@@ -277,12 +315,19 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Liabilities:',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(color: theme.disabledColor)),
-              Text('N/A',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold, color: theme.disabledColor)),
+              Text(
+                'Total Liabilities:',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.disabledColor,
+                ),
+              ),
+              Text(
+                'N/A',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.disabledColor,
+                ),
+              ),
             ],
           ),
         ),
@@ -290,21 +335,27 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
           child: Center(
-              child: Text(
-                  'Liability accounts (Credit Cards, Loans) coming soon!',
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  textAlign: TextAlign.center)),
+            child: Text(
+              'Liability accounts (Credit Cards, Loans) coming soon!',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
         Padding(
           // Button remains the same, but is effectively disabled by FAB logic now
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: OutlinedButton.icon(
             icon: Icon(Icons.add_circle_outline, color: theme.disabledColor),
-            label: Text('Add Liability Account',
-                style: TextStyle(color: theme.disabledColor)),
+            label: Text(
+              'Add Liability Account',
+              style: TextStyle(color: theme.disabledColor),
+            ),
             onPressed: () => _showLiabilityComingSoon(
-                context), // Show message on button press too
+              context,
+            ), // Show message on button press too
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
               textStyle: theme.textTheme.labelLarge,

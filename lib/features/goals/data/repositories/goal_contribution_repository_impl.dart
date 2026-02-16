@@ -27,8 +27,8 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
     );
     try {
       // 1. Get all contributions for the goal
-      final contributions =
-          await contributionDataSource.getContributionsForGoal(goalId);
+      final contributions = await contributionDataSource
+          .getContributionsForGoal(goalId);
       // 2. Calculate sum
       final double newTotalSaved = contributions.fold(
         0.0,

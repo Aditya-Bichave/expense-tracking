@@ -10,21 +10,20 @@ class PauseResumeRecurringRule implements UseCase<void, String> {
   final RecurringTransactionRepository repository;
   final UpdateRecurringRule updateRecurringRule;
 
-  PauseResumeRecurringRule(
-      {required this.repository, required this.updateRecurringRule});
+  PauseResumeRecurringRule({
+    required this.repository,
+    required this.updateRecurringRule,
+  });
 
   @override
   Future<Either<Failure, void>> call(String ruleId) async {
     final ruleOrFailure = await repository.getRecurringRuleById(ruleId);
-    return ruleOrFailure.fold(
-      (failure) => Left(failure),
-      (rule) async {
-        final newStatus = rule.status == RuleStatus.active
-            ? RuleStatus.paused
-            : RuleStatus.active;
-        final updatedRule = rule.copyWith(status: newStatus);
-        return await updateRecurringRule(updatedRule);
-      },
-    );
+    return ruleOrFailure.fold((failure) => Left(failure), (rule) async {
+      final newStatus = rule.status == RuleStatus.active
+          ? RuleStatus.paused
+          : RuleStatus.active;
+      final updatedRule = rule.copyWith(status: newStatus);
+      return await updateRecurringRule(updatedRule);
+    });
   }
 }

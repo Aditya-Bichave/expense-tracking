@@ -17,14 +17,16 @@ void main() {
   late MockExpenseRepository mockExpenseRepository;
 
   setUpAll(() {
-    registerFallbackValue(BudgetModel(
-      id: '',
-      name: '',
-      budgetTypeIndex: BudgetType.overall.index,
-      targetAmount: 0,
-      periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
-      createdAt: DateTime(2000),
-    ));
+    registerFallbackValue(
+      BudgetModel(
+        id: '',
+        name: '',
+        budgetTypeIndex: BudgetType.overall.index,
+        targetAmount: 0,
+        periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
+        createdAt: DateTime(2000),
+      ),
+    );
   });
 
   setUp(() {

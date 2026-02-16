@@ -26,7 +26,8 @@ class AccountSelectorDropdown extends StatelessWidget {
     return BlocBuilder<AccountListBloc, AccountListState>(
       builder: (context, state) {
         log.info(
-            "[AccountSelector] BlocBuilder running for state: ${state.runtimeType}");
+          "[AccountSelector] BlocBuilder running for state: ${state.runtimeType}",
+        );
         List<AssetAccount> accounts = [];
         bool isLoading = false;
         String? errorMessage;
@@ -41,7 +42,8 @@ class AccountSelectorDropdown extends StatelessWidget {
           accounts = state.accounts;
         } else if (state is AccountListError) {
           log.severe(
-              "[AccountSelector] Error state detected: ${state.message}");
+            "[AccountSelector] Error state detected: ${state.message}",
+          );
           errorMessage = "Error loading accounts: ${state.message}";
         } else if (state is AccountListInitial) {
           isLoading = true;
@@ -52,7 +54,8 @@ class AccountSelectorDropdown extends StatelessWidget {
         if (selectedAccountId != null &&
             !accounts.any((acc) => acc.id == selectedAccountId)) {
           log.warning(
-              "[AccountSelector] Selected ID '$selectedAccountId' is not in the current list of accounts. Displaying as null.");
+            "[AccountSelector] Selected ID '$selectedAccountId' is not in the current list of accounts. Displaying as null.",
+          );
           displayValue = null;
         }
 
@@ -69,9 +72,10 @@ class AccountSelectorDropdown extends StatelessWidget {
                 ? const Padding(
                     padding: EdgeInsets.all(12.0),
                     child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2)),
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
                   )
                 : null,
           ),
@@ -79,7 +83,8 @@ class AccountSelectorDropdown extends StatelessWidget {
               ? null
               : (String? newValue) {
                   log.info(
-                      "[AccountSelector] Dropdown changed. New value: $newValue");
+                    "[AccountSelector] Dropdown changed. New value: $newValue",
+                  );
                   onChanged(newValue);
                 },
           items: (isLoading || errorMessage != null)
@@ -89,17 +94,24 @@ class AccountSelectorDropdown extends StatelessWidget {
                     value: account.id,
                     child: Row(
                       children: [
-                        Icon(account.iconData,
-                            size: 20, color: theme.colorScheme.secondary),
+                        Icon(
+                          account.iconData,
+                          size: 20,
+                          color: theme.colorScheme.secondary,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
-                            child: Text(account.name,
-                                overflow: TextOverflow.ellipsis)),
+                          child: Text(
+                            account.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   );
                 }).toList(),
-          validator: validator ??
+          validator:
+              validator ??
               (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please select an account';

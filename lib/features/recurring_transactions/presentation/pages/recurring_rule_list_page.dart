@@ -13,9 +13,7 @@ class RecurringRuleListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Recurring Transactions'),
-      ),
+      appBar: AppBar(title: const Text('Recurring Transactions')),
       body: BlocProvider(
         create: (context) => sl<RecurringListBloc>()..add(LoadRecurringRules()),
         child: BlocBuilder<RecurringListBloc, RecurringListState>(
@@ -42,9 +40,10 @@ class RecurringRuleListPage extends StatelessWidget {
                       color: Theme.of(context).colorScheme.errorContainer,
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Icon(Icons.delete_sweep_outlined,
-                          color:
-                              Theme.of(context).colorScheme.onErrorContainer),
+                      child: Icon(
+                        Icons.delete_sweep_outlined,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
                     ),
                     confirmDismiss: (_) async {
                       final confirmed = await AppDialogs.showConfirmation(
@@ -55,9 +54,9 @@ class RecurringRuleListPage extends StatelessWidget {
                         confirmText: "Delete",
                       );
                       if (confirmed == true && context.mounted) {
-                        context
-                            .read<RecurringListBloc>()
-                            .add(DeleteRule(rule.id));
+                        context.read<RecurringListBloc>().add(
+                          DeleteRule(rule.id),
+                        );
                         return true;
                       }
                       return false;

@@ -19,7 +19,8 @@ void main() {
   setUp(() {
     mockBloc = MockAddEditGoalBloc();
     sl.registerFactoryParam<AddEditGoalBloc, Goal?, void>(
-        (param1, _) => mockBloc);
+      (param1, _) => mockBloc,
+    );
   });
 
   tearDown(() {
@@ -27,8 +28,9 @@ void main() {
   });
 
   group('AddEditGoalPage', () {
-    testWidgets('renders GoalForm and correct title for "Add" mode',
-        (tester) async {
+    testWidgets('renders GoalForm and correct title for "Add" mode', (
+      tester,
+    ) async {
       when(() => mockBloc.state).thenReturn(const AddEditGoalState());
       await pumpWidgetWithProviders(
         tester: tester,
@@ -39,10 +41,12 @@ void main() {
       expect(find.byType(GoalForm), findsOneWidget);
     });
 
-    testWidgets('shows loading indicator when state is loading',
-        (tester) async {
-      when(() => mockBloc.state).thenReturn(
-          const AddEditGoalState(status: AddEditGoalStatus.loading));
+    testWidgets('shows loading indicator when state is loading', (
+      tester,
+    ) async {
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const AddEditGoalState(status: AddEditGoalStatus.loading));
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const AddEditGoalPage(),
@@ -55,12 +59,15 @@ void main() {
     testWidgets('shows success snackbar when state is success', (tester) async {
       whenListen(
         mockBloc,
-        Stream.fromIterable(
-            [const AddEditGoalState(status: AddEditGoalStatus.success)]),
+        Stream.fromIterable([
+          const AddEditGoalState(status: AddEditGoalStatus.success),
+        ]),
         initialState: const AddEditGoalState(),
       );
       await pumpWidgetWithProviders(
-          tester: tester, widget: const AddEditGoalPage());
+        tester: tester,
+        widget: const AddEditGoalPage(),
+      );
       await tester.pump(); // Let snackbar appear
 
       expect(find.text('Goal added successfully!'), findsOneWidget);

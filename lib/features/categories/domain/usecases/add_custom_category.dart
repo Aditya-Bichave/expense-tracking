@@ -18,44 +18,55 @@ class AddCustomCategoryUseCase
   @override
   Future<Either<Failure, void>> call(AddCustomCategoryParams params) async {
     log.info(
-        "[AddCustomCategoryUseCase] Executing for name: '${params.name}', Type: ${params.type.name}.");
+      "[AddCustomCategoryUseCase] Executing for name: '${params.name}', Type: ${params.type.name}.",
+    );
 
     // --- Validation ---
     if (params.name.trim().isEmpty) {
       log.warning(
-          "[AddCustomCategoryUseCase] Validation failed: Name cannot be empty.");
+        "[AddCustomCategoryUseCase] Validation failed: Name cannot be empty.",
+      );
       return const Left(ValidationFailure("Category name cannot be empty."));
     }
     if (params.iconName.trim().isEmpty) {
       log.warning(
-          "[AddCustomCategoryUseCase] Validation failed: Icon name cannot be empty.");
+        "[AddCustomCategoryUseCase] Validation failed: Icon name cannot be empty.",
+      );
       return const Left(ValidationFailure("An icon must be selected."));
     }
     if (params.colorHex.trim().isEmpty || !params.colorHex.startsWith('#')) {
       log.warning(
-          "[AddCustomCategoryUseCase] Validation failed: Invalid color hex format.");
+        "[AddCustomCategoryUseCase] Validation failed: Invalid color hex format.",
+      );
       return const Left(ValidationFailure("A valid color must be selected."));
     }
     // --- Unique Name Check ---
     final allCategoriesResult = await repository.getAllCategories();
     if (allCategoriesResult.isLeft()) {
       log.severe(
-          "[AddCustom-CategoryUseCase] Failed to get categories for validation.");
+        "[AddCustom-CategoryUseCase] Failed to get categories for validation.",
+      );
       return Left(allCategoriesResult.fold((l) => l, (r) => ServerFailure()));
     }
     final allCategories = allCategoriesResult.getOrElse(() => []);
     final trimmedName = params.name.trim();
 
-    final isDuplicate = allCategories.any((cat) =>
-        cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
-        cat.type == params.type &&
-        cat.parentCategoryId == params.parentCategoryId);
+    final isDuplicate = allCategories.any(
+      (cat) =>
+          cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
+          cat.type == params.type &&
+          cat.parentCategoryId == params.parentCategoryId,
+    );
 
     if (isDuplicate) {
       log.warning(
-          "[AddCustomCategoryUseCase] Validation failed: A category with the name '$trimmedName' already exists for this type/parent.");
-      return const Left(ValidationFailure(
-          "A category with this name already exists in the selected category group."));
+        "[AddCustomCategoryUseCase] Validation failed: A category with the name '$trimmedName' already exists for this type/parent.",
+      );
+      return const Left(
+        ValidationFailure(
+          "A category with this name already exists in the selected category group.",
+        ),
+      );
     }
 
     // --- Create Category Entity ---
@@ -70,7 +81,8 @@ class AddCustomCategoryUseCase
     );
 
     log.info(
-        "[AddCustomCategoryUseCase] Calling repository to add category ID: ${newCategory.id}");
+      "[AddCustomCategoryUseCase] Calling repository to add category ID: ${newCategory.id}",
+    );
     // Pass the fully constructed Category entity to the repository
     return await repository.addCustomCategory(newCategory);
   }
@@ -93,6 +105,5 @@ class AddCustomCategoryParams extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [name, iconName, colorHex, type, parentCategoryId]; // ADDED type
+  List<Object?> get props => [name, iconName, colorHex, type, parentCategoryId]; // ADDED type
 }

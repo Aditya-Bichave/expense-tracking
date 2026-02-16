@@ -29,10 +29,12 @@ class DemoAwareGoalContributionDataSource
 
   @override
   Future<List<GoalContributionModel>> getContributionsForGoal(
-      String goalId) async {
+    String goalId,
+  ) async {
     if (demoModeService.isDemoActive) {
       log.fine(
-          "[DemoAwareContribDS] Getting demo contributions for Goal ID: $goalId");
+        "[DemoAwareContribDS] Getting demo contributions for Goal ID: $goalId",
+      );
       return demoModeService.getDemoContributionsForGoal(goalId);
     } else {
       return hiveDataSource.getContributionsForGoal(goalId);
@@ -53,7 +55,8 @@ class DemoAwareGoalContributionDataSource
   Future<void> saveContribution(GoalContributionModel contribution) async {
     if (demoModeService.isDemoActive) {
       log.fine(
-          "[DemoAwareContribDS] Saving demo contribution: ${contribution.id}");
+        "[DemoAwareContribDS] Saving demo contribution: ${contribution.id}",
+      );
       return demoModeService.saveDemoContribution(contribution);
     } else {
       return hiveDataSource.saveContribution(contribution);
@@ -74,7 +77,8 @@ class DemoAwareGoalContributionDataSource
   Future<void> clearAllContributions() async {
     if (demoModeService.isDemoActive) {
       log.warning(
-          "[DemoAwareContribDS] clearAllContributions called in Demo Mode. Ignoring.");
+        "[DemoAwareContribDS] clearAllContributions called in Demo Mode. Ignoring.",
+      );
       return;
     } else {
       return hiveDataSource.clearAllContributions();

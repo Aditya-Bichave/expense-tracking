@@ -19,8 +19,10 @@ class BudgetPerformanceReportLoading extends BudgetPerformanceReportState {
 class BudgetPerformanceReportLoaded extends BudgetPerformanceReportState {
   final BudgetPerformanceReportData reportData;
   final bool showComparison; // Whether comparison data should be shown in UI
-  const BudgetPerformanceReportLoaded(this.reportData,
-      {required this.showComparison});
+  const BudgetPerformanceReportLoaded(
+    this.reportData, {
+    required this.showComparison,
+  });
   @override
   List<Object?> get props => [reportData, showComparison];
 }

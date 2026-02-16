@@ -13,9 +13,12 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
 
   @override
   Future<Either<Failure, UserHistoryRule?>> findRule(
-      RuleType type, String matcher) async {
+    RuleType type,
+    String matcher,
+  ) async {
     log.fine(
-        "[UserHistoryRepo] findRule called. Type: ${type.name}, Matcher: $matcher");
+      "[UserHistoryRepo] findRule called. Type: ${type.name}, Matcher: $matcher",
+    );
     try {
       final model = await localDataSource.findRule(type.name, matcher);
       if (model != null) {
@@ -27,7 +30,8 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
       }
     } on CacheFailure catch (e) {
       log.warning(
-          "[UserHistoryRepo] CacheFailure during findRule: ${e.message}");
+        "[UserHistoryRepo] CacheFailure during findRule: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe("[UserHistoryRepo] Unexpected error in findRule$e$s");
@@ -38,7 +42,8 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
   @override
   Future<Either<Failure, void>> saveRule(UserHistoryRule rule) async {
     log.info(
-        "[UserHistoryRepo] saveRule called for rule ID: ${rule.id}, Type: ${rule.ruleType.name}");
+      "[UserHistoryRepo] saveRule called for rule ID: ${rule.id}, Type: ${rule.ruleType.name}",
+    );
     try {
       // Overwrite existing rule based on type/matcher before saving new one?
       // Current DS logic uses rule.id as key, so need to find existing first if we want to overwrite by type/matcher.
@@ -47,7 +52,8 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
         final existingRule = existingRuleResult.getOrElse(() => null);
         if (existingRule != null && existingRule.id != rule.id) {
           log.info(
-              "[UserHistoryRepo] Deleting existing rule ${existingRule.id} before saving new one ${rule.id}.");
+            "[UserHistoryRepo] Deleting existing rule ${existingRule.id} before saving new one ${rule.id}.",
+          );
           await localDataSource.deleteRule(existingRule.id);
         }
       } // Ignore failure during find, proceed to save new rule
@@ -58,7 +64,8 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
       return const Right(null);
     } on CacheFailure catch (e) {
       log.warning(
-          "[UserHistoryRepo] CacheFailure during saveRule: ${e.message}");
+        "[UserHistoryRepo] CacheFailure during saveRule: ${e.message}",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe("[UserHistoryRepo] Unexpected error in saveRule$e$s");

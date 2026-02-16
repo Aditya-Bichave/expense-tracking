@@ -26,12 +26,12 @@ abstract class BaseListState<T> extends Equatable {
 
   @override
   List<Object?> get props => [
-        items,
-        filterStartDate,
-        filterEndDate,
-        filterCategory,
-        filterAccountId,
-      ];
+    items,
+    filterStartDate,
+    filterEndDate,
+    filterCategory,
+    filterAccountId,
+  ];
 }
 
 // Base class for the Loading state

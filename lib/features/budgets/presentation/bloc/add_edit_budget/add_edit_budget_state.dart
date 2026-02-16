@@ -38,9 +38,9 @@ class AddEditBudgetState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        initialBudget,
-        availableCategories,
-        errorMessage,
-      ];
+    status,
+    initialBudget,
+    availableCategories,
+    errorMessage,
+  ];
 }

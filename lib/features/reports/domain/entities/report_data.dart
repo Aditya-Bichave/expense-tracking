@@ -56,8 +56,13 @@ class CategorySpendingData extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [categoryId, categoryName, categoryColor, totalAmount, percentage];
+  List<Object?> get props => [
+    categoryId,
+    categoryName,
+    categoryColor,
+    totalAmount,
+    percentage,
+  ];
 }
 
 class SpendingCategoryReportData extends Equatable {
@@ -114,12 +119,13 @@ class IncomeExpensePeriodData extends Equatable {
 
   // Calculated Net Flow using ComparisonValue
   ComparisonValue<double> get netFlow => ComparisonValue(
-        currentValue: totalIncome.currentValue - totalExpense.currentValue,
-        previousValue: (totalIncome.previousValue != null &&
-                totalExpense.previousValue != null)
-            ? totalIncome.previousValue! - totalExpense.previousValue!
-            : null,
-      );
+    currentValue: totalIncome.currentValue - totalExpense.currentValue,
+    previousValue:
+        (totalIncome.previousValue != null &&
+            totalExpense.previousValue != null)
+        ? totalIncome.previousValue! - totalExpense.previousValue!
+        : null,
+  );
 
   // Getters for current values (convenience)
   double get currentTotalIncome => totalIncome.currentValue;
@@ -141,8 +147,10 @@ class IncomeExpenseReportData extends Equatable {
   final List<IncomeExpensePeriodData> periodData;
   final IncomeExpensePeriodType periodType;
 
-  const IncomeExpenseReportData(
-      {required this.periodData, required this.periodType});
+  const IncomeExpenseReportData({
+    required this.periodData,
+    required this.periodType,
+  });
   @override
   List<Object?> get props => [periodData, periodType];
 }
@@ -154,7 +162,7 @@ class BudgetPerformanceData extends Equatable {
   final ComparisonValue<double> varianceAmount; // Use ComparisonValue
   final double currentVariancePercent; // Percentage for current period
   final double?
-      previousVariancePercent; // Percentage for previous period (nullable)
+  previousVariancePercent; // Percentage for previous period (nullable)
   final BudgetHealth health;
   final Color statusColor;
 
@@ -193,14 +201,14 @@ class BudgetPerformanceData extends Equatable {
 
   @override
   List<Object?> get props => [
-        budget,
-        actualSpending,
-        varianceAmount,
-        currentVariancePercent,
-        previousVariancePercent,
-        health,
-        statusColor
-      ];
+    budget,
+    actualSpending,
+    varianceAmount,
+    currentVariancePercent,
+    previousVariancePercent,
+    health,
+    statusColor,
+  ];
 }
 
 class BudgetPerformanceReportData extends Equatable {
@@ -209,20 +217,20 @@ class BudgetPerformanceReportData extends Equatable {
   final List<BudgetPerformanceData>? previousPerformanceData;
   // --- END ADD ---
 
-  const BudgetPerformanceReportData(
-      {required this.performanceData,
-      this.previousPerformanceData}); // Added optional param
+  const BudgetPerformanceReportData({
+    required this.performanceData,
+    this.previousPerformanceData,
+  }); // Added optional param
 
   @override
-  List<Object?> get props =>
-      [performanceData, previousPerformanceData]; // Added previous data
+  List<Object?> get props => [performanceData, previousPerformanceData]; // Added previous data
 }
 
 // --- Goal Progress Report ---
 class GoalProgressData extends Equatable {
   final Goal goal;
   final List<GoalContribution>
-      contributions; // Full contribution history for the goal
+  contributions; // Full contribution history for the goal
   final double? requiredDailySaving; // Pacing info
   final double? requiredMonthlySaving;
   final DateTime? estimatedCompletionDate;
@@ -237,12 +245,12 @@ class GoalProgressData extends Equatable {
 
   @override
   List<Object?> get props => [
-        goal,
-        contributions,
-        requiredDailySaving,
-        requiredMonthlySaving,
-        estimatedCompletionDate
-      ];
+    goal,
+    contributions,
+    requiredDailySaving,
+    requiredMonthlySaving,
+    estimatedCompletionDate,
+  ];
 }
 
 class GoalProgressReportData extends Equatable {

@@ -32,7 +32,9 @@ class BudgetWithStatus extends Equatable {
   }) {
     final target = budget.targetAmount;
     final remaining = (target - amountSpent).clamp(
-        double.negativeInfinity, target); // Can't remain more than target
+      double.negativeInfinity,
+      target,
+    ); // Can't remain more than target
     final percentage = target > 0 ? (amountSpent / target) : 0.0;
 
     BudgetHealth health;
@@ -61,11 +63,11 @@ class BudgetWithStatus extends Equatable {
 
   @override
   List<Object?> get props => [
-        budget,
-        amountSpent,
-        amountRemaining,
-        percentageUsed,
-        health,
-        statusColor,
-      ];
+    budget,
+    amountSpent,
+    amountRemaining,
+    percentageUsed,
+    health,
+    statusColor,
+  ];
 }

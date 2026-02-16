@@ -9,6 +9,7 @@ class DownloaderServiceImpl implements DownloaderService {
     String? mimeType,
   }) async {
     throw UnimplementedError(
-        'File download is not supported on this platform.');
+      'File download is not supported on this platform.',
+    );
   }
 }

@@ -54,6 +54,14 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
   }) async {
     try {
       final List<IncomeModel> results = [];
+
+      final accountIdSet = (accountId != null && accountId.isNotEmpty)
+          ? accountId.split(',').toSet()
+          : null;
+      final categoryIdSet = (categoryId != null && categoryId.isNotEmpty)
+          ? categoryId.split(',').toSet()
+          : null;
+
       for (final income in incomeBox.values) {
         if (startDate != null) {
           final incDateOnly = DateTime(
@@ -79,13 +87,12 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
           );
           if (income.date.isAfter(endDateInclusive)) continue;
         }
-        if (accountId != null && accountId.isNotEmpty) {
-          final ids = accountId.split(',');
-          if (!ids.contains(income.accountId)) continue;
+        if (accountIdSet != null && !accountIdSet.contains(income.accountId)) {
+          continue;
         }
-        if (categoryId != null && categoryId.isNotEmpty) {
-          final ids = categoryId.split(',');
-          if (!ids.contains(income.categoryId)) continue;
+        if (categoryIdSet != null &&
+            !categoryIdSet.contains(income.categoryId)) {
+          continue;
         }
         results.add(income);
       }

@@ -10,10 +10,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainShell({
-    super.key,
-    required this.navigationShell,
-  });
+  const MainShell({super.key, required this.navigationShell});
 
   // Function to handle tapping on the BottomNavigationBar items
   void _onTap(BuildContext context, int index) {
@@ -77,7 +74,8 @@ class MainShell extends StatelessWidget {
     context.watch<SettingsBloc>().state.isInDemoMode;
     // --- End Check ---
 
-    final bool showFab = (currentTabIndex == 0 || // Dashboard
+    final bool showFab =
+        (currentTabIndex == 0 || // Dashboard
         currentTabIndex == 1 || // Transactions
         currentTabIndex == 3 || // Accounts
         currentTabIndex == 4); // Recurring
@@ -131,21 +129,27 @@ class MainShell extends StatelessWidget {
                   case 0: // Dashboard -> Add Transaction
                   case 1: // Transactions -> Add Transaction
                     log.info(
-                        "[MainShell FAB] Navigating to Add Transaction from tab $currentTabIndex.");
+                      "[MainShell FAB] Navigating to Add Transaction from tab $currentTabIndex.",
+                    );
                     context.push(
-                        '${RouteNames.transactionsList}/${RouteNames.addTransaction}'); // Use full path relative to shell
+                      '${RouteNames.transactionsList}/${RouteNames.addTransaction}',
+                    ); // Use full path relative to shell
                     break;
                   case 3: // Accounts -> Add Account
                     log.info(
-                        "[MainShell FAB] Navigating to Add Account from tab $currentTabIndex.");
+                      "[MainShell FAB] Navigating to Add Account from tab $currentTabIndex.",
+                    );
                     context.push(
-                        '${RouteNames.accounts}/${RouteNames.addAccount}'); // Use full path relative to shell
+                      '${RouteNames.accounts}/${RouteNames.addAccount}',
+                    ); // Use full path relative to shell
                     break;
                   case 4: // Recurring -> Add Recurring
                     log.info(
-                        "[MainShell FAB] Navigating to Add Recurring from tab $currentTabIndex.");
+                      "[MainShell FAB] Navigating to Add Recurring from tab $currentTabIndex.",
+                    );
                     context.push(
-                        '${RouteNames.recurring}/${RouteNames.addRecurring}'); // Use full path relative to shell
+                      '${RouteNames.recurring}/${RouteNames.addRecurring}',
+                    ); // Use full path relative to shell
                     break;
                   default:
                     return; // Should not happen if showFab is false for other tabs

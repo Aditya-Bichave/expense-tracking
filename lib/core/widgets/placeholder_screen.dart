@@ -27,9 +27,11 @@ class PlaceholderScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.construction_rounded,
-                  size: 80,
-                  color: theme.colorScheme.secondary.withOpacity(0.7)),
+              Icon(
+                Icons.construction_rounded,
+                size: 80,
+                color: theme.colorScheme.secondary.withOpacity(0.7),
+              ),
               const SizedBox(height: 24),
               Text(
                 featureName,
@@ -47,8 +49,9 @@ class PlaceholderScreen extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 'This section is currently under development and will be available soon. Stay tuned!',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -36,9 +36,10 @@ class ExpenseModel extends HiveObject {
 
   @HiveField(5) // Reuse index 5
   @JsonKey(
-      defaultValue: 'uncategorized', // Default value for JSON parsing
-      toJson: _categorizationStatusToJson,
-      fromJson: _categorizationStatusFromJson)
+    defaultValue: 'uncategorized', // Default value for JSON parsing
+    toJson: _categorizationStatusToJson,
+    fromJson: _categorizationStatusFromJson,
+  )
   final String categorizationStatusValue; // NEW: Store enum value string
 
   @HiveField(6)
@@ -97,7 +98,8 @@ class ExpenseModel extends HiveObject {
       category: null, // Set to null initially
       accountId: accountId,
       status: CategorizationStatusExtension.fromValue(
-          categorizationStatusValue), // Convert string back to enum
+        categorizationStatusValue,
+      ), // Convert string back to enum
       confidenceScore: confidenceScoreValue,
       isRecurring: isRecurring,
     );

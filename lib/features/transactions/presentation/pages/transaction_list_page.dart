@@ -64,11 +64,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
       );
       // Dispatch event to bloc to apply filters and load
       context.read<TransactionListBloc>().add(
-            LoadTransactions(
-              forceReload: true,
-              incomingFilters: widget.initialFilters,
-            ),
-          );
+        LoadTransactions(
+          forceReload: true,
+          incomingFilters: widget.initialFilters,
+        ),
+      );
     } else {
       // Load normally if no initial filters
       _setupInitialCalendarData();
@@ -99,8 +99,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
         final searchTerm = _searchController.text.trim();
         log.fine("[TxnListPage] Search term changed: '$searchTerm'");
         context.read<TransactionListBloc>().add(
-              SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
-            );
+          SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
+        );
       }
     });
   }
@@ -171,13 +171,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
             null, // TODO: Add merchant ID if available on transaction entity
       );
       context.read<TransactionListBloc>().add(
-            UserCategorizedTransaction(
-              transactionId: transaction.id,
-              transactionType: transaction.type,
-              selectedCategory: selectedCategory,
-              matchData: matchData,
-            ),
-          );
+        UserCategorizedTransaction(
+          transactionId: transaction.id,
+          transactionType: transaction.type,
+          selectedCategory: selectedCategory,
+          matchData: matchData,
+        ),
+      );
     } else {
       log.info("[TxnListPage] Category picker dismissed without selection.");
     }
@@ -237,14 +237,14 @@ class _TransactionListPageState extends State<TransactionListPage> {
             initialCategoryId: currentState.categoryId,
             onApplyFilter: (startDate, endDate, type, accountId, categoryId) {
               context.read<TransactionListBloc>().add(
-                    FilterChanged(
-                      startDate: startDate,
-                      endDate: endDate,
-                      transactionType: type,
-                      accountId: accountId,
-                      categoryId: categoryId,
-                    ),
-                  );
+                FilterChanged(
+                  startDate: startDate,
+                  endDate: endDate,
+                  transactionType: type,
+                  accountId: accountId,
+                  categoryId: categoryId,
+                ),
+              );
             },
             onClearFilter: () {
               context.read<TransactionListBloc>().add(const FilterChanged());
@@ -271,8 +271,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
           currentSortDirection: currentState.sortDirection,
           onApplySort: (sortBy, sortDirection) {
             context.read<TransactionListBloc>().add(
-                  SortChanged(sortBy: sortBy, sortDirection: sortDirection),
-                );
+              SortChanged(sortBy: sortBy, sortDirection: sortDirection),
+            );
           },
         );
       },
@@ -365,13 +365,13 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionListBloc>().add(
-                          const LoadTransactions(forceReload: true),
-                        );
+                      const LoadTransactions(forceReload: true),
+                    );
                     await context.read<TransactionListBloc>().stream.firstWhere(
-                          (s) =>
-                              s.status != ListStatus.loading &&
-                              s.status != ListStatus.reloading,
-                        );
+                      (s) =>
+                          s.status != ListStatus.loading &&
+                          s.status != ListStatus.reloading,
+                    );
                   },
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
@@ -417,68 +417,72 @@ class _TransactionListPageState extends State<TransactionListPage> {
       ),
       floatingActionButton:
           BlocBuilder<TransactionListBloc, TransactionListState>(
-        builder: (context, state) {
-          final bool showFab = state.isInBatchEditMode && !_showCalendarView;
-          final int count = state.selectedTransactionIds.length;
-          return AnimatedScale(
-            duration: const Duration(milliseconds: 200),
-            scale: showFab ? 1.0 : 0.0,
-            child: FloatingActionButton.extended(
-              key: const ValueKey('batch_fab'),
-              heroTag: 'transactions_batch_fab',
-              onPressed: count > 0
-                  ? () async {
-                      log.info(
-                        "[TxnListPage] Batch categorize button pressed.",
-                      );
-                      final type = _getDominantTransactionType(state) ??
-                          TransactionType.expense;
-                      final CategoryTypeFilter pickerType =
-                          type == TransactionType.expense
+            builder: (context, state) {
+              final bool showFab =
+                  state.isInBatchEditMode && !_showCalendarView;
+              final int count = state.selectedTransactionIds.length;
+              return AnimatedScale(
+                duration: const Duration(milliseconds: 200),
+                scale: showFab ? 1.0 : 0.0,
+                child: FloatingActionButton.extended(
+                  key: const ValueKey('batch_fab'),
+                  heroTag: 'transactions_batch_fab',
+                  onPressed: count > 0
+                      ? () async {
+                          log.info(
+                            "[TxnListPage] Batch categorize button pressed.",
+                          );
+                          final type =
+                              _getDominantTransactionType(state) ??
+                              TransactionType.expense;
+                          final CategoryTypeFilter pickerType =
+                              type == TransactionType.expense
                               ? CategoryTypeFilter.expense
                               : CategoryTypeFilter.income;
-                      final catState =
-                          context.read<CategoryManagementBloc>().state;
-                      final list = pickerType == CategoryTypeFilter.expense
-                          ? catState.allExpenseCategories
-                          : catState.allIncomeCategories;
-                      final Category? selectedCategory =
-                          await showCategoryPicker(
-                        context,
-                        pickerType,
-                        list,
-                      );
-                      if (selectedCategory != null &&
-                          selectedCategory.id != Category.uncategorized.id &&
-                          context.mounted) {
-                        context.read<TransactionListBloc>().add(
+                          final catState = context
+                              .read<CategoryManagementBloc>()
+                              .state;
+                          final list = pickerType == CategoryTypeFilter.expense
+                              ? catState.allExpenseCategories
+                              : catState.allIncomeCategories;
+                          final Category? selectedCategory =
+                              await showCategoryPicker(
+                                context,
+                                pickerType,
+                                list,
+                              );
+                          if (selectedCategory != null &&
+                              selectedCategory.id !=
+                                  Category.uncategorized.id &&
+                              context.mounted) {
+                            context.read<TransactionListBloc>().add(
                               ApplyBatchCategory(selectedCategory.id),
                             );
-                      } else if (selectedCategory?.id ==
-                              Category.uncategorized.id &&
-                          context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              "Please select a specific category.",
-                            ),
-                          ),
-                        );
-                      }
-                    }
-                  : null,
-              label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
-              icon: const Icon(Icons.category_rounded),
-              backgroundColor: count > 0
-                  ? theme.colorScheme.secondaryContainer
-                  : theme.disabledColor.withOpacity(0.1),
-              foregroundColor: count > 0
-                  ? theme.colorScheme.onSecondaryContainer
-                  : theme.disabledColor,
-            ),
-          );
-        },
-      ),
+                          } else if (selectedCategory?.id ==
+                                  Category.uncategorized.id &&
+                              context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Please select a specific category.",
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      : null,
+                  label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
+                  icon: const Icon(Icons.category_rounded),
+                  backgroundColor: count > 0
+                      ? theme.colorScheme.secondaryContainer
+                      : theme.disabledColor.withOpacity(0.1),
+                  foregroundColor: count > 0
+                      ? theme.colorScheme.onSecondaryContainer
+                      : theme.disabledColor,
+                ),
+              );
+            },
+          ),
     );
   }
 
@@ -507,5 +511,4 @@ class _TransactionListPageState extends State<TransactionListPage> {
 @visibleForTesting
 TransactionType? getDominantTransactionTypeForTesting(
   TransactionListState state,
-) =>
-    _TransactionListPageState()._getDominantTransactionType(state);
+) => _TransactionListPageState()._getDominantTransactionType(state);

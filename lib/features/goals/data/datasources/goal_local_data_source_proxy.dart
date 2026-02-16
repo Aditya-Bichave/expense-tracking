@@ -62,7 +62,8 @@ class DemoAwareGoalDataSource implements GoalLocalDataSource {
   Future<void> clearAllGoals() async {
     if (demoModeService.isDemoActive) {
       log.warning(
-          "[DemoAwareGoalDS] clearAllGoals called in Demo Mode. Ignoring.");
+        "[DemoAwareGoalDS] clearAllGoals called in Demo Mode. Ignoring.",
+      );
       return;
     } else {
       return hiveDataSource.clearAllGoals();

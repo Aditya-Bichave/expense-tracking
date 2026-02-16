@@ -58,8 +58,10 @@ class ElementalConfig implements IThemePaletteConfig {
     this.incomeGlowColorDark = const Color(0x66C8E6C9),
     this.expenseGlowColorDark = const Color(0x66FFCDD2),
     // Example: Override specific padding for elemental
-    this.cardOuterPadding =
-        const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+    this.cardOuterPadding = const EdgeInsets.symmetric(
+      horizontal: 12.0,
+      vertical: 6.0,
+    ),
     this.cardInnerPadding, // = null, use AppModeTheme default
     this.mediumDuration, // = null, use AppModeTheme default
   });
@@ -147,38 +149,54 @@ abstract class ElementalConfigs {
     AppTheme.elementalPalette1: ElementalConfig(
       paletteIdentifier: AppTheme.elementalPalette1,
       lightColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3A7BD5), brightness: Brightness.light),
+        seedColor: const Color(0xFF3A7BD5),
+        brightness: Brightness.light,
+      ),
       darkColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF3A7BD5), brightness: Brightness.dark),
+        seedColor: const Color(0xFF3A7BD5),
+        brightness: Brightness.dark,
+      ),
       lightAssets: _p1Assets,
       darkAssets: _p1Assets,
     ),
     AppTheme.elementalPalette2: ElementalConfig(
       paletteIdentifier: AppTheme.elementalPalette2,
       lightColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF039BE5), brightness: Brightness.light),
+        seedColor: const Color(0xFF039BE5),
+        brightness: Brightness.light,
+      ),
       darkColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF039BE5), brightness: Brightness.dark),
+        seedColor: const Color(0xFF039BE5),
+        brightness: Brightness.dark,
+      ),
       lightAssets: _p2Assets,
       darkAssets: _p2Assets,
     ),
     AppTheme.elementalPalette3: ElementalConfig(
       paletteIdentifier: AppTheme.elementalPalette3,
       lightColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9C27B0), brightness: Brightness.light),
+        seedColor: const Color(0xFF9C27B0),
+        brightness: Brightness.light,
+      ),
       darkColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF9C27B0), brightness: Brightness.dark),
+        seedColor: const Color(0xFF9C27B0),
+        brightness: Brightness.dark,
+      ),
       lightAssets: _p3Assets,
       darkAssets: _p3Assets,
     ),
     AppTheme.elementalPalette4: ElementalConfig(
       paletteIdentifier: AppTheme.elementalPalette4,
       lightColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFBB86FC),
-          brightness: Brightness.dark), // Use dark as light too
+        seedColor: const Color(0xFFBB86FC),
+        brightness: Brightness.dark,
+      ), // Use dark as light too
       darkColorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFBB86FC), brightness: Brightness.dark),
-      lightAssets: _p4Assets, darkAssets: _p4Assets,
+        seedColor: const Color(0xFFBB86FC),
+        brightness: Brightness.dark,
+      ),
+      lightAssets: _p4Assets,
+      darkAssets: _p4Assets,
     ),
   };
 

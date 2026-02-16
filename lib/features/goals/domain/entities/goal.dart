@@ -13,7 +13,7 @@ class Goal extends Equatable {
   final String? description;
   final GoalStatus status;
   final double
-      totalSaved; // This will be read from cache in Hive implementation
+  totalSaved; // This will be read from cache in Hive implementation
   final DateTime createdAt;
   final DateTime? achievedAt;
 
@@ -43,17 +43,17 @@ class Goal extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        targetAmount,
-        targetDate,
-        iconName,
-        description,
-        status,
-        totalSaved,
-        createdAt,
-        achievedAt,
-      ];
+    id,
+    name,
+    targetAmount,
+    targetDate,
+    iconName,
+    description,
+    status,
+    totalSaved,
+    createdAt,
+    achievedAt,
+  ];
 
   Goal copyWith({
     String? id,

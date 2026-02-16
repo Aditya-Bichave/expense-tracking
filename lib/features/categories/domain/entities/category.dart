@@ -26,14 +26,14 @@ class Category extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        iconName,
-        colorHex,
-        type, // ADDED
-        isCustom,
-        parentCategoryId,
-      ];
+    id,
+    name,
+    iconName,
+    colorHex,
+    type, // ADDED
+    isCustom,
+    parentCategoryId,
+  ];
 
   // Update Uncategorized (make it expense type by default)
   static const uncategorized = Category(
@@ -54,7 +54,7 @@ class Category extends Equatable {
     CategoryType? type,
     bool? isCustom,
     ValueGetter<String?>?
-        parentCategoryId, // Use ValueGetter for nullable fields
+    parentCategoryId, // Use ValueGetter for nullable fields
   }) {
     return Category(
       id: id ?? this.id,
@@ -63,8 +63,9 @@ class Category extends Equatable {
       colorHex: colorHex ?? this.colorHex,
       type: type ?? this.type,
       isCustom: isCustom ?? this.isCustom,
-      parentCategoryId:
-          parentCategoryId != null ? parentCategoryId() : this.parentCategoryId,
+      parentCategoryId: parentCategoryId != null
+          ? parentCategoryId()
+          : this.parentCategoryId,
     );
   }
 }

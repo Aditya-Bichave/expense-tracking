@@ -9,9 +9,11 @@ class AnalyticsDependencies {
     // Use Cases (Depends on Expense Repo)
     sl.registerLazySingleton(() => GetExpenseSummaryUseCase(sl()));
     // Bloc
-    sl.registerFactory(() => SummaryBloc(
-          getExpenseSummaryUseCase: sl(),
-          dataChangeStream: sl<Stream<DataChangedEvent>>(),
-        ));
+    sl.registerFactory(
+      () => SummaryBloc(
+        getExpenseSummaryUseCase: sl(),
+        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+      ),
+    );
   }
 }

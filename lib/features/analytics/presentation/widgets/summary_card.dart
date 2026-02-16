@@ -17,13 +17,15 @@ class SummaryCard extends StatelessWidget {
     return BlocBuilder<SummaryBloc, SummaryState>(
       builder: (context, state) {
         log.info(
-            "[SummaryCard] BlocBuilder running for state: ${state.runtimeType}");
+          "[SummaryCard] BlocBuilder running for state: ${state.runtimeType}",
+        );
 
         Widget content;
 
         if (state is SummaryLoading && !state.isReloading) {
           log.info(
-              "[SummaryCard UI] State is initial SummaryLoading. Showing Shimmer/Indicator.");
+            "[SummaryCard UI] State is initial SummaryLoading. Showing Shimmer/Indicator.",
+          );
           // Use a shimmer effect or simple indicator for initial load
           content = const Padding(
             padding: EdgeInsets.all(16.0),
@@ -32,19 +34,22 @@ class SummaryCard extends StatelessWidget {
         } else if (state is SummaryLoaded ||
             (state is SummaryLoading && state.isReloading)) {
           log.info(
-              "[SummaryCard UI] State is SummaryLoaded or reloading. Building card content.");
+            "[SummaryCard UI] State is SummaryLoaded or reloading. Building card content.",
+          );
           final summary = (state is SummaryLoaded)
               ? state.summary
               : (context.read<SummaryBloc>().state as SummaryLoaded?)
-                  ?.summary; // Use previous data if reloading
+                    ?.summary; // Use previous data if reloading
 
           if (summary == null) {
             // Should not happen if reloading logic is correct, but safety check
             log.warning(
-                "[SummaryCard UI] Summary is null during Loaded/Reloading state.");
+              "[SummaryCard UI] Summary is null during Loaded/Reloading state.",
+            );
             content = const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: Text('Loading summary data...')));
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: Text('Loading summary data...')),
+            );
           } else {
             content = Padding(
               padding: const EdgeInsets.all(16.0),
@@ -53,8 +58,9 @@ class SummaryCard extends StatelessWidget {
                 children: [
                   Text(
                     'Expense Summary', // Title for the card
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(color: theme.colorScheme.primary),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -63,12 +69,15 @@ class SummaryCard extends StatelessWidget {
                       Text('Total Spent:', style: theme.textTheme.titleMedium),
                       Text(
                         CurrencyFormatter.format(
-                            summary.totalExpenses, currencySymbol),
+                          summary.totalExpenses,
+                          currencySymbol,
+                        ),
                         style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme
-                                .colorScheme.error // Expenses are typically red
-                            ),
+                          fontWeight: FontWeight.bold,
+                          color: theme
+                              .colorScheme
+                              .error, // Expenses are typically red
+                        ),
                       ),
                     ],
                   ),
@@ -83,19 +92,23 @@ class SummaryCard extends StatelessWidget {
                           const NeverScrollableScrollPhysics(), // Disable ListView's own scrolling
                       itemCount: summary.categoryBreakdown.length,
                       itemBuilder: (context, index) {
-                        final entry =
-                            summary.categoryBreakdown.entries.elementAt(index);
+                        final entry = summary.categoryBreakdown.entries
+                            .elementAt(index);
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(entry.key,
-                                style: theme
-                                    .textTheme.bodyMedium), // Category Name
+                            Text(
+                              entry.key,
+                              style: theme.textTheme.bodyMedium,
+                            ), // Category Name
                             Text(
                               CurrencyFormatter.format(
-                                  entry.value, currencySymbol),
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w500),
+                                entry.value,
+                                currencySymbol,
+                              ),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
                             ), // Amount
                           ],
                         );
@@ -107,34 +120,40 @@ class SummaryCard extends StatelessWidget {
                     // Show only if total > 0 but breakdown is empty
                     const Divider(height: 24, thickness: 0.5),
                     Text(
-                        'No expenses with categories found in the selected period.',
-                        style: theme.textTheme.bodySmall),
+                      'No expenses with categories found in the selected period.',
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ] else ...[
                     // Show if total is also 0
                     const Divider(height: 24, thickness: 0.5),
-                    Text('No expenses recorded in the selected period.',
-                        style: theme.textTheme.bodySmall),
-                  ]
+                    Text(
+                      'No expenses recorded in the selected period.',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ],
               ),
             );
           }
         } else if (state is SummaryError) {
           log.info(
-              "[SummaryCard UI] State is SummaryError: ${state.message}. Showing error message.");
+            "[SummaryCard UI] State is SummaryError: ${state.message}. Showing error message.",
+          );
           content = Padding(
             padding: const EdgeInsets.all(16.0),
             child: Center(
-                child: Text(
-              'Error loading summary: ${state.message}',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: theme.colorScheme.error),
-            )),
+              child: Text(
+                'Error loading summary: ${state.message}',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
           );
         } else {
           // Initial state
           log.info(
-              "[SummaryCard UI] State is SummaryInitial or Unknown. Showing loading indicator.");
+            "[SummaryCard UI] State is SummaryInitial or Unknown. Showing loading indicator.",
+          );
           content = const Padding(
             padding: EdgeInsets.all(16.0),
             child: Center(child: CircularProgressIndicator(strokeWidth: 2)),

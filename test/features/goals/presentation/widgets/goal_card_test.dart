@@ -32,8 +32,10 @@ void main() {
 
       expect(find.text('New Laptop'), findsOneWidget);
       expect(find.textContaining('Saved'), findsOneWidget);
-      expect(find.textContaining('Target'),
-          findsNWidgets(2)); // Target amount and target date
+      expect(
+        find.textContaining('Target'),
+        findsNWidgets(2),
+      ); // Target amount and target date
       expect(find.textContaining('Remaining'), findsOneWidget);
     });
 
@@ -43,8 +45,9 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        widget:
-            Material(child: GoalCard(goal: mockGoal, onTap: mockOnTap.call)),
+        widget: Material(
+          child: GoalCard(goal: mockGoal, onTap: mockOnTap.call),
+        ),
       );
 
       await tester.tap(find.byType(AppCard));
@@ -53,8 +56,10 @@ void main() {
     });
 
     testWidgets('shows achieved chip when goal is achieved', (tester) async {
-      final achievedGoal =
-          mockGoal.copyWith(totalSaved: 1500, status: GoalStatus.achieved);
+      final achievedGoal = mockGoal.copyWith(
+        totalSaved: 1500,
+        status: GoalStatus.achieved,
+      );
       await pumpWidgetWithProviders(
         tester: tester,
         widget: Material(child: GoalCard(goal: achievedGoal)),

@@ -69,19 +69,20 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
 // **************************************************************************
 
 ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      date: DateTime.parse(json['date'] as String),
-      categoryId: json['categoryId'] as String?,
-      categorizationStatusValue: json['categorizationStatusValue'] == null
-          ? 'uncategorized'
-          : ExpenseModel._categorizationStatusFromJson(
-              json['categorizationStatusValue'] as String?),
-      accountId: json['accountId'] as String,
-      confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
-      isRecurring: json['isRecurring'] as bool? ?? false,
-    );
+  id: json['id'] as String,
+  title: json['title'] as String,
+  amount: (json['amount'] as num).toDouble(),
+  date: DateTime.parse(json['date'] as String),
+  categoryId: json['categoryId'] as String?,
+  categorizationStatusValue: json['categorizationStatusValue'] == null
+      ? 'uncategorized'
+      : ExpenseModel._categorizationStatusFromJson(
+          json['categorizationStatusValue'] as String?,
+        ),
+  accountId: json['accountId'] as String,
+  confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
+  isRecurring: json['isRecurring'] as bool? ?? false,
+);
 
 Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
     <String, dynamic>{
@@ -91,7 +92,8 @@ Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
       'date': instance.date.toIso8601String(),
       if (instance.categoryId case final value?) 'categoryId': value,
       'categorizationStatusValue': ExpenseModel._categorizationStatusToJson(
-          instance.categorizationStatusValue),
+        instance.categorizationStatusValue,
+      ),
       'accountId': instance.accountId,
       if (instance.confidenceScoreValue case final value?)
         'confidenceScoreValue': value,

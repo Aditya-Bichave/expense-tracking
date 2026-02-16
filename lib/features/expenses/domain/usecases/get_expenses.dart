@@ -9,8 +9,12 @@ class GetExpensesParams extends Equatable {
   final String? category; // Category ID
   final String? accountId;
 
-  const GetExpensesParams(
-      {this.startDate, this.endDate, this.category, this.accountId});
+  const GetExpensesParams({
+    this.startDate,
+    this.endDate,
+    this.category,
+    this.accountId,
+  });
 
   @override
   List<Object?> get props => [startDate, endDate, category, accountId];

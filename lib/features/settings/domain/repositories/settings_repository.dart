@@ -10,7 +10,8 @@ abstract class SettingsRepository {
 
   // Palette Identifier
   Future<Either<Failure, void>> savePaletteIdentifier(
-      String identifier); // RENAMED
+    String identifier,
+  ); // RENAMED
   Future<Either<Failure, String>> getPaletteIdentifier(); // RENAMED
 
   // UI Mode

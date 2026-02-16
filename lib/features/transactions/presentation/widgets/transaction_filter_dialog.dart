@@ -17,13 +17,14 @@ extension MaybeReadBuildContext on BuildContext {
 }
 
 // Callback type for applying filters
-typedef ApplyFiltersCallback = void Function(
-  DateTime? startDate,
-  DateTime? endDate,
-  TransactionType? transactionType,
-  String? accountId,
-  String? categoryId,
-);
+typedef ApplyFiltersCallback =
+    void Function(
+      DateTime? startDate,
+      DateTime? endDate,
+      TransactionType? transactionType,
+      String? accountId,
+      String? categoryId,
+    );
 
 class TransactionFilterDialog extends StatefulWidget {
   final DateTime? initialStartDate;
@@ -38,7 +39,8 @@ class TransactionFilterDialog extends StatefulWidget {
   final Widget Function(
     String? selectedAccountId,
     ValueChanged<String?> onChanged,
-  )? accountSelectorBuilder;
+  )?
+  accountSelectorBuilder;
 
   const TransactionFilterDialog({
     super.key,
@@ -97,7 +99,10 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
       setState(() {
         if (isStartDate) {
           _selectedStartDate = DateTime(
-              picked.year, picked.month, picked.day); // Store date only
+            picked.year,
+            picked.month,
+            picked.day,
+          ); // Store date only
           // Adjust end date if necessary
           if (_selectedEndDate != null &&
               _selectedEndDate!.isBefore(_selectedStartDate!)) {
@@ -105,7 +110,13 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           }
         } else {
           _selectedEndDate = DateTime(
-              picked.year, picked.month, picked.day, 23, 59, 59); // End of day
+            picked.year,
+            picked.month,
+            picked.day,
+            23,
+            59,
+            59,
+          ); // End of day
           // Adjust start date if necessary
           if (_selectedStartDate != null &&
               _selectedStartDate!.isAfter(_selectedEndDate!)) {
@@ -123,30 +134,37 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
     // Prepare category dropdown items
     final categoryDropdownItems = [
       const DropdownMenuItem<String>(
-          value: null, // Represents "All Categories"
-          child: Text('All Categories')),
+        value: null, // Represents "All Categories"
+        child: Text('All Categories'),
+      ),
       ...widget.availableCategories
-          .where((cat) =>
-              cat.id != Category.uncategorized.id) // Exclude uncategorized
+          .where(
+            (cat) => cat.id != Category.uncategorized.id,
+          ) // Exclude uncategorized
           .map((Category category) {
-        return DropdownMenuItem<String>(
-          value: category.id,
-          child: Row(
-            children: [
-              // TODO: Add category icon rendering here later
-              Icon(Icons.circle, color: category.displayColor, size: 12),
-              const SizedBox(width: 8),
-              Text(category.name, overflow: TextOverflow.ellipsis),
-            ],
-          ),
-        );
-      }).toList(),
+            return DropdownMenuItem<String>(
+              value: category.id,
+              child: Row(
+                children: [
+                  // TODO: Add category icon rendering here later
+                  Icon(Icons.circle, color: category.displayColor, size: 12),
+                  const SizedBox(width: 8),
+                  Text(category.name, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            );
+          })
+          .toList(),
     ];
 
     return AlertDialog(
       title: const Text('Filter Transactions'),
-      contentPadding:
-          const EdgeInsets.fromLTRB(16, 20, 16, 0), // Adjusted padding
+      contentPadding: const EdgeInsets.fromLTRB(
+        16,
+        20,
+        16,
+        0,
+      ), // Adjusted padding
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -160,20 +178,24 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 Expanded(
                   child: ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.date_range_outlined,
-                        color: theme.iconTheme.color),
+                    leading: Icon(
+                      Icons.date_range_outlined,
+                      color: theme.iconTheme.color,
+                    ),
                     title: Text(
-                        _selectedStartDate == null
-                            ? 'Start Date'
-                            : DateFormatter.formatDate(_selectedStartDate!),
-                        style: theme.textTheme.bodyMedium),
+                      _selectedStartDate == null
+                          ? 'Start Date'
+                          : DateFormatter.formatDate(_selectedStartDate!),
+                      style: theme.textTheme.bodyMedium,
+                    ),
                     trailing: _selectedStartDate != null
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 18),
                             onPressed: () =>
                                 setState(() => _selectedStartDate = null),
                             tooltip: "Clear Start Date",
-                            visualDensity: VisualDensity.compact)
+                            visualDensity: VisualDensity.compact,
+                          )
                         : null,
                     onTap: () => _selectDate(context, true),
                     dense: true,
@@ -186,20 +208,24 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 Expanded(
                   child: ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading:
-                        Icon(Icons.date_range, color: theme.iconTheme.color),
+                    leading: Icon(
+                      Icons.date_range,
+                      color: theme.iconTheme.color,
+                    ),
                     title: Text(
-                        _selectedEndDate == null
-                            ? 'End Date'
-                            : DateFormatter.formatDate(_selectedEndDate!),
-                        style: theme.textTheme.bodyMedium),
+                      _selectedEndDate == null
+                          ? 'End Date'
+                          : DateFormatter.formatDate(_selectedEndDate!),
+                      style: theme.textTheme.bodyMedium,
+                    ),
                     trailing: _selectedEndDate != null
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 18),
                             onPressed: () =>
                                 setState(() => _selectedEndDate = null),
                             tooltip: "Clear End Date",
-                            visualDensity: VisualDensity.compact)
+                            visualDensity: VisualDensity.compact,
+                          )
                         : null,
                     onTap: () => _selectDate(context, false),
                     dense: true,
@@ -215,27 +241,35 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
               decoration: InputDecoration(
                 labelText: 'Type',
                 prefixIcon: Icon(
-                    _selectedTransactionType == TransactionType.expense
-                        ? Icons.arrow_downward
-                        : _selectedTransactionType == TransactionType.income
-                            ? Icons.arrow_upward
-                            : Icons.swap_vert,
-                    size: 20),
+                  _selectedTransactionType == TransactionType.expense
+                      ? Icons.arrow_downward
+                      : _selectedTransactionType == TransactionType.income
+                      ? Icons.arrow_upward
+                      : Icons.swap_vert,
+                  size: 20,
+                ),
                 border: const OutlineInputBorder(),
                 isDense: true,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
               ),
               hint: const Text('All Types'),
               isExpanded: true,
               items: const [
                 DropdownMenuItem<TransactionType?>(
-                    value: null, child: Text('All Types')),
+                  value: null,
+                  child: Text('All Types'),
+                ),
                 DropdownMenuItem<TransactionType?>(
-                    value: TransactionType.expense,
-                    child: Text('Expenses Only')),
+                  value: TransactionType.expense,
+                  child: Text('Expenses Only'),
+                ),
                 DropdownMenuItem<TransactionType?>(
-                    value: TransactionType.income, child: Text('Income Only')),
+                  value: TransactionType.income,
+                  child: Text('Income Only'),
+                ),
               ],
               onChanged: (TransactionType? newValue) {
                 setState(() => _selectedTransactionType = newValue);
@@ -244,9 +278,10 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
             const SizedBox(height: 16),
 
             // --- Account Selector ---
-            Builder(builder: (context) {
-              if (context.maybeRead<AccountListBloc>() != null) {
-                return AccountSelectorDropdown(
+            Builder(
+              builder: (context) {
+                if (context.maybeRead<AccountListBloc>() != null) {
+                  return AccountSelectorDropdown(
                     // Reuse existing widget
                     selectedAccountId: _selectedAccountId,
                     labelText: 'Account',
@@ -254,16 +289,19 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                     validator: null, // No validation needed for filter
                     onChanged: (String? newAccountId) {
                       setState(() => _selectedAccountId = newAccountId);
-                    });
-              }
-              if (widget.accountSelectorBuilder != null) {
-                return widget.accountSelectorBuilder!(_selectedAccountId,
-                    (String? newAccountId) {
-                  setState(() => _selectedAccountId = newAccountId);
-                });
-              }
-              return const SizedBox.shrink();
-            }),
+                    },
+                  );
+                }
+                if (widget.accountSelectorBuilder != null) {
+                  return widget.accountSelectorBuilder!(_selectedAccountId, (
+                    String? newAccountId,
+                  ) {
+                    setState(() => _selectedAccountId = newAccountId);
+                  });
+                }
+                return const SizedBox.shrink();
+              },
+            ),
             const SizedBox(height: 16),
 
             // --- Category Selector ---
@@ -274,8 +312,10 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 prefixIcon: Icon(Icons.category_outlined, size: 20),
                 border: OutlineInputBorder(),
                 isDense: true,
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
               ),
               hint: const Text('All Categories'),
               isExpanded: true,

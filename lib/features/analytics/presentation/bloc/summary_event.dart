@@ -13,7 +13,7 @@ class LoadSummary extends SummaryEvent {
   final DateTime? endDate;
   final bool forceReload;
   final bool
-      updateFilters; // Flag to indicate if these dates should become the new stored filters
+  updateFilters; // Flag to indicate if these dates should become the new stored filters
 
   const LoadSummary({
     this.startDate,
@@ -36,4 +36,5 @@ class _DataChanged extends SummaryEvent {
 class ResetState extends SummaryEvent {
   const ResetState();
 }
+
 // --- END ADDED ---

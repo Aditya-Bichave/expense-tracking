@@ -30,4 +30,5 @@ class _DataChanged extends AccountListEvent {
 class ResetState extends AccountListEvent {
   const ResetState();
 }
+
 // --- END ADDED ---

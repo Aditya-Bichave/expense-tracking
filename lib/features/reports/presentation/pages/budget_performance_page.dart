@@ -27,7 +27,8 @@ class BudgetPerformancePage extends StatelessWidget {
     // ... (implementation unchanged) ...
     final filterBlocState = context.read<ReportFilterBloc>().state;
     // Use budget period if one-time, else use report filter dates
-    final (start, end) = budget.period == BudgetPeriodType.oneTime &&
+    final (start, end) =
+        budget.period == BudgetPeriodType.oneTime &&
             budget.startDate != null &&
             budget.endDate != null
         ? (budget.startDate!, budget.endDate!)
@@ -71,7 +72,8 @@ class BudgetPerformancePage extends StatelessWidget {
                 ? state.showComparison
                 : false;
             // Enable comparison button only if loaded state has previous data OR if currently showing comparison (to allow hiding)
-            final bool canCompare = state is BudgetPerformanceReportLoaded &&
+            final bool canCompare =
+                state is BudgetPerformanceReportLoaded &&
                 (state.reportData.previousPerformanceData != null ||
                     showComparison);
 
@@ -87,8 +89,8 @@ class BudgetPerformancePage extends StatelessWidget {
               color: showComparison ? theme.colorScheme.primary : null,
               onPressed: canCompare
                   ? () => context.read<BudgetPerformanceReportBloc>().add(
-                        const ToggleBudgetComparison(),
-                      )
+                      const ToggleBudgetComparison(),
+                    )
                   : null,
             );
           },
@@ -108,8 +110,7 @@ class BudgetPerformancePage extends StatelessWidget {
           ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
         );
       },
-      body: BlocBuilder<BudgetPerformanceReportBloc,
-          BudgetPerformanceReportState>(
+      body: BlocBuilder<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
         builder: (context, state) {
           if (state is BudgetPerformanceReportLoading)
             return const Center(child: CircularProgressIndicator());
@@ -142,7 +143,8 @@ class BudgetPerformancePage extends StatelessWidget {
                     child: BudgetPerformanceBarChart(
                       data: reportData.performanceData,
                       // Pass previous data if available and comparison is enabled
-                      previousData: (showComparison &&
+                      previousData:
+                          (showComparison &&
                               reportData.previousPerformanceData != null)
                           ? reportData.previousPerformanceData
                           : null,
@@ -203,11 +205,8 @@ class BudgetPerformancePage extends StatelessWidget {
 
     final Map<String, BudgetPerformanceData> previousDataMap =
         (showComparison && data.previousPerformanceData != null)
-            ? {
-                for (var item in data.previousPerformanceData!)
-                  item.budget.id: item
-              }
-            : {};
+        ? {for (var item in data.previousPerformanceData!) item.budget.id: item}
+        : {};
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -229,8 +228,9 @@ class BudgetPerformancePage extends StatelessWidget {
 
           if (showComparison && varianceChangePercent != null) {
             if (varianceChangePercent.isInfinite) {
-              varianceChangeText =
-                  varianceChangePercent.isNegative ? '-∞' : '+∞';
+              varianceChangeText = varianceChangePercent.isNegative
+                  ? '-∞'
+                  : '+∞';
               // Improvement is negative change (less overspending or more underspending)
               varianceChangeColor = varianceChangePercent.isNegative
                   ? Colors.green.shade700

@@ -31,39 +31,55 @@ class LegalSettingsSection extends StatelessWidget {
           enabled: isEnabled, // Use combined state
           leadingIcon: Icons.privacy_tip_outlined,
           title: 'Privacy Policy',
-          trailing: Icon(Icons.open_in_new,
-              size: 18,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.secondary),
-          onTap: !isEnabled // Use combined state
+          trailing: Icon(
+            Icons.open_in_new,
+            size: 18,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.secondary,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () => launchUrlCallback(
-                  context, 'https://example.com/privacy'), // Replace URL
+                  context,
+                  'https://example.com/privacy',
+                ), // Replace URL
         ),
         SettingsListTile(
           enabled: isEnabled, // Use combined state
           leadingIcon: Icons.gavel_outlined,
           title: 'Terms of Service',
-          trailing: Icon(Icons.open_in_new,
-              size: 18,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.secondary),
-          onTap: !isEnabled // Use combined state
+          trailing: Icon(
+            Icons.open_in_new,
+            size: 18,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.secondary,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () => launchUrlCallback(
-                  context, 'https://example.com/terms'), // Replace URL
+                  context,
+                  'https://example.com/terms',
+                ), // Replace URL
         ),
         SettingsListTile(
           enabled: isEnabled, // Use combined state
           leadingIcon: Icons.article_outlined,
           title: 'Open Source Licenses',
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
-          onTap: !isEnabled // Use combined state
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () => showLicensePage(context: context),
         ),

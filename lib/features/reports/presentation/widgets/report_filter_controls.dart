@@ -63,7 +63,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
   late List<String> _tempSelectedBudgetIds;
   late List<String> _tempSelectedGoalIds;
   late TransactionType?
-      _tempSelectedTransactionType; // Corrected state variable
+  _tempSelectedTransactionType; // Corrected state variable
 
   @override
   void initState() {
@@ -100,16 +100,16 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
 
   void _applyFilters() {
     context.read<ReportFilterBloc>().add(
-          UpdateReportFilters(
-            startDate: _tempStartDate,
-            endDate: _tempEndDate,
-            categoryIds: _tempSelectedCategoryIds,
-            accountIds: _tempSelectedAccountIds,
-            budgetIds: _tempSelectedBudgetIds,
-            goalIds: _tempSelectedGoalIds,
-            transactionType: _tempSelectedTransactionType, // Pass the value
-          ),
-        );
+      UpdateReportFilters(
+        startDate: _tempStartDate,
+        endDate: _tempEndDate,
+        categoryIds: _tempSelectedCategoryIds,
+        accountIds: _tempSelectedAccountIds,
+        budgetIds: _tempSelectedBudgetIds,
+        goalIds: _tempSelectedGoalIds,
+        transactionType: _tempSelectedTransactionType, // Pass the value
+      ),
+    );
     Navigator.pop(context);
   }
 
@@ -209,9 +209,9 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                     TransactionType.expense
                                 ? Icons.arrow_downward
                                 : _tempSelectedTransactionType ==
-                                        TransactionType.income
-                                    ? Icons.arrow_upward
-                                    : Icons.swap_vert,
+                                      TransactionType.income
+                                ? Icons.arrow_upward
+                                : Icons.swap_vert,
                             size: 20,
                           ),
                           border: const OutlineInputBorder(),
@@ -310,8 +310,9 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                         MultiSelectDialogField<String>(
                           items: budgetItems,
                           initialValue: _tempSelectedBudgetIds,
-                          title:
-                              const Text("Select Budgets (For Budget Report)"),
+                          title: const Text(
+                            "Select Budgets (For Budget Report)",
+                          ),
                           buttonText: Text(
                             _tempSelectedBudgetIds.isEmpty
                                 ? "All Budgets"
@@ -382,7 +383,8 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                               ),
                               const SizedBox(width: 8),
                               ElevatedButton(
-                                onPressed: state.optionsStatus ==
+                                onPressed:
+                                    state.optionsStatus ==
                                         FilterOptionsStatus.loaded
                                     ? _applyFilters
                                     : null,

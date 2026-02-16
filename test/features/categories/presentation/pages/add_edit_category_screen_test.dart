@@ -29,48 +29,57 @@ void main() {
   });
 
   group('AddEditCategoryScreen', () {
-    testWidgets('renders CategoryForm and correct title for "Add" mode',
-        (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: BlocProvider.value(
-          value: mockBloc,
-          child: const AddEditCategoryScreen(),
+    testWidgets('renders CategoryForm and correct title for "Add" mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider.value(
+            value: mockBloc,
+            child: const AddEditCategoryScreen(),
+          ),
         ),
-      ));
+      );
       expect(find.text('Add Category'), findsWidgets);
       expect(find.byType(CategoryForm), findsOneWidget);
     });
 
     testWidgets('renders correct title for "Edit" mode', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: BlocProvider.value(
-          value: mockBloc,
-          child: AddEditCategoryScreen(
-            initialCategory: const Category(
-              id: '1',
-              name: 'Test',
-              iconName: 'test',
-              colorHex: '#ffffff',
-              type: CategoryType.expense,
-              isCustom: true,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider.value(
+            value: mockBloc,
+            child: AddEditCategoryScreen(
+              initialCategory: const Category(
+                id: '1',
+                name: 'Test',
+                iconName: 'test',
+                colorHex: '#ffffff',
+                type: CategoryType.expense,
+                isCustom: true,
+              ),
             ),
           ),
         ),
-      ));
+      );
       expect(find.text('Edit Category'), findsOneWidget);
     });
 
     testWidgets('submit calls AddCategory event when adding', (tester) async {
       when(() => mockBloc.add(any())).thenAnswer((_) {});
-      await tester.pumpWidget(MaterialApp(
-        home: BlocProvider.value(
-          value: mockBloc,
-          child: const AddEditCategoryScreen(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider.value(
+            value: mockBloc,
+            child: const AddEditCategoryScreen(),
+          ),
         ),
-      ));
+      );
 
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Category Name'), 'New Category');
+        find.widgetWithText(TextFormField, 'Category Name'),
+        'New Category',
+      );
       await tester.tap(find.byKey(const ValueKey('button_submit')));
       await tester.pump();
 

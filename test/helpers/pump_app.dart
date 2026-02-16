@@ -48,7 +48,8 @@ Future<void> pumpWidgetWithProviders({
   bool settle = true,
 }) async {
   // 1. Determine router configuration
-  final routerConfig = router ??
+  final routerConfig =
+      router ??
       GoRouter(
         navigatorKey: GlobalKey<NavigatorState>(),
         initialLocation: '/',
@@ -65,7 +66,7 @@ Future<void> pumpWidgetWithProviders({
   whenListen(
     mockSettingsBloc,
     Stream.fromIterable([
-      settingsState ?? const SettingsState()
+      settingsState ?? const SettingsState(),
     ]), // Use provided state or default
     initialState: settingsState ?? const SettingsState(),
   );
@@ -74,9 +75,9 @@ Future<void> pumpWidgetWithProviders({
   if (accountListBloc == null) {
     whenListen(
       mockAccountListBloc,
-      Stream<AccountListState>.fromIterable(
-        [accountListState ?? const AccountListInitial()],
-      ),
+      Stream<AccountListState>.fromIterable([
+        accountListState ?? const AccountListInitial(),
+      ]),
       initialState: accountListState ?? const AccountListInitial(),
     );
   }

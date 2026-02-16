@@ -22,8 +22,10 @@ class DemoIndicatorWidget extends StatelessWidget {
               elevation: 4.0, // Add slight elevation
               color: theme.colorScheme.secondaryContainer.withOpacity(0.95),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 6.0,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -36,15 +38,18 @@ class DemoIndicatorWidget extends StatelessWidget {
                     Text(
                       'Demo Mode Active',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSecondaryContainer,
-                          fontWeight: FontWeight.w500),
+                        color: theme.colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const Spacer(), // Push button to the right
                     TextButton(
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.onSecondaryContainer,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: VisualDensity.compact,
@@ -59,9 +64,9 @@ class DemoIndicatorWidget extends StatelessWidget {
                           confirmText: 'Exit',
                         );
                         if (confirmed == true && context.mounted) {
-                          context
-                              .read<SettingsBloc>()
-                              .add(const ExitDemoMode());
+                          context.read<SettingsBloc>().add(
+                            const ExitDemoMode(),
+                          );
                         }
                       },
                       key: const ValueKey('button_demoIndicator_exit'),

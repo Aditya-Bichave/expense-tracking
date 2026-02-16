@@ -40,24 +40,30 @@ class TransactionListHeader extends StatelessWidget {
                   hintText: "Search title, category, amount...",
                   prefixIcon: const Icon(Icons.search, size: 20),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none),
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
                   enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide.none),
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
                   focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      borderSide: BorderSide(color: theme.colorScheme.primary)),
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide(color: theme.colorScheme.primary),
+                  ),
                   filled: true,
                   fillColor: theme.colorScheme.surfaceContainerHighest,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: 16,
+                  ),
                   isDense: true,
                   suffixIcon: hasSearchTerm
                       ? IconButton(
                           icon: const Icon(Icons.clear, size: 18),
                           tooltip: "Clear Search",
-                          onPressed: onClearSearch)
+                          onPressed: onClearSearch,
+                        )
                       : null,
                 ),
               ),
@@ -68,19 +74,25 @@ class TransactionListHeader extends StatelessWidget {
                     children: [
                       TextButton.icon(
                         key: const ValueKey('button_show_filter'),
-                        icon: Icon(Icons.filter_list_rounded,
-                            size: 18,
+                        icon: Icon(
+                          Icons.filter_list_rounded,
+                          size: 18,
+                          color: state.filtersApplied
+                              ? theme.colorScheme.primary
+                              : null,
+                        ),
+                        label: Text(
+                          "Filter",
+                          style: theme.textTheme.labelMedium?.copyWith(
                             color: state.filtersApplied
                                 ? theme.colorScheme.primary
-                                : null),
-                        label: Text("Filter",
-                            style: theme.textTheme.labelMedium?.copyWith(
-                                color: state.filtersApplied
-                                    ? theme.colorScheme.primary
-                                    : null)),
+                                : null,
+                          ),
+                        ),
                         onPressed: () => showFilterDialog(context, state),
                         style: TextButton.styleFrom(
-                            visualDensity: VisualDensity.compact),
+                          visualDensity: VisualDensity.compact,
+                        ),
                       ),
                       TextButton.icon(
                         key: const ValueKey('button_show_sort'),
@@ -88,7 +100,8 @@ class TransactionListHeader extends StatelessWidget {
                         label: Text("Sort", style: theme.textTheme.labelMedium),
                         onPressed: () => showSortDialog(context, state),
                         style: TextButton.styleFrom(
-                            visualDensity: VisualDensity.compact),
+                          visualDensity: VisualDensity.compact,
+                        ),
                       ),
                     ],
                   ),
@@ -97,21 +110,24 @@ class TransactionListHeader extends StatelessWidget {
                       IconButton(
                         key: const ValueKey('button_toggle_view'),
                         icon: Icon(
-                            isCalendarViewShown
-                                ? Icons.view_list_rounded
-                                : Icons.calendar_today_rounded,
-                            size: 20),
-                        tooltip:
-                            isCalendarViewShown ? "List View" : "Calendar View",
+                          isCalendarViewShown
+                              ? Icons.view_list_rounded
+                              : Icons.calendar_today_rounded,
+                          size: 20,
+                        ),
+                        tooltip: isCalendarViewShown
+                            ? "List View"
+                            : "Calendar View",
                         onPressed: onToggleCalendarView,
                       ),
                       IconButton(
                         key: const ValueKey('button_toggle_batchEdit'),
                         icon: Icon(
-                            isInBatchMode
-                                ? Icons.cancel_outlined
-                                : Icons.select_all_rounded,
-                            size: 20),
+                          isInBatchMode
+                              ? Icons.cancel_outlined
+                              : Icons.select_all_rounded,
+                          size: 20,
+                        ),
                         tooltip: isInBatchMode
                             ? "Cancel Selection"
                             : "Select Multiple",

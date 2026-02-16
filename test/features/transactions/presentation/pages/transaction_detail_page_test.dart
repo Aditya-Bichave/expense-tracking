@@ -74,8 +74,9 @@ void main() {
   group('TransactionDetailPage', () {
     testWidgets('renders all transaction details correctly', (tester) async {
       // ARRANGE
-      when(() => mockAccountListBloc.state)
-          .thenReturn(AccountListLoaded(accounts: [mockAccount]));
+      when(
+        () => mockAccountListBloc.state,
+      ).thenReturn(AccountListLoaded(accounts: [mockAccount]));
 
       // ACT
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
@@ -90,8 +91,9 @@ void main() {
     });
 
     testWidgets('tapping Edit button does not throw', (tester) async {
-      when(() => mockAccountListBloc.state)
-          .thenReturn(const AccountListInitial());
+      when(
+        () => mockAccountListBloc.state,
+      ).thenReturn(const AccountListInitial());
 
       final router = GoRouter(
         routes: [
@@ -110,25 +112,30 @@ void main() {
         router: router,
       );
 
-      final editFinder =
-          find.byKey(const ValueKey('button_transactionDetail_edit'));
+      final editFinder = find.byKey(
+        const ValueKey('button_transactionDetail_edit'),
+      );
       expect(editFinder, findsOneWidget);
       await tester.tap(editFinder);
       await tester.pump();
     });
 
-    testWidgets('tapping Delete button shows dialog and dispatches event',
-        (tester) async {
+    testWidgets('tapping Delete button shows dialog and dispatches event', (
+      tester,
+    ) async {
       // ARRANGE
-      when(() => mockAccountListBloc.state)
-          .thenReturn(const AccountListInitial());
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState());
+      when(
+        () => mockAccountListBloc.state,
+      ).thenReturn(const AccountListInitial());
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
 
       // ACT
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
-      await tester
-          .tap(find.byKey(const ValueKey('button_transactionDetail_delete')));
+      await tester.tap(
+        find.byKey(const ValueKey('button_transactionDetail_delete')),
+      );
       await tester.pumpAndSettle();
 
       // ASSERT
@@ -139,9 +146,9 @@ void main() {
       await tester.pump();
 
       // ASSERT
-      verify(() =>
-              mockTransactionListBloc.add(DeleteTransaction(mockTransaction)))
-          .called(1);
+      verify(
+        () => mockTransactionListBloc.add(DeleteTransaction(mockTransaction)),
+      ).called(1);
     });
   });
 }

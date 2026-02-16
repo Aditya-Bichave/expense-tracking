@@ -14,7 +14,8 @@ class AddAssetAccountUseCase
 
   @override
   Future<Either<Failure, AssetAccount>> call(
-      AddAssetAccountParams params) async {
+    AddAssetAccountParams params,
+  ) async {
     log.info("Executing AddAssetAccountUseCase for '${params.account.name}'.");
     final name = params.account.name.trim();
     if (name.isEmpty) {
@@ -24,7 +25,8 @@ class AddAssetAccountUseCase
     if (!RegExp(r'^[a-zA-Z0-9 ]+$').hasMatch(name)) {
       log.warning("Validation failed: Account name must be alphanumeric.");
       return const Left(
-          ValidationFailure("Account name must be alphanumeric."));
+        ValidationFailure("Account name must be alphanumeric."),
+      );
     }
     // Initial balance validation could be added here if needed (e.g., >= 0)
     // if (params.account.initialBalance < 0) {

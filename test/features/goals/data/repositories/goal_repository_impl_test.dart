@@ -18,14 +18,16 @@ void main() {
   late MockGoalContributionLocalDataSource mockContributionDataSource;
 
   setUpAll(() {
-    registerFallbackValue(GoalModel(
-      id: '',
-      name: '',
-      targetAmount: 0,
-      statusIndex: GoalStatus.active.index,
-      totalSavedCache: 0,
-      createdAt: DateTime(2000),
-    ));
+    registerFallbackValue(
+      GoalModel(
+        id: '',
+        name: '',
+        targetAmount: 0,
+        statusIndex: GoalStatus.active.index,
+        totalSavedCache: 0,
+        createdAt: DateTime(2000),
+      ),
+    );
   });
 
   setUp(() {
@@ -76,9 +78,9 @@ void main() {
       expect(goal.achievedAt, isNull);
     });
 
-    final saved = verify(() => mockLocalDataSource.saveGoal(captureAny()))
-        .captured
-        .single as GoalModel;
+    final saved =
+        verify(() => mockLocalDataSource.saveGoal(captureAny())).captured.single
+            as GoalModel;
     expect(saved.statusIndex, GoalStatus.active.index);
     expect(saved.achievedAt, isNull);
   });

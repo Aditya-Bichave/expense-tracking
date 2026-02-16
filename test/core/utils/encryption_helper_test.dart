@@ -14,7 +14,9 @@ void main() {
   test('decrypt with wrong password throws', () {
     const password = 'secret';
     final payload = EncryptionHelper.encryptString('data', password);
-    expect(() => EncryptionHelper.decryptString(payload, 'wrong'),
-        throwsA(anything));
+    expect(
+      () => EncryptionHelper.decryptString(payload, 'wrong'),
+      throwsA(anything),
+    );
   });
 }

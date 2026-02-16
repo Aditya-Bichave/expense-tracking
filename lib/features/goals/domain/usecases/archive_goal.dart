@@ -17,9 +17,10 @@ class ArchiveGoalUseCase implements UseCase<void, ArchiveGoalParams> {
     // Repository implementation will handle fetching the goal and updating its status
     final result = await repository.archiveGoal(params.id);
     // Return Right(null) on success, Left(failure) on error
-    return result.fold((l) => Left(l),
-        (_) => const Right(null) // Map successful Goal return to void
-        );
+    return result.fold(
+      (l) => Left(l),
+      (_) => const Right(null), // Map successful Goal return to void
+    );
   }
 }
 

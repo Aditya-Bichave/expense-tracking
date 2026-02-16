@@ -42,6 +42,10 @@ class LogContributionState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [status, goalId, initialContribution, errorMessage];
+  List<Object?> get props => [
+    status,
+    goalId,
+    initialContribution,
+    errorMessage,
+  ];
 }

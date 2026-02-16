@@ -11,21 +11,28 @@ class DataManagementDependencies {
   static void register() {
     // Repository
     sl.registerLazySingleton<DataManagementRepository>(
-        () => DataManagementRepositoryImpl(
-              accountBox: sl(), // These boxes are registered in main locator
-              expenseBox: sl(),
-              incomeBox: sl(),
-            ));
+      () => DataManagementRepositoryImpl(
+        accountBox: sl(), // These boxes are registered in main locator
+        expenseBox: sl(),
+        incomeBox: sl(),
+      ),
+    );
     // Use Cases
-    sl.registerLazySingleton(() => BackupDataUseCase(
-        dataManagementRepository: sl(), downloaderService: sl()));
+    sl.registerLazySingleton(
+      () => BackupDataUseCase(
+        dataManagementRepository: sl(),
+        downloaderService: sl(),
+      ),
+    );
     sl.registerLazySingleton(() => RestoreDataUseCase(sl()));
     sl.registerLazySingleton(() => ClearAllDataUseCase(sl()));
     // BLoC
-    sl.registerFactory(() => DataManagementBloc(
-          backupDataUseCase: sl(),
-          restoreDataUseCase: sl(),
-          clearAllDataUseCase: sl(),
-        ));
+    sl.registerFactory(
+      () => DataManagementBloc(
+        backupDataUseCase: sl(),
+        restoreDataUseCase: sl(),
+        clearAllDataUseCase: sl(),
+      ),
+    );
   }
 }

@@ -24,11 +24,13 @@ class TransactionListItem extends StatelessWidget {
 
   // Helper to get icon based on category or type
   Widget _buildIcon(BuildContext context, ThemeData theme) {
-    final category = transaction.category ??
+    final category =
+        transaction.category ??
         Category.uncategorized; // Use uncategorized as fallback
     final isExpense = transaction.type == TransactionType.expense;
-    final fallbackIconData =
-        isExpense ? Icons.arrow_downward : Icons.arrow_upward;
+    final fallbackIconData = isExpense
+        ? Icons.arrow_downward
+        : Icons.arrow_upward;
 
     // Attempt to get icon from category definition using the availableIcons map
     final IconData displayIconData =

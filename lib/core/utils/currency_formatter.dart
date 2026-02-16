@@ -6,8 +6,11 @@ class CurrencyFormatter {
   /// Uses the provided [currencySymbol] if not null, otherwise defaults to '$'.
   /// Uses the specified [locale] for formatting rules (e.g., decimal separators).
   /// Defaults to 'en_US' locale.
-  static String format(double amount, String? currencySymbol,
-      {String locale = 'en_US'}) {
+  static String format(
+    double amount,
+    String? currencySymbol, {
+    String locale = 'en_US',
+  }) {
     // Handle null or empty symbol - default to '$'
     final symbolToUse = (currencySymbol == null || currencySymbol.isEmpty)
         ? '\$'

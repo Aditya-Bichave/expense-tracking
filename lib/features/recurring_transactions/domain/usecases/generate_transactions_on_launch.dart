@@ -33,13 +33,14 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final rulesOrFailure =
-        await recurringTransactionRepository.getRecurringRules();
+    final rulesOrFailure = await recurringTransactionRepository
+        .getRecurringRules();
     return await rulesOrFailure.fold<Future<Either<Failure, void>>>(
       (failure) async => Left(failure),
       (rules) async {
-        final activeRules =
-            rules.where((rule) => rule.status == RuleStatus.active).toList();
+        final activeRules = rules
+            .where((rule) => rule.status == RuleStatus.active)
+            .toList();
 
         for (var rule in activeRules) {
           if (rule.nextOccurrenceDate.isBefore(today) ||
@@ -56,8 +57,9 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
   }
 
   Future<Either<Failure, void>> _processRule(RecurringRule rule) async {
-    final categoryOrFailure =
-        await categoryRepository.getCategoryById(rule.categoryId);
+    final categoryOrFailure = await categoryRepository.getCategoryById(
+      rule.categoryId,
+    );
 
     return await categoryOrFailure.fold<Future<Either<Failure, void>>>(
       (failure) async => Left(failure),
@@ -152,7 +154,10 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         break;
       case Frequency.yearly:
         nextDate = DateTime(
-            nextDate.year + rule.interval, nextDate.month, nextDate.day);
+          nextDate.year + rule.interval,
+          nextDate.month,
+          nextDate.day,
+        );
         break;
     }
     return nextDate;

@@ -19,6 +19,8 @@ class GetIncomeCategoriesUseCase implements UseCase<List<Category>, NoParams> {
     log.info("[GetIncomeCategoriesUseCase] Executing.");
     // Use the specific repository method
     return await repository.getSpecificCategories(
-        type: CategoryType.income, includeCustom: true);
+      type: CategoryType.income,
+      includeCustom: true,
+    );
   }
 }
