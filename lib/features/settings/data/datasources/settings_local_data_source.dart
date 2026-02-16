@@ -67,7 +67,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<String> getPaletteIdentifier() async {
     // Use constant key and default from SettingsState
-    final identifier = prefs.getString(PrefKeys.paletteIdentifier) ??
+    final identifier =
+        prefs.getString(PrefKeys.paletteIdentifier) ??
         SettingsState.defaultPaletteIdentifier;
     return identifier;
   }
@@ -119,7 +120,8 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   @override
   Future<bool> getAppLockEnabled() async {
     // Use constant key and default from AppConstants
-    final enabled = prefs.getBool(PrefKeys.appLockEnabled) ??
+    final enabled =
+        prefs.getBool(PrefKeys.appLockEnabled) ??
         AppConstants.defaultAppLockEnabled;
     return enabled;
   }

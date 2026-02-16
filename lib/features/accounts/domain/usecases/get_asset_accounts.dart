@@ -16,12 +16,14 @@ class GetAssetAccountsUseCase implements UseCase<List<AssetAccount>, NoParams> {
     try {
       final result = await repository.getAssetAccounts();
       log.info(
-          "[GetAssetAccountsUseCase] Repository returned. Result isLeft: ${result.isLeft()}");
+        "[GetAssetAccountsUseCase] Repository returned. Result isLeft: ${result.isLeft()}",
+      );
       result.fold(
         (failure) =>
             log.warning("[GetAssetAccountsUseCase] Failed: ${failure.message}"),
         (accounts) => log.info(
-            "[GetAssetAccountsUseCase] Succeeded with ${accounts.length} accounts."),
+          "[GetAssetAccountsUseCase] Succeeded with ${accounts.length} accounts.",
+        ),
       );
       return result;
     } catch (e, s) {

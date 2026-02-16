@@ -111,16 +111,16 @@ class _LogContributionSheetContentState
         "[LogContribSheet] Form validated, dispatching SaveContribution.",
       );
       context.read<LogContributionBloc>().add(
-            SaveContribution(
-              amount: double.tryParse(
-                      _amountController.text.replaceAll(',', '.')) ??
-                  0.0,
-              date: _selectedDate,
-              note: _noteController.text.trim().isEmpty
-                  ? null
-                  : _noteController.text.trim(),
-            ),
-          );
+        SaveContribution(
+          amount:
+              double.tryParse(_amountController.text.replaceAll(',', '.')) ??
+              0.0,
+          date: _selectedDate,
+          note: _noteController.text.trim().isEmpty
+              ? null
+              : _noteController.text.trim(),
+        ),
+      );
     } else {
       log.warning("[LogContribSheet] Form validation failed.");
     }
@@ -180,13 +180,14 @@ class _LogContributionSheetContentState
               ),
             );
           context.read<LogContributionBloc>().add(
-                const ClearContributionMessage(),
-              );
+            const ClearContributionMessage(),
+          );
         }
       },
       child: Padding(
         // --- PHASE 5: Apply themed padding (or default) ---
-        padding: modeTheme?.pagePadding.copyWith(
+        padding:
+            modeTheme?.pagePadding.copyWith(
               left: 20,
               right: 20,
               top: 8,
@@ -236,7 +237,8 @@ class _LogContributionSheetContentState
               // Date
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 0),
-                shape: theme.inputDecorationTheme.enabledBorder ??
+                shape:
+                    theme.inputDecorationTheme.enabledBorder ??
                     const OutlineInputBorder(),
                 // --- PHASE 5: Use helper for potentially themed icon ---
                 leading: Padding(
@@ -284,51 +286,52 @@ class _LogContributionSheetContentState
                       ),
                       onPressed:
                           context.watch<LogContributionBloc>().state.status ==
-                                  LogContributionStatus.loading
-                              ? null
-                              : () async {
-                                  // Confirmation is handled in GoalDetailPage before calling delete use case
-                                  context.read<LogContributionBloc>().add(
-                                        const DeleteContribution(),
-                                      );
-                                },
+                              LogContributionStatus.loading
+                          ? null
+                          : () async {
+                              // Confirmation is handled in GoalDetailPage before calling delete use case
+                              context.read<LogContributionBloc>().add(
+                                const DeleteContribution(),
+                              );
+                            },
                     ),
                   if (_isEditing) const SizedBox(width: 10),
                   Expanded(
                     child:
                         BlocBuilder<LogContributionBloc, LogContributionState>(
-                      builder: (context, state) {
-                        return ElevatedButton.icon(
-                          key: const ValueKey('button_submit_contribution'),
-                          icon: state.status == LogContributionStatus.loading
-                              ? Container(
-                                  width: 20,
-                                  height: 20,
-                                  padding: const EdgeInsets.all(2),
-                                  child: const CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Icon(
-                                  _isEditing
-                                      ? Icons.save_outlined
-                                      : Icons.add_task_outlined,
+                          builder: (context, state) {
+                            return ElevatedButton.icon(
+                              key: const ValueKey('button_submit_contribution'),
+                              icon:
+                                  state.status == LogContributionStatus.loading
+                                  ? Container(
+                                      width: 20,
+                                      height: 20,
+                                      padding: const EdgeInsets.all(2),
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Icon(
+                                      _isEditing
+                                          ? Icons.save_outlined
+                                          : Icons.add_task_outlined,
+                                    ),
+                              label: Text(_isEditing ? 'Update' : 'Add'),
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
                                 ),
-                          label: Text(_isEditing ? 'Update' : 'Add'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                            ),
-                            textStyle: theme.textTheme.titleMedium,
-                          ),
-                          onPressed:
-                              state.status == LogContributionStatus.loading
+                                textStyle: theme.textTheme.titleMedium,
+                              ),
+                              onPressed:
+                                  state.status == LogContributionStatus.loading
                                   ? null
                                   : _submitForm,
-                        );
-                      },
-                    ),
+                            );
+                          },
+                        ),
                   ),
                 ],
               ),

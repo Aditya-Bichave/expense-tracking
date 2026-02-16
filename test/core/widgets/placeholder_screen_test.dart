@@ -18,9 +18,11 @@ void main() {
       expect(find.text('My Feature'), findsNWidgets(2)); // AppBar and Body
       expect(find.text('Feature In Progress'), findsOneWidget);
       expect(
-          find.text(
-              'This section is currently under development and will be available soon. Stay tuned!'),
-          findsOneWidget);
+        find.text(
+          'This section is currently under development and will be available soon. Stay tuned!',
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('does not show back button when it cannot pop', (tester) async {
@@ -40,17 +42,19 @@ void main() {
         initialLocation: '/home',
         routes: [
           GoRoute(
-              path: '/home',
-              builder: (context, state) => Scaffold(
-                    body: ElevatedButton(
-                      onPressed: () => context.push('/placeholder'),
-                      child: const Text('Go to Placeholder'),
-                    ),
-                  )),
+            path: '/home',
+            builder: (context, state) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => context.push('/placeholder'),
+                child: const Text('Go to Placeholder'),
+              ),
+            ),
+          ),
           GoRoute(
-              path: '/placeholder',
-              builder: (context, state) =>
-                  const PlaceholderScreen(featureName: 'My Feature')),
+            path: '/placeholder',
+            builder: (context, state) =>
+                const PlaceholderScreen(featureName: 'My Feature'),
+          ),
         ],
       );
 
@@ -62,8 +66,10 @@ void main() {
 
       // ASSERT: Placeholder screen is now visible
       expect(find.byType(PlaceholderScreen), findsOneWidget);
-      expect(find.byKey(const ValueKey('button_placeholder_back')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('button_placeholder_back')),
+        findsOneWidget,
+      );
 
       // ACT: Tap the back button
       await tester.tap(find.byKey(const ValueKey('button_placeholder_back')));

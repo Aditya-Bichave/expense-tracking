@@ -80,33 +80,38 @@ void main() {
     bool clicked = false;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (
-      MethodCall methodCall,
-    ) async {
-      if (methodCall.method == 'SystemSound.play') {
-        clicked = true;
-      }
-      return null;
-    });
+          MethodCall methodCall,
+        ) async {
+          if (methodCall.method == 'SystemSound.play') {
+            clicked = true;
+          }
+          return null;
+        });
 
-    final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (_, __) => const SpendingByCategoryPage()),
-      GoRoute(
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const SpendingByCategoryPage()),
+        GoRoute(
           path: RouteNames.transactionsList,
-          builder: (_, __) => const SizedBox()),
-    ]);
-
-    await tester.pumpWidget(MultiBlocProvider(
-      providers: [
-        BlocProvider<SpendingCategoryReportBloc>.value(value: reportBloc),
-        BlocProvider<ReportFilterBloc>.value(value: filterBloc),
-        BlocProvider<SettingsBloc>.value(value: settingsBloc),
+          builder: (_, __) => const SizedBox(),
+        ),
       ],
-      child: MaterialApp.router(
-        routerConfig: router,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+    );
+
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<SpendingCategoryReportBloc>.value(value: reportBloc),
+          BlocProvider<ReportFilterBloc>.value(value: filterBloc),
+          BlocProvider<SettingsBloc>.value(value: settingsBloc),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     final table = tester.widget<DataTable>(find.byType(DataTable));

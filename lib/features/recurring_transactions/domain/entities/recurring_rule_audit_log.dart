@@ -21,12 +21,12 @@ class RecurringRuleAuditLog extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        ruleId,
-        timestamp,
-        userId,
-        fieldChanged,
-        oldValue,
-        newValue,
-      ];
+    id,
+    ruleId,
+    timestamp,
+    userId,
+    fieldChanged,
+    oldValue,
+    newValue,
+  ];
 }

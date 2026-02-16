@@ -2,8 +2,8 @@ import 'package:expense_tracker/features/transactions/domain/usecases/get_transa
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-typedef ApplySortCallback = void Function(
-    TransactionSortBy sortBy, SortDirection sortDirection);
+typedef ApplySortCallback =
+    void Function(TransactionSortBy sortBy, SortDirection sortDirection);
 
 class TransactionSortSheet extends StatelessWidget {
   final TransactionSortBy currentSortBy;
@@ -37,11 +37,11 @@ class TransactionSortSheet extends StatelessWidget {
       final SortDirection defaultDir = defaultDirection(sortBy);
       final IconData directionIcon = isSelected
           ? (currentSortDirection == SortDirection.descending
-              ? Icons.arrow_downward_rounded
-              : Icons.arrow_upward_rounded)
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_upward_rounded)
           : (defaultDir == SortDirection.descending
-              ? Icons.arrow_downward_rounded
-              : Icons.arrow_upward_rounded);
+                ? Icons.arrow_downward_rounded
+                : Icons.arrow_upward_rounded);
 
       return RadioListTile<TransactionSortBy>(
         title: Text(toBeginningOfSentenceCase(sortBy.name) ?? sortBy.name),
@@ -56,8 +56,8 @@ class TransactionSortSheet extends StatelessWidget {
           if (value != null) {
             final newDirection = isSelected
                 ? (currentSortDirection == SortDirection.descending
-                    ? SortDirection.ascending
-                    : SortDirection.descending)
+                      ? SortDirection.ascending
+                      : SortDirection.descending)
                 : defaultDirection(value);
             onApplySort(value, newDirection);
             Navigator.pop(context);

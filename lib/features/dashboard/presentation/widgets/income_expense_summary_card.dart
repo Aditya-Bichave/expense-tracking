@@ -20,7 +20,9 @@ class IncomeExpenseSummaryCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8.0), // Add vertical margin
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: 16.0, vertical: 20.0), // Increase vertical padding
+          horizontal: 16.0,
+          vertical: 20.0,
+        ), // Increase vertical padding
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -77,8 +79,9 @@ class IncomeExpenseSummaryCard extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 title,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),

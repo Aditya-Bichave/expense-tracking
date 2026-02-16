@@ -30,37 +30,51 @@ class RecentTransactionsSection extends StatelessWidget {
 
     if (transactionState.status == ListStatus.success ||
         transactionState.status == ListStatus.reloading) {
-      recentItems =
-          transactionState.transactions.take(5).toList(); // Show latest 5
+      recentItems = transactionState.transactions
+          .take(5)
+          .toList(); // Show latest 5
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(
-            title: 'Recent Activity',
-            padding: EdgeInsets.fromLTRB(16, 24, 16, 8)),
+          title: 'Recent Activity',
+          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+        ),
         if (isLoading && recentItems.isEmpty)
           const Center(
-              child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24.0),
-                  child: CircularProgressIndicator(strokeWidth: 2)))
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24.0),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          )
         else if (errorMsg != null && recentItems.isEmpty)
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 16.0,
+            ),
             child: Center(
-                child: Text("Error loading recent: $errorMsg",
-                    style: TextStyle(color: theme.colorScheme.error),
-                    textAlign: TextAlign.center)),
+              child: Text(
+                "Error loading recent: $errorMsg",
+                style: TextStyle(color: theme.colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+            ),
           )
         else if (recentItems.isEmpty)
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 24.0,
+            ),
             child: Center(
-                child: Text("No transactions recorded yet.",
-                    style: theme.textTheme.bodyMedium)),
+              child: Text(
+                "No transactions recorded yet.",
+                style: theme.textTheme.bodyMedium,
+              ),
+            ),
           )
         else
           ListView.builder(

@@ -95,12 +95,15 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
 
       String decryptedJsonString;
       try {
-        decryptedJsonString =
-            EncryptionHelper.decryptString(payload, params.password);
+        decryptedJsonString = EncryptionHelper.decryptString(
+          payload,
+          params.password,
+        );
       } catch (e) {
         log.warning("[RestoreUseCase] Decryption failed: $e");
         return const Left(
-            RestoreFailure("Incorrect password or corrupted backup."));
+          RestoreFailure("Incorrect password or corrupted backup."),
+        );
       }
 
       Map<String, dynamic> decodedJson;
@@ -109,7 +112,8 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
       } catch (e) {
         log.warning("[RestoreUseCase] Decrypted JSON decoding error: $e");
         return const Left(
-            RestoreFailure("Invalid decrypted backup structure."));
+          RestoreFailure("Invalid decrypted backup structure."),
+        );
       }
       log.info("[RestoreUseCase] JSON decoded.");
 

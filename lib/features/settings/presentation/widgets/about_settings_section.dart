@@ -35,15 +35,19 @@ class AboutSettingsSection extends StatelessWidget {
           subtitle: state.packageInfoStatus == PackageInfoStatus.loading
               ? 'Loading version...'
               : state.packageInfoStatus == PackageInfoStatus.error
-                  ? state.packageInfoError ?? 'Error loading version'
-                  : state.appVersion ?? 'N/A',
-          trailing: Icon(Icons.chevron_right,
-              color: isLoading
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
+              ? state.packageInfoError ?? 'Error loading version'
+              : state.appVersion ?? 'N/A',
+          trailing: Icon(
+            Icons.chevron_right,
+            color: isLoading
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
           onTap: isLoading
               ? null
-              : () {/* TODO: Navigate to a dedicated About screen if needed */},
+              : () {
+                  /* TODO: Navigate to a dedicated About screen if needed */
+                },
         ),
         // Optional Logout
         SettingsListTile(
@@ -53,12 +57,14 @@ class AboutSettingsSection extends StatelessWidget {
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
               : null, // Explain why disabled
-          onTap: !isEnabled // Use combined state
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () {
                   log.warning("Logout functionality not implemented.");
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Logout (Not Implemented)")));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Logout (Not Implemented)")),
+                  );
                 },
         ),
       ],

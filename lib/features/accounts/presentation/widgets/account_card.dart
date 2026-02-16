@@ -12,28 +12,24 @@ class AccountCard extends StatelessWidget {
   final AssetAccount account;
   final VoidCallback? onTap;
 
-  const AccountCard({
-    super.key,
-    required this.account,
-    this.onTap,
-  });
+  const AccountCard({super.key, required this.account, this.onTap});
 
   // _buildIcon helper remains the same as previous refactor...
   Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
     final theme = Theme.of(context);
     IconData defaultIconData = account.iconData; // Get fallback from entity
     String? svgPath;
-    String accountTypeKey =
-        account.type.name.toLowerCase(); // Use enum name as key
+    String accountTypeKey = account.type.name
+        .toLowerCase(); // Use enum name as key
 
     if (modeTheme != null) {
       // Try to get SVG path from theme extension based on account type name
       svgPath = modeTheme.assets.getCategoryIcon(
-          // Using category map for account types too
-          accountTypeKey,
-          defaultPath:
-              '' // No default SVG path needed here, will fallback to IconData
-          );
+        // Using category map for account types too
+        accountTypeKey,
+        defaultPath:
+            '', // No default SVG path needed here, will fallback to IconData
+      );
       if (svgPath.isEmpty) svgPath = null;
     }
 
@@ -43,8 +39,9 @@ class AccountCard extends StatelessWidget {
         width: 24,
         height: 24,
         colorFilter: ColorFilter.mode(
-            theme.colorScheme.onSecondaryContainer, // Use themed color
-            BlendMode.srcIn),
+          theme.colorScheme.onSecondaryContainer, // Use themed color
+          BlendMode.srcIn,
+        ),
       );
     } else {
       // Fallback to Material Icon defined in AssetAccount entity
@@ -81,22 +78,29 @@ class AccountCard extends StatelessWidget {
             child: _buildIcon(context, modeTheme),
           ),
           SizedBox(
-              width: modeTheme?.listItemPadding.left ?? 16), // Themed spacing
+            width: modeTheme?.listItemPadding.left ?? 16,
+          ), // Themed spacing
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(account.name,
-                    style: theme.textTheme.titleMedium,
-                    overflow: TextOverflow.ellipsis),
-                Text(account.typeName, // Display type name from entity
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                Text(
+                  account.name,
+                  style: theme.textTheme.titleMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  account.typeName, // Display type name from entity
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
           SizedBox(
-              width: modeTheme?.listItemPadding.right ?? 16), // Themed spacing
+            width: modeTheme?.listItemPadding.right ?? 16,
+          ), // Themed spacing
           // Animate balance color change
           AnimatedDefaultTextStyle(
             duration:
@@ -105,8 +109,9 @@ class AccountCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: balanceColor,
             ),
-            child: Text(CurrencyFormatter.format(
-                account.currentBalance, currencySymbol)),
+            child: Text(
+              CurrencyFormatter.format(account.currentBalance, currencySymbol),
+            ),
           ),
         ],
       ),

@@ -49,12 +49,15 @@ class TransactionCalendarView extends StatelessWidget {
     if (state.status == ListStatus.error &&
         currentTransactionsForCalendar.isEmpty) {
       return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                  "Error loading data for calendar: ${state.errorMessage}",
-                  style: TextStyle(color: theme.colorScheme.error),
-                  textAlign: TextAlign.center)));
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            "Error loading data for calendar: ${state.errorMessage}",
+            style: TextStyle(color: theme.colorScheme.error),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
     }
 
     return Column(
@@ -73,18 +76,24 @@ class TransactionCalendarView extends StatelessWidget {
           eventLoader: (day) => getEventsForDay(day),
           calendarStyle: CalendarStyle(
             todayDecoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.3),
-                shape: BoxShape.circle),
+              color: theme.colorScheme.primary.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
             selectedDecoration: BoxDecoration(
-                color: theme.colorScheme.primary, shape: BoxShape.circle),
+              color: theme.colorScheme.primary,
+              shape: BoxShape.circle,
+            ),
             markerDecoration: BoxDecoration(
-                color: theme.colorScheme.secondary, shape: BoxShape.circle),
+              color: theme.colorScheme.secondary,
+              shape: BoxShape.circle,
+            ),
             outsideDaysVisible: false,
             markersMaxCount: 1,
             markerSize: 5.0,
             markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
-            weekendTextStyle:
-                TextStyle(color: theme.colorScheme.onSurface.withOpacity(0.7)),
+            weekendTextStyle: TextStyle(
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+            ),
             selectedTextStyle: TextStyle(color: theme.colorScheme.onPrimary),
             todayTextStyle: TextStyle(color: theme.colorScheme.primary),
           ),
@@ -92,17 +101,24 @@ class TransactionCalendarView extends StatelessWidget {
             formatButtonVisible: true,
             titleCentered: true,
             titleTextStyle: theme.textTheme.titleMedium!,
-            formatButtonTextStyle:
-                TextStyle(color: theme.colorScheme.primary, fontSize: 12),
+            formatButtonTextStyle: TextStyle(
+              color: theme.colorScheme.primary,
+              fontSize: 12,
+            ),
             formatButtonDecoration: BoxDecoration(
-              border:
-                  Border.all(color: theme.colorScheme.primary.withOpacity(0.5)),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.5),
+              ),
               borderRadius: BorderRadius.circular(12.0),
             ),
-            leftChevronIcon:
-                Icon(Icons.chevron_left, color: theme.colorScheme.primary),
-            rightChevronIcon:
-                Icon(Icons.chevron_right, color: theme.colorScheme.primary),
+            leftChevronIcon: Icon(
+              Icons.chevron_left,
+              color: theme.colorScheme.primary,
+            ),
+            rightChevronIcon: Icon(
+              Icons.chevron_right,
+              color: theme.colorScheme.primary,
+            ),
           ),
           onDaySelected: onDaySelected,
           onFormatChanged: onFormatChanged,
@@ -117,31 +133,33 @@ class TransactionCalendarView extends StatelessWidget {
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: theme.colorScheme.secondary),
+                    shape: BoxShape.circle,
+                    color: theme.colorScheme.secondary,
+                  ),
                 ),
               );
             },
           ),
         ),
         const Divider(height: 1, thickness: 1),
-        Expanded(
-          child: _buildSelectedDayTransactionList(context, settings),
-        ),
+        Expanded(child: _buildSelectedDayTransactionList(context, settings)),
       ],
     );
   }
 
   Widget _buildSelectedDayTransactionList(
-      BuildContext context, SettingsState settings) {
+    BuildContext context,
+    SettingsState settings,
+  ) {
     final theme = Theme.of(context);
     if (selectedDayTransactions.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 40.0),
           child: Text(
-              "No transactions on ${DateFormatter.formatDate(selectedDay ?? focusedDay)}.",
-              style: theme.textTheme.bodyMedium),
+            "No transactions on ${DateFormatter.formatDate(selectedDay ?? focusedDay)}.",
+            style: theme.textTheme.bodyMedium,
+          ),
         ),
       );
     }
@@ -152,10 +170,10 @@ class TransactionCalendarView extends StatelessWidget {
       itemBuilder: (ctx, index) {
         final transaction = selectedDayTransactions[index];
         return TransactionListItem(
-          transaction: transaction,
-          currencySymbol: settings.currencySymbol,
-          onTap: () => navigateToDetailOrEdit(context, transaction),
-        )
+              transaction: transaction,
+              currencySymbol: settings.currencySymbol,
+              onTap: () => navigateToDetailOrEdit(context, transaction),
+            )
             .animate()
             .fadeIn(delay: (50 * index).ms, duration: 300.ms)
             .slideX(begin: 0.2, curve: Curves.easeOutCubic);

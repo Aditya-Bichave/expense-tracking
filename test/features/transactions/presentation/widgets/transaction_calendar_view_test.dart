@@ -16,7 +16,9 @@ class MockCallbacks extends Mock {
   void onFormatChanged(CalendarFormat format);
   void onPageChanged(DateTime focusedDay);
   void navigateToDetailOrEdit(
-      BuildContext context, TransactionEntity transaction);
+    BuildContext context,
+    TransactionEntity transaction,
+  );
 }
 
 void main() {
@@ -24,18 +26,20 @@ void main() {
   final testDay = DateTime.now();
   final mockTransactions = [
     TransactionEntity(
-        id: '1',
-        title: 'Transaction 1',
-        amount: 10,
-        date: testDay,
-        type: TransactionType.expense),
+      id: '1',
+      title: 'Transaction 1',
+      amount: 10,
+      date: testDay,
+      type: TransactionType.expense,
+    ),
   ];
 
   setUp(() {
     mockCallbacks = MockCallbacks();
     when(() => mockCallbacks.getEventsForDay(any())).thenReturn([]);
-    when(() => mockCallbacks.getEventsForDay(testDay))
-        .thenReturn(mockTransactions);
+    when(
+      () => mockCallbacks.getEventsForDay(testDay),
+    ).thenReturn(mockTransactions);
   });
 
   Widget buildTestWidget({
@@ -58,19 +62,22 @@ void main() {
   }
 
   group('TransactionCalendarView', () {
-    testWidgets('renders TableCalendar and list of transactions',
-        (tester) async {
+    testWidgets('renders TableCalendar and list of transactions', (
+      tester,
+    ) async {
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(selectedDayTransactions: mockTransactions));
+        tester: tester,
+        widget: buildTestWidget(selectedDayTransactions: mockTransactions),
+      );
 
       expect(find.byWidgetPredicate((w) => w is TableCalendar), findsOneWidget);
       expect(find.byType(ListView), findsOneWidget);
       expect(find.byType(TransactionListItem), findsOneWidget);
     });
 
-    testWidgets('shows empty message when no transactions on selected day',
-        (tester) async {
+    testWidgets('shows empty message when no transactions on selected day', (
+      tester,
+    ) async {
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
       expect(find.textContaining('No transactions on'), findsOneWidget);
@@ -85,18 +92,23 @@ void main() {
       verify(() => mockCallbacks.onDaySelected(any(), any())).called(1);
     });
 
-    testWidgets('calls navigateToDetailOrEdit when a transaction is tapped',
-        (tester) async {
-      when(() => mockCallbacks.navigateToDetailOrEdit(any(), any()))
-          .thenAnswer((_) {});
+    testWidgets('calls navigateToDetailOrEdit when a transaction is tapped', (
+      tester,
+    ) async {
+      when(
+        () => mockCallbacks.navigateToDetailOrEdit(any(), any()),
+      ).thenAnswer((_) {});
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(selectedDayTransactions: mockTransactions));
+        tester: tester,
+        widget: buildTestWidget(selectedDayTransactions: mockTransactions),
+      );
 
       await tester.tap(find.byType(TransactionListItem));
 
-      verify(() => mockCallbacks.navigateToDetailOrEdit(
-          any(), mockTransactions.first)).called(1);
+      verify(
+        () =>
+            mockCallbacks.navigateToDetailOrEdit(any(), mockTransactions.first),
+      ).called(1);
     });
   });
 }

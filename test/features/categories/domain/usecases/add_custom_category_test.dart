@@ -32,27 +32,34 @@ void main() {
     isCustom: true,
   );
 
-  test('should return validation failure when category with same name exists',
-      () async {
-    // Arrange
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => const Right([tCategory]));
-    const params = AddCustomCategoryParams(
-      name: 'Test',
-      iconName: 'icon',
-      colorHex: '#ffffff',
-      type: CategoryType.expense,
-    );
+  test(
+    'should return validation failure when category with same name exists',
+    () async {
+      // Arrange
+      when(
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => const Right([tCategory]));
+      const params = AddCustomCategoryParams(
+        name: 'Test',
+        iconName: 'icon',
+        colorHex: '#ffffff',
+        type: CategoryType.expense,
+      );
 
-    // Act
-    final result = await usecase(params);
+      // Act
+      final result = await usecase(params);
 
-    // Assert
-    expect(
+      // Assert
+      expect(
         result,
-        const Left(ValidationFailure(
-            'A category with this name already exists in the selected category group.')));
-    verify(() => mockCategoryRepository.getAllCategories()).called(1);
-    verifyNoMoreInteractions(mockCategoryRepository);
-  });
+        const Left(
+          ValidationFailure(
+            'A category with this name already exists in the selected category group.',
+          ),
+        ),
+      );
+      verify(() => mockCategoryRepository.getAllCategories()).called(1);
+      verifyNoMoreInteractions(mockCategoryRepository);
+    },
+  );
 }

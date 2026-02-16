@@ -47,65 +47,81 @@ class TransactionListView extends StatelessWidget {
     }
     if (state.status == ListStatus.error && state.transactions.isEmpty) {
       return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                  "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
-                  style: TextStyle(color: theme.colorScheme.error),
-                  textAlign: TextAlign.center)));
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
+            style: TextStyle(color: theme.colorScheme.error),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
     }
     if (state.transactions.isEmpty &&
         state.status != ListStatus.loading &&
         state.status != ListStatus.reloading) {
       return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(30.0),
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.receipt_long_outlined,
-                        size: 60,
-                        color: theme.colorScheme.secondary.withOpacity(0.7)),
-                    const SizedBox(height: 16),
-                    Text(
-                        state.filtersApplied
-                            ? "No transactions match filters"
-                            : "No transactions recorded yet",
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(color: theme.colorScheme.secondary)),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.filtersApplied
-                          ? "Try adjusting or clearing the filters."
-                          : "Tap the '+' button to add your first expense or income.",
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                      textAlign: TextAlign.center,
+        child: Padding(
+          padding: const EdgeInsets.all(30.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.receipt_long_outlined,
+                size: 60,
+                color: theme.colorScheme.secondary.withOpacity(0.7),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                state.filtersApplied
+                    ? "No transactions match filters"
+                    : "No transactions recorded yet",
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: theme.colorScheme.secondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                state.filtersApplied
+                    ? "Try adjusting or clearing the filters."
+                    : "Tap the '+' button to add your first expense or income.",
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              if (!state
+                  .filtersApplied) // Show add button only if no filters applied
+                ElevatedButton.icon(
+                  key: const ValueKey('button_listView_addFirst'),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add First Transaction'),
+                  onPressed: () => context.pushNamed(RouteNames.addTransaction),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
                     ),
-                    const SizedBox(height: 24),
-                    if (!state
-                        .filtersApplied) // Show add button only if no filters applied
-                      ElevatedButton.icon(
-                        key: const ValueKey('button_listView_addFirst'),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add First Transaction'),
-                        onPressed: () =>
-                            context.pushNamed(RouteNames.addTransaction),
-                        style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12)),
-                      )
-                  ])));
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
     }
 
     return ListView.builder(
-      padding:
-          const EdgeInsets.only(top: 0, bottom: 80), // Ensure padding for FAB
+      padding: const EdgeInsets.only(
+        top: 0,
+        bottom: 80,
+      ), // Ensure padding for FAB
       itemCount: state.transactions.length,
       itemBuilder: (ctx, index) {
         final transaction = state.transactions[index];
-        final isSelected =
-            state.selectedTransactionIds.contains(transaction.id);
+        final isSelected = state.selectedTransactionIds.contains(
+          transaction.id,
+        );
 
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
@@ -115,25 +131,31 @@ class TransactionListView extends StatelessWidget {
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
-                context
-                    .read<TransactionListBloc>()
-                    .add(SelectTransaction(exp.id));
+                context.read<TransactionListBloc>().add(
+                  SelectTransaction(exp.id),
+                );
               } else {
                 navigateToDetailOrEdit(
-                    context, transaction); // Pass the TransactionEntity
+                  context,
+                  transaction,
+                ); // Pass the TransactionEntity
               }
             },
             onChangeCategoryRequest: (exp) =>
                 handleChangeCategoryRequest(context, transaction),
             onUserCategorized: (exp, cat) {
               final matchData = TransactionMatchData(
-                  description: exp.title, merchantId: null);
+                description: exp.title,
+                merchantId: null,
+              );
               context.read<TransactionListBloc>().add(
-                  UserCategorizedTransaction(
-                      transactionId: exp.id,
-                      transactionType: TransactionType.expense,
-                      selectedCategory: cat,
-                      matchData: matchData));
+                UserCategorizedTransaction(
+                  transactionId: exp.id,
+                  transactionType: TransactionType.expense,
+                  selectedCategory: cat,
+                  matchData: matchData,
+                ),
+              );
             },
           );
         } else {
@@ -143,25 +165,31 @@ class TransactionListView extends StatelessWidget {
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {
-                context
-                    .read<TransactionListBloc>()
-                    .add(SelectTransaction(inc.id));
+                context.read<TransactionListBloc>().add(
+                  SelectTransaction(inc.id),
+                );
               } else {
                 navigateToDetailOrEdit(
-                    context, transaction); // Pass the TransactionEntity
+                  context,
+                  transaction,
+                ); // Pass the TransactionEntity
               }
             },
             onChangeCategoryRequest: (inc) =>
                 handleChangeCategoryRequest(context, transaction),
             onUserCategorized: (inc, cat) {
               final matchData = TransactionMatchData(
-                  description: inc.title, merchantId: null);
+                description: inc.title,
+                merchantId: null,
+              );
               context.read<TransactionListBloc>().add(
-                  UserCategorizedTransaction(
-                      transactionId: inc.id,
-                      transactionType: TransactionType.income,
-                      selectedCategory: cat,
-                      matchData: matchData));
+                UserCategorizedTransaction(
+                  transactionId: inc.id,
+                  transactionType: TransactionType.income,
+                  selectedCategory: cat,
+                  matchData: matchData,
+                ),
+              );
             },
           );
         }
@@ -169,20 +197,23 @@ class TransactionListView extends StatelessWidget {
 
         final animatedCard = enableAnimations
             ? cardItem
-                .animate()
-                .fadeIn(delay: (20 * index).ms)
-                .slideY(begin: 0.1)
+                  .animate()
+                  .fadeIn(delay: (20 * index).ms)
+                  .slideY(begin: 0.1)
             : cardItem;
 
         return Dismissible(
           key: Key("${transaction.id}_dismissible"), // More specific key
           direction: DismissDirection.endToStart,
           background: Container(
-              color: theme.colorScheme.errorContainer,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Icon(Icons.delete_sweep_outlined,
-                  color: theme.colorScheme.onErrorContainer)),
+            color: theme.colorScheme.errorContainer,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Icon(
+              Icons.delete_sweep_outlined,
+              color: theme.colorScheme.onErrorContainer,
+            ),
+          ),
           confirmDismiss: (_) async =>
               await confirmDeletion(context, transaction),
           onDismissed: (direction) {

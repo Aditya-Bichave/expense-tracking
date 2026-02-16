@@ -42,7 +42,8 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
     try {
       final customCategories = categoryBox.values.toList();
       log.info(
-          "Retrieved ${customCategories.length} custom categories from Hive.");
+        "Retrieved ${customCategories.length} custom categories from Hive.",
+      );
       return customCategories;
     } catch (e, s) {
       log.severe("Failed to get custom categories from cache$e$s");
@@ -54,16 +55,19 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
   Future<void> saveCustomCategory(CategoryModel category) async {
     if (!category.isCustom) {
       log.warning(
-          "Attempted to save a non-custom category via local source. ID: ${category.id}");
+        "Attempted to save a non-custom category via local source. ID: ${category.id}",
+      );
       return;
     }
     try {
       await categoryBox.put(category.id, category);
       log.info(
-          "Saved custom category '${category.name}' (ID: ${category.id}) to Hive.");
+        "Saved custom category '${category.name}' (ID: ${category.id}) to Hive.",
+      );
     } catch (e, s) {
       log.severe(
-          "Failed to save custom category '${category.name}' to cache$e$s");
+        "Failed to save custom category '${category.name}' to cache$e$s",
+      );
       throw CacheFailure('Failed to save category: ${e.toString()}');
     }
   }
@@ -72,22 +76,27 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
   Future<void> updateCustomCategory(CategoryModel category) async {
     if (!category.isCustom) {
       log.warning(
-          "Attempted to update a non-custom category via local source. ID: ${category.id}");
+        "Attempted to update a non-custom category via local source. ID: ${category.id}",
+      );
       return;
     }
     if (!categoryBox.containsKey(category.id)) {
       log.warning(
-          "Attempted to update non-existent custom category ID: ${category.id}");
+        "Attempted to update non-existent custom category ID: ${category.id}",
+      );
       throw CacheFailure(
-          "Category with ID ${category.id} not found for update.");
+        "Category with ID ${category.id} not found for update.",
+      );
     }
     try {
       await categoryBox.put(category.id, category);
       log.info(
-          "Updated custom category '${category.name}' (ID: ${category.id}) in Hive.");
+        "Updated custom category '${category.name}' (ID: ${category.id}) in Hive.",
+      );
     } catch (e, s) {
       log.severe(
-          "Failed to update custom category '${category.name}' in cache$e$s");
+        "Failed to update custom category '${category.name}' in cache$e$s",
+      );
       throw CacheFailure('Failed to update category: ${e.toString()}');
     }
   }

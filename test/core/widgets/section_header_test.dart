@@ -39,10 +39,7 @@ void main() {
       const customPadding = EdgeInsets.all(30);
       await pumpWidgetWithProviders(
         tester: tester,
-        widget: const SectionHeader(
-          title: 'Test',
-          padding: customPadding,
-        ),
+        widget: const SectionHeader(title: 'Test', padding: customPadding),
       );
 
       // ACT

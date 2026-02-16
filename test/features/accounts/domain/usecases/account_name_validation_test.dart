@@ -41,7 +41,8 @@ void main() {
     expect(
       result,
       equals(
-          const Left(ValidationFailure('Account name must be alphanumeric.'))),
+        const Left(ValidationFailure('Account name must be alphanumeric.')),
+      ),
     );
     verifyZeroInteractions(repository);
   });
@@ -54,14 +55,16 @@ void main() {
     expect(
       result,
       equals(
-          const Left(ValidationFailure('Account name must be alphanumeric.'))),
+        const Left(ValidationFailure('Account name must be alphanumeric.')),
+      ),
     );
     verifyZeroInteractions(repository);
   });
 
   test('AddAssetAccountUseCase succeeds for valid name', () async {
-    when(() => repository.addAssetAccount(validAccount))
-        .thenAnswer((_) async => const Right(validAccount));
+    when(
+      () => repository.addAssetAccount(validAccount),
+    ).thenAnswer((_) async => const Right(validAccount));
 
     final result = await addUseCase(AddAssetAccountParams(validAccount));
 
@@ -70,12 +73,11 @@ void main() {
   });
 
   test('UpdateAssetAccountUseCase succeeds for valid name', () async {
-    when(() => repository.updateAssetAccount(validAccount))
-        .thenAnswer((_) async => const Right(validAccount));
+    when(
+      () => repository.updateAssetAccount(validAccount),
+    ).thenAnswer((_) async => const Right(validAccount));
 
-    final result = await updateUseCase(
-      UpdateAssetAccountParams(validAccount),
-    );
+    final result = await updateUseCase(UpdateAssetAccountParams(validAccount));
 
     expect(result, equals(const Right(validAccount)));
     verify(() => repository.updateAssetAccount(validAccount)).called(1);

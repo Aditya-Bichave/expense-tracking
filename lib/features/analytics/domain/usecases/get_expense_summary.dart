@@ -15,7 +15,8 @@ class GetExpenseSummaryUseCase
   @override
   Future<Either<Failure, ExpenseSummary>> call(GetSummaryParams params) async {
     log.info(
-        "Executing GetExpenseSummaryUseCase. Start: ${params.startDate}, End: ${params.endDate}");
+      "Executing GetExpenseSummaryUseCase. Start: ${params.startDate}, End: ${params.endDate}",
+    );
     // The summary logic is inside ExpenseRepositoryImpl
     final result = await repository.getExpenseSummary(
       startDate: params.startDate,
@@ -25,7 +26,8 @@ class GetExpenseSummaryUseCase
       (failure) =>
           log.warning("[GetExpenseSummaryUseCase] Failed: ${failure.message}"),
       (summary) => log.info(
-          "[GetExpenseSummaryUseCase] Succeeded. Total: ${summary.totalExpenses}, Categories: ${summary.categoryBreakdown.length}"),
+        "[GetExpenseSummaryUseCase] Succeeded. Total: ${summary.totalExpenses}, Categories: ${summary.categoryBreakdown.length}",
+      ),
     );
     return result;
   }

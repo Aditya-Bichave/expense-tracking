@@ -23,8 +23,10 @@ void main() {
     test('formatDateTime should handle different locales', () {
       final dateTime = DateTime(2023, 1, 15, 14, 30);
       const expected = '15 janv. 2023, 14:30';
-      expect(DateFormatter.formatDateTime(dateTime, locale: 'fr'),
-          isNot(expected));
+      expect(
+        DateFormatter.formatDateTime(dateTime, locale: 'fr'),
+        isNot(expected),
+      );
     });
   });
 }

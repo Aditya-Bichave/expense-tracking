@@ -121,7 +121,9 @@ void registerFallbackValues() {
 // --- Mock Registration Functions ---
 
 Future<void> _register<T extends Object>(
-    GetIt getIt, T Function() factory) async {
+  GetIt getIt,
+  T Function() factory,
+) async {
   if (getIt.isRegistered<T>()) {
     await getIt.unregister<T>();
   }
@@ -131,7 +133,9 @@ Future<void> _register<T extends Object>(
 // Registers mocks needed for the Accounts feature
 Future<void> registerAccountsMocks(GetIt getIt) async {
   await _register<AssetAccountRepository>(
-      getIt, () => MockAssetAccountRepository());
+    getIt,
+    () => MockAssetAccountRepository(),
+  );
 }
 
 // Registers mocks needed for the Budgets feature
@@ -143,9 +147,13 @@ Future<void> registerBudgetsMocks(GetIt getIt) async {
 Future<void> registerCategoriesMocks(GetIt getIt) async {
   await _register<CategoryRepository>(getIt, () => MockCategoryRepository());
   await _register<MerchantCategoryRepository>(
-      getIt, () => MockMerchantCategoryRepository());
+    getIt,
+    () => MockMerchantCategoryRepository(),
+  );
   await _register<UserHistoryRepository>(
-      getIt, () => MockUserHistoryRepository());
+    getIt,
+    () => MockUserHistoryRepository(),
+  );
 }
 
 // Registers mocks needed for the Transactions (Expense/Income) features
@@ -158,13 +166,17 @@ Future<void> registerTransactionsMocks(GetIt getIt) async {
 Future<void> registerGoalsMocks(GetIt getIt) async {
   await _register<GoalRepository>(getIt, () => MockGoalRepository());
   await _register<GoalContributionRepository>(
-      getIt, () => MockGoalContributionRepository());
+    getIt,
+    () => MockGoalContributionRepository(),
+  );
 }
 
 // Registers mocks needed for the Recurring Transactions feature
 Future<void> registerRecurringTransactionsMocks(GetIt getIt) async {
   await _register<RecurringTransactionRepository>(
-      getIt, () => MockRecurringTransactionRepository());
+    getIt,
+    () => MockRecurringTransactionRepository(),
+  );
 }
 
 // Registers mocks needed for the Reports feature
@@ -176,5 +188,7 @@ Future<void> registerReportsMocks(GetIt getIt) async {
 Future<void> registerSettingsMocks(GetIt getIt) async {
   await _register<SettingsRepository>(getIt, () => MockSettingsRepository());
   await _register<DataManagementRepository>(
-      getIt, () => MockDataManagementRepository());
+    getIt,
+    () => MockDataManagementRepository(),
+  );
 }

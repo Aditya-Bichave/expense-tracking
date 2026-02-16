@@ -39,14 +39,19 @@ class AetherConfig implements IThemePaletteConfig {
   final Color? expenseGlowColorDark;
   // Aether specific overrides for new properties (optional)
   final EdgeInsets? pagePadding = const EdgeInsets.only(
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 16); // No top padding if AppBar is transparent/gone
-  final EdgeInsets? cardOuterPadding =
-      const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0);
-  final EdgeInsets? cardInnerPadding =
-      const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0);
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 16,
+  ); // No top padding if AppBar is transparent/gone
+  final EdgeInsets? cardOuterPadding = const EdgeInsets.symmetric(
+    horizontal: 16.0,
+    vertical: 10.0,
+  );
+  final EdgeInsets? cardInnerPadding = const EdgeInsets.symmetric(
+    horizontal: 20.0,
+    vertical: 16.0,
+  );
   final Duration? mediumDuration = const Duration(milliseconds: 450);
   final Duration? listAnimationDelay = const Duration(milliseconds: 80);
 
@@ -70,7 +75,8 @@ abstract class AetherConfigs {
   // Base assets definition using AssetKeys
   static const _baseAssets = ThemeAssetPaths(
     // Backgrounds handled per-palette
-    divider: null, focusRing: null, // No common SVGs
+    divider: null,
+    focusRing: null, // No common SVGs
     commonIcons: {
       AssetKeys.iconAdd: AppAssets.aeComIconAdd,
       AssetKeys.iconSettings: AppAssets.aeComIconSettings,
@@ -202,10 +208,12 @@ abstract class AetherConfigs {
   static final Map<String, AetherConfig> palettes = {
     AppTheme.aetherPalette1: AetherConfig(
       paletteIdentifier: AppTheme.aetherPalette1,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p1Assets,
       darkAssets: _p1Assets,
       incomeGlowColorLight: const Color(0xAA00BFA5),
@@ -216,10 +224,12 @@ abstract class AetherConfigs {
     AppTheme.aetherPalette2: AetherConfig(
       /* ... Garden ... */
       paletteIdentifier: AppTheme.aetherPalette2,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p2Assets,
       darkAssets: _p2Assets,
       incomeGlowColorLight: const Color(0xAA00BFA5),
@@ -230,10 +240,12 @@ abstract class AetherConfigs {
     AppTheme.aetherPalette3: AetherConfig(
       /* ... Mystic ... */
       paletteIdentifier: AppTheme.aetherPalette3,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p3Assets,
       darkAssets: _p3Assets,
       incomeGlowColorLight: const Color(0xAA00BFA5),
@@ -244,10 +256,12 @@ abstract class AetherConfigs {
     AppTheme.aetherPalette4: AetherConfig(
       /* ... Calm Sky ... */
       paletteIdentifier: AppTheme.aetherPalette4,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p4Assets,
       darkAssets: _p4Assets,
       incomeGlowColorLight: const Color(0xAA26A69A),

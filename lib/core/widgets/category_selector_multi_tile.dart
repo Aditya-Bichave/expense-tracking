@@ -102,7 +102,7 @@ class CategorySelectorMultiTile extends StatelessWidget {
     final borderConfig = theme.inputDecorationTheme.enabledBorder;
     BorderSide borderSide =
         theme.inputDecorationTheme.enabledBorder?.borderSide ??
-            BorderSide(color: theme.dividerColor);
+        BorderSide(color: theme.dividerColor);
     if (hasError) {
       final errorBorderConfig = theme.inputDecorationTheme.errorBorder;
       if (errorBorderConfig is OutlineInputBorder) {

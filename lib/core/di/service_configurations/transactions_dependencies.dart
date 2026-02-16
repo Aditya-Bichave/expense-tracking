@@ -8,37 +8,43 @@ import 'package:expense_tracker/features/transactions/presentation/bloc/transact
 class TransactionsDependencies {
   static void register() {
     // Use Cases (List/Hydration)
-    sl.registerLazySingleton(() => GetTransactionsUseCase(
-          expenseRepository: sl(),
-          incomeRepository: sl(),
-          categoryRepository: sl(),
-        ));
+    sl.registerLazySingleton(
+      () => GetTransactionsUseCase(
+        expenseRepository: sl(),
+        incomeRepository: sl(),
+        categoryRepository: sl(),
+      ),
+    );
 
     // Blocs
-    sl.registerFactory(() => TransactionListBloc(
-          getTransactionsUseCase: sl(),
-          deleteExpenseUseCase: sl(), // Assumes ExpensesDependencies registered
-          deleteIncomeUseCase: sl(), // Assumes IncomeDependencies registered
-          applyCategoryToBatchUseCase:
-              sl(), // Assumes CategoriesDependencies registered
-          saveUserHistoryUseCase:
-              sl(), // Assumes CategoriesDependencies registered
-          expenseRepository: sl(),
-          incomeRepository: sl(),
-          dataChangeStream: sl<Stream<DataChangedEvent>>(),
-        ));
+    sl.registerFactory(
+      () => TransactionListBloc(
+        getTransactionsUseCase: sl(),
+        deleteExpenseUseCase: sl(), // Assumes ExpensesDependencies registered
+        deleteIncomeUseCase: sl(), // Assumes IncomeDependencies registered
+        applyCategoryToBatchUseCase:
+            sl(), // Assumes CategoriesDependencies registered
+        saveUserHistoryUseCase:
+            sl(), // Assumes CategoriesDependencies registered
+        expenseRepository: sl(),
+        incomeRepository: sl(),
+        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+      ),
+    );
 
     // Add/Edit Bloc (Depends on multiple features)
-    sl.registerFactory<AddEditTransactionBloc>(() => AddEditTransactionBloc(
-          addExpenseUseCase: sl(),
-          updateExpenseUseCase: sl(),
-          addIncomeUseCase: sl(),
-          updateIncomeUseCase: sl(),
-          categorizeTransactionUseCase:
-              sl(), // Assumes CategoriesDependencies registered
-          expenseRepository: sl(),
-          incomeRepository: sl(),
-          categoryRepository: sl(), // Assumes CategoriesDependencies registered
-        ));
+    sl.registerFactory<AddEditTransactionBloc>(
+      () => AddEditTransactionBloc(
+        addExpenseUseCase: sl(),
+        updateExpenseUseCase: sl(),
+        addIncomeUseCase: sl(),
+        updateIncomeUseCase: sl(),
+        categorizeTransactionUseCase:
+            sl(), // Assumes CategoriesDependencies registered
+        expenseRepository: sl(),
+        incomeRepository: sl(),
+        categoryRepository: sl(), // Assumes CategoriesDependencies registered
+      ),
+    );
   }
 }

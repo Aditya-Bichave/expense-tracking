@@ -29,11 +29,11 @@ class CategoryManagementBloc
     required AddCustomCategoryUseCase addCustomCategoryUseCase,
     required UpdateCustomCategoryUseCase updateCustomCategoryUseCase,
     required DeleteCustomCategoryUseCase deleteCustomCategoryUseCase,
-  })  : _getCategoriesUseCase = getCategoriesUseCase,
-        _addCustomCategoryUseCase = addCustomCategoryUseCase,
-        _updateCustomCategoryUseCase = updateCustomCategoryUseCase,
-        _deleteCustomCategoryUseCase = deleteCustomCategoryUseCase,
-        super(const CategoryManagementState()) {
+  }) : _getCategoriesUseCase = getCategoriesUseCase,
+       _addCustomCategoryUseCase = addCustomCategoryUseCase,
+       _updateCustomCategoryUseCase = updateCustomCategoryUseCase,
+       _deleteCustomCategoryUseCase = deleteCustomCategoryUseCase,
+       super(const CategoryManagementState()) {
     on<LoadCategories>(_onLoadCategories);
     on<AddCategory>(_onAddCategory);
     on<UpdateCategory>(_onUpdateCategory);
@@ -46,25 +46,36 @@ class CategoryManagementBloc
   // --- Event Handlers ---
 
   Future<void> _onLoadCategories(
-      LoadCategories event, Emitter<CategoryManagementState> emit) async {
+    LoadCategories event,
+    Emitter<CategoryManagementState> emit,
+  ) async {
     log.info(
-        "[CategoryManagementBloc] Received LoadCategories event. ForceReload: ${event.forceReload}");
+      "[CategoryManagementBloc] Received LoadCategories event. ForceReload: ${event.forceReload}",
+    );
     if (state.status == CategoryManagementStatus.loaded && !event.forceReload) {
       log.info(
-          "[CategoryManagementBloc] Categories already loaded and not forced, skipping reload.");
+        "[CategoryManagementBloc] Categories already loaded and not forced, skipping reload.",
+      );
       return;
     }
-    emit(state.copyWith(
-        status: CategoryManagementStatus.loading, clearError: true));
+    emit(
+      state.copyWith(
+        status: CategoryManagementStatus.loading,
+        clearError: true,
+      ),
+    );
 
     final result = await _getCategoriesUseCase(const NoParams());
 
     result.fold(
       (failure) {
         log.warning("[CategoryManagementBloc] Load failed: ${failure.message}");
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             status: CategoryManagementStatus.error,
-            errorMessage: _mapFailureToMessage(failure)));
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
       },
       (allCategories) {
         final customExpense = allCategories
@@ -81,142 +92,222 @@ class CategoryManagementBloc
             .toList();
 
         customExpense.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         customIncome.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         predefinedExpense.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         predefinedIncome.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
 
         log.info(
-            "[CategoryManagementBloc] Load successful. CustomExp: ${customExpense.length}, CustomInc: ${customIncome.length}, PredefExp: ${predefinedExpense.length}, PredefInc: ${predefinedIncome.length}");
-        emit(state.copyWith(
-          status: CategoryManagementStatus.loaded,
-          customExpenseCategories: customExpense,
-          customIncomeCategories: customIncome,
-          predefinedExpenseCategories: predefinedExpense,
-          predefinedIncomeCategories: predefinedIncome,
-          clearError: true,
-        ));
+          "[CategoryManagementBloc] Load successful. CustomExp: ${customExpense.length}, CustomInc: ${customIncome.length}, PredefExp: ${predefinedExpense.length}, PredefInc: ${predefinedIncome.length}",
+        );
+        emit(
+          state.copyWith(
+            status: CategoryManagementStatus.loaded,
+            customExpenseCategories: customExpense,
+            customIncomeCategories: customIncome,
+            predefinedExpenseCategories: predefinedExpense,
+            predefinedIncomeCategories: predefinedIncome,
+            clearError: true,
+          ),
+        );
       },
     );
   }
 
   Future<void> _onAddCategory(
-      AddCategory event, Emitter<CategoryManagementState> emit) async {
+    AddCategory event,
+    Emitter<CategoryManagementState> emit,
+  ) async {
     log.info(
-        "[CategoryManagementBloc] Received AddCategory event: ${event.name}, Type: ${event.type.name}");
-    emit(state.copyWith(
-        status: CategoryManagementStatus.loading, clearError: true));
+      "[CategoryManagementBloc] Received AddCategory event: ${event.name}, Type: ${event.type.name}",
+    );
+    emit(
+      state.copyWith(
+        status: CategoryManagementStatus.loading,
+        clearError: true,
+      ),
+    );
 
     final params = AddCustomCategoryParams(
-        name: event.name,
-        iconName: event.iconName,
-        colorHex: event.colorHex,
-        type: event.type,
-        parentCategoryId: event.parentId);
+      name: event.name,
+      iconName: event.iconName,
+      colorHex: event.colorHex,
+      type: event.type,
+      parentCategoryId: event.parentId,
+    );
 
     final result = await _addCustomCategoryUseCase(params);
 
-    result.fold((failure) {
-      log.warning(
-          "[CategoryManagementBloc] AddCategory failed: ${failure.message}");
-      emit(state.copyWith(
-          status: CategoryManagementStatus.error,
-          errorMessage: _mapFailureToMessage(failure)));
-      // Revert status back to loaded after showing error
-      emit(state.copyWith(
-          status: CategoryManagementStatus.loaded,
-          clearError: true)); // Keep lists as they are
-    }, (_) {
-      log.info(
-          "[CategoryManagementBloc] AddCategory successful. Reloading categories and publishing event.");
-      add(const LoadCategories(forceReload: true)); // Reload list
-      publishDataChangedEvent(
-          type: DataChangeType.category, reason: DataChangeReason.added);
-    });
+    result.fold(
+      (failure) {
+        log.warning(
+          "[CategoryManagementBloc] AddCategory failed: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: CategoryManagementStatus.error,
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
+        // Revert status back to loaded after showing error
+        emit(
+          state.copyWith(
+            status: CategoryManagementStatus.loaded,
+            clearError: true,
+          ),
+        ); // Keep lists as they are
+      },
+      (_) {
+        log.info(
+          "[CategoryManagementBloc] AddCategory successful. Reloading categories and publishing event.",
+        );
+        add(const LoadCategories(forceReload: true)); // Reload list
+        publishDataChangedEvent(
+          type: DataChangeType.category,
+          reason: DataChangeReason.added,
+        );
+      },
+    );
   }
 
   Future<void> _onUpdateCategory(
-      UpdateCategory event, Emitter<CategoryManagementState> emit) async {
+    UpdateCategory event,
+    Emitter<CategoryManagementState> emit,
+  ) async {
     log.info(
-        "[CategoryManagementBloc] Received UpdateCategory event: ${event.category.name} (ID: ${event.category.id})");
-    emit(state.copyWith(
-        status: CategoryManagementStatus.loading, clearError: true));
+      "[CategoryManagementBloc] Received UpdateCategory event: ${event.category.name} (ID: ${event.category.id})",
+    );
+    emit(
+      state.copyWith(
+        status: CategoryManagementStatus.loading,
+        clearError: true,
+      ),
+    );
 
     final params = UpdateCustomCategoryParams(category: event.category);
     final result = await _updateCustomCategoryUseCase(params);
 
-    result.fold((failure) {
-      log.warning(
-          "[CategoryManagementBloc] UpdateCategory failed: ${failure.message}");
-      emit(state.copyWith(
-          status: CategoryManagementStatus.error,
-          errorMessage: _mapFailureToMessage(failure)));
-      emit(state.copyWith(
-          status: CategoryManagementStatus.loaded,
-          clearError: true)); // Keep lists
-    }, (_) {
-      log.info(
-          "[CategoryManagementBloc] UpdateCategory successful. Reloading categories and publishing event.");
-      add(const LoadCategories(forceReload: true));
-      publishDataChangedEvent(
-          type: DataChangeType.category, reason: DataChangeReason.updated);
-    });
+    result.fold(
+      (failure) {
+        log.warning(
+          "[CategoryManagementBloc] UpdateCategory failed: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: CategoryManagementStatus.error,
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
+        emit(
+          state.copyWith(
+            status: CategoryManagementStatus.loaded,
+            clearError: true,
+          ),
+        ); // Keep lists
+      },
+      (_) {
+        log.info(
+          "[CategoryManagementBloc] UpdateCategory successful. Reloading categories and publishing event.",
+        );
+        add(const LoadCategories(forceReload: true));
+        publishDataChangedEvent(
+          type: DataChangeType.category,
+          reason: DataChangeReason.updated,
+        );
+      },
+    );
   }
 
   Future<void> _onDeleteCategory(
-      DeleteCategory event, Emitter<CategoryManagementState> emit) async {
+    DeleteCategory event,
+    Emitter<CategoryManagementState> emit,
+  ) async {
     log.info(
-        "[CategoryManagementBloc] Received DeleteCategory event: ${event.categoryId}");
-    emit(state.copyWith(
-        status: CategoryManagementStatus.loading, clearError: true));
+      "[CategoryManagementBloc] Received DeleteCategory event: ${event.categoryId}",
+    );
+    emit(
+      state.copyWith(
+        status: CategoryManagementStatus.loading,
+        clearError: true,
+      ),
+    );
 
     // --- FIX: Call the uncategorized method ---
     // Determine fallback type based on the category being deleted (important!)
-    state.allExpenseCategories.firstWhere((c) => c.id == event.categoryId,
-        orElse: () => state.allIncomeCategories.firstWhere(
-            (c) => c.id == event.categoryId,
-            orElse: () => Category.uncategorized));
+    state.allExpenseCategories.firstWhere(
+      (c) => c.id == event.categoryId,
+      orElse: () => state.allIncomeCategories.firstWhere(
+        (c) => c.id == event.categoryId,
+        orElse: () => Category.uncategorized,
+      ),
+    );
     final fallbackId = Category.uncategorized.id;
     // --- END FIX ---
 
     final params = DeleteCustomCategoryParams(
-        categoryId: event.categoryId, fallbackCategoryId: fallbackId);
+      categoryId: event.categoryId,
+      fallbackCategoryId: fallbackId,
+    );
     final result = await _deleteCustomCategoryUseCase(params);
 
-    result.fold((failure) {
-      log.warning(
-          "[CategoryManagementBloc] DeleteCategory failed: ${failure.message}");
-      emit(state.copyWith(
-          status: CategoryManagementStatus.error,
-          errorMessage: _mapFailureToMessage(failure)));
-      emit(state.copyWith(
-          status: CategoryManagementStatus.loaded,
-          clearError: true)); // Keep lists
-    }, (_) {
-      log.info(
-          "[CategoryManagementBloc] DeleteCategory successful. Reloading categories and publishing events.");
-      add(const LoadCategories(forceReload: true));
-      publishDataChangedEvent(
-          type: DataChangeType.category, reason: DataChangeReason.deleted);
-      // Trigger updates for transactions too, as they might have been reassigned
-      publishDataChangedEvent(
-          type: DataChangeType.expense, reason: DataChangeReason.updated);
-      publishDataChangedEvent(
-          type: DataChangeType.income, reason: DataChangeReason.updated);
-    });
+    result.fold(
+      (failure) {
+        log.warning(
+          "[CategoryManagementBloc] DeleteCategory failed: ${failure.message}",
+        );
+        emit(
+          state.copyWith(
+            status: CategoryManagementStatus.error,
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
+        emit(
+          state.copyWith(
+            status: CategoryManagementStatus.loaded,
+            clearError: true,
+          ),
+        ); // Keep lists
+      },
+      (_) {
+        log.info(
+          "[CategoryManagementBloc] DeleteCategory successful. Reloading categories and publishing events.",
+        );
+        add(const LoadCategories(forceReload: true));
+        publishDataChangedEvent(
+          type: DataChangeType.category,
+          reason: DataChangeReason.deleted,
+        );
+        // Trigger updates for transactions too, as they might have been reassigned
+        publishDataChangedEvent(
+          type: DataChangeType.expense,
+          reason: DataChangeReason.updated,
+        );
+        publishDataChangedEvent(
+          type: DataChangeType.income,
+          reason: DataChangeReason.updated,
+        );
+      },
+    );
   }
 
   void _onClearCategoryMessages(
-      ClearCategoryMessages event, Emitter<CategoryManagementState> emit) {
+    ClearCategoryMessages event,
+    Emitter<CategoryManagementState> emit,
+  ) {
     emit(state.copyWith(clearError: true)); // Clears errorMessage
   }
 
   String _mapFailureToMessage(Failure failure) {
     log.warning(
-        "[CategoryManagementBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
+      "[CategoryManagementBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
+    );
     switch (failure.runtimeType) {
       case ValidationFailure:
         return failure.message;

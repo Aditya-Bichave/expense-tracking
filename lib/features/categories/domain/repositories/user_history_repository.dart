@@ -5,7 +5,9 @@ import 'package:expense_tracker/features/categories/domain/entities/user_history
 abstract class UserHistoryRepository {
   /// Finds a rule matching the type and matcher string.
   Future<Either<Failure, UserHistoryRule?>> findRule(
-      RuleType type, String matcher);
+    RuleType type,
+    String matcher,
+  );
 
   /// Saves or updates a user history rule.
   Future<Either<Failure, void>> saveRule(UserHistoryRule rule);

@@ -27,52 +27,79 @@ class CategoriesDependencies {
   static void register() {
     // Data Sources
     sl.registerLazySingleton<CategoryLocalDataSource>(
-        () => HiveCategoryLocalDataSource(sl()));
+      () => HiveCategoryLocalDataSource(sl()),
+    );
     sl.registerLazySingleton<CategoryPredefinedDataSource>(
-        () => AssetExpenseCategoryDataSource(),
-        instanceName: 'expensePredefined');
+      () => AssetExpenseCategoryDataSource(),
+      instanceName: 'expensePredefined',
+    );
     sl.registerLazySingleton<CategoryPredefinedDataSource>(
-        () => AssetIncomeCategoryDataSource(),
-        instanceName: 'incomePredefined');
+      () => AssetIncomeCategoryDataSource(),
+      instanceName: 'incomePredefined',
+    );
     sl.registerLazySingleton<UserHistoryLocalDataSource>(
-        () => HiveUserHistoryLocalDataSource(sl()));
+      () => HiveUserHistoryLocalDataSource(sl()),
+    );
     sl.registerLazySingleton<MerchantCategoryDataSource>(
-        () => AssetMerchantCategoryDataSource());
+      () => AssetMerchantCategoryDataSource(),
+    );
     // Repositories (Depend on Income/Expense repos)
-    sl.registerLazySingleton<CategoryRepository>(() => CategoryRepositoryImpl(
-          localDataSource: sl<CategoryLocalDataSource>(),
-          expensePredefinedDataSource: sl<CategoryPredefinedDataSource>(
-              instanceName: 'expensePredefined'),
-          incomePredefinedDataSource: sl<CategoryPredefinedDataSource>(
-              instanceName: 'incomePredefined'),
-        ));
+    sl.registerLazySingleton<CategoryRepository>(
+      () => CategoryRepositoryImpl(
+        localDataSource: sl<CategoryLocalDataSource>(),
+        expensePredefinedDataSource: sl<CategoryPredefinedDataSource>(
+          instanceName: 'expensePredefined',
+        ),
+        incomePredefinedDataSource: sl<CategoryPredefinedDataSource>(
+          instanceName: 'incomePredefined',
+        ),
+      ),
+    );
     sl.registerLazySingleton<UserHistoryRepository>(
-        () => UserHistoryRepositoryImpl(localDataSource: sl()));
+      () => UserHistoryRepositoryImpl(localDataSource: sl()),
+    );
     sl.registerLazySingleton<MerchantCategoryRepository>(
-        () => MerchantCategoryRepositoryImpl(dataSource: sl()));
+      () => MerchantCategoryRepositoryImpl(dataSource: sl()),
+    );
     // Use Cases
     sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
     sl.registerLazySingleton(() => GetExpenseCategoriesUseCase(sl()));
     sl.registerLazySingleton(() => GetIncomeCategoriesUseCase(sl()));
     sl.registerLazySingleton(
-        () => AddCustomCategoryUseCase(sl(), sl())); // Inject Uuid
+      () => AddCustomCategoryUseCase(sl(), sl()),
+    ); // Inject Uuid
     sl.registerLazySingleton(() => UpdateCustomCategoryUseCase(sl()));
-    sl.registerLazySingleton(() => DeleteCustomCategoryUseCase(
-        sl(), sl<ExpenseRepository>(), sl<IncomeRepository>())); // Inject Repos
     sl.registerLazySingleton(
-        () => SaveUserCategorizationHistoryUseCase(sl(), sl())); // Inject Uuid
-    sl.registerLazySingleton(() => CategorizeTransactionUseCase(
+      () => DeleteCustomCategoryUseCase(
+        sl(),
+        sl<ExpenseRepository>(),
+        sl<IncomeRepository>(),
+      ),
+    ); // Inject Repos
+    sl.registerLazySingleton(
+      () => SaveUserCategorizationHistoryUseCase(sl(), sl()),
+    ); // Inject Uuid
+    sl.registerLazySingleton(
+      () => CategorizeTransactionUseCase(
         userHistoryRepository: sl(),
         merchantCategoryRepository: sl(),
-        categoryRepository: sl()));
-    sl.registerLazySingleton(() => ApplyCategoryToBatchUseCase(
+        categoryRepository: sl(),
+      ),
+    );
+    sl.registerLazySingleton(
+      () => ApplyCategoryToBatchUseCase(
         expenseRepository: sl<ExpenseRepository>(),
-        incomeRepository: sl<IncomeRepository>())); // Inject Repos
+        incomeRepository: sl<IncomeRepository>(),
+      ),
+    ); // Inject Repos
     // Bloc
-    sl.registerFactory(() => CategoryManagementBloc(
+    sl.registerFactory(
+      () => CategoryManagementBloc(
         getCategoriesUseCase: sl(),
         addCustomCategoryUseCase: sl(),
         updateCustomCategoryUseCase: sl(),
-        deleteCustomCategoryUseCase: sl()));
+        deleteCustomCategoryUseCase: sl(),
+      ),
+    );
   }
 }

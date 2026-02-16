@@ -20,9 +20,9 @@ class GoalProgressReportBloc
   GoalProgressReportBloc({
     required GetGoalProgressReportUseCase getGoalProgressReportUseCase,
     required ReportFilterBloc reportFilterBloc,
-  })  : _getReportUseCase = getGoalProgressReportUseCase,
-        _reportFilterBloc = reportFilterBloc,
-        super(GoalProgressReportInitial()) {
+  }) : _getReportUseCase = getGoalProgressReportUseCase,
+       _reportFilterBloc = reportFilterBloc,
+       super(GoalProgressReportInitial()) {
     on<LoadGoalProgressReport>(_onLoadReport);
     on<_FilterChanged>(_onFilterChanged);
 
@@ -38,14 +38,19 @@ class GoalProgressReportBloc
   }
 
   void _onFilterChanged(
-      _FilterChanged event, Emitter<GoalProgressReportState> emit) {
+    _FilterChanged event,
+    Emitter<GoalProgressReportState> emit,
+  ) {
     log.info(
-        "[GoalProgressReportBloc] Filter changed detected, reloading report.");
+      "[GoalProgressReportBloc] Filter changed detected, reloading report.",
+    );
     add(const LoadGoalProgressReport());
   }
 
-  Future<void> _onLoadReport(LoadGoalProgressReport event,
-      Emitter<GoalProgressReportState> emit) async {
+  Future<void> _onLoadReport(
+    LoadGoalProgressReport event,
+    Emitter<GoalProgressReportState> emit,
+  ) async {
     if (state is GoalProgressReportLoading) return;
 
     emit(GoalProgressReportLoading());
@@ -68,7 +73,8 @@ class GoalProgressReportBloc
       },
       (reportData) {
         log.info(
-            "[GoalProgressReportBloc] Load successful. Goals: ${reportData.progressData.length}");
+          "[GoalProgressReportBloc] Load successful. Goals: ${reportData.progressData.length}",
+        );
         emit(GoalProgressReportLoaded(reportData));
       },
     );

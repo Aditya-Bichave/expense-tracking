@@ -28,44 +28,60 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
     required UpdateBudgetUseCase updateBudgetUseCase, // ADDED
     required CategoryRepository categoryRepository,
     Budget? initialBudget,
-  })  : _addBudgetUseCase = addBudgetUseCase,
-        _updateBudgetUseCase = updateBudgetUseCase, // ADDED
-        _categoryRepository = categoryRepository,
-        super(AddEditBudgetState(initialBudget: initialBudget)) {
+  }) : _addBudgetUseCase = addBudgetUseCase,
+       _updateBudgetUseCase = updateBudgetUseCase, // ADDED
+       _categoryRepository = categoryRepository,
+       super(AddEditBudgetState(initialBudget: initialBudget)) {
     on<InitializeBudgetForm>(_onInitializeBudgetForm);
     on<SaveBudget>(_onSaveBudget);
     on<ClearBudgetFormMessage>(_onClearMessage);
 
     log.info(
-        "[AddEditBudgetBloc] Initialized. Editing: ${initialBudget != null}");
+      "[AddEditBudgetBloc] Initialized. Editing: ${initialBudget != null}",
+    );
     // Load categories immediately
     add(InitializeBudgetForm(initialBudget: initialBudget));
   }
 
   Future<void> _onInitializeBudgetForm(
-      InitializeBudgetForm event, Emitter<AddEditBudgetState> emit) async {
+    InitializeBudgetForm event,
+    Emitter<AddEditBudgetState> emit,
+  ) async {
     // Load available expense categories for the dropdown/selector
-    emit(state.copyWith(
+    emit(
+      state.copyWith(
         status: AddEditBudgetStatus.loading,
-        initialBudgetOrNull: () => event.initialBudget));
+        initialBudgetOrNull: () => event.initialBudget,
+      ),
+    );
     final categoriesResult = await _categoryRepository.getSpecificCategories(
-        type: CategoryType.expense, includeCustom: true);
+      type: CategoryType.expense,
+      includeCustom: true,
+    );
 
     categoriesResult.fold(
-      (failure) => emit(state.copyWith(
+      (failure) => emit(
+        state.copyWith(
           status: AddEditBudgetStatus.error,
           errorMessage:
-              "Failed to load categories for selection: ${failure.message}")),
-      (categories) => emit(state.copyWith(
+              "Failed to load categories for selection: ${failure.message}",
+        ),
+      ),
+      (categories) => emit(
+        state.copyWith(
           status: AddEditBudgetStatus.initial, // Ready after loading categories
           initialBudgetOrNull: () =>
               event.initialBudget, // Reset initial budget in state
-          availableCategories: categories)),
+          availableCategories: categories,
+        ),
+      ),
     );
   }
 
   Future<void> _onSaveBudget(
-      SaveBudget event, Emitter<AddEditBudgetState> emit) async {
+    SaveBudget event,
+    Emitter<AddEditBudgetState> emit,
+  ) async {
     log.info("[AddEditBudgetBloc] SaveBudget received: ${event.name}");
     emit(state.copyWith(status: AddEditBudgetStatus.loading, clearError: true));
 
@@ -73,66 +89,80 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
 
     // Construct the Budget object
     final budgetData = Budget(
-      id: state.initialBudget?.id ??
+      id:
+          state.initialBudget?.id ??
           sl<Uuid>().v4(), // Use existing ID or generate new
       name: event.name.trim(),
       type: event.type,
       targetAmount: event.targetAmount,
       period: event.period,
-      startDate:
-          event.period == BudgetPeriodType.oneTime ? event.startDate : null,
+      startDate: event.period == BudgetPeriodType.oneTime
+          ? event.startDate
+          : null,
       endDate: event.period == BudgetPeriodType.oneTime ? event.endDate : null,
-      categoryIds:
-          event.type == BudgetType.categorySpecific ? event.categoryIds : null,
+      categoryIds: event.type == BudgetType.categorySpecific
+          ? event.categoryIds
+          : null,
       notes: event.notes?.trim(),
-      createdAt: state.initialBudget?.createdAt ??
+      createdAt:
+          state.initialBudget?.createdAt ??
           DateTime.now(), // Preserve original createdAt
     );
 
     // Call appropriate use case
     final result = isEditing
         ? await _updateBudgetUseCase(
-            UpdateBudgetParams(budget: budgetData)) // Use Update use case
-        : await _addBudgetUseCase(AddBudgetParams(
-            // Add params remain the same
-            name: budgetData.name,
-            type: budgetData.type,
-            targetAmount: budgetData.targetAmount,
-            period: budgetData.period,
-            startDate: budgetData.startDate,
-            endDate: budgetData.endDate,
-            categoryIds: budgetData.categoryIds,
-            notes: budgetData.notes,
-          ));
+            UpdateBudgetParams(budget: budgetData),
+          ) // Use Update use case
+        : await _addBudgetUseCase(
+            AddBudgetParams(
+              // Add params remain the same
+              name: budgetData.name,
+              type: budgetData.type,
+              targetAmount: budgetData.targetAmount,
+              period: budgetData.period,
+              startDate: budgetData.startDate,
+              endDate: budgetData.endDate,
+              categoryIds: budgetData.categoryIds,
+              notes: budgetData.notes,
+            ),
+          );
 
     result.fold(
       (failure) {
         log.warning("[AddEditBudgetBloc] Save failed: ${failure.message}");
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             status: AddEditBudgetStatus.error,
-            errorMessage: _mapFailureToMessage(failure)));
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
         // Keep loading state on error? Or revert to initial? Reverting is safer.
         emit(state.copyWith(status: AddEditBudgetStatus.initial));
       },
       (savedBudget) {
         log.info(
-            "[AddEditBudgetBloc] Save successful for '${savedBudget.name}'.");
+          "[AddEditBudgetBloc] Save successful for '${savedBudget.name}'.",
+        );
         emit(state.copyWith(status: AddEditBudgetStatus.success));
         publishDataChangedEvent(
-            type: DataChangeType.budget,
-            reason:
-                isEditing ? DataChangeReason.updated : DataChangeReason.added);
+          type: DataChangeType.budget,
+          reason: isEditing ? DataChangeReason.updated : DataChangeReason.added,
+        );
       },
     );
   }
 
   void _onClearMessage(
-      ClearBudgetFormMessage event, Emitter<AddEditBudgetState> emit) {
+    ClearBudgetFormMessage event,
+    Emitter<AddEditBudgetState> emit,
+  ) {
     // Reset status to initial when clearing message
     if (state.status == AddEditBudgetStatus.error ||
         state.status == AddEditBudgetStatus.success) {
-      emit(state.copyWith(
-          status: AddEditBudgetStatus.initial, clearError: true));
+      emit(
+        state.copyWith(status: AddEditBudgetStatus.initial, clearError: true),
+      );
     } else {
       // If still loading or initial, just clear error
       emit(state.copyWith(clearError: true));
@@ -141,7 +171,8 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
 
   String _mapFailureToMessage(Failure failure) {
     log.warning(
-        "[AddEditBudgetBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
+      "[AddEditBudgetBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
+    );
     switch (failure.runtimeType) {
       case ValidationFailure:
         return failure.message;

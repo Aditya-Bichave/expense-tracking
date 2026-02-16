@@ -23,8 +23,9 @@ class GeneralSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final AppCountry? currentCountry =
-        AppCountries.findCountryByCode(state.selectedCountryCode);
+    final AppCountry? currentCountry = AppCountries.findCountryByCode(
+      state.selectedCountryCode,
+    );
     // --- Check Demo Mode ---
     final bool isEnabled = !isLoading && !state.isInDemoMode;
     // --- End Check ---
@@ -38,17 +39,23 @@ class GeneralSettingsSection extends StatelessWidget {
           leadingIcon: Icons.category_outlined,
           title: 'Manage Categories',
           subtitle: 'Add, edit, or delete custom categories',
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
-          onTap: !isEnabled // Use combined state
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () {
                   log.info("[SettingsPage] Navigating to Category Management.");
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const CategoryManagementScreen(),
-                  ));
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CategoryManagementScreen(),
+                    ),
+                  );
                 },
         ),
         SettingsListTile(
@@ -56,15 +63,18 @@ class GeneralSettingsSection extends StatelessWidget {
           leadingIcon: Icons.autorenew_outlined,
           title: 'Recurring Transactions',
           subtitle: 'Manage automatic income and expenses',
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
+          trailing: Icon(
+            Icons.chevron_right,
+            color: !isEnabled
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
           onTap: !isEnabled
               ? null
               : () {
                   log.info(
-                      "[SettingsPage] Navigating to Recurring Transactions.");
+                    "[SettingsPage] Navigating to Recurring Transactions.",
+                  );
                   context.push(RouteNames.recurring);
                 },
         ),
@@ -74,23 +84,32 @@ class GeneralSettingsSection extends StatelessWidget {
             value: currentCountry?.code,
             decoration: InputDecoration(
               labelText: 'Country / Currency',
-              prefixIcon: Icon(Icons.public_outlined,
-                  color: !isEnabled // Use combined state
-                      ? theme.disabledColor
-                      : theme.inputDecorationTheme.prefixIconColor),
+              prefixIcon: Icon(
+                Icons.public_outlined,
+                color:
+                    !isEnabled // Use combined state
+                    ? theme.disabledColor
+                    : theme.inputDecorationTheme.prefixIconColor,
+              ),
               border: const OutlineInputBorder(),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 16,
+              ),
               enabled: isEnabled, // Use combined state
             ),
             hint: const Text('Select Country'),
             isExpanded: true,
             items: AppCountries.availableCountries
-                .map((AppCountry country) => DropdownMenuItem<String>(
+                .map(
+                  (AppCountry country) => DropdownMenuItem<String>(
                     value: country.code,
-                    child: Text('${country.name} (${country.currencySymbol})')))
+                    child: Text('${country.name} (${country.currencySymbol})'),
+                  ),
+                )
                 .toList(),
-            onChanged: !isEnabled // Use combined state
+            onChanged:
+                !isEnabled // Use combined state
                 ? null
                 : (String? newValue) {
                     if (newValue != null) {

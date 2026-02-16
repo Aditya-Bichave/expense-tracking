@@ -21,7 +21,8 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
     try {
       await accountBox.put(account.id, account);
       log.info(
-          "Added asset account '${account.name}' (ID: ${account.id}) to Hive.");
+        "Added asset account '${account.name}' (ID: ${account.id}) to Hive.",
+      );
       return account;
     } catch (e, s) {
       log.severe("Failed to add asset account '${account.name}' to cache$e$s");
@@ -54,15 +55,18 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
 
   @override
   Future<AssetAccountModel> updateAssetAccount(
-      AssetAccountModel account) async {
+    AssetAccountModel account,
+  ) async {
     try {
       await accountBox.put(account.id, account);
       log.info(
-          "Updated asset account '${account.name}' (ID: ${account.id}) in Hive.");
+        "Updated asset account '${account.name}' (ID: ${account.id}) in Hive.",
+      );
       return account;
     } catch (e, s) {
       log.severe(
-          "Failed to update asset account '${account.name}' in cache$e$s");
+        "Failed to update asset account '${account.name}' in cache$e$s",
+      );
       throw CacheFailure('Failed to update account: ${e.toString()}');
     }
   }

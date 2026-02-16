@@ -25,13 +25,16 @@ class CategoryListSectionWidget extends StatelessWidget {
     final theme = Theme.of(context);
     if (categories.isEmpty) {
       return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(emptyMessage, style: theme.textTheme.titleMedium)));
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(emptyMessage, style: theme.textTheme.titleMedium),
+        ),
+      );
     }
     // Sort combined list for consistent display
-    categories
-        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    categories.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
 
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8.0, bottom: 90.0), // Padding for FAB
@@ -39,11 +42,11 @@ class CategoryListSectionWidget extends StatelessWidget {
       itemBuilder: (context, index) {
         final category = categories[index];
         return CategoryListItemWidget(
-          category: category,
-          onEdit: () => onEditCategory(category),
-          onDelete: () => onDeleteCategory(category),
-          onPersonalize: () => onPersonalizeCategory(category),
-        )
+              category: category,
+              onEdit: () => onEditCategory(category),
+              onDelete: () => onDeleteCategory(category),
+              onPersonalize: () => onPersonalizeCategory(category),
+            )
             .animate()
             .fadeIn(delay: (40 * index).ms, duration: 300.ms)
             .slideY(begin: 0.1, curve: Curves.easeOut);

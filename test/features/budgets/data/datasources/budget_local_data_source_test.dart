@@ -42,8 +42,9 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.put(any(), any()))
-            .thenThrow(Exception('Hive Error'));
+        when(
+          () => mockBox.put(any(), any()),
+        ).thenThrow(Exception('Hive Error'));
 
         expect(
           () => dataSource.saveBudget(tBudget),
@@ -65,10 +66,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.values).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.getBudgets(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() => dataSource.getBudgets(), throwsA(isA<CacheFailure>()));
       });
     });
 

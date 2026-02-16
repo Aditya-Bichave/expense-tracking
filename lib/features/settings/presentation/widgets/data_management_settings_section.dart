@@ -51,10 +51,13 @@ class DataManagementSettingsSection extends StatelessWidget {
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
               : 'Save all data to a file', // Demo message
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
           onTap: !isEnabled ? null : onBackup, // Use combined state
         ),
         SettingsListTile(
@@ -66,10 +69,13 @@ class DataManagementSettingsSection extends StatelessWidget {
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
               : 'Load data from a backup file', // Demo message
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
           onTap: !isEnabled ? null : onRestore, // Use combined state
         ),
         SettingsListTile(
@@ -79,14 +85,19 @@ class DataManagementSettingsSection extends StatelessWidget {
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
               : 'Export data to CSV/JSON (Coming Soon)', // Demo message
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
-          onTap: !isEnabled // Use combined state
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
-              : () => context
-                  .pushNamed(RouteNames.settingsExport), // Keep nav for now
+              : () => context.pushNamed(
+                  RouteNames.settingsExport,
+                ), // Keep nav for now
         ),
         SettingsListTile(
           // --- Use combined enabled state, but specifically allow clear when NOT loading data ops ---
@@ -97,11 +108,17 @@ class DataManagementSettingsSection extends StatelessWidget {
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
               : 'Permanently delete all accounts & transactions',
-          trailing: Icon(Icons.chevron_right,
-              color: isDataManagementLoading || isInDemoMode // Check both
-                  ? theme.disabledColor
-                  : theme.colorScheme.error),
-          onTap: isDataManagementLoading || isInDemoMode // Check both
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                isDataManagementLoading ||
+                    isInDemoMode // Check both
+                ? theme.disabledColor
+                : theme.colorScheme.error,
+          ),
+          onTap:
+              isDataManagementLoading ||
+                  isInDemoMode // Check both
               ? null
               : onClearData, // Use callback
         ),
@@ -112,12 +129,17 @@ class DataManagementSettingsSection extends StatelessWidget {
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
               : 'View recently deleted items (Coming Soon)',
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
-          onTap:
-              !isEnabled ? null : () {/* TODO: Navigate to Trash Bin Screen */},
+          trailing: Icon(
+            Icons.chevron_right,
+            color: !isEnabled
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          onTap: !isEnabled
+              ? null
+              : () {
+                  /* TODO: Navigate to Trash Bin Screen */
+                },
         ),
       ],
     );

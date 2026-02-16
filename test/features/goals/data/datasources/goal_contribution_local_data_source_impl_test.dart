@@ -41,8 +41,9 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.put(any(), any()))
-            .thenThrow(Exception('Hive Error'));
+        when(
+          () => mockBox.put(any(), any()),
+        ).thenThrow(Exception('Hive Error'));
 
         expect(
           () => dataSource.saveContribution(tContribution),
@@ -110,7 +111,7 @@ void main() {
         );
         final List<GoalContributionModel> tList = [
           tContribution,
-          tContribution2
+          tContribution2,
         ];
         when(() => mockBox.values).thenReturn(tList);
 

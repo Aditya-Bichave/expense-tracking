@@ -56,8 +56,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     super.initState();
     _loadData();
     _budgetSubscription = context.read<BudgetListBloc>().stream.listen(
-          _handleBudgetStateChange,
-        );
+      _handleBudgetStateChange,
+    );
   }
 
   @override
@@ -203,8 +203,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     );
     if (confirmed == true && context.mounted) {
       context.read<BudgetListBloc>().add(
-            DeleteBudget(budgetId: _budgetWithStatus!.budget.id),
-          );
+        DeleteBudget(budgetId: _budgetWithStatus!.budget.id),
+      );
       if (context.canPop()) {
         context.pop();
       } else {
@@ -279,8 +279,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         center: Text(
           "${(status.percentageUsed * 100).toStringAsFixed(0)}%",
           style: TextStyle(
-            color:
-                color.computeLuminance() > 0.5 ? Colors.black87 : Colors.white,
+            color: color.computeLuminance() > 0.5
+                ? Colors.black87
+                : Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 12,
           ),
@@ -364,10 +365,12 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     } else {
       // Elemental / Aether ListView
       final bool isAether = uiMode == UIMode.aether;
-      final Duration itemDelay =
-          isAether ? (modeTheme?.listAnimationDelay ?? 80.ms) : 50.ms;
-      final Duration itemDuration =
-          isAether ? (modeTheme?.listAnimationDuration ?? 450.ms) : 300.ms;
+      final Duration itemDelay = isAether
+          ? (modeTheme?.listAnimationDelay ?? 80.ms)
+          : 50.ms;
+      final Duration itemDuration = isAether
+          ? (modeTheme?.listAnimationDuration ?? 450.ms)
+          : 300.ms;
 
       return ListView.builder(
         shrinkWrap: true,
@@ -387,8 +390,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                 .slideY(begin: 0.2, curve: Curves.easeOut);
           } else {
             item = item.animate().fadeIn(
-                  delay: (itemDelay.inMilliseconds * 0.5 * index).ms,
-                );
+              delay: (itemDelay.inMilliseconds * 0.5 * index).ms,
+            );
           }
           return Padding(
             // Add padding between items
@@ -516,17 +519,18 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final isAether = uiMode == UIMode.aether;
     final String? bgPath = isAether
         ? (Theme.of(context).brightness == Brightness.dark
-            ? modeTheme?.assets.mainBackgroundDark
-            : modeTheme?.assets.mainBackgroundLight)
+              ? modeTheme?.assets.mainBackgroundDark
+              : modeTheme?.assets.mainBackgroundLight)
         : null;
 
     Widget mainContent = ListView(
-      padding: modeTheme?.pagePadding.copyWith(
+      padding:
+          modeTheme?.pagePadding.copyWith(
             bottom: 80,
             top: isAether
                 ? (modeTheme.pagePadding.top +
-                    kToolbarHeight +
-                    MediaQuery.of(context).padding.top)
+                      kToolbarHeight +
+                      MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
           const EdgeInsets.all(16.0).copyWith(bottom: 80),

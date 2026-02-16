@@ -29,44 +29,49 @@ void main() {
     'should return ExpenseSummary from the repository when successful',
     () async {
       // Arrange
-      when(() => mockExpenseRepository.getExpenseSummary(
-            startDate: tStartDate,
-            endDate: tEndDate,
-          )).thenAnswer((_) async => const Right(tExpenseSummary));
+      when(
+        () => mockExpenseRepository.getExpenseSummary(
+          startDate: tStartDate,
+          endDate: tEndDate,
+        ),
+      ).thenAnswer((_) async => const Right(tExpenseSummary));
 
       // Act
       final result = await useCase(tParams);
 
       // Assert
       expect(result, const Right(tExpenseSummary));
-      verify(() => mockExpenseRepository.getExpenseSummary(
-            startDate: tStartDate,
-            endDate: tEndDate,
-          )).called(1);
+      verify(
+        () => mockExpenseRepository.getExpenseSummary(
+          startDate: tStartDate,
+          endDate: tEndDate,
+        ),
+      ).called(1);
       verifyNoMoreInteractions(mockExpenseRepository);
     },
   );
 
-  test(
-    'should return Failure from the repository when it fails',
-    () async {
-      // Arrange
-      const tFailure = ServerFailure('Server Error');
-      when(() => mockExpenseRepository.getExpenseSummary(
-            startDate: tStartDate,
-            endDate: tEndDate,
-          )).thenAnswer((_) async => const Left(tFailure));
+  test('should return Failure from the repository when it fails', () async {
+    // Arrange
+    const tFailure = ServerFailure('Server Error');
+    when(
+      () => mockExpenseRepository.getExpenseSummary(
+        startDate: tStartDate,
+        endDate: tEndDate,
+      ),
+    ).thenAnswer((_) async => const Left(tFailure));
 
-      // Act
-      final result = await useCase(tParams);
+    // Act
+    final result = await useCase(tParams);
 
-      // Assert
-      expect(result, const Left(tFailure));
-      verify(() => mockExpenseRepository.getExpenseSummary(
-            startDate: tStartDate,
-            endDate: tEndDate,
-          )).called(1);
-      verifyNoMoreInteractions(mockExpenseRepository);
-    },
-  );
+    // Assert
+    expect(result, const Left(tFailure));
+    verify(
+      () => mockExpenseRepository.getExpenseSummary(
+        startDate: tStartDate,
+        endDate: tEndDate,
+      ),
+    ).called(1);
+    verifyNoMoreInteractions(mockExpenseRepository);
+  });
 }

@@ -5,7 +5,7 @@ enum DataChangeReason {
   added,
   updated,
   deleted,
-  reset // Added for system reset
+  reset, // Added for system reset
 }
 
 // Describes the type of data affected
@@ -19,7 +19,7 @@ enum DataChangeType {
   goalContribution,
   budget,
   recurringRule,
-  system // Added for global/system events like reset
+  system, // Added for global/system events like reset
 }
 
 class DataChangedEvent {

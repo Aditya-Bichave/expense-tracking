@@ -34,15 +34,17 @@ class AddEditCategoryScreen extends StatelessWidget {
     final forcedInitialType = routeArgs?['initialType'] as CategoryType?;
 
     log.info(
-        "[AddEditCategoryScreen] Building. Editing: $isEditing. Category: ${initialCategory?.name}. Forced Initial Type: ${forcedInitialType?.name}");
+      "[AddEditCategoryScreen] Building. Editing: $isEditing. Category: ${initialCategory?.name}. Forced Initial Type: ${forcedInitialType?.name}",
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditing ? 'Edit Category' : 'Add Category'),
         leading: IconButton(
-            icon: const Icon(Icons.close),
-            tooltip: 'Cancel',
-            onPressed: () => Navigator.of(context).pop()),
+          icon: const Icon(Icons.close),
+          tooltip: 'Cancel',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SafeArea(
         // Ensure CategoryManagementBloc is provided up the tree or provide here
@@ -51,18 +53,22 @@ class AddEditCategoryScreen extends StatelessWidget {
           initialType: forcedInitialType ?? initialCategory?.type,
           onSubmit: (name, iconName, colorHex, type, parentId, categoryObject) {
             log.info(
-                "[AddEditCategoryScreen] Form submitted. Name: $name, Type: ${type.name}");
+              "[AddEditCategoryScreen] Form submitted. Name: $name, Type: ${type.name}",
+            );
             final bloc = context.read<CategoryManagementBloc>();
             if (isEditing) {
               bloc.add(UpdateCategory(category: categoryObject));
               Navigator.of(context).pop();
             } else {
-              bloc.add(AddCategory(
+              bloc.add(
+                AddCategory(
                   name: name,
                   iconName: iconName,
                   colorHex: colorHex,
                   type: type,
-                  parentId: parentId));
+                  parentId: parentId,
+                ),
+              );
               Navigator.of(context).pop(categoryObject);
             }
           },
@@ -76,8 +82,15 @@ class AddEditCategoryScreen extends StatelessWidget {
 class CategoryForm extends StatefulWidget {
   final Category? initialCategory;
   final CategoryType? initialType;
-  final Function(String name, String iconName, String colorHex,
-      CategoryType type, String? parentId, Category categoryObject) onSubmit;
+  final Function(
+    String name,
+    String iconName,
+    String colorHex,
+    CategoryType type,
+    String? parentId,
+    Category categoryObject,
+  )
+  onSubmit;
 
   const CategoryForm({
     super.key,
@@ -105,14 +118,16 @@ class _CategoryFormState extends State<CategoryForm> {
     final initial = widget.initialCategory;
     _nameController = TextEditingController(text: initial?.name ?? '');
     _selectedIconName = initial?.iconName ?? 'category';
-    _selectedColor =
-        initial != null ? ColorUtils.fromHex(initial.colorHex) : Colors.blue;
+    _selectedColor = initial != null
+        ? ColorUtils.fromHex(initial.colorHex)
+        : Colors.blue;
     _selectedType = widget.initialType ?? initial?.type ?? CategoryType.expense;
     _selectedParentId = initial?.parentCategoryId;
     _isTypeChangeAllowed =
         widget.initialCategory == null && widget.initialType == null;
     log.info(
-        "[CategoryForm] initState. Initial Type: ${_selectedType.name}, AllowChange: $_isTypeChangeAllowed");
+      "[CategoryForm] initState. Initial Type: ${_selectedType.name}, AllowChange: $_isTypeChangeAllowed",
+    );
   }
 
   @override
@@ -124,7 +139,8 @@ class _CategoryFormState extends State<CategoryForm> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       log.info(
-          "[CategoryForm] Form validated. Submitting with Type: ${_selectedType.name}");
+        "[CategoryForm] Form validated. Submitting with Type: ${_selectedType.name}",
+      );
       final categoryObject = Category(
         id: widget.initialCategory?.id ?? sl<Uuid>().v4(),
         name: _nameController.text.trim(),
@@ -135,24 +151,29 @@ class _CategoryFormState extends State<CategoryForm> {
         parentCategoryId: _selectedParentId,
       );
       widget.onSubmit(
-          categoryObject.name,
-          categoryObject.iconName,
-          categoryObject.colorHex,
-          categoryObject.type,
-          categoryObject.parentCategoryId,
-          categoryObject);
+        categoryObject.name,
+        categoryObject.iconName,
+        categoryObject.colorHex,
+        categoryObject.type,
+        categoryObject.parentCategoryId,
+        categoryObject,
+      );
     } else {
       log.warning("[CategoryForm] Form validation failed.");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
           content: Text('Please correct the errors in the form.'),
-          backgroundColor: Colors.orangeAccent));
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
     }
   }
 
   void _showParentPicker() {
     log.warning("[CategoryForm] Parent Category Picker not implemented yet.");
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Sub-category selection coming soon!")));
+      const SnackBar(content: Text("Sub-category selection coming soon!")),
+    );
   }
 
   // Removed _getPrefixIcon
@@ -165,18 +186,23 @@ class _CategoryFormState extends State<CategoryForm> {
 
     final List<Color> expenseColors = [
       theme.colorScheme.errorContainer.withOpacity(0.7),
-      theme.colorScheme.errorContainer
+      theme.colorScheme.errorContainer,
     ];
     final List<Color> incomeColors = [
       theme.colorScheme.primaryContainer,
-      theme.colorScheme.primaryContainer.withOpacity(0.7)
+      theme.colorScheme.primaryContainer.withOpacity(0.7),
     ];
 
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding
-                .copyWith(left: 16, right: 16, bottom: 40, top: 16) ??
+        padding:
+            modeTheme?.pagePadding.copyWith(
+              left: 16,
+              right: 16,
+              bottom: 40,
+              top: 16,
+            ) ??
             const EdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Category Type Toggle
@@ -188,12 +214,14 @@ class _CategoryFormState extends State<CategoryForm> {
             disabled: !_isTypeChangeAllowed,
             onToggle: (index) {
               if (index != null) {
-                final newType =
-                    index == 0 ? CategoryType.expense : CategoryType.income;
+                final newType = index == 0
+                    ? CategoryType.expense
+                    : CategoryType.income;
                 if (_selectedType != newType) {
                   setState(() => _selectedType = newType);
                   log.info(
-                      "[CategoryForm] Type toggled to: ${_selectedType.name}");
+                    "[CategoryForm] Type toggled to: ${_selectedType.name}",
+                  );
                   // Reset parent on type change
                   // setState(() => _selectedParentId = null);
                 }
@@ -214,14 +242,19 @@ class _CategoryFormState extends State<CategoryForm> {
 
           // Parent Category Picker
           ListTile(
-            leading: CommonFormFields.getPrefixIcon(context, 'parent',
-                Icons.account_tree_outlined), // Use public helper
+            leading: CommonFormFields.getPrefixIcon(
+              context,
+              'parent',
+              Icons.account_tree_outlined,
+            ), // Use public helper
             title: const Text("Parent Category"),
             subtitle: Text(_selectedParentId ?? "None (Top Level)"),
-            trailing: const Icon(Icons.chevron_right), onTap: _showParentPicker,
+            trailing: const Icon(Icons.chevron_right),
+            onTap: _showParentPicker,
             shape: RoundedRectangleBorder(
-                side: BorderSide(color: theme.dividerColor),
-                borderRadius: BorderRadius.circular(8)),
+              side: BorderSide(color: theme.dividerColor),
+              borderRadius: BorderRadius.circular(8),
+            ),
             tileColor: theme.colorScheme.surfaceContainerHighest,
           ),
           const SizedBox(height: 20),
@@ -241,11 +274,13 @@ class _CategoryFormState extends State<CategoryForm> {
           ElevatedButton.icon(
             key: const ValueKey('button_submit'),
             icon: Icon(
-                isEditing ? Icons.save_outlined : Icons.add_circle_outline),
+              isEditing ? Icons.save_outlined : Icons.add_circle_outline,
+            ),
             label: Text(isEditing ? 'Update Category' : 'Add Category'),
             style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: theme.textTheme.titleMedium),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              textStyle: theme.textTheme.titleMedium,
+            ),
             onPressed: _submitForm,
           ),
         ],

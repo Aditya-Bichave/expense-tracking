@@ -37,15 +37,15 @@ class SaveBudget extends AddEditBudgetEvent {
 
   @override
   List<Object?> get props => [
-        name,
-        type,
-        targetAmount,
-        period,
-        startDate,
-        endDate,
-        categoryIds,
-        notes
-      ];
+    name,
+    type,
+    targetAmount,
+    period,
+    startDate,
+    endDate,
+    categoryIds,
+    notes,
+  ];
 }
 
 // Event to clear success/error message

@@ -15,19 +15,22 @@ class GetGoalProgressReportUseCase
 
   @override
   Future<Either<Failure, GoalProgressReportData>> call(
-      GetGoalProgressReportParams params) async {
+    GetGoalProgressReportParams params,
+  ) async {
     log.info(
-        "[GetGoalProgressReportUseCase] Fetching goal progress. Compare Rate: ${params.calculateComparisonRate}");
+      "[GetGoalProgressReportUseCase] Fetching goal progress. Compare Rate: ${params.calculateComparisonRate}",
+    );
     // For now, only fetch current progress. Comparison logic TBD.
     return await repository.getGoalProgress(
-        goalIds: params.goalIds,
-        calculateComparisonRate: params.calculateComparisonRate);
+      goalIds: params.goalIds,
+      calculateComparisonRate: params.calculateComparisonRate,
+    );
   }
 }
 
 class GetGoalProgressReportParams extends Equatable {
   final List<String>?
-      goalIds; // Optional: Filter specific goals (null = all active)
+  goalIds; // Optional: Filter specific goals (null = all active)
   final bool calculateComparisonRate;
 
   const GetGoalProgressReportParams({

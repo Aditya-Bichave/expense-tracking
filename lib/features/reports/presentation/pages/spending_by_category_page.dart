@@ -38,8 +38,8 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final newComparisonState = !_showComparison;
     setState(() => _showComparison = newComparisonState);
     context.read<SpendingCategoryReportBloc>().add(
-          LoadSpendingCategoryReport(compareToPrevious: newComparisonState),
-        ); // Pass the flag
+      LoadSpendingCategoryReport(compareToPrevious: newComparisonState),
+    ); // Pass the flag
     log.info(
       "[SpendingByCategoryPage] Toggled comparison to: $newComparisonState",
     );
@@ -75,7 +75,8 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     // Bar chart is default for Quantum, or if comparison active, or if toggled
     final bool useBarChart =
         uiMode == UIMode.quantum || _showComparison || !_showPieChart;
-    final bool showAlternateChartOption = uiMode != UIMode.aether &&
+    final bool showAlternateChartOption =
+        uiMode != UIMode.aether &&
         !_showComparison; // Can toggle if not Aether and not comparing
     final currencySymbol = settingsState.currencySymbol;
 
@@ -123,73 +124,74 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
       },
       body:
           BlocBuilder<SpendingCategoryReportBloc, SpendingCategoryReportState>(
-        builder: (context, state) {
-          if (state is SpendingCategoryReportLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is SpendingCategoryReportError) {
-            return Center(
-              child: Text(
-                "Error: ${state.message}",
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            );
-          }
-          if (state is SpendingCategoryReportLoaded) {
-            final reportData = state.reportData;
-            if (reportData.spendingByCategory.isEmpty) {
+            builder: (context, state) {
+              if (state is SpendingCategoryReportLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is SpendingCategoryReportError) {
+                return Center(
+                  child: Text(
+                    "Error: ${state.message}",
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                );
+              }
+              if (state is SpendingCategoryReportLoaded) {
+                final reportData = state.reportData;
+                if (reportData.spendingByCategory.isEmpty) {
+                  return const Center(
+                    child: Text("No spending data for this period."),
+                  );
+                }
+
+                Widget chartWidget;
+                if (useBarChart) {
+                  chartWidget = SpendingBarChart(
+                    data: reportData.spendingByCategory,
+                    // Pass previous data if comparison is active
+                    previousData:
+                        (_showComparison &&
+                            reportData.previousSpendingByCategory != null)
+                        ? reportData.previousSpendingByCategory
+                        : null,
+                    onTapBar: (index) => _navigateToFilteredTransactions(
+                      context,
+                      reportData.spendingByCategory[index],
+                    ),
+                  );
+                } else {
+                  // Pie Chart for Elemental/Aether (no comparison shown on pie)
+                  chartWidget = SpendingPieChart(
+                    data: reportData.spendingByCategory,
+                    onTapSlice: (index) => _navigateToFilteredTransactions(
+                      context,
+                      reportData.spendingByCategory[index],
+                    ),
+                  );
+                }
+
+                return ListView(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: SizedBox(height: 250, child: chartWidget),
+                    ),
+                    const Divider(),
+                    _buildDataTable(
+                      context,
+                      reportData,
+                      settingsState,
+                      _showComparison,
+                    ), // Pass comparison flag
+                    const SizedBox(height: 80),
+                  ],
+                );
+              }
               return const Center(
-                child: Text("No spending data for this period."),
+                child: Text("Select filters to view report."),
               );
-            }
-
-            Widget chartWidget;
-            if (useBarChart) {
-              chartWidget = SpendingBarChart(
-                data: reportData.spendingByCategory,
-                // Pass previous data if comparison is active
-                previousData: (_showComparison &&
-                        reportData.previousSpendingByCategory != null)
-                    ? reportData.previousSpendingByCategory
-                    : null,
-                onTapBar: (index) => _navigateToFilteredTransactions(
-                  context,
-                  reportData.spendingByCategory[index],
-                ),
-              );
-            } else {
-              // Pie Chart for Elemental/Aether (no comparison shown on pie)
-              chartWidget = SpendingPieChart(
-                data: reportData.spendingByCategory,
-                onTapSlice: (index) => _navigateToFilteredTransactions(
-                  context,
-                  reportData.spendingByCategory[index],
-                ),
-              );
-            }
-
-            return ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: SizedBox(height: 250, child: chartWidget),
-                ),
-                const Divider(),
-                _buildDataTable(
-                  context,
-                  reportData,
-                  settingsState,
-                  _showComparison,
-                ), // Pass comparison flag
-                const SizedBox(height: 80),
-              ],
-            );
-          }
-          return const Center(
-            child: Text("Select filters to view report."),
-          );
-        },
-      ),
+            },
+          ),
     );
   }
 
@@ -219,11 +221,11 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     // Create a map for quick lookup of previous data
     final Map<String, CategorySpendingData> previousDataMap =
         (showComparison && data.previousSpendingByCategory != null)
-            ? {
-                for (var item in data.previousSpendingByCategory!)
-                  item.categoryId: item,
-              }
-            : {};
+        ? {
+            for (var item in data.previousSpendingByCategory!)
+              item.categoryId: item,
+          }
+        : {};
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,

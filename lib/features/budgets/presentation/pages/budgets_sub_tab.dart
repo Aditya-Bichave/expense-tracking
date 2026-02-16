@@ -26,73 +26,88 @@ class BudgetsSubTab extends StatelessWidget {
           } else if (state.status == BudgetListStatus.error &&
               state.budgetsWithStatus.isEmpty) {
             content = Center(
-                child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Text(
-                        "Error loading budgets: ${state.errorMessage ?? 'Unknown error'}",
-                        style: TextStyle(color: theme.colorScheme.error),
-                        textAlign: TextAlign.center)));
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Text(
+                  "Error loading budgets: ${state.errorMessage ?? 'Unknown error'}",
+                  style: TextStyle(color: theme.colorScheme.error),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
           } else if (state.budgetsWithStatus.isEmpty &&
               state.status != BudgetListStatus.loading) {
             content = Center(
-                child: Padding(
-                    padding: const EdgeInsets.all(30.0),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.pie_chart_outline_rounded,
-                              size: 60,
-                              color:
-                                  theme.colorScheme.secondary.withOpacity(0.7)),
-                          const SizedBox(height: 16),
-                          Text("No Budgets Created Yet",
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                  color: theme.colorScheme.secondary)),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Create budgets to track your spending goals.",
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          // --- FIX: Added back Empty State Button ---
-                          ElevatedButton.icon(
-                            key: const ValueKey('button_budgetList_addFirst'),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add First Budget'),
-                            onPressed: () =>
-                                context.pushNamed(RouteNames.addBudget),
-                            style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 12)),
-                          )
-                          // --- END FIX ---
-                        ])));
+              child: Padding(
+                padding: const EdgeInsets.all(30.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.pie_chart_outline_rounded,
+                      size: 60,
+                      color: theme.colorScheme.secondary.withOpacity(0.7),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "No Budgets Created Yet",
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        color: theme.colorScheme.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Create budgets to track your spending goals.",
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    // --- FIX: Added back Empty State Button ---
+                    ElevatedButton.icon(
+                      key: const ValueKey('button_budgetList_addFirst'),
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add First Budget'),
+                      onPressed: () => context.pushNamed(RouteNames.addBudget),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                      ),
+                    ),
+                    // --- END FIX ---
+                  ],
+                ),
+              ),
+            );
           } else {
             content = ListView.builder(
-              padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
+              padding:
+                  modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
                   const EdgeInsets.only(top: 8.0, bottom: 90.0),
               itemCount: state.budgetsWithStatus.length,
               itemBuilder: (ctx, index) {
                 final budgetStatus = state.budgetsWithStatus[index];
                 return BudgetCard(
                   budgetStatus: budgetStatus,
-                  onTap: () => context.pushNamed(RouteNames.budgetDetail,
-                      pathParameters: {'id': budgetStatus.budget.id}),
+                  onTap: () => context.pushNamed(
+                    RouteNames.budgetDetail,
+                    pathParameters: {'id': budgetStatus.budget.id},
+                  ),
                 ).animate().fadeIn(delay: (50 * index).ms).slideY(begin: 0.2);
               },
             );
           }
           return RefreshIndicator(
             onRefresh: () async {
-              context
-                  .read<BudgetListBloc>()
-                  .add(const LoadBudgets(forceReload: true));
-              await context
-                  .read<BudgetListBloc>()
-                  .stream
-                  .firstWhere((s) => s.status != BudgetListStatus.loading);
+              context.read<BudgetListBloc>().add(
+                const LoadBudgets(forceReload: true),
+              );
+              await context.read<BudgetListBloc>().stream.firstWhere(
+                (s) => s.status != BudgetListStatus.loading,
+              );
             },
             child: content,
           );

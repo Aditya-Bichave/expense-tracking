@@ -14,7 +14,8 @@ class UpdateIncomeUseCase implements UseCase<Income, UpdateIncomeParams> {
   @override
   Future<Either<Failure, Income>> call(UpdateIncomeParams params) async {
     log.info(
-        "Executing UpdateIncomeUseCase for '${params.income.title}' (ID: ${params.income.id}).");
+      "Executing UpdateIncomeUseCase for '${params.income.title}' (ID: ${params.income.id}).",
+    );
     if (params.income.title.trim().isEmpty) {
       log.warning("Validation failed: Income title cannot be empty.");
       return const Left(ValidationFailure("Title cannot be empty."));

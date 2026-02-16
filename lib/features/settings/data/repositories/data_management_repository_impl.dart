@@ -16,9 +16,9 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
     required Box<AssetAccountModel> accountBox,
     required Box<ExpenseModel> expenseBox,
     required Box<IncomeModel> incomeBox,
-  })  : _accountBox = accountBox,
-        _expenseBox = expenseBox,
-        _incomeBox = incomeBox;
+  }) : _accountBox = accountBox,
+       _expenseBox = expenseBox,
+       _incomeBox = incomeBox;
 
   @override
   Future<Either<Failure, AllData>> getAllDataForBackup() async {
@@ -28,13 +28,16 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
       final expenses = _expenseBox.values.toList();
       final incomes = _incomeBox.values.toList();
       log.info(
-          "[DataMgmtRepo] Fetched: ${accounts.length} accounts, ${expenses.length} expenses, ${incomes.length} incomes.");
+        "[DataMgmtRepo] Fetched: ${accounts.length} accounts, ${expenses.length} expenses, ${incomes.length} incomes.",
+      );
       return Right(
-          AllData(accounts: accounts, expenses: expenses, incomes: incomes));
+        AllData(accounts: accounts, expenses: expenses, incomes: incomes),
+      );
     } catch (e, s) {
       log.severe("[DataMgmtRepo] Error in getAllDataForBackup$e$s");
       return Left(
-          CacheFailure("Failed to retrieve data for backup: ${e.toString()}"));
+        CacheFailure("Failed to retrieve data for backup: ${e.toString()}"),
+      );
     }
   }
 
@@ -50,7 +53,8 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
         _incomeBox.clear(),
       ]);
       log.info(
-          "[DataMgmtRepo] All boxes cleared successfully. Counts: $results");
+        "[DataMgmtRepo] All boxes cleared successfully. Counts: $results",
+      );
       return const Right(null);
     } catch (e, s) {
       log.severe("[DataMgmtRepo] Error in clearAllData$e$s");
@@ -67,26 +71,30 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
       final clearResult = await clearAllData();
       if (clearResult.isLeft()) {
         log.severe(
-            "[DataMgmtRepo] Failed to clear data before restore. Aborting.");
+          "[DataMgmtRepo] Failed to clear data before restore. Aborting.",
+        );
         // Propagate the clearing failure
-        return clearResult.fold((failure) => Left(failure),
-            (_) => const Left(CacheFailure("Unknown error during clear.")));
+        return clearResult.fold(
+          (failure) => Left(failure),
+          (_) => const Left(CacheFailure("Unknown error during clear.")),
+        );
       }
       log.info("[DataMgmtRepo] Data cleared. Proceeding with restore...");
 
       // 2. Restore data using putAll for efficiency
       log.info("[DataMgmtRepo] Preparing data maps for restore...");
       final Map<String, AssetAccountModel> accountMap = {
-        for (var v in data.accounts) v.id: v
+        for (var v in data.accounts) v.id: v,
       };
       final Map<String, ExpenseModel> expenseMap = {
-        for (var v in data.expenses) v.id: v
+        for (var v in data.expenses) v.id: v,
       };
       final Map<String, IncomeModel> incomeMap = {
-        for (var v in data.incomes) v.id: v
+        for (var v in data.incomes) v.id: v,
       };
       log.info(
-          "[DataMgmtRepo] Restoring ${accountMap.length} accounts, ${expenseMap.length} expenses, ${incomeMap.length} incomes...");
+        "[DataMgmtRepo] Restoring ${accountMap.length} accounts, ${expenseMap.length} expenses, ${incomeMap.length} incomes...",
+      );
 
       await Future.wait([
         _accountBox.putAll(accountMap),

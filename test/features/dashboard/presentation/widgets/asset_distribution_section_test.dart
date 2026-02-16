@@ -11,18 +11,18 @@ import '../../../../helpers/pump_app.dart';
 class TestAppModeTheme extends AppModeTheme {
   final bool preferTables;
   const TestAppModeTheme({required this.preferTables})
-      : super(
-          modeId: 'test',
-          layoutDensity: LayoutDensity.comfortable,
-          cardStyle: CardStyle.flat,
-          assets: const ThemeAssetPaths(),
-          preferDataTableForLists: preferTables,
-          primaryAnimationDuration: Duration.zero,
-          listEntranceAnimation: ListEntranceAnimation.none,
-          pagePadding: EdgeInsets.zero,
-          cardOuterPadding: EdgeInsets.zero,
-          cardInnerPadding: EdgeInsets.zero,
-        );
+    : super(
+        modeId: 'test',
+        layoutDensity: LayoutDensity.comfortable,
+        cardStyle: CardStyle.flat,
+        assets: const ThemeAssetPaths(),
+        preferDataTableForLists: preferTables,
+        primaryAnimationDuration: Duration.zero,
+        listEntranceAnimation: ListEntranceAnimation.none,
+        pagePadding: EdgeInsets.zero,
+        cardOuterPadding: EdgeInsets.zero,
+        cardInnerPadding: EdgeInsets.zero,
+      );
 }
 
 void main() {
@@ -39,45 +39,48 @@ void main() {
     });
 
     testWidgets(
-        'renders Pie Chart for Quantum mode when preferDataTableForLists is false',
-        (tester) async {
-      // The default Quantum theme in the app has preferDataTableForLists = false
-      await pumpWidgetWithProviders(
-        tester: tester,
-        settingsState: const SettingsState(uiMode: UIMode.quantum),
-        widget: const AssetDistributionSection(accountBalances: {}),
-      );
+      'renders Pie Chart for Quantum mode when preferDataTableForLists is false',
+      (tester) async {
+        // The default Quantum theme in the app has preferDataTableForLists = false
+        await pumpWidgetWithProviders(
+          tester: tester,
+          settingsState: const SettingsState(uiMode: UIMode.quantum),
+          widget: const AssetDistributionSection(accountBalances: {}),
+        );
 
-      expect(find.byType(AssetDistributionPieChart), findsOneWidget);
-      expect(find.byType(DataTable), findsNothing);
-    });
+        expect(find.byType(AssetDistributionPieChart), findsOneWidget);
+        expect(find.byType(DataTable), findsNothing);
+      },
+    );
 
     testWidgets(
-        'renders DataTable for Quantum mode when preferDataTableForLists is true',
-        (tester) async {
-      // To test this, we need to inject a custom AppModeTheme.
-      // We can wrap our widget in a Theme with a specific extension.
-      await pumpWidgetWithProviders(
-        tester: tester,
-        settingsState: const SettingsState(uiMode: UIMode.quantum),
-        widget: Builder(
-          builder: (context) {
-            return Theme(
-              data: Theme.of(context).copyWith(
-                extensions: const <ThemeExtension<dynamic>>[
-                  TestAppModeTheme(preferTables: true),
-                ],
-              ),
-              child: const AssetDistributionSection(
-                  accountBalances: {'Bank': 100.0}),
-            );
-          },
-        ),
-      );
+      'renders DataTable for Quantum mode when preferDataTableForLists is true',
+      (tester) async {
+        // To test this, we need to inject a custom AppModeTheme.
+        // We can wrap our widget in a Theme with a specific extension.
+        await pumpWidgetWithProviders(
+          tester: tester,
+          settingsState: const SettingsState(uiMode: UIMode.quantum),
+          widget: Builder(
+            builder: (context) {
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  extensions: const <ThemeExtension<dynamic>>[
+                    TestAppModeTheme(preferTables: true),
+                  ],
+                ),
+                child: const AssetDistributionSection(
+                  accountBalances: {'Bank': 100.0},
+                ),
+              );
+            },
+          ),
+        );
 
-      expect(find.byType(DataTable), findsOneWidget);
-      expect(find.byType(AssetDistributionPieChart), findsNothing);
-      expect(find.text('Bank'), findsOneWidget); // Verify table content
-    });
+        expect(find.byType(DataTable), findsOneWidget);
+        expect(find.byType(AssetDistributionPieChart), findsNothing);
+        expect(find.text('Bank'), findsOneWidget); // Verify table content
+      },
+    );
   }, skip: true);
 }

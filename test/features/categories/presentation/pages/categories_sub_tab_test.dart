@@ -44,16 +44,14 @@ void main() {
   });
 
   Widget buildTestWidget() {
-    return BlocProvider.value(
-      value: mockBloc,
-      child: const CategoriesSubTab(),
-    );
+    return BlocProvider.value(value: mockBloc, child: const CategoriesSubTab());
   }
 
   group('CategoriesSubTab', () {
     testWidgets('shows loading indicator', (tester) async {
-      when(() => mockBloc.state).thenReturn(const CategoryManagementState(
-          status: CategoryManagementStatus.loading));
+      when(() => mockBloc.state).thenReturn(
+        const CategoryManagementState(status: CategoryManagementStatus.loading),
+      );
       await pumpWidgetWithProviders(
         tester: tester,
         widget: buildTestWidget(),
@@ -62,13 +60,16 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('renders category lists in their respective tabs',
-        (tester) async {
-      when(() => mockBloc.state).thenReturn(CategoryManagementState(
-        status: CategoryManagementStatus.loaded,
-        customExpenseCategories: mockExpenseCategories,
-        customIncomeCategories: mockIncomeCategories,
-      ));
+    testWidgets('renders category lists in their respective tabs', (
+      tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(
+        CategoryManagementState(
+          status: CategoryManagementStatus.loaded,
+          customExpenseCategories: mockExpenseCategories,
+          customIncomeCategories: mockIncomeCategories,
+        ),
+      );
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
       // Expense tab is visible by default
@@ -84,13 +85,16 @@ void main() {
     });
 
     testWidgets('has "Manage Categories" button', (tester) async {
-      when(() => mockBloc.state).thenReturn(const CategoryManagementState(
-          status: CategoryManagementStatus.loaded));
+      when(() => mockBloc.state).thenReturn(
+        const CategoryManagementState(status: CategoryManagementStatus.loaded),
+      );
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
-      expect(find.byKey(const ValueKey('button_manage_categories')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('button_manage_categories')),
+        findsOneWidget,
+      );
     });
   });
 }

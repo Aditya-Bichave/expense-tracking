@@ -35,25 +35,25 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final newComparisonState = !_showComparison;
     setState(() => _showComparison = newComparisonState);
     // Get current granularity from state
-    final currentGranularity = context.read<SpendingTimeReportBloc>().state
-            is SpendingTimeReportLoaded
+    final currentGranularity =
+        context.read<SpendingTimeReportBloc>().state is SpendingTimeReportLoaded
         ? (context.read<SpendingTimeReportBloc>().state
-                as SpendingTimeReportLoaded)
-            .reportData
-            .granularity
+                  as SpendingTimeReportLoaded)
+              .reportData
+              .granularity
         : (context.read<SpendingTimeReportBloc>().state
-                is SpendingTimeReportLoading)
-            ? (context.read<SpendingTimeReportBloc>().state
-                    as SpendingTimeReportLoading)
-                .granularity
-            : TimeSeriesGranularity.daily; // Default
+              is SpendingTimeReportLoading)
+        ? (context.read<SpendingTimeReportBloc>().state
+                  as SpendingTimeReportLoading)
+              .granularity
+        : TimeSeriesGranularity.daily; // Default
 
     context.read<SpendingTimeReportBloc>().add(
-          LoadSpendingTimeReport(
-            compareToPrevious: newComparisonState, // Pass new comparison state
-            granularity: currentGranularity,
-          ),
-        );
+      LoadSpendingTimeReport(
+        compareToPrevious: newComparisonState, // Pass new comparison state
+        granularity: currentGranularity,
+      ),
+    );
     log.info(
       "[SpendingOverTimePage] Toggled comparison to: $newComparisonState",
     );
@@ -98,7 +98,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final Map<String, String> filters = {
       'startDate': periodStart.toIso8601String(),
       'endDate': periodEnd.toIso8601String(),
-      'type': filterBlocState.selectedTransactionType?.name ??
+      'type':
+          filterBlocState.selectedTransactionType?.name ??
           TransactionType.expense.name, // Use filter or default
     };
     if (filterBlocState.selectedAccountIds.isNotEmpty) {
@@ -140,18 +141,18 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             final currentGranularity = (state is SpendingTimeReportLoaded)
                 ? state.reportData.granularity
                 : (state is SpendingTimeReportLoading)
-                    ? state.granularity
-                    : TimeSeriesGranularity.daily;
+                ? state.granularity
+                : TimeSeriesGranularity.daily;
             return PopupMenuButton<TimeSeriesGranularity>(
               initialValue: currentGranularity,
               onSelected: (g) {
                 // When granularity changes, also pass current comparison state
                 context.read<SpendingTimeReportBloc>().add(
-                      LoadSpendingTimeReport(
-                        granularity: g,
-                        compareToPrevious: _showComparison,
-                      ),
-                    );
+                  LoadSpendingTimeReport(
+                    granularity: g,
+                    compareToPrevious: _showComparison,
+                  ),
+                );
               },
               icon: const Icon(Icons.timeline_outlined),
               tooltip: AppLocalizations.of(context)!.changeGranularity,
@@ -212,7 +213,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               ),
             );
 
-            final bool showTable = settingsState.uiMode == UIMode.quantum &&
+            final bool showTable =
+                settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
             return ListView(

@@ -10,7 +10,7 @@ class DashboardInitial extends DashboardState {}
 
 class DashboardLoading extends DashboardState {
   final bool
-      isReloading; // True if loading triggered while data was already loaded
+  isReloading; // True if loading triggered while data was already loaded
   const DashboardLoading({this.isReloading = false});
 
   @override

@@ -20,7 +20,8 @@ class AssetExpenseCategoryDataSource implements CategoryPredefinedDataSource {
     // Caching logic remains the same
     if (_cachedCategories != null) {
       log.info(
-          "Returning cached predefined EXPENSE categories (${_cachedCategories!.length}).");
+        "Returning cached predefined EXPENSE categories (${_cachedCategories!.length}).",
+      );
       return _cachedCategories!;
     }
 
@@ -29,15 +30,18 @@ class AssetExpenseCategoryDataSource implements CategoryPredefinedDataSource {
       final jsonString = await rootBundle.loadString(_assetPath);
       final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
       final categories = jsonList
-          .map((jsonItem) =>
-              CategoryModel.fromJson(jsonItem as Map<String, dynamic>))
+          .map(
+            (jsonItem) =>
+                CategoryModel.fromJson(jsonItem as Map<String, dynamic>),
+          )
           .toList();
 
       // Validation (no custom allowed)
       categories.removeWhere((cat) {
         if (cat.isCustom) {
           log.warning(
-              "Predefined expense category loaded from asset has isCustom=true! ID: ${cat.id}. Removing.");
+            "Predefined expense category loaded from asset has isCustom=true! ID: ${cat.id}. Removing.",
+          );
           return true;
         }
         return false;
@@ -45,20 +49,25 @@ class AssetExpenseCategoryDataSource implements CategoryPredefinedDataSource {
 
       _cachedCategories = categories;
       log.info(
-          "Successfully loaded and cached ${_cachedCategories!.length} predefined EXPENSE categories.");
+        "Successfully loaded and cached ${_cachedCategories!.length} predefined EXPENSE categories.",
+      );
       return _cachedCategories!;
     } on FormatException catch (e, s) {
       log.severe(
-          "Failed to parse predefined expense categories JSON from asset '$_assetPath'$e$s");
+        "Failed to parse predefined expense categories JSON from asset '$_assetPath'$e$s",
+      );
       _cachedCategories = []; // Return empty on format error
       throw const CacheFailure(
-          'Invalid format in predefined expense categories asset file.');
+        'Invalid format in predefined expense categories asset file.',
+      );
     } catch (e, s) {
       log.severe(
-          "Failed to load predefined expense categories from asset '$_assetPath'$e$s");
+        "Failed to load predefined expense categories from asset '$_assetPath'$e$s",
+      );
       _cachedCategories = []; // Return empty on other errors
       throw CacheFailure(
-          'Could not load predefined expense categories: ${e.toString()}');
+        'Could not load predefined expense categories: ${e.toString()}',
+      );
     }
   }
 }
@@ -74,7 +83,8 @@ class AssetIncomeCategoryDataSource implements CategoryPredefinedDataSource {
     // Caching logic remains the same
     if (_cachedCategories != null) {
       log.info(
-          "Returning cached predefined INCOME categories (${_cachedCategories!.length}).");
+        "Returning cached predefined INCOME categories (${_cachedCategories!.length}).",
+      );
       return _cachedCategories!;
     }
 
@@ -83,15 +93,18 @@ class AssetIncomeCategoryDataSource implements CategoryPredefinedDataSource {
       final jsonString = await rootBundle.loadString(_assetPath);
       final List<dynamic> jsonList = jsonDecode(jsonString) as List<dynamic>;
       final categories = jsonList
-          .map((jsonItem) =>
-              CategoryModel.fromJson(jsonItem as Map<String, dynamic>))
+          .map(
+            (jsonItem) =>
+                CategoryModel.fromJson(jsonItem as Map<String, dynamic>),
+          )
           .toList();
 
       // Validation (no custom allowed)
       categories.removeWhere((cat) {
         if (cat.isCustom) {
           log.warning(
-              "Predefined income category loaded from asset has isCustom=true! ID: ${cat.id}. Removing.");
+            "Predefined income category loaded from asset has isCustom=true! ID: ${cat.id}. Removing.",
+          );
           return true;
         }
         return false;
@@ -99,20 +112,25 @@ class AssetIncomeCategoryDataSource implements CategoryPredefinedDataSource {
 
       _cachedCategories = categories;
       log.info(
-          "Successfully loaded and cached ${_cachedCategories!.length} predefined INCOME categories.");
+        "Successfully loaded and cached ${_cachedCategories!.length} predefined INCOME categories.",
+      );
       return _cachedCategories!;
     } on FormatException catch (e, s) {
       log.severe(
-          "Failed to parse predefined income categories JSON from asset '$_assetPath'$e$s");
+        "Failed to parse predefined income categories JSON from asset '$_assetPath'$e$s",
+      );
       _cachedCategories = [];
       throw const CacheFailure(
-          'Invalid format in predefined income categories asset file.');
+        'Invalid format in predefined income categories asset file.',
+      );
     } catch (e, s) {
       log.severe(
-          "Failed to load predefined income categories from asset '$_assetPath'$e$s");
+        "Failed to load predefined income categories from asset '$_assetPath'$e$s",
+      );
       _cachedCategories = [];
       throw CacheFailure(
-          'Could not load predefined income categories: ${e.toString()}');
+        'Could not load predefined income categories: ${e.toString()}',
+      );
     }
   }
 }

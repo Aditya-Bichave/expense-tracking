@@ -35,13 +35,16 @@ class ApplyCategoryToBatchUseCase
   final ExpenseRepository expenseRepository;
   final IncomeRepository incomeRepository;
 
-  ApplyCategoryToBatchUseCase(
-      {required this.expenseRepository, required this.incomeRepository});
+  ApplyCategoryToBatchUseCase({
+    required this.expenseRepository,
+    required this.incomeRepository,
+  });
 
   @override
   Future<Either<Failure, void>> call(ApplyCategoryToBatchParams params) async {
     log.info(
-        "[ApplyCategoryBatchUseCase] Executing for ${params.transactionIds.length} ${params.transactionType.name} transactions. Category ID: ${params.categoryId}");
+      "[ApplyCategoryBatchUseCase] Executing for ${params.transactionIds.length} ${params.transactionType.name} transactions. Category ID: ${params.categoryId}",
+    );
 
     List<Future<Either<Failure, void>>> updateFutures = [];
 
@@ -50,41 +53,48 @@ class ApplyCategoryToBatchUseCase
       if (params.transactionType == TransactionType.expense) {
         // --- END Use ---
         // Use the specific categorization update method from the repository
-        updateFutures.add(expenseRepository.updateExpenseCategorization(
+        updateFutures.add(
+          expenseRepository.updateExpenseCategorization(
             txnId,
             params.categoryId,
             CategorizationStatus
                 .categorized, // Batch categorize sets status to categorized
-            null // Confidence not applicable for manual batch action
-            ));
+            null, // Confidence not applicable for manual batch action
+          ),
+        );
       } else {
         // --- Use the imported TransactionType for comparison ---
         if (params.transactionType == TransactionType.income) {
           // --- END Use ---
-          updateFutures.add(incomeRepository.updateIncomeCategorization(
+          updateFutures.add(
+            incomeRepository.updateIncomeCategorization(
               txnId,
               params.categoryId,
               CategorizationStatus
                   .categorized, // Batch categorize sets status to categorized
-              null // Confidence not applicable for manual batch action
-              ));
+              null, // Confidence not applicable for manual batch action
+            ),
+          );
         } else {
           // Should not happen if called correctly, but good practice to handle
           log.warning(
-              "[ApplyCategoryBatchUseCase] Unknown transaction type encountered for ID $txnId during batch apply.");
+            "[ApplyCategoryBatchUseCase] Unknown transaction type encountered for ID $txnId during batch apply.",
+          );
         }
       }
     }
 
     if (updateFutures.isEmpty) {
       log.info(
-          "[ApplyCategoryBatchUseCase] No transactions found matching the specified type for batch update.");
+        "[ApplyCategoryBatchUseCase] No transactions found matching the specified type for batch update.",
+      );
       return const Right(null); // Nothing to update, consider success
     }
 
     try {
       log.info(
-          "[ApplyCategoryBatchUseCase] Awaiting ${updateFutures.length} update futures...");
+        "[ApplyCategoryBatchUseCase] Awaiting ${updateFutures.length} update futures...",
+      );
       final results = await Future.wait(updateFutures);
 
       // Check if any individual update failed
@@ -108,20 +118,29 @@ class ApplyCategoryToBatchUseCase
 
       if (firstFailure != null) {
         log.warning(
-            "[ApplyCategoryBatchUseCase] Some updates failed (${failedIds.length} / ${params.transactionIds.length}). IDs: ${failedIds.join(', ')}. First error: ${firstFailure?.message}");
+          "[ApplyCategoryBatchUseCase] Some updates failed (${failedIds.length} / ${params.transactionIds.length}). IDs: ${failedIds.join(', ')}. First error: ${firstFailure?.message}",
+        );
         // Return the first failure encountered, possibly wrapped in a more specific BatchFailure
-        return Left(CacheFailure(
-            "Failed to update category for ${failedIds.length} transaction(s): ${firstFailure?.message}"));
+        return Left(
+          CacheFailure(
+            "Failed to update category for ${failedIds.length} transaction(s): ${firstFailure?.message}",
+          ),
+        );
       }
 
       log.info(
-          "[ApplyCategoryBatchUseCase] All ${updateFutures.length} batch updates successful.");
+        "[ApplyCategoryBatchUseCase] All ${updateFutures.length} batch updates successful.",
+      );
       return const Right(null); // Overall success
     } catch (e) {
       log.severe(
-          "[ApplyCategoryBatchUseCase] Unexpected error during batch update execution");
-      return Left(UnexpectedFailure(
-          "Unexpected error applying batch category: ${e.toString()}"));
+        "[ApplyCategoryBatchUseCase] Unexpected error during batch update execution",
+      );
+      return Left(
+        UnexpectedFailure(
+          "Unexpected error applying batch category: ${e.toString()}",
+        ),
+      );
     }
   }
 }

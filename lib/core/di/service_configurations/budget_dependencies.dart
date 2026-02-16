@@ -22,17 +22,20 @@ class BudgetDependencies {
   static void register() {
     // --- MODIFIED: Register Proxy ---
     sl.registerLazySingleton<BudgetLocalDataSource>(
-        () => DemoAwareBudgetDataSource(
-              hiveDataSource: sl<HiveBudgetLocalDataSource>(), // Get real DS
-              demoModeService: sl<DemoModeService>(),
-            ));
+      () => DemoAwareBudgetDataSource(
+        hiveDataSource: sl<HiveBudgetLocalDataSource>(), // Get real DS
+        demoModeService: sl<DemoModeService>(),
+      ),
+    );
     // --- END MODIFIED ---
 
     // Repository (Depends on Expense Repo)
-    sl.registerLazySingleton<BudgetRepository>(() => BudgetRepositoryImpl(
-          localDataSource: sl(),
-          expenseRepository: sl<ExpenseRepository>(),
-        ));
+    sl.registerLazySingleton<BudgetRepository>(
+      () => BudgetRepositoryImpl(
+        localDataSource: sl(),
+        expenseRepository: sl<ExpenseRepository>(),
+      ),
+    );
 
     // Use Cases
     sl.registerLazySingleton(() => AddBudgetUseCase(sl(), sl<Uuid>()));
@@ -42,21 +45,24 @@ class BudgetDependencies {
 
     // Blocs
     if (!sl.isRegistered<BudgetListBloc>()) {
-      sl.registerFactory(() => BudgetListBloc(
-            getBudgetsUseCase: sl(),
-            budgetRepository: sl(),
-            deleteBudgetUseCase: sl(),
-            dataChangeStream: sl<Stream<DataChangedEvent>>(),
-          ));
+      sl.registerFactory(
+        () => BudgetListBloc(
+          getBudgetsUseCase: sl(),
+          budgetRepository: sl(),
+          deleteBudgetUseCase: sl(),
+          dataChangeStream: sl<Stream<DataChangedEvent>>(),
+        ),
+      );
     }
     if (!sl.isRegistered<AddEditBudgetBloc>()) {
       sl.registerFactoryParam<AddEditBudgetBloc, Budget?, void>(
-          (initialBudget, _) => AddEditBudgetBloc(
-                addBudgetUseCase: sl(),
-                updateBudgetUseCase: sl(),
-                categoryRepository: sl<CategoryRepository>(),
-                initialBudget: initialBudget,
-              ));
+        (initialBudget, _) => AddEditBudgetBloc(
+          addBudgetUseCase: sl(),
+          updateBudgetUseCase: sl(),
+          categoryRepository: sl<CategoryRepository>(),
+          initialBudget: initialBudget,
+        ),
+      );
     }
   }
 }

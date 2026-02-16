@@ -26,11 +26,13 @@ void main() {
   );
 
   setUpAll(() {
-    registerFallbackValue(GetSpendingCategoryReportParams(
-      startDate: DateTime.now(),
-      endDate: DateTime.now(),
-      compareToPrevious: false,
-    ));
+    registerFallbackValue(
+      GetSpendingCategoryReportParams(
+        startDate: DateTime.now(),
+        endDate: DateTime.now(),
+        compareToPrevious: false,
+      ),
+    );
   });
 
   setUp(() {
@@ -43,8 +45,9 @@ void main() {
     blocTest<SpendingCategoryReportBloc, SpendingCategoryReportState>(
       'emits [loading, loaded] on success',
       build: () {
-        when(() => mockUseCase(any()))
-            .thenAnswer((_) async => Right(tReportData));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => Right(tReportData));
         return SpendingCategoryReportBloc(
           getSpendingCategoryReportUseCase: mockUseCase,
           reportFilterBloc: mockFilterBloc,
@@ -60,8 +63,9 @@ void main() {
     blocTest<SpendingCategoryReportBloc, SpendingCategoryReportState>(
       'emits [loading, error] on failure',
       build: () {
-        when(() => mockUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Error')));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Error')));
         return SpendingCategoryReportBloc(
           getSpendingCategoryReportUseCase: mockUseCase,
           reportFilterBloc: mockFilterBloc,

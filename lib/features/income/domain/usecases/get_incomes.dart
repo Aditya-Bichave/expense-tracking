@@ -7,8 +7,12 @@ class GetIncomesParams extends Equatable {
   final String? category;
   final String? accountId;
 
-  const GetIncomesParams(
-      {this.startDate, this.endDate, this.category, this.accountId});
+  const GetIncomesParams({
+    this.startDate,
+    this.endDate,
+    this.category,
+    this.accountId,
+  });
 
   @override
   List<Object?> get props => [startDate, endDate, category, accountId];

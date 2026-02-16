@@ -51,7 +51,8 @@ void main() {
     mockGetContributionsUseCase = MockGetContributionsUseCase();
     sl.registerSingleton<GoalRepository>(mockGoalRepository);
     sl.registerSingleton<GetContributionsForGoalUseCase>(
-        mockGetContributionsUseCase);
+      mockGetContributionsUseCase,
+    );
   });
 
   tearDown(() {
@@ -67,10 +68,12 @@ void main() {
 
   group('GoalDetailPage', () {
     testWidgets('shows loading and then displays details', (tester) async {
-      when(() => mockGoalRepository.getGoalById(any()))
-          .thenAnswer((_) async => Right(mockGoal));
-      when(() => mockGetContributionsUseCase.call(any()))
-          .thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGoalRepository.getGoalById(any()),
+      ).thenAnswer((_) async => Right(mockGoal));
+      when(
+        () => mockGetContributionsUseCase.call(any()),
+      ).thenAnswer((_) async => const Right([]));
 
       await pumpWidgetWithProviders(
         tester: tester,
@@ -86,10 +89,12 @@ void main() {
     });
 
     testWidgets('tapping Edit button navigates', (tester) async {
-      when(() => mockGoalRepository.getGoalById(any()))
-          .thenAnswer((_) async => Right(mockGoal));
-      when(() => mockGetContributionsUseCase.call(any()))
-          .thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGoalRepository.getGoalById(any()),
+      ).thenAnswer((_) async => Right(mockGoal));
+      when(
+        () => mockGetContributionsUseCase.call(any()),
+      ).thenAnswer((_) async => const Right([]));
 
       final router = GoRouter(
         routes: [
@@ -117,12 +122,15 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('button_edit')));
     });
 
-    testWidgets('tapping Archive shows dialog and dispatches event',
-        (tester) async {
-      when(() => mockGoalRepository.getGoalById(any()))
-          .thenAnswer((_) async => Right(mockGoal));
-      when(() => mockGetContributionsUseCase.call(any()))
-          .thenAnswer((_) async => const Right([]));
+    testWidgets('tapping Archive shows dialog and dispatches event', (
+      tester,
+    ) async {
+      when(
+        () => mockGoalRepository.getGoalById(any()),
+      ).thenAnswer((_) async => Right(mockGoal));
+      when(
+        () => mockGetContributionsUseCase.call(any()),
+      ).thenAnswer((_) async => const Right([]));
       when(() => mockGoalListBloc.add(any())).thenAnswer((_) {});
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
@@ -136,8 +144,9 @@ void main() {
       await tester.tap(find.text('Archive'));
       await tester.pump();
 
-      verify(() => mockGoalListBloc.add(const ArchiveGoal(goalId: '1')))
-          .called(1);
+      verify(
+        () => mockGoalListBloc.add(const ArchiveGoal(goalId: '1')),
+      ).called(1);
     });
   });
 }

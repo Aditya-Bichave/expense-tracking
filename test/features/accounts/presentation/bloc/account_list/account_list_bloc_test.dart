@@ -62,8 +62,9 @@ void main() {
     blocTest<AccountListBloc, AccountListState>(
       'emits [AccountListLoading, AccountListLoaded] when successful',
       build: () {
-        when(() => mockGetAssetAccountsUseCase(any()))
-            .thenAnswer((_) async => Right(tAccounts));
+        when(
+          () => mockGetAssetAccountsUseCase(any()),
+        ).thenAnswer((_) async => Right(tAccounts));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadAccounts()),
@@ -79,15 +80,19 @@ void main() {
     blocTest<AccountListBloc, AccountListState>(
       'emits [AccountListLoading, AccountListError] when failure',
       build: () {
-        when(() => mockGetAssetAccountsUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Error')));
+        when(
+          () => mockGetAssetAccountsUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Error')));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadAccounts()),
       expect: () => [
         isA<AccountListLoading>(),
-        isA<AccountListError>()
-            .having((s) => s.message, 'message', contains('Error')),
+        isA<AccountListError>().having(
+          (s) => s.message,
+          'message',
+          contains('Error'),
+        ),
       ],
     );
   });
@@ -97,8 +102,9 @@ void main() {
       'emits optimistic update then nothing if success',
       seed: () => AccountListLoaded(accounts: tAccounts),
       build: () {
-        when(() => mockDeleteAssetAccountUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockDeleteAssetAccountUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
         return bloc;
       },
       act: (bloc) => bloc.add(DeleteAccountRequested(tAccount.id)),
@@ -119,15 +125,19 @@ void main() {
       'emits optimistic update then reverts if failure',
       seed: () => AccountListLoaded(accounts: tAccounts),
       build: () {
-        when(() => mockDeleteAssetAccountUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Delete Error')));
+        when(
+          () => mockDeleteAssetAccountUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Delete Error')));
         return bloc;
       },
       act: (bloc) => bloc.add(DeleteAccountRequested(tAccount.id)),
       expect: () => [
         AccountListLoaded(accounts: const []), // Optimistic
         isA<AccountListError>().having(
-            (s) => s.message, 'message', contains('Delete Error')), // Error
+          (s) => s.message,
+          'message',
+          contains('Delete Error'),
+        ), // Error
         AccountListLoaded(accounts: tAccounts), // Revert
       ],
     );
@@ -137,8 +147,9 @@ void main() {
     blocTest<AccountListBloc, AccountListState>(
       'triggers reload when relevant data changes',
       build: () {
-        when(() => mockGetAssetAccountsUseCase(any()))
-            .thenAnswer((_) async => Right(tAccounts));
+        when(
+          () => mockGetAssetAccountsUseCase(any()),
+        ).thenAnswer((_) async => Right(tAccounts));
         return bloc;
       },
       act: (bloc) async {
@@ -159,8 +170,9 @@ void main() {
     blocTest<AccountListBloc, AccountListState>(
       'resets state when system reset event occurs',
       build: () {
-        when(() => mockGetAssetAccountsUseCase(any()))
-            .thenAnswer((_) async => Right(tAccounts));
+        when(
+          () => mockGetAssetAccountsUseCase(any()),
+        ).thenAnswer((_) async => Right(tAccounts));
         return bloc;
       },
       act: (bloc) async {

@@ -27,8 +27,9 @@ void main() {
 
   group('LogContributionSheetContent', () {
     testWidgets('renders in "Add" mode and submits', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const LogContributionState(goalId: '1'));
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const LogContributionState(goalId: '1'));
       when(() => mockBloc.add(any())).thenAnswer((_) {});
 
       await pumpWidgetWithProviders(
@@ -45,16 +46,20 @@ void main() {
       expect(find.text('Add'), findsOneWidget);
 
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Amount Contributed'), '100');
-      await tester
-          .tap(find.byKey(const ValueKey('button_submit_contribution')));
+        find.widgetWithText(TextFormField, 'Amount Contributed'),
+        '100',
+      );
+      await tester.tap(
+        find.byKey(const ValueKey('button_submit_contribution')),
+      );
       await tester.pump();
 
       verify(() => mockBloc.add(any(that: isA<SaveContribution>()))).called(1);
     });
 
-    testWidgets('shows loading state on button when submitting',
-        (tester) async {
+    testWidgets('shows loading state on button when submitting', (
+      tester,
+    ) async {
       when(() => mockBloc.state).thenReturn(
         const LogContributionState(
           status: LogContributionStatus.loading,
@@ -74,7 +79,8 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       final button = tester.widget<ElevatedButton>(
-          find.byKey(const ValueKey('button_submit_contribution')));
+        find.byKey(const ValueKey('button_submit_contribution')),
+      );
       expect(button.onPressed, isNull);
     });
   });

@@ -25,21 +25,23 @@ void main() {
       repository: mockRepository,
       updateRecurringRule: mockUpdateRecurringRule,
     );
-    registerFallbackValue(RecurringRule(
-      id: '',
-      description: '',
-      amount: 0,
-      transactionType: TransactionType.expense,
-      accountId: '',
-      categoryId: '',
-      frequency: Frequency.monthly,
-      interval: 1,
-      startDate: DateTime.now(),
-      endConditionType: EndConditionType.never,
-      status: RuleStatus.active,
-      nextOccurrenceDate: DateTime.now(),
-      occurrencesGenerated: 0,
-    ));
+    registerFallbackValue(
+      RecurringRule(
+        id: '',
+        description: '',
+        amount: 0,
+        transactionType: TransactionType.expense,
+        accountId: '',
+        categoryId: '',
+        frequency: Frequency.monthly,
+        interval: 1,
+        startDate: DateTime.now(),
+        endConditionType: EndConditionType.never,
+        status: RuleStatus.active,
+        nextOccurrenceDate: DateTime.now(),
+        occurrencesGenerated: 0,
+      ),
+    );
   });
 
   final tActiveRule = RecurringRule(
@@ -60,17 +62,20 @@ void main() {
 
   test('should pause an active rule', () async {
     // Arrange
-    when(() => mockRepository.getRecurringRuleById(any()))
-        .thenAnswer((_) async => Right(tActiveRule));
-    when(() => mockUpdateRecurringRule(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.getRecurringRuleById(any()),
+    ).thenAnswer((_) async => Right(tActiveRule));
+    when(
+      () => mockUpdateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     await usecase('1');
 
     // Assert
-    final captured =
-        verify(() => mockUpdateRecurringRule(captureAny())).captured;
+    final captured = verify(
+      () => mockUpdateRecurringRule(captureAny()),
+    ).captured;
     expect(captured.single.status, RuleStatus.paused);
   });
 }

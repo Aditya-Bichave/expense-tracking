@@ -75,10 +75,10 @@ class AddGoalParams extends Equatable {
 
   @override
   List<Object?> get props => [
-        name,
-        targetAmount,
-        targetDate,
-        iconName,
-        description,
-      ];
+    name,
+    targetAmount,
+    targetDate,
+    iconName,
+    description,
+  ];
 }

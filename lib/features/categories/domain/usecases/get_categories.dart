@@ -22,7 +22,8 @@ class GetCategoriesUseCase implements UseCase<List<Category>, NoParams> {
       (failure) =>
           log.warning("[GetCategoriesUseCase] Failed: ${failure.message}"),
       (categories) => log.info(
-          "[GetCategoriesUseCase] Succeeded with ${categories.length} categories."),
+        "[GetCategoriesUseCase] Succeeded with ${categories.length} categories.",
+      ),
     );
     return result;
   }

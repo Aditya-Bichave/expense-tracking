@@ -33,8 +33,11 @@ class GoalProgressPage extends StatelessWidget {
           }
           if (state is GoalProgressReportError) {
             return Center(
-                child: Text("Error: ${state.message}",
-                    style: TextStyle(color: theme.colorScheme.error)));
+              child: Text(
+                "Error: ${state.message}",
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            );
           }
           if (state is GoalProgressReportLoaded) {
             final reportData = state.reportData;
@@ -57,19 +60,26 @@ class GoalProgressPage extends StatelessWidget {
   }
 
   Widget _buildGoalProgressCard(
-      BuildContext context, GoalProgressData goalData, SettingsState settings) {
+    BuildContext context,
+    GoalProgressData goalData,
+    SettingsState settings,
+  ) {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
     final goal = goalData.goal;
-    final progressColor =
-        goal.isAchieved ? Colors.green.shade600 : theme.colorScheme.primary;
+    final progressColor = goal.isAchieved
+        ? Colors.green.shade600
+        : theme.colorScheme.primary;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
       child: InkWell(
-        onTap: () => context.pushNamed(RouteNames.goalDetail,
-            pathParameters: {'id': goal.id}, extra: goal),
+        onTap: () => context.pushNamed(
+          RouteNames.goalDetail,
+          pathParameters: {'id': goal.id},
+          extra: goal,
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -87,15 +97,21 @@ class GoalProgressPage extends StatelessWidget {
                         Text(goal.name, style: theme.textTheme.titleMedium),
                         if (goal.targetDate != null)
                           Text(
-                              'Target: ${DateFormatter.formatDate(goal.targetDate!)}',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant)),
+                            'Target: ${DateFormatter.formatDate(goal.targetDate!)}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                       ],
                     ),
                   ),
-                  Text('${(goal.percentageComplete * 100).toStringAsFixed(0)}%',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                          color: progressColor, fontWeight: FontWeight.bold)),
+                  Text(
+                    '${(goal.percentageComplete * 100).toStringAsFixed(0)}%',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: progressColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -114,13 +130,17 @@ class GoalProgressPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                      'Saved: ${CurrencyFormatter.format(goal.totalSaved, currencySymbol)}',
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: progressColor)),
+                    'Saved: ${CurrencyFormatter.format(goal.totalSaved, currencySymbol)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: progressColor,
+                    ),
+                  ),
                   Text(
-                      'Target: ${CurrencyFormatter.format(goal.targetAmount, currencySymbol)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                    'Target: ${CurrencyFormatter.format(goal.targetAmount, currencySymbol)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
               // Contribution Chart (Optional)
@@ -131,11 +151,12 @@ class GoalProgressPage extends StatelessWidget {
                 SizedBox(
                   height: 100, // Adjust height as needed
                   child: GoalContributionChart(
-                      contributions: goalData.contributions),
+                    contributions: goalData.contributions,
+                  ),
                 ),
                 // Or show list:
                 // _buildContributionList(context, goalData.contributions, settings)
-              ]
+              ],
             ],
           ),
         ),

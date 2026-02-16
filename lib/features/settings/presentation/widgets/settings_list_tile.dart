@@ -43,8 +43,9 @@ class SettingsListTile extends StatelessWidget {
       leading: _buildLeadingIcon(context),
       title: Text(
         title,
-        style:
-            enabled ? titleStyle : titleStyle?.copyWith(color: disabledColor),
+        style: enabled
+            ? titleStyle
+            : titleStyle?.copyWith(color: disabledColor),
       ),
       subtitle: subtitle != null
           ? Text(

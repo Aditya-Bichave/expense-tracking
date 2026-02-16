@@ -45,11 +45,11 @@ class DeleteCustomCategoryUseCase
         log.info(
           "[DeleteCustomCategoryUseCase] Reassigning income from ${params.categoryId} to ${params.fallbackCategoryId}...",
         );
-        final incomeReassignResult =
-            await incomeRepository.reassignIncomesCategory(
-          params.categoryId,
-          params.fallbackCategoryId,
-        );
+        final incomeReassignResult = await incomeRepository
+            .reassignIncomesCategory(
+              params.categoryId,
+              params.fallbackCategoryId,
+            );
 
         return await incomeReassignResult.fold<Future<Either<Failure, void>>>(
           (failure) async {

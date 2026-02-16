@@ -40,8 +40,9 @@ void main() {
 
   group('CategoryManagementScreen', () {
     testWidgets('shows loading indicator', (tester) async {
-      when(() => mockBloc.state).thenReturn(const CategoryManagementState(
-          status: CategoryManagementStatus.loading));
+      when(() => mockBloc.state).thenReturn(
+        const CategoryManagementState(status: CategoryManagementStatus.loading),
+      );
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const CategoryManagementScreen(),
@@ -50,13 +51,16 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('renders CategoryListSectionWidget when loaded',
-        (tester) async {
-      when(() => mockBloc.state).thenReturn(CategoryManagementState(
-        status: CategoryManagementStatus.loaded,
-        customExpenseCategories: mockCategories,
-        customIncomeCategories: mockCategories,
-      ));
+    testWidgets('renders CategoryListSectionWidget when loaded', (
+      tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(
+        CategoryManagementState(
+          status: CategoryManagementStatus.loaded,
+          customExpenseCategories: mockCategories,
+          customIncomeCategories: mockCategories,
+        ),
+      );
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const CategoryManagementScreen(),
@@ -68,23 +72,32 @@ void main() {
       // This test is tricky because the page uses Navigator.of(context).push
       // which is hard to mock without a full router setup.
       // We will just verify the button exists.
-      when(() => mockBloc.state).thenReturn(const CategoryManagementState(
-          status: CategoryManagementStatus.loaded));
+      when(() => mockBloc.state).thenReturn(
+        const CategoryManagementState(status: CategoryManagementStatus.loaded),
+      );
       await pumpWidgetWithProviders(
-          tester: tester, widget: const CategoryManagementScreen());
+        tester: tester,
+        widget: const CategoryManagementScreen(),
+      );
 
       expect(find.byKey(const ValueKey('fab_add_custom')), findsOneWidget);
     });
 
     testWidgets('shows error message', (tester) async {
-      when(() => mockBloc.state).thenReturn(const CategoryManagementState(
-        status: CategoryManagementStatus.error,
-        errorMessage: 'Failed to load',
-      ));
+      when(() => mockBloc.state).thenReturn(
+        const CategoryManagementState(
+          status: CategoryManagementStatus.error,
+          errorMessage: 'Failed to load',
+        ),
+      );
       await pumpWidgetWithProviders(
-          tester: tester, widget: const CategoryManagementScreen());
-      expect(find.textContaining('Error loading categories: Failed to load'),
-          findsOneWidget);
+        tester: tester,
+        widget: const CategoryManagementScreen(),
+      );
+      expect(
+        find.textContaining('Error loading categories: Failed to load'),
+        findsOneWidget,
+      );
     });
   });
 }

@@ -48,8 +48,9 @@ void main() {
   ];
 
   group('CategorySelectorMultiTile', () {
-    testWidgets('renders hint text when no categories are selected',
-        (tester) async {
+    testWidgets('renders hint text when no categories are selected', (
+      tester,
+    ) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
@@ -68,8 +69,9 @@ void main() {
       expect(find.byIcon(Icons.category_outlined), findsOneWidget);
     });
 
-    testWidgets('renders count and icons when 1 category is selected',
-        (tester) async {
+    testWidgets('renders count and icons when 1 category is selected', (
+      tester,
+    ) async {
       // ARRANGE
       await pumpWidgetWithProviders(
         tester: tester,
@@ -93,24 +95,25 @@ void main() {
     });
 
     testWidgets(
-        'displays more indicator when more than 3 categories are selected',
-        (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: CategorySelectorMultiTile(
-            selectedCategoryIds: const ['1', '2', '3', '4'],
-            availableCategories: mockCategories,
-            onTap: () {},
+      'displays more indicator when more than 3 categories are selected',
+      (tester) async {
+        // ARRANGE
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: Material(
+            child: CategorySelectorMultiTile(
+              selectedCategoryIds: const ['1', '2', '3', '4'],
+              availableCategories: mockCategories,
+              onTap: () {},
+            ),
           ),
-        ),
-      );
+        );
 
-      // ASSERT
-      expect(find.text('4 Categories Selected'), findsOneWidget);
-      expect(find.text('+1'), findsOneWidget);
-    });
+        // ASSERT
+        expect(find.text('4 Categories Selected'), findsOneWidget);
+        expect(find.text('+1'), findsOneWidget);
+      },
+    );
 
     testWidgets('calls onTap when the tile is tapped', (tester) async {
       // ARRANGE
@@ -140,8 +143,9 @@ void main() {
       verify(() => mockOnTap.call()).called(1);
     });
 
-    testWidgets('displays error text and styling when errorText is provided',
-        (tester) async {
+    testWidgets('displays error text and styling when errorText is provided', (
+      tester,
+    ) async {
       // ARRANGE
       const errorText = 'This is an error';
       await pumpWidgetWithProviders(

@@ -15,7 +15,7 @@ class FinancialOverview extends Equatable {
   final List<BudgetWithStatus> activeBudgetsSummary;
   final List<Goal> activeGoalsSummary;
   final List<TimeSeriesDataPoint>
-      recentSpendingSparkline; // Renamed for clarity
+  recentSpendingSparkline; // Renamed for clarity
   final List<TimeSeriesDataPoint> recentContributionSparkline; // Added
 
   const FinancialOverview({
@@ -33,15 +33,15 @@ class FinancialOverview extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalIncome,
-        totalExpenses,
-        netFlow,
-        overallBalance,
-        accounts,
-        accountBalances,
-        activeBudgetsSummary,
-        activeGoalsSummary,
-        recentSpendingSparkline,
-        recentContributionSparkline, // Added
-      ];
+    totalIncome,
+    totalExpenses,
+    netFlow,
+    overallBalance,
+    accounts,
+    accountBalances,
+    activeBudgetsSummary,
+    activeGoalsSummary,
+    recentSpendingSparkline,
+    recentContributionSparkline, // Added
+  ];
 }

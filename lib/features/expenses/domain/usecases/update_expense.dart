@@ -14,7 +14,8 @@ class UpdateExpenseUseCase implements UseCase<Expense, UpdateExpenseParams> {
   @override
   Future<Either<Failure, Expense>> call(UpdateExpenseParams params) async {
     log.info(
-        "Executing UpdateExpenseUseCase for '${params.expense.title}' (ID: ${params.expense.id}).");
+      "Executing UpdateExpenseUseCase for '${params.expense.title}' (ID: ${params.expense.id}).",
+    );
     // Validation
     if (params.expense.title.trim().isEmpty) {
       log.warning("Validation failed: Expense title cannot be empty.");

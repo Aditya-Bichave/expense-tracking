@@ -7,11 +7,7 @@ class SpendingPieChart extends StatefulWidget {
   final List<CategorySpendingData> data;
   final Function(int index)? onTapSlice; // Callback for tap
 
-  const SpendingPieChart({
-    super.key,
-    required this.data,
-    this.onTapSlice,
-  });
+  const SpendingPieChart({super.key, required this.data, this.onTapSlice});
 
   @override
   State<SpendingPieChart> createState() => _SpendingPieChartState();

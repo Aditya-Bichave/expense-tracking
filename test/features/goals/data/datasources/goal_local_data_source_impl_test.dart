@@ -42,13 +42,11 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.put(any(), any()))
-            .thenThrow(Exception('Hive Error'));
+        when(
+          () => mockBox.put(any(), any()),
+        ).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.saveGoal(tGoal),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() => dataSource.saveGoal(tGoal), throwsA(isA<CacheFailure>()));
       });
     });
 
@@ -65,10 +63,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.values).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.getGoals(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() => dataSource.getGoals(), throwsA(isA<CacheFailure>()));
       });
     });
 
@@ -131,10 +126,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.clearAllGoals(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() => dataSource.clearAllGoals(), throwsA(isA<CacheFailure>()));
       });
     });
   });

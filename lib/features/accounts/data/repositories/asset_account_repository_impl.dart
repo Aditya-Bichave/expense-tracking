@@ -304,10 +304,10 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       log.info(
         "[$runtimeType] Fetching total expenses for account $accountId...",
       );
-      final totalExpensesEither =
-          await expenseRepository.getTotalExpensesForAccount(
-        accountId,
-      ); // Empty string handled in ExpenseRepo
+      final totalExpensesEither = await expenseRepository
+          .getTotalExpensesForAccount(
+            accountId,
+          ); // Empty string handled in ExpenseRepo
       totalExpensesEither.fold(
         (f) => log.warning(
           "[$runtimeType] Expense fetch failed for $accountId: ${f.message}",

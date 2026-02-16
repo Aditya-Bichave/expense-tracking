@@ -15,13 +15,16 @@ class UpdateContributionUseCase
 
   @override
   Future<Either<Failure, GoalContribution>> call(
-      UpdateContributionParams params) async {
+    UpdateContributionParams params,
+  ) async {
     final contribution = params.contribution;
     log.info(
-        "[UpdateContributionUseCase] Updating contribution ID: ${contribution.id}");
+      "[UpdateContributionUseCase] Updating contribution ID: ${contribution.id}",
+    );
     if (contribution.amount <= 0) {
       return const Left(
-          ValidationFailure("Contribution amount must be positive."));
+        ValidationFailure("Contribution amount must be positive."),
+      );
     }
     return await repository.updateContribution(contribution);
   }

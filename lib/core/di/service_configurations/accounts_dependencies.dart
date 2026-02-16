@@ -23,19 +23,22 @@ class AccountDependencies {
     // --- MODIFIED: Register Proxy ---
     // Data Source (Register the Proxy)
     sl.registerLazySingleton<AssetAccountLocalDataSource>(
-        () => DemoAwareAccountDataSource(
-              hiveDataSource:
-                  sl<HiveAssetAccountLocalDataSource>(), // Pass the real one
-              demoModeService: sl<DemoModeService>(),
-            ));
+      () => DemoAwareAccountDataSource(
+        hiveDataSource:
+            sl<HiveAssetAccountLocalDataSource>(), // Pass the real one
+        demoModeService: sl<DemoModeService>(),
+      ),
+    );
     // --- END MODIFIED ---
 
     // Repository (Depends on Income/Expense Repos)
-    sl.registerLazySingleton<AssetAccountRepository>(() =>
-        AssetAccountRepositoryImpl(
-            localDataSource: sl(),
-            incomeRepository: sl<IncomeRepository>(),
-            expenseRepository: sl<ExpenseRepository>()));
+    sl.registerLazySingleton<AssetAccountRepository>(
+      () => AssetAccountRepositoryImpl(
+        localDataSource: sl(),
+        incomeRepository: sl<IncomeRepository>(),
+        expenseRepository: sl<ExpenseRepository>(),
+      ),
+    );
     // Use Cases
     sl.registerLazySingleton(() => AddAssetAccountUseCase(sl()));
     sl.registerLazySingleton(() => GetAssetAccountsUseCase(sl()));
@@ -43,13 +46,18 @@ class AccountDependencies {
     sl.registerLazySingleton(() => DeleteAssetAccountUseCase(sl()));
     // Blocs
     sl.registerFactoryParam<AddEditAccountBloc, AssetAccount?, void>(
-        (initialAccount, _) => AddEditAccountBloc(
-            addAssetAccountUseCase: sl(),
-            updateAssetAccountUseCase: sl(),
-            initialAccount: initialAccount));
-    sl.registerFactory(() => AccountListBloc(
+      (initialAccount, _) => AddEditAccountBloc(
+        addAssetAccountUseCase: sl(),
+        updateAssetAccountUseCase: sl(),
+        initialAccount: initialAccount,
+      ),
+    );
+    sl.registerFactory(
+      () => AccountListBloc(
         getAssetAccountsUseCase: sl(),
         deleteAssetAccountUseCase: sl(),
-        dataChangeStream: sl<Stream<DataChangedEvent>>()));
+        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+      ),
+    );
   }
 }

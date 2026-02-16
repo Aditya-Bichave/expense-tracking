@@ -45,8 +45,9 @@ void main() {
 
       test('should throw CacheFailure when box operation fails', () async {
         // Arrange
-        when(() => mockBox.put(any(), any()))
-            .thenThrow(Exception('Hive Error'));
+        when(
+          () => mockBox.put(any(), any()),
+        ).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
         expect(
@@ -96,8 +97,9 @@ void main() {
 
       test('should throw CacheFailure when update fails', () async {
         // Arrange
-        when(() => mockBox.put(any(), any()))
-            .thenThrow(Exception('Hive Error'));
+        when(
+          () => mockBox.put(any(), any()),
+        ).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
         expect(
@@ -148,10 +150,7 @@ void main() {
         when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
-        expect(
-          () => dataSource.clearAll(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() => dataSource.clearAll(), throwsA(isA<CacheFailure>()));
       });
     });
   });

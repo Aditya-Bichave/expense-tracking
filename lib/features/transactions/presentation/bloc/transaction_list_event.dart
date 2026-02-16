@@ -36,8 +36,13 @@ class FilterChanged extends TransactionListEvent {
   });
 
   @override
-  List<Object?> get props =>
-      [startDate, endDate, categoryId, accountId, transactionType];
+  List<Object?> get props => [
+    startDate,
+    endDate,
+    categoryId,
+    accountId,
+    transactionType,
+  ];
 }
 
 // Update sort order and reload
@@ -103,8 +108,12 @@ class UserCategorizedTransaction extends TransactionListEvent {
   });
 
   @override
-  List<Object?> get props =>
-      [transactionId, transactionType, selectedCategory, matchData];
+  List<Object?> get props => [
+    transactionId,
+    transactionType,
+    selectedCategory,
+    matchData,
+  ];
 }
 
 // Internal event for reactive updates from data changes
@@ -116,4 +125,5 @@ class _DataChanged extends TransactionListEvent {
 class ResetState extends TransactionListEvent {
   const ResetState();
 }
+
 // --- END ADDED ---

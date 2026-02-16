@@ -10,7 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class SpendingBarChart extends StatelessWidget {
   final List<CategorySpendingData> data;
   final List<CategorySpendingData>?
-      previousData; // Now used for comparison display
+  previousData; // Now used for comparison display
   final Function(int index)? onTapBar;
   final int maxBarsToShow; // Renamed from `limit`
 
@@ -69,8 +69,10 @@ class SpendingBarChart extends StatelessWidget {
                   TextSpan(
                     text:
                         '$prefix${CurrencyFormatter.format(value, currencySymbol)}',
-                    style:
-                        ChartUtils.tooltipContentStyle(context, color: color),
+                    style: ChartUtils.tooltipContentStyle(
+                      context,
+                      color: color,
+                    ),
                   ),
                 ],
                 textAlign: TextAlign.left,
@@ -88,19 +90,22 @@ class SpendingBarChart extends StatelessWidget {
         ),
         titlesData: FlTitlesData(
           show: true,
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               getTitlesWidget: (value, meta) => ChartUtils.bottomTitleWidgets(
-                  context,
-                  value,
-                  meta,
-                  chartData.length,
-                  (index) => chartData[index].categoryName),
+                context,
+                value,
+                meta,
+                chartData.length,
+                (index) => chartData[index].categoryName,
+              ),
               reservedSize: 38,
             ),
           ),
@@ -114,8 +119,12 @@ class SpendingBarChart extends StatelessWidget {
           ),
         ),
         borderData: FlBorderData(show: false),
-        barGroups:
-            showingGroups(context, chartData, previousDataMap, showComparison),
+        barGroups: showingGroups(
+          context,
+          chartData,
+          previousDataMap,
+          showComparison,
+        ),
         gridData: const FlGridData(show: false),
         alignment: BarChartAlignment.spaceAround,
       ),
@@ -123,17 +132,19 @@ class SpendingBarChart extends StatelessWidget {
   }
 
   List<BarChartGroupData> showingGroups(
-      BuildContext context,
-      List<CategorySpendingData> chartData,
-      Map<String, CategorySpendingData> previousDataMap,
-      bool showComparison) {
+    BuildContext context,
+    List<CategorySpendingData> chartData,
+    Map<String, CategorySpendingData> previousDataMap,
+    bool showComparison,
+  ) {
     final double barWidth = showComparison ? 8 : 16;
     final double spaceBetweenRods = showComparison ? 2 : 0;
 
     return List.generate(chartData.length, (i) {
       final currentItem = chartData[i];
-      final CategorySpendingData? prevItem =
-          showComparison ? previousDataMap[currentItem.categoryId] : null;
+      final CategorySpendingData? prevItem = showComparison
+          ? previousDataMap[currentItem.categoryId]
+          : null;
 
       return BarChartGroupData(
         x: i,
@@ -143,11 +154,14 @@ class SpendingBarChart extends StatelessWidget {
           if (showComparison)
             BarChartRodData(
               toY: prevItem?.currentTotalAmount ?? 0,
-              color:
-                  currentItem.categoryColor.withOpacity(0.4), // Lighter color
+              color: currentItem.categoryColor.withOpacity(
+                0.4,
+              ), // Lighter color
               width: barWidth,
               borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+                topLeft: Radius.circular(4),
+                topRight: Radius.circular(4),
+              ),
             ),
           // Current Bar
           BarChartRodData(
@@ -155,7 +169,9 @@ class SpendingBarChart extends StatelessWidget {
             color: currentItem.categoryColor, // Solid color
             width: barWidth,
             borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4), topRight: Radius.circular(4)),
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
           ),
         ],
       );

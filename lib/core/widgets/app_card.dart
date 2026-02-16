@@ -30,7 +30,8 @@ class AppCard extends StatelessWidget {
     final modeTheme = context.modeTheme;
 
     // Determine properties: Use override -> theme.cardTheme -> modeTheme -> hardcoded fallback
-    final cardMargin = margin ??
+    final cardMargin =
+        margin ??
         theme.cardTheme.margin ??
         modeTheme?.cardOuterPadding ??
         const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
@@ -47,10 +48,7 @@ class AppCard extends StatelessWidget {
     final cardClipBehavior = theme.cardTheme.clipBehavior ?? clipBehavior;
 
     // Wrap the child with the determined padding
-    Widget cardContent = Padding(
-      padding: cardInnerPadding,
-      child: child,
-    );
+    Widget cardContent = Padding(padding: cardInnerPadding, child: child);
 
     // Ensure elevation is not null for Card widget
     final double finalElevation =

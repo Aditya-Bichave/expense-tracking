@@ -63,8 +63,10 @@ Future<void> _writeStartupLog(String message) async {
 }
 
 Future<void> _runMigrations(int fromVersion) async {
-  log.info('Running Hive migrations from v$fromVersion to '
-      '${HiveConstants.dataVersion}');
+  log.info(
+    'Running Hive migrations from v$fromVersion to '
+    '${HiveConstants.dataVersion}',
+  );
   // TODO: Implement actual migration logic when data models change.
 }
 
@@ -87,7 +89,9 @@ Future<void> main() async {
     if (storedVersion < HiveConstants.dataVersion) {
       await _runMigrations(storedVersion);
       await prefs.setInt(
-          HiveConstants.dataVersionKey, HiveConstants.dataVersion);
+        HiveConstants.dataVersionKey,
+        HiveConstants.dataVersion,
+      );
     }
 
     // Register All Adapters BEFORE opening boxes
@@ -130,8 +134,8 @@ Future<void> main() async {
     );
     final recurringRuleAuditLogBox =
         await Hive.openBox<RecurringRuleAuditLogModel>(
-      HiveConstants.recurringRuleAuditLogBoxName,
-    );
+          HiveConstants.recurringRuleAuditLogBoxName,
+        );
     log.info("All Hive boxes opened.");
     log.info("SharedPreferences instance obtained.");
 
@@ -293,11 +297,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (!settingsState.isAppLockEnabled) return;
     try {
       await _localAuth.authenticate(
-          localizedReason: 'Please authenticate to continue',
-          options: const AuthenticationOptions(
-            biometricOnly: false,
-            stickyAuth: true,
-          ));
+        localizedReason: 'Please authenticate to continue',
+        options: const AuthenticationOptions(
+          biometricOnly: false,
+          stickyAuth: true,
+        ),
+      );
     } catch (e) {
       log.warning('[MyApp] Authentication failed: $e');
     }

@@ -3,12 +3,14 @@ import 'package:expense_tracker/features/goals/data/models/goal_contribution_mod
 
 abstract class GoalContributionLocalDataSource {
   Future<List<GoalContributionModel>>
-      getAllContributions(); // Needed for recalculation
+  getAllContributions(); // Needed for recalculation
   Future<List<GoalContributionModel>> getContributionsForGoal(
-      String goalId); // Convenience method
+    String goalId,
+  ); // Convenience method
   Future<GoalContributionModel?> getContributionById(String id);
   Future<void> saveContribution(
-      GoalContributionModel contribution); // Add/Update
+    GoalContributionModel contribution,
+  ); // Add/Update
   Future<void> deleteContribution(String id);
   Future<void> deleteContributions(List<String> ids); // Batch delete
   Future<void> clearAllContributions();

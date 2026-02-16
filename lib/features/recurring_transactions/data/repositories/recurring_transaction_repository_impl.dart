@@ -81,7 +81,8 @@ class RecurringTransactionRepositoryImpl
 
   @override
   Future<Either<Failure, List<RecurringRuleAuditLog>>> getAuditLogsForRule(
-      String ruleId) async {
+    String ruleId,
+  ) async {
     try {
       final logModels = await localDataSource.getAuditLogsForRule(ruleId);
       final logs = logModels.map((model) => model.toEntity()).toList();

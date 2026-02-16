@@ -24,21 +24,21 @@ class AppearanceSettingsSection extends StatelessWidget {
           AppTheme.elementalPalette1,
           AppTheme.elementalPalette2,
           AppTheme.elementalPalette3,
-          AppTheme.elementalPalette4
+          AppTheme.elementalPalette4,
         ];
       case UIMode.quantum:
         return [
           AppTheme.quantumPalette1,
           AppTheme.quantumPalette2,
           AppTheme.quantumPalette3,
-          AppTheme.quantumPalette4
+          AppTheme.quantumPalette4,
         ];
       case UIMode.aether:
         return [
           AppTheme.aetherPalette1,
           AppTheme.aetherPalette2,
           AppTheme.aetherPalette3,
-          AppTheme.aetherPalette4
+          AppTheme.aetherPalette4,
         ];
     }
   }
@@ -46,8 +46,9 @@ class AppearanceSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final relevantPaletteIdentifiers =
-        _getRelevantPaletteIdentifiers(state.uiMode);
+    final relevantPaletteIdentifiers = _getRelevantPaletteIdentifiers(
+      state.uiMode,
+    );
     // --- Check Demo Mode ---
     final bool isEnabled = !isLoading && !state.isInDemoMode;
     // --- End Check ---
@@ -62,7 +63,8 @@ class AppearanceSettingsSection extends StatelessWidget {
           // --- End Use ---
           leadingIcon: Icons.view_quilt_outlined,
           title: 'UI Mode',
-          subtitle: AppTheme.uiModeNames[state.uiMode] ??
+          subtitle:
+              AppTheme.uiModeNames[state.uiMode] ??
               (toBeginningOfSentenceCase(state.uiMode.name) ??
                   state.uiMode.name),
           trailing: PopupMenuButton<UIMode>(
@@ -73,14 +75,16 @@ class AppearanceSettingsSection extends StatelessWidget {
             onSelected: (UIMode newMode) =>
                 context.read<SettingsBloc>().add(UpdateUIMode(newMode)),
             itemBuilder: (context) => UIMode.values
-                .map((mode) => PopupMenuItem<UIMode>(
-                      value: mode,
-                      child: Text(
-                          AppTheme.uiModeNames[mode] ??
-                              (toBeginningOfSentenceCase(mode.name) ??
-                                  mode.name),
-                          style: theme.textTheme.bodyMedium),
-                    ))
+                .map(
+                  (mode) => PopupMenuItem<UIMode>(
+                    value: mode,
+                    child: Text(
+                      AppTheme.uiModeNames[mode] ??
+                          (toBeginningOfSentenceCase(mode.name) ?? mode.name),
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -90,7 +94,8 @@ class AppearanceSettingsSection extends StatelessWidget {
           // --- End Use ---
           leadingIcon: Icons.palette_outlined,
           title: 'Palette / Variant',
-          subtitle: AppTheme.paletteNames[state.paletteIdentifier] ??
+          subtitle:
+              AppTheme.paletteNames[state.paletteIdentifier] ??
               state.paletteIdentifier,
           trailing: relevantPaletteIdentifiers.isEmpty
               ? null
@@ -103,11 +108,15 @@ class AppearanceSettingsSection extends StatelessWidget {
                       .read<SettingsBloc>()
                       .add(UpdatePaletteIdentifier(newIdentifier)),
                   itemBuilder: (context) => relevantPaletteIdentifiers
-                      .map((id) => PopupMenuItem<String>(
-                            value: id,
-                            child: Text(AppTheme.paletteNames[id] ?? id,
-                                style: theme.textTheme.bodyMedium),
-                          ))
+                      .map(
+                        (id) => PopupMenuItem<String>(
+                          value: id,
+                          child: Text(
+                            AppTheme.paletteNames[id] ?? id,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
         ),
@@ -117,7 +126,8 @@ class AppearanceSettingsSection extends StatelessWidget {
           // --- End Use ---
           leadingIcon: Icons.brightness_6_outlined,
           title: 'Brightness Mode',
-          subtitle: toBeginningOfSentenceCase(state.themeMode.name) ??
+          subtitle:
+              toBeginningOfSentenceCase(state.themeMode.name) ??
               state.themeMode.name,
           trailing: PopupMenuButton<ThemeMode>(
             enabled: isEnabled, // Use combined state
@@ -127,12 +137,15 @@ class AppearanceSettingsSection extends StatelessWidget {
             onSelected: (ThemeMode newMode) =>
                 context.read<SettingsBloc>().add(UpdateTheme(newMode)),
             itemBuilder: (context) => ThemeMode.values
-                .map((mode) => PopupMenuItem<ThemeMode>(
-                      value: mode,
-                      child: Text(
-                          toBeginningOfSentenceCase(mode.name) ?? mode.name,
-                          style: theme.textTheme.bodyMedium),
-                    ))
+                .map(
+                  (mode) => PopupMenuItem<ThemeMode>(
+                    value: mode,
+                    child: Text(
+                      toBeginningOfSentenceCase(mode.name) ?? mode.name,
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),

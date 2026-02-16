@@ -26,17 +26,21 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
   @override
   Future<Either<Failure, String?>> call(BackupParams params) async {
     log.info(
-        "[BackupUseCase] Backup process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}");
+      "[BackupUseCase] Backup process started. Platform: ${kIsWeb ? 'Web' : 'Non-Web'}",
+    );
     try {
       log.info("[BackupUseCase] Fetching all data...");
       final dataEither = await dataManagementRepository.getAllDataForBackup();
       if (dataEither.isLeft()) {
         log.warning("[BackupUseCase] Failed to retrieve data for backup.");
-        return dataEither.fold((failure) => Left(failure),
-            (_) => const Left(BackupFailure("Failed to retrieve data.")));
+        return dataEither.fold(
+          (failure) => Left(failure),
+          (_) => const Left(BackupFailure("Failed to retrieve data.")),
+        );
       }
-      final allData =
-          dataEither.getOrElse(() => throw Exception("Data retrieval error"));
+      final allData = dataEither.getOrElse(
+        () => throw Exception("Data retrieval error"),
+      );
       log.info("[BackupUseCase] Data fetched.");
 
       log.info("[BackupUseCase] Fetching package info...");
@@ -62,8 +66,10 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
 
       log.info("[BackupUseCase] Encoding data to JSON...");
       final jsonString = jsonEncode(backupData);
-      final encryptedPayload =
-          EncryptionHelper.encryptString(jsonString, params.password);
+      final encryptedPayload = EncryptionHelper.encryptString(
+        jsonString,
+        params.password,
+      );
       final payloadString = jsonEncode(encryptedPayload);
       final backupFilename =
           '${AppConstants.appName.toLowerCase().replaceAll(' ', '_')}_backup_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.json';
@@ -78,16 +84,19 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
             mimeType: 'application/json',
           );
           log.info(
-              "[BackupUseCase] Web download initiated for '$backupFilename'.");
+            "[BackupUseCase] Web download initiated for '$backupFilename'.",
+          );
           return const Right('Download started');
         } catch (e, s) {
           log.severe("[BackupUseCase] Error during web download$e$s");
           return Left(
-              BackupFailure("Failed to initiate download: ${e.toString()}"));
+            BackupFailure("Failed to initiate download: ${e.toString()}"),
+          );
         }
       } else {
         log.info(
-            "[BackupUseCase] Platform is Non-Web. Prompting user for save file location...");
+          "[BackupUseCase] Platform is Non-Web. Prompting user for save file location...",
+        );
         try {
           final String? outputFile = await FilePicker.platform.saveFile(
             dialogTitle: 'Save Backup File',
@@ -115,20 +124,25 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
         } on PlatformException catch (e, s) {
           log.severe("[BackupUseCase] PlatformException during saveFile$e$s");
           return Left(
-              BackupFailure("Could not save file: ${e.message} (${e.code})"));
+            BackupFailure("Could not save file: ${e.message} (${e.code})"),
+          );
         } on FileSystemException catch (e, s) {
           log.severe("[BackupUseCase] FileSystemException writing file$e$s");
           return Left(FileSystemFailure("File system error: ${e.message}"));
         } catch (e, s) {
           log.severe("[BackupUseCase] Unexpected error writing file$e$s");
           return Left(
-              BackupFailure("Failed to write backup file: ${e.toString()}"));
+            BackupFailure("Failed to write backup file: ${e.toString()}"),
+          );
         }
       }
     } catch (e, s) {
       log.severe("[BackupUseCase] Unexpected error in backup process$e$s");
-      return Left(BackupFailure(
-          "An unexpected error occurred during backup: ${e.toString()}"));
+      return Left(
+        BackupFailure(
+          "An unexpected error occurred during backup: ${e.toString()}",
+        ),
+      );
     }
   }
 }

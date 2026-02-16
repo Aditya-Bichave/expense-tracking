@@ -17,7 +17,8 @@ class AddEditGoalPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isEditing = initialGoal != null;
     log.info(
-        "[AddEditGoalPage] Building. Editing: $isEditing. Goal: ${initialGoal?.name}");
+      "[AddEditGoalPage] Building. Editing: $isEditing. Goal: ${initialGoal?.name}",
+    );
 
     return BlocProvider<AddEditGoalBloc>(
       create: (_) => sl<AddEditGoalBloc>(param1: initialGoal),
@@ -27,21 +28,26 @@ class AddEditGoalPage extends StatelessWidget {
             log.info("[AddEditGoalPage] Save successful. Popping.");
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
-                content: Text(
-                    'Goal ${isEditing ? 'updated' : 'added'} successfully!'),
-                backgroundColor: Colors.green,
-              ));
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Goal ${isEditing ? 'updated' : 'added'} successfully!',
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
             if (context.canPop()) context.pop();
           } else if (state.status == AddEditGoalStatus.error &&
               state.errorMessage != null) {
             log.warning("[AddEditGoalPage] Save error: ${state.errorMessage}");
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
-                content: Text('Error: ${state.errorMessage}'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ));
+              ..showSnackBar(
+                SnackBar(
+                  content: Text('Error: ${state.errorMessage}'),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
             context.read<AddEditGoalBloc>().add(const ClearGoalFormMessage());
           }
         },
@@ -66,14 +72,16 @@ class AddEditGoalPage extends StatelessWidget {
                 initialGoal: state.initialGoal,
                 onSubmit:
                     (name, targetAmount, targetDate, iconName, description) {
-                  context.read<AddEditGoalBloc>().add(SaveGoal(
-                        name: name,
-                        targetAmount: targetAmount,
-                        targetDate: targetDate,
-                        iconName: iconName,
-                        description: description,
-                      ));
-                },
+                      context.read<AddEditGoalBloc>().add(
+                        SaveGoal(
+                          name: name,
+                          targetAmount: targetAmount,
+                          targetDate: targetDate,
+                          iconName: iconName,
+                          description: description,
+                        ),
+                      );
+                    },
               );
             },
           ),
