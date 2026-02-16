@@ -128,7 +128,8 @@ void main() {
             .having((s) => s.budgetsWithStatus, 'budgets', isEmpty),
       ],
       verify: (_) {
-        verify(() => mockDeleteBudgetUseCase(DeleteBudgetParams(id: tBudget.id)))
+        verify(() =>
+                mockDeleteBudgetUseCase(DeleteBudgetParams(id: tBudget.id)))
             .called(1);
       },
     );

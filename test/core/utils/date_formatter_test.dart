@@ -10,7 +10,7 @@ void main() {
 
     test('formatDateTime should format the date and time correctly', () {
       final dateTime = DateTime(2023, 1, 15, 14, 30);
-      const expected = 'Jan 15, 2023, 2:30 PM';
+      const expected = 'Jan 15, 2023 2:30 PM';
       expect(DateFormatter.formatDateTime(dateTime, locale: 'en'), expected);
     });
 

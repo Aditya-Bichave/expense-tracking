@@ -65,8 +65,8 @@ void main() {
     blocTest<SummaryBloc, SummaryState>(
       'emits [SummaryLoading, SummaryError] when usecase fails',
       build: () {
-        when(() => mockUseCase(any())).thenAnswer(
-            (_) async => const Left(ServerFailure('Server Error')));
+        when(() => mockUseCase(any()))
+            .thenAnswer((_) async => const Left(ServerFailure('Server Error')));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadSummary()),
