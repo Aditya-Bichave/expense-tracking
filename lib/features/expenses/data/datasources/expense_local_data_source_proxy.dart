@@ -49,6 +49,14 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
     if (demoModeService.isDemoActive) {
       log.fine("[DemoAwareExpenseDS] Getting demo expenses with filters.");
       final expenses = await demoModeService.getDemoExpenses();
+
+      final accountIdSet = (accountId != null && accountId.isNotEmpty)
+          ? accountId.split(',').toSet()
+          : null;
+      final categoryIdSet = (categoryId != null && categoryId.isNotEmpty)
+          ? categoryId.split(',').toSet()
+          : null;
+
       return expenses.where((expense) {
         if (startDate != null) {
           final expDateOnly = DateTime(
@@ -74,13 +82,12 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
           );
           if (expense.date.isAfter(endDateInclusive)) return false;
         }
-        if (accountId != null && accountId.isNotEmpty) {
-          final ids = accountId.split(',');
-          if (!ids.contains(expense.accountId)) return false;
+        if (accountIdSet != null && !accountIdSet.contains(expense.accountId)) {
+          return false;
         }
-        if (categoryId != null && categoryId.isNotEmpty) {
-          final ids = categoryId.split(',');
-          if (!ids.contains(expense.categoryId)) return false;
+        if (categoryIdSet != null &&
+            !categoryIdSet.contains(expense.categoryId)) {
+          return false;
         }
         return true;
       }).toList();

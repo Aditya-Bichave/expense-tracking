@@ -54,6 +54,14 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
   }) async {
     try {
       final List<ExpenseModel> results = [];
+
+      final accountIdSet = (accountId != null && accountId.isNotEmpty)
+          ? accountId.split(',').toSet()
+          : null;
+      final categoryIdSet = (categoryId != null && categoryId.isNotEmpty)
+          ? categoryId.split(',').toSet()
+          : null;
+
       for (final expense in expenseBox.values) {
         if (startDate != null) {
           final expenseDateOnly = DateTime(
@@ -79,13 +87,12 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
           );
           if (expense.date.isAfter(endDateInclusive)) continue;
         }
-        if (accountId != null && accountId.isNotEmpty) {
-          final ids = accountId.split(',');
-          if (!ids.contains(expense.accountId)) continue;
+        if (accountIdSet != null && !accountIdSet.contains(expense.accountId)) {
+          continue;
         }
-        if (categoryId != null && categoryId.isNotEmpty) {
-          final ids = categoryId.split(',');
-          if (!ids.contains(expense.categoryId)) continue;
+        if (categoryIdSet != null &&
+            !categoryIdSet.contains(expense.categoryId)) {
+          continue;
         }
         results.add(expense);
       }

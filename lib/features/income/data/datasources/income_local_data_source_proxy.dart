@@ -45,6 +45,14 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
     if (demoModeService.isDemoActive) {
       log.fine("[DemoAwareIncomeDS] Getting demo incomes with filters.");
       final incomes = await demoModeService.getDemoIncomes();
+
+      final accountIdSet = (accountId != null && accountId.isNotEmpty)
+          ? accountId.split(',').toSet()
+          : null;
+      final categoryIdSet = (categoryId != null && categoryId.isNotEmpty)
+          ? categoryId.split(',').toSet()
+          : null;
+
       return incomes.where((income) {
         if (startDate != null) {
           final incDateOnly = DateTime(
@@ -70,13 +78,12 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
           );
           if (income.date.isAfter(endDateInclusive)) return false;
         }
-        if (accountId != null && accountId.isNotEmpty) {
-          final ids = accountId.split(',');
-          if (!ids.contains(income.accountId)) return false;
+        if (accountIdSet != null && !accountIdSet.contains(income.accountId)) {
+          return false;
         }
-        if (categoryId != null && categoryId.isNotEmpty) {
-          final ids = categoryId.split(',');
-          if (!ids.contains(income.categoryId)) return false;
+        if (categoryIdSet != null &&
+            !categoryIdSet.contains(income.categoryId)) {
+          return false;
         }
         return true;
       }).toList();
