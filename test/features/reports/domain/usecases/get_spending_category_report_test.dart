@@ -32,22 +32,26 @@ void main() {
 
   test('should get spending category report from repository', () async {
     // arrange
-    when(() => mockReportRepository.getSpendingByCategory(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          accountIds: ['a1'],
-        )).thenAnswer((_) async => const Right(tReportData));
+    when(
+      () => mockReportRepository.getSpendingByCategory(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        accountIds: ['a1'],
+      ),
+    ).thenAnswer((_) async => const Right(tReportData));
 
     // act
     final result = await useCase(tParams);
 
     // assert
     expect(result, const Right(tReportData));
-    verify(() => mockReportRepository.getSpendingByCategory(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          accountIds: ['a1'],
-        )).called(1);
+    verify(
+      () => mockReportRepository.getSpendingByCategory(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        accountIds: ['a1'],
+      ),
+    ).called(1);
     verifyNoMoreInteractions(mockReportRepository);
   });
 }

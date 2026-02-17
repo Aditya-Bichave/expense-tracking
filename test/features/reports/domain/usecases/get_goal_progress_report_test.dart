@@ -24,20 +24,24 @@ void main() {
 
   test('should get goal progress report from repository', () async {
     // arrange
-    when(() => mockReportRepository.getGoalProgress(
-          goalIds: ['g1'],
-          calculateComparisonRate: true,
-        )).thenAnswer((_) async => const Right(tReportData));
+    when(
+      () => mockReportRepository.getGoalProgress(
+        goalIds: ['g1'],
+        calculateComparisonRate: true,
+      ),
+    ).thenAnswer((_) async => const Right(tReportData));
 
     // act
     final result = await useCase(tParams);
 
     // assert
     expect(result, const Right(tReportData));
-    verify(() => mockReportRepository.getGoalProgress(
-          goalIds: ['g1'],
-          calculateComparisonRate: true,
-        )).called(1);
+    verify(
+      () => mockReportRepository.getGoalProgress(
+        goalIds: ['g1'],
+        calculateComparisonRate: true,
+      ),
+    ).called(1);
     verifyNoMoreInteractions(mockReportRepository);
   });
 }

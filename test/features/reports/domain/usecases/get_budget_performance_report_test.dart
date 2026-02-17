@@ -16,9 +16,7 @@ void main() {
     useCase = GetBudgetPerformanceReportUseCase(mockReportRepository);
   });
 
-  const tReportData = BudgetPerformanceReportData(
-    performanceData: [],
-  );
+  const tReportData = BudgetPerformanceReportData(performanceData: []);
 
   final tStartDate = DateTime(2023, 1, 1);
   final tEndDate = DateTime(2023, 1, 31);
@@ -32,26 +30,30 @@ void main() {
 
   test('should get budget performance report from repository', () async {
     // arrange
-    when(() => mockReportRepository.getBudgetPerformance(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          budgetIds: ['b1'],
-          accountIds: ['a1'],
-          compareToPrevious: true,
-        )).thenAnswer((_) async => const Right(tReportData));
+    when(
+      () => mockReportRepository.getBudgetPerformance(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        budgetIds: ['b1'],
+        accountIds: ['a1'],
+        compareToPrevious: true,
+      ),
+    ).thenAnswer((_) async => const Right(tReportData));
 
     // act
     final result = await useCase(tParams);
 
     // assert
     expect(result, const Right(tReportData));
-    verify(() => mockReportRepository.getBudgetPerformance(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          budgetIds: ['b1'],
-          accountIds: ['a1'],
-          compareToPrevious: true,
-        )).called(1);
+    verify(
+      () => mockReportRepository.getBudgetPerformance(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        budgetIds: ['b1'],
+        accountIds: ['a1'],
+        compareToPrevious: true,
+      ),
+    ).called(1);
     verifyNoMoreInteractions(mockReportRepository);
   });
 }

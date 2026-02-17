@@ -36,24 +36,28 @@ void main() {
 
   test('should get income vs expense report from repository', () async {
     // arrange
-    when(() => mockReportRepository.getIncomeVsExpense(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          periodType: IncomeExpensePeriodType.monthly,
-          accountIds: ['a1'],
-        )).thenAnswer((_) async => const Right(tReportData));
+    when(
+      () => mockReportRepository.getIncomeVsExpense(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        periodType: IncomeExpensePeriodType.monthly,
+        accountIds: ['a1'],
+      ),
+    ).thenAnswer((_) async => const Right(tReportData));
 
     // act
     final result = await useCase(tParams);
 
     // assert
     expect(result, const Right(tReportData));
-    verify(() => mockReportRepository.getIncomeVsExpense(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          periodType: IncomeExpensePeriodType.monthly,
-          accountIds: ['a1'],
-        )).called(1);
+    verify(
+      () => mockReportRepository.getIncomeVsExpense(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        periodType: IncomeExpensePeriodType.monthly,
+        accountIds: ['a1'],
+      ),
+    ).called(1);
     verifyNoMoreInteractions(mockReportRepository);
   });
 }
