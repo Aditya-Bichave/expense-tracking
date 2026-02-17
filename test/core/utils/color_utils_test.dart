@@ -38,10 +38,13 @@ void main() {
         expect(ColorUtils.fromHex(''), Colors.grey); // Empty
       });
 
-       test('returns Colors.grey for null-ish input (though param is non-nullable String)', () {
-         // Dart strong mode prevents passing null usually, but we can test unexpected strings
-         expect(ColorUtils.fromHex('ZZZZZZ'), Colors.grey); // Non-hex chars
-       });
+      test(
+        'returns Colors.grey for null-ish input (though param is non-nullable String)',
+        () {
+          // Dart strong mode prevents passing null usually, but we can test unexpected strings
+          expect(ColorUtils.fromHex('ZZZZZZ'), Colors.grey); // Non-hex chars
+        },
+      );
     });
 
     group('toHex', () {

@@ -6,11 +6,16 @@ void main() {
   testWidgets('FinancialGardenWidget renders placeholder text', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: FinancialGardenWidget()));
 
-    expect(find.text('Financial Garden Dashboard\n(Coming Soon!)'), findsOneWidget);
+    expect(
+      find.text('Financial Garden Dashboard\n(Coming Soon!)'),
+      findsOneWidget,
+    );
     expect(find.byType(Text), findsOneWidget);
 
     // Optional: Check style
-    final textWidget = tester.widget<Text>(find.text('Financial Garden Dashboard\n(Coming Soon!)'));
+    final textWidget = tester.widget<Text>(
+      find.text('Financial Garden Dashboard\n(Coming Soon!)'),
+    );
     expect(textWidget.style?.color, Colors.green);
   });
 }

@@ -39,27 +39,31 @@ void main() {
           path: '/',
           builder: (context, state) => const BudgetsAndCatsTabPage(),
           routes: [
-             GoRoute(
+            GoRoute(
               path: 'add_budget', // Relative path from /
               name: RouteNames.addBudget,
-              builder: (context, state) => const Scaffold(body: Text('Add Budget Page')),
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Add Budget Page')),
             ),
-             GoRoute(
+            GoRoute(
               path: 'add_goal', // Relative path from /
               name: RouteNames.addGoal,
-              builder: (context, state) => const Scaffold(body: Text('Add Goal Page')),
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Add Goal Page')),
             ),
-             GoRoute(
-               path: 'budget_detail/:id',
-               name: RouteNames.budgetDetail,
-               builder: (context, state) => const Scaffold(body: Text('Budget Detail Page')),
-             ),
-             GoRoute(
-               path: 'goal_detail/:id',
-               name: RouteNames.goalDetail,
-               builder: (context, state) => const Scaffold(body: Text('Goal Detail Page')),
-             ),
-          ]
+            GoRoute(
+              path: 'budget_detail/:id',
+              name: RouteNames.budgetDetail,
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Budget Detail Page')),
+            ),
+            GoRoute(
+              path: 'goal_detail/:id',
+              name: RouteNames.goalDetail,
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Goal Detail Page')),
+            ),
+          ],
         ),
       ],
     );
@@ -159,13 +163,13 @@ void main() {
       const GoalListState(status: GoalListStatus.success, goals: []),
     );
 
-      await pumpPage(tester);
+    await pumpPage(tester);
 
-      // Tap Add First Budget button (empty state)
-      await tester.tap(find.byKey(const ValueKey('button_budgetList_addFirst')));
-      await tester.pumpAndSettle();
+    // Tap Add First Budget button (empty state)
+    await tester.tap(find.byKey(const ValueKey('button_budgetList_addFirst')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Add Budget Page'), findsOneWidget);
+    expect(find.text('Add Budget Page'), findsOneWidget);
   });
 
   testWidgets('navigates to Add Goal page', (tester) async {
@@ -179,12 +183,12 @@ void main() {
       const GoalListState(status: GoalListStatus.success, goals: []),
     );
 
-      await pumpPage(tester, extra: {'initialTabIndex': 2}); // Start on Goals tab
+    await pumpPage(tester, extra: {'initialTabIndex': 2}); // Start on Goals tab
 
-      // Tap Add First Goal button (empty state)
-      await tester.tap(find.byKey(const ValueKey('button_addFirst')));
-      await tester.pumpAndSettle();
+    // Tap Add First Goal button (empty state)
+    await tester.tap(find.byKey(const ValueKey('button_addFirst')));
+    await tester.pumpAndSettle();
 
-      expect(find.text('Add Goal Page'), findsOneWidget);
+    expect(find.text('Add Goal Page'), findsOneWidget);
   });
 }

@@ -43,17 +43,37 @@ void main() {
 
   group('AppCountry', () {
     test('equality works', () {
-      const country1 = AppCountry(code: 'US', name: 'United States', currencySymbol: '\$');
-      const country2 = AppCountry(code: 'US', name: 'United States', currencySymbol: '\$');
-      const country3 = AppCountry(code: 'GB', name: 'United Kingdom', currencySymbol: '£');
+      const country1 = AppCountry(
+        code: 'US',
+        name: 'United States',
+        currencySymbol: '\$',
+      );
+      const country2 = AppCountry(
+        code: 'US',
+        name: 'United States',
+        currencySymbol: '\$',
+      );
+      const country3 = AppCountry(
+        code: 'GB',
+        name: 'United Kingdom',
+        currencySymbol: '£',
+      );
 
       expect(country1, equals(country2));
       expect(country1, isNot(equals(country3)));
     });
 
     test('hashCode works', () {
-      const country1 = AppCountry(code: 'US', name: 'United States', currencySymbol: '\$');
-      const country2 = AppCountry(code: 'US', name: 'United States', currencySymbol: '\$');
+      const country1 = AppCountry(
+        code: 'US',
+        name: 'United States',
+        currencySymbol: '\$',
+      );
+      const country2 = AppCountry(
+        code: 'US',
+        name: 'United States',
+        currencySymbol: '\$',
+      );
 
       expect(country1.hashCode, equals(country2.hashCode));
     });
