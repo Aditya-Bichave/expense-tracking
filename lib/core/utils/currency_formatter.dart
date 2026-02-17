@@ -1,6 +1,8 @@
 import 'package:intl/intl.dart';
 
 class CurrencyFormatter {
+  static final Map<String, NumberFormat> _cache = {};
+
   /// Formats a double amount into a currency string.
   ///
   /// Uses the provided [currencySymbol] if not null, otherwise defaults to '$'.
@@ -17,13 +19,16 @@ class CurrencyFormatter {
         : currencySymbol;
 
     try {
-      // Create a NumberFormat instance for currency.
-      // Using the locale helps with correct decimal/grouping separators.
-      final currencyFormat = NumberFormat.currency(
-        locale: locale,
-        symbol: symbolToUse, // Use the selected or default symbol
-        decimalDigits: 2, // Standard 2 decimal places for currency
-      );
+      final cacheKey = '$locale|$symbolToUse';
+      final currencyFormat = _cache.putIfAbsent(cacheKey, () {
+        // Create a NumberFormat instance for currency.
+        // Using the locale helps with correct decimal/grouping separators.
+        return NumberFormat.currency(
+          locale: locale,
+          symbol: symbolToUse, // Use the selected or default symbol
+          decimalDigits: 2, // Standard 2 decimal places for currency
+        );
+      });
 
       return currencyFormat.format(amount);
     } catch (e) {
