@@ -10,6 +10,9 @@ on:
       - ".github/workflows/**"
       - "ios/**"
       - "android/**"
+      - "web/**"
+      - "Dockerfile"
+      - "nginx.conf"
   push:
     branches: [ main ]
     paths:
@@ -20,6 +23,9 @@ on:
       - ".github/workflows/**"
       - "ios/**"
       - "android/**"
+      - "web/**"
+      - "Dockerfile"
+      - "nginx.conf"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -66,3 +72,6 @@ jobs:
           name: lcov
           path: coverage/lcov.info
           retention-days: 5
+
+      - name: Build Web
+        run: flutter build web --release
