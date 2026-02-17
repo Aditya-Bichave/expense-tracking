@@ -14,6 +14,7 @@ class Income extends Equatable {
   final String? notes;
   final CategorizationStatus status; // ADDED
   final double? confidenceScore; // ADDED
+  final String? merchantId; // ADDED
 
   final bool isRecurring;
 
@@ -28,6 +29,7 @@ class Income extends Equatable {
     this.status =
         CategorizationStatus.uncategorized, // ADDED: Default to uncategorized
     this.confidenceScore, // ADDED
+    this.merchantId, // ADDED
     this.isRecurring = false,
   });
 
@@ -45,6 +47,8 @@ class Income extends Equatable {
     CategorizationStatus? status,
     double? confidenceScore,
     ValueGetter<double?>? confidenceScoreOrNull, // Allow setting to null
+    String? merchantId,
+    ValueGetter<String?>? merchantIdOrNull, // Allow setting to null
     bool? isRecurring,
   }) {
     return Income(
@@ -61,6 +65,9 @@ class Income extends Equatable {
       confidenceScore: confidenceScoreOrNull != null
           ? confidenceScoreOrNull()
           : (confidenceScore ?? this.confidenceScore),
+      merchantId: merchantIdOrNull != null
+          ? merchantIdOrNull()
+          : (merchantId ?? this.merchantId),
       isRecurring: isRecurring ?? this.isRecurring,
     );
   }
@@ -76,6 +83,7 @@ class Income extends Equatable {
     notes,
     status, // Added
     confidenceScore, // Added
+    merchantId, // Added
     isRecurring,
   ];
 }

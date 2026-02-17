@@ -19,6 +19,7 @@ class TransactionEntity extends Equatable {
   final CategorizationStatus status;
   final double? confidenceScore;
   final bool isRecurring;
+  final String? merchantId;
 
   // Preserve original typed entities to avoid reconstruction/casting
   final Expense? expense;
@@ -37,6 +38,7 @@ class TransactionEntity extends Equatable {
     this.status = CategorizationStatus.categorized,
     this.confidenceScore,
     this.isRecurring = false,
+    this.merchantId,
   }) : expense = null,
        income = null;
 
@@ -53,6 +55,7 @@ class TransactionEntity extends Equatable {
     required this.status,
     required this.confidenceScore,
     required this.isRecurring,
+    required this.merchantId,
     this.expense,
     this.income,
   });
@@ -71,6 +74,7 @@ class TransactionEntity extends Equatable {
       status: expense.status,
       confidenceScore: expense.confidenceScore,
       isRecurring: expense.isRecurring,
+      merchantId: expense.merchantId,
       expense: expense,
       income: null,
     );
@@ -90,6 +94,7 @@ class TransactionEntity extends Equatable {
       status: income.status,
       confidenceScore: income.confidenceScore,
       isRecurring: income.isRecurring,
+      merchantId: income.merchantId,
       expense: null,
       income: income,
     );
@@ -107,6 +112,7 @@ class TransactionEntity extends Equatable {
     CategorizationStatus? status,
     double? confidenceScore,
     bool? isRecurring,
+    String? merchantId,
   }) {
     return TransactionEntity(
       id: id ?? this.id,
@@ -120,6 +126,7 @@ class TransactionEntity extends Equatable {
       status: status ?? this.status,
       confidenceScore: confidenceScore ?? this.confidenceScore,
       isRecurring: isRecurring ?? this.isRecurring,
+      merchantId: merchantId ?? this.merchantId,
     );
   }
 
@@ -136,5 +143,6 @@ class TransactionEntity extends Equatable {
     status,
     confidenceScore,
     isRecurring,
+    merchantId,
   ];
 }
