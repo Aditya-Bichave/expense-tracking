@@ -22,8 +22,13 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 
 class AddEditTransactionPage extends StatefulWidget {
   final dynamic initialTransactionData;
+  final String? merchantId;
 
-  const AddEditTransactionPage({super.key, this.initialTransactionData});
+  const AddEditTransactionPage({
+    super.key,
+    this.initialTransactionData,
+    this.merchantId,
+  });
 
   @override
   State<AddEditTransactionPage> createState() => _AddEditTransactionPageState();
@@ -59,7 +64,10 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     }
 
     _bloc.add(
-      InitializeTransaction(initialTransaction: _initialTransactionEntity),
+      InitializeTransaction(
+        initialTransaction: _initialTransactionEntity,
+        merchantId: widget.merchantId,
+      ),
     );
     _previousStatus = _bloc.state.status;
     log.info(

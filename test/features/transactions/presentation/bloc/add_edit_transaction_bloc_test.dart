@@ -272,4 +272,77 @@ void main() {
       ],
     );
   });
+
+  group('AutoCategorization', () {
+    late MockAddExpenseUseCase addExpense;
+    late MockUpdateExpenseUseCase updateExpense;
+    late MockAddIncomeUseCase addIncome;
+    late MockUpdateIncomeUseCase updateIncome;
+    late MockCategorizeTransactionUseCase categorize;
+    late MockExpenseRepository expenseRepo;
+    late MockIncomeRepository incomeRepo;
+    late MockCategoryRepository categoryRepo;
+
+    setUp(() {
+      addExpense = MockAddExpenseUseCase();
+      updateExpense = MockUpdateExpenseUseCase();
+      addIncome = MockAddIncomeUseCase();
+      updateIncome = MockUpdateIncomeUseCase();
+      categorize = MockCategorizeTransactionUseCase();
+      expenseRepo = MockExpenseRepository();
+      incomeRepo = MockIncomeRepository();
+      categoryRepo = MockCategoryRepository();
+    });
+
+    blocTest<AddEditTransactionBloc, AddEditTransactionState>(
+      'uses merchantId when available for categorization',
+      build: () {
+        when(
+          () => categorize(any()),
+        ).thenAnswer((_) async => Right(CategorizationResult.uncategorized()));
+        when(
+          () => addExpense(any()),
+        ).thenAnswer((_) async => Right(Expense(
+          id: '1',
+          title: 't',
+          amount: 1,
+          date: DateTime(2024),
+          accountId: 'a',
+          category: Category.uncategorized,
+        )));
+
+        final bloc = AddEditTransactionBloc(
+          addExpenseUseCase: addExpense,
+          updateExpenseUseCase: updateExpense,
+          addIncomeUseCase: addIncome,
+          updateIncomeUseCase: updateIncome,
+          categorizeTransactionUseCase: categorize,
+          expenseRepository: expenseRepo,
+          incomeRepository: incomeRepo,
+          categoryRepository: categoryRepo,
+        );
+        bloc.add(const InitializeTransaction(merchantId: 'merchant_123'));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        SaveTransactionRequested(
+          title: 't',
+          amount: 1.0,
+          date: DateTime(2024),
+          category: Category.uncategorized,
+          accountId: 'a',
+        ),
+      ),
+      verify: (_) {
+        verify(
+          () => categorize(
+            CategorizeTransactionParams(
+              description: 't',
+              merchantId: 'merchant_123',
+            ),
+          ),
+        ).called(1);
+      },
+    );
+  });
 }

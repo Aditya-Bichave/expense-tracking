@@ -232,9 +232,18 @@ class AppRouter {
                     path: RouteNames.addTransaction,
                     name: RouteNames.addTransaction,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const AddEditTransactionPage(
-                      initialTransactionData: null,
-                    ),
+                    builder: (context, state) {
+                      final merchantId =
+                          state.uri.queryParameters['merchantId'];
+                      final extra = state.extra as Map<String, dynamic>?;
+                      final merchantIdFromExtra =
+                          extra?['merchantId'] as String?;
+
+                      return AddEditTransactionPage(
+                        initialTransactionData: null,
+                        merchantId: merchantId ?? merchantIdFromExtra,
+                      );
+                    },
                   ),
                   GoRoute(
                     path:
