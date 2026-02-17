@@ -18,12 +18,14 @@ void main() {
   late UpdateAssetAccountUseCase updateUseCase;
 
   setUpAll(() {
-    registerFallbackValue(const AssetAccount(
-      id: 'fallback',
-      name: 'fallback',
-      type: AssetType.cash,
-      currentBalance: 0,
-    ));
+    registerFallbackValue(
+      const AssetAccount(
+        id: 'fallback',
+        name: 'fallback',
+        type: AssetType.cash,
+        currentBalance: 0,
+      ),
+    );
   });
 
   setUp(() {
@@ -73,9 +75,10 @@ void main() {
       ],
       verify: (_) {
         final captured =
-            verify(() => repository.updateAssetAccount(captureAny()))
-                .captured
-                .single as AssetAccount;
+            verify(
+                  () => repository.updateAssetAccount(captureAny()),
+                ).captured.single
+                as AssetAccount;
         expect(captured.currentBalance, existingAccount.currentBalance);
         expect(captured.initialBalance, 500);
       },

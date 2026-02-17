@@ -33,17 +33,23 @@ class HelpSettingsSection extends StatelessWidget {
           leadingIcon: Icons.feedback_outlined,
           title: 'Send Feedback',
           subtitle: isInDemoMode ? 'Disabled in Demo Mode' : null,
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
-          onTap: !isEnabled // Use combined state
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () {
                   log.warning(
-                      "Send Feedback navigation/action not implemented.");
+                    "Send Feedback navigation/action not implemented.",
+                  );
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Feedback (Coming Soon)")));
+                    const SnackBar(content: Text("Feedback (Coming Soon)")),
+                  );
                   // context.pushNamed(RouteNames.settingsFeedback) // Keep navigation if screen exists
                 },
         ),
@@ -51,32 +57,44 @@ class HelpSettingsSection extends StatelessWidget {
           enabled: isEnabled, // Use combined state
           leadingIcon: Icons.help_outline_rounded,
           title: 'FAQ / Help Center',
-          trailing: Icon(Icons.open_in_new,
-              size: 18,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.secondary),
-          onTap: !isEnabled // Use combined state
+          trailing: Icon(
+            Icons.open_in_new,
+            size: 18,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.secondary,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () => launchUrlCallback(
-                  context, 'https://example.com/help'), // Replace URL
+                  context,
+                  'https://example.com/help',
+                ), // Replace URL
         ),
         SettingsListTile(
           enabled: isEnabled, // Use combined state
           leadingIcon: Icons.share_outlined,
           title: 'Tell a Friend',
-          subtitle:
-              isInDemoMode ? 'Disabled in Demo Mode' : 'Help spread the word!',
-          trailing: Icon(Icons.chevron_right,
-              color: !isEnabled // Use combined state
-                  ? theme.disabledColor
-                  : theme.colorScheme.onSurfaceVariant),
-          onTap: !isEnabled // Use combined state
+          subtitle: isInDemoMode
+              ? 'Disabled in Demo Mode'
+              : 'Help spread the word!',
+          trailing: Icon(
+            Icons.chevron_right,
+            color:
+                !isEnabled // Use combined state
+                ? theme.disabledColor
+                : theme.colorScheme.onSurfaceVariant,
+          ),
+          onTap:
+              !isEnabled // Use combined state
               ? null
               : () {
                   log.warning("Share functionality not implemented.");
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Share (Not Implemented)")));
+                    const SnackBar(content: Text("Share (Not Implemented)")),
+                  );
                 },
         ),
       ],

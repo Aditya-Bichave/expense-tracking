@@ -28,28 +28,32 @@ void main() {
 
   group('CategoryPickerDialogContent', () {
     testWidgets('renders a list of categories', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: CategoryPickerDialogContent(
-            categoryType: CategoryTypeFilter.expense,
-            categories: mockCategories,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CategoryPickerDialogContent(
+              categoryType: CategoryTypeFilter.expense,
+              categories: mockCategories,
+            ),
           ),
         ),
-      ));
+      );
 
       expect(find.text('Food'), findsOneWidget);
       expect(find.text('Shopping'), findsOneWidget);
     });
 
     testWidgets('filters categories based on search', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: CategoryPickerDialogContent(
-            categoryType: CategoryTypeFilter.expense,
-            categories: mockCategories,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CategoryPickerDialogContent(
+              categoryType: CategoryTypeFilter.expense,
+              categories: mockCategories,
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.enterText(find.byType(TextField), 'shop');
       await tester.pump();
@@ -58,22 +62,30 @@ void main() {
       expect(find.text('Shopping'), findsOneWidget);
     });
 
-    testWidgets('tapping a category pops with the selected category',
-        (tester) async {
+    testWidgets('tapping a category pops with the selected category', (
+      tester,
+    ) async {
       Category? result;
-      await tester.pumpWidget(MaterialApp(
-        home: Builder(builder: (context) {
-          return Scaffold(
-            body: ElevatedButton(
-              onPressed: () async {
-                result = await showCategoryPicker(
-                    context, CategoryTypeFilter.expense, mockCategories);
-              },
-              child: const Text('Show'),
-            ),
-          );
-        }),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) {
+              return Scaffold(
+                body: ElevatedButton(
+                  onPressed: () async {
+                    result = await showCategoryPicker(
+                      context,
+                      CategoryTypeFilter.expense,
+                      mockCategories,
+                    );
+                  },
+                  child: const Text('Show'),
+                ),
+              );
+            },
+          ),
+        ),
+      );
 
       await tester.tap(find.text('Show'));
       await tester.pumpAndSettle();
@@ -85,14 +97,16 @@ void main() {
     });
 
     testWidgets('shows "Add New" button', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: CategoryPickerDialogContent(
-            categoryType: CategoryTypeFilter.expense,
-            categories: [],
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CategoryPickerDialogContent(
+              categoryType: CategoryTypeFilter.expense,
+              categories: [],
+            ),
           ),
         ),
-      ));
+      );
       expect(
         find.byKey(const ValueKey('button_add_new_category')),
         findsOneWidget,

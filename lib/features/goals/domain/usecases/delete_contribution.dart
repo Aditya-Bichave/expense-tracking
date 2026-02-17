@@ -15,7 +15,8 @@ class DeleteContributionUseCase
   @override
   Future<Either<Failure, void>> call(DeleteContributionParams params) async {
     log.info(
-        "[DeleteContributionUseCase] Deleting contribution ID: ${params.id}");
+      "[DeleteContributionUseCase] Deleting contribution ID: ${params.id}",
+    );
     return await repository.deleteContribution(params.id);
   }
 }

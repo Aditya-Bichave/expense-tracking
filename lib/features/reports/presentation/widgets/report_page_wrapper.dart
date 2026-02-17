@@ -13,7 +13,7 @@ class ReportPageWrapper extends StatelessWidget {
   final List<Widget>? actions;
   // --- ADDED: Callback to get data for export ---
   final Future<Either<String, Failure>> Function()?
-      onExportCSV; // Returns CSV string or Failure
+  onExportCSV; // Returns CSV string or Failure
   // final Future<Either<Uint8List, Failure>> Function()? onExportPDF; // For PDF later
   // --- END ADD ---
 
@@ -32,39 +32,59 @@ class ReportPageWrapper extends StatelessWidget {
 
     log.info("[ReportWrapper] CSV Export requested for report: $title");
     // Show loading indicator maybe?
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text("Generating CSV...")));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text("Generating CSV...")));
 
     final result = await onExportCSV!();
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context)
-        .hideCurrentSnackBar(); // Hide generating message
+    ScaffoldMessenger.of(
+      context,
+    ).hideCurrentSnackBar(); // Hide generating message
 
-    result.fold((csvData) async {
-      log.info("[ReportWrapper] CSV data generated. Triggering download/save.");
-      try {
-        final exportHelper = sl<CsvExportHelper>(); // Get helper instance
-        final fileName =
-            '${title.toLowerCase().replaceAll(' ', '_')}_export_${DateTime.now().toIso8601String().split('T').first}.csv';
-        await exportHelper.saveCsvFile(
-            context: context, csvData: csvData, fileName: fileName);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("CSV export successful!"),
-            backgroundColor: Colors.green));
-      } catch (e) {
-        log.severe("[ReportWrapper] Error saving CSV file: $e");
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Error saving CSV: $e"),
-            backgroundColor: Colors.red));
-      }
-    }, (failure) {
-      log.warning(
-          "[ReportWrapper] Failed to generate CSV data: ${failure.message}");
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("CSV Export Failed: ${failure.message}"),
-          backgroundColor: Colors.red));
-    });
+    result.fold(
+      (csvData) async {
+        log.info(
+          "[ReportWrapper] CSV data generated. Triggering download/save.",
+        );
+        try {
+          final exportHelper = sl<CsvExportHelper>(); // Get helper instance
+          final fileName =
+              '${title.toLowerCase().replaceAll(' ', '_')}_export_${DateTime.now().toIso8601String().split('T').first}.csv';
+          await exportHelper.saveCsvFile(
+            context: context,
+            csvData: csvData,
+            fileName: fileName,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("CSV export successful!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } catch (e) {
+          log.severe("[ReportWrapper] Error saving CSV file: $e");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Error saving CSV: $e"),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      (failure) {
+        log.warning(
+          "[ReportWrapper] Failed to generate CSV data: ${failure.message}",
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("CSV Export Failed: ${failure.message}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      },
+    );
   }
   // --- END Export Handling ---
 
@@ -96,7 +116,8 @@ class ReportPageWrapper extends StatelessWidget {
               } else if (result == 'pdf') {
                 // _handleExportPDF(context); // Call PDF handler later
                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("PDF Export (Coming Soon)")));
+                  const SnackBar(content: Text("PDF Export (Coming Soon)")),
+                );
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -104,16 +125,18 @@ class ReportPageWrapper extends StatelessWidget {
                 const PopupMenuItem<String>(
                   value: 'csv',
                   child: ListTile(
-                      leading: Icon(Icons.description_outlined),
-                      title: Text('Export as CSV')),
+                    leading: Icon(Icons.description_outlined),
+                    title: Text('Export as CSV'),
+                  ),
                 ),
               // Add PDF option later
               const PopupMenuItem<String>(
                 value: 'pdf',
                 enabled: false, // Disable for now
                 child: ListTile(
-                    leading: Icon(Icons.picture_as_pdf_outlined),
-                    title: Text('Export as PDF (Soon)')),
+                  leading: Icon(Icons.picture_as_pdf_outlined),
+                  title: Text('Export as PDF (Soon)'),
+                ),
               ),
             ],
           ),

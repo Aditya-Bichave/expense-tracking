@@ -93,25 +93,26 @@ void main() {
         find.byKey(const ValueKey('button_accountList_addFirst')),
       );
       await tester.pumpAndSettle();
-      expect(
-        router.routerDelegate.currentConfiguration.uri.toString(),
-        '/add',
-      );
+      expect(router.routerDelegate.currentConfiguration.uri.toString(), '/add');
     });
 
     testWidgets('shows error state and retries', (tester) async {
       whenListen(
-          mockBloc, Stream.fromIterable([const AccountListError('Failed')]),
-          initialState: const AccountListError('Failed'));
+        mockBloc,
+        Stream.fromIterable([const AccountListError('Failed')]),
+        initialState: const AccountListError('Failed'),
+      );
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: const AccountListPage(),
-          accountListBloc: mockBloc);
+        tester: tester,
+        widget: const AccountListPage(),
+        accountListBloc: mockBloc,
+      );
 
       expect(find.text('Error loading accounts'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('button_accountList_retry')));
-      verify(() => mockBloc.add(const LoadAccounts(forceReload: true)))
-          .called(1);
+      verify(
+        () => mockBloc.add(const LoadAccounts(forceReload: true)),
+      ).called(1);
     });
 
     testWidgets('renders a list of AccountCards', (tester) async {
@@ -121,9 +122,10 @@ void main() {
         initialState: AccountListLoaded(accounts: mockAccounts),
       );
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: const AccountListPage(),
-          accountListBloc: mockBloc);
+        tester: tester,
+        widget: const AccountListPage(),
+        accountListBloc: mockBloc,
+      );
       expect(find.byType(AccountCard), findsNWidgets(2));
     });
 
@@ -142,10 +144,7 @@ void main() {
 
       await tester.tap(find.byKey(const ValueKey('fab_accountList_add')));
       await tester.pumpAndSettle();
-      expect(
-        router.routerDelegate.currentConfiguration.uri.toString(),
-        '/add',
-      );
+      expect(router.routerDelegate.currentConfiguration.uri.toString(), '/add');
     });
   }, skip: true);
 }

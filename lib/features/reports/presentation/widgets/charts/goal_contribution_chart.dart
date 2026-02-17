@@ -54,25 +54,37 @@ class GoalContributionChart extends StatelessWidget {
           show: true,
           drawVerticalLine: true,
           horizontalInterval: maxY / 5, // Aim for 5 horizontal lines
-          verticalInterval: _calculateXInterval(minX, maxX,
-              sortedContributions.length), // Calculate interval dynamically
+          verticalInterval: _calculateXInterval(
+            minX,
+            maxX,
+            sortedContributions.length,
+          ), // Calculate interval dynamically
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+            color: theme.dividerColor.withOpacity(0.1),
+            strokeWidth: 1,
+          ),
           getDrawingVerticalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+            color: theme.dividerColor.withOpacity(0.1),
+            strokeWidth: 1,
+          ),
         ),
         titlesData: FlTitlesData(
           show: true,
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 30,
-              interval:
-                  _calculateXInterval(minX, maxX, sortedContributions.length),
+              interval: _calculateXInterval(
+                minX,
+                maxX,
+                sortedContributions.length,
+              ),
               getTitlesWidget: (value, meta) =>
                   _bottomTitleWidgets(context, value, meta),
             ),
@@ -88,8 +100,9 @@ class GoalContributionChart extends StatelessWidget {
           ),
         ),
         borderData: FlBorderData(
-            show: true,
-            border: Border.all(color: theme.dividerColor, width: 0.5)),
+          show: true,
+          border: Border.all(color: theme.dividerColor, width: 0.5),
+        ),
         minX: minX,
         maxX: maxX,
         minY: minY,
@@ -105,14 +118,15 @@ class GoalContributionChart extends StatelessWidget {
             barWidth: 3, // Slightly thicker line
             isStrokeCapRound: true,
             dotData: FlDotData(
-                show: spots.length < 20), // Show dots for fewer points
+              show: spots.length < 20,
+            ), // Show dots for fewer points
             belowBarData: BarAreaData(
               // Enhanced area below
               show: true,
               gradient: LinearGradient(
                 colors: [
                   primaryColor.withOpacity(0.3),
-                  primaryColor.withOpacity(0.0)
+                  primaryColor.withOpacity(0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -124,14 +138,15 @@ class GoalContributionChart extends StatelessWidget {
           touchTooltipData: LineTouchTooltipData(
             getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
               return touchedBarSpots.map((barSpot) {
-                final date =
-                    DateTime.fromMillisecondsSinceEpoch(barSpot.x.toInt());
+                final date = DateTime.fromMillisecondsSinceEpoch(
+                  barSpot.x.toInt(),
+                );
                 final cumulativeAmount = barSpot.y;
                 // Find original contribution (less efficient, okay for tooltips)
                 final originalContribution = sortedContributions.lastWhere(
-                    (c) => c.date.millisecondsSinceEpoch <= barSpot.x.toInt(),
-                    orElse: () => sortedContributions.first // Fallback
-                    );
+                  (c) => c.date.millisecondsSinceEpoch <= barSpot.x.toInt(),
+                  orElse: () => sortedContributions.first, // Fallback
+                );
 
                 return LineTooltipItem(
                   '${DateFormat.yMd().format(date)}\n', // Date format
@@ -140,15 +155,19 @@ class GoalContributionChart extends StatelessWidget {
                     TextSpan(
                       text:
                           'Contrib: ${CurrencyFormatter.format(originalContribution.amount, currencySymbol)}',
-                      style: ChartUtils.tooltipContentStyle(context,
-                          color: primaryColor.withOpacity(0.8)),
+                      style: ChartUtils.tooltipContentStyle(
+                        context,
+                        color: primaryColor.withOpacity(0.8),
+                      ),
                     ),
                     const TextSpan(text: '\n'), // New line
                     TextSpan(
                       text:
                           'Total: ${CurrencyFormatter.format(cumulativeAmount, currencySymbol)}',
-                      style: ChartUtils.tooltipContentStyle(context,
-                          color: primaryColor),
+                      style: ChartUtils.tooltipContentStyle(
+                        context,
+                        color: primaryColor,
+                      ),
                     ),
                   ],
                   textAlign: TextAlign.left, // Align text left
@@ -158,8 +177,7 @@ class GoalContributionChart extends StatelessWidget {
           ),
           handleBuiltInTouches: true,
           // --- ADDED: Touch callback ---
-          touchCallback:
-              (FlTouchEvent event, LineTouchResponse? touchResponse) {
+          touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
             // Example: Log tap - Add actual drill-down logic if needed
             if (event is FlTapUpEvent &&
                 touchResponse != null &&
@@ -192,7 +210,10 @@ class GoalContributionChart extends StatelessWidget {
   }
 
   Widget _bottomTitleWidgets(
-      BuildContext context, double value, TitleMeta meta) {
+    BuildContext context,
+    double value,
+    TitleMeta meta,
+  ) {
     final theme = Theme.of(context);
     final style = theme.textTheme.labelSmall?.copyWith(fontSize: 10);
     final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
@@ -217,6 +238,9 @@ class GoalContributionChart extends StatelessWidget {
     // Avoid label overlap by checking distance to min/max (simplistic check)
     // TODO: implement smarter label hiding if needed
     return SideTitleWidget(
-        axisSide: meta.axisSide, space: 4, child: Text(text, style: style));
+      axisSide: meta.axisSide,
+      space: 4,
+      child: Text(text, style: style),
+    );
   }
 }

@@ -1,7 +1,7 @@
 // lib/features/income/data/models/income_model.dart
 // MODIFIED FILE
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 // REMOVED: import 'package:expense_tracker/features/income/domain/entities/income_category.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -40,9 +40,10 @@ class IncomeModel extends HiveObject {
 
   @HiveField(7) // NEW Index
   @JsonKey(
-      defaultValue: 'uncategorized',
-      toJson: _categorizationStatusToJson,
-      fromJson: _categorizationStatusFromJson)
+    defaultValue: 'uncategorized',
+    toJson: _categorizationStatusToJson,
+    fromJson: _categorizationStatusFromJson,
+  )
   final String categorizationStatusValue; // NEW: Store enum value string
 
   @HiveField(8) // NEW Index
@@ -100,7 +101,8 @@ class IncomeModel extends HiveObject {
       accountId: accountId,
       notes: notes,
       status: CategorizationStatusExtension.fromValue(
-          categorizationStatusValue), // Convert string back to enum
+        categorizationStatusValue,
+      ), // Convert string back to enum
       confidenceScore: confidenceScoreValue,
       isRecurring: isRecurring,
     );

@@ -28,8 +28,9 @@ class TimeSeriesLineChart extends StatelessWidget {
     final settings = context.watch<SettingsBloc>().state;
     final currencySymbol = settings.currencySymbol;
     final primaryColor = theme.colorScheme.primary;
-    final comparisonColor =
-        theme.colorScheme.secondary.withOpacity(0.6); // Lighter/dashed color
+    final comparisonColor = theme.colorScheme.secondary.withOpacity(
+      0.6,
+    ); // Lighter/dashed color
 
     if (data.isEmpty) {
       return const Center(child: Text("No data to display"));
@@ -54,21 +55,27 @@ class TimeSeriesLineChart extends StatelessWidget {
 
     // Create spots for current period
     final List<FlSpot> currentSpots = data
-        .map((point) => FlSpot(
-              point.date.millisecondsSinceEpoch.toDouble(),
-              point.currentAmount, // Use getter
-            ))
+        .map(
+          (point) => FlSpot(
+            point.date.millisecondsSinceEpoch.toDouble(),
+            point.currentAmount, // Use getter
+          ),
+        )
         .toList();
 
     // Create spots for previous period if showing comparison
     final List<FlSpot> previousSpots = (showComparison)
         ? data
-            .where((p) =>
-                p.amount.previousValue !=
-                null) // Filter out points without previous data
-            .map((point) => FlSpot(point.date.millisecondsSinceEpoch.toDouble(),
-                point.amount.previousValue!))
-            .toList()
+              .where(
+                (p) => p.amount.previousValue != null,
+              ) // Filter out points without previous data
+              .map(
+                (point) => FlSpot(
+                  point.date.millisecondsSinceEpoch.toDouble(),
+                  point.amount.previousValue!,
+                ),
+              )
+              .toList()
         : [];
 
     return LineChart(
@@ -79,14 +86,18 @@ class TimeSeriesLineChart extends StatelessWidget {
           drawVerticalLine: false,
           horizontalInterval: maxY / 5, // Match left title intervals
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+            color: theme.dividerColor.withOpacity(0.1),
+            strokeWidth: 1,
+          ),
         ),
         titlesData: FlTitlesData(
           show: true,
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -123,13 +134,14 @@ class TimeSeriesLineChart extends StatelessWidget {
             barWidth: 3,
             isStrokeCapRound: true,
             dotData: FlDotData(
-                show: currentSpots.length < 30), // Show dots if few points
+              show: currentSpots.length < 30,
+            ), // Show dots if few points
             belowBarData: BarAreaData(
               show: true,
               gradient: LinearGradient(
                 colors: [
                   primaryColor.withOpacity(0.3),
-                  primaryColor.withOpacity(0.0)
+                  primaryColor.withOpacity(0.0),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -144,8 +156,9 @@ class TimeSeriesLineChart extends StatelessWidget {
               color: comparisonColor, // Use comparison color
               barWidth: 2,
               isStrokeCapRound: true,
-              dotData:
-                  const FlDotData(show: false), // Hide dots for comparison line
+              dotData: const FlDotData(
+                show: false,
+              ), // Hide dots for comparison line
               dashArray: [4, 4], // Make it dashed
               belowBarData: BarAreaData(show: false), // No area fill
             ),
@@ -163,36 +176,50 @@ class TimeSeriesLineChart extends StatelessWidget {
               return spotsByX.entries.map((entry) {
                 final xValue = entry.key;
                 final spots = entry.value;
-                final date =
-                    DateTime.fromMillisecondsSinceEpoch(xValue.toInt());
+                final date = DateTime.fromMillisecondsSinceEpoch(
+                  xValue.toInt(),
+                );
                 final dateStr = _formatTooltipDate(date, granularity);
 
-                final currentSpot = spots.firstWhere((s) => s.barIndex == 0,
-                    orElse: () =>
-                        spots.first); // Assuming current is always index 0
+                final currentSpot = spots.firstWhere(
+                  (s) => s.barIndex == 0,
+                  orElse: () => spots.first,
+                ); // Assuming current is always index 0
                 final previousSpot = showComparison
-                    ? spots.firstWhere((s) => s.barIndex == 1,
-                        orElse: () => currentSpot /* fallback */)
+                    ? spots.firstWhere(
+                        (s) => s.barIndex == 1,
+                        orElse: () => currentSpot /* fallback */,
+                      )
                     : null;
 
                 List<TextSpan> children = [];
                 // Add Current Value
-                children.add(TextSpan(
+                children.add(
+                  TextSpan(
                     text:
                         'Current: ${CurrencyFormatter.format(currentSpot.y, currencySymbol)}',
-                    style: ChartUtils.tooltipContentStyle(context,
-                        color: primaryColor)));
+                    style: ChartUtils.tooltipContentStyle(
+                      context,
+                      color: primaryColor,
+                    ),
+                  ),
+                );
 
                 // Add Previous Value if applicable
                 if (showComparison &&
                     previousSpot != null &&
                     previousSpot.barIndex == 1) {
                   children.add(const TextSpan(text: '\n'));
-                  children.add(TextSpan(
+                  children.add(
+                    TextSpan(
                       text:
                           'Previous: ${CurrencyFormatter.format(previousSpot.y, currencySymbol)}',
-                      style: ChartUtils.tooltipContentStyle(context,
-                          color: comparisonColor)));
+                      style: ChartUtils.tooltipContentStyle(
+                        context,
+                        color: comparisonColor,
+                      ),
+                    ),
+                  );
                 }
 
                 return LineTooltipItem(
@@ -207,19 +234,20 @@ class TimeSeriesLineChart extends StatelessWidget {
           handleBuiltInTouches: true,
           touchCallback:
               (FlTouchEvent event, LineTouchResponse? touchResponse) {
-            if (onTapSpot != null &&
-                event is FlTapUpEvent &&
-                touchResponse != null &&
-                touchResponse.lineBarSpots != null &&
-                touchResponse.lineBarSpots!.isNotEmpty) {
-              // Get index from the *current data* spot (barIndex 0)
-              final currentSpot = touchResponse.lineBarSpots!.firstWhere(
-                  (spot) => spot.barIndex == 0,
-                  orElse: () => touchResponse.lineBarSpots![0]);
-              final spotIndex = currentSpot.spotIndex;
-              onTapSpot!(spotIndex);
-            }
-          },
+                if (onTapSpot != null &&
+                    event is FlTapUpEvent &&
+                    touchResponse != null &&
+                    touchResponse.lineBarSpots != null &&
+                    touchResponse.lineBarSpots!.isNotEmpty) {
+                  // Get index from the *current data* spot (barIndex 0)
+                  final currentSpot = touchResponse.lineBarSpots!.firstWhere(
+                    (spot) => spot.barIndex == 0,
+                    orElse: () => touchResponse.lineBarSpots![0],
+                  );
+                  final spotIndex = currentSpot.spotIndex;
+                  onTapSpot!(spotIndex);
+                }
+              },
         ),
       ),
     );
@@ -227,7 +255,10 @@ class TimeSeriesLineChart extends StatelessWidget {
 
   // Helper methods remain the same
   double? _calculateXInterval(
-      double minX, double maxX, TimeSeriesGranularity granularity) {
+    double minX,
+    double maxX,
+    TimeSeriesGranularity granularity,
+  ) {
     final durationMs = maxX - minX;
     if (durationMs <= 0) return null;
     // Aim for roughly 5-7 labels
@@ -251,8 +282,9 @@ class TimeSeriesLineChart extends StatelessWidget {
   String _formatTooltipDate(DateTime date, TimeSeriesGranularity granularity) {
     switch (granularity) {
       case TimeSeriesGranularity.daily:
-        return DateFormat('E, MMM d, yyyy')
-            .format(date); // More specific for tooltip
+        return DateFormat(
+          'E, MMM d, yyyy',
+        ).format(date); // More specific for tooltip
       case TimeSeriesGranularity.weekly:
         final weekEnd = date.add(const Duration(days: 6));
         return 'Week: ${DateFormat.MMMd().format(date)} - ${DateFormat.MMMd().format(weekEnd)}';
@@ -261,8 +293,12 @@ class TimeSeriesLineChart extends StatelessWidget {
     }
   }
 
-  Widget _bottomTitleWidgets(BuildContext context, double value, TitleMeta meta,
-      TimeSeriesGranularity granularity) {
+  Widget _bottomTitleWidgets(
+    BuildContext context,
+    double value,
+    TitleMeta meta,
+    TimeSeriesGranularity granularity,
+  ) {
     final theme = Theme.of(context);
     final style = theme.textTheme.labelSmall?.copyWith(fontSize: 10);
     final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
@@ -298,8 +334,9 @@ class TimeSeriesLineChart extends StatelessWidget {
     }
 
     return SideTitleWidget(
-        axisSide: meta.axisSide,
-        space: 4,
-        child: Text(text, style: style, textAlign: TextAlign.center));
+      axisSide: meta.axisSide,
+      space: 4,
+      child: Text(text, style: style, textAlign: TextAlign.center),
+    );
   }
 }

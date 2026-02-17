@@ -18,7 +18,8 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
     if (_isLoading) {
       // Avoid race conditions if called multiple times before completion
       await Future.delayed(
-          const Duration(milliseconds: 100)); // Small delay and retry
+        const Duration(milliseconds: 100),
+      ); // Small delay and retry
       return _loadDb();
     }
 
@@ -31,21 +32,26 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
           jsonDecode(jsonString) as Map<String, dynamic>;
 
       // Convert keys and values to lowercase for case-insensitive matching
-      _cachedDb = jsonMap
-          .map((key, value) => MapEntry(key.toLowerCase(), value.toString()));
+      _cachedDb = jsonMap.map(
+        (key, value) => MapEntry(key.toLowerCase(), value.toString()),
+      );
 
       log.info(
-          "Successfully loaded and cached ${_cachedDb!.length} merchant categories.");
+        "Successfully loaded and cached ${_cachedDb!.length} merchant categories.",
+      );
       return _cachedDb!;
     } on FormatException catch (e, s) {
       log.severe(
-          "Failed to parse merchant categories JSON from asset '$_assetPath'$e$s");
+        "Failed to parse merchant categories JSON from asset '$_assetPath'$e$s",
+      );
       _cachedDb = {}; // Set empty cache on error to prevent retries
       throw const CacheFailure(
-          'Invalid format in merchant categories asset file.');
+        'Invalid format in merchant categories asset file.',
+      );
     } catch (e, s) {
       log.severe(
-          "Failed to load merchant categories from asset '$_assetPath'$e$s");
+        "Failed to load merchant categories from asset '$_assetPath'$e$s",
+      );
       _cachedDb = {}; // Set empty cache on error
       throw CacheFailure('Could not load merchant categories: ${e.toString()}');
     } finally {
@@ -64,17 +70,20 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
 
       if (categoryId != null) {
         log.fine(
-            "Found default category '$categoryId' for merchant '$merchantIdentifier'.");
+          "Found default category '$categoryId' for merchant '$merchantIdentifier'.",
+        );
       } else {
         log.fine(
-            "No default category found for merchant '$merchantIdentifier'.");
+          "No default category found for merchant '$merchantIdentifier'.",
+        );
         // TODO: Consider more advanced matching later if needed (e.g., partial matches, aliases)
       }
       return categoryId;
     } catch (e) {
       // Errors during loading are handled in _loadDb, but catch potential future issues
       log.severe(
-          "Error looking up default category for '$merchantIdentifier': $e");
+        "Error looking up default category for '$merchantIdentifier': $e",
+      );
       return null; // Return null on error
     }
   }

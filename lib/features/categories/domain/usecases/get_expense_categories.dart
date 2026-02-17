@@ -19,6 +19,8 @@ class GetExpenseCategoriesUseCase implements UseCase<List<Category>, NoParams> {
     log.info("[GetExpenseCategoriesUseCase] Executing.");
     // Use the specific repository method
     return await repository.getSpecificCategories(
-        type: CategoryType.expense, includeCustom: true);
+      type: CategoryType.expense,
+      includeCustom: true,
+    );
   }
 }

@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 class CategorizationSuggestion extends Equatable {
   final Category suggestedCategory;
   final double
-      confidenceScore; // Numeric score might be more flexible than enum
+  confidenceScore; // Numeric score might be more flexible than enum
 
   const CategorizationSuggestion({
     required this.suggestedCategory,

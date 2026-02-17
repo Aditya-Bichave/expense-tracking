@@ -25,4 +25,5 @@ class _DataChanged extends DashboardEvent {
 class ResetState extends DashboardEvent {
   const ResetState();
 }
+
 // --- END ADDED ---

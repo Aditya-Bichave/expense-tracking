@@ -17,9 +17,11 @@ class GetSpendingCategoryReportUseCase
 
   @override
   Future<Either<Failure, SpendingCategoryReportData>> call(
-      GetSpendingCategoryReportParams params) async {
+    GetSpendingCategoryReportParams params,
+  ) async {
     log.info(
-        "[GetSpendingCategoryReportUseCase] Start: ${params.startDate}, End: ${params.endDate}");
+      "[GetSpendingCategoryReportUseCase] Start: ${params.startDate}, End: ${params.endDate}",
+    );
     return await repository.getSpendingByCategory(
       startDate: params.startDate,
       endDate: params.endDate,

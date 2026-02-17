@@ -13,8 +13,10 @@ class SpendingTimeReportLoading extends SpendingTimeReportState {
   final TimeSeriesGranularity granularity;
   // --- ADDED compareToPrevious flag ---
   final bool compareToPrevious;
-  const SpendingTimeReportLoading(
-      {required this.granularity, required this.compareToPrevious});
+  const SpendingTimeReportLoading({
+    required this.granularity,
+    required this.compareToPrevious,
+  });
   @override
   List<Object?> get props => [granularity, compareToPrevious];
   // --- END ADD ---
@@ -24,8 +26,10 @@ class SpendingTimeReportLoaded extends SpendingTimeReportState {
   final SpendingTimeReportData reportData;
   // --- ADDED showComparison flag ---
   final bool showComparison;
-  const SpendingTimeReportLoaded(this.reportData,
-      {required this.showComparison});
+  const SpendingTimeReportLoaded(
+    this.reportData, {
+    required this.showComparison,
+  });
   @override
   List<Object?> get props => [reportData, showComparison];
   // --- END ADD ---

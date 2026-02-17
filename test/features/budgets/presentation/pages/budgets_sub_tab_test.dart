@@ -45,16 +45,14 @@ void main() {
   });
 
   Widget buildTestWidget() {
-    return BlocProvider.value(
-      value: mockBloc,
-      child: const BudgetsSubTab(),
-    );
+    return BlocProvider.value(value: mockBloc, child: const BudgetsSubTab());
   }
 
   group('BudgetsSubTab', () {
     testWidgets('shows loading indicator', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const BudgetListState(status: BudgetListStatus.loading));
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const BudgetListState(status: BudgetListStatus.loading));
       await pumpWidgetWithProviders(
         tester: tester,
         widget: buildTestWidget(),
@@ -64,40 +62,59 @@ void main() {
     });
 
     testWidgets('shows empty state and handles add button tap', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const BudgetListState(status: BudgetListStatus.success));
-      when(() => mockGoRouter.pushNamed(RouteNames.addBudget))
-          .thenAnswer((_) async => {});
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const BudgetListState(status: BudgetListStatus.success));
+      when(
+        () => mockGoRouter.pushNamed(RouteNames.addBudget),
+      ).thenAnswer((_) async => {});
       await pumpWidgetWithProviders(
-          tester: tester, router: mockGoRouter, widget: buildTestWidget());
+        tester: tester,
+        router: mockGoRouter,
+        widget: buildTestWidget(),
+      );
 
       expect(find.text('No Budgets Created Yet'), findsOneWidget);
-      await tester
-          .tap(find.byKey(const ValueKey('button_budgetList_addFirst')));
+      await tester.tap(
+        find.byKey(const ValueKey('button_budgetList_addFirst')),
+      );
       verify(() => mockGoRouter.pushNamed(RouteNames.addBudget)).called(1);
     }, skip: true);
 
     testWidgets('shows error message', (tester) async {
-      when(() => mockBloc.state).thenReturn(const BudgetListState(
-          status: BudgetListStatus.error, errorMessage: 'Failed'));
+      when(() => mockBloc.state).thenReturn(
+        const BudgetListState(
+          status: BudgetListStatus.error,
+          errorMessage: 'Failed',
+        ),
+      );
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       expect(find.text('Error loading budgets: Failed'), findsOneWidget);
     });
 
     testWidgets('renders a list of BudgetCards', (tester) async {
-      when(() => mockBloc.state).thenReturn(BudgetListState(
-          status: BudgetListStatus.success, budgetsWithStatus: mockBudgets));
+      when(() => mockBloc.state).thenReturn(
+        BudgetListState(
+          status: BudgetListStatus.success,
+          budgetsWithStatus: mockBudgets,
+        ),
+      );
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       expect(find.byType(BudgetCard), findsOneWidget);
     });
 
     testWidgets('tapping FAB navigates to add page', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const BudgetListState(status: BudgetListStatus.success));
-      when(() => mockGoRouter.pushNamed(RouteNames.addBudget))
-          .thenAnswer((_) async => {});
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const BudgetListState(status: BudgetListStatus.success));
+      when(
+        () => mockGoRouter.pushNamed(RouteNames.addBudget),
+      ).thenAnswer((_) async => {});
       await pumpWidgetWithProviders(
-          tester: tester, router: mockGoRouter, widget: buildTestWidget());
+        tester: tester,
+        router: mockGoRouter,
+        widget: buildTestWidget(),
+      );
 
       await tester.tap(find.byKey(const ValueKey('fab_budgetList_add')));
       verify(() => mockGoRouter.pushNamed(RouteNames.addBudget)).called(1);

@@ -68,8 +68,9 @@ class BudgetPerformanceBarChart extends StatelessWidget {
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final currentItem = chartData[groupIndex];
               final budget = currentItem.budget;
-              final BudgetPerformanceData? prevItem =
-                  showComparison ? previousDataMap[budget.id] : null;
+              final BudgetPerformanceData? prevItem = showComparison
+                  ? previousDataMap[budget.id]
+                  : null;
               bool isTargetBar;
               bool isPreviousBar;
               double value;
@@ -124,17 +125,21 @@ class BudgetPerformanceBarChart extends StatelessWidget {
                   TextSpan(
                     text:
                         '$tooltipPrefix$tooltipMainText: ${CurrencyFormatter.format(value, currencySymbol)}',
-                    style:
-                        ChartUtils.tooltipContentStyle(context, color: color),
+                    style: ChartUtils.tooltipContentStyle(
+                      context,
+                      color: color,
+                    ),
                   ),
                   // Optionally add variance info
                   if (!isTargetBar) // Show variance only for Actual bars
                     TextSpan(
-                        text:
-                            '\nVar: ${CurrencyFormatter.format(currentItem.currentVarianceAmount, currencySymbol)} (${currentItem.currentVariancePercent.toStringAsFixed(0)}%)',
-                        style: ChartUtils.tooltipContentStyle(context,
-                                color: currentItem.statusColor)
-                            .copyWith(fontSize: 11))
+                      text:
+                          '\nVar: ${CurrencyFormatter.format(currentItem.currentVarianceAmount, currencySymbol)} (${currentItem.currentVariancePercent.toStringAsFixed(0)}%)',
+                      style: ChartUtils.tooltipContentStyle(
+                        context,
+                        color: currentItem.statusColor,
+                      ).copyWith(fontSize: 11),
+                    ),
                 ],
                 textAlign: TextAlign.left,
               );
@@ -151,40 +156,52 @@ class BudgetPerformanceBarChart extends StatelessWidget {
           },
         ),
         titlesData: FlTitlesData(
-            show: true,
-            rightTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles:
-                const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                    showTitles: true,
-                    getTitlesWidget: (value, meta) =>
-                        ChartUtils.bottomTitleWidgets(
-                            context,
-                            value,
-                            meta,
-                            chartData.length,
-                            (index) => chartData[index].budget.name),
-                    reservedSize: 38)),
-            leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 45,
-                    interval: maxY / 5, // Match grid
-                    getTitlesWidget: (value, meta) =>
-                        ChartUtils.leftTitleWidgets(
-                            context, value, meta, maxY)))),
+          show: true,
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (value, meta) => ChartUtils.bottomTitleWidgets(
+                context,
+                value,
+                meta,
+                chartData.length,
+                (index) => chartData[index].budget.name,
+              ),
+              reservedSize: 38,
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 45,
+              interval: maxY / 5, // Match grid
+              getTitlesWidget: (value, meta) =>
+                  ChartUtils.leftTitleWidgets(context, value, meta, maxY),
+            ),
+          ),
+        ),
         borderData: FlBorderData(show: false),
-        barGroups:
-            showingGroups(context, chartData, previousDataMap, showComparison),
+        barGroups: showingGroups(
+          context,
+          chartData,
+          previousDataMap,
+          showComparison,
+        ),
         gridData: FlGridData(
           // Subtle grid
           show: true,
           drawVerticalLine: false,
           horizontalInterval: maxY / 5,
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+            color: theme.dividerColor.withOpacity(0.1),
+            strokeWidth: 1,
+          ),
         ),
         alignment: BarChartAlignment.spaceAround,
       ),
@@ -192,10 +209,11 @@ class BudgetPerformanceBarChart extends StatelessWidget {
   }
 
   List<BarChartGroupData> showingGroups(
-      BuildContext context,
-      List<BudgetPerformanceData> chartData,
-      Map<String, BudgetPerformanceData> previousDataMap,
-      bool showComparison) {
+    BuildContext context,
+    List<BudgetPerformanceData> chartData,
+    Map<String, BudgetPerformanceData> previousDataMap,
+    bool showComparison,
+  ) {
     final theme = Theme.of(context);
     final double barWidth = showComparison ? 6 : 12; // Narrower bars
     final double groupSpace = showComparison ? 1 : 4; // Space between rods
@@ -203,8 +221,9 @@ class BudgetPerformanceBarChart extends StatelessWidget {
     return List.generate(chartData.length, (i) {
       final currentItem = chartData[i];
       final budget = currentItem.budget;
-      final BudgetPerformanceData? prevItem =
-          showComparison ? previousDataMap[budget.id] : null;
+      final BudgetPerformanceData? prevItem = showComparison
+          ? previousDataMap[budget.id]
+          : null;
       final targetColor =
           theme.colorScheme.secondary; // Use secondary for target
       final actualColor = currentItem.statusColor;

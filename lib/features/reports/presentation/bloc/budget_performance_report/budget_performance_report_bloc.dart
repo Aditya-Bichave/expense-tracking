@@ -19,11 +19,11 @@ class BudgetPerformanceReportBloc
 
   BudgetPerformanceReportBloc({
     required GetBudgetPerformanceReportUseCase
-        getBudgetPerformanceReportUseCase,
+    getBudgetPerformanceReportUseCase,
     required ReportFilterBloc reportFilterBloc,
-  })  : _getReportUseCase = getBudgetPerformanceReportUseCase,
-        _reportFilterBloc = reportFilterBloc,
-        super(BudgetPerformanceReportInitial()) {
+  }) : _getReportUseCase = getBudgetPerformanceReportUseCase,
+       _reportFilterBloc = reportFilterBloc,
+       super(BudgetPerformanceReportInitial()) {
     on<LoadBudgetPerformanceReport>(_onLoadReport);
     on<ToggleBudgetComparison>(_onToggleComparison);
     on<_FilterChanged>(_onFilterChanged);
@@ -41,9 +41,12 @@ class BudgetPerformanceReportBloc
   }
 
   void _onFilterChanged(
-      _FilterChanged event, Emitter<BudgetPerformanceReportState> emit) {
+    _FilterChanged event,
+    Emitter<BudgetPerformanceReportState> emit,
+  ) {
     log.info(
-        "[BudgetPerformanceReportBloc] Filter changed detected, reloading report.");
+      "[BudgetPerformanceReportBloc] Filter changed detected, reloading report.",
+    );
     // Get current comparison state before reloading
     final bool compare = state is BudgetPerformanceReportLoaded
         ? (state as BudgetPerformanceReportLoaded).showComparison
@@ -51,10 +54,13 @@ class BudgetPerformanceReportBloc
     add(LoadBudgetPerformanceReport(compareToPrevious: compare));
   }
 
-  void _onToggleComparison(ToggleBudgetComparison event,
-      Emitter<BudgetPerformanceReportState> emit) {
+  void _onToggleComparison(
+    ToggleBudgetComparison event,
+    Emitter<BudgetPerformanceReportState> emit,
+  ) {
     log.info(
-        "[BudgetPerformanceReportBloc] Comparison toggled. Reloading report.");
+      "[BudgetPerformanceReportBloc] Comparison toggled. Reloading report.",
+    );
     final bool currentCompare = state is BudgetPerformanceReportLoaded
         ? (state as BudgetPerformanceReportLoaded).showComparison
         : false;
@@ -62,21 +68,28 @@ class BudgetPerformanceReportBloc
     add(LoadBudgetPerformanceReport(compareToPrevious: !currentCompare));
   }
 
-  Future<void> _onLoadReport(LoadBudgetPerformanceReport event,
-      Emitter<BudgetPerformanceReportState> emit) async {
+  Future<void> _onLoadReport(
+    LoadBudgetPerformanceReport event,
+    Emitter<BudgetPerformanceReportState> emit,
+  ) async {
     // Avoid duplicate loads for the same comparison state
     if (state is BudgetPerformanceReportLoading &&
         (state as BudgetPerformanceReportLoading).compareToPrevious ==
             event.compareToPrevious) {
       log.fine(
-          "[BudgetPerformanceReportBloc] Already loading for comparison state: ${event.compareToPrevious}");
+        "[BudgetPerformanceReportBloc] Already loading for comparison state: ${event.compareToPrevious}",
+      );
       return;
     }
 
-    emit(BudgetPerformanceReportLoading(
-        compareToPrevious: event.compareToPrevious));
+    emit(
+      BudgetPerformanceReportLoading(
+        compareToPrevious: event.compareToPrevious,
+      ),
+    );
     log.info(
-        "[BudgetPerformanceReportBloc] Loading budget performance report (Compare: ${event.compareToPrevious})...");
+      "[BudgetPerformanceReportBloc] Loading budget performance report (Compare: ${event.compareToPrevious})...",
+    );
 
     final filterState = _reportFilterBloc.state;
     final params = GetBudgetPerformanceReportParams(
@@ -96,15 +109,21 @@ class BudgetPerformanceReportBloc
     result.fold(
       (failure) {
         log.warning(
-            "[BudgetPerformanceReportBloc] Load failed: ${failure.message}");
+          "[BudgetPerformanceReportBloc] Load failed: ${failure.message}",
+        );
         emit(BudgetPerformanceReportError(_mapFailureToMessage(failure)));
       },
       (reportData) {
         log.info(
-            "[BudgetPerformanceReportBloc] Load successful. Budgets: ${reportData.performanceData.length}, Comparison data present: ${reportData.previousPerformanceData != null}");
+          "[BudgetPerformanceReportBloc] Load successful. Budgets: ${reportData.performanceData.length}, Comparison data present: ${reportData.previousPerformanceData != null}",
+        );
         // Pass both report data and the comparison flag used for this load
-        emit(BudgetPerformanceReportLoaded(reportData,
-            showComparison: event.compareToPrevious));
+        emit(
+          BudgetPerformanceReportLoaded(
+            reportData,
+            showComparison: event.compareToPrevious,
+          ),
+        );
       },
     );
   }
@@ -117,7 +136,8 @@ class BudgetPerformanceReportBloc
   Future<void> close() {
     _filterSubscription.cancel();
     log.info(
-        "[BudgetPerformanceReportBloc] Closed and cancelled subscription.");
+      "[BudgetPerformanceReportBloc] Closed and cancelled subscription.",
+    );
     return super.close();
   }
 }

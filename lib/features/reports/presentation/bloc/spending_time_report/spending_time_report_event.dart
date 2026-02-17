@@ -11,8 +11,10 @@ class LoadSpendingTimeReport extends SpendingTimeReportEvent {
   final TimeSeriesGranularity? granularity;
   // --- ADDED compareToPrevious flag ---
   final bool compareToPrevious;
-  const LoadSpendingTimeReport(
-      {this.granularity, this.compareToPrevious = false});
+  const LoadSpendingTimeReport({
+    this.granularity,
+    this.compareToPrevious = false,
+  });
   @override
   List<Object?> get props => [granularity, compareToPrevious];
   // --- END ADD ---

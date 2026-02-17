@@ -8,7 +8,7 @@ part of 'goal_contribution_model.dart';
 
 class GoalContributionModelAdapter extends TypeAdapter<GoalContributionModel> {
   @override
-  final int typeId = 7;
+  final typeId = 7;
 
   @override
   GoalContributionModel read(BinaryReader reader) {
@@ -19,7 +19,7 @@ class GoalContributionModelAdapter extends TypeAdapter<GoalContributionModel> {
     return GoalContributionModel(
       id: fields[0] as String,
       goalId: fields[1] as String,
-      amount: fields[2] as double,
+      amount: (fields[2] as num).toDouble(),
       date: fields[3] as DateTime,
       note: fields[4] as String?,
       createdAt: fields[5] as DateTime,

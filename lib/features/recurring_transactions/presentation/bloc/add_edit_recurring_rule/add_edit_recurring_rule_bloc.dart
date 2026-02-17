@@ -242,8 +242,9 @@ class AddEditRecurringRuleBloc
       nextOccurrenceDate: state.isEditMode
           ? state.initialRule!.nextOccurrenceDate
           : startDateTime,
-      occurrencesGenerated:
-          state.isEditMode ? state.initialRule!.occurrencesGenerated : 0,
+      occurrencesGenerated: state.isEditMode
+          ? state.initialRule!.occurrencesGenerated
+          : 0,
     );
 
     final result = state.isEditMode

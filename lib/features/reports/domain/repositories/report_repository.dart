@@ -54,7 +54,7 @@ abstract class ReportRepository {
 
   // --- ADDED: Method for goal sparkline data ---
   Future<Either<Failure, List<TimeSeriesDataPoint>>>
-      getRecentDailyContributions(
+  getRecentDailyContributions(
     String goalId, {
     int days = 30, // Default to 30 days for goals
   });

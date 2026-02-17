@@ -16,26 +16,29 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_account/add_edit_account_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart'; // Dependency
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart'; // Dependency
-import 'package:hive/hive.dart'; // Needed for HiveAssetAccountLocalDataSource
+import 'package:hive_ce/hive.dart'; // Needed for HiveAssetAccountLocalDataSource
 
 class AccountDependencies {
   static void register() {
     // --- MODIFIED: Register Proxy ---
     // Data Source (Register the Proxy)
     sl.registerLazySingleton<AssetAccountLocalDataSource>(
-        () => DemoAwareAccountDataSource(
-              hiveDataSource:
-                  sl<HiveAssetAccountLocalDataSource>(), // Pass the real one
-              demoModeService: sl<DemoModeService>(),
-            ));
+      () => DemoAwareAccountDataSource(
+        hiveDataSource:
+            sl<HiveAssetAccountLocalDataSource>(), // Pass the real one
+        demoModeService: sl<DemoModeService>(),
+      ),
+    );
     // --- END MODIFIED ---
 
     // Repository (Depends on Income/Expense Repos)
-    sl.registerLazySingleton<AssetAccountRepository>(() =>
-        AssetAccountRepositoryImpl(
-            localDataSource: sl(),
-            incomeRepository: sl<IncomeRepository>(),
-            expenseRepository: sl<ExpenseRepository>()));
+    sl.registerLazySingleton<AssetAccountRepository>(
+      () => AssetAccountRepositoryImpl(
+        localDataSource: sl(),
+        incomeRepository: sl<IncomeRepository>(),
+        expenseRepository: sl<ExpenseRepository>(),
+      ),
+    );
     // Use Cases
     sl.registerLazySingleton(() => AddAssetAccountUseCase(sl()));
     sl.registerLazySingleton(() => GetAssetAccountsUseCase(sl()));
@@ -43,13 +46,18 @@ class AccountDependencies {
     sl.registerLazySingleton(() => DeleteAssetAccountUseCase(sl()));
     // Blocs
     sl.registerFactoryParam<AddEditAccountBloc, AssetAccount?, void>(
-        (initialAccount, _) => AddEditAccountBloc(
-            addAssetAccountUseCase: sl(),
-            updateAssetAccountUseCase: sl(),
-            initialAccount: initialAccount));
-    sl.registerFactory(() => AccountListBloc(
+      (initialAccount, _) => AddEditAccountBloc(
+        addAssetAccountUseCase: sl(),
+        updateAssetAccountUseCase: sl(),
+        initialAccount: initialAccount,
+      ),
+    );
+    sl.registerFactory(
+      () => AccountListBloc(
         getAssetAccountsUseCase: sl(),
         deleteAssetAccountUseCase: sl(),
-        dataChangeStream: sl<Stream<DataChangedEvent>>()));
+        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+      ),
+    );
   }
 }

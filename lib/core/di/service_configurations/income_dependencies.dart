@@ -9,20 +9,22 @@ import 'package:expense_tracker/features/income/domain/repositories/income_repos
 import 'package:expense_tracker/features/income/domain/usecases/add_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/delete_income.dart';
 import 'package:expense_tracker/features/income/domain/usecases/update_income.dart';
-import 'package:hive/hive.dart'; // Keep for HiveIncomeLocalDataSource
+import 'package:hive_ce/hive.dart'; // Keep for HiveIncomeLocalDataSource
 
 class IncomeDependencies {
   static void register() {
     // --- MODIFIED: Register Proxy ---
     sl.registerLazySingleton<IncomeLocalDataSource>(
-        () => DemoAwareIncomeDataSource(
-              hiveDataSource: sl<HiveIncomeLocalDataSource>(), // Get real DS
-              demoModeService: sl<DemoModeService>(),
-            ));
+      () => DemoAwareIncomeDataSource(
+        hiveDataSource: sl<HiveIncomeLocalDataSource>(), // Get real DS
+        demoModeService: sl<DemoModeService>(),
+      ),
+    );
     // --- END MODIFIED ---
 
     sl.registerLazySingleton<IncomeRepository>(
-        () => IncomeRepositoryImpl(localDataSource: sl()));
+      () => IncomeRepositoryImpl(localDataSource: sl()),
+    );
     // Domain
     sl.registerLazySingleton(() => AddIncomeUseCase(sl()));
     sl.registerLazySingleton(() => UpdateIncomeUseCase(sl()));

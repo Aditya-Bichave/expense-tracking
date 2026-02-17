@@ -79,7 +79,7 @@ class ReportFilterState extends Equatable {
     bool clearOptionsError = false,
     // --- ADDED Clear Flags ---
     ValueGetter<TransactionType?>?
-        selectedTransactionTypeOrNull, // For clearing
+    selectedTransactionTypeOrNull, // For clearing
     // --- END ADDED ---
   }) {
     final now = DateTime.now();
@@ -88,8 +88,9 @@ class ReportFilterState extends Equatable {
 
     return ReportFilterState(
       optionsStatus: optionsStatus ?? this.optionsStatus,
-      optionsError:
-          clearOptionsError ? null : optionsError ?? this.optionsError,
+      optionsError: clearOptionsError
+          ? null
+          : optionsError ?? this.optionsError,
       availableCategories: availableCategories ?? this.availableCategories,
       availableAccounts: availableAccounts ?? this.availableAccounts,
       availableBudgets: availableBudgets ?? this.availableBudgets, // Added
@@ -110,9 +111,9 @@ class ReportFilterState extends Equatable {
 
   @override
   List<Object?> get props => [
-        optionsStatus, optionsError, availableCategories, availableAccounts,
-        availableBudgets, availableGoals, // Added
-        startDate, endDate, selectedCategoryIds, selectedAccountIds,
-        selectedBudgetIds, selectedGoalIds, selectedTransactionType, // Added
-      ];
+    optionsStatus, optionsError, availableCategories, availableAccounts,
+    availableBudgets, availableGoals, // Added
+    startDate, endDate, selectedCategoryIds, selectedAccountIds,
+    selectedBudgetIds, selectedGoalIds, selectedTransactionType, // Added
+  ];
 }

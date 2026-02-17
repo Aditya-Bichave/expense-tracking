@@ -51,8 +51,9 @@ void main() {
     blocTest<SummaryBloc, SummaryState>(
       'emits [SummaryLoading, SummaryLoaded] when usecase succeeds',
       build: () {
-        when(() => mockUseCase(any()))
-            .thenAnswer((_) async => const Right(tSummary));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => const Right(tSummary));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadSummary()),
@@ -65,8 +66,9 @@ void main() {
     blocTest<SummaryBloc, SummaryState>(
       'emits [SummaryLoading, SummaryError] when usecase fails',
       build: () {
-        when(() => mockUseCase(any())).thenAnswer(
-            (_) async => const Left(ServerFailure('Server Error')));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => const Left(ServerFailure('Server Error')));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadSummary()),
@@ -80,8 +82,9 @@ void main() {
       'emits [SummaryLoading, SummaryLoaded] with isReloading=true when already loaded and forced',
       seed: () => const SummaryLoaded(tSummary),
       build: () {
-        when(() => mockUseCase(any()))
-            .thenAnswer((_) async => const Right(tSummary));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => const Right(tSummary));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadSummary(forceReload: true)),
@@ -99,14 +102,17 @@ void main() {
     );
 
     test('triggers reload when expense data changes', () async {
-      when(() => mockUseCase(any()))
-          .thenAnswer((_) async => const Right(tSummary));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Right(tSummary));
 
       // Trigger the event via stream
-      dataChangeStreamController.add(const DataChangedEvent(
-        type: DataChangeType.expense,
-        reason: DataChangeReason.updated,
-      ));
+      dataChangeStreamController.add(
+        const DataChangedEvent(
+          type: DataChangeType.expense,
+          reason: DataChangeReason.updated,
+        ),
+      );
 
       // Wait for async processing
       await expectLater(
@@ -119,13 +125,16 @@ void main() {
     });
 
     test('triggers ResetState when system reset happens', () async {
-      when(() => mockUseCase(any()))
-          .thenAnswer((_) async => const Right(tSummary));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Right(tSummary));
 
-      dataChangeStreamController.add(const DataChangedEvent(
-        type: DataChangeType.system,
-        reason: DataChangeReason.reset,
-      ));
+      dataChangeStreamController.add(
+        const DataChangedEvent(
+          type: DataChangeType.system,
+          reason: DataChangeReason.reset,
+        ),
+      );
 
       // Should go to Initial, then Loading -> Loaded (because ResetState triggers LoadSummary)
       await expectLater(

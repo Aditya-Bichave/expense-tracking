@@ -20,8 +20,15 @@ class MockAddEditTransactionBloc
     implements AddEditTransactionBloc {}
 
 class MockOnSubmit extends Mock {
-  void call(TransactionType type, String title, double amount, DateTime date,
-      Category category, String accountId, String? notes);
+  void call(
+    TransactionType type,
+    String title,
+    double amount,
+    DateTime date,
+    Category category,
+    String accountId,
+    String? notes,
+  );
 }
 
 void main() {
@@ -62,8 +69,9 @@ void main() {
   }
 
   group('TransactionForm', () {
-    testWidgets('initializes fields with initialTransaction data',
-        (tester) async {
+    testWidgets('initializes fields with initialTransaction data', (
+      tester,
+    ) async {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: buildTestWidget(initialTransaction: mockTransaction),
@@ -76,26 +84,33 @@ void main() {
     });
 
     testWidgets(
-        'toggling transaction type clears category and dispatches event',
-        (tester) async {
-      when(() => mockBloc.add(any())).thenAnswer((_) async {});
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: buildTestWidget(initialTransaction: mockTransaction),
-        settle: false,
-      );
-      await tester.pump();
-      await tester.tap(find.byType(ToggleSwitch));
-      await tester.pump();
+      'toggling transaction type clears category and dispatches event',
+      (tester) async {
+        when(() => mockBloc.add(any())).thenAnswer((_) async {});
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: buildTestWidget(initialTransaction: mockTransaction),
+          settle: false,
+        );
+        await tester.pump();
+        await tester.tap(find.byType(ToggleSwitch));
+        await tester.pump();
 
-      verify(() => mockBloc
-          .add(const TransactionTypeChanged(TransactionType.income))).called(1);
-    });
+        verify(
+          () => mockBloc.add(
+            const TransactionTypeChanged(TransactionType.income),
+          ),
+        ).called(1);
+      },
+    );
 
-    testWidgets('onSubmit is called with correct data when form is valid',
-        (tester) async {
-      when(() => mockOnSubmit.call(
-          any(), any(), any(), any(), any(), any(), any())).thenAnswer((_) {});
+    testWidgets('onSubmit is called with correct data when form is valid', (
+      tester,
+    ) async {
+      when(
+        () =>
+            mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any()),
+      ).thenAnswer((_) {});
       await pumpWidgetWithProviders(
         tester: tester,
         widget: buildTestWidget(
@@ -107,24 +122,30 @@ void main() {
       await tester.pump();
 
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Title / Description'),
-          'Test Title');
+        find.widgetWithText(TextFormField, 'Title / Description'),
+        'Test Title',
+      );
       await tester.enterText(
-          find.widgetWithText(TextFormField, 'Amount'), '50.00');
+        find.widgetWithText(TextFormField, 'Amount'),
+        '50.00',
+      );
 
-      await tester
-          .tap(find.byKey(const ValueKey('button_transactionForm_submit')));
+      await tester.tap(
+        find.byKey(const ValueKey('button_transactionForm_submit')),
+      );
       await tester.pump();
 
-      verify(() => mockOnSubmit.call(
-            TransactionType.expense,
-            'Test Title',
-            50.00,
-            any(named: 'date'),
-            Category.uncategorized,
-            'acc1',
-            any(named: 'notes'),
-          )).called(1);
+      verify(
+        () => mockOnSubmit.call(
+          TransactionType.expense,
+          'Test Title',
+          50.00,
+          any(named: 'date'),
+          Category.uncategorized,
+          'acc1',
+          any(named: 'notes'),
+        ),
+      ).called(1);
     });
 
     testWidgets('onSubmit is not called when form is invalid', (tester) async {
@@ -135,14 +156,19 @@ void main() {
       );
       await tester.pump();
 
-      await tester
-          .tap(find.byKey(const ValueKey('button_transactionForm_submit')));
+      await tester.tap(
+        find.byKey(const ValueKey('button_transactionForm_submit')),
+      );
       await tester.pump();
 
-      verifyNever(() =>
-          mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any()));
+      verifyNever(
+        () =>
+            mockOnSubmit.call(any(), any(), any(), any(), any(), any(), any()),
+      );
       expect(
-          find.text('Please correct the errors in the form.'), findsOneWidget);
+        find.text('Please correct the errors in the form.'),
+        findsOneWidget,
+      );
     });
   });
 }

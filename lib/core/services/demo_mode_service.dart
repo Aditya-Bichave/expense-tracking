@@ -152,8 +152,8 @@ class DemoModeService {
 
   // --- Goal Contribution Operations ---
   Future<List<GoalContributionModel>> getDemoContributionsForGoal(
-          String goalId) async =>
-      _demoContributions.where((c) => c.goalId == goalId).toList();
+    String goalId,
+  ) async => _demoContributions.where((c) => c.goalId == goalId).toList();
   Future<List<GoalContributionModel>> getAllDemoContributions() async =>
       _demoContributions;
   Future<GoalContributionModel?> getDemoContributionById(String id) async =>

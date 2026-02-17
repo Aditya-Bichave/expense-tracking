@@ -37,14 +37,18 @@ void main() {
     mockGetGoalsUseCase = MockGetGoalsUseCase();
 
     // Default success responses
-    when(() => mockGetCategoriesUseCase(any()))
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockGetAssetAccountsUseCase(any()))
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockGetBudgetsUseCase(any()))
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockGetGoalsUseCase(any()))
-        .thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetCategoriesUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetAssetAccountsUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetBudgetsUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetGoalsUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
   });
 
   group('LoadFilterOptions', () {
@@ -59,10 +63,16 @@ void main() {
       // Initial load triggered in constructor
       expect: () => [
         isA<ReportFilterState>().having(
-            (s) => s.optionsStatus, 'status', FilterOptionsStatus.loading),
+          (s) => s.optionsStatus,
+          'status',
+          FilterOptionsStatus.loading,
+        ),
         isA<ReportFilterState>()
             .having(
-                (s) => s.optionsStatus, 'status', FilterOptionsStatus.loaded)
+              (s) => s.optionsStatus,
+              'status',
+              FilterOptionsStatus.loaded,
+            )
             .having((s) => s.availableCategories, 'cats', isEmpty),
       ],
     );
@@ -70,8 +80,9 @@ void main() {
     blocTest<ReportFilterBloc, ReportFilterState>(
       'emits [loading, error] on failure',
       build: () {
-        when(() => mockGetCategoriesUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Error')));
+        when(
+          () => mockGetCategoriesUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Error')));
         return ReportFilterBloc(
           categoryRepository: mockGetCategoriesUseCase,
           accountRepository: mockGetAssetAccountsUseCase,
@@ -81,7 +92,10 @@ void main() {
       },
       expect: () => [
         isA<ReportFilterState>().having(
-            (s) => s.optionsStatus, 'status', FilterOptionsStatus.loading),
+          (s) => s.optionsStatus,
+          'status',
+          FilterOptionsStatus.loading,
+        ),
         isA<ReportFilterState>()
             .having((s) => s.optionsStatus, 'status', FilterOptionsStatus.error)
             .having((s) => s.optionsError, 'error', contains('Failed to load')),
@@ -99,12 +113,14 @@ void main() {
         goalRepository: mockGetGoalsUseCase,
       ),
       skip: 2, // Skip initial load states
-      act: (bloc) => bloc.add(UpdateReportFilters(
-        startDate: DateTime(2023, 1, 1),
-        endDate: DateTime(2023, 1, 31),
-        categoryIds: const ['c1'],
-        accountIds: const ['a1'],
-      )),
+      act: (bloc) => bloc.add(
+        UpdateReportFilters(
+          startDate: DateTime(2023, 1, 1),
+          endDate: DateTime(2023, 1, 31),
+          categoryIds: const ['c1'],
+          accountIds: const ['a1'],
+        ),
+      ),
       expect: () => [
         isA<ReportFilterState>()
             .having((s) => s.startDate, 'startDate', DateTime(2023, 1, 1))

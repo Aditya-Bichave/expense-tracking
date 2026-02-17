@@ -81,7 +81,8 @@ class _DashboardPageState extends State<DashboardPage> {
       onRefresh: _refreshDashboard,
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+        padding:
+            modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
             const EdgeInsets.only(top: 8.0, bottom: 80.0),
         children: [
           DashboardHeader(overview: overview),
@@ -133,7 +134,8 @@ class _DashboardPageState extends State<DashboardPage> {
             Positioned.fill(child: SvgPicture.asset(bgPath, fit: BoxFit.cover)),
           ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: modeTheme?.pagePadding.copyWith(
+            padding:
+                modeTheme?.pagePadding.copyWith(
                   top: kToolbarHeight + MediaQuery.of(context).padding.top + 8,
                   bottom: 80,
                 ) ??
@@ -297,7 +299,7 @@ class _DashboardPageState extends State<DashboardPage> {
             final overview = (state is DashboardLoaded)
                 ? state.overview
                 : (context.read<DashboardBloc>().state as DashboardLoaded?)
-                    ?.overview; // Use previous data if reloading
+                      ?.overview; // Use previous data if reloading
             if (overview == null && state is DashboardLoading) {
               bodyContent = const Center(
                 child: CircularProgressIndicator(),

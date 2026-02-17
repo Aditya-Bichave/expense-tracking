@@ -48,7 +48,8 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     _colorCache = {};
     _generateColorCache(widget.accountBalances.keys);
     log.info(
-        "[PieChart] Initialized with ${widget.accountBalances.length} accounts.");
+      "[PieChart] Initialized with ${widget.accountBalances.length} accounts.",
+    );
   }
 
   @override
@@ -73,7 +74,8 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     final uiMode = settingsState.uiMode;
 
     log.info(
-        "[PieChart] Build method. TouchedIndex: $touchedIndex, Mode: $uiMode");
+      "[PieChart] Build method. TouchedIndex: $touchedIndex, Mode: $uiMode",
+    );
 
     // --- Quantum Mode: Return null, handled by DashboardPage ---
     // Note: We could render a table here, but dashboard page already does
@@ -85,10 +87,12 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
 
     // Filter out accounts with zero or negative balance for the chart itself
     final positiveBalances = Map.fromEntries(
-        widget.accountBalances.entries.where((entry) => entry.value > 0));
+      widget.accountBalances.entries.where((entry) => entry.value > 0),
+    );
 
     log.info(
-        "[PieChart] Filtered positive balances: ${positiveBalances.length} accounts.");
+      "[PieChart] Filtered positive balances: ${positiveBalances.length} accounts.",
+    );
 
     if (positiveBalances.isEmpty) {
       log.info("[PieChart] No positive balances to display.");
@@ -97,8 +101,11 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Center(
-              child: Text('No positive asset balances to chart.',
-                  style: theme.textTheme.bodyMedium)),
+            child: Text(
+              'No positive asset balances to chart.',
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
         ),
       );
     }
@@ -106,12 +113,15 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     // Prepare data for the chart
     final List<String> accountNames = positiveBalances.keys.toList();
     final List<double> balances = positiveBalances.values.toList();
-    final double totalPositiveBalance =
-        balances.fold(0.0, (sum, item) => sum + item);
+    final double totalPositiveBalance = balances.fold(
+      0.0,
+      (sum, item) => sum + item,
+    );
 
     // Get colors from cache
-    final List<Color> sectionColors =
-        accountNames.map((name) => _colorCache[name]!).toList();
+    final List<Color> sectionColors = accountNames
+        .map((name) => _colorCache[name]!)
+        .toList();
 
     return Card(
       // Use Card theme
@@ -122,8 +132,9 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
           children: [
             Text(
               'Asset Distribution',
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(color: theme.colorScheme.secondary),
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: theme.colorScheme.secondary,
+              ),
             ),
             const SizedBox(height: 20),
             AspectRatio(
@@ -143,17 +154,23 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
                           return;
                         }
                         log.info(
-                            "[PieChart] Touched section index: ${pieTouchResponse.touchedSection!.touchedSectionIndex}");
+                          "[PieChart] Touched section index: ${pieTouchResponse.touchedSection!.touchedSectionIndex}",
+                        );
                         touchedIndex = pieTouchResponse
-                            .touchedSection!.touchedSectionIndex;
+                            .touchedSection!
+                            .touchedSectionIndex;
                       });
                     },
                   ),
                   borderData: FlBorderData(show: false),
                   sectionsSpace: 2,
                   centerSpaceRadius: 50, // Make center hole larger
-                  sections: showingSections(positiveBalances, sectionColors,
-                      totalPositiveBalance, theme),
+                  sections: showingSections(
+                    positiveBalances,
+                    sectionColors,
+                    totalPositiveBalance,
+                    theme,
+                  ),
                 ),
               ),
             ),
@@ -165,9 +182,12 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
               alignment: WrapAlignment.center,
               children: List.generate(accountNames.length, (index) {
                 return _buildLegend(
-                    accountNames[index], sectionColors[index], theme);
+                  accountNames[index],
+                  sectionColors[index],
+                  theme,
+                );
               }),
-            )
+            ),
           ],
         ),
       ),
@@ -179,17 +199,22 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-            width: 14,
-            height: 14,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 6),
         Text(name, style: theme.textTheme.bodySmall),
       ],
     );
   }
 
-  List<PieChartSectionData> showingSections(Map<String, double> data,
-      List<Color> colors, double totalValue, ThemeData theme) {
+  List<PieChartSectionData> showingSections(
+    Map<String, double> data,
+    List<Color> colors,
+    double totalValue,
+    ThemeData theme,
+  ) {
     // Reduce/remove animations in Quantum mode (handled by main check now)
     // bool isQuantum = context.read<SettingsBloc>().state.uiMode == UIMode.quantum;
 
@@ -199,8 +224,9 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
       final radius = isTouched ? 70.0 : 60.0;
       final balance = data.values.elementAt(i);
       final percentage = totalValue > 0 ? (balance / totalValue * 100) : 0.0;
-      final titleColor =
-          colors[i].computeLuminance() > 0.5 ? Colors.black : Colors.white;
+      final titleColor = colors[i].computeLuminance() > 0.5
+          ? Colors.black
+          : Colors.white;
 
       return PieChartSectionData(
         color: colors[i],

@@ -27,8 +27,9 @@ class RecurringRuleListItem extends StatelessWidget {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).colorScheme.secondaryContainer,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.secondaryContainer,
                 child: Icon(
                   Icons.autorenew,
                   color: Theme.of(context).colorScheme.onSecondaryContainer,

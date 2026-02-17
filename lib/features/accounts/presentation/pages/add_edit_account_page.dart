@@ -13,33 +13,33 @@ class AddEditAccountPage extends StatelessWidget {
   final String? accountId;
   final AssetAccount? account; // Received via route 'extra'
 
-  const AddEditAccountPage({
-    super.key,
-    this.accountId,
-    this.account,
-  });
+  const AddEditAccountPage({super.key, this.accountId, this.account});
 
   @override
   Widget build(BuildContext context) {
     final bool isEditing = account != null;
     log.info(
-        "[AddEditAccountPage] Build called. Editing: $isEditing, AccountId: $accountId, InitialCurrentBalance: ${account?.currentBalance}");
+      "[AddEditAccountPage] Build called. Editing: $isEditing, AccountId: $accountId, InitialCurrentBalance: ${account?.currentBalance}",
+    );
 
     return BlocProvider(
       create: (context) => sl<AddEditAccountBloc>(param1: account),
       child: BlocListener<AddEditAccountBloc, AddEditAccountState>(
         listener: (context, state) {
           log.info(
-              "[AddEditAccountPage] BlocListener received state: Status=${state.status}");
+            "[AddEditAccountPage] BlocListener received state: Status=${state.status}",
+          );
           if (state.status == FormStatus.success) {
             log.info(
-                "[AddEditAccountPage] Form submission successful. Popping route.");
+              "[AddEditAccountPage] Form submission successful. Popping route.",
+            );
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
                 SnackBar(
                   content: Text(
-                      'Account ${isEditing ? 'updated' : 'added'} successfully!'),
+                    'Account ${isEditing ? 'updated' : 'added'} successfully!',
+                  ),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -47,13 +47,15 @@ class AddEditAccountPage extends StatelessWidget {
               context.pop();
             } else {
               log.warning(
-                  "[AddEditAccountPage] Cannot pop context after successful save.");
+                "[AddEditAccountPage] Cannot pop context after successful save.",
+              );
               context.goNamed('accounts'); // Navigate to accounts tab
             }
           } else if (state.status == FormStatus.error &&
               state.errorMessage != null) {
             log.warning(
-                "[AddEditAccountPage] Form submission error: ${state.errorMessage}");
+              "[AddEditAccountPage] Form submission error: ${state.errorMessage}",
+            );
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
@@ -73,14 +75,16 @@ class AddEditAccountPage extends StatelessWidget {
           body: BlocBuilder<AddEditAccountBloc, AddEditAccountState>(
             builder: (context, state) {
               log.info(
-                  "[AddEditAccountPage] BlocBuilder building for status: ${state.status}");
+                "[AddEditAccountPage] BlocBuilder building for status: ${state.status}",
+              );
 
               return AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: state.status == FormStatus.submitting
                     ? const Center(
                         key: ValueKey('loading'),
-                        child: CircularProgressIndicator())
+                        child: CircularProgressIndicator(),
+                      )
                     : AccountForm(
                         key: const ValueKey('form'),
                         initialAccount:
@@ -91,17 +95,18 @@ class AddEditAccountPage extends StatelessWidget {
                         // --- END MODIFIED ---
                         onSubmit: (name, type, initialBalanceFromForm) {
                           log.info(
-                              "[AddEditAccountPage] Form submitted. Dispatching SaveAccountRequested. Balance value from form: $initialBalanceFromForm");
+                            "[AddEditAccountPage] Form submitted. Dispatching SaveAccountRequested. Balance value from form: $initialBalanceFromForm",
+                          );
                           context.read<AddEditAccountBloc>().add(
-                                SaveAccountRequested(
-                                  name: name,
-                                  type: type,
-                                  // Pass the value from the form field as the 'initialBalance'
-                                  initialBalance: initialBalanceFromForm,
-                                  existingAccountId:
-                                      accountId, // Use accountId from route param
-                                ),
-                              );
+                            SaveAccountRequested(
+                              name: name,
+                              type: type,
+                              // Pass the value from the form field as the 'initialBalance'
+                              initialBalance: initialBalanceFromForm,
+                              existingAccountId:
+                                  accountId, // Use accountId from route param
+                            ),
+                          );
                         },
                       ),
               );

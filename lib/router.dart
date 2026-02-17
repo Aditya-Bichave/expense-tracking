@@ -63,8 +63,9 @@ class GoRouterRefreshStream extends ChangeNotifier {
 }
 
 // --- Navigator Keys ---
-final GlobalKey<NavigatorState> _rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
 final GlobalKey<NavigatorState> _shellNavigatorKeyDashboard =
     GlobalKey<NavigatorState>(debugLabel: 'shellDashboard');
 final GlobalKey<NavigatorState> _shellNavigatorKeyTransactions =
@@ -83,312 +84,336 @@ class AppRouter {
   static final SettingsBloc _settingsBloc = sl<SettingsBloc>();
 
   static final GoRouter router = GoRouter(
-      // --- FIXED: Set initialLocation to /setup ---
-      initialLocation: RouteNames.initialSetup,
-      // --- END FIXED ---
-      navigatorKey: _rootNavigatorKey,
-      debugLogDiagnostics: kDebugMode,
-      observers: [GoRouterObserver()],
-      refreshListenable: GoRouterRefreshStream(_settingsBloc.stream),
-      redirect: (BuildContext context, GoRouterState state) {
-        final settingsState = _settingsBloc.state;
-        final bool isInDemo = settingsState.isInDemoMode;
-        final bool isInitialized =
-            settingsState.status == SettingsStatus.loaded ||
-                settingsState.status == SettingsStatus.error;
-        final bool setupSkipped = settingsState.setupSkipped;
+    // --- FIXED: Set initialLocation to /setup ---
+    initialLocation: RouteNames.initialSetup,
+    // --- END FIXED ---
+    navigatorKey: _rootNavigatorKey,
+    debugLogDiagnostics: kDebugMode,
+    observers: [GoRouterObserver()],
+    refreshListenable: GoRouterRefreshStream(_settingsBloc.stream),
+    redirect: (BuildContext context, GoRouterState state) {
+      final settingsState = _settingsBloc.state;
+      final bool isInDemo = settingsState.isInDemoMode;
+      final bool isInitialized =
+          settingsState.status == SettingsStatus.loaded ||
+          settingsState.status == SettingsStatus.error;
+      final bool setupSkipped = settingsState.setupSkipped;
 
-        const bool isAuthenticated = false; // MOCK
+      const bool isAuthenticated = false; // MOCK
 
-        final String currentRoute = state.matchedLocation;
-        final bool isGoingToInitialSetup =
-            currentRoute == RouteNames.initialSetup;
-        final bool isGoingToShellRoute = currentRoute == RouteNames.dashboard ||
-            currentRoute == RouteNames.transactionsList ||
-            currentRoute == RouteNames.budgetsAndCats ||
-            currentRoute == RouteNames.accounts ||
-            currentRoute == RouteNames.settings ||
-            currentRoute.startsWith(RouteNames.recurring);
+      final String currentRoute = state.matchedLocation;
+      final bool isGoingToInitialSetup =
+          currentRoute == RouteNames.initialSetup;
+      final bool isGoingToShellRoute =
+          currentRoute == RouteNames.dashboard ||
+          currentRoute == RouteNames.transactionsList ||
+          currentRoute == RouteNames.budgetsAndCats ||
+          currentRoute == RouteNames.accounts ||
+          currentRoute == RouteNames.settings ||
+          currentRoute.startsWith(RouteNames.recurring);
 
+      log.info(
+        "[RouterRedirect] To: $currentRoute, IsInDemo: $isInDemo, IsAuth: $isAuthenticated, IsInit: $isInitialized, SetupSkipped: $setupSkipped",
+      );
+
+      if (setupSkipped && isGoingToInitialSetup) {
         log.info(
-            "[RouterRedirect] To: $currentRoute, IsInDemo: $isInDemo, IsAuth: $isAuthenticated, IsInit: $isInitialized, SetupSkipped: $setupSkipped");
+          "[RouterRedirect] Setup skipped, redirecting from InitialSetup to Dashboard.",
+        );
+        return RouteNames.dashboard;
+      }
 
-        if (setupSkipped && isGoingToInitialSetup) {
+      // Don't redirect if settings aren't initialized unless going to setup
+      if (!isInitialized && !isGoingToInitialSetup) {
+        log.info(
+          "[RouterRedirect] Settings not initialized, staying put (or default).",
+        );
+        return null;
+      }
+
+      // If in demo mode, allow access to shell routes, redirect away from setup
+      if (isInDemo) {
+        if (isGoingToInitialSetup) {
           log.info(
-              "[RouterRedirect] Setup skipped, redirecting from InitialSetup to Dashboard.");
+            "[RouterRedirect] In Demo Mode, redirecting from InitialSetup to Dashboard.",
+          );
           return RouteNames.dashboard;
         }
+        log.info(
+          "[RouterRedirect] In Demo Mode, allowing access to $currentRoute.",
+        );
+        return null; // No redirection needed
+      }
 
-        // Don't redirect if settings aren't initialized unless going to setup
-        if (!isInitialized && !isGoingToInitialSetup) {
+      // If NOT authenticated AND NOT in demo mode
+      if (!isAuthenticated && !isInDemo) {
+        // If already on the setup page, allow it
+        if (isGoingToInitialSetup) {
           log.info(
-              "[RouterRedirect] Settings not initialized, staying put (or default).");
+            "[RouterRedirect] Not authenticated, already on InitialSetup. Allowing.",
+          );
           return null;
         }
-
-        // If in demo mode, allow access to shell routes, redirect away from setup
-        if (isInDemo) {
-          if (isGoingToInitialSetup) {
-            log.info(
-                "[RouterRedirect] In Demo Mode, redirecting from InitialSetup to Dashboard.");
-            return RouteNames.dashboard;
-          }
+        // If setup was skipped AND trying to access a shell route, allow it
+        else if (setupSkipped && isGoingToShellRoute) {
           log.info(
-              "[RouterRedirect] In Demo Mode, allowing access to $currentRoute.");
-          return null; // No redirection needed
+            "[RouterRedirect] Not authenticated, but setup was skipped. Allowing navigation to $currentRoute.",
+          );
+          return null; // Allow navigation
         }
-
-        // If NOT authenticated AND NOT in demo mode
-        if (!isAuthenticated && !isInDemo) {
-          // If already on the setup page, allow it
-          if (isGoingToInitialSetup) {
-            log.info(
-                "[RouterRedirect] Not authenticated, already on InitialSetup. Allowing.");
-            return null;
-          }
-          // If setup was skipped AND trying to access a shell route, allow it
-          else if (setupSkipped && isGoingToShellRoute) {
-            log.info(
-                "[RouterRedirect] Not authenticated, but setup was skipped. Allowing navigation to $currentRoute.");
-            return null; // Allow navigation
-          }
-          // Otherwise, redirect to InitialSetup
-          else {
-            log.info(
-                "[RouterRedirect] Not authenticated & setup not skipped/not going to setup, redirecting to InitialSetup.");
-            return RouteNames.initialSetup;
-          }
+        // Otherwise, redirect to InitialSetup
+        else {
+          log.info(
+            "[RouterRedirect] Not authenticated & setup not skipped/not going to setup, redirecting to InitialSetup.",
+          );
+          return RouteNames.initialSetup;
         }
+      }
 
-        // Default: Allow navigation to the intended route (if reached here, conditions are met)
-        log.info("[RouterRedirect] Allowing access to $currentRoute.");
-        return null;
-      },
-      routes: [
-        // Initial Setup Route - This is the route for the initial screen
-        GoRoute(
-          path: RouteNames.initialSetup,
-          name: RouteNames.initialSetup,
-          builder: (context, state) => const InitialSetupScreen(),
-        ),
+      // Default: Allow navigation to the intended route (if reached here, conditions are met)
+      log.info("[RouterRedirect] Allowing access to $currentRoute.");
+      return null;
+    },
+    routes: [
+      // Initial Setup Route - This is the route for the initial screen
+      GoRoute(
+        path: RouteNames.initialSetup,
+        name: RouteNames.initialSetup,
+        builder: (context, state) => const InitialSetupScreen(),
+      ),
 
-        // Main App Shell Routes - These are the main screens accessible after setup/login
-        StatefulShellRoute.indexedStack(
-          builder: (context, state, navigationShell) {
-            return BlocProvider.value(
-              value: sl<ReportFilterBloc>(),
-              child: MainShell(navigationShell: navigationShell),
-            );
-          },
-          branches: [
-            // --- Branch 0: Dashboard ---
-            StatefulShellBranch(
-              navigatorKey: _shellNavigatorKeyDashboard,
-              routes: [
-                GoRoute(
-                  path: RouteNames.dashboard,
-                  name: RouteNames.dashboard,
-                  pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: DashboardPage()),
-                  routes: _buildReportSubRoutes(_rootNavigatorKey),
-                ),
-              ],
-            ),
-            // --- Branch 1: Transactions ---
-            StatefulShellBranch(
-              navigatorKey: _shellNavigatorKeyTransactions,
-              routes: [
-                GoRoute(
-                  path: RouteNames.transactionsList,
-                  name: RouteNames.transactionsList,
-                  pageBuilder: (context, state) {
-                    final Map<String, dynamic> queryParams =
-                        state.uri.queryParameters;
-                    final Map<String, dynamic>? extra =
-                        state.extra as Map<String, dynamic>?;
-                    Map<String, dynamic>? filtersFromExtra =
-                        extra?['filters'] as Map<String, dynamic>?;
-                    log.fine(
-                        "[Router] TransactionsListPage: queryParams=$queryParams, extra=$extra, filtersFromExtra=$filtersFromExtra");
-                    return NoTransitionPage(
-                        child: TransactionListPage(
+      // Main App Shell Routes - These are the main screens accessible after setup/login
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return BlocProvider.value(
+            value: sl<ReportFilterBloc>(),
+            child: MainShell(navigationShell: navigationShell),
+          );
+        },
+        branches: [
+          // --- Branch 0: Dashboard ---
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeyDashboard,
+            routes: [
+              GoRoute(
+                path: RouteNames.dashboard,
+                name: RouteNames.dashboard,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: DashboardPage()),
+                routes: _buildReportSubRoutes(_rootNavigatorKey),
+              ),
+            ],
+          ),
+          // --- Branch 1: Transactions ---
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeyTransactions,
+            routes: [
+              GoRoute(
+                path: RouteNames.transactionsList,
+                name: RouteNames.transactionsList,
+                pageBuilder: (context, state) {
+                  final Map<String, dynamic> queryParams =
+                      state.uri.queryParameters;
+                  final Map<String, dynamic>? extra =
+                      state.extra as Map<String, dynamic>?;
+                  Map<String, dynamic>? filtersFromExtra =
+                      extra?['filters'] as Map<String, dynamic>?;
+                  log.fine(
+                    "[Router] TransactionsListPage: queryParams=$queryParams, extra=$extra, filtersFromExtra=$filtersFromExtra",
+                  );
+                  return NoTransitionPage(
+                    child: TransactionListPage(
                       initialFilters: filtersFromExtra ?? queryParams,
-                    ));
-                  },
-                  routes: [
-                    GoRoute(
-                        path: RouteNames.addTransaction,
-                        name: RouteNames.addTransaction,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) =>
-                            const AddEditTransactionPage(
-                                initialTransactionData: null)),
-                    GoRoute(
-                        path:
-                            '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}',
-                        name: RouteNames.editTransaction,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildEditTransactionPage),
-                    GoRoute(
-                        path:
-                            '${RouteNames.transactionDetail}/:${RouteNames.paramTransactionId}',
-                        name: RouteNames.transactionDetail,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildTransactionDetailPage),
-                  ],
-                ),
-              ],
-            ),
-            // --- Branch 2: Budgets/Goals ---
-            StatefulShellBranch(
-              navigatorKey: _shellNavigatorKeyBudgetsCats,
-              routes: [
-                GoRoute(
-                  path: RouteNames.budgetsAndCats,
-                  name: RouteNames.budgetsAndCats,
-                  pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: BudgetsAndCatsTabPage()),
-                  routes: [
-                    GoRoute(
-                      path: RouteNames.manageCategories,
-                      name: RouteNames.manageCategories,
-                      parentNavigatorKey: _rootNavigatorKey,
-                      builder: (context, state) =>
-                          const CategoryManagementScreen(),
-                      routes: [
-                        GoRoute(
-                            path: RouteNames.addCategory,
-                            name: RouteNames.addCategory,
-                            parentNavigatorKey: _rootNavigatorKey,
-                            builder: (context, state) {
-                              final Map<String, dynamic>? extra =
-                                  state.extra as Map<String, dynamic>?;
-                              final CategoryType? initialType =
-                                  extra?['initialType'] as CategoryType?;
-                              return AddEditCategoryScreen(
-                                  initialType: initialType);
-                            }),
-                        GoRoute(
-                            path:
-                                '${RouteNames.editCategory}/:${RouteNames.paramId}',
-                            name: RouteNames.editCategory,
-                            parentNavigatorKey: _rootNavigatorKey,
-                            builder: _buildEditCategoryPage),
-                      ],
                     ),
-                    GoRoute(
-                        path: RouteNames.addBudget,
-                        name: RouteNames.addBudget,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) =>
-                            const AddEditBudgetPage(initialBudget: null)),
-                    GoRoute(
-                        path: '${RouteNames.editBudget}/:${RouteNames.paramId}',
-                        name: RouteNames.editBudget,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildEditBudgetPage),
-                    GoRoute(
-                        path:
-                            '${RouteNames.budgetDetail}/:${RouteNames.paramId}',
-                        name: RouteNames.budgetDetail,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildBudgetDetailPage),
-                    GoRoute(
-                        path: RouteNames.addGoal,
-                        name: RouteNames.addGoal,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) =>
-                            const AddEditGoalPage(initialGoal: null)),
-                    GoRoute(
-                        path: '${RouteNames.editGoal}/:${RouteNames.paramId}',
-                        name: RouteNames.editGoal,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildEditGoalPage),
-                    GoRoute(
-                        path: '${RouteNames.goalDetail}/:${RouteNames.paramId}',
-                        name: RouteNames.goalDetail,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildGoalDetailPage),
-                  ],
-                ),
-              ],
-            ),
-            // --- Branch 3: Accounts ---
-            StatefulShellBranch(
-              navigatorKey: _shellNavigatorKeyAccounts,
-              routes: [
-                GoRoute(
-                  path: RouteNames.accounts,
-                  name: RouteNames.accounts,
-                  pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: AccountsTabPage()),
-                  routes: [
-                    GoRoute(
-                        path: RouteNames.addAccount,
-                        name: RouteNames.addAccount,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) =>
-                            const AddEditAccountPage()),
-                    GoRoute(
-                        path:
-                            '${RouteNames.editAccount}/:${RouteNames.paramAccountId}',
-                        name: RouteNames.editAccount,
-                        parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildEditAccountPage),
-                  ],
-                ),
-              ],
-            ),
-            // --- Branch 4: Recurring ---
-            StatefulShellBranch(
-              navigatorKey: _shellNavigatorKeyRecurring,
-              routes: [
-                GoRoute(
-                  path: RouteNames.recurring,
-                  name: RouteNames.recurring,
-                  pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: RecurringRuleListPage()),
-                  routes: [
-                    GoRoute(
-                      path: RouteNames.addRecurring,
-                      name: RouteNames.addRecurring,
-                      parentNavigatorKey: _rootNavigatorKey,
-                      builder: (context, state) =>
-                          const AddEditRecurringRulePage(),
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    path: RouteNames.addTransaction,
+                    name: RouteNames.addTransaction,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const AddEditTransactionPage(
+                      initialTransactionData: null,
                     ),
-                    GoRoute(
-                      path:
-                          '${RouteNames.editRecurring}/:${RouteNames.paramId}',
-                      name: RouteNames.editRecurring,
-                      parentNavigatorKey: _rootNavigatorKey,
-                      builder: (context, state) {
-                        final rule = state.extra as RecurringRule?;
-                        return AddEditRecurringRulePage(initialRule: rule);
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            // --- Branch 5: Settings ---
-            StatefulShellBranch(
-              navigatorKey: _shellNavigatorKeySettings,
-              routes: [
-                GoRoute(
-                  path: RouteNames.settings,
-                  name: RouteNames.settings,
-                  pageBuilder: (context, state) =>
-                      const NoTransitionPage(child: SettingsPage()),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ]);
+                  ),
+                  GoRoute(
+                    path:
+                        '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}',
+                    name: RouteNames.editTransaction,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: _buildEditTransactionPage,
+                  ),
+                  GoRoute(
+                    path:
+                        '${RouteNames.transactionDetail}/:${RouteNames.paramTransactionId}',
+                    name: RouteNames.transactionDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: _buildTransactionDetailPage,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // --- Branch 2: Budgets/Goals ---
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeyBudgetsCats,
+            routes: [
+              GoRoute(
+                path: RouteNames.budgetsAndCats,
+                name: RouteNames.budgetsAndCats,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: BudgetsAndCatsTabPage()),
+                routes: [
+                  GoRoute(
+                    path: RouteNames.manageCategories,
+                    name: RouteNames.manageCategories,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const CategoryManagementScreen(),
+                    routes: [
+                      GoRoute(
+                        path: RouteNames.addCategory,
+                        name: RouteNames.addCategory,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: (context, state) {
+                          final Map<String, dynamic>? extra =
+                              state.extra as Map<String, dynamic>?;
+                          final CategoryType? initialType =
+                              extra?['initialType'] as CategoryType?;
+                          return AddEditCategoryScreen(
+                            initialType: initialType,
+                          );
+                        },
+                      ),
+                      GoRoute(
+                        path:
+                            '${RouteNames.editCategory}/:${RouteNames.paramId}',
+                        name: RouteNames.editCategory,
+                        parentNavigatorKey: _rootNavigatorKey,
+                        builder: _buildEditCategoryPage,
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: RouteNames.addBudget,
+                    name: RouteNames.addBudget,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const AddEditBudgetPage(initialBudget: null),
+                  ),
+                  GoRoute(
+                    path: '${RouteNames.editBudget}/:${RouteNames.paramId}',
+                    name: RouteNames.editBudget,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: _buildEditBudgetPage,
+                  ),
+                  GoRoute(
+                    path: '${RouteNames.budgetDetail}/:${RouteNames.paramId}',
+                    name: RouteNames.budgetDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: _buildBudgetDetailPage,
+                  ),
+                  GoRoute(
+                    path: RouteNames.addGoal,
+                    name: RouteNames.addGoal,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const AddEditGoalPage(initialGoal: null),
+                  ),
+                  GoRoute(
+                    path: '${RouteNames.editGoal}/:${RouteNames.paramId}',
+                    name: RouteNames.editGoal,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: _buildEditGoalPage,
+                  ),
+                  GoRoute(
+                    path: '${RouteNames.goalDetail}/:${RouteNames.paramId}',
+                    name: RouteNames.goalDetail,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: _buildGoalDetailPage,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // --- Branch 3: Accounts ---
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeyAccounts,
+            routes: [
+              GoRoute(
+                path: RouteNames.accounts,
+                name: RouteNames.accounts,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: AccountsTabPage()),
+                routes: [
+                  GoRoute(
+                    path: RouteNames.addAccount,
+                    name: RouteNames.addAccount,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const AddEditAccountPage(),
+                  ),
+                  GoRoute(
+                    path:
+                        '${RouteNames.editAccount}/:${RouteNames.paramAccountId}',
+                    name: RouteNames.editAccount,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: _buildEditAccountPage,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // --- Branch 4: Recurring ---
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeyRecurring,
+            routes: [
+              GoRoute(
+                path: RouteNames.recurring,
+                name: RouteNames.recurring,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: RecurringRuleListPage()),
+                routes: [
+                  GoRoute(
+                    path: RouteNames.addRecurring,
+                    name: RouteNames.addRecurring,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) =>
+                        const AddEditRecurringRulePage(),
+                  ),
+                  GoRoute(
+                    path: '${RouteNames.editRecurring}/:${RouteNames.paramId}',
+                    name: RouteNames.editRecurring,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final rule = state.extra as RecurringRule?;
+                      return AddEditRecurringRulePage(initialRule: rule);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          // --- Branch 5: Settings ---
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorKeySettings,
+            routes: [
+              GoRoute(
+                path: RouteNames.settings,
+                name: RouteNames.settings,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: SettingsPage()),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
 
   // --- Report Sub-Routes Builder (Unchanged) ---
   static List<RouteBase> _buildReportSubRoutes(
-      GlobalKey<NavigatorState> parentKey) {
+    GlobalKey<NavigatorState> parentKey,
+  ) {
     return [
       GoRoute(
         path: RouteNames.reportSpendingCategory, // Relative path
@@ -487,28 +512,36 @@ class AppRouter {
 
   // --- Helper Builder Functions (Unchanged) ---
   static Widget _buildTransactionDetailPage(
-      BuildContext context, GoRouterState state) {
+    BuildContext context,
+    GoRouterState state,
+  ) {
     final id = state.pathParameters[RouteNames.paramTransactionId];
     TransactionEntity? transaction;
     if (state.extra is TransactionEntity) {
       transaction = state.extra as TransactionEntity;
     } else {
       log.warning(
-          "[AppRouter] Txn Detail route received 'extra' of unexpected type or null. Extra: ${state.extra?.runtimeType}");
+        "[AppRouter] Txn Detail route received 'extra' of unexpected type or null. Extra: ${state.extra?.runtimeType}",
+      );
     }
     if (id == null || transaction == null) {
       log.severe(
-          "[AppRouter] Txn Detail route missing ID or valid transaction data!");
+        "[AppRouter] Txn Detail route missing ID or valid transaction data!",
+      );
       return Scaffold(
-          appBar: AppBar(),
-          body: const Center(
-              child: Text("Error: Could not load transaction details")));
+        appBar: AppBar(),
+        body: const Center(
+          child: Text("Error: Could not load transaction details"),
+        ),
+      );
     }
     return TransactionDetailPage(transaction: transaction);
   }
 
   static Widget _buildEditTransactionPage(
-      BuildContext context, GoRouterState state) {
+    BuildContext context,
+    GoRouterState state,
+  ) {
     final transactionId = state.pathParameters[RouteNames.paramTransactionId];
     dynamic initialData = state.extra;
     if (initialData != null &&
@@ -516,24 +549,30 @@ class AppRouter {
             initialData is Income ||
             initialData is TransactionEntity)) {
       log.warning(
-          "[AppRouter] Edit Txn route received 'extra' of unexpected type: ${state.extra?.runtimeType}. Ignoring.");
+        "[AppRouter] Edit Txn route received 'extra' of unexpected type: ${state.extra?.runtimeType}. Ignoring.",
+      );
       initialData = null;
     }
     if (transactionId == null && initialData == null) {
       log.severe(
-          "[AppRouter] Edit Txn route called without transaction ID or initial data!");
+        "[AppRouter] Edit Txn route called without transaction ID or initial data!",
+      );
       return const Scaffold(
-          appBar: null,
-          body: Center(child: Text("Error: Missing Transaction Data")));
+        appBar: null,
+        body: Center(child: Text("Error: Missing Transaction Data")),
+      );
     }
     return AddEditTransactionPage(initialTransactionData: initialData);
   }
 
   static Widget _buildEditCategoryPage(
-      BuildContext context, GoRouterState state) {
+    BuildContext context,
+    GoRouterState state,
+  ) {
     final categoryId = state.pathParameters[RouteNames.paramId];
-    final Category? category =
-        state.extra is Category ? state.extra as Category : null;
+    final Category? category = state.extra is Category
+        ? state.extra as Category
+        : null;
     final Map<String, dynamic>? extraMap = state.extra is Map<String, dynamic>
         ? state.extra as Map<String, dynamic>
         : null;
@@ -542,45 +581,61 @@ class AppRouter {
     if (categoryId == null) {
       log.severe("[AppRouter] Edit Category route called without ID!");
       return const Scaffold(
-          appBar: null,
-          body: Center(child: Text("Error: Missing Category ID")));
+        appBar: null,
+        body: Center(child: Text("Error: Missing Category ID")),
+      );
     }
     return AddEditCategoryScreen(
-        initialCategory: category, initialType: initialType);
+      initialCategory: category,
+      initialType: initialType,
+    );
   }
 
   static Widget _buildEditAccountPage(
-      BuildContext context, GoRouterState state) {
+    BuildContext context,
+    GoRouterState state,
+  ) {
     final accountId = state.pathParameters[RouteNames.paramAccountId];
-    final AssetAccount? account =
-        state.extra is AssetAccount ? state.extra as AssetAccount : null;
+    final AssetAccount? account = state.extra is AssetAccount
+        ? state.extra as AssetAccount
+        : null;
     if (accountId == null) {
       log.severe("[AppRouter] Edit Account route called without ID!");
       return const Scaffold(
-          appBar: null, body: Center(child: Text("Error: Missing Account ID")));
+        appBar: null,
+        body: Center(child: Text("Error: Missing Account ID")),
+      );
     }
     return AddEditAccountPage(accountId: accountId, account: account);
   }
 
   static Widget _buildEditBudgetPage(
-      BuildContext context, GoRouterState state) {
+    BuildContext context,
+    GoRouterState state,
+  ) {
     final budgetId = state.pathParameters[RouteNames.paramId];
     final Budget? budget = state.extra is Budget ? state.extra as Budget : null;
     if (budgetId == null) {
       log.severe("[AppRouter] Edit Budget route called without ID!");
       return const Scaffold(
-          appBar: null, body: Center(child: Text("Error: Missing Budget ID")));
+        appBar: null,
+        body: Center(child: Text("Error: Missing Budget ID")),
+      );
     }
     return AddEditBudgetPage(initialBudget: budget);
   }
 
   static Widget _buildBudgetDetailPage(
-      BuildContext context, GoRouterState state) {
+    BuildContext context,
+    GoRouterState state,
+  ) {
     final budgetId = state.pathParameters[RouteNames.paramId];
     if (budgetId == null) {
       log.severe("[AppRouter] Budget Detail route called without ID!");
       return const Scaffold(
-          appBar: null, body: Center(child: Text("Error: Missing Budget ID")));
+        appBar: null,
+        body: Center(child: Text("Error: Missing Budget ID")),
+      );
     }
     return BudgetDetailPage(budgetId: budgetId);
   }
@@ -591,19 +646,25 @@ class AppRouter {
     if (goalId == null) {
       log.severe("[AppRouter] Edit Goal route called without ID!");
       return const Scaffold(
-          appBar: null, body: Center(child: Text("Error: Missing Goal ID")));
+        appBar: null,
+        body: Center(child: Text("Error: Missing Goal ID")),
+      );
     }
     return AddEditGoalPage(initialGoal: goal);
   }
 
   static Widget _buildGoalDetailPage(
-      BuildContext context, GoRouterState state) {
+    BuildContext context,
+    GoRouterState state,
+  ) {
     final goalId = state.pathParameters[RouteNames.paramId];
     final Goal? goal = state.extra is Goal ? state.extra as Goal : null;
     if (goalId == null) {
       log.severe("[AppRouter] Goal Detail route called without ID!");
       return const Scaffold(
-          appBar: null, body: Center(child: Text("Error: Missing Goal ID")));
+        appBar: null,
+        body: Center(child: Text("Error: Missing Goal ID")),
+      );
     }
     return GoalDetailPage(goalId: goalId, initialGoal: goal);
   }
@@ -614,42 +675,52 @@ class GoRouterObserver extends NavigatorObserver {
   // ... (Implementation unchanged) ...
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    final String pushedRoute = route.settings.name ??
+    final String pushedRoute =
+        route.settings.name ??
         route.settings.arguments?.toString() ??
         route.toString();
-    final String? previousRouteName = previousRoute?.settings.name ??
+    final String? previousRouteName =
+        previousRoute?.settings.name ??
         previousRoute?.settings.arguments?.toString();
     log.fine('GoRouter Pushed: ${previousRouteName ?? 'null'} -> $pushedRoute');
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    final String poppedRoute = route.settings.name ??
+    final String poppedRoute =
+        route.settings.name ??
         route.settings.arguments?.toString() ??
         route.toString();
-    final String? previousRouteName = previousRoute?.settings.name ??
+    final String? previousRouteName =
+        previousRoute?.settings.name ??
         previousRoute?.settings.arguments?.toString();
     log.fine(
-        'GoRouter Popped: $poppedRoute -> Returning to ${previousRouteName ?? 'null'}');
+      'GoRouter Popped: $poppedRoute -> Returning to ${previousRouteName ?? 'null'}',
+    );
   }
 
   @override
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    final String removedRoute = route.settings.name ??
+    final String removedRoute =
+        route.settings.name ??
         route.settings.arguments?.toString() ??
         route.toString();
-    final String? previousRouteName = previousRoute?.settings.name ??
+    final String? previousRouteName =
+        previousRoute?.settings.name ??
         previousRoute?.settings.arguments?.toString();
     log.fine(
-        'GoRouter Removed: $removedRoute (Previous was: ${previousRouteName ?? 'null'})');
+      'GoRouter Removed: $removedRoute (Previous was: ${previousRouteName ?? 'null'})',
+    );
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    final String oldRouteName = oldRoute?.settings.name ??
+    final String oldRouteName =
+        oldRoute?.settings.name ??
         oldRoute?.settings.arguments?.toString() ??
         'null';
-    final String newRouteName = newRoute?.settings.name ??
+    final String newRouteName =
+        newRoute?.settings.name ??
         newRoute?.settings.arguments?.toString() ??
         'null';
     log.fine('GoRouter Replaced: $oldRouteName with $newRouteName');

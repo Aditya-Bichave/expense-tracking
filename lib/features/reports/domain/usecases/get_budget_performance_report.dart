@@ -16,9 +16,11 @@ class GetBudgetPerformanceReportUseCase
 
   @override
   Future<Either<Failure, BudgetPerformanceReportData>> call(
-      GetBudgetPerformanceReportParams params) async {
+    GetBudgetPerformanceReportParams params,
+  ) async {
     log.info(
-        "[GetBudgetPerformanceReportUseCase] Start: ${params.startDate}, End: ${params.endDate}, Compare: ${params.compareToPrevious}");
+      "[GetBudgetPerformanceReportUseCase] Start: ${params.startDate}, End: ${params.endDate}, Compare: ${params.compareToPrevious}",
+    );
     return await repository.getBudgetPerformance(
       startDate: params.startDate,
       endDate: params.endDate,
@@ -45,6 +47,11 @@ class GetBudgetPerformanceReportParams extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [startDate, endDate, budgetIds, accountIds, compareToPrevious];
+  List<Object?> get props => [
+    startDate,
+    endDate,
+    budgetIds,
+    accountIds,
+    compareToPrevious,
+  ];
 }

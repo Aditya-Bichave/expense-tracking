@@ -288,10 +288,16 @@ void main() {
           'categoryId',
           'c1',
         ),
-        isA<TransactionListState>()
-            .having((s) => s.status, 'reloading', ListStatus.reloading),
-        isA<TransactionListState>()
-            .having((s) => s.status, 'success', ListStatus.success),
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'reloading',
+          ListStatus.reloading,
+        ),
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'success',
+          ListStatus.success,
+        ),
       ],
     );
 
@@ -325,10 +331,16 @@ void main() {
               'direction',
               SortDirection.ascending,
             ),
-        isA<TransactionListState>()
-            .having((s) => s.status, 'reloading', ListStatus.reloading),
-        isA<TransactionListState>()
-            .having((s) => s.status, 'success', ListStatus.success),
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'reloading',
+          ListStatus.reloading,
+        ),
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'success',
+          ListStatus.success,
+        ),
       ],
     );
 

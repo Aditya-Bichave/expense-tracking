@@ -26,28 +26,32 @@ void main() {
   );
 
   setUpAll(() {
-    registerFallbackValue(GetIncomeExpenseReportParams(
-      startDate: DateTime.now(),
-      endDate: DateTime.now(),
-      periodType: IncomeExpensePeriodType.monthly,
-      compareToPrevious: false,
-    ));
+    registerFallbackValue(
+      GetIncomeExpenseReportParams(
+        startDate: DateTime.now(),
+        endDate: DateTime.now(),
+        periodType: IncomeExpensePeriodType.monthly,
+        compareToPrevious: false,
+      ),
+    );
   });
 
   setUp(() {
     mockGetReportUseCase = MockGetIncomeExpenseReportUseCase();
     mockReportFilterBloc = MockReportFilterBloc();
 
-    when(() => mockReportFilterBloc.state)
-        .thenReturn(ReportFilterState.initial());
+    when(
+      () => mockReportFilterBloc.state,
+    ).thenReturn(ReportFilterState.initial());
   });
 
   group('LoadIncomeExpenseReport', () {
     blocTest<IncomeExpenseReportBloc, IncomeExpenseReportState>(
       'emits [loading, loaded] on success',
       build: () {
-        when(() => mockGetReportUseCase(any()))
-            .thenAnswer((_) async => Right(tReportData));
+        when(
+          () => mockGetReportUseCase(any()),
+        ).thenAnswer((_) async => Right(tReportData));
         return IncomeExpenseReportBloc(
           getIncomeExpenseReportUseCase: mockGetReportUseCase,
           reportFilterBloc: mockReportFilterBloc,
@@ -63,8 +67,9 @@ void main() {
     blocTest<IncomeExpenseReportBloc, IncomeExpenseReportState>(
       'emits [loading, error] on failure',
       build: () {
-        when(() => mockGetReportUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Error')));
+        when(
+          () => mockGetReportUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Error')));
         return IncomeExpenseReportBloc(
           getIncomeExpenseReportUseCase: mockGetReportUseCase,
           reportFilterBloc: mockReportFilterBloc,
@@ -82,20 +87,25 @@ void main() {
     blocTest<IncomeExpenseReportBloc, IncomeExpenseReportState>(
       'emits [loading, loaded] with new period',
       build: () {
-        when(() => mockGetReportUseCase(any()))
-            .thenAnswer((_) async => Right(tReportData));
+        when(
+          () => mockGetReportUseCase(any()),
+        ).thenAnswer((_) async => Right(tReportData));
         return IncomeExpenseReportBloc(
           getIncomeExpenseReportUseCase: mockGetReportUseCase,
           reportFilterBloc: mockReportFilterBloc,
         );
       },
-      act: (bloc) => bloc
-          .add(const ChangeIncomeExpensePeriod(IncomeExpensePeriodType.yearly)),
+      act: (bloc) => bloc.add(
+        const ChangeIncomeExpensePeriod(IncomeExpensePeriodType.yearly),
+      ),
       expect: () => [
         isA<IncomeExpenseReportLoading>(), // Initial load
         isA<IncomeExpenseReportLoaded>(),
-        isA<IncomeExpenseReportLoading>().having((s) => s.periodType, 'period',
-            IncomeExpensePeriodType.yearly), // Reload with new period
+        isA<IncomeExpenseReportLoading>().having(
+          (s) => s.periodType,
+          'period',
+          IncomeExpensePeriodType.yearly,
+        ), // Reload with new period
         isA<IncomeExpenseReportLoaded>(),
       ],
     );

@@ -35,16 +35,14 @@ void main() {
   });
 
   Widget buildTestWidget() {
-    return BlocProvider.value(
-      value: mockBloc,
-      child: const GoalsSubTab(),
-    );
+    return BlocProvider.value(value: mockBloc, child: const GoalsSubTab());
   }
 
   group('GoalsSubTab', () {
     testWidgets('shows loading indicator', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const GoalListState(status: GoalListStatus.loading));
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const GoalListState(status: GoalListStatus.loading));
       await pumpWidgetWithProviders(
         tester: tester,
         widget: buildTestWidget(),
@@ -54,8 +52,9 @@ void main() {
     });
 
     testWidgets('shows empty state and handles button tap', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const GoalListState(status: GoalListStatus.success));
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const GoalListState(status: GoalListStatus.success));
       final router = GoRouter(
         routes: [
           GoRoute(
@@ -83,14 +82,16 @@ void main() {
 
     testWidgets('renders a list of GoalCards', (tester) async {
       when(() => mockBloc.state).thenReturn(
-          GoalListState(status: GoalListStatus.success, goals: mockGoals));
+        GoalListState(status: GoalListStatus.success, goals: mockGoals),
+      );
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
       expect(find.byType(GoalCard), findsOneWidget);
     });
 
     testWidgets('FAB navigates to add page', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const GoalListState(status: GoalListStatus.success));
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const GoalListState(status: GoalListStatus.success));
       final router = GoRouter(
         routes: [
           GoRoute(

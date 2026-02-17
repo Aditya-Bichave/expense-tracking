@@ -18,6 +18,11 @@ class UserHistoryRule extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [id, ruleType, matcher, assignedCategoryId, timestamp];
+  List<Object?> get props => [
+    id,
+    ruleType,
+    matcher,
+    assignedCategoryId,
+    timestamp,
+  ];
 }

@@ -29,16 +29,16 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
 
   ReportFilterBloc({
     required GetCategoriesUseCase
-        categoryRepository, // Name kept for compatibility
+    categoryRepository, // Name kept for compatibility
     required GetAssetAccountsUseCase
-        accountRepository, // Name kept for compatibility
+    accountRepository, // Name kept for compatibility
     required GetBudgetsUseCase budgetRepository, // Use correct type
     required GetGoalsUseCase goalRepository, // Use correct type
-  })  : _getCategoriesUseCase = categoryRepository,
-        _getAssetAccountsUseCase = accountRepository,
-        _getBudgetsUseCase = budgetRepository, // Assign
-        _getGoalsUseCase = goalRepository, // Assign
-        super(ReportFilterState.initial()) {
+  }) : _getCategoriesUseCase = categoryRepository,
+       _getAssetAccountsUseCase = accountRepository,
+       _getBudgetsUseCase = budgetRepository, // Assign
+       _getGoalsUseCase = goalRepository, // Assign
+       super(ReportFilterState.initial()) {
     on<LoadFilterOptions>(_onLoadFilterOptions);
     on<UpdateReportFilters>(_onUpdateReportFilters);
     on<ClearReportFilters>(_onClearReportFilters);
@@ -48,7 +48,9 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
   }
 
   Future<void> _onLoadFilterOptions(
-      LoadFilterOptions event, Emitter<ReportFilterState> emit) async {
+    LoadFilterOptions event,
+    Emitter<ReportFilterState> emit,
+  ) async {
     if (state.optionsStatus == FilterOptionsStatus.loaded &&
         !event.forceReload) {
       log.info("[ReportFilterBloc] Filter options already loaded.");
@@ -93,52 +95,67 @@ class ReportFilterBloc extends Bloc<ReportFilterEvent, ReportFilterState> {
 
     if (errorMsg != null) {
       log.warning("[ReportFilterBloc] Error loading filter options: $errorMsg");
-      emit(state.copyWith(
-          optionsStatus: FilterOptionsStatus.error, optionsError: errorMsg));
+      emit(
+        state.copyWith(
+          optionsStatus: FilterOptionsStatus.error,
+          optionsError: errorMsg,
+        ),
+      );
     } else {
       log.info(
-          "[ReportFilterBloc] Filter options loaded successfully (Cats: ${categories.length}, Accs: ${accounts.length}, Budgets: ${budgets.length}, Goals: ${goals.length}).");
-      emit(state.copyWith(
-        optionsStatus: FilterOptionsStatus.loaded,
-        availableCategories: categories,
-        availableAccounts: accounts,
-        availableBudgets: budgets, // Added
-        availableGoals: goals, // Added
-        optionsError: null, // Clear previous error
-      ));
+        "[ReportFilterBloc] Filter options loaded successfully (Cats: ${categories.length}, Accs: ${accounts.length}, Budgets: ${budgets.length}, Goals: ${goals.length}).",
+      );
+      emit(
+        state.copyWith(
+          optionsStatus: FilterOptionsStatus.loaded,
+          availableCategories: categories,
+          availableAccounts: accounts,
+          availableBudgets: budgets, // Added
+          availableGoals: goals, // Added
+          optionsError: null, // Clear previous error
+        ),
+      );
     }
   }
 
   void _onUpdateReportFilters(
-      UpdateReportFilters event, Emitter<ReportFilterState> emit) {
+    UpdateReportFilters event,
+    Emitter<ReportFilterState> emit,
+  ) {
     log.info("[ReportFilterBloc] Updating filters.");
-    emit(state.copyWith(
-      startDate: event.startDate,
-      endDate: event.endDate,
-      selectedCategoryIds: event.categoryIds,
-      selectedAccountIds: event.accountIds,
-      selectedBudgetIds: event.budgetIds, // Added
-      selectedGoalIds: event.goalIds, // Added
-      // --- UPDATED to use ValueGetter for nullable type ---
-      selectedTransactionTypeOrNull: () => event.transactionType, // Added
-      // --- END UPDATED ---
-      clearDates: event.startDate == null && event.endDate == null,
-    ));
+    emit(
+      state.copyWith(
+        startDate: event.startDate,
+        endDate: event.endDate,
+        selectedCategoryIds: event.categoryIds,
+        selectedAccountIds: event.accountIds,
+        selectedBudgetIds: event.budgetIds, // Added
+        selectedGoalIds: event.goalIds, // Added
+        // --- UPDATED to use ValueGetter for nullable type ---
+        selectedTransactionTypeOrNull: () => event.transactionType, // Added
+        // --- END UPDATED ---
+        clearDates: event.startDate == null && event.endDate == null,
+      ),
+    );
   }
 
   void _onClearReportFilters(
-      ClearReportFilters event, Emitter<ReportFilterState> emit) {
+    ClearReportFilters event,
+    Emitter<ReportFilterState> emit,
+  ) {
     log.info("[ReportFilterBloc] Clearing all filters.");
-    emit(state.copyWith(
-      startDate: null, // Will be reset by copyWith logic
-      endDate: null, // Will be reset by copyWith logic
-      selectedCategoryIds: [],
-      selectedAccountIds: [],
-      selectedBudgetIds: [], // Added
-      selectedGoalIds: [], // Added
-      selectedTransactionTypeOrNull: () => null, // Added clear
-      clearDates: true,
-    ));
+    emit(
+      state.copyWith(
+        startDate: null, // Will be reset by copyWith logic
+        endDate: null, // Will be reset by copyWith logic
+        selectedCategoryIds: [],
+        selectedAccountIds: [],
+        selectedBudgetIds: [], // Added
+        selectedGoalIds: [], // Added
+        selectedTransactionTypeOrNull: () => null, // Added clear
+        clearDates: true,
+      ),
+    );
   }
 
   String _appendError(String? current, String message) {

@@ -74,46 +74,53 @@ void main() {
     bool clicked = false;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(SystemChannels.platform, (
-      MethodCall methodCall,
-    ) async {
-      if (methodCall.method == 'SystemSound.play') {
-        clicked = true;
-      }
-      return null;
-    });
+          MethodCall methodCall,
+        ) async {
+          if (methodCall.method == 'SystemSound.play') {
+            clicked = true;
+          }
+          return null;
+        });
 
-    final router = GoRouter(routes: [
-      GoRoute(path: '/', builder: (_, __) => const SpendingOverTimePage()),
-      GoRoute(
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (_, __) => const SpendingOverTimePage()),
+        GoRoute(
           path: RouteNames.transactionsList,
-          builder: (_, __) => const SizedBox()),
-    ]);
-
-    final theme = ThemeData(extensions: const [
-      AppModeTheme(
-        modeId: 'test',
-        layoutDensity: LayoutDensity.compact,
-        cardStyle: CardStyle.flat,
-        assets: ThemeAssetPaths(),
-        preferDataTableForLists: true,
-        primaryAnimationDuration: Duration.zero,
-        listEntranceAnimation: ListEntranceAnimation.none,
-      ),
-    ]);
-
-    await tester.pumpWidget(MultiBlocProvider(
-      providers: [
-        BlocProvider<SpendingTimeReportBloc>.value(value: spendingBloc),
-        BlocProvider<ReportFilterBloc>.value(value: filterBloc),
-        BlocProvider<SettingsBloc>.value(value: settingsBloc),
+          builder: (_, __) => const SizedBox(),
+        ),
       ],
-      child: MaterialApp.router(
-        routerConfig: router,
-        theme: theme,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+    );
+
+    final theme = ThemeData(
+      extensions: const [
+        AppModeTheme(
+          modeId: 'test',
+          layoutDensity: LayoutDensity.compact,
+          cardStyle: CardStyle.flat,
+          assets: ThemeAssetPaths(),
+          preferDataTableForLists: true,
+          primaryAnimationDuration: Duration.zero,
+          listEntranceAnimation: ListEntranceAnimation.none,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<SpendingTimeReportBloc>.value(value: spendingBloc),
+          BlocProvider<ReportFilterBloc>.value(value: filterBloc),
+          BlocProvider<SettingsBloc>.value(value: settingsBloc),
+        ],
+        child: MaterialApp.router(
+          routerConfig: router,
+          theme: theme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     expect(find.byType(AspectRatio), findsOneWidget);

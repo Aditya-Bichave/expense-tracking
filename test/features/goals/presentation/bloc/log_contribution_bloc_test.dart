@@ -31,11 +31,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(
-      AddContributionParams(
-        goalId: 'g',
-        amount: 1,
-        date: DateTime(2024, 1, 1),
-      ),
+      AddContributionParams(goalId: 'g', amount: 1, date: DateTime(2024, 1, 1)),
     );
     registerFallbackValue(
       UpdateContributionParams(

@@ -17,7 +17,8 @@ class AddEditBudgetPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isEditing = initialBudget != null;
     log.info(
-        "[AddEditBudgetPage] Building. Editing: $isEditing. Budget: ${initialBudget?.name}");
+      "[AddEditBudgetPage] Building. Editing: $isEditing. Budget: ${initialBudget?.name}",
+    );
 
     return BlocProvider<AddEditBudgetBloc>(
       // Use sl<>() to get the factory
@@ -28,27 +29,33 @@ class AddEditBudgetPage extends StatelessWidget {
             log.info("[AddEditBudgetPage] Save successful. Popping.");
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
-                content: Text(
-                    'Budget ${isEditing ? 'updated' : 'added'} successfully!'),
-                backgroundColor: Colors.green,
-              ));
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Budget ${isEditing ? 'updated' : 'added'} successfully!',
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
             // Use context.pop() which is safer with GoRouter shells
             if (context.canPop()) context.pop();
           } else if (state.status == AddEditBudgetStatus.error &&
               state.errorMessage != null) {
             log.warning(
-                "[AddEditBudgetPage] Save error: ${state.errorMessage}");
+              "[AddEditBudgetPage] Save error: ${state.errorMessage}",
+            );
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(
-                content: Text('Error: ${state.errorMessage}'),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ));
+              ..showSnackBar(
+                SnackBar(
+                  content: Text('Error: ${state.errorMessage}'),
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
+              );
             // Clear error after showing
-            context
-                .read<AddEditBudgetBloc>()
-                .add(const ClearBudgetFormMessage());
+            context.read<AddEditBudgetBloc>().add(
+              const ClearBudgetFormMessage(),
+            );
           }
         },
         child: Scaffold(
@@ -72,30 +79,35 @@ class AddEditBudgetPage extends StatelessWidget {
                   state.availableCategories.isEmpty) {
                 // Show error if categories failed to load
                 return Center(
-                    child: Text(
-                        "Error loading form data: ${state.errorMessage ?? ''}"));
+                  child: Text(
+                    "Error loading form data: ${state.errorMessage ?? ''}",
+                  ),
+                );
               }
 
               // Show form once categories are available or if editing
               return BudgetForm(
                 key: ValueKey(
-                    initialBudget?.id ?? 'new'), // Key for state preservation
+                  initialBudget?.id ?? 'new',
+                ), // Key for state preservation
                 initialBudget: state.initialBudget,
                 availableCategories:
                     state.availableCategories, // Pass categories
                 onSubmit:
                     (name, type, amount, period, start, end, catIds, notes) {
-                  context.read<AddEditBudgetBloc>().add(SaveBudget(
-                        name: name,
-                        type: type,
-                        targetAmount: amount,
-                        period: period,
-                        startDate: start,
-                        endDate: end,
-                        categoryIds: catIds,
-                        notes: notes,
-                      ));
-                },
+                      context.read<AddEditBudgetBloc>().add(
+                        SaveBudget(
+                          name: name,
+                          type: type,
+                          targetAmount: amount,
+                          period: period,
+                          startDate: start,
+                          endDate: end,
+                          categoryIds: catIds,
+                          notes: notes,
+                        ),
+                      );
+                    },
               );
             },
           ),

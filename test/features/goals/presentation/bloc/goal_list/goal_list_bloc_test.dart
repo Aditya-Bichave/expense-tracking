@@ -64,8 +64,9 @@ void main() {
     blocTest<GoalListBloc, GoalListState>(
       'emits [loading, success] when successful',
       build: () {
-        when(() => mockGetGoalsUseCase(any()))
-            .thenAnswer((_) async => Right([tGoal]));
+        when(
+          () => mockGetGoalsUseCase(any()),
+        ).thenAnswer((_) async => Right([tGoal]));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadGoals()),
@@ -78,8 +79,9 @@ void main() {
     blocTest<GoalListBloc, GoalListState>(
       'emits [loading, error] when failure',
       build: () {
-        when(() => mockGetGoalsUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Error')));
+        when(
+          () => mockGetGoalsUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Error')));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadGoals()),
@@ -87,8 +89,11 @@ void main() {
         const GoalListState(status: GoalListStatus.loading),
         isA<GoalListState>()
             .having((s) => s.status, 'status', GoalListStatus.error)
-            .having((s) => s.errorMessage, 'errorMessage',
-                contains('Database Error')),
+            .having(
+              (s) => s.errorMessage,
+              'errorMessage',
+              contains('Database Error'),
+            ),
       ],
     );
   });
@@ -98,18 +103,22 @@ void main() {
       'emits optimistic update and then success',
       seed: () => GoalListState(status: GoalListStatus.success, goals: [tGoal]),
       build: () {
-        when(() => mockArchiveGoalUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockArchiveGoalUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
         return bloc;
       },
       act: (bloc) => bloc.add(ArchiveGoal(goalId: tGoal.id)),
       expect: () => [
         const GoalListState(
-            status: GoalListStatus.success, goals: []), // Optimistic removal
+          status: GoalListStatus.success,
+          goals: [],
+        ), // Optimistic removal
       ],
       verify: (_) {
-        verify(() => mockArchiveGoalUseCase(ArchiveGoalParams(id: tGoal.id)))
-            .called(1);
+        verify(
+          () => mockArchiveGoalUseCase(ArchiveGoalParams(id: tGoal.id)),
+        ).called(1);
       },
     );
 
@@ -117,8 +126,9 @@ void main() {
       'emits optimistic update and then reverts on failure',
       seed: () => GoalListState(status: GoalListStatus.success, goals: [tGoal]),
       build: () {
-        when(() => mockArchiveGoalUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Fail')));
+        when(
+          () => mockArchiveGoalUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Fail')));
         when(() => mockGetGoalsUseCase(any())) // Reload triggered on failure
             .thenAnswer((_) async => Right([tGoal]));
         return bloc;
@@ -126,14 +136,20 @@ void main() {
       act: (bloc) => bloc.add(ArchiveGoal(goalId: tGoal.id)),
       expect: () => [
         const GoalListState(
-            status: GoalListStatus.success, goals: []), // Optimistic removal
+          status: GoalListStatus.success,
+          goals: [],
+        ), // Optimistic removal
         isA<GoalListState>()
             .having((s) => s.status, 'status', GoalListStatus.error)
             .having((s) => s.goals, 'goals', isEmpty), // Error state
         const GoalListState(
-            status: GoalListStatus.loading, goals: []), // Reload loading
+          status: GoalListStatus.loading,
+          goals: [],
+        ), // Reload loading
         GoalListState(
-            status: GoalListStatus.success, goals: [tGoal]), // Reload success
+          status: GoalListStatus.success,
+          goals: [tGoal],
+        ), // Reload success
       ],
     );
   });
@@ -143,18 +159,22 @@ void main() {
       'emits optimistic update and then success',
       seed: () => GoalListState(status: GoalListStatus.success, goals: [tGoal]),
       build: () {
-        when(() => mockDeleteGoalUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockDeleteGoalUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
         return bloc;
       },
       act: (bloc) => bloc.add(DeleteGoal(goalId: tGoal.id)),
       expect: () => [
         const GoalListState(
-            status: GoalListStatus.success, goals: []), // Optimistic removal
+          status: GoalListStatus.success,
+          goals: [],
+        ), // Optimistic removal
       ],
       verify: (_) {
-        verify(() => mockDeleteGoalUseCase(DeleteGoalParams(id: tGoal.id)))
-            .called(1);
+        verify(
+          () => mockDeleteGoalUseCase(DeleteGoalParams(id: tGoal.id)),
+        ).called(1);
       },
     );
   });
@@ -163,13 +183,18 @@ void main() {
     blocTest<GoalListBloc, GoalListState>(
       'triggers reload on goal change',
       build: () {
-        when(() => mockGetGoalsUseCase(any()))
-            .thenAnswer((_) async => Right([tGoal]));
+        when(
+          () => mockGetGoalsUseCase(any()),
+        ).thenAnswer((_) async => Right([tGoal]));
         return bloc;
       },
       act: (bloc) async {
-        dataChangeController.add(const DataChangedEvent(
-            type: DataChangeType.goal, reason: DataChangeReason.updated));
+        dataChangeController.add(
+          const DataChangedEvent(
+            type: DataChangeType.goal,
+            reason: DataChangeReason.updated,
+          ),
+        );
       },
       expect: () => [
         const GoalListState(status: GoalListStatus.loading),
@@ -180,13 +205,18 @@ void main() {
     blocTest<GoalListBloc, GoalListState>(
       'resets state on system reset',
       build: () {
-        when(() => mockGetGoalsUseCase(any()))
-            .thenAnswer((_) async => Right([tGoal]));
+        when(
+          () => mockGetGoalsUseCase(any()),
+        ).thenAnswer((_) async => Right([tGoal]));
         return bloc;
       },
       act: (bloc) async {
-        dataChangeController.add(const DataChangedEvent(
-            type: DataChangeType.system, reason: DataChangeReason.reset));
+        dataChangeController.add(
+          const DataChangedEvent(
+            type: DataChangeType.system,
+            reason: DataChangeReason.reset,
+          ),
+        );
       },
       expect: () => [
         const GoalListState(status: GoalListStatus.initial, goals: []),

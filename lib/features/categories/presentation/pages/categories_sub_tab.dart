@@ -22,39 +22,50 @@ class CategoriesSubTab extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       padding: EdgeInsets.zero,
       child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: category.displayColor.withOpacity(0.15),
-            foregroundColor: category.displayColor.computeLuminance() > 0.5
-                ? Colors.black
-                : null,
-            child:
-                Icon(displayIconData, color: category.displayColor, size: 20),
-          ),
-          title: Text(category.name)),
+        leading: CircleAvatar(
+          backgroundColor: category.displayColor.withOpacity(0.15),
+          foregroundColor: category.displayColor.computeLuminance() > 0.5
+              ? Colors.black
+              : null,
+          child: Icon(displayIconData, color: category.displayColor, size: 20),
+        ),
+        title: Text(category.name),
+      ),
     );
   }
 
   // Builder for the category list within a tab
   Widget _buildCategoryList(
-      BuildContext context, List<Category> categories, String title) {
+    BuildContext context,
+    List<Category> categories,
+    String title,
+  ) {
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme; // Get themed padding
 
     if (categories.isEmpty) {
       return Center(
-          child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text('No $title categories defined.',
-                  style: theme.textTheme.bodyMedium)));
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            'No $title categories defined.',
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+      );
     }
     // Sort list before displaying
-    categories
-        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    categories.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
     return ListView.builder(
       // --- MODIFIED: Apply themed padding OR a default, including bottom padding for FAB ---
-      padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
+      padding:
+          modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
           const EdgeInsets.only(
-              top: 8.0, bottom: 90.0), // Increased bottom padding
+            top: 8.0,
+            bottom: 90.0,
+          ), // Increased bottom padding
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final category = categories[index];
@@ -95,18 +106,20 @@ class CategoriesSubTab extends StatelessWidget {
                 }
                 if (state.status == CategoryManagementStatus.error) {
                   return Center(
-                      child: Text(
-                          "Error: ${state.errorMessage ?? 'Could not load'}"));
+                    child: Text(
+                      "Error: ${state.errorMessage ?? 'Could not load'}",
+                    ),
+                  );
                 }
 
                 // Combine predefined and custom for display in each tab
                 final expenseCats = [
                   ...state.predefinedExpenseCategories,
-                  ...state.customExpenseCategories
+                  ...state.customExpenseCategories,
                 ];
                 final incomeCats = [
                   ...state.predefinedIncomeCategories,
-                  ...state.customIncomeCategories
+                  ...state.customIncomeCategories,
                 ];
 
                 return TabBarView(
@@ -137,7 +150,7 @@ class CategoriesSubTab extends StatelessWidget {
                 minimumSize: const Size.fromHeight(45), // Make button wider
               ),
             ),
-          )
+          ),
           // --- END MODIFIED ---
         ],
       ),

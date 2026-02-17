@@ -25,13 +25,19 @@ class ChartUtils {
 
   // Common widget builder for left (Y-axis) titles
   static Widget leftTitleWidgets(
-      BuildContext context, double value, TitleMeta meta, double maxY) {
+    BuildContext context,
+    double value,
+    TitleMeta meta,
+    double maxY,
+  ) {
     final theme = Theme.of(context);
     final style = theme.textTheme.labelSmall?.copyWith(fontSize: 10);
 
     if (value == 0) {
       return SideTitleWidget(
-          axisSide: meta.axisSide, child: Text('0', style: style));
+        axisSide: meta.axisSide,
+        child: Text('0', style: style),
+      );
     }
     if (value == meta.max || value <= 0) {
       return Container();
@@ -55,12 +61,20 @@ class ChartUtils {
     }
 
     return SideTitleWidget(
-        axisSide: meta.axisSide, space: 4, child: Text(text, style: style));
+      axisSide: meta.axisSide,
+      space: 4,
+      child: Text(text, style: style),
+    );
   }
 
   // Common widget builder for bottom (X-axis) titles for category bar charts
-  static Widget bottomTitleWidgets(BuildContext context, double value,
-      TitleMeta meta, int dataLength, String Function(int) getTitle) {
+  static Widget bottomTitleWidgets(
+    BuildContext context,
+    double value,
+    TitleMeta meta,
+    int dataLength,
+    String Function(int) getTitle,
+  ) {
     final theme = Theme.of(context);
     final style = theme.textTheme.labelSmall?.copyWith(fontSize: 10);
     final index = value.toInt();
@@ -70,13 +84,15 @@ class ChartUtils {
     }
 
     final title = getTitle(index);
-    final displayText =
-        title.length > 8 ? '${title.substring(0, 6)}...' : title;
+    final displayText = title.length > 8
+        ? '${title.substring(0, 6)}...'
+        : title;
 
     return SideTitleWidget(
-        axisSide: meta.axisSide,
-        space: 4,
-        child: Text(displayText, style: style));
+      axisSide: meta.axisSide,
+      space: 4,
+      child: Text(displayText, style: style),
+    );
   }
 
   // --- ADDED: Helper for simple sparkline data ---
@@ -85,8 +101,9 @@ class ChartUtils {
       gridData: const FlGridData(show: false),
       titlesData: const FlTitlesData(show: false),
       borderData: FlBorderData(show: false),
-      lineTouchData:
-          const LineTouchData(enabled: false), // Disable touch for sparklines
+      lineTouchData: const LineTouchData(
+        enabled: false,
+      ), // Disable touch for sparklines
       lineBarsData: [
         LineChartBarData(
           spots: spots,
@@ -100,5 +117,6 @@ class ChartUtils {
       ],
     );
   }
+
   // --- END ADDED ---
 }

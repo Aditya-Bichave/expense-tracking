@@ -10,8 +10,8 @@ import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:intl/intl.dart';
 
 // Callback remains the same, still submitting the value from the field as 'initialBalance'
-typedef AccountSubmitCallback = Function(
-    String name, AssetType type, double initialBalance);
+typedef AccountSubmitCallback =
+    Function(String name, AssetType type, double initialBalance);
 
 class AccountForm extends StatefulWidget {
   final AssetAccount? initialAccount;
@@ -47,9 +47,9 @@ class _AccountFormState extends State<AccountForm> {
     _balanceController = TextEditingController(
       text: _isEditing
           ? widget.currentBalanceForDisplay?.toStringAsFixed(2) ??
-              '0.00' // Use current balance if editing
+                '0.00' // Use current balance if editing
           : initial?.initialBalance.toStringAsFixed(2) ??
-              '0.00', // Use initial or default if adding
+                '0.00', // Use initial or default if adding
     );
     // --- END MODIFIED ---
     _selectedType = initial?.type ?? AssetType.bank;
@@ -91,14 +91,16 @@ class _AccountFormState extends State<AccountForm> {
     final modeTheme = context.modeTheme;
 
     // --- Determine Label Text Dynamically ---
-    final String balanceLabel =
-        _isEditing ? 'Current Balance' : 'Initial Balance';
+    final String balanceLabel = _isEditing
+        ? 'Current Balance'
+        : 'Initial Balance';
     // --- End ---
 
     return Form(
       key: _formKey,
       child: ListView(
-        padding: modeTheme?.pagePadding.copyWith(
+        padding:
+            modeTheme?.pagePadding.copyWith(
               left: 16,
               right: 16,
               bottom: 40,
@@ -171,8 +173,10 @@ class _AccountFormState extends State<AccountForm> {
               if (value == null || value.isEmpty) {
                 return 'Enter balance (0 is valid)';
               }
-              final locale =
-                  context.read<SettingsBloc>().state.selectedCountryCode;
+              final locale = context
+                  .read<SettingsBloc>()
+                  .state
+                  .selectedCountryCode;
               if (parseCurrency(value, locale).isNaN) {
                 return 'Invalid number';
               }

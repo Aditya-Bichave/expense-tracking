@@ -38,10 +38,14 @@ class QuantumConfig implements IThemePaletteConfig {
   @override
   final Color? expenseGlowColorDark = null;
   // Quantum specific overrides for new properties (optional)
-  final EdgeInsets? cardOuterPadding =
-      const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0);
-  final EdgeInsets? listItemPadding =
-      const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0);
+  final EdgeInsets? cardOuterPadding = const EdgeInsets.symmetric(
+    horizontal: 8.0,
+    vertical: 4.0,
+  );
+  final EdgeInsets? listItemPadding = const EdgeInsets.symmetric(
+    horizontal: 12.0,
+    vertical: 2.0,
+  );
   final Duration? mediumDuration = const Duration(milliseconds: 150);
   final Duration? fastDuration = const Duration(milliseconds: 100);
 
@@ -63,7 +67,8 @@ abstract class QuantumConfigs {
     mainBackgroundDark: AppAssets.qBgDark,
     mainBackgroundLight: AppAssets.qBgDark,
     cardBackground: AppAssets.qBgCardDark,
-    divider: null, focusRing: null,
+    divider: null,
+    focusRing: null,
     commonIcons: {
       AssetKeys.iconAdd: AppAssets.qComIconAdd,
       AssetKeys.iconSettings: AppAssets.qComIconSettings,
@@ -134,37 +139,45 @@ abstract class QuantumConfigs {
   static final Map<String, QuantumConfig> palettes = {
     AppTheme.quantumPalette1: QuantumConfig(
       paletteIdentifier: AppTheme.quantumPalette1,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p1Assets,
       darkAssets: _p1Assets,
     ),
     AppTheme.quantumPalette2: QuantumConfig(
       paletteIdentifier: AppTheme.quantumPalette2,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p2Assets,
       darkAssets: _p2Assets,
     ),
     AppTheme.quantumPalette3: QuantumConfig(
       paletteIdentifier: AppTheme.quantumPalette3,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p3Assets,
       darkAssets: _p3Assets,
     ),
     AppTheme.quantumPalette4: QuantumConfig(
       paletteIdentifier: AppTheme.quantumPalette4,
-      lightColorScheme:
-          const ColorScheme.light(/* ... */ brightness: Brightness.light),
-      darkColorScheme:
-          const ColorScheme.dark(/* ... */ brightness: Brightness.dark),
+      lightColorScheme: const ColorScheme.light(
+        /* ... */ brightness: Brightness.light,
+      ),
+      darkColorScheme: const ColorScheme.dark(
+        /* ... */ brightness: Brightness.dark,
+      ),
       lightAssets: _p4Assets,
       darkAssets: _p4Assets,
     ),

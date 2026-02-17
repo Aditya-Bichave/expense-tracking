@@ -15,9 +15,11 @@ class GetIncomeExpenseReportUseCase
 
   @override
   Future<Either<Failure, IncomeExpenseReportData>> call(
-      GetIncomeExpenseReportParams params) async {
+    GetIncomeExpenseReportParams params,
+  ) async {
     log.info(
-        "[GetIncomeExpenseReportUseCase] Period: ${params.periodType}, Start: ${params.startDate}, End: ${params.endDate}");
+      "[GetIncomeExpenseReportUseCase] Period: ${params.periodType}, Start: ${params.startDate}, End: ${params.endDate}",
+    );
     return await repository.getIncomeVsExpense(
       startDate: params.startDate,
       endDate: params.endDate,

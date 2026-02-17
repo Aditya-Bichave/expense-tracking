@@ -15,8 +15,9 @@ extension FailureMessage on Failure {
         specificMessage = 'An unexpected error occurred. Please try again.';
         break;
       default:
-        specificMessage =
-            message.isNotEmpty ? message : 'An unknown error occurred.';
+        specificMessage = message.isNotEmpty
+            ? message
+            : 'An unknown error occurred.';
     }
     if (context != null && context.isNotEmpty) {
       return '$context: $specificMessage';

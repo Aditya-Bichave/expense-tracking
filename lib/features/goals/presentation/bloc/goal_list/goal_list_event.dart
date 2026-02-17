@@ -36,4 +36,5 @@ class DeleteGoal extends GoalListEvent {
 class ResetState extends GoalListEvent {
   const ResetState();
 }
+
 // --- END ADDED ---

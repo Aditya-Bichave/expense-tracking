@@ -1,7 +1,7 @@
 // lib/features/budgets/data/models/budget_model.dart
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 part 'budget_model.g.dart'; // Ensure this file is generated
 

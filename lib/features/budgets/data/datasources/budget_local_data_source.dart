@@ -2,7 +2,7 @@
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 
 abstract class BudgetLocalDataSource {
   Future<List<BudgetModel>> getBudgets();
@@ -43,9 +43,11 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
   Future<BudgetModel?> getBudgetById(String id) async {
     try {
       final budget = budgetBox.get(id);
-      log.fine(budget != null
-          ? "[BudgetDS] Retrieved budget by ID $id."
-          : "[BudgetDS] Budget with ID $id not found.");
+      log.fine(
+        budget != null
+            ? "[BudgetDS] Retrieved budget by ID $id."
+            : "[BudgetDS] Budget with ID $id not found.",
+      );
       return budget;
     } catch (e, s) {
       log.severe("[BudgetDS] Failed to get budget by ID $id$e$s");
@@ -70,7 +72,8 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
     try {
       await budgetBox.put(budget.id, budget);
       log.info(
-          "[BudgetDS] Saved/Updated budget '${budget.name}' (ID: ${budget.id}).");
+        "[BudgetDS] Saved/Updated budget '${budget.name}' (ID: ${budget.id}).",
+      );
     } catch (e, s) {
       log.severe("[BudgetDS] Failed to save budget '${budget.name}'$e$s");
       throw CacheFailure('Failed to save budget: ${e.toString()}');

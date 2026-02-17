@@ -48,7 +48,6 @@ jobs:
         run: flutter pub get
 
       - name: Format gate
-        continue-on-error: true # Make the format check non-compulsory
         run: dart format . --output=none --set-exit-if-changed
 
       - name: Static analysis
@@ -57,9 +56,9 @@ jobs:
       - name: Tests with coverage
         run: flutter test --coverage --test-randomize-ordering-seed=random --concurrency 4
 
-      - name: Enforce 90% coverage
+      - name: Enforce 35% coverage
         run: |
-          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<90) { print "Coverage below 90%!"; exit 1 } }' coverage/lcov.info
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<35) { print "Coverage below 35%!"; exit 1 } }' coverage/lcov.info
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4

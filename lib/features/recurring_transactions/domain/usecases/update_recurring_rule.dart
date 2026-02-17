@@ -27,35 +27,36 @@ class UpdateRecurringRule implements UseCase<void, RecurringRule> {
   Future<Either<Failure, void>> call(RecurringRule newRule) async {
     final oldRuleOrFailure = await getRecurringRuleById(newRule.id);
 
-    return oldRuleOrFailure.fold(
-      (failure) => Left(failure),
-      (oldRule) async {
-        final logs = _createAuditLogs(oldRule, newRule);
-        for (var log in logs) {
-          await addAuditLog(log);
-        }
-        return repository.updateRecurringRule(newRule);
-      },
-    );
+    return oldRuleOrFailure.fold((failure) => Left(failure), (oldRule) async {
+      final logs = _createAuditLogs(oldRule, newRule);
+      for (var log in logs) {
+        await addAuditLog(log);
+      }
+      return repository.updateRecurringRule(newRule);
+    });
   }
 
   List<RecurringRuleAuditLog> _createAuditLogs(
-      RecurringRule oldRule, RecurringRule newRule) {
+    RecurringRule oldRule,
+    RecurringRule newRule,
+  ) {
     final List<RecurringRuleAuditLog> logs = [];
     final timestamp = DateTime.now();
     final userId = this.userId;
 
     void addLog(String field, dynamic oldValue, dynamic newValue) {
       if (oldValue != newValue) {
-        logs.add(RecurringRuleAuditLog(
-          id: uuid.v4(),
-          ruleId: oldRule.id,
-          timestamp: timestamp,
-          userId: userId,
-          fieldChanged: field,
-          oldValue: oldValue.toString(),
-          newValue: newValue.toString(),
-        ));
+        logs.add(
+          RecurringRuleAuditLog(
+            id: uuid.v4(),
+            ruleId: oldRule.id,
+            timestamp: timestamp,
+            userId: userId,
+            fieldChanged: field,
+            oldValue: oldValue.toString(),
+            newValue: newValue.toString(),
+          ),
+        );
       }
     }
 

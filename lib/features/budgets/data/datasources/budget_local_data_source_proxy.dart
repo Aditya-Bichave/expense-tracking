@@ -59,7 +59,8 @@ class DemoAwareBudgetDataSource implements BudgetLocalDataSource {
   Future<void> clearAllBudgets() async {
     if (demoModeService.isDemoActive) {
       log.warning(
-          "[DemoAwareBudgetDS] clearAllBudgets called in Demo Mode. Ignoring.");
+        "[DemoAwareBudgetDS] clearAllBudgets called in Demo Mode. Ignoring.",
+      );
       return;
     } else {
       return hiveDataSource.clearAllBudgets();

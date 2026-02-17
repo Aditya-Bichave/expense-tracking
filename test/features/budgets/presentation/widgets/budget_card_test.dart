@@ -39,12 +39,15 @@ void main() {
 
   setUp(() {
     mockCategoryBloc = MockCategoryManagementBloc();
-    when(() => mockCategoryBloc.state)
-        .thenReturn(const CategoryManagementState());
+    when(
+      () => mockCategoryBloc.state,
+    ).thenReturn(const CategoryManagementState());
   });
 
-  Widget buildTestWidget(
-      {required BudgetWithStatus budgetStatus, VoidCallback? onTap}) {
+  Widget buildTestWidget({
+    required BudgetWithStatus budgetStatus,
+    VoidCallback? onTap,
+  }) {
     return BlocProvider.value(
       value: mockCategoryBloc,
       child: BudgetCard(budgetStatus: budgetStatus, onTap: onTap),
@@ -54,8 +57,9 @@ void main() {
   group('BudgetCard', () {
     testWidgets('renders budget name, period, and amounts', (tester) async {
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(budgetStatus: mockBudgetStatus));
+        tester: tester,
+        widget: buildTestWidget(budgetStatus: mockBudgetStatus),
+      );
 
       expect(find.text('Groceries'), findsOneWidget);
       expect(find.text('Monthly'), findsOneWidget);
@@ -71,7 +75,9 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: buildTestWidget(
-            budgetStatus: mockBudgetStatus, onTap: mockOnTap.call),
+          budgetStatus: mockBudgetStatus,
+          onTap: mockOnTap.call,
+        ),
       );
 
       await tester.tap(find.byType(InkWell));

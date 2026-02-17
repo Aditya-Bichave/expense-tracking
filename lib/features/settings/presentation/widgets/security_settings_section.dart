@@ -31,7 +31,8 @@ class SecuritySettingsSection extends StatelessWidget {
         SwitchListTile(
           secondary: Icon(
             Icons.security_outlined,
-            color: !isEnabled // Use combined state
+            color:
+                !isEnabled // Use combined state
                 ? theme.disabledColor
                 : theme.listTileTheme.iconColor,
           ),
@@ -44,7 +45,8 @@ class SecuritySettingsSection extends StatelessWidget {
             style: TextStyle(color: !isEnabled ? theme.disabledColor : null),
           ), // Use combined state
           value: state.isAppLockEnabled,
-          onChanged: !isEnabled // Use combined state
+          onChanged:
+              !isEnabled // Use combined state
               ? null
               : (bool value) => onAppLockToggle(context, value),
           activeColor: theme.colorScheme.primary,

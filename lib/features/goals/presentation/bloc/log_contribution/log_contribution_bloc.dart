@@ -28,11 +28,11 @@ class LogContributionBloc
     required UpdateContributionUseCase updateContributionUseCase, // Added
     required DeleteContributionUseCase deleteContributionUseCase, // Added
     required CheckGoalAchievementUseCase checkGoalAchievementUseCase, // Added
-  })  : _addContributionUseCase = addContributionUseCase,
-        _updateContributionUseCase = updateContributionUseCase, // Added
-        _deleteContributionUseCase = deleteContributionUseCase, // Added
-        _checkGoalAchievementUseCase = checkGoalAchievementUseCase, // Added
-        super(LogContributionState.initial('')) {
+  }) : _addContributionUseCase = addContributionUseCase,
+       _updateContributionUseCase = updateContributionUseCase, // Added
+       _deleteContributionUseCase = deleteContributionUseCase, // Added
+       _checkGoalAchievementUseCase = checkGoalAchievementUseCase, // Added
+       super(LogContributionState.initial('')) {
     // Initial state needs a dummy goalId
     on<InitializeContribution>(_onInitializeContribution);
     on<SaveContribution>(_onSaveContribution);
@@ -75,13 +75,15 @@ class LogContributionBloc
 
     // Construct the contribution object
     final contributionData = GoalContribution(
-      id: state.initialContribution?.id ??
+      id:
+          state.initialContribution?.id ??
           sl<Uuid>().v4(), // Use existing or new ID
       goalId: goalId, // Use captured goalId
       amount: event.amount,
       date: event.date,
       note: event.note?.trim(),
-      createdAt: state.initialContribution?.createdAt ??
+      createdAt:
+          state.initialContribution?.createdAt ??
           DateTime.now(), // Preserve original createdAt
     );
 

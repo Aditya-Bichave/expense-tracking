@@ -48,7 +48,8 @@ class AppDropdownFormField<T> extends StatelessWidget {
         focusedErrorBorder: inputTheme.focusedErrorBorder,
         filled: inputTheme.filled,
         fillColor: inputTheme.fillColor,
-        contentPadding: contentPadding ??
+        contentPadding:
+            contentPadding ??
             inputTheme.contentPadding ??
             modeTheme?.listItemPadding.copyWith(top: 14, bottom: 14),
         isDense: inputTheme.isDense,

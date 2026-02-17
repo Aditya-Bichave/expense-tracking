@@ -58,8 +58,9 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               const SizedBox(height: 8),
               Text(
                 'Track your expenses, manage budgets, and achieve your financial goals.',
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
@@ -71,8 +72,9 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   currentCountry != null
                       ? 'Currency: ${currentCountry.name} (${currentCountry.currencySymbol})'
                       : 'Select Currency',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(color: theme.colorScheme.onPrimary),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onPrimary,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -104,8 +106,9 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 children: [
                   Expanded(child: Divider()),
                   Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text("OR")),
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text("OR"),
+                  ),
                   Expanded(child: Divider()),
                 ],
               ),
@@ -121,7 +124,8 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 onPressed: () {
                   log.warning("[InitialSetup] Sign Up navigation TBD");
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Sign Up: Coming Soon!")));
+                    const SnackBar(content: Text("Sign Up: Coming Soon!")),
+                  );
                 },
                 child: const Text('Sign Up'),
               ),
@@ -130,7 +134,8 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 onPressed: () {
                   log.warning("[InitialSetup] Log In navigation TBD");
                   ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Log In: Coming Soon!")));
+                    const SnackBar(content: Text("Log In: Coming Soon!")),
+                  );
                 },
                 child: const Text('Log In'),
               ),
@@ -188,8 +193,10 @@ class CurrencyPickerSheet extends StatelessWidget {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text('Select Your Currency',
-                  style: theme.textTheme.titleLarge),
+              child: Text(
+                'Select Your Currency',
+                style: theme.textTheme.titleLarge,
+              ),
             ),
             const Divider(height: 1),
             ConstrainedBox(

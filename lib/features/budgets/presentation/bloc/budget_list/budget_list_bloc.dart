@@ -28,10 +28,10 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     required BudgetRepository budgetRepository,
     required DeleteBudgetUseCase deleteBudgetUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
-  })  : _getBudgetsUseCase = getBudgetsUseCase,
-        _budgetRepository = budgetRepository,
-        _deleteBudgetUseCase = deleteBudgetUseCase,
-        super(const BudgetListState()) {
+  }) : _getBudgetsUseCase = getBudgetsUseCase,
+       _budgetRepository = budgetRepository,
+       _deleteBudgetUseCase = deleteBudgetUseCase,
+       super(const BudgetListState()) {
     on<LoadBudgets>(_onLoadBudgets);
     on<_BudgetsDataChanged>(_onDataChanged);
     on<DeleteBudget>(_onDeleteBudget);
@@ -139,7 +139,8 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
               );
               calculationErrorOccurred = true;
               firstCalcErrorMsg ??= failure.toDisplayMessage(
-                  context: "Failed to calculate status for '${budget.name}'");
+                context: "Failed to calculate status for '${budget.name}'",
+              );
             },
             (amountSpent) {
               budgetsWithStatusList.add(

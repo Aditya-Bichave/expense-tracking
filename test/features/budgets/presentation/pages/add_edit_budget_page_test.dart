@@ -21,7 +21,8 @@ void main() {
   setUp(() {
     mockBloc = MockAddEditBudgetBloc();
     sl.registerFactoryParam<AddEditBudgetBloc, Budget?, void>(
-        (param1, _) => mockBloc);
+      (param1, _) => mockBloc,
+    );
   });
 
   tearDown(() {
@@ -41,31 +42,42 @@ void main() {
     testWidgets('renders correct AppBar title for "Add" mode', (tester) async {
       when(() => mockBloc.state).thenReturn(const AddEditBudgetState());
       await pumpWidgetWithProviders(
-          tester: tester, widget: const AddEditBudgetPage());
+        tester: tester,
+        widget: const AddEditBudgetPage(),
+      );
       expect(find.text('Add Budget'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('renders correct AppBar title for "Edit" mode', (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(AddEditBudgetState(initialBudget: mockBudget));
+      when(
+        () => mockBloc.state,
+      ).thenReturn(AddEditBudgetState(initialBudget: mockBudget));
       await pumpWidgetWithProviders(
-          tester: tester, widget: AddEditBudgetPage(initialBudget: mockBudget));
+        tester: tester,
+        widget: AddEditBudgetPage(initialBudget: mockBudget),
+      );
       expect(find.text('Edit Budget'), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('renders BudgetForm when categories are loaded',
-        (tester) async {
-      when(() => mockBloc.state)
-          .thenReturn(const AddEditBudgetState(availableCategories: []));
+    testWidgets('renders BudgetForm when categories are loaded', (
+      tester,
+    ) async {
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const AddEditBudgetState(availableCategories: []));
       await pumpWidgetWithProviders(
-          tester: tester, widget: const AddEditBudgetPage());
+        tester: tester,
+        widget: const AddEditBudgetPage(),
+      );
       expect(find.byType(BudgetForm), findsOneWidget);
     });
 
-    testWidgets('shows loading indicator when loading categories',
-        (tester) async {
+    testWidgets('shows loading indicator when loading categories', (
+      tester,
+    ) async {
       when(() => mockBloc.state).thenReturn(
-          const AddEditBudgetState(status: AddEditBudgetStatus.loading));
+        const AddEditBudgetState(status: AddEditBudgetStatus.loading),
+      );
       await pumpWidgetWithProviders(
         tester: tester,
         widget: const AddEditBudgetPage(),
@@ -77,12 +89,15 @@ void main() {
     testWidgets('shows success SnackBar when state is success', (tester) async {
       whenListen(
         mockBloc,
-        Stream.fromIterable(
-            [const AddEditBudgetState(status: AddEditBudgetStatus.success)]),
+        Stream.fromIterable([
+          const AddEditBudgetState(status: AddEditBudgetStatus.success),
+        ]),
         initialState: const AddEditBudgetState(),
       );
       await pumpWidgetWithProviders(
-          tester: tester, widget: const AddEditBudgetPage());
+        tester: tester,
+        widget: const AddEditBudgetPage(),
+      );
       await tester.pump();
       expect(find.text('Budget added successfully!'), findsOneWidget);
     });

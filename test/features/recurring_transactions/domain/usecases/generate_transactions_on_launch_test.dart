@@ -380,11 +380,13 @@ void main() {
       await usecase(const NoParams());
 
       // Assert
-      final captured = verify(
-        () => mockRecurringTransactionRepository.updateRecurringRule(
-          captureAny(),
-        ),
-      ).captured.single as RecurringRule;
+      final captured =
+          verify(
+                () => mockRecurringTransactionRepository.updateRecurringRule(
+                  captureAny(),
+                ),
+              ).captured.single
+              as RecurringRule;
       expect(captured.nextOccurrenceDate, expectedNextDate);
     },
   );
@@ -429,11 +431,13 @@ void main() {
       await usecase(const NoParams());
 
       // Assert
-      final captured = verify(
-        () => mockRecurringTransactionRepository.updateRecurringRule(
-          captureAny(),
-        ),
-      ).captured.single as RecurringRule;
+      final captured =
+          verify(
+                () => mockRecurringTransactionRepository.updateRecurringRule(
+                  captureAny(),
+                ),
+              ).captured.single
+              as RecurringRule;
       expect(captured.nextOccurrenceDate, expectedNextDate);
     },
   );

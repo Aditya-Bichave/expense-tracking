@@ -6,8 +6,11 @@ class AppCountry {
   final String name; // e.g., 'United States', 'United Kingdom', 'India'
   final String currencySymbol; // e.g., '$', '£', '₹'
 
-  const AppCountry(
-      {required this.code, required this.name, required this.currencySymbol});
+  const AppCountry({
+    required this.code,
+    required this.name,
+    required this.currencySymbol,
+  });
 
   @override
   bool operator ==(Object other) =>
@@ -35,10 +38,10 @@ abstract class AppCountries {
     // Add more countries as needed
   ];
 
-  static AppCountry get defaultCountry =>
-      availableCountries.firstWhere((c) => c.code == defaultCountryCode,
-          orElse: () => availableCountries.first // Absolute fallback
-          );
+  static AppCountry get defaultCountry => availableCountries.firstWhere(
+    (c) => c.code == defaultCountryCode,
+    orElse: () => availableCountries.first, // Absolute fallback
+  );
 
   static String getCurrencyForCountry(String? countryCode) {
     final codeToUse = countryCode ?? defaultCountryCode;

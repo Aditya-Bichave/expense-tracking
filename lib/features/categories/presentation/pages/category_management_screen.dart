@@ -15,22 +15,29 @@ class CategoryManagementScreen extends StatelessWidget {
 
   void _navigateToAddEdit(BuildContext context, {Category? category}) {
     log.info(
-        "[CategoryMgmtScreen] Navigating to Add/Edit. Category: ${category?.name}");
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => BlocProvider.value(
-        value: BlocProvider.of<CategoryManagementBloc>(context),
-        child: AddEditCategoryScreen(initialCategory: category),
+      "[CategoryMgmtScreen] Navigating to Add/Edit. Category: ${category?.name}",
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider.value(
+          value: BlocProvider.of<CategoryManagementBloc>(context),
+          child: AddEditCategoryScreen(initialCategory: category),
+        ),
       ),
-    ));
+    );
   }
 
   void _handleDelete(BuildContext context, Category category) async {
     log.info("[CategoryMgmtScreen] Delete requested for: ${category.name}");
     if (!category.isCustom) {
       log.warning(
-          "[CategoryMgmtScreen] Attempted to delete a non-custom category: ${category.name}");
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Predefined categories cannot be deleted.")));
+        "[CategoryMgmtScreen] Attempted to delete a non-custom category: ${category.name}",
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Predefined categories cannot be deleted."),
+        ),
+      );
       return;
     }
     final confirmed = await AppDialogs.showConfirmation(
@@ -43,9 +50,9 @@ class CategoryManagementScreen extends StatelessWidget {
     );
     if (confirmed == true && context.mounted) {
       log.info("[CategoryMgmtScreen] Delete confirmed for: ${category.name}");
-      context
-          .read<CategoryManagementBloc>()
-          .add(DeleteCategory(categoryId: category.id));
+      context.read<CategoryManagementBloc>().add(
+        DeleteCategory(categoryId: category.id),
+      );
     } else {
       log.info("[CategoryMgmtScreen] Delete cancelled for: ${category.name}");
     }
@@ -54,7 +61,8 @@ class CategoryManagementScreen extends StatelessWidget {
   void _handlePersonalize(BuildContext context, Category category) {
     log.warning("Personalization for predefined categories not implemented.");
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Personalization coming soon!")));
+      const SnackBar(content: Text("Personalization coming soon!")),
+    );
   }
 
   @override
@@ -74,8 +82,9 @@ class CategoryManagementScreen extends StatelessWidget {
               ],
               indicatorColor: Theme.of(context).colorScheme.primary,
               labelColor: Theme.of(context).colorScheme.primary,
-              unselectedLabelColor:
-                  Theme.of(context).colorScheme.onSurfaceVariant,
+              unselectedLabelColor: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant,
             ),
           ),
           body: BlocConsumer<CategoryManagementBloc, CategoryManagementState>(
@@ -84,9 +93,12 @@ class CategoryManagementScreen extends StatelessWidget {
                   state.errorMessage != null) {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(
+                  ..showSnackBar(
+                    SnackBar(
                       content: Text("Error: ${state.errorMessage!}"),
-                      backgroundColor: Theme.of(context).colorScheme.error));
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
                 // Optionally clear error message via Bloc event
                 // context.read<CategoryManagementBloc>().add(const ClearCategoryMessages());
               }
@@ -100,12 +112,16 @@ class CategoryManagementScreen extends StatelessWidget {
                   state.predefinedExpenseCategories.isEmpty &&
                   state.customExpenseCategories.isEmpty) {
                 return Center(
-                    child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text(
-                            "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.error))));
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Text(
+                      "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+                );
               }
 
               // Use the decomposed list section widget
@@ -114,7 +130,7 @@ class CategoryManagementScreen extends StatelessWidget {
                   CategoryListSectionWidget(
                     categories: [
                       ...state.predefinedExpenseCategories,
-                      ...state.customExpenseCategories
+                      ...state.customExpenseCategories,
                     ],
                     emptyMessage: 'No expense categories found.',
                     onEditCategory: (category) =>
@@ -127,7 +143,7 @@ class CategoryManagementScreen extends StatelessWidget {
                   CategoryListSectionWidget(
                     categories: [
                       ...state.predefinedIncomeCategories,
-                      ...state.customIncomeCategories
+                      ...state.customIncomeCategories,
                     ],
                     emptyMessage: 'No income categories found.',
                     onEditCategory: (category) =>

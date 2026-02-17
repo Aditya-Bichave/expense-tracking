@@ -17,14 +17,18 @@ class ClearAllDataUseCase implements UseCase<void, NoParams> {
       final result = await dataManagementRepository.clearAllData();
       result.fold(
         (f) => log.warning(
-            "[ClearAllDataUseCase] Repository clear failed: ${f.message}"),
+          "[ClearAllDataUseCase] Repository clear failed: ${f.message}",
+        ),
         (_) => log.info("[ClearAllDataUseCase] Repository clear successful."),
       );
       return result;
     } catch (e, s) {
       log.severe("[ClearAllDataUseCase] Unexpected error$e$s");
-      return Left(ClearDataFailure(
-          "An unexpected error occurred while clearing data: ${e.toString()}"));
+      return Left(
+        ClearDataFailure(
+          "An unexpected error occurred while clearing data: ${e.toString()}",
+        ),
+      );
     }
   }
 }

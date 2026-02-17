@@ -9,7 +9,7 @@ import 'package:expense_tracker/features/expenses/domain/repositories/expense_re
 import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/delete_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
-import 'package:hive/hive.dart'; // Keep for HiveExpenseLocalDataSource
+import 'package:hive_ce/hive.dart'; // Keep for HiveExpenseLocalDataSource
 
 class ExpensesDependencies {
   static void register() {

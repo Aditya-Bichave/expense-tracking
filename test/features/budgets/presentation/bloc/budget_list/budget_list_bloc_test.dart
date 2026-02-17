@@ -66,13 +66,16 @@ void main() {
     blocTest<BudgetListBloc, BudgetListState>(
       'emits [loading, success] with calculated status when successful',
       build: () {
-        when(() => mockGetBudgetsUseCase(any()))
-            .thenAnswer((_) async => Right([tBudget]));
-        when(() => mockBudgetRepository.calculateAmountSpent(
-              budget: any(named: 'budget'),
-              periodStart: any(named: 'periodStart'),
-              periodEnd: any(named: 'periodEnd'),
-            )).thenAnswer((_) async => const Right(100.0));
+        when(
+          () => mockGetBudgetsUseCase(any()),
+        ).thenAnswer((_) async => Right([tBudget]));
+        when(
+          () => mockBudgetRepository.calculateAmountSpent(
+            budget: any(named: 'budget'),
+            periodStart: any(named: 'periodStart'),
+            periodEnd: any(named: 'periodEnd'),
+          ),
+        ).thenAnswer((_) async => const Right(100.0));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadBudgets()),
@@ -88,15 +91,19 @@ void main() {
     blocTest<BudgetListBloc, BudgetListState>(
       'emits [loading, error] when fetch fails',
       build: () {
-        when(() => mockGetBudgetsUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Error')));
+        when(
+          () => mockGetBudgetsUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Error')));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadBudgets()),
       expect: () => [
         const BudgetListState(status: BudgetListStatus.loading),
-        isA<BudgetListState>()
-            .having((s) => s.status, 'status', BudgetListStatus.error),
+        isA<BudgetListState>().having(
+          (s) => s.status,
+          'status',
+          BudgetListStatus.error,
+        ),
       ],
     );
   });
@@ -114,22 +121,27 @@ void main() {
             percentageUsed: 0,
             health: BudgetHealth.thriving,
             statusColor: const Color(0x00000000),
-          )
+          ),
         ],
       ),
       build: () {
-        when(() => mockDeleteBudgetUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockDeleteBudgetUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
         return bloc;
       },
       act: (bloc) => bloc.add(DeleteBudget(budgetId: tBudget.id)),
       expect: () => [
-        isA<BudgetListState>()
-            .having((s) => s.budgetsWithStatus, 'budgets', isEmpty),
+        isA<BudgetListState>().having(
+          (s) => s.budgetsWithStatus,
+          'budgets',
+          isEmpty,
+        ),
       ],
       verify: (_) {
-        verify(() => mockDeleteBudgetUseCase(DeleteBudgetParams(id: tBudget.id)))
-            .called(1);
+        verify(
+          () => mockDeleteBudgetUseCase(DeleteBudgetParams(id: tBudget.id)),
+        ).called(1);
       },
     );
   });
@@ -138,23 +150,33 @@ void main() {
     blocTest<BudgetListBloc, BudgetListState>(
       'triggers reload on budget change',
       build: () {
-        when(() => mockGetBudgetsUseCase(any()))
-            .thenAnswer((_) async => Right([tBudget]));
-        when(() => mockBudgetRepository.calculateAmountSpent(
-              budget: any(named: 'budget'),
-              periodStart: any(named: 'periodStart'),
-              periodEnd: any(named: 'periodEnd'),
-            )).thenAnswer((_) async => const Right(100.0));
+        when(
+          () => mockGetBudgetsUseCase(any()),
+        ).thenAnswer((_) async => Right([tBudget]));
+        when(
+          () => mockBudgetRepository.calculateAmountSpent(
+            budget: any(named: 'budget'),
+            periodStart: any(named: 'periodStart'),
+            periodEnd: any(named: 'periodEnd'),
+          ),
+        ).thenAnswer((_) async => const Right(100.0));
         return bloc;
       },
       act: (bloc) async {
-        dataChangeController.add(const DataChangedEvent(
-            type: DataChangeType.budget, reason: DataChangeReason.updated));
+        dataChangeController.add(
+          const DataChangedEvent(
+            type: DataChangeType.budget,
+            reason: DataChangeReason.updated,
+          ),
+        );
       },
       expect: () => [
         const BudgetListState(status: BudgetListStatus.loading),
-        isA<BudgetListState>()
-            .having((s) => s.status, 'status', BudgetListStatus.success),
+        isA<BudgetListState>().having(
+          (s) => s.status,
+          'status',
+          BudgetListStatus.success,
+        ),
       ],
     );
   });

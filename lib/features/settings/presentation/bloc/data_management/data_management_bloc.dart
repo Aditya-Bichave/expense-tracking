@@ -24,10 +24,10 @@ class DataManagementBloc
     required BackupDataUseCase backupDataUseCase,
     required RestoreDataUseCase restoreDataUseCase,
     required ClearAllDataUseCase clearAllDataUseCase,
-  })  : _backupDataUseCase = backupDataUseCase,
-        _restoreDataUseCase = restoreDataUseCase,
-        _clearAllDataUseCase = clearAllDataUseCase,
-        super(const DataManagementState()) {
+  }) : _backupDataUseCase = backupDataUseCase,
+       _restoreDataUseCase = restoreDataUseCase,
+       _clearAllDataUseCase = clearAllDataUseCase,
+       super(const DataManagementState()) {
     on<BackupRequested>(_onBackupRequested);
     on<RestoreRequested>(_onRestoreRequested);
     on<ClearDataRequested>(_onClearDataRequested);

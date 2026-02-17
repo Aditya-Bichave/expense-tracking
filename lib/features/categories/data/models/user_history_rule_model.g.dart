@@ -8,7 +8,7 @@ part of 'user_history_rule_model.dart';
 
 class UserHistoryRuleModelAdapter extends TypeAdapter<UserHistoryRuleModel> {
   @override
-  final int typeId = 4;
+  final typeId = 4;
 
   @override
   UserHistoryRuleModel read(BinaryReader reader) {

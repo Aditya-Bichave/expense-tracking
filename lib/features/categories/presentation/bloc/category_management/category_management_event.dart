@@ -28,8 +28,7 @@ class AddCategory extends CategoryManagementEvent {
     this.parentId,
   });
   @override
-  List<Object?> get props =>
-      [name, iconName, colorHex, type, parentId]; // ADDED type
+  List<Object?> get props => [name, iconName, colorHex, type, parentId]; // ADDED type
 }
 
 class UpdateCategory extends CategoryManagementEvent {

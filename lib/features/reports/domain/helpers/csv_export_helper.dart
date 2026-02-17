@@ -23,10 +23,12 @@ class CsvExportHelper {
   final DownloaderService _downloaderService;
 
   CsvExportHelper({required DownloaderService downloaderService})
-      : _downloaderService = downloaderService;
+    : _downloaderService = downloaderService;
 
   Future<String> _generateCsv(
-      List<List<dynamic>> dataRows, List<String> headers) async {
+    List<List<dynamic>> dataRows,
+    List<String> headers,
+  ) async {
     try {
       List<List<dynamic>> csvData = [headers];
       csvData.addAll(dataRows);
@@ -38,10 +40,11 @@ class CsvExportHelper {
     }
   }
 
-  Future<void> saveCsvFile(
-      {required BuildContext context,
-      required String csvData,
-      required String fileName}) async {
+  Future<void> saveCsvFile({
+    required BuildContext context,
+    required String csvData,
+    required String fileName,
+  }) async {
     if (kIsWeb) {
       await _saveCsvWeb(csvData, fileName);
     } else {
@@ -65,7 +68,10 @@ class CsvExportHelper {
   }
 
   Future<void> _saveCsvMobileDesktop(
-      BuildContext context, String csvData, String fileName) async {
+    BuildContext context,
+    String csvData,
+    String fileName,
+  ) async {
     final platform = Theme.of(context).platform;
 
     if (platform == TargetPlatform.android || platform == TargetPlatform.iOS) {
@@ -101,35 +107,44 @@ class CsvExportHelper {
       log.info("[CsvExportHelper] CSV file saved successfully.");
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text("CSV saved to ${file.parent.path}"),
-            action: SnackBarAction(label: "OK", onPressed: () {})));
+            action: SnackBarAction(label: "OK", onPressed: () {}),
+          ),
+        );
       }
     } on PlatformException catch (e, s) {
       log.severe("[CsvExportHelper] PlatformException saving CSV: $e\n$s");
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("File Picker Error: ${e.message ?? 'Unknown'}")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("File Picker Error: ${e.message ?? 'Unknown'}"),
+          ),
+        );
       }
       throw Exception("File Picker Error: ${e.message}");
     } catch (e, s) {
       log.severe("[CsvExportHelper] Error saving CSV file: $e\n$s");
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("File Save Error: $e")));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("File Save Error: $e")));
       }
       throw Exception("File Save Error: $e");
     }
   }
 
   Future<Either<String, Failure>> exportSpendingCategoryReport(
-      SpendingCategoryReportData data, String currencySymbol,
-      {bool showComparison = false}) async {
+    SpendingCategoryReportData data,
+    String currencySymbol, {
+    bool showComparison = false,
+  }) async {
     try {
       List<String> headers = [
         'Category',
         'Amount ($currencySymbol)',
-        'Percentage'
+        'Percentage',
       ];
       if (showComparison) {
         headers.addAll(['Previous Amount ($currencySymbol)', 'Change (%)']);
@@ -139,13 +154,15 @@ class CsvExportHelper {
         List<dynamic> rowData = [
           item.categoryName,
           item.currentTotalAmount.toStringAsFixed(2),
-          '${(item.percentage * 100).toStringAsFixed(1)}%'
+          '${(item.percentage * 100).toStringAsFixed(1)}%',
         ];
         if (showComparison) {
-          rowData
-              .add(item.totalAmount.previousValue?.toStringAsFixed(2) ?? 'N/A');
-          rowData
-              .add(_formatPercentageChange(item.totalAmount.percentageChange));
+          rowData.add(
+            item.totalAmount.previousValue?.toStringAsFixed(2) ?? 'N/A',
+          );
+          rowData.add(
+            _formatPercentageChange(item.totalAmount.percentageChange),
+          );
         }
         return rowData;
       }).toList();
@@ -153,13 +170,15 @@ class CsvExportHelper {
       List<dynamic> totalRow = [
         'TOTAL',
         data.currentTotalSpending.toStringAsFixed(2),
-        '100.0%'
+        '100.0%',
       ];
       if (showComparison) {
-        totalRow
-            .add(data.totalSpending.previousValue?.toStringAsFixed(2) ?? 'N/A');
-        totalRow
-            .add(_formatPercentageChange(data.totalSpending.percentageChange));
+        totalRow.add(
+          data.totalSpending.previousValue?.toStringAsFixed(2) ?? 'N/A',
+        );
+        totalRow.add(
+          _formatPercentageChange(data.totalSpending.percentageChange),
+        );
       }
       rows.add(totalRow);
 
@@ -167,13 +186,16 @@ class CsvExportHelper {
       return Left(csvString);
     } catch (e) {
       return Right(
-          ExportFailure("Failed to generate Category Spending CSV: $e"));
+        ExportFailure("Failed to generate Category Spending CSV: $e"),
+      );
     }
   }
 
   Future<Either<String, Failure>> exportSpendingTimeReport(
-      SpendingTimeReportData data, String currencySymbol,
-      {bool showComparison = false}) async {
+    SpendingTimeReportData data,
+    String currencySymbol, {
+    bool showComparison = false,
+  }) async {
     try {
       List<String> headers = ['Period Start', 'Amount ($currencySymbol)'];
       if (showComparison) {
@@ -182,15 +204,15 @@ class CsvExportHelper {
 
       final DateFormat dateFormat =
           data.granularity == TimeSeriesGranularity.daily
-              ? DateFormat('yyyy-MM-dd')
-              : data.granularity == TimeSeriesGranularity.weekly
-                  ? DateFormat('yyyy-MM-dd \'Wk\'')
-                  : DateFormat('yyyy-MMM');
+          ? DateFormat('yyyy-MM-dd')
+          : data.granularity == TimeSeriesGranularity.weekly
+          ? DateFormat('yyyy-MM-dd \'Wk\'')
+          : DateFormat('yyyy-MMM');
 
       final rows = data.spendingData.map((item) {
         List<dynamic> rowData = [
           dateFormat.format(item.date),
-          item.currentAmount.toStringAsFixed(2)
+          item.currentAmount.toStringAsFixed(2),
         ];
         if (showComparison) {
           rowData.add(item.amount.previousValue?.toStringAsFixed(2) ?? 'N/A');
@@ -203,46 +225,51 @@ class CsvExportHelper {
       return Left(csvString);
     } catch (e) {
       return Right(
-          ExportFailure("Failed to generate Spending Over Time CSV: $e"));
+        ExportFailure("Failed to generate Spending Over Time CSV: $e"),
+      );
     }
   }
 
   Future<Either<String, Failure>> exportIncomeExpenseReport(
-      IncomeExpenseReportData data, String currencySymbol,
-      {bool showComparison = false}) async {
+    IncomeExpenseReportData data,
+    String currencySymbol, {
+    bool showComparison = false,
+  }) async {
     try {
       List<String> headers = [
         'Period Start',
         'Income ($currencySymbol)',
         'Expense ($currencySymbol)',
-        'Net Flow ($currencySymbol)'
+        'Net Flow ($currencySymbol)',
       ];
       if (showComparison) {
         headers.addAll([
           'Prev Income ($currencySymbol)',
           'Prev Expense ($currencySymbol)',
           'Prev Net Flow ($currencySymbol)',
-          'Net Change (%)'
+          'Net Change (%)',
         ]);
       }
 
       final DateFormat dateFormat =
           data.periodType == IncomeExpensePeriodType.monthly
-              ? DateFormat('yyyy-MMM')
-              : DateFormat('yyyy');
+          ? DateFormat('yyyy-MMM')
+          : DateFormat('yyyy');
 
       final rows = data.periodData.map((item) {
         List<dynamic> rowData = [
           dateFormat.format(item.periodStart),
           item.currentTotalIncome.toStringAsFixed(2),
           item.currentTotalExpense.toStringAsFixed(2),
-          item.currentNetFlow.toStringAsFixed(2)
+          item.currentNetFlow.toStringAsFixed(2),
         ];
         if (showComparison) {
-          rowData
-              .add(item.totalIncome.previousValue?.toStringAsFixed(2) ?? 'N/A');
           rowData.add(
-              item.totalExpense.previousValue?.toStringAsFixed(2) ?? 'N/A');
+            item.totalIncome.previousValue?.toStringAsFixed(2) ?? 'N/A',
+          );
+          rowData.add(
+            item.totalExpense.previousValue?.toStringAsFixed(2) ?? 'N/A',
+          );
           rowData.add(item.netFlow.previousValue?.toStringAsFixed(2) ?? 'N/A');
           rowData.add(_formatPercentageChange(item.netFlow.percentageChange));
         }
@@ -253,22 +280,26 @@ class CsvExportHelper {
       return Left(csvString);
     } catch (e) {
       return Right(
-          ExportFailure("Failed to generate Income vs Expense CSV: $e"));
+        ExportFailure("Failed to generate Income vs Expense CSV: $e"),
+      );
     }
   }
 
   Future<Either<String, Failure>> exportBudgetPerformanceReport(
-      BudgetPerformanceReportData data, String currencySymbol,
-      {bool showComparison = false}) async {
+    BudgetPerformanceReportData data,
+    String currencySymbol, {
+    bool showComparison = false,
+  }) async {
     try {
       List<String> headers = [
         'Budget',
         'Target ($currencySymbol)',
         'Actual ($currencySymbol)',
         'Variance ($currencySymbol)',
-        'Variance (%)'
+        'Variance (%)',
       ];
-      bool canCompare = showComparison &&
+      bool canCompare =
+          showComparison &&
           data.previousPerformanceData != null &&
           data.previousPerformanceData!.isNotEmpty;
       if (canCompare) {
@@ -276,7 +307,7 @@ class CsvExportHelper {
           'Prev Actual ($currencySymbol)',
           'Prev Variance ($currencySymbol)',
           'Prev Variance (%)',
-          'Var Δ%'
+          'Var Δ%',
         ]);
       }
 
@@ -291,15 +322,20 @@ class CsvExportHelper {
               : (item.currentVariancePercent.isNegative ? '-Inf' : '+Inf'),
         ];
         if (canCompare) {
-          final prevData = data.previousPerformanceData!
-              .firstWhereOrNull((p) => p.budget.id == item.budget.id);
-          rowData
-              .add(prevData?.currentActualSpending.toStringAsFixed(2) ?? 'N/A');
-          rowData
-              .add(prevData?.currentVarianceAmount.toStringAsFixed(2) ?? 'N/A');
-          rowData.add(item.previousVariancePercent?.isFinite == true
-              ? '${item.previousVariancePercent!.toStringAsFixed(1)}%'
-              : 'N/A');
+          final prevData = data.previousPerformanceData!.firstWhereOrNull(
+            (p) => p.budget.id == item.budget.id,
+          );
+          rowData.add(
+            prevData?.currentActualSpending.toStringAsFixed(2) ?? 'N/A',
+          );
+          rowData.add(
+            prevData?.currentVarianceAmount.toStringAsFixed(2) ?? 'N/A',
+          );
+          rowData.add(
+            item.previousVariancePercent?.isFinite == true
+                ? '${item.previousVariancePercent!.toStringAsFixed(1)}%'
+                : 'N/A',
+          );
           rowData.add(_formatPercentageChange(item.varianceChangePercent));
         }
         return rowData;
@@ -309,12 +345,15 @@ class CsvExportHelper {
       return Left(csvString);
     } catch (e) {
       return Right(
-          ExportFailure("Failed to generate Budget Performance CSV: $e"));
+        ExportFailure("Failed to generate Budget Performance CSV: $e"),
+      );
     }
   }
 
   Future<Either<String, Failure>> exportGoalProgressReport(
-      GoalProgressReportData data, String currencySymbol) async {
+    GoalProgressReportData data,
+    String currencySymbol,
+  ) async {
     try {
       final headers = [
         'Goal',
@@ -326,7 +365,7 @@ class CsvExportHelper {
         'Status',
         'Est. Daily Save',
         'Est. Monthly Save',
-        'Est. Completion'
+        'Est. Completion',
       ];
       final rows = data.progressData.map((item) {
         final goal = item.goal;
@@ -342,11 +381,15 @@ class CsvExportHelper {
           goal.status.displayName,
           item.requiredDailySaving?.isFinite == true
               ? CurrencyFormatter.format(
-                  item.requiredDailySaving!, currencySymbol)
+                  item.requiredDailySaving!,
+                  currencySymbol,
+                )
               : 'N/A',
           item.requiredMonthlySaving?.isFinite == true
               ? CurrencyFormatter.format(
-                  item.requiredMonthlySaving!, currencySymbol)
+                  item.requiredMonthlySaving!,
+                  currencySymbol,
+                )
               : 'N/A',
           item.estimatedCompletionDate != null
               ? df.DateFormatter.formatDate(item.estimatedCompletionDate!)

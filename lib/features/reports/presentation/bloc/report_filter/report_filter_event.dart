@@ -37,9 +37,9 @@ class UpdateReportFilters extends ReportFilterEvent {
 
   @override
   List<Object?> get props => [
-        startDate, endDate, categoryIds, accountIds,
-        budgetIds, goalIds, transactionType // Added
-      ];
+    startDate, endDate, categoryIds, accountIds,
+    budgetIds, goalIds, transactionType, // Added
+  ];
 }
 
 class ClearReportFilters extends ReportFilterEvent {

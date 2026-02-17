@@ -65,7 +65,9 @@ Map<String, IconData> availableIcons = {
 
 // Function to show the icon picker dialog
 Future<String?> showIconPicker(
-    BuildContext context, String currentIconName) async {
+  BuildContext context,
+  String currentIconName,
+) async {
   return await showDialog<String>(
     context: context,
     builder: (BuildContext context) {
@@ -136,14 +138,18 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
               decoration: InputDecoration(
                 hintText: "Search icons by name...",
                 prefixIcon: const Icon(Icons.search),
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 16,
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear),
-                        onPressed: () => _searchController.clear())
+                        onPressed: () => _searchController.clear(),
+                      )
                     : null,
               ),
             ),
@@ -154,11 +160,11 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                   : GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 60.0,
-                        mainAxisSpacing: 8.0,
-                        crossAxisSpacing: 8.0,
-                        childAspectRatio: 1.0, // Make items square
-                      ),
+                            maxCrossAxisExtent: 60.0,
+                            mainAxisSpacing: 8.0,
+                            crossAxisSpacing: 8.0,
+                            childAspectRatio: 1.0, // Make items square
+                          ),
                       itemCount: _filteredIcons.length,
                       itemBuilder: (context, index) {
                         final entry = _filteredIcons[index];
@@ -182,16 +188,20 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                                 ),
                                 color: isSelected
                                     ? theme.colorScheme.primaryContainer
-                                        .withOpacity(0.3)
-                                    : theme.colorScheme
-                                        .surfaceContainerHighest, // Use a background color
+                                          .withOpacity(0.3)
+                                    : theme
+                                          .colorScheme
+                                          .surfaceContainerHighest, // Use a background color
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               padding: const EdgeInsets.all(
-                                  4), // Add padding around icon
-                              child: Icon(entry.value,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  size: 28), // Slightly larger icon
+                                4,
+                              ), // Add padding around icon
+                              child: Icon(
+                                entry.value,
+                                color: theme.colorScheme.onSurfaceVariant,
+                                size: 28,
+                              ), // Slightly larger icon
                             ),
                           ),
                         );
@@ -209,8 +219,9 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
         TextButton(
           key: const ValueKey('button_select'),
           child: const Text('Select'),
-          onPressed: () => Navigator.of(context)
-              .pop(_selectedIconName), // Return selected name
+          onPressed: () => Navigator.of(
+            context,
+          ).pop(_selectedIconName), // Return selected name
         ),
       ],
     );

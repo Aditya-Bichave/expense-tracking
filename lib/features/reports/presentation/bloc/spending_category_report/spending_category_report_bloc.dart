@@ -20,12 +20,13 @@ class SpendingCategoryReportBloc
   SpendingCategoryReportBloc({
     required GetSpendingCategoryReportUseCase getSpendingCategoryReportUseCase,
     required ReportFilterBloc reportFilterBloc,
-  })  : _getReportUseCase = getSpendingCategoryReportUseCase,
-        _reportFilterBloc = reportFilterBloc,
-        super(SpendingCategoryReportInitial()) {
+  }) : _getReportUseCase = getSpendingCategoryReportUseCase,
+       _reportFilterBloc = reportFilterBloc,
+       super(SpendingCategoryReportInitial()) {
     on<LoadSpendingCategoryReport>(_onLoadReport);
     on<ToggleSpendingComparison>(
-        _onToggleComparison); // Use specific toggle event
+      _onToggleComparison,
+    ); // Use specific toggle event
     on<_FilterChanged>(_onFilterChanged);
 
     _filterSubscription = _reportFilterBloc.stream.listen((filterState) {
@@ -37,9 +38,12 @@ class SpendingCategoryReportBloc
   }
 
   void _onFilterChanged(
-      _FilterChanged event, Emitter<SpendingCategoryReportState> emit) {
+    _FilterChanged event,
+    Emitter<SpendingCategoryReportState> emit,
+  ) {
     log.info(
-        "[SpendingCategoryReportBloc] Filter changed detected, reloading report.");
+      "[SpendingCategoryReportBloc] Filter changed detected, reloading report.",
+    );
     // Get current comparison state before reloading
     final bool compare = state is SpendingCategoryReportLoaded
         ? (state as SpendingCategoryReportLoaded).showComparison
@@ -47,10 +51,13 @@ class SpendingCategoryReportBloc
     add(LoadSpendingCategoryReport(compareToPrevious: compare));
   }
 
-  void _onToggleComparison(ToggleSpendingComparison event,
-      Emitter<SpendingCategoryReportState> emit) {
+  void _onToggleComparison(
+    ToggleSpendingComparison event,
+    Emitter<SpendingCategoryReportState> emit,
+  ) {
     log.info(
-        "[SpendingCategoryReportBloc] Comparison toggled. Reloading report.");
+      "[SpendingCategoryReportBloc] Comparison toggled. Reloading report.",
+    );
     final bool currentCompare = state is SpendingCategoryReportLoaded
         ? (state as SpendingCategoryReportLoaded).showComparison
         : false;
@@ -58,21 +65,26 @@ class SpendingCategoryReportBloc
     add(LoadSpendingCategoryReport(compareToPrevious: !currentCompare));
   }
 
-  Future<void> _onLoadReport(LoadSpendingCategoryReport event,
-      Emitter<SpendingCategoryReportState> emit) async {
+  Future<void> _onLoadReport(
+    LoadSpendingCategoryReport event,
+    Emitter<SpendingCategoryReportState> emit,
+  ) async {
     // Avoid duplicate loads for the same comparison state
     if (state is SpendingCategoryReportLoading &&
         (state as SpendingCategoryReportLoading).compareToPrevious ==
             event.compareToPrevious) {
       log.fine(
-          "[SpendingCategoryReportBloc] Already loading for comparison state: ${event.compareToPrevious}");
+        "[SpendingCategoryReportBloc] Already loading for comparison state: ${event.compareToPrevious}",
+      );
       return;
     }
 
-    emit(SpendingCategoryReportLoading(
-        compareToPrevious: event.compareToPrevious)); // Pass compare flag
+    emit(
+      SpendingCategoryReportLoading(compareToPrevious: event.compareToPrevious),
+    ); // Pass compare flag
     log.info(
-        "[SpendingCategoryReportBloc] Loading spending by category report (Compare: ${event.compareToPrevious})...");
+      "[SpendingCategoryReportBloc] Loading spending by category report (Compare: ${event.compareToPrevious})...",
+    );
 
     final filterState = _reportFilterBloc.state;
     final params = GetSpendingCategoryReportParams(
@@ -94,15 +106,21 @@ class SpendingCategoryReportBloc
     result.fold(
       (failure) {
         log.warning(
-            "[SpendingCategoryReportBloc] Load failed: ${failure.message}");
+          "[SpendingCategoryReportBloc] Load failed: ${failure.message}",
+        );
         emit(SpendingCategoryReportError(_mapFailureToMessage(failure)));
       },
       (reportData) {
         log.info(
-            "[SpendingCategoryReportBloc] Load successful. Total: ${reportData.currentTotalSpending}, Categories: ${reportData.spendingByCategory.length}, Comparison: ${reportData.previousSpendingByCategory != null}");
+          "[SpendingCategoryReportBloc] Load successful. Total: ${reportData.currentTotalSpending}, Categories: ${reportData.spendingByCategory.length}, Comparison: ${reportData.previousSpendingByCategory != null}",
+        );
         // Pass the comparison flag used for this load to the loaded state
-        emit(SpendingCategoryReportLoaded(reportData,
-            showComparison: event.compareToPrevious));
+        emit(
+          SpendingCategoryReportLoaded(
+            reportData,
+            showComparison: event.compareToPrevious,
+          ),
+        );
       },
     );
   }

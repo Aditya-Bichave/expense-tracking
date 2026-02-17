@@ -225,7 +225,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       Map<String, double> categoryTotals = {};
       for (var model in expenseModels) {
         total += model.amount;
-        final categoryName = categoryMap[model.categoryId]?.name ??
+        final categoryName =
+            categoryMap[model.categoryId]?.name ??
             Category.uncategorized.name; // Use uncategorized name as fallback
         categoryTotals.update(
           categoryName,

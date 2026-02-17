@@ -6,7 +6,8 @@ abstract class AssetAccountRepository {
   Future<Either<Failure, List<AssetAccount>>> getAssetAccounts();
   Future<Either<Failure, AssetAccount>> addAssetAccount(AssetAccount account);
   Future<Either<Failure, AssetAccount>> updateAssetAccount(
-      AssetAccount account);
+    AssetAccount account,
+  );
   Future<Either<Failure, void>> deleteAssetAccount(String id);
   // Balance calculation is implicitly handled within the implementation (e.g., getAssetAccounts)
 }

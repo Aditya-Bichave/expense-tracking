@@ -25,7 +25,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting theme mode$e$s');
       return Left(
-          SettingsFailure('Failed to load theme setting: ${e.toString()}'));
+        SettingsFailure('Failed to load theme setting: ${e.toString()}'),
+      );
     }
   }
 
@@ -39,7 +40,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error saving theme mode$e$s');
       return Left(
-          SettingsFailure('Failed to save theme setting: ${e.toString()}'));
+        SettingsFailure('Failed to save theme setting: ${e.toString()}'),
+      );
     }
   }
 
@@ -50,9 +52,12 @@ class SettingsRepositoryImpl implements SettingsRepository {
       return Right(identifier);
     } catch (e, s) {
       log.log(
-          Level.SEVERE, '[SettingsRepo] Error getting palette identifier$e$s');
-      return Left(SettingsFailure(
-          'Failed to load palette identifier: ${e.toString()}'));
+        Level.SEVERE,
+        '[SettingsRepo] Error getting palette identifier$e$s',
+      );
+      return Left(
+        SettingsFailure('Failed to load palette identifier: ${e.toString()}'),
+      );
     }
   }
 
@@ -65,9 +70,12 @@ class SettingsRepositoryImpl implements SettingsRepository {
       return const Right(null);
     } catch (e, s) {
       log.log(
-          Level.SEVERE, '[SettingsRepo] Error saving palette identifier$e$s');
-      return Left(SettingsFailure(
-          'Failed to save palette identifier: ${e.toString()}'));
+        Level.SEVERE,
+        '[SettingsRepo] Error saving palette identifier$e$s',
+      );
+      return Left(
+        SettingsFailure('Failed to save palette identifier: ${e.toString()}'),
+      );
     }
   }
 
@@ -79,7 +87,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting UI mode$e$s');
       return Left(
-          SettingsFailure('Failed to load UI mode setting: ${e.toString()}'));
+        SettingsFailure('Failed to load UI mode setting: ${e.toString()}'),
+      );
     }
   }
 
@@ -93,7 +102,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error saving UI mode$e$s');
       return Left(
-          SettingsFailure('Failed to save UI mode setting: ${e.toString()}'));
+        SettingsFailure('Failed to save UI mode setting: ${e.toString()}'),
+      );
     }
   }
 
@@ -103,26 +113,33 @@ class SettingsRepositoryImpl implements SettingsRepository {
       final code = await localDataSource.getSelectedCountryCode();
       return Right(code);
     } catch (e, s) {
-      log.log(Level.SEVERE,
-          '[SettingsRepo] Error getting selected country code$e$s');
+      log.log(
+        Level.SEVERE,
+        '[SettingsRepo] Error getting selected country code$e$s',
+      );
       return Left(
-          SettingsFailure('Failed to load country setting: ${e.toString()}'));
+        SettingsFailure('Failed to load country setting: ${e.toString()}'),
+      );
     }
   }
 
   @override
   Future<Either<Failure, void>> saveSelectedCountryCode(
-      String countryCode) async {
+    String countryCode,
+  ) async {
     log.info("[SettingsRepo] Saving selected country code: $countryCode");
     try {
       await localDataSource.saveSelectedCountryCode(countryCode);
       log.info("[SettingsRepo] Selected country code saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      log.log(Level.SEVERE,
-          '[SettingsRepo] Error saving selected country code$e$s');
+      log.log(
+        Level.SEVERE,
+        '[SettingsRepo] Error saving selected country code$e$s',
+      );
       return Left(
-          SettingsFailure('Failed to save country setting: ${e.toString()}'));
+        SettingsFailure('Failed to save country setting: ${e.toString()}'),
+      );
     }
   }
 
@@ -133,10 +150,12 @@ class SettingsRepositoryImpl implements SettingsRepository {
       return codeEither.fold(
         (failure) {
           log.warning(
-              "[SettingsRepo] Failed to get country code for currency derivation: ${failure.message}. Defaulting.");
+            "[SettingsRepo] Failed to get country code for currency derivation: ${failure.message}. Defaulting.",
+          );
           // *** FIXED: Call the method from AppCountries ***
-          return Right(AppCountries.getCurrencyForCountry(
-              AppCountries.defaultCountryCode));
+          return Right(
+            AppCountries.getCurrencyForCountry(AppCountries.defaultCountryCode),
+          );
         },
         (code) {
           // *** FIXED: Call the method from AppCountries ***
@@ -145,10 +164,15 @@ class SettingsRepositoryImpl implements SettingsRepository {
         },
       );
     } catch (e, s) {
-      log.log(Level.SEVERE,
-          '[SettingsRepo] Unexpected error deriving currency symbol$e$s');
-      return Left(SettingsFailure(
-          'Unexpected error deriving currency symbol: ${e.toString()}'));
+      log.log(
+        Level.SEVERE,
+        '[SettingsRepo] Unexpected error deriving currency symbol$e$s',
+      );
+      return Left(
+        SettingsFailure(
+          'Unexpected error deriving currency symbol: ${e.toString()}',
+        ),
+      );
     }
   }
 
@@ -160,7 +184,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error getting app lock status$e$s');
       return Left(
-          SettingsFailure('Failed to load app lock setting: ${e.toString()}'));
+        SettingsFailure('Failed to load app lock setting: ${e.toString()}'),
+      );
     }
   }
 
@@ -174,7 +199,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(Level.SEVERE, '[SettingsRepo] Error saving app lock status$e$s');
       return Left(
-          SettingsFailure('Failed to save app lock setting: ${e.toString()}'));
+        SettingsFailure('Failed to save app lock setting: ${e.toString()}'),
+      );
     }
   }
 }

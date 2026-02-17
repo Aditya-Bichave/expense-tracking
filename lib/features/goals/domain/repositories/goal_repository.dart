@@ -9,6 +9,7 @@ abstract class GoalRepository {
   Future<Either<Failure, Goal>> addGoal(Goal goal);
   Future<Either<Failure, Goal>> updateGoal(Goal goal);
   Future<Either<Failure, void>> deleteGoal(
-      String id); // Keep delete for now if needed
+    String id,
+  ); // Keep delete for now if needed
   Future<Either<Failure, Goal>> archiveGoal(String id); // ADDED
 }

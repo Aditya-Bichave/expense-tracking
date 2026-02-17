@@ -50,16 +50,14 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
             // --- END FIX ---
             indicatorColor: Theme.of(context).colorScheme.primary,
             labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor:
-                Theme.of(context).colorScheme.onSurfaceVariant,
+            unselectedLabelColor: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant,
           ),
         ),
         body: const TabBarView(
           // --- FIX: Remove CategoriesSubTab ---
-          children: [
-            BudgetsSubTab(),
-            GoalsSubTab(),
-          ],
+          children: [BudgetsSubTab(), GoalsSubTab()],
           // --- END FIX ---
         ),
       ),

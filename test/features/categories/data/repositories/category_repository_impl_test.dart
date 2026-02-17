@@ -31,24 +31,29 @@ void main() {
     );
   });
 
-  test('should return ValidationFailure when updating non-custom category',
-      () async {
-    const nonCustomCategory = Category(
-      id: '1',
-      name: 'Food',
-      iconName: 'food',
-      colorHex: '#FFFFFF',
-      type: CategoryType.expense,
-      isCustom: false,
-    );
+  test(
+    'should return ValidationFailure when updating non-custom category',
+    () async {
+      const nonCustomCategory = Category(
+        id: '1',
+        name: 'Food',
+        iconName: 'food',
+        colorHex: '#FFFFFF',
+        type: CategoryType.expense,
+        isCustom: false,
+      );
 
-    final result = await repository.updateCategory(nonCustomCategory);
+      final result = await repository.updateCategory(nonCustomCategory);
 
-    expect(
-      result,
-      equals(const Left(
-          ValidationFailure('Only custom categories can be updated.'))),
-    );
-    verifyZeroInteractions(mockLocalDataSource);
-  });
+      expect(
+        result,
+        equals(
+          const Left(
+            ValidationFailure('Only custom categories can be updated.'),
+          ),
+        ),
+      );
+      verifyZeroInteractions(mockLocalDataSource);
+    },
+  );
 }

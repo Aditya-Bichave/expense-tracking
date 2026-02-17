@@ -33,8 +33,9 @@ void main() {
 
       expect(find.text('food'), findsOneWidget);
       expect(find.text('#4CAF50'), findsOneWidget); // Hex for Colors.green
-      final icon =
-          tester.widget<Icon>(find.byIcon(Icons.restaurant_menu_outlined));
+      final icon = tester.widget<Icon>(
+        find.byIcon(Icons.restaurant_menu_outlined),
+      );
       expect(icon.color, Colors.green);
     });
 

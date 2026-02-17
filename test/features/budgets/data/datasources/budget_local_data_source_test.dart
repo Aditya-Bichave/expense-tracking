@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/core/error/failure.dart';
@@ -42,8 +42,9 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.put(any(), any()))
-            .thenThrow(Exception('Hive Error'));
+        when(
+          () => mockBox.put(any(), any()),
+        ).thenThrow(Exception('Hive Error'));
 
         expect(
           () => dataSource.saveBudget(tBudget),
@@ -65,10 +66,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.values).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.getBudgets(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() => dataSource.getBudgets(), throwsA(isA<CacheFailure>()));
       });
     });
 

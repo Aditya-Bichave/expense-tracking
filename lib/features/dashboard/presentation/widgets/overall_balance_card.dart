@@ -17,24 +17,30 @@ class OverallBalanceCard extends StatelessWidget {
 
     // Determine color based on balance
     final balanceColor = overview.overallBalance >= 0
-        ? theme.colorScheme.primary // Use primary color for positive balance
+        ? theme
+              .colorScheme
+              .primary // Use primary color for positive balance
         : theme.colorScheme.error; // Use error color for negative balance
 
     return Card(
       elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8.0), // Add vertical margin
       color: theme
-          .colorScheme.surfaceContainerHighest, // Use a distinct surface color
+          .colorScheme
+          .surfaceContainerHighest, // Use a distinct surface color
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: 16.0, vertical: 20.0), // Increase vertical padding
+          horizontal: 16.0,
+          vertical: 20.0,
+        ), // Increase vertical padding
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Overall Balance',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -54,8 +60,9 @@ class OverallBalanceCard extends StatelessWidget {
               children: [
                 Text(
                   'Net Flow (Period): ',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 Text(
                   CurrencyFormatter.format(overview.netFlow, currencySymbol),

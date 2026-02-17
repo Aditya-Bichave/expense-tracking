@@ -19,14 +19,16 @@ void main() {
   late MockGoalContributionLocalDataSource mockContributionDataSource;
 
   setUpAll(() {
-    registerFallbackValue(GoalModel(
-      id: '',
-      name: '',
-      targetAmount: 0,
-      statusIndex: GoalStatus.active.index,
-      totalSavedCache: 0,
-      createdAt: DateTime(2000),
-    ));
+    registerFallbackValue(
+      GoalModel(
+        id: '',
+        name: '',
+        targetAmount: 0,
+        statusIndex: GoalStatus.active.index,
+        totalSavedCache: 0,
+        createdAt: DateTime(2000),
+      ),
+    );
   });
 
   setUp(() {
@@ -77,54 +79,57 @@ void main() {
       expect(goal.achievedAt, isNull);
     });
 
-    final saved = verify(() => mockLocalDataSource.saveGoal(captureAny()))
-        .captured
-        .single as GoalModel;
+    final saved =
+        verify(() => mockLocalDataSource.saveGoal(captureAny())).captured.single
+            as GoalModel;
     expect(saved.statusIndex, GoalStatus.active.index);
     expect(saved.achievedAt, isNull);
   });
 
-  test('deleteGoal deletes associated contributions using batch delete',
-      () async {
-    const goalId = 'g1';
-    final contributions = <GoalContributionModel>[
-      GoalContributionModel(
-        id: 'c1',
-        goalId: goalId,
-        amount: 10,
-        date: DateTime(2023),
-        note: 'note',
-        createdAt: DateTime(2023),
-      ),
-      GoalContributionModel(
-        id: 'c2',
-        goalId: goalId,
-        amount: 20,
-        date: DateTime(2023),
-        note: 'note',
-        createdAt: DateTime(2023),
-      ),
-    ];
+  test(
+    'deleteGoal deletes associated contributions using batch delete',
+    () async {
+      const goalId = 'g1';
+      final contributions = <GoalContributionModel>[
+        GoalContributionModel(
+          id: 'c1',
+          goalId: goalId,
+          amount: 10,
+          date: DateTime(2023),
+          note: 'note',
+          createdAt: DateTime(2023),
+        ),
+        GoalContributionModel(
+          id: 'c2',
+          goalId: goalId,
+          amount: 20,
+          date: DateTime(2023),
+          note: 'note',
+          createdAt: DateTime(2023),
+        ),
+      ];
 
-    when(
-      () => mockContributionDataSource.getContributionsForGoal(goalId),
-    ).thenAnswer((_) async => contributions);
-    when(
-      () => mockContributionDataSource.deleteContributions(any()),
-    ).thenAnswer((_) async => {});
-    when(() => mockLocalDataSource.deleteGoal(goalId))
-        .thenAnswer((_) async => {});
+      when(
+        () => mockContributionDataSource.getContributionsForGoal(goalId),
+      ).thenAnswer((_) async => contributions);
+      when(
+        () => mockContributionDataSource.deleteContributions(any()),
+      ).thenAnswer((_) async => {});
+      when(
+        () => mockLocalDataSource.deleteGoal(goalId),
+      ).thenAnswer((_) async => {});
 
-    final result = await repository.deleteGoal(goalId);
+      final result = await repository.deleteGoal(goalId);
 
-    expect(result.isRight(), true);
-    verify(
-      () => mockContributionDataSource.getContributionsForGoal(goalId),
-    ).called(1);
-    verify(
-      () => mockContributionDataSource.deleteContributions(['c1', 'c2']),
-    ).called(1);
-    verify(() => mockLocalDataSource.deleteGoal(goalId)).called(1);
-    verifyNever(() => mockContributionDataSource.deleteContribution(any()));
-  });
+      expect(result.isRight(), true);
+      verify(
+        () => mockContributionDataSource.getContributionsForGoal(goalId),
+      ).called(1);
+      verify(
+        () => mockContributionDataSource.deleteContributions(['c1', 'c2']),
+      ).called(1);
+      verify(() => mockLocalDataSource.deleteGoal(goalId)).called(1);
+      verifyNever(() => mockContributionDataSource.deleteContribution(any()));
+    },
+  );
 }

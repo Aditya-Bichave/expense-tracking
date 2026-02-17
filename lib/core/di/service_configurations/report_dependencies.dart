@@ -26,15 +26,17 @@ import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart';
 class ReportDependencies {
   static void register() {
     // --- Repository ---
-    sl.registerLazySingleton<ReportRepository>(() => ReportRepositoryImpl(
-          expenseRepository: sl(),
-          incomeRepository: sl(),
-          categoryRepository: sl(),
-          accountRepository: sl(),
-          budgetRepository: sl(),
-          goalRepository: sl(),
-          goalContributionRepository: sl(),
-        ));
+    sl.registerLazySingleton<ReportRepository>(
+      () => ReportRepositoryImpl(
+        expenseRepository: sl(),
+        incomeRepository: sl(),
+        categoryRepository: sl(),
+        accountRepository: sl(),
+        budgetRepository: sl(),
+        goalRepository: sl(),
+        goalContributionRepository: sl(),
+      ),
+    );
 
     // --- Use Cases ---
     sl.registerLazySingleton(() => GetSpendingCategoryReportUseCase(sl()));
@@ -45,35 +47,54 @@ class ReportDependencies {
 
     // --- Helpers ---
     sl.registerLazySingleton<CsvExportHelper>(
-        () => CsvExportHelper(downloaderService: sl()));
+      () => CsvExportHelper(downloaderService: sl()),
+    );
 
     // --- Blocs ---
     // Filter bloc - Factory (new instance per report page)
-    sl.registerFactory<ReportFilterBloc>(() => ReportFilterBloc(
-          categoryRepository: sl<GetCategoriesUseCase>(),
-          accountRepository: sl<GetAssetAccountsUseCase>(),
-          budgetRepository: sl<GetBudgetsUseCase>(),
-          goalRepository: sl<GetGoalsUseCase>(),
-        ));
+    sl.registerFactory<ReportFilterBloc>(
+      () => ReportFilterBloc(
+        categoryRepository: sl<GetCategoriesUseCase>(),
+        accountRepository: sl<GetAssetAccountsUseCase>(),
+        budgetRepository: sl<GetBudgetsUseCase>(),
+        goalRepository: sl<GetGoalsUseCase>(),
+      ),
+    );
 
     // Individual report Blocs require an external ReportFilterBloc
     sl.registerFactoryParam<SpendingCategoryReportBloc, ReportFilterBloc, void>(
-        (filterBloc, _) => SpendingCategoryReportBloc(
-            getSpendingCategoryReportUseCase: sl(),
-            reportFilterBloc: filterBloc));
+      (filterBloc, _) => SpendingCategoryReportBloc(
+        getSpendingCategoryReportUseCase: sl(),
+        reportFilterBloc: filterBloc,
+      ),
+    );
     sl.registerFactoryParam<SpendingTimeReportBloc, ReportFilterBloc, void>(
-        (filterBloc, _) => SpendingTimeReportBloc(
-            getSpendingTimeReportUseCase: sl(), reportFilterBloc: filterBloc));
+      (filterBloc, _) => SpendingTimeReportBloc(
+        getSpendingTimeReportUseCase: sl(),
+        reportFilterBloc: filterBloc,
+      ),
+    );
     sl.registerFactoryParam<IncomeExpenseReportBloc, ReportFilterBloc, void>(
-        (filterBloc, _) => IncomeExpenseReportBloc(
-            getIncomeExpenseReportUseCase: sl(), reportFilterBloc: filterBloc));
-    sl.registerFactoryParam<BudgetPerformanceReportBloc, ReportFilterBloc,
-            void>(
-        (filterBloc, _) => BudgetPerformanceReportBloc(
-            getBudgetPerformanceReportUseCase: sl(),
-            reportFilterBloc: filterBloc));
+      (filterBloc, _) => IncomeExpenseReportBloc(
+        getIncomeExpenseReportUseCase: sl(),
+        reportFilterBloc: filterBloc,
+      ),
+    );
+    sl.registerFactoryParam<
+      BudgetPerformanceReportBloc,
+      ReportFilterBloc,
+      void
+    >(
+      (filterBloc, _) => BudgetPerformanceReportBloc(
+        getBudgetPerformanceReportUseCase: sl(),
+        reportFilterBloc: filterBloc,
+      ),
+    );
     sl.registerFactoryParam<GoalProgressReportBloc, ReportFilterBloc, void>(
-        (filterBloc, _) => GoalProgressReportBloc(
-            getGoalProgressReportUseCase: sl(), reportFilterBloc: filterBloc));
+      (filterBloc, _) => GoalProgressReportBloc(
+        getGoalProgressReportUseCase: sl(),
+        reportFilterBloc: filterBloc,
+      ),
+    );
   }
 }

@@ -48,7 +48,8 @@ class DemoAwareAccountDataSource implements AssetAccountLocalDataSource {
 
   @override
   Future<AssetAccountModel> updateAssetAccount(
-      AssetAccountModel account) async {
+    AssetAccountModel account,
+  ) async {
     if (demoModeService.isDemoActive) {
       log.fine("[DemoAwareAccountDS] Updating demo account: ${account.name}");
       return demoModeService.updateDemoAccount(account);
@@ -61,7 +62,8 @@ class DemoAwareAccountDataSource implements AssetAccountLocalDataSource {
   Future<void> clearAll() async {
     if (demoModeService.isDemoActive) {
       log.warning(
-          "[DemoAwareAccountDS] clearAll called in Demo Mode. Ignoring.");
+        "[DemoAwareAccountDS] clearAll called in Demo Mode. Ignoring.",
+      );
       return;
     } else {
       return hiveDataSource.clearAll();

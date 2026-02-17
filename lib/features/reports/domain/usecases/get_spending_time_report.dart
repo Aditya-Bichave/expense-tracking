@@ -16,9 +16,11 @@ class GetSpendingTimeReportUseCase
 
   @override
   Future<Either<Failure, SpendingTimeReportData>> call(
-      GetSpendingTimeReportParams params) async {
+    GetSpendingTimeReportParams params,
+  ) async {
     log.info(
-        "[GetSpendingTimeReportUseCase] Granularity: ${params.granularity}, Start: ${params.startDate}, End: ${params.endDate}");
+      "[GetSpendingTimeReportUseCase] Granularity: ${params.granularity}, Start: ${params.startDate}, End: ${params.endDate}",
+    );
     return await repository.getSpendingOverTime(
       startDate: params.startDate,
       endDate: params.endDate,
@@ -47,6 +49,11 @@ class GetSpendingTimeReportParams extends Equatable {
   });
 
   @override
-  List<Object?> get props =>
-      [startDate, endDate, granularity, accountIds, categoryIds];
+  List<Object?> get props => [
+    startDate,
+    endDate,
+    granularity,
+    accountIds,
+    categoryIds,
+  ];
 }

@@ -25,9 +25,9 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
     required GetAssetAccountsUseCase getAssetAccountsUseCase,
     required DeleteAssetAccountUseCase deleteAssetAccountUseCase,
     required Stream<DataChangedEvent> dataChangeStream,
-  })  : _getAssetAccountsUseCase = getAssetAccountsUseCase,
-        _deleteAssetAccountUseCase = deleteAssetAccountUseCase,
-        super(const AccountListInitial()) {
+  }) : _getAssetAccountsUseCase = getAssetAccountsUseCase,
+       _deleteAssetAccountUseCase = deleteAssetAccountUseCase,
+       super(const AccountListInitial()) {
     on<LoadAccounts>(_onLoadAccounts);
     on<DeleteAccountRequested>(_onDeleteAccountRequested);
     on<_DataChanged>(_onDataChanged);
@@ -147,8 +147,9 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
         "[AccountListBloc] Current state is Loaded. Performing optimistic delete.",
       );
       // Optimistic UI Update using 'items' from base state
-      final optimisticList =
-          currentState.items.where((acc) => acc.id != event.accountId).toList();
+      final optimisticList = currentState.items
+          .where((acc) => acc.id != event.accountId)
+          .toList();
       log.info(
         "[AccountListBloc] Optimistic list size: ${optimisticList.length}. Emitting updated AccountListLoaded.",
       );

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/core/error/failure.dart';
@@ -41,8 +41,9 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.put(any(), any()))
-            .thenThrow(Exception('Hive Error'));
+        when(
+          () => mockBox.put(any(), any()),
+        ).thenThrow(Exception('Hive Error'));
 
         expect(
           () => dataSource.saveContribution(tContribution),
@@ -110,7 +111,7 @@ void main() {
         );
         final List<GoalContributionModel> tList = [
           tContribution,
-          tContribution2
+          tContribution2,
         ];
         when(() => mockBox.values).thenReturn(tList);
 

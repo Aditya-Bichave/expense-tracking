@@ -34,37 +34,52 @@ class AssetDistributionSection extends StatelessWidget {
   }
 
   // Extracted table building logic from original DashboardPage
-  Widget _buildQuantumAssetTable(BuildContext context,
-      Map<String, double> accountBalances, SettingsState settings) {
+  Widget _buildQuantumAssetTable(
+    BuildContext context,
+    Map<String, double> accountBalances,
+    SettingsState settings,
+  ) {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
     final rows = accountBalances.entries.map((entry) {
-      return DataRow(cells: [
-        DataCell(Text(entry.key, style: theme.textTheme.bodyMedium)),
-        DataCell(Text(
-          CurrencyFormatter.format(entry.value, currencySymbol),
-          style: theme.textTheme.bodyMedium?.copyWith(
-              color: entry.value >= 0
-                  ? theme.colorScheme.tertiary
-                  : theme.colorScheme.error,
-              fontWeight: FontWeight.w500),
-          textAlign: TextAlign.end,
-        )),
-      ]);
+      return DataRow(
+        cells: [
+          DataCell(Text(entry.key, style: theme.textTheme.bodyMedium)),
+          DataCell(
+            Text(
+              CurrencyFormatter.format(entry.value, currencySymbol),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: entry.value >= 0
+                    ? theme.colorScheme.tertiary
+                    : theme.colorScheme.error,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.end,
+            ),
+          ),
+        ],
+      );
     }).toList();
 
     if (rows.isEmpty) {
       return Card(
-          margin: theme.cardTheme.margin ??
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                  child: Text("No accounts with balance.",
-                      style: theme.textTheme.bodyMedium))));
+        margin:
+            theme.cardTheme.margin ??
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Text(
+              "No accounts with balance.",
+              style: theme.textTheme.bodyMedium,
+            ),
+          ),
+        ),
+      );
     }
     return Card(
-      margin: theme.cardTheme.margin ??
+      margin:
+          theme.cardTheme.margin ??
           const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: theme.cardTheme.shape,
       elevation: theme.cardTheme.elevation,

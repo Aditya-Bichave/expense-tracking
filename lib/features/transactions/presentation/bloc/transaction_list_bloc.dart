@@ -48,14 +48,14 @@ class TransactionListBloc
     required ExpenseRepository expenseRepository,
     required IncomeRepository incomeRepository,
     required Stream<DataChangedEvent> dataChangeStream,
-  })  : _getTransactionsUseCase = getTransactionsUseCase,
-        _deleteExpenseUseCase = deleteExpenseUseCase,
-        _deleteIncomeUseCase = deleteIncomeUseCase,
-        _applyCategoryToBatchUseCase = applyCategoryToBatchUseCase,
-        _saveUserHistoryUseCase = saveUserHistoryUseCase,
-        _expenseRepository = expenseRepository,
-        _incomeRepository = incomeRepository,
-        super(const TransactionListState()) {
+  }) : _getTransactionsUseCase = getTransactionsUseCase,
+       _deleteExpenseUseCase = deleteExpenseUseCase,
+       _deleteIncomeUseCase = deleteIncomeUseCase,
+       _applyCategoryToBatchUseCase = applyCategoryToBatchUseCase,
+       _saveUserHistoryUseCase = saveUserHistoryUseCase,
+       _expenseRepository = expenseRepository,
+       _incomeRepository = incomeRepository,
+       super(const TransactionListState()) {
     // Register Event Handlers
     on<LoadTransactions>(_onLoadTransactions, transformer: restartable());
     on<FilterChanged>(_onFilterChanged);
@@ -146,7 +146,8 @@ class TransactionListBloc
     }
 
     final bool filtersChanged = event.incomingFilters != null;
-    final bool isLoading = state.status == ListStatus.loading ||
+    final bool isLoading =
+        state.status == ListStatus.loading ||
         state.status == ListStatus.reloading;
     if (isLoading && !event.forceReload && !filtersChanged) {
       log.info(
@@ -200,8 +201,8 @@ class TransactionListBloc
         );
         final validSelection = state.isInBatchEditMode
             ? state.selectedTransactionIds
-                .where((id) => transactions.any((txn) => txn.id == id))
-                .toSet()
+                  .where((id) => transactions.any((txn) => txn.id == id))
+                  .toSet()
             : <String>{};
 
         emit(
@@ -455,8 +456,9 @@ class TransactionListBloc
 
     final previousState = state;
 
-    final optimisticList =
-        previousState.transactions.where((t) => t.id != txn.id).toList();
+    final optimisticList = previousState.transactions
+        .where((t) => t.id != txn.id)
+        .toList();
     final updatedSelection = Set<String>.from(
       previousState.selectedTransactionIds,
     )..remove(txn.id);
@@ -509,18 +511,20 @@ class TransactionListBloc
       transactionData: event.matchData,
       selectedCategory: event.selectedCategory,
     );
-    _saveUserHistoryUseCase(historyParams).then((result) {
-      result.fold(
-        (failure) => log.warning(
-          "[TransactionListBloc] Failed to save user history: ${failure.message}",
-        ),
-        (_) => log.info(
-          "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}",
-        ),
-      );
-    }).catchError((e, s) {
-      log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
-    });
+    _saveUserHistoryUseCase(historyParams)
+        .then((result) {
+          result.fold(
+            (failure) => log.warning(
+              "[TransactionListBloc] Failed to save user history: ${failure.message}",
+            ),
+            (_) => log.info(
+              "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}",
+            ),
+          );
+        })
+        .catchError((e, s) {
+          log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
+        });
 
     // Update Transaction Categorization State
     log.info(

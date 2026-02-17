@@ -10,8 +10,10 @@ abstract class LogContributionEvent extends Equatable {
 class InitializeContribution extends LogContributionEvent {
   final String goalId;
   final GoalContribution? initialContribution;
-  const InitializeContribution(
-      {required this.goalId, this.initialContribution});
+  const InitializeContribution({
+    required this.goalId,
+    this.initialContribution,
+  });
   @override
   List<Object?> get props => [goalId, initialContribution];
 }

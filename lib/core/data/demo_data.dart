@@ -261,30 +261,33 @@ class DemoData {
 
   // --- Sample Budgets ---
   static final BudgetModel overallBudget = BudgetModel(
-      id: _uuid.v4(),
-      name: 'Overall Monthly Spending',
-      budgetTypeIndex: BudgetType.overall.index,
-      targetAmount: 1500.00,
-      periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
-      createdAt: DateTime.now().subtract(const Duration(days: 40)));
+    id: _uuid.v4(),
+    name: 'Overall Monthly Spending',
+    budgetTypeIndex: BudgetType.overall.index,
+    targetAmount: 1500.00,
+    periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
+    createdAt: DateTime.now().subtract(const Duration(days: 40)),
+  );
 
   static final BudgetModel diningBudget = BudgetModel(
-      id: _uuid.v4(),
-      name: 'Dining Out',
-      budgetTypeIndex: BudgetType.categorySpecific.index,
-      targetAmount: 200.00,
-      periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
-      categoryIds: [catDiningId],
-      createdAt: DateTime.now().subtract(const Duration(days: 45)));
+    id: _uuid.v4(),
+    name: 'Dining Out',
+    budgetTypeIndex: BudgetType.categorySpecific.index,
+    targetAmount: 200.00,
+    periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
+    categoryIds: [catDiningId],
+    createdAt: DateTime.now().subtract(const Duration(days: 45)),
+  );
 
   static final BudgetModel groceriesBudget = BudgetModel(
-      id: _uuid.v4(),
-      name: 'Groceries',
-      budgetTypeIndex: BudgetType.categorySpecific.index,
-      targetAmount: 400.00,
-      periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
-      categoryIds: [catGroceriesId],
-      createdAt: DateTime.now().subtract(const Duration(days: 50)));
+    id: _uuid.v4(),
+    name: 'Groceries',
+    budgetTypeIndex: BudgetType.categorySpecific.index,
+    targetAmount: 400.00,
+    periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
+    categoryIds: [catGroceriesId],
+    createdAt: DateTime.now().subtract(const Duration(days: 50)),
+  );
 
   static final List<BudgetModel> sampleBudgets = [
     // Made final
@@ -295,25 +298,27 @@ class DemoData {
 
   // --- Sample Goals ---
   static final GoalModel vacationGoal = GoalModel(
-      id: _uuid.v4(),
-      name: 'Hawaii Trip Fund',
-      targetAmount: 3000.00,
-      targetDate: DateTime.now().add(const Duration(days: 180)),
-      iconName: 'flight_takeoff',
-      description: 'Saving for a 1 week trip!',
-      statusIndex: GoalStatus.active.index,
-      totalSavedCache: 1200.00, // Initial cache (contributions sum up to this)
-      createdAt: DateTime.now().subtract(const Duration(days: 60)));
+    id: _uuid.v4(),
+    name: 'Hawaii Trip Fund',
+    targetAmount: 3000.00,
+    targetDate: DateTime.now().add(const Duration(days: 180)),
+    iconName: 'flight_takeoff',
+    description: 'Saving for a 1 week trip!',
+    statusIndex: GoalStatus.active.index,
+    totalSavedCache: 1200.00, // Initial cache (contributions sum up to this)
+    createdAt: DateTime.now().subtract(const Duration(days: 60)),
+  );
 
   static final GoalModel laptopGoal = GoalModel(
-      id: _uuid.v4(),
-      name: 'New Laptop',
-      targetAmount: 1500.00,
-      targetDate: DateTime.now().add(const Duration(days: 90)),
-      iconName: 'computer',
-      statusIndex: GoalStatus.active.index,
-      totalSavedCache: 550.00, // Initial cache (contributions sum up to this)
-      createdAt: DateTime.now().subtract(const Duration(days: 30)));
+    id: _uuid.v4(),
+    name: 'New Laptop',
+    targetAmount: 1500.00,
+    targetDate: DateTime.now().add(const Duration(days: 90)),
+    iconName: 'computer',
+    statusIndex: GoalStatus.active.index,
+    totalSavedCache: 550.00, // Initial cache (contributions sum up to this)
+    createdAt: DateTime.now().subtract(const Duration(days: 30)),
+  );
 
   static final List<GoalModel> sampleGoals = [
     // Made final
@@ -326,37 +331,42 @@ class DemoData {
     // Made final
     // Vacation Goal
     GoalContributionModel(
-        id: _uuid.v4(),
-        goalId: vacationGoal.id,
-        amount: 500.00,
-        date: DateTime.now().subtract(const Duration(days: 55)),
-        createdAt: DateTime.now().subtract(const Duration(days: 55))),
+      id: _uuid.v4(),
+      goalId: vacationGoal.id,
+      amount: 500.00,
+      date: DateTime.now().subtract(const Duration(days: 55)),
+      createdAt: DateTime.now().subtract(const Duration(days: 55)),
+    ),
     GoalContributionModel(
-        id: _uuid.v4(),
-        goalId: vacationGoal.id,
-        amount: 400.00,
-        date: DateTime.now().subtract(const Duration(days: 25)),
-        note: 'Tax Refund',
-        createdAt: DateTime.now().subtract(const Duration(days: 25))),
+      id: _uuid.v4(),
+      goalId: vacationGoal.id,
+      amount: 400.00,
+      date: DateTime.now().subtract(const Duration(days: 25)),
+      note: 'Tax Refund',
+      createdAt: DateTime.now().subtract(const Duration(days: 25)),
+    ),
     GoalContributionModel(
-        id: _uuid.v4(),
-        goalId: vacationGoal.id,
-        amount: 300.00,
-        date: DateTime.now().subtract(const Duration(days: 5)),
-        createdAt: DateTime.now().subtract(const Duration(days: 5))),
+      id: _uuid.v4(),
+      goalId: vacationGoal.id,
+      amount: 300.00,
+      date: DateTime.now().subtract(const Duration(days: 5)),
+      createdAt: DateTime.now().subtract(const Duration(days: 5)),
+    ),
     // Laptop Goal
     GoalContributionModel(
-        id: _uuid.v4(),
-        goalId: laptopGoal.id,
-        amount: 200.00,
-        date: DateTime.now().subtract(const Duration(days: 28)),
-        createdAt: DateTime.now().subtract(const Duration(days: 28))),
+      id: _uuid.v4(),
+      goalId: laptopGoal.id,
+      amount: 200.00,
+      date: DateTime.now().subtract(const Duration(days: 28)),
+      createdAt: DateTime.now().subtract(const Duration(days: 28)),
+    ),
     GoalContributionModel(
-        id: _uuid.v4(),
-        goalId: laptopGoal.id,
-        amount: 350.00,
-        date: DateTime.now().subtract(const Duration(days: 10)),
-        note: 'Sold old device',
-        createdAt: DateTime.now().subtract(const Duration(days: 10))),
+      id: _uuid.v4(),
+      goalId: laptopGoal.id,
+      amount: 350.00,
+      date: DateTime.now().subtract(const Duration(days: 10)),
+      note: 'Sold old device',
+      createdAt: DateTime.now().subtract(const Duration(days: 10)),
+    ),
   ];
 }

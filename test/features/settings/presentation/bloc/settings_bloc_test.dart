@@ -39,16 +39,21 @@ void main() {
   blocTest<SettingsBloc, SettingsState>(
     'LoadSettings emits success state when all repos return Right',
     build: () {
-      when(() => mockRepository.getThemeMode())
-          .thenAnswer((_) async => const Right(ThemeMode.dark));
-      when(() => mockRepository.getPaletteIdentifier())
-          .thenAnswer((_) async => const Right('palette1'));
-      when(() => mockRepository.getUIMode())
-          .thenAnswer((_) async => const Right(UIMode.quantum));
-      when(() => mockRepository.getSelectedCountryCode())
-          .thenAnswer((_) async => const Right('US'));
-      when(() => mockRepository.getAppLockEnabled())
-          .thenAnswer((_) async => const Right(true));
+      when(
+        () => mockRepository.getThemeMode(),
+      ).thenAnswer((_) async => const Right(ThemeMode.dark));
+      when(
+        () => mockRepository.getPaletteIdentifier(),
+      ).thenAnswer((_) async => const Right('palette1'));
+      when(
+        () => mockRepository.getUIMode(),
+      ).thenAnswer((_) async => const Right(UIMode.quantum));
+      when(
+        () => mockRepository.getSelectedCountryCode(),
+      ).thenAnswer((_) async => const Right('US'));
+      when(
+        () => mockRepository.getAppLockEnabled(),
+      ).thenAnswer((_) async => const Right(true));
 
       return SettingsBloc(
         settingsRepository: mockRepository,
@@ -58,8 +63,11 @@ void main() {
     },
     act: (bloc) => bloc.add(const LoadSettings()),
     expect: () => [
-      isA<SettingsState>()
-          .having((s) => s.status, 'status', SettingsStatus.loading),
+      isA<SettingsState>().having(
+        (s) => s.status,
+        'status',
+        SettingsStatus.loading,
+      ),
       isA<SettingsState>()
           .having((s) => s.status, 'status', SettingsStatus.loaded)
           .having((s) => s.themeMode, 'themeMode', ThemeMode.dark)
@@ -78,13 +86,17 @@ void main() {
       toggleAppLockUseCase: mockToggleAppLockUseCase,
     ),
     setUp: () {
-      when(() => mockRepository.saveThemeMode(any()))
-          .thenAnswer((_) async => const Right(null));
+      when(
+        () => mockRepository.saveThemeMode(any()),
+      ).thenAnswer((_) async => const Right(null));
     },
     act: (bloc) => bloc.add(const UpdateTheme(ThemeMode.light)),
     expect: () => [
-      isA<SettingsState>()
-          .having((s) => s.themeMode, 'themeMode', ThemeMode.light),
+      isA<SettingsState>().having(
+        (s) => s.themeMode,
+        'themeMode',
+        ThemeMode.light,
+      ),
     ],
     verify: (_) {
       verify(() => mockRepository.saveThemeMode(ThemeMode.light)).called(1);
@@ -99,10 +111,12 @@ void main() {
       toggleAppLockUseCase: mockToggleAppLockUseCase,
     ),
     setUp: () {
-      when(() => mockRepository.saveUIMode(any()))
-          .thenAnswer((_) async => const Right(null));
-      when(() => mockRepository.savePaletteIdentifier(any()))
-          .thenAnswer((_) async => const Right(null));
+      when(
+        () => mockRepository.saveUIMode(any()),
+      ).thenAnswer((_) async => const Right(null));
+      when(
+        () => mockRepository.savePaletteIdentifier(any()),
+      ).thenAnswer((_) async => const Right(null));
     },
     act: (bloc) => bloc.add(const UpdateUIMode(UIMode.aether)),
     expect: () => [
@@ -142,13 +156,17 @@ void main() {
       toggleAppLockUseCase: mockToggleAppLockUseCase,
     ),
     setUp: () {
-      when(() => mockToggleAppLockUseCase(any()))
-          .thenAnswer((_) async => const Right(null));
+      when(
+        () => mockToggleAppLockUseCase(any()),
+      ).thenAnswer((_) async => const Right(null));
     },
     act: (bloc) => bloc.add(const UpdateAppLock(true)),
     expect: () => [
-      isA<SettingsState>()
-          .having((s) => s.status, 'status', SettingsStatus.loading),
+      isA<SettingsState>().having(
+        (s) => s.status,
+        'status',
+        SettingsStatus.loading,
+      ),
       isA<SettingsState>()
           .having((s) => s.isAppLockEnabled, 'appLock', true)
           .having((s) => s.status, 'status', SettingsStatus.loaded),

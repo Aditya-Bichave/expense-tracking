@@ -191,8 +191,9 @@ class BudgetRepositoryImpl implements BudgetRepository {
         final budgetsResult = await getBudgets(); // Fetch existing
         if (budgetsResult.isRight()) {
           final existingBudgets = budgetsResult.getOrElse(() => []);
-          final otherBudgets =
-              existingBudgets.where((b) => b.id != budget.id).toList();
+          final otherBudgets = existingBudgets
+              .where((b) => b.id != budget.id)
+              .toList();
           final overlap = _checkForOverlap(budget, otherBudgets);
           if (overlap != null) {
             log.warning(

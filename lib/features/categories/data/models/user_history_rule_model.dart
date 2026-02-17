@@ -1,6 +1,6 @@
 // lib/features/categories/data/models/user_history_rule_model.dart
 // MODIFIED FILE
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/categories/domain/entities/user_history_rule.dart';
 
 part 'user_history_rule_model.g.dart'; // CORRECTED: Relative path

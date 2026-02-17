@@ -42,8 +42,8 @@ class AccountListLoaded extends AccountListState
 
   const AccountListLoaded({
     required List<AssetAccount> accounts, // Keep param name
-  })  : items = accounts, // Assign to base 'items'
-        super();
+  }) : items = accounts, // Assign to base 'items'
+       super();
 
   // --- ADDED: Concrete implementation for filtersApplied ---
   @override
@@ -57,13 +57,13 @@ class AccountListLoaded extends AccountListState
   // Props are handled by the base class via its getter
   @override
   List<Object?> get props => [
-        // Need to explicitly list props here now
-        items,
-        filterStartDate,
-        filterEndDate,
-        filterCategory,
-        filterAccountId,
-      ];
+    // Need to explicitly list props here now
+    items,
+    filterStartDate,
+    filterEndDate,
+    filterCategory,
+    filterAccountId,
+  ];
 
   // Convenience getter (optional)
   List<AssetAccount> get accounts => items;

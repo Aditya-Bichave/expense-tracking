@@ -1,7 +1,7 @@
 // lib/features/goals/data/models/goal_model.dart
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 
 part 'goal_model.g.dart'; // Generate this
 

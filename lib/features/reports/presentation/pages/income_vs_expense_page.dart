@@ -43,16 +43,16 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     final currentPeriod = currentState is IncomeExpenseReportLoaded
         ? currentState.reportData.periodType
         : (currentState is IncomeExpenseReportLoading)
-            ? currentState.periodType
-            : IncomeExpensePeriodType.monthly; // Default
+        ? currentState.periodType
+        : IncomeExpensePeriodType.monthly; // Default
 
     // Dispatch event with the NEW comparison state
     context.read<IncomeExpenseReportBloc>().add(
-          LoadIncomeExpenseReport(
-            compareToPrevious: newComparisonState, // Pass the toggled value
-            periodType: currentPeriod,
-          ),
-        );
+      LoadIncomeExpenseReport(
+        compareToPrevious: newComparisonState, // Pass the toggled value
+        periodType: currentPeriod,
+      ),
+    );
     log.info(
       "[IncomeVsExpensePage] Toggled comparison to: $newComparisonState",
     );
@@ -128,18 +128,18 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             final currentPeriod = (state is IncomeExpenseReportLoaded)
                 ? state.reportData.periodType
                 : (state is IncomeExpenseReportLoading)
-                    ? state.periodType
-                    : IncomeExpensePeriodType.monthly;
+                ? state.periodType
+                : IncomeExpensePeriodType.monthly;
             return PopupMenuButton<IncomeExpensePeriodType>(
               initialValue: currentPeriod,
               onSelected: (p) {
                 // When period changes, also pass current comparison state
                 context.read<IncomeExpenseReportBloc>().add(
-                      LoadIncomeExpenseReport(
-                        periodType: p,
-                        compareToPrevious: _showComparison,
-                      ),
-                    );
+                  LoadIncomeExpenseReport(
+                    periodType: p,
+                    compareToPrevious: _showComparison,
+                  ),
+                );
               },
               icon: const Icon(Icons.calendar_view_month_outlined),
               tooltip: AppLocalizations.of(context)!.changePeriodAggregation,
@@ -211,7 +211,8 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               },
             );
 
-            final bool showTable = settingsState.uiMode == UIMode.quantum &&
+            final bool showTable =
+                settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
             return ListView(

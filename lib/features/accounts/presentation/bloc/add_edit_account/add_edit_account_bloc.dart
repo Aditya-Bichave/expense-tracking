@@ -24,17 +24,20 @@ class AddEditAccountBloc
     required AddAssetAccountUseCase addAssetAccountUseCase,
     required UpdateAssetAccountUseCase updateAssetAccountUseCase,
     AssetAccount? initialAccount,
-  })  : _addAssetAccountUseCase = addAssetAccountUseCase,
-        _updateAssetAccountUseCase = updateAssetAccountUseCase,
-        _uuid = const Uuid(),
-        super(AddEditAccountState(initialAccount: initialAccount)) {
+  }) : _addAssetAccountUseCase = addAssetAccountUseCase,
+       _updateAssetAccountUseCase = updateAssetAccountUseCase,
+       _uuid = const Uuid(),
+       super(AddEditAccountState(initialAccount: initialAccount)) {
     on<SaveAccountRequested>(_onSaveAccountRequested);
     log.info(
-        "[AddEditAccountBloc] Initialized. Editing: ${initialAccount != null}");
+      "[AddEditAccountBloc] Initialized. Editing: ${initialAccount != null}",
+    );
   }
 
   Future<void> _onSaveAccountRequested(
-      SaveAccountRequested event, Emitter<AddEditAccountState> emit) async {
+    SaveAccountRequested event,
+    Emitter<AddEditAccountState> emit,
+  ) async {
     log.info("[AddEditAccountBloc] Received SaveAccountRequested.");
     emit(state.copyWith(status: FormStatus.submitting, clearError: true));
 
@@ -53,22 +56,28 @@ class AddEditAccountBloc
     );
 
     log.info(
-        "[AddEditAccountBloc] Calling ${isEditing ? 'Update' : 'Add'} use case for '${accountData.name}'.");
+      "[AddEditAccountBloc] Calling ${isEditing ? 'Update' : 'Add'} use case for '${accountData.name}'.",
+    );
     final result = isEditing
         ? await _updateAssetAccountUseCase(
-            UpdateAssetAccountParams(accountData))
+            UpdateAssetAccountParams(accountData),
+          )
         : await _addAssetAccountUseCase(AddAssetAccountParams(accountData));
 
     result.fold(
       (failure) {
         log.warning("[AddEditAccountBloc] Save failed: ${failure.message}");
-        emit(state.copyWith(
+        emit(
+          state.copyWith(
             status: FormStatus.error,
-            errorMessage: _mapFailureToMessage(failure)));
+            errorMessage: _mapFailureToMessage(failure),
+          ),
+        );
       },
       (savedAccount) {
         log.info(
-            "[AddEditAccountBloc] Save successful for '${savedAccount.name}'. Emitting Success status and publishing event.");
+          "[AddEditAccountBloc] Save successful for '${savedAccount.name}'. Emitting Success status and publishing event.",
+        );
         emit(state.copyWith(status: FormStatus.success));
         publishDataChangedEvent(
           type: DataChangeType.account,
@@ -80,7 +89,8 @@ class AddEditAccountBloc
 
   String _mapFailureToMessage(Failure failure) {
     log.warning(
-        "[AddEditAccountBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}");
+      "[AddEditAccountBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
+    );
     switch (failure.runtimeType) {
       case ValidationFailure:
         return failure.message;

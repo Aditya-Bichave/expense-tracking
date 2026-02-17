@@ -112,13 +112,14 @@ class _SettingsViewState extends State<SettingsView> {
                 ..showSnackBar(
                   SnackBar(
                     content: Text(dataMsg),
-                    backgroundColor:
-                        isError ? theme.colorScheme.error : Colors.green,
+                    backgroundColor: isError
+                        ? theme.colorScheme.error
+                        : Colors.green,
                   ),
                 );
               context.read<DataManagementBloc>().add(
-                    const ClearDataManagementMessage(),
-                  );
+                const ClearDataManagementMessage(),
+              );
             }
           },
         ),
@@ -128,11 +129,12 @@ class _SettingsViewState extends State<SettingsView> {
         // appBar: AppBar(title: const Text('Settings')),
         body: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, settingsState) {
-            final dataManagementState =
-                context.watch<DataManagementBloc>().state;
+            final dataManagementState = context
+                .watch<DataManagementBloc>()
+                .state;
 
-            final isSettingsLoading = settingsState.status ==
-                    SettingsStatus.loading ||
+            final isSettingsLoading =
+                settingsState.status == SettingsStatus.loading ||
                 settingsState.packageInfoStatus == PackageInfoStatus.loading;
             final isDataManagementLoading =
                 dataManagementState.status == DataManagementStatus.loading;
@@ -148,7 +150,7 @@ class _SettingsViewState extends State<SettingsView> {
                 ListView(
                   padding:
                       modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-                          const EdgeInsets.only(top: 8.0, bottom: 80.0),
+                      const EdgeInsets.only(top: 8.0, bottom: 80.0),
                   children: [
                     AppearanceSettingsSection(
                       state: settingsState,
@@ -173,11 +175,13 @@ class _SettingsViewState extends State<SettingsView> {
                           "[SettingsPage] Backup requested via section.",
                         );
                         final password = await _promptForPassword(
-                            context, 'Backup Password');
+                          context,
+                          'Backup Password',
+                        );
                         if (password != null && password.isNotEmpty) {
-                          context
-                              .read<DataManagementBloc>()
-                              .add(BackupRequested(password));
+                          context.read<DataManagementBloc>().add(
+                            BackupRequested(password),
+                          );
                         }
                       },
                       onRestore: () async {
@@ -194,11 +198,13 @@ class _SettingsViewState extends State<SettingsView> {
                         );
                         if (confirmed == true && context.mounted) {
                           final password = await _promptForPassword(
-                              context, 'Backup Password');
+                            context,
+                            'Backup Password',
+                          );
                           if (password != null && password.isNotEmpty) {
-                            context
-                                .read<DataManagementBloc>()
-                                .add(RestoreRequested(password));
+                            context.read<DataManagementBloc>().add(
+                              RestoreRequested(password),
+                            );
                           }
                         }
                       },
@@ -206,8 +212,7 @@ class _SettingsViewState extends State<SettingsView> {
                         log.info(
                           "[SettingsPage] Clear data requested via section.",
                         );
-                        final confirmed =
-                            await AppDialogs.showStrongConfirmation(
+                        final confirmed = await AppDialogs.showStrongConfirmation(
                           context,
                           title: "Confirm Clear All Data",
                           content:
@@ -218,8 +223,8 @@ class _SettingsViewState extends State<SettingsView> {
                         );
                         if (confirmed == true && context.mounted) {
                           context.read<DataManagementBloc>().add(
-                                const ClearDataRequested(),
-                              );
+                            const ClearDataRequested(),
+                          );
                         }
                       },
                     ),

@@ -27,17 +27,19 @@ void main() {
 
   final mockTransactions = [
     TransactionEntity(
-        id: '1',
-        title: 'Txn 1',
-        amount: 10,
-        date: DateTime.now(),
-        type: TransactionType.expense),
+      id: '1',
+      title: 'Txn 1',
+      amount: 10,
+      date: DateTime.now(),
+      type: TransactionType.expense,
+    ),
     TransactionEntity(
-        id: '2',
-        title: 'Txn 2',
-        amount: 20,
-        date: DateTime.now(),
-        type: TransactionType.expense),
+      id: '2',
+      title: 'Txn 2',
+      amount: 20,
+      date: DateTime.now(),
+      type: TransactionType.expense,
+    ),
   ];
 
   setUp(() {
@@ -51,62 +53,89 @@ void main() {
     return BlocProvider.value(
       value: mockTransactionListBloc,
       child: RecentTransactionsSection(
-          navigateToDetailOrEdit: mockNavigateToDetail.call),
+        navigateToDetailOrEdit: mockNavigateToDetail.call,
+      ),
     );
   }
 
   group('RecentTransactionsSection', () {
     testWidgets('shows loading indicator', (tester) async {
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(
-              const TransactionListState(status: ListStatus.loading)));
+        tester: tester,
+        widget: buildTestWidget(
+          const TransactionListState(status: ListStatus.loading),
+        ),
+      );
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('shows empty message', (tester) async {
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(const TransactionListState(
-              status: ListStatus.success, transactions: [])));
+        tester: tester,
+        widget: buildTestWidget(
+          const TransactionListState(
+            status: ListStatus.success,
+            transactions: [],
+          ),
+        ),
+      );
       expect(find.text('No transactions recorded yet.'), findsOneWidget);
     });
 
     testWidgets('renders a list of TransactionListItems', (tester) async {
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(TransactionListState(
-              status: ListStatus.success, transactions: mockTransactions)));
+        tester: tester,
+        widget: buildTestWidget(
+          TransactionListState(
+            status: ListStatus.success,
+            transactions: mockTransactions,
+          ),
+        ),
+      );
       expect(find.byType(TransactionListItem), findsNWidgets(2));
     });
 
     testWidgets('"View All" button navigates', (tester) async {
-      when(() => mockGoRouter.go(RouteNames.transactionsList))
-          .thenAnswer((_) {});
+      when(
+        () => mockGoRouter.go(RouteNames.transactionsList),
+      ).thenAnswer((_) {});
       await pumpWidgetWithProviders(
-          tester: tester,
-          router: mockGoRouter,
-          widget: buildTestWidget(const TransactionListState(
-              status: ListStatus.success, transactions: [])));
+        tester: tester,
+        router: mockGoRouter,
+        widget: buildTestWidget(
+          const TransactionListState(
+            status: ListStatus.success,
+            transactions: [],
+          ),
+        ),
+      );
 
-      await tester
-          .tap(find.byKey(const ValueKey('button_recentTransactions_viewAll')));
+      await tester.tap(
+        find.byKey(const ValueKey('button_recentTransactions_viewAll')),
+      );
 
       verify(() => mockGoRouter.go(RouteNames.transactionsList)).called(1);
     });
 
-    testWidgets('tapping a list item calls navigateToDetailOrEdit',
-        (tester) async {
+    testWidgets('tapping a list item calls navigateToDetailOrEdit', (
+      tester,
+    ) async {
       when(() => mockNavigateToDetail.call(any(), any())).thenAnswer((_) {});
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(TransactionListState(
-              status: ListStatus.success, transactions: mockTransactions)));
+        tester: tester,
+        widget: buildTestWidget(
+          TransactionListState(
+            status: ListStatus.success,
+            transactions: mockTransactions,
+          ),
+        ),
+      );
 
       await tester.tap(find.byType(TransactionListItem).first);
 
-      verify(() => mockNavigateToDetail.call(any(), mockTransactions.first))
-          .called(1);
+      verify(
+        () => mockNavigateToDetail.call(any(), mockTransactions.first),
+      ).called(1);
     });
   }, skip: true);
 }

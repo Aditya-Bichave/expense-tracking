@@ -26,12 +26,14 @@ void main() {
   );
 
   setUpAll(() {
-    registerFallbackValue(GetSpendingTimeReportParams(
-      startDate: DateTime.now(),
-      endDate: DateTime.now(),
-      granularity: TimeSeriesGranularity.daily,
-      compareToPrevious: false,
-    ));
+    registerFallbackValue(
+      GetSpendingTimeReportParams(
+        startDate: DateTime.now(),
+        endDate: DateTime.now(),
+        granularity: TimeSeriesGranularity.daily,
+        compareToPrevious: false,
+      ),
+    );
   });
 
   setUp(() {
@@ -44,8 +46,9 @@ void main() {
     blocTest<SpendingTimeReportBloc, SpendingTimeReportState>(
       'emits [loading, loaded] on success',
       build: () {
-        when(() => mockUseCase(any()))
-            .thenAnswer((_) async => Right(tReportData));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => Right(tReportData));
         return SpendingTimeReportBloc(
           getSpendingTimeReportUseCase: mockUseCase,
           reportFilterBloc: mockFilterBloc,
@@ -61,8 +64,9 @@ void main() {
     blocTest<SpendingTimeReportBloc, SpendingTimeReportState>(
       'emits [loading, error] on failure',
       build: () {
-        when(() => mockUseCase(any()))
-            .thenAnswer((_) async => Left(CacheFailure('Error')));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => Left(CacheFailure('Error')));
         return SpendingTimeReportBloc(
           getSpendingTimeReportUseCase: mockUseCase,
           reportFilterBloc: mockFilterBloc,
@@ -79,8 +83,9 @@ void main() {
     blocTest<SpendingTimeReportBloc, SpendingTimeReportState>(
       'emits [loading, loaded] with new granularity',
       build: () {
-        when(() => mockUseCase(any()))
-            .thenAnswer((_) async => Right(tReportData));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => Right(tReportData));
         return SpendingTimeReportBloc(
           getSpendingTimeReportUseCase: mockUseCase,
           reportFilterBloc: mockFilterBloc,
@@ -91,8 +96,11 @@ void main() {
       expect: () => [
         isA<SpendingTimeReportLoading>(), // Initial
         isA<SpendingTimeReportLoaded>(),
-        isA<SpendingTimeReportLoading>().having((s) => s.granularity,
-            'granularity', TimeSeriesGranularity.weekly), // Reload
+        isA<SpendingTimeReportLoading>().having(
+          (s) => s.granularity,
+          'granularity',
+          TimeSeriesGranularity.weekly,
+        ), // Reload
         isA<SpendingTimeReportLoaded>(),
       ],
     );

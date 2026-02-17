@@ -30,4 +30,5 @@ class DeleteBudget extends BudgetListEvent {
 class ResetState extends BudgetListEvent {
   const ResetState();
 }
+
 // --- END ADDED ---

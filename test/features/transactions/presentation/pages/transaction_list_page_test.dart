@@ -55,8 +55,9 @@ void main() {
     mockCategoryManagementBloc = MockCategoryManagementBloc();
     mockGetCategoriesUseCase = MockGetCategoriesUseCase();
     sl.registerSingleton<GetCategoriesUseCase>(mockGetCategoriesUseCase);
-    when(() => mockGetCategoriesUseCase.call(any()))
-        .thenAnswer((_) async => const Right(<Category>[]));
+    when(
+      () => mockGetCategoriesUseCase.call(any()),
+    ).thenAnswer((_) async => const Right(<Category>[]));
   });
 
   tearDown(() {
@@ -70,7 +71,8 @@ void main() {
       providers: [
         BlocProvider<TransactionListBloc>.value(value: mockTransactionListBloc),
         BlocProvider<CategoryManagementBloc>.value(
-            value: mockCategoryManagementBloc),
+          value: mockCategoryManagementBloc,
+        ),
       ],
       child: const TransactionListPage(),
     );
@@ -78,10 +80,12 @@ void main() {
 
   group('TransactionListPage', () {
     testWidgets('renders Header and ListView by default', (tester) async {
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState());
-      when(() => mockCategoryManagementBloc.state)
-          .thenReturn(const CategoryManagementState());
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
+      when(
+        () => mockCategoryManagementBloc.state,
+      ).thenReturn(const CategoryManagementState());
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -90,12 +94,15 @@ void main() {
       expect(find.byKey(const ValueKey('calendar_view')), findsNothing);
     });
 
-    testWidgets('switches to CalendarView when toggle is tapped',
-        (tester) async {
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState());
-      when(() => mockCategoryManagementBloc.state)
-          .thenReturn(const CategoryManagementState());
+    testWidgets('switches to CalendarView when toggle is tapped', (
+      tester,
+    ) async {
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
+      when(
+        () => mockCategoryManagementBloc.state,
+      ).thenReturn(const CategoryManagementState());
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -106,12 +113,15 @@ void main() {
       expect(find.byKey(const ValueKey('list_view')), findsNothing);
     });
 
-    testWidgets('shows FilterDialog when filter button is tapped',
-        (tester) async {
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState());
-      when(() => mockCategoryManagementBloc.state)
-          .thenReturn(const CategoryManagementState());
+    testWidgets('shows FilterDialog when filter button is tapped', (
+      tester,
+    ) async {
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
+      when(
+        () => mockCategoryManagementBloc.state,
+      ).thenReturn(const CategoryManagementState());
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -131,10 +141,12 @@ void main() {
         binding.window.clearDevicePixelRatioTestValue();
       });
 
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState());
-      when(() => mockCategoryManagementBloc.state)
-          .thenReturn(const CategoryManagementState());
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
+      when(
+        () => mockCategoryManagementBloc.state,
+      ).thenReturn(const CategoryManagementState());
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -145,10 +157,12 @@ void main() {
     });
 
     testWidgets('shows batch FAB when in batch edit mode', (tester) async {
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState(isInBatchEditMode: true));
-      when(() => mockCategoryManagementBloc.state)
-          .thenReturn(const CategoryManagementState());
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState(isInBatchEditMode: true));
+      when(
+        () => mockCategoryManagementBloc.state,
+      ).thenReturn(const CategoryManagementState());
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
@@ -156,19 +170,26 @@ void main() {
     });
 
     testWidgets('search input triggers SearchChanged event', (tester) async {
-      when(() => mockTransactionListBloc.state)
-          .thenReturn(const TransactionListState());
-      when(() => mockCategoryManagementBloc.state)
-          .thenReturn(const CategoryManagementState());
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
+      when(
+        () => mockCategoryManagementBloc.state,
+      ).thenReturn(const CategoryManagementState());
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
 
       await tester.enterText(
-          find.byKey(const ValueKey('textField_transactionSearch')), 'coffee');
+        find.byKey(const ValueKey('textField_transactionSearch')),
+        'coffee',
+      );
       await tester.pump(const Duration(milliseconds: 501)); // Wait for debounce
 
-      verify(() => mockTransactionListBloc
-          .add(const SearchChanged(searchTerm: 'coffee'))).called(1);
+      verify(
+        () => mockTransactionListBloc.add(
+          const SearchChanged(searchTerm: 'coffee'),
+        ),
+      ).called(1);
     });
   });
 }

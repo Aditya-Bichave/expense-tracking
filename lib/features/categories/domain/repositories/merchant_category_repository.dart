@@ -5,5 +5,6 @@ abstract class MerchantCategoryRepository {
   /// Gets the default category ID for a given merchant identifier.
   /// Returns null if no mapping exists.
   Future<Either<Failure, String?>> getDefaultCategoryId(
-      String merchantIdentifier);
+    String merchantIdentifier,
+  );
 }

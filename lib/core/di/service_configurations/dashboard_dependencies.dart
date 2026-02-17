@@ -7,17 +7,21 @@ import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_b
 class DashboardDependencies {
   static void register() {
     // Use Cases (Depends on Account, Income, Expense Repos)
-    sl.registerLazySingleton(() => GetFinancialOverviewUseCase(
-          accountRepository: sl(),
-          incomeRepository: sl(),
-          expenseRepository: sl(),
-          budgetRepository: sl(),
-          goalRepository: sl(),
-        ));
+    sl.registerLazySingleton(
+      () => GetFinancialOverviewUseCase(
+        accountRepository: sl(),
+        incomeRepository: sl(),
+        expenseRepository: sl(),
+        budgetRepository: sl(),
+        goalRepository: sl(),
+      ),
+    );
     // Bloc
-    sl.registerFactory(() => DashboardBloc(
-          getFinancialOverviewUseCase: sl(),
-          dataChangeStream: sl<Stream<DataChangedEvent>>(),
-        ));
+    sl.registerFactory(
+      () => DashboardBloc(
+        getFinancialOverviewUseCase: sl(),
+        dataChangeStream: sl<Stream<DataChangedEvent>>(),
+      ),
+    );
   }
 }

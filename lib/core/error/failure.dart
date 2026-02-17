@@ -11,12 +11,12 @@ abstract class Failure extends Equatable {
 // General failures
 class ServerFailure extends Failure {
   const ServerFailure([String message = "A server error occurred."])
-      : super(message);
+    : super(message);
 }
 
 class CacheFailure extends Failure {
   const CacheFailure([String message = "A local data storage error occurred."])
-      : super(message);
+    : super(message);
 }
 
 class ValidationFailure extends Failure {
@@ -24,9 +24,9 @@ class ValidationFailure extends Failure {
 }
 
 class NetworkFailure extends Failure {
-  const NetworkFailure(
-      [String message = "Please check your network connection."])
-      : super(message);
+  const NetworkFailure([
+    String message = "Please check your network connection.",
+  ]) : super(message);
 }
 
 class SettingsFailure extends Failure {
@@ -55,7 +55,7 @@ class AuthenticationFailure extends Failure {
 
 class UnexpectedFailure extends Failure {
   const UnexpectedFailure([String message = "An unexpected error occurred."])
-      : super(message);
+    : super(message);
 }
 
 class NotFoundFailure extends Failure {

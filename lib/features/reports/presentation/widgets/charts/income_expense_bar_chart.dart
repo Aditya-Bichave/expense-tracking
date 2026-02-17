@@ -27,10 +27,12 @@ class IncomeExpenseBarChart extends StatelessWidget {
     final currencySymbol = settings.currencySymbol;
     final incomeColor = Colors.green.shade600; // Consistent Income color
     final expenseColor = theme.colorScheme.error;
-    final prevIncomeColor =
-        incomeColor.withOpacity(0.4); // Lighter for previous
-    final prevExpenseColor =
-        expenseColor.withOpacity(0.4); // Lighter for previous
+    final prevIncomeColor = incomeColor.withOpacity(
+      0.4,
+    ); // Lighter for previous
+    final prevExpenseColor = expenseColor.withOpacity(
+      0.4,
+    ); // Lighter for previous
 
     if (data.isEmpty) return const Center(child: Text("No data to display"));
 
@@ -56,7 +58,8 @@ class IncomeExpenseBarChart extends StatelessWidget {
       maxY = 10; // Ensure some height
     }
 
-    final isMonthly = data.length > 1 &&
+    final isMonthly =
+        data.length > 1 &&
         data[1].periodStart.month != data[0].periodStart.month;
     final periodType = isMonthly
         ? IncomeExpensePeriodType.monthly
@@ -69,8 +72,10 @@ class IncomeExpenseBarChart extends StatelessWidget {
           touchTooltipData: BarTouchTooltipData(
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               final item = data[groupIndex];
-              final periodStr =
-                  _formatPeriodHeader(item.periodStart, periodType);
+              final periodStr = _formatPeriodHeader(
+                item.periodStart,
+                periodType,
+              );
               bool isIncome;
               bool isPrevious;
               double value;
@@ -125,8 +130,10 @@ class IncomeExpenseBarChart extends StatelessWidget {
                   TextSpan(
                     text:
                         '$prefix$typeStr: ${CurrencyFormatter.format(value, currencySymbol)}',
-                    style:
-                        ChartUtils.tooltipContentStyle(context, color: color),
+                    style: ChartUtils.tooltipContentStyle(
+                      context,
+                      color: color,
+                    ),
                   ),
                   // Optionally show net flow for the group in tooltip
                   // TextSpan(text: '\nNet: ${CurrencyFormatter.format(item.currentNetFlow, currencySymbol)}', style: TextStyle(...))
@@ -148,10 +155,12 @@ class IncomeExpenseBarChart extends StatelessWidget {
         ),
         titlesData: FlTitlesData(
           show: true,
-          rightTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles:
-              const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
+          topTitles: const AxisTitles(
+            sideTitles: SideTitles(showTitles: false),
+          ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
@@ -171,15 +180,24 @@ class IncomeExpenseBarChart extends StatelessWidget {
           ),
         ),
         borderData: FlBorderData(show: false),
-        barGroups: showingGroups(context, data, incomeColor, expenseColor,
-            prevIncomeColor, prevExpenseColor, showComparison),
+        barGroups: showingGroups(
+          context,
+          data,
+          incomeColor,
+          expenseColor,
+          prevIncomeColor,
+          prevExpenseColor,
+          showComparison,
+        ),
         gridData: FlGridData(
           // Subtle grid lines
           show: true,
           drawVerticalLine: false,
           horizontalInterval: maxY / 5,
           getDrawingHorizontalLine: (value) => FlLine(
-              color: theme.dividerColor.withOpacity(0.1), strokeWidth: 1),
+            color: theme.dividerColor.withOpacity(0.1),
+            strokeWidth: 1,
+          ),
         ),
         alignment: BarChartAlignment.spaceAround,
       ),
@@ -187,16 +205,18 @@ class IncomeExpenseBarChart extends StatelessWidget {
   }
 
   List<BarChartGroupData> showingGroups(
-      BuildContext context,
-      List<IncomeExpensePeriodData> data,
-      Color incomeColor,
-      Color expenseColor,
-      Color prevIncomeColor,
-      Color prevExpenseColor,
-      bool showComparison) {
+    BuildContext context,
+    List<IncomeExpensePeriodData> data,
+    Color incomeColor,
+    Color expenseColor,
+    Color prevIncomeColor,
+    Color prevExpenseColor,
+    bool showComparison,
+  ) {
     final double barWidth = showComparison ? 6 : 12;
-    final double groupSpace =
-        showComparison ? 2 : 4; // Space between rods within a group
+    final double groupSpace = showComparison
+        ? 2
+        : 4; // Space between rods within a group
 
     return List.generate(data.length, (i) {
       final item = data[i];
@@ -207,29 +227,33 @@ class IncomeExpenseBarChart extends StatelessWidget {
           // Previous Income (if comparing)
           if (showComparison)
             BarChartRodData(
-                toY: item.totalIncome.previousValue ?? 0,
-                color: prevIncomeColor,
-                width: barWidth,
-                borderRadius: BorderRadius.zero),
+              toY: item.totalIncome.previousValue ?? 0,
+              color: prevIncomeColor,
+              width: barWidth,
+              borderRadius: BorderRadius.zero,
+            ),
           // Current Income
           BarChartRodData(
-              toY: item.currentTotalIncome,
-              color: incomeColor,
-              width: barWidth,
-              borderRadius: BorderRadius.zero),
+            toY: item.currentTotalIncome,
+            color: incomeColor,
+            width: barWidth,
+            borderRadius: BorderRadius.zero,
+          ),
           // Previous Expense (if comparing)
           if (showComparison)
             BarChartRodData(
-                toY: item.totalExpense.previousValue ?? 0,
-                color: prevExpenseColor,
-                width: barWidth,
-                borderRadius: BorderRadius.zero),
+              toY: item.totalExpense.previousValue ?? 0,
+              color: prevExpenseColor,
+              width: barWidth,
+              borderRadius: BorderRadius.zero,
+            ),
           // Current Expense
           BarChartRodData(
-              toY: item.currentTotalExpense,
-              color: expenseColor,
-              width: barWidth,
-              borderRadius: BorderRadius.zero),
+            toY: item.currentTotalExpense,
+            color: expenseColor,
+            width: barWidth,
+            borderRadius: BorderRadius.zero,
+          ),
         ],
       );
     });
@@ -237,7 +261,9 @@ class IncomeExpenseBarChart extends StatelessWidget {
 
   // Helper methods remain unchanged
   String _formatPeriodHeader(
-      DateTime date, IncomeExpensePeriodType periodType) {
+    DateTime date,
+    IncomeExpensePeriodType periodType,
+  ) {
     switch (periodType) {
       case IncomeExpensePeriodType.monthly:
         return DateFormat('MMM yyyy').format(date);
@@ -246,8 +272,13 @@ class IncomeExpenseBarChart extends StatelessWidget {
     }
   }
 
-  Widget _bottomTitleWidgets(BuildContext context, double value, TitleMeta meta,
-      IncomeExpensePeriodType periodType, List<IncomeExpensePeriodData> data) {
+  Widget _bottomTitleWidgets(
+    BuildContext context,
+    double value,
+    TitleMeta meta,
+    IncomeExpensePeriodType periodType,
+    List<IncomeExpensePeriodData> data,
+  ) {
     final theme = Theme.of(context);
     final style = theme.textTheme.labelSmall?.copyWith(fontSize: 10);
     final index = value.toInt();
@@ -274,8 +305,9 @@ class IncomeExpenseBarChart extends StatelessWidget {
     }
 
     return SideTitleWidget(
-        axisSide: meta.axisSide,
-        space: 4,
-        child: Text(text, style: style, textAlign: TextAlign.center));
+      axisSide: meta.axisSide,
+      space: 4,
+      child: Text(text, style: style, textAlign: TextAlign.center),
+    );
   }
 }

@@ -38,8 +38,9 @@ void main() {
 
     await sl.reset();
     sl.registerSingleton<StreamController<DataChangedEvent>>(
-        dataChangeController,
-        instanceName: 'dataChangeController');
+      dataChangeController,
+      instanceName: 'dataChangeController',
+    );
     sl.registerSingleton<Stream<DataChangedEvent>>(dataChangeController.stream);
 
     recurringListBloc = RecurringListBloc(

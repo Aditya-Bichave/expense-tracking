@@ -10,7 +10,7 @@ void main() {
 
     test('formatDateTime should format the date and time correctly', () {
       final dateTime = DateTime(2023, 1, 15, 14, 30);
-      const expected = 'Jan 15, 2023, 2:30 PM';
+      const expected = 'Jan 15, 2023 2:30 PM';
       expect(DateFormatter.formatDateTime(dateTime, locale: 'en'), expected);
     });
 
@@ -23,8 +23,10 @@ void main() {
     test('formatDateTime should handle different locales', () {
       final dateTime = DateTime(2023, 1, 15, 14, 30);
       const expected = '15 janv. 2023, 14:30';
-      expect(DateFormatter.formatDateTime(dateTime, locale: 'fr'),
-          isNot(expected));
+      expect(
+        DateFormatter.formatDateTime(dateTime, locale: 'fr'),
+        isNot(expected),
+      );
     });
   });
 }

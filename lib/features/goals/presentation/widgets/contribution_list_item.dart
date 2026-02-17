@@ -28,8 +28,10 @@ class ContributionListItem extends StatelessWidget {
       leading: CircleAvatar(
         backgroundColor: theme.colorScheme.tertiaryContainer,
         foregroundColor: theme.colorScheme.onTertiaryContainer,
-        child: const Icon(Icons.arrow_upward_rounded,
-            size: 20), // Simple contribution icon
+        child: const Icon(
+          Icons.arrow_upward_rounded,
+          size: 20,
+        ), // Simple contribution icon
       ),
       title: Text(CurrencyFormatter.format(contribution.amount, currency)),
       subtitle: Column(
@@ -41,8 +43,9 @@ class ContributionListItem extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2.0),
               child: Text(
                 contribution.note!,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontStyle: FontStyle.italic),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -64,7 +67,9 @@ class ContributionListItem extends StatelessWidget {
       ),
       dense: true,
       contentPadding: const EdgeInsets.symmetric(
-          horizontal: 0, vertical: 4), // Adjust padding
+        horizontal: 0,
+        vertical: 4,
+      ), // Adjust padding
       visualDensity: VisualDensity.compact,
     );
   }

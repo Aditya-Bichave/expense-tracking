@@ -33,8 +33,9 @@ void main() {
 
     expect(
       result,
-      equals(const Left(
-          ValidationFailure('Only custom categories can be updated.'))),
+      equals(
+        const Left(ValidationFailure('Only custom categories can be updated.')),
+      ),
     );
     verifyZeroInteractions(mockRepository);
   });

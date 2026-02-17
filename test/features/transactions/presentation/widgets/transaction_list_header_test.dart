@@ -44,10 +44,13 @@ void main() {
     searchController.dispose();
   });
 
-  Widget buildTestWidget(
-      {TransactionListState? state, bool isCalendarView = false}) {
-    when(() => mockBloc.state)
-        .thenReturn(state ?? const TransactionListState());
+  Widget buildTestWidget({
+    TransactionListState? state,
+    bool isCalendarView = false,
+  }) {
+    when(
+      () => mockBloc.state,
+    ).thenReturn(state ?? const TransactionListState());
     return BlocProvider.value(
       value: mockBloc,
       child: TransactionListHeader(
@@ -64,13 +67,17 @@ void main() {
   group('TransactionListHeader', () {
     testWidgets('renders all interactive elements', (tester) async {
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
-      expect(find.byKey(const ValueKey('textField_transactionSearch')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('textField_transactionSearch')),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('button_show_filter')), findsOneWidget);
       expect(find.byKey(const ValueKey('button_show_sort')), findsOneWidget);
       expect(find.byKey(const ValueKey('button_toggle_view')), findsOneWidget);
-      expect(find.byKey(const ValueKey('button_toggle_batchEdit')),
-          findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('button_toggle_batchEdit')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('calls callbacks when buttons are tapped', (tester) async {
@@ -87,18 +94,24 @@ void main() {
     });
 
     testWidgets(
-        'dispatches ToggleBatchEdit event when batch edit button is tapped',
-        (tester) async {
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
-      await tester.tap(find.byKey(const ValueKey('button_toggle_batchEdit')));
-      verify(() => mockBloc.add(const ToggleBatchEdit())).called(1);
-    });
+      'dispatches ToggleBatchEdit event when batch edit button is tapped',
+      (tester) async {
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: buildTestWidget(),
+        );
+        await tester.tap(find.byKey(const ValueKey('button_toggle_batchEdit')));
+        verify(() => mockBloc.add(const ToggleBatchEdit())).called(1);
+      },
+    );
 
     testWidgets('shows and calls clear button for search', (tester) async {
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(
-              state: const TransactionListState(searchTerm: 'test')));
+        tester: tester,
+        widget: buildTestWidget(
+          state: const TransactionListState(searchTerm: 'test'),
+        ),
+      );
 
       final clearButton = find.byIcon(Icons.clear);
       expect(clearButton, findsOneWidget);
@@ -107,21 +120,26 @@ void main() {
       verify(() => onClearSearch.call()).called(1);
     });
 
-    testWidgets('shows correct icons for view and batch mode toggles',
-        (tester) async {
+    testWidgets('shows correct icons for view and batch mode toggles', (
+      tester,
+    ) async {
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(
-              isCalendarView: false,
-              state: const TransactionListState(isInBatchEditMode: false)));
+        tester: tester,
+        widget: buildTestWidget(
+          isCalendarView: false,
+          state: const TransactionListState(isInBatchEditMode: false),
+        ),
+      );
       expect(find.byIcon(Icons.calendar_today_rounded), findsOneWidget);
       expect(find.byIcon(Icons.select_all_rounded), findsOneWidget);
 
       await pumpWidgetWithProviders(
-          tester: tester,
-          widget: buildTestWidget(
-              isCalendarView: true,
-              state: const TransactionListState(isInBatchEditMode: true)));
+        tester: tester,
+        widget: buildTestWidget(
+          isCalendarView: true,
+          state: const TransactionListState(isInBatchEditMode: true),
+        ),
+      );
       expect(find.byIcon(Icons.view_list_rounded), findsOneWidget);
       expect(find.byIcon(Icons.cancel_outlined), findsOneWidget);
     });

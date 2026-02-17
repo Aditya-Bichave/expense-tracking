@@ -19,8 +19,9 @@ void main() {
 
       // ASSERT
       expect(find.text('Demo Mode Active'), findsOneWidget);
-      final animatedOpacity =
-          tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
+      final animatedOpacity = tester.widget<AnimatedOpacity>(
+        find.byType(AnimatedOpacity),
+      );
       expect(animatedOpacity.opacity, 1.0);
     });
 
@@ -35,44 +36,50 @@ void main() {
       // ASSERT
       // The child is a SizedBox.shrink, so the text won't be in the tree
       expect(find.text('Demo Mode Active'), findsNothing);
-      final animatedOpacity =
-          tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
+      final animatedOpacity = tester.widget<AnimatedOpacity>(
+        find.byType(AnimatedOpacity),
+      );
       expect(animatedOpacity.opacity, 0.0);
     });
 
     testWidgets(
-        'tapping "Exit Demo" shows dialog and adds event on confirmation',
-        (tester) async {
-      // ARRANGE
-      // We need to get the mock bloc from the provider tree to verify events
-      late SettingsBloc mockSettingsBloc;
-      await pumpWidgetWithProviders(
-        tester: tester,
-        settingsState: const SettingsState(isInDemoMode: true),
-        widget: Builder(
-          builder: (context) {
-            // This is a bit of a hack to get the instance of the mock bloc created by the helper
-            mockSettingsBloc = context.read<SettingsBloc>();
-            return const DemoIndicatorWidget();
-          },
-        ),
-      );
+      'tapping "Exit Demo" shows dialog and adds event on confirmation',
+      (tester) async {
+        // ARRANGE
+        // We need to get the mock bloc from the provider tree to verify events
+        late SettingsBloc mockSettingsBloc;
+        await pumpWidgetWithProviders(
+          tester: tester,
+          settingsState: const SettingsState(isInDemoMode: true),
+          widget: Builder(
+            builder: (context) {
+              // This is a bit of a hack to get the instance of the mock bloc created by the helper
+              mockSettingsBloc = context.read<SettingsBloc>();
+              return const DemoIndicatorWidget();
+            },
+          ),
+        );
 
-      // ACT - Tap the exit button
-      expect(find.byKey(const ValueKey('button_demoIndicator_exit')),
-          findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('button_demoIndicator_exit')));
-      await tester.pumpAndSettle(); // Let the dialog appear
+        // ACT - Tap the exit button
+        expect(
+          find.byKey(const ValueKey('button_demoIndicator_exit')),
+          findsOneWidget,
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('button_demoIndicator_exit')),
+        );
+        await tester.pumpAndSettle(); // Let the dialog appear
 
-      // ASSERT - Dialog is visible
-      expect(find.text('Exit Demo Mode?'), findsOneWidget);
+        // ASSERT - Dialog is visible
+        expect(find.text('Exit Demo Mode?'), findsOneWidget);
 
-      // ACT - Tap the confirmation button in the dialog
-      await tester.tap(find.text('Exit'));
-      await tester.pump();
+        // ACT - Tap the confirmation button in the dialog
+        await tester.tap(find.text('Exit'));
+        await tester.pump();
 
-      // ASSERT - Event was added to the bloc
-      verify(() => mockSettingsBloc.add(const ExitDemoMode())).called(1);
-    });
+        // ASSERT - Event was added to the bloc
+        verify(() => mockSettingsBloc.add(const ExitDemoMode())).called(1);
+      },
+    );
   });
 }
