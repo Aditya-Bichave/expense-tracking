@@ -235,9 +235,14 @@ class AppRouter {
                     builder: (context, state) {
                       final merchantId =
                           state.uri.queryParameters['merchantId'];
-                      final extra = state.extra as Map<String, dynamic>?;
-                      final merchantIdFromExtra =
-                          extra?['merchantId'] as String?;
+                      // Safely handle extra, which might be a String or a Map or null
+                      String? merchantIdFromExtra;
+                      if (state.extra is String) {
+                        merchantIdFromExtra = state.extra as String;
+                      } else if (state.extra is Map<String, dynamic>) {
+                        final extraMap = state.extra as Map<String, dynamic>;
+                        merchantIdFromExtra = extraMap['merchantId'] as String?;
+                      }
 
                       return AddEditTransactionPage(
                         initialTransactionData: null,
