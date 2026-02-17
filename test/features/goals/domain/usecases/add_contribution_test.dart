@@ -8,8 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
-class MockGoalContributionRepository extends Mock implements GoalContributionRepository {}
+class MockGoalContributionRepository extends Mock
+    implements GoalContributionRepository {}
+
 class MockClock extends Mock implements Clock {}
+
 class FakeGoalContribution extends Fake implements GoalContribution {}
 
 void main() {
@@ -39,15 +42,18 @@ void main() {
 
   test('should call addContribution on repository', () async {
     // arrange
-    when(() => mockRepository.addContribution(any()))
-        .thenAnswer((_) async => Right(tContribution));
+    when(
+      () => mockRepository.addContribution(any()),
+    ).thenAnswer((_) async => Right(tContribution));
 
     // act
-    final result = await useCase(AddContributionParams(
-      goalId: tContribution.goalId,
-      amount: tContribution.amount,
-      date: tContribution.date,
-    ));
+    final result = await useCase(
+      AddContributionParams(
+        goalId: tContribution.goalId,
+        amount: tContribution.amount,
+        date: tContribution.date,
+      ),
+    );
 
     // assert
     expect(result.isRight(), true);
@@ -56,15 +62,18 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.addContribution(any()))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.addContribution(any()),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
-    final result = await useCase(AddContributionParams(
-      goalId: tContribution.goalId,
-      amount: tContribution.amount,
-      date: tContribution.date,
-    ));
+    final result = await useCase(
+      AddContributionParams(
+        goalId: tContribution.goalId,
+        amount: tContribution.amount,
+        date: tContribution.date,
+      ),
+    );
 
     // assert
     expect(result.isLeft(), true);

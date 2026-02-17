@@ -6,7 +6,8 @@ import 'package:expense_tracker/features/accounts/domain/usecases/update_asset_a
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockAssetAccountRepository extends Mock implements AssetAccountRepository {}
+class MockAssetAccountRepository extends Mock
+    implements AssetAccountRepository {}
 
 void main() {
   late UpdateAssetAccountUseCase useCase;
@@ -27,8 +28,9 @@ void main() {
 
   test('should call updateAssetAccount on repository', () async {
     // arrange
-    when(() => mockRepository.updateAssetAccount(tAccount))
-        .thenAnswer((_) async => const Right(tAccount));
+    when(
+      () => mockRepository.updateAssetAccount(tAccount),
+    ).thenAnswer((_) async => const Right(tAccount));
 
     // act
     final result = await useCase(UpdateAssetAccountParams(tAccount));
@@ -41,8 +43,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.updateAssetAccount(tAccount))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.updateAssetAccount(tAccount),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(UpdateAssetAccountParams(tAccount));

@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../../helpers/pump_app.dart';
 
 void main() {
-  testWidgets('TimeSeriesLineChart renders correctly with data', (tester) async {
+  testWidgets('TimeSeriesLineChart renders correctly with data', (
+    tester,
+  ) async {
     final tData = [
       TimeSeriesDataPoint(
         date: DateTime(2023, 1, 1),
@@ -34,7 +36,9 @@ void main() {
     // We assume finding LineChart is sufficient validation that the chart widget loaded.
   });
 
-  testWidgets('TimeSeriesLineChart renders empty state when no data', (tester) async {
+  testWidgets('TimeSeriesLineChart renders empty state when no data', (
+    tester,
+  ) async {
     await pumpWidgetWithProviders(
       tester: tester,
       widget: const Scaffold(

@@ -7,7 +7,8 @@ import 'package:expense_tracker/features/accounts/domain/usecases/get_asset_acco
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockAssetAccountRepository extends Mock implements AssetAccountRepository {}
+class MockAssetAccountRepository extends Mock
+    implements AssetAccountRepository {}
 
 void main() {
   late GetAssetAccountsUseCase useCase;
@@ -25,13 +26,14 @@ void main() {
       type: AssetType.bank,
       initialBalance: 100.0,
       currentBalance: 100.0,
-    )
+    ),
   ];
 
   test('should get accounts from repository', () async {
     // arrange
-    when(() => mockRepository.getAssetAccounts())
-        .thenAnswer((_) async => const Right(tAccounts));
+    when(
+      () => mockRepository.getAssetAccounts(),
+    ).thenAnswer((_) async => const Right(tAccounts));
 
     // act
     final result = await useCase(NoParams());
@@ -44,8 +46,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.getAssetAccounts())
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.getAssetAccounts(),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(NoParams());

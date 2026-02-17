@@ -7,7 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../../helpers/pump_app.dart';
 
 void main() {
-  testWidgets('IncomeExpenseBarChart renders correctly with data', (tester) async {
+  testWidgets('IncomeExpenseBarChart renders correctly with data', (
+    tester,
+  ) async {
     final tData = [
       IncomeExpensePeriodData(
         periodStart: DateTime(2023, 1, 1),
@@ -23,21 +25,19 @@ void main() {
 
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: Scaffold(
-        body: IncomeExpenseBarChart(data: tData),
-      ),
+      widget: Scaffold(body: IncomeExpenseBarChart(data: tData)),
     );
 
     expect(find.byType(BarChart), findsOneWidget);
     // Titles are rendered on canvas, so find.text won't work for chart labels in this case.
   });
 
-  testWidgets('IncomeExpenseBarChart renders empty state when no data', (tester) async {
+  testWidgets('IncomeExpenseBarChart renders empty state when no data', (
+    tester,
+  ) async {
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: const Scaffold(
-        body: IncomeExpenseBarChart(data: []),
-      ),
+      widget: const Scaffold(body: IncomeExpenseBarChart(data: [])),
     );
 
     expect(find.byType(BarChart), findsNothing);

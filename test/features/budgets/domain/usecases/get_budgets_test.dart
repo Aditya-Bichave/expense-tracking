@@ -27,13 +27,14 @@ void main() {
       targetAmount: 500.0,
       period: BudgetPeriodType.recurringMonthly,
       createdAt: DateTime.now(),
-    )
+    ),
   ];
 
   test('should get budgets from repository', () async {
     // arrange
-    when(() => mockRepository.getBudgets())
-        .thenAnswer((_) async => Right(tBudgets));
+    when(
+      () => mockRepository.getBudgets(),
+    ).thenAnswer((_) async => Right(tBudgets));
 
     // act
     final result = await useCase(NoParams());
@@ -46,8 +47,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.getBudgets())
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.getBudgets(),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(NoParams());

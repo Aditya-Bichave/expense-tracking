@@ -6,7 +6,8 @@ import 'package:expense_tracker/features/goals/domain/usecases/update_contributi
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGoalContributionRepository extends Mock implements GoalContributionRepository {}
+class MockGoalContributionRepository extends Mock
+    implements GoalContributionRepository {}
 
 class FakeGoalContribution extends Fake implements GoalContribution {}
 
@@ -33,11 +34,14 @@ void main() {
 
   test('should call updateContribution on repository', () async {
     // arrange
-    when(() => mockRepository.updateContribution(tContribution))
-        .thenAnswer((_) async => Right(tContribution));
+    when(
+      () => mockRepository.updateContribution(tContribution),
+    ).thenAnswer((_) async => Right(tContribution));
 
     // act
-    final result = await useCase(UpdateContributionParams(contribution: tContribution));
+    final result = await useCase(
+      UpdateContributionParams(contribution: tContribution),
+    );
 
     // assert
     expect(result, Right(tContribution));
@@ -47,11 +51,14 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.updateContribution(tContribution))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.updateContribution(tContribution),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
-    final result = await useCase(UpdateContributionParams(contribution: tContribution));
+    final result = await useCase(
+      UpdateContributionParams(contribution: tContribution),
+    );
 
     // assert
     expect(result.isLeft(), true);

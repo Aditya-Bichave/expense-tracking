@@ -27,9 +27,7 @@ void main() {
 
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: Scaffold(
-        body: SpendingBarChart(data: tData),
-      ),
+      widget: Scaffold(body: SpendingBarChart(data: tData)),
     );
 
     expect(find.byType(BarChart), findsOneWidget);
@@ -39,12 +37,12 @@ void main() {
     expect(find.text('Cat2'), findsOneWidget);
   });
 
-  testWidgets('SpendingBarChart renders empty state when no data', (tester) async {
+  testWidgets('SpendingBarChart renders empty state when no data', (
+    tester,
+  ) async {
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: const Scaffold(
-        body: SpendingBarChart(data: []),
-      ),
+      widget: const Scaffold(body: SpendingBarChart(data: [])),
     );
 
     expect(find.byType(BarChart), findsNothing);

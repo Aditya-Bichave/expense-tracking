@@ -22,7 +22,9 @@ void main() {
     mockUseCase = MockGetGoalProgressReportUseCase();
     mockReportFilterBloc = MockReportFilterBloc();
 
-    when(() => mockReportFilterBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockReportFilterBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => mockReportFilterBloc.state).thenReturn(
       ReportFilterState(
         optionsStatus: FilterOptionsStatus.loaded,
@@ -62,7 +64,9 @@ void main() {
     blocTest<GoalProgressReportBloc, GoalProgressReportState>(
       'emits [loading, loaded] when LoadGoalProgressReport is successful',
       build: () {
-        when(() => mockUseCase(any())).thenAnswer((_) async => const Right(tReportData));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => const Right(tReportData));
         return GoalProgressReportBloc(
           getGoalProgressReportUseCase: mockUseCase,
           reportFilterBloc: mockReportFilterBloc,

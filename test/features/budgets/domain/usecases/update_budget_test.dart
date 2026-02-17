@@ -30,8 +30,9 @@ void main() {
 
   test('should call updateBudget on repository', () async {
     // arrange
-    when(() => mockRepository.updateBudget(tBudget))
-        .thenAnswer((_) async => Right(tBudget)); // Assume it returns the updated budget or similar
+    when(() => mockRepository.updateBudget(tBudget)).thenAnswer(
+      (_) async => Right(tBudget),
+    ); // Assume it returns the updated budget or similar
 
     // act
     final result = await useCase(UpdateBudgetParams(budget: tBudget));
@@ -44,8 +45,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.updateBudget(tBudget))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.updateBudget(tBudget),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(UpdateBudgetParams(budget: tBudget));

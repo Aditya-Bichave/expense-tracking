@@ -32,23 +32,28 @@ void main() {
     type: BudgetType.categorySpecific,
     targetAmount: 500.0,
     period: BudgetPeriodType.recurringMonthly,
-    categoryIds: const ['cat1'], // Must validate category presence for categorySpecific
+    categoryIds: const [
+      'cat1',
+    ], // Must validate category presence for categorySpecific
     createdAt: DateTime.now(),
   );
 
   test('should call addBudget on repository', () async {
     // arrange
-    when(() => mockRepository.addBudget(any()))
-        .thenAnswer((_) async => Right(tBudget));
+    when(
+      () => mockRepository.addBudget(any()),
+    ).thenAnswer((_) async => Right(tBudget));
 
     // act
-    final result = await useCase(AddBudgetParams(
-      name: tBudget.name,
-      targetAmount: tBudget.targetAmount,
-      period: tBudget.period,
-      type: tBudget.type,
-      categoryIds: tBudget.categoryIds,
-    ));
+    final result = await useCase(
+      AddBudgetParams(
+        name: tBudget.name,
+        targetAmount: tBudget.targetAmount,
+        period: tBudget.period,
+        type: tBudget.type,
+        categoryIds: tBudget.categoryIds,
+      ),
+    );
 
     // assert
     expect(result.isRight(), true);
@@ -57,17 +62,20 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.addBudget(any()))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.addBudget(any()),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
-    final result = await useCase(AddBudgetParams(
-      name: tBudget.name,
-      targetAmount: tBudget.targetAmount,
-      period: tBudget.period,
-      type: tBudget.type,
-      categoryIds: tBudget.categoryIds,
-    ));
+    final result = await useCase(
+      AddBudgetParams(
+        name: tBudget.name,
+        targetAmount: tBudget.targetAmount,
+        period: tBudget.period,
+        type: tBudget.type,
+        categoryIds: tBudget.categoryIds,
+      ),
+    );
 
     // assert
     expect(result.isLeft(), true);

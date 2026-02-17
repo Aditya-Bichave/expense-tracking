@@ -73,20 +73,25 @@ void main() {
 
   test('should return combined list of transactions', () async {
     // arrange
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => Right([tCategory1, tCategory2]));
-    when(() => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-        )).thenAnswer((_) async => Right([tExpenseModel]));
-    when(() => mockIncomeRepository.getIncomes(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-        )).thenAnswer((_) async => Right([tIncomeModel]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory1, tCategory2]));
+    when(
+      () => mockExpenseRepository.getExpenses(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([tExpenseModel]));
+    when(
+      () => mockIncomeRepository.getIncomes(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([tIncomeModel]));
 
     // act
     final result = await useCase(const GetTransactionsParams());
@@ -108,54 +113,64 @@ void main() {
 
   test('should return filtered transactions (Expense only)', () async {
     // arrange
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => Right([tCategory1]));
-    when(() => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-        )).thenAnswer((_) async => Right([tExpenseModel]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory1]));
+    when(
+      () => mockExpenseRepository.getExpenses(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([tExpenseModel]));
 
     // act
-    final result = await useCase(const GetTransactionsParams(
-      transactionType: TransactionType.expense,
-    ));
+    final result = await useCase(
+      const GetTransactionsParams(transactionType: TransactionType.expense),
+    );
 
     // assert
     expect(result.isRight(), true);
     final list = result.getOrElse(() => []);
     expect(list.length, 1);
     expect(list.first.id, 'e1');
-    verifyNever(() => mockIncomeRepository.getIncomes(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-    ));
+    verifyNever(
+      () => mockIncomeRepository.getIncomes(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    );
   });
 
   test('should return filtered transactions (Search term)', () async {
     // arrange
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => Right([tCategory1, tCategory2]));
-    when(() => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-    )).thenAnswer((_) async => Right([tExpenseModel]));
-    when(() => mockIncomeRepository.getIncomes(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-    )).thenAnswer((_) async => Right([tIncomeModel]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory1, tCategory2]));
+    when(
+      () => mockExpenseRepository.getExpenses(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([tExpenseModel]));
+    when(
+      () => mockIncomeRepository.getIncomes(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([tIncomeModel]));
 
     // act
-    final result = await useCase(const GetTransactionsParams(
-      searchTerm: 'Expense',
-    ));
+    final result = await useCase(
+      const GetTransactionsParams(searchTerm: 'Expense'),
+    );
 
     // assert
     expect(result.isRight(), true);
@@ -166,23 +181,28 @@ void main() {
 
   test('should handle repository failure (Categories)', () async {
     // arrange
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Left(CacheFailure()));
     // Mock repositories are still called to construct the future list, so we need to mock them returning something or nothing.
     // The usecase builds the future list *before* awaiting.
     // So expenseRepository.getExpenses IS called.
-    when(() => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-    )).thenAnswer((_) async => const Right([]));
-    when(() => mockIncomeRepository.getIncomes(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-    )).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockExpenseRepository.getExpenses(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockIncomeRepository.getIncomes(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => const Right([]));
 
     // act
     final result = await useCase(const GetTransactionsParams());
@@ -192,26 +212,31 @@ void main() {
   });
 
   test('should handle repository failure (Expenses)', () async {
-      // arrange
-      when(() => mockCategoryRepository.getAllCategories())
-          .thenAnswer((_) async => Right([]));
-      when(() => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-      )).thenAnswer((_) async => Left(CacheFailure()));
-      when(() => mockIncomeRepository.getIncomes(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          categoryId: any(named: 'categoryId'),
-          accountId: any(named: 'accountId'),
-      )).thenAnswer((_) async => Right([]));
+    // arrange
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([]));
+    when(
+      () => mockExpenseRepository.getExpenses(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockIncomeRepository.getIncomes(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([]));
 
-      // act
-      final result = await useCase(const GetTransactionsParams());
+    // act
+    final result = await useCase(const GetTransactionsParams());
 
-      // assert
-      expect(result.isLeft(), true);
-    });
+    // assert
+    expect(result.isLeft(), true);
+  });
 }

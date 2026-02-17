@@ -21,13 +21,13 @@ void main() {
   test('should call deleteAssetAccount on repository', () async {
     // arrange
     when(() => mockRepository.deleteAssetAccount(tAccountId))
-        .thenAnswer((_) async => const Right(true));
+        .thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(const DeleteAssetAccountParams(tAccountId));
 
     // assert
-    expect(result, const Right(true));
+    expect(result, const Right(null));
     verify(() => mockRepository.deleteAssetAccount(tAccountId));
     verifyNoMoreInteractions(mockRepository);
   });

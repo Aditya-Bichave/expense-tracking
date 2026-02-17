@@ -27,13 +27,14 @@ void main() {
       status: GoalStatus.active,
       totalSaved: 0.0,
       createdAt: DateTime.now(),
-    )
+    ),
   ];
 
   test('should get goals from repository', () async {
     // arrange
-    when(() => mockRepository.getGoals())
-        .thenAnswer((_) async => Right(tGoals));
+    when(
+      () => mockRepository.getGoals(),
+    ).thenAnswer((_) async => Right(tGoals));
 
     // act
     final result = await useCase(NoParams());
@@ -46,8 +47,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.getGoals())
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.getGoals(),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(NoParams());

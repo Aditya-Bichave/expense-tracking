@@ -26,11 +26,11 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: SpendingPieChart(data: tData.spendingByCategory),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: SpendingPieChart(data: tData.spendingByCategory)),
       ),
-    ));
+    );
 
     // PieChart from fl_chart might not render text widgets directly in the tree if it draws on canvas.
     // However, the test failure says it found 0 widgets with text "Cat1".
@@ -43,17 +43,19 @@ void main() {
     expect(find.byType(PieChart), findsOneWidget);
   });
 
-  testWidgets('SpendingPieChart renders empty state when no data', (tester) async {
+  testWidgets('SpendingPieChart renders empty state when no data', (
+    tester,
+  ) async {
     const tData = SpendingCategoryReportData(
       totalSpending: ComparisonValue(currentValue: 0.0),
       spendingByCategory: [],
     );
 
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(
-        body: SpendingPieChart(data: []),
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(body: SpendingPieChart(data: [])),
       ),
-    ));
+    );
 
     // When empty, it renders Center(child: Text("No data to display")) based on implementation file reading.
     expect(find.text('No data to display'), findsOneWidget);

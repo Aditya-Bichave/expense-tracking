@@ -23,7 +23,9 @@ void main() {
     mockReportFilterBloc = MockReportFilterBloc();
 
     // Mock the filter bloc stream and state
-    when(() => mockReportFilterBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockReportFilterBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => mockReportFilterBloc.state).thenReturn(
       ReportFilterState(
         optionsStatus: FilterOptionsStatus.loaded,
@@ -45,7 +47,12 @@ void main() {
       reportFilterBloc: mockReportFilterBloc,
     );
 
-    registerFallbackValue(GetBudgetPerformanceReportParams(startDate: DateTime(2023), endDate: DateTime(2023)));
+    registerFallbackValue(
+      GetBudgetPerformanceReportParams(
+        startDate: DateTime(2023),
+        endDate: DateTime(2023),
+      ),
+    );
   });
 
   tearDown(() {
@@ -63,7 +70,9 @@ void main() {
     blocTest<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
       'emits [loading, loaded] when LoadBudgetPerformanceReport is successful',
       build: () {
-        when(() => mockUseCase(any())).thenAnswer((_) async => const Right(tReportData));
+        when(
+          () => mockUseCase(any()),
+        ).thenAnswer((_) async => const Right(tReportData));
         return BudgetPerformanceReportBloc(
           getBudgetPerformanceReportUseCase: mockUseCase,
           reportFilterBloc: mockReportFilterBloc,
@@ -90,7 +99,9 @@ void main() {
       act: (bloc) => bloc.add(const LoadBudgetPerformanceReport()),
       expect: () => [
         const BudgetPerformanceReportLoading(compareToPrevious: false),
-        const BudgetPerformanceReportError('A local data storage error occurred.'),
+        const BudgetPerformanceReportError(
+          'A local data storage error occurred.',
+        ),
       ],
     );
   });

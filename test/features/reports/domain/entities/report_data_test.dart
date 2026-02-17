@@ -62,13 +62,13 @@ void main() {
   });
 
   group('SpendingCategoryReportData', () {
-      test('currentTotalSpending getter works', () {
-        const data = SpendingCategoryReportData(
-          totalSpending: ComparisonValue(currentValue: 500.0),
-          spendingByCategory: [],
-        );
-        expect(data.currentTotalSpending, 500.0);
-      });
+    test('currentTotalSpending getter works', () {
+      const data = SpendingCategoryReportData(
+        totalSpending: ComparisonValue(currentValue: 500.0),
+        spendingByCategory: [],
+      );
+      expect(data.currentTotalSpending, 500.0);
+    });
   });
 
   group('TimeSeriesDataPoint', () {
@@ -87,8 +87,14 @@ void main() {
     test('netFlow calculation works with comparison', () {
       final data = IncomeExpensePeriodData(
         periodStart: tStart,
-        totalIncome: const ComparisonValue(currentValue: 1000.0, previousValue: 800.0),
-        totalExpense: const ComparisonValue(currentValue: 600.0, previousValue: 500.0),
+        totalIncome: const ComparisonValue(
+          currentValue: 1000.0,
+          previousValue: 800.0,
+        ),
+        totalExpense: const ComparisonValue(
+          currentValue: 600.0,
+          previousValue: 500.0,
+        ),
       );
       // Net Flow: Current = 1000 - 600 = 400. Previous = 800 - 500 = 300.
       expect(data.netFlow.currentValue, 400.0);
@@ -106,7 +112,7 @@ void main() {
     });
 
     test('getters work', () {
-       final data = IncomeExpensePeriodData(
+      final data = IncomeExpensePeriodData(
         periodStart: tStart,
         totalIncome: const ComparisonValue(currentValue: 1000.0),
         totalExpense: const ComparisonValue(currentValue: 600.0),

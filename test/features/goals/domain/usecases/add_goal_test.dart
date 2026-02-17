@@ -10,7 +10,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
 class MockGoalRepository extends Mock implements GoalRepository {}
+
 class MockClock extends Mock implements Clock {}
+
 class FakeGoal extends Fake implements Goal {}
 
 void main() {
@@ -41,14 +43,14 @@ void main() {
 
   test('should call addGoal on repository', () async {
     // arrange
-    when(() => mockRepository.addGoal(any()))
-        .thenAnswer((_) async => Right(tGoal));
+    when(
+      () => mockRepository.addGoal(any()),
+    ).thenAnswer((_) async => Right(tGoal));
 
     // act
-    final result = await useCase(AddGoalParams(
-      name: tGoal.name,
-      targetAmount: tGoal.targetAmount,
-    ));
+    final result = await useCase(
+      AddGoalParams(name: tGoal.name, targetAmount: tGoal.targetAmount),
+    );
 
     // assert
     expect(result.isRight(), true);
@@ -57,14 +59,14 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.addGoal(any()))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.addGoal(any()),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
-    final result = await useCase(AddGoalParams(
-      name: tGoal.name,
-      targetAmount: tGoal.targetAmount,
-    ));
+    final result = await useCase(
+      AddGoalParams(name: tGoal.name, targetAmount: tGoal.targetAmount),
+    );
 
     // assert
     expect(result.isLeft(), true);

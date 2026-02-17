@@ -35,8 +35,9 @@ void main() {
 
   test('should call updateGoal on repository', () async {
     // arrange
-    when(() => mockRepository.updateGoal(tGoal))
-        .thenAnswer((_) async => Right(tGoal));
+    when(
+      () => mockRepository.updateGoal(tGoal),
+    ).thenAnswer((_) async => Right(tGoal));
 
     // act
     final result = await useCase(UpdateGoalParams(goal: tGoal));
@@ -49,8 +50,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.updateGoal(tGoal))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.updateGoal(tGoal),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(UpdateGoalParams(goal: tGoal));

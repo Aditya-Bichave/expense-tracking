@@ -10,7 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../../../../helpers/pump_app.dart';
 
 void main() {
-  testWidgets('BudgetPerformanceBarChart renders correctly with data', (tester) async {
+  testWidgets('BudgetPerformanceBarChart renders correctly with data', (
+    tester,
+  ) async {
     final tBudget = Budget(
       id: '1',
       name: 'Budget1',
@@ -34,10 +36,7 @@ void main() {
     await pumpWidgetWithProviders(
       tester: tester,
       widget: Scaffold(
-        body: BudgetPerformanceBarChart(
-          data: tData,
-          currencySymbol: '\$',
-        ),
+        body: BudgetPerformanceBarChart(data: tData, currencySymbol: '\$'),
       ),
     );
 
@@ -54,14 +53,13 @@ void main() {
     // Commented out to avoid potential failure similar to pie chart if not rendered as standard Text widget in tree.
   });
 
-  testWidgets('BudgetPerformanceBarChart renders empty state when no data', (tester) async {
+  testWidgets('BudgetPerformanceBarChart renders empty state when no data', (
+    tester,
+  ) async {
     await pumpWidgetWithProviders(
       tester: tester,
       widget: const Scaffold(
-        body: BudgetPerformanceBarChart(
-          data: [],
-          currencySymbol: '\$',
-        ),
+        body: BudgetPerformanceBarChart(data: [], currencySymbol: '\$'),
       ),
     );
 

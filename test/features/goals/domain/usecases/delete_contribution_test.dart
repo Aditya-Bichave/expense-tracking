@@ -5,7 +5,8 @@ import 'package:expense_tracker/features/goals/domain/usecases/delete_contributi
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGoalContributionRepository extends Mock implements GoalContributionRepository {}
+class MockGoalContributionRepository extends Mock
+    implements GoalContributionRepository {}
 
 void main() {
   late DeleteContributionUseCase useCase;
@@ -20,8 +21,9 @@ void main() {
 
   test('should call deleteContribution on repository', () async {
     // arrange
-    when(() => mockRepository.deleteContribution(tId))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteContribution(tId),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(const DeleteContributionParams(id: tId));
@@ -34,8 +36,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.deleteContribution(tId))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.deleteContribution(tId),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(const DeleteContributionParams(id: tId));

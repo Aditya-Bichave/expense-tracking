@@ -20,8 +20,9 @@ void main() {
 
   test('should call deleteGoal on repository', () async {
     // arrange
-    when(() => mockRepository.deleteGoal(tGoalId))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteGoal(tGoalId),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(const DeleteGoalParams(id: tGoalId));
@@ -34,8 +35,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.deleteGoal(tGoalId))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.deleteGoal(tGoalId),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(const DeleteGoalParams(id: tGoalId));

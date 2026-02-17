@@ -20,8 +20,9 @@ void main() {
 
   test('should call deleteBudget on repository', () async {
     // arrange
-    when(() => mockRepository.deleteBudget(tBudgetId))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteBudget(tBudgetId),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(const DeleteBudgetParams(id: tBudgetId));
@@ -34,8 +35,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.deleteBudget(tBudgetId))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.deleteBudget(tBudgetId),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(const DeleteBudgetParams(id: tBudgetId));
