@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
@@ -54,27 +53,29 @@ void main() {
     verifyNoMoreInteractions(mockRepository);
   });
 
-  test('should return a failure when the repository call is unsuccessful',
-      () async {
-    // arrange
-    when(
-      () => mockRepository.getSpecificCategories(
-        type: CategoryType.expense,
-        includeCustom: true,
-      ),
-    ).thenAnswer((_) async => Left(ServerFailure('Server Failure')));
+  test(
+    'should return a failure when the repository call is unsuccessful',
+    () async {
+      // arrange
+      when(
+        () => mockRepository.getSpecificCategories(
+          type: CategoryType.expense,
+          includeCustom: true,
+        ),
+      ).thenAnswer((_) async => Left(ServerFailure('Server Failure')));
 
-    // act
-    final result = await useCase(NoParams());
+      // act
+      final result = await useCase(NoParams());
 
-    // assert
-    expect(result, Left(ServerFailure('Server Failure')));
-    verify(
-      () => mockRepository.getSpecificCategories(
-        type: CategoryType.expense,
-        includeCustom: true,
-      ),
-    );
-    verifyNoMoreInteractions(mockRepository);
-  });
+      // assert
+      expect(result, Left(ServerFailure('Server Failure')));
+      verify(
+        () => mockRepository.getSpecificCategories(
+          type: CategoryType.expense,
+          includeCustom: true,
+        ),
+      );
+      verifyNoMoreInteractions(mockRepository);
+    },
+  );
 }

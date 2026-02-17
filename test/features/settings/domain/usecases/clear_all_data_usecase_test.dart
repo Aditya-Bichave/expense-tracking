@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
@@ -21,8 +20,9 @@ void main() {
 
   test('should clear all data using the repository', () async {
     // arrange
-    when(() => mockRepository.clearAllData())
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.clearAllData(),
+    ).thenAnswer((_) async => const Right(null));
     // act
     final result = await useCase(NoParams());
     // assert

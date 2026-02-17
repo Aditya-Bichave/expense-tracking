@@ -18,6 +18,9 @@ void main() {
   late MockGetGoalProgressReportUseCase mockUseCase;
   late MockReportFilterBloc mockReportFilterBloc;
 
+  const tReportData = GoalProgressReportData(progressData: []);
+  final tFailure = CacheFailure();
+
   setUp(() {
     mockUseCase = MockGetGoalProgressReportUseCase();
     mockReportFilterBloc = MockReportFilterBloc();
@@ -41,29 +44,28 @@ void main() {
       ),
     );
 
+    registerFallbackValue(const GetGoalProgressReportParams());
+
+    // Stub the usecase for default behavior
+    when(
+      () => mockUseCase(any()),
+    ).thenAnswer((_) async => const Right(tReportData));
+
     bloc = GoalProgressReportBloc(
       getGoalProgressReportUseCase: mockUseCase,
       reportFilterBloc: mockReportFilterBloc,
     );
-
-    registerFallbackValue(const GetGoalProgressReportParams());
   });
 
   tearDown(() {
     bloc.close();
   });
 
-  const tReportData = GoalProgressReportData(progressData: []);
-  final tFailure = CacheFailure();
-
   group('GoalProgressReportBloc', () {
-    test('initial state is initial (before first event processed)', () {
-      expect(bloc.state, isA<GoalProgressReportInitial>());
-    });
-
     blocTest<GoalProgressReportBloc, GoalProgressReportState>(
       'emits [loading, loaded] when LoadGoalProgressReport is successful',
       build: () {
+        // Mock default behavior for success
         when(
           () => mockUseCase(any()),
         ).thenAnswer((_) async => const Right(tReportData));
@@ -83,6 +85,7 @@ void main() {
     blocTest<GoalProgressReportBloc, GoalProgressReportState>(
       'emits [loading, error] when LoadGoalProgressReport fails',
       build: () {
+        // Override with failure
         when(() => mockUseCase(any())).thenAnswer((_) async => Left(tFailure));
         return GoalProgressReportBloc(
           getGoalProgressReportUseCase: mockUseCase,

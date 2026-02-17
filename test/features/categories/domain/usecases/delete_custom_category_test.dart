@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
@@ -40,12 +39,15 @@ void main() {
 
   test('should reassign expenses, incomes and delete category', () async {
     // arrange
-    when(() => mockExpenseRepository.reassignExpensesCategory(any(), any()))
-        .thenAnswer((_) async => const Right(1));
-    when(() => mockIncomeRepository.reassignIncomesCategory(any(), any()))
-        .thenAnswer((_) async => const Right(1));
-    when(() => mockCategoryRepository.deleteCustomCategory(any(), any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockExpenseRepository.reassignExpensesCategory(any(), any()),
+    ).thenAnswer((_) async => const Right(1));
+    when(
+      () => mockIncomeRepository.reassignIncomesCategory(any(), any()),
+    ).thenAnswer((_) async => const Right(1));
+    when(
+      () => mockCategoryRepository.deleteCustomCategory(any(), any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(tParams);
@@ -53,34 +55,61 @@ void main() {
     // assert
     expect(result, const Right(null));
     verify(
-        () => mockExpenseRepository.reassignExpensesCategory(tCategoryId, tFallbackId));
+      () => mockExpenseRepository.reassignExpensesCategory(
+        tCategoryId,
+        tFallbackId,
+      ),
+    );
     verify(
-        () => mockIncomeRepository.reassignIncomesCategory(tCategoryId, tFallbackId));
+      () => mockIncomeRepository.reassignIncomesCategory(
+        tCategoryId,
+        tFallbackId,
+      ),
+    );
     verify(
-        () => mockCategoryRepository.deleteCustomCategory(tCategoryId, tFallbackId));
+      () =>
+          mockCategoryRepository.deleteCustomCategory(tCategoryId, tFallbackId),
+    );
   });
 
-  test('should rollback expense reassignment if income reassignment fails',
-      () async {
-    // arrange
-    when(() => mockExpenseRepository.reassignExpensesCategory(any(), any()))
-        .thenAnswer((_) async => const Right(1));
-    when(() => mockIncomeRepository.reassignIncomesCategory(any(), any()))
-        .thenAnswer((_) async => Left(ServerFailure('Fail')));
+  test(
+    'should rollback expense reassignment if income reassignment fails',
+    () async {
+      // arrange
+      when(
+        () => mockExpenseRepository.reassignExpensesCategory(any(), any()),
+      ).thenAnswer((_) async => const Right(1));
+      when(
+        () => mockIncomeRepository.reassignIncomesCategory(any(), any()),
+      ).thenAnswer((_) async => Left(ServerFailure('Fail')));
 
-    // act
-    final result = await useCase(tParams);
+      // act
+      final result = await useCase(tParams);
 
-    // assert
-    expect(result, Left(ServerFailure('Fail')));
-    verify(
-        () => mockExpenseRepository.reassignExpensesCategory(tCategoryId, tFallbackId));
-    verify(
-        () => mockIncomeRepository.reassignIncomesCategory(tCategoryId, tFallbackId));
-    // Verify rollback
-    verify(
-        () => mockExpenseRepository.reassignExpensesCategory(tFallbackId, tCategoryId));
-    verifyNever(
-        () => mockCategoryRepository.deleteCustomCategory(any(), any()));
-  });
+      // assert
+      expect(result, Left(ServerFailure('Fail')));
+      verify(
+        () => mockExpenseRepository.reassignExpensesCategory(
+          tCategoryId,
+          tFallbackId,
+        ),
+      );
+      verify(
+        () => mockIncomeRepository.reassignIncomesCategory(
+          tCategoryId,
+          tFallbackId,
+        ),
+      );
+      // Verify rollback
+      verify(
+        () => mockExpenseRepository.reassignExpensesCategory(
+          tFallbackId,
+          tCategoryId,
+        ),
+      );
+      verifyNever(
+        () => mockCategoryRepository.deleteCustomCategory(any(), any()),
+      );
+    },
+  );
 }

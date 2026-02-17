@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -49,10 +48,12 @@ void main() {
   test('should add a custom category to the repository', () async {
     // arrange
     when(() => mockUuid.v4()).thenReturn(tId);
-    when(() => mockRepository.getAllCategories())
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.addCustomCategory(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.getAllCategories(),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.addCustomCategory(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(tParams);
@@ -76,24 +77,32 @@ void main() {
     final result = await useCase(invalidParams);
 
     // assert
-    expect(result, const Left(ValidationFailure("Category name cannot be empty.")));
+    expect(
+      result,
+      const Left(ValidationFailure("Category name cannot be empty.")),
+    );
     verifyZeroInteractions(mockRepository);
   });
 
-    test('should return validation failure if category exists', () async {
+  test('should return validation failure if category exists', () async {
     // arrange
     when(() => mockUuid.v4()).thenReturn(tId);
-    when(() => mockRepository.getAllCategories())
-        .thenAnswer((_) async => Right([tCategory])); // Existing category
+    when(
+      () => mockRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory])); // Existing category
 
     // act
     final result = await useCase(tParams);
 
     // assert
     expect(
-        result,
-        const Left(ValidationFailure(
-            "A category with this name already exists in the selected category group.")));
+      result,
+      const Left(
+        ValidationFailure(
+          "A category with this name already exists in the selected category group.",
+        ),
+      ),
+    );
     verify(() => mockRepository.getAllCategories());
     verifyNever(() => mockRepository.addCustomCategory(any()));
   });

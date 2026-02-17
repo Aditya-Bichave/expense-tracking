@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/error/failure.dart';
@@ -73,59 +72,84 @@ void main() {
     currentBalance: 1000.0,
   );
 
-  test('should return financial overview when all repositories succeed', () async {
-    // arrange
-    when(() => mockAccountRepository.getAssetAccounts())
-        .thenAnswer((_) async => Right([tAccount]));
-    when(
-      () => mockIncomeRepository.getTotalIncomeForAccount(
-        any(),
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-      ),
-    ).thenAnswer((_) async => const Right(2000.0));
-    when(
-      () => mockExpenseRepository.getTotalExpensesForAccount(
-        any(),
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-      ),
-    ).thenAnswer((_) async => const Right(500.0));
-    when(() => mockBudgetRepository.getBudgets())
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockGoalRepository.getGoals(includeArchived: false))
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockReportRepository.getRecentDailySpending(days: any(named: 'days')))
-        .thenAnswer((_) async => const Right([]));
+  test(
+    'should return financial overview when all repositories succeed',
+    () async {
+      // arrange
+      when(
+        () => mockAccountRepository.getAssetAccounts(),
+      ).thenAnswer((_) async => Right([tAccount]));
+      when(
+        () => mockIncomeRepository.getTotalIncomeForAccount(
+          any(),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+        ),
+      ).thenAnswer((_) async => const Right(2000.0));
+      when(
+        () => mockExpenseRepository.getTotalExpensesForAccount(
+          any(),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+        ),
+      ).thenAnswer((_) async => const Right(500.0));
+      when(
+        () => mockBudgetRepository.getBudgets(),
+      ).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGoalRepository.getGoals(includeArchived: false),
+      ).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockReportRepository.getRecentDailySpending(
+          days: any(named: 'days'),
+        ),
+      ).thenAnswer((_) async => const Right([]));
 
-    // act
-    final result = await useCase(tParams);
+      // act
+      final result = await useCase(tParams);
 
-    // assert
-    expect(result.isRight(), true);
-    final overview = result.getOrElse(() => throw Exception());
-    expect(overview.totalIncome, 2000.0);
-    expect(overview.totalExpenses, 500.0);
-    expect(overview.netFlow, 1500.0);
-    expect(overview.overallBalance, 1000.0);
-    expect(overview.accounts.length, 1);
+      // assert
+      expect(result.isRight(), true);
+      final overview = result.getOrElse(() => throw Exception());
+      expect(overview.totalIncome, 2000.0);
+      expect(overview.totalExpenses, 500.0);
+      expect(overview.netFlow, 1500.0);
+      expect(overview.overallBalance, 1000.0);
+      expect(overview.accounts.length, 1);
 
-    verify(() => mockAccountRepository.getAssetAccounts());
-    verify(() => mockIncomeRepository.getTotalIncomeForAccount(any(), startDate: any(named: 'startDate'), endDate: any(named: 'endDate')));
-    verify(() => mockExpenseRepository.getTotalExpensesForAccount(any(), startDate: any(named: 'startDate'), endDate: any(named: 'endDate')));
-    verify(() => mockBudgetRepository.getBudgets());
-    verify(() => mockGoalRepository.getGoals(includeArchived: false));
-  });
+      verify(() => mockAccountRepository.getAssetAccounts());
+      verify(
+        () => mockIncomeRepository.getTotalIncomeForAccount(
+          any(),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+        ),
+      );
+      verify(
+        () => mockExpenseRepository.getTotalExpensesForAccount(
+          any(),
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+        ),
+      );
+      verify(() => mockBudgetRepository.getBudgets());
+      verify(() => mockGoalRepository.getGoals(includeArchived: false));
+    },
+  );
 
-  test('should return failure when one of the critical calls fails (e.g. accounts)', () async {
-    // arrange
-    when(() => mockAccountRepository.getAssetAccounts())
-        .thenAnswer((_) async => Left(ServerFailure('Failed')));
+  test(
+    'should return failure when one of the critical calls fails (e.g. accounts)',
+    () async {
+      // arrange
+      when(
+        () => mockAccountRepository.getAssetAccounts(),
+      ).thenAnswer((_) async => Left(ServerFailure('Failed')));
 
-    // act
-    final result = await useCase(tParams);
+      // act
+      final result = await useCase(tParams);
 
-    // assert
-    expect(result, Left(ServerFailure('Failed')));
-  });
+      // assert
+      expect(result, Left(ServerFailure('Failed')));
+    },
+  );
 }

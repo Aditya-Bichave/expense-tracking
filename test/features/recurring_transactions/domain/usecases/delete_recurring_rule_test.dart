@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
@@ -22,8 +21,9 @@ void main() {
 
   test('should delete a recurring rule from the repository', () async {
     // arrange
-    when(() => mockRepository.deleteRecurringRule(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
     // act
     final result = await useCase(tRuleId);
     // assert
@@ -32,16 +32,19 @@ void main() {
     verifyNoMoreInteractions(mockRepository);
   });
 
-  test('should return a failure when the repository call is unsuccessful',
-      () async {
-    // arrange
-    when(() => mockRepository.deleteRecurringRule(any()))
-        .thenAnswer((_) async => Left(ServerFailure('Server Failure')));
-    // act
-    final result = await useCase(tRuleId);
-    // assert
-    expect(result, Left(ServerFailure('Server Failure')));
-    verify(() => mockRepository.deleteRecurringRule(tRuleId));
-    verifyNoMoreInteractions(mockRepository);
-  });
+  test(
+    'should return a failure when the repository call is unsuccessful',
+    () async {
+      // arrange
+      when(
+        () => mockRepository.deleteRecurringRule(any()),
+      ).thenAnswer((_) async => Left(ServerFailure('Server Failure')));
+      // act
+      final result = await useCase(tRuleId);
+      // assert
+      expect(result, Left(ServerFailure('Server Failure')));
+      verify(() => mockRepository.deleteRecurringRule(tRuleId));
+      verifyNoMoreInteractions(mockRepository);
+    },
+  );
 }

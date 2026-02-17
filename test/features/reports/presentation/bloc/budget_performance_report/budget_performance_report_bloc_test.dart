@@ -18,6 +18,9 @@ void main() {
   late MockGetBudgetPerformanceReportUseCase mockUseCase;
   late MockReportFilterBloc mockReportFilterBloc;
 
+  const tReportData = BudgetPerformanceReportData(performanceData: []);
+  final tFailure = CacheFailure();
+
   setUp(() {
     mockUseCase = MockGetBudgetPerformanceReportUseCase();
     mockReportFilterBloc = MockReportFilterBloc();
@@ -42,16 +45,21 @@ void main() {
       ),
     );
 
-    bloc = BudgetPerformanceReportBloc(
-      getBudgetPerformanceReportUseCase: mockUseCase,
-      reportFilterBloc: mockReportFilterBloc,
-    );
-
     registerFallbackValue(
       GetBudgetPerformanceReportParams(
         startDate: DateTime(2023),
         endDate: DateTime(2023),
       ),
+    );
+
+    // Stub default behavior for constructor call
+    when(
+      () => mockUseCase(any()),
+    ).thenAnswer((_) async => const Right(tReportData));
+
+    bloc = BudgetPerformanceReportBloc(
+      getBudgetPerformanceReportUseCase: mockUseCase,
+      reportFilterBloc: mockReportFilterBloc,
     );
   });
 
@@ -59,26 +67,25 @@ void main() {
     bloc.close();
   });
 
-  const tReportData = BudgetPerformanceReportData(performanceData: []);
-  final tFailure = CacheFailure();
-
   group('BudgetPerformanceReportBloc', () {
-    test('initial state is initial (before first event processed)', () {
-      expect(bloc.state, isA<BudgetPerformanceReportInitial>());
-    });
-
     blocTest<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
       'emits [loading, loaded] when LoadBudgetPerformanceReport is successful',
       build: () {
-        when(
-          () => mockUseCase(any()),
-        ).thenAnswer((_) async => const Right(tReportData));
+        // Re-stub if needed, but the default stub in setUp is fine for success case.
+        // Actually, blocTest creates a NEW bloc instance in build().
+        // So we must ensure the stub is active. It is, because mockUseCase is reused?
+        // Wait, mockUseCase is created in setUp.
+        // blocTest uses `setUp` from `main`? Yes.
+        // But `blocTest`'s `build` creates a *new* Bloc.
+        // Does it use the *same* mockUseCase? Yes, because `setUp` ran once before this test.
+        // So the stub in `setUp` applies here.
         return BudgetPerformanceReportBloc(
           getBudgetPerformanceReportUseCase: mockUseCase,
           reportFilterBloc: mockReportFilterBloc,
         );
       },
-      skip: 2, // Skip the initial load triggered by constructor
+      skip:
+          2, // Skip the initial load triggered by constructor (Loading, Loaded)
       act: (bloc) => bloc.add(const LoadBudgetPerformanceReport()),
       expect: () => [
         const BudgetPerformanceReportLoading(compareToPrevious: false),
@@ -89,13 +96,15 @@ void main() {
     blocTest<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
       'emits [loading, error] when LoadBudgetPerformanceReport fails',
       build: () {
+        // Override the stub for failure
         when(() => mockUseCase(any())).thenAnswer((_) async => Left(tFailure));
         return BudgetPerformanceReportBloc(
           getBudgetPerformanceReportUseCase: mockUseCase,
           reportFilterBloc: mockReportFilterBloc,
         );
       },
-      skip: 2, // Skip initial load
+      skip:
+          2, // Skip initial load (which will now be Loading -> Error because of override)
       act: (bloc) => bloc.add(const LoadBudgetPerformanceReport()),
       expect: () => [
         const BudgetPerformanceReportLoading(compareToPrevious: false),

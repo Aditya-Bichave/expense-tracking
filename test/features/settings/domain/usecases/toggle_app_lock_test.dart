@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -23,48 +22,60 @@ void main() {
   });
 
   test(
-      'should enable app lock when biometrics are available and save to repository',
-      () async {
-    // arrange
-    when(() => mockLocalAuth.canCheckBiometrics).thenAnswer((_) async => true);
-    when(() => mockLocalAuth.isDeviceSupported()).thenAnswer((_) async => true);
-    when(() => mockRepository.saveAppLockEnabled(any()))
-        .thenAnswer((_) async => const Right(null));
+    'should enable app lock when biometrics are available and save to repository',
+    () async {
+      // arrange
+      when(
+        () => mockLocalAuth.canCheckBiometrics,
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockLocalAuth.isDeviceSupported(),
+      ).thenAnswer((_) async => true);
+      when(
+        () => mockRepository.saveAppLockEnabled(any()),
+      ).thenAnswer((_) async => const Right(null));
 
-    // act
-    final result = await useCase(true);
+      // act
+      final result = await useCase(true);
 
-    // assert
-    expect(result, const Right(null));
-    verify(() => mockRepository.saveAppLockEnabled(true));
-  });
+      // assert
+      expect(result, const Right(null));
+      verify(() => mockRepository.saveAppLockEnabled(true));
+    },
+  );
 
-  test('should return validation failure when enabling but biometrics unavailable',
-      () async {
-    // arrange
-    when(() => mockLocalAuth.canCheckBiometrics).thenAnswer((_) async => false);
-    when(() => mockLocalAuth.isDeviceSupported())
-        .thenAnswer((_) async => false);
+  test(
+    'should return validation failure when enabling but biometrics unavailable',
+    () async {
+      // arrange
+      when(
+        () => mockLocalAuth.canCheckBiometrics,
+      ).thenAnswer((_) async => false);
+      when(
+        () => mockLocalAuth.isDeviceSupported(),
+      ).thenAnswer((_) async => false);
 
-    // act
-    final result = await useCase(true);
+      // act
+      final result = await useCase(true);
 
-    // assert
-    expect(
-      result,
-      Left(
-        ValidationFailure(
-          'Cannot enable App Lock. Biometrics or device lock not available.',
+      // assert
+      expect(
+        result,
+        Left(
+          ValidationFailure(
+            'Cannot enable App Lock. Biometrics or device lock not available.',
+          ),
         ),
-      ),
-    );
-    verifyZeroInteractions(mockRepository);
-  });
+      );
+      verifyZeroInteractions(mockRepository);
+    },
+  );
 
   test('should disable app lock without checking biometrics', () async {
     // arrange
-    when(() => mockRepository.saveAppLockEnabled(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.saveAppLockEnabled(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(false);

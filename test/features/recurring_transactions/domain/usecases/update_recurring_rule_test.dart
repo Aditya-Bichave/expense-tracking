@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
@@ -104,32 +103,38 @@ void main() {
     occurrencesGenerated: 0,
   );
 
-  test('should update a recurring rule in the repository and add audit logs',
-      () async {
-    // arrange
-    when(() => mockGetRecurringRuleById(any()))
-        .thenAnswer((_) async => Right(tOldRule));
-    when(() => mockUuid.v4()).thenReturn('log1');
-    when(() => mockAddAuditLog(any()))
-        .thenAnswer((_) async => const Right(null));
-    when(() => mockRepository.updateRecurringRule(any()))
-        .thenAnswer((_) async => const Right(null));
+  test(
+    'should update a recurring rule in the repository and add audit logs',
+    () async {
+      // arrange
+      when(
+        () => mockGetRecurringRuleById(any()),
+      ).thenAnswer((_) async => Right(tOldRule));
+      when(() => mockUuid.v4()).thenReturn('log1');
+      when(
+        () => mockAddAuditLog(any()),
+      ).thenAnswer((_) async => const Right(null));
+      when(
+        () => mockRepository.updateRecurringRule(any()),
+      ).thenAnswer((_) async => const Right(null));
 
-    // act
-    final result = await useCase(tRule);
+      // act
+      final result = await useCase(tRule);
 
-    // assert
-    expect(result, const Right(null));
-    verify(() => mockGetRecurringRuleById(tRule.id));
-    // Verify audit log for amount change
-    verify(() => mockAddAuditLog(any())).called(1);
-    verify(() => mockRepository.updateRecurringRule(tRule));
-  });
+      // assert
+      expect(result, const Right(null));
+      verify(() => mockGetRecurringRuleById(tRule.id));
+      // Verify audit log for amount change
+      verify(() => mockAddAuditLog(any())).called(1);
+      verify(() => mockRepository.updateRecurringRule(tRule));
+    },
+  );
 
   test('should return failure when getting old rule fails', () async {
     // arrange
-    when(() => mockGetRecurringRuleById(any()))
-        .thenAnswer((_) async => Left(ServerFailure('Fetch Failed')));
+    when(
+      () => mockGetRecurringRuleById(any()),
+    ).thenAnswer((_) async => Left(ServerFailure('Fetch Failed')));
 
     // act
     final result = await useCase(tRule);

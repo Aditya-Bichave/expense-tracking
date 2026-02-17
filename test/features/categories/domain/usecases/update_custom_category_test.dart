@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -32,10 +31,12 @@ void main() {
 
   test('should update a custom category in the repository', () async {
     // arrange
-    when(() => mockRepository.getAllCategories())
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockRepository.updateCategory(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.getAllCategories(),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.updateCategory(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(tParams);
@@ -57,13 +58,17 @@ void main() {
       isCustom: false,
     );
     final params = const UpdateCustomCategoryParams(
-        category: nonCustomCategory);
+      category: nonCustomCategory,
+    );
 
     // act
     final result = await useCase(params);
 
     // assert
-    expect(result, const Left(ValidationFailure("Only custom categories can be updated.")));
+    expect(
+      result,
+      const Left(ValidationFailure("Only custom categories can be updated.")),
+    );
     verifyZeroInteractions(mockRepository);
   });
 }

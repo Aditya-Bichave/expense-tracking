@@ -1,4 +1,3 @@
-
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
@@ -42,8 +41,9 @@ void main() {
 
   test('should get recurring rules from the repository', () async {
     // arrange
-    when(() => mockRepository.getRecurringRules())
-        .thenAnswer((_) async => Right(tRules));
+    when(
+      () => mockRepository.getRecurringRules(),
+    ).thenAnswer((_) async => Right(tRules));
     // act
     final result = await useCase(NoParams());
     // assert
@@ -52,16 +52,19 @@ void main() {
     verifyNoMoreInteractions(mockRepository);
   });
 
-  test('should return a failure when the repository call is unsuccessful',
-      () async {
-    // arrange
-    when(() => mockRepository.getRecurringRules())
-        .thenAnswer((_) async => Left(ServerFailure('Server Failure')));
-    // act
-    final result = await useCase(NoParams());
-    // assert
-    expect(result, Left(ServerFailure('Server Failure')));
-    verify(() => mockRepository.getRecurringRules());
-    verifyNoMoreInteractions(mockRepository);
-  });
+  test(
+    'should return a failure when the repository call is unsuccessful',
+    () async {
+      // arrange
+      when(
+        () => mockRepository.getRecurringRules(),
+      ).thenAnswer((_) async => Left(ServerFailure('Server Failure')));
+      // act
+      final result = await useCase(NoParams());
+      // assert
+      expect(result, Left(ServerFailure('Server Failure')));
+      verify(() => mockRepository.getRecurringRules());
+      verifyNoMoreInteractions(mockRepository);
+    },
+  );
 }

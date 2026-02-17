@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
@@ -7,7 +9,9 @@ import 'package:expense_tracker/features/settings/domain/repositories/settings_r
 import 'package:expense_tracker/features/settings/domain/usecases/toggle_app_lock.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
@@ -23,17 +27,47 @@ void main() {
   late MockToggleAppLockUseCase mockToggleAppLockUseCase;
 
   setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+
+    const channel = MethodChannel('dev.fluttercommunity.plus/package_info');
+    channel.setMockMethodCallHandler((MethodCall methodCall) async {
+      if (methodCall.method == 'getAll') {
+        return <String, dynamic>{
+          'appName': 'Expense Tracker',
+          'packageName': 'com.example.expense_tracker',
+          'version': '1.0.0',
+          'buildNumber': '1',
+        };
+      }
+      return null;
+    });
+
     registerFallbackValue(ThemeMode.light);
     registerFallbackValue(UIMode.elemental);
   });
 
   setUp(() {
+    final getIt = GetIt.instance;
+    // Ensure StreamController is registered for publishDataChangedEvent
+    if (!getIt.isRegistered<StreamController<DataChangedEvent>>(
+      instanceName: 'dataChangeController',
+    )) {
+      getIt.registerSingleton<StreamController<DataChangedEvent>>(
+        StreamController<DataChangedEvent>.broadcast(),
+        instanceName: 'dataChangeController',
+      );
+    }
+
     mockRepository = MockSettingsRepository();
     mockDemoModeService = MockDemoModeService();
     mockToggleAppLockUseCase = MockToggleAppLockUseCase();
 
     // Default mock behaviors
     when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+  });
+
+  tearDown(() {
+    GetIt.instance.reset();
   });
 
   blocTest<SettingsBloc, SettingsState>(
