@@ -53,6 +53,10 @@ class ExpenseModel extends HiveObject {
   @JsonKey(defaultValue: false)
   final bool isRecurring;
 
+  @HiveField(9) // NEW index
+  @JsonKey(includeIfNull: false)
+  final String? merchantId; // NEW: Merchant ID
+
   // Helper functions for JSON serialization of enum
   static String _categorizationStatusToJson(String statusValue) => statusValue;
   static String _categorizationStatusFromJson(String? value) =>
@@ -69,6 +73,7 @@ class ExpenseModel extends HiveObject {
     required this.accountId,
     this.confidenceScoreValue, // Added
     this.isRecurring = false,
+    this.merchantId, // Added
   });
 
   factory ExpenseModel.fromEntity(Expense entity) {
@@ -83,6 +88,7 @@ class ExpenseModel extends HiveObject {
       accountId: entity.accountId,
       confidenceScoreValue: entity.confidenceScore,
       isRecurring: entity.isRecurring,
+      merchantId: entity.merchantId,
     );
   }
 
@@ -102,6 +108,7 @@ class ExpenseModel extends HiveObject {
       ), // Convert string back to enum
       confidenceScore: confidenceScoreValue,
       isRecurring: isRecurring,
+      merchantId: merchantId,
     );
   }
 

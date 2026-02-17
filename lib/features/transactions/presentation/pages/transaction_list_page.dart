@@ -167,8 +167,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
       // Prepare data for learning user history
       final matchData = TransactionMatchData(
         description: transaction.title,
-        merchantId:
-            null, // TODO: Add merchant ID if available on transaction entity
+        merchantId: transaction.merchantId,
       );
       context.read<TransactionListBloc>().add(
         UserCategorizedTransaction(

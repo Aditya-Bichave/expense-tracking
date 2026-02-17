@@ -29,13 +29,14 @@ class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
       notes: fields[6] as String?,
       confidenceScoreValue: (fields[8] as num?)?.toDouble(),
       isRecurring: fields[9] == null ? false : fields[9] as bool,
+      merchantId: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, IncomeModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -55,7 +56,9 @@ class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
       ..writeByte(8)
       ..write(obj.confidenceScoreValue)
       ..writeByte(9)
-      ..write(obj.isRecurring);
+      ..write(obj.isRecurring)
+      ..writeByte(10)
+      ..write(obj.merchantId);
   }
 
   @override
@@ -88,6 +91,7 @@ IncomeModel _$IncomeModelFromJson(Map<String, dynamic> json) => IncomeModel(
   notes: json['notes'] as String?,
   confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
   isRecurring: json['isRecurring'] as bool? ?? false,
+  merchantId: json['merchantId'] as String?,
 );
 
 Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
@@ -104,4 +108,5 @@ Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
       ),
       'confidenceScoreValue': ?instance.confidenceScoreValue,
       'isRecurring': instance.isRecurring,
+      'merchantId': ?instance.merchantId,
     };
