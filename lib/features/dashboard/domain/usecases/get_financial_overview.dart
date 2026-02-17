@@ -265,7 +265,8 @@ class GetFinancialOverviewUseCase
     ); // Only active goals
     goalsResult.fold((failure) => goalError = failure, (activeGoals) {
       // Sort by most complete first, then soonest target date
-      activeGoals.sort((a, b) {
+      final mutableGoals = List<Goal>.from(activeGoals);
+      mutableGoals.sort((a, b) {
         int comparison = b.percentageComplete.compareTo(a.percentageComplete);
         if (comparison == 0) {
           comparison = (a.targetDate ?? DateTime(2100)).compareTo(
@@ -274,7 +275,7 @@ class GetFinancialOverviewUseCase
         }
         return comparison;
       });
-      goalSummary = activeGoals
+      goalSummary = mutableGoals
           .take(3)
           .toList(); // Take top 3 most complete / closest target
     });

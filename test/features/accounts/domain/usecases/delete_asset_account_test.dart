@@ -5,7 +5,8 @@ import 'package:expense_tracker/features/accounts/domain/usecases/delete_asset_a
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockAssetAccountRepository extends Mock implements AssetAccountRepository {}
+class MockAssetAccountRepository extends Mock
+    implements AssetAccountRepository {}
 
 void main() {
   late DeleteAssetAccountUseCase useCase;
@@ -20,8 +21,9 @@ void main() {
 
   test('should call deleteAssetAccount on repository', () async {
     // arrange
-    when(() => mockRepository.deleteAssetAccount(tAccountId))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteAssetAccount(tAccountId),
+    ).thenAnswer((_) async => const Right(null));
 
     // act
     final result = await useCase(const DeleteAssetAccountParams(tAccountId));
@@ -34,8 +36,9 @@ void main() {
 
   test('should return failure when repository fails', () async {
     // arrange
-    when(() => mockRepository.deleteAssetAccount(tAccountId))
-        .thenAnswer((_) async => Left(CacheFailure()));
+    when(
+      () => mockRepository.deleteAssetAccount(tAccountId),
+    ).thenAnswer((_) async => Left(CacheFailure()));
 
     // act
     final result = await useCase(const DeleteAssetAccountParams(tAccountId));
