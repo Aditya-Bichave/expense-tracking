@@ -9,9 +9,10 @@ abstract class AddEditTransactionEvent extends Equatable {
 // Initial event when opening the page (determines add/edit mode)
 class InitializeTransaction extends AddEditTransactionEvent {
   final TransactionEntity? initialTransaction;
-  const InitializeTransaction({this.initialTransaction});
+  final String? merchantId;
+  const InitializeTransaction({this.initialTransaction, this.merchantId});
   @override
-  List<Object?> get props => [initialTransaction];
+  List<Object?> get props => [initialTransaction, merchantId];
 }
 
 // User toggles between Expense and Income

@@ -89,6 +89,7 @@ class AddEditTransactionBloc
           tempDate: initial.date,
           tempAccountId: initial.accountId,
           tempNotes: () => initial.notes, // Use ValueGetter for nullable notes
+          merchantId: event.merchantId,
           clearErrorMessage: true,
         ),
       );
@@ -97,7 +98,7 @@ class AddEditTransactionBloc
       emit(
         const AddEditTransactionState(
           status: AddEditStatus.ready,
-        ).copyWith(clearTempData: true),
+        ).copyWith(clearTempData: true, merchantId: event.merchantId),
       );
     }
   }
@@ -172,8 +173,8 @@ class AddEditTransactionBloc
   ) async {
     final catParams = CategorizeTransactionParams(
       description: state.tempTitle ?? '',
-      merchantId: null,
-    ); // TODO: Get merchantId if available
+      merchantId: state.merchantId,
+    );
     final catResult = await _categorizeTransactionUseCase(catParams);
 
     await catResult.fold(
