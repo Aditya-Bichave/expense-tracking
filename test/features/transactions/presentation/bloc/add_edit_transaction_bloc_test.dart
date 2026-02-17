@@ -300,16 +300,18 @@ void main() {
         when(
           () => categorize(any()),
         ).thenAnswer((_) async => Right(CategorizationResult.uncategorized()));
-        when(
-          () => addExpense(any()),
-        ).thenAnswer((_) async => Right(Expense(
-          id: '1',
-          title: 't',
-          amount: 1,
-          date: DateTime(2024),
-          accountId: 'a',
-          category: Category.uncategorized,
-        )));
+        when(() => addExpense(any())).thenAnswer(
+          (_) async => Right(
+            Expense(
+              id: '1',
+              title: 't',
+              amount: 1,
+              date: DateTime(2024),
+              accountId: 'a',
+              category: Category.uncategorized,
+            ),
+          ),
+        );
 
         final bloc = AddEditTransactionBloc(
           addExpenseUseCase: addExpense,

@@ -130,5 +130,6 @@ class AddEditTransactionState extends Equatable {
     tempDate,
     tempAccountId,
     tempNotes,
+    merchantId,
   ];
 }
