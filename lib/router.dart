@@ -46,6 +46,15 @@ import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/features/auth/presentation/pages/auth_page.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/groups/presentation/pages/groups_page.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_list_bloc.dart';
+import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_detail_bloc.dart';
+import 'package:expense_tracker/features/invites/presentation/pages/join_group_page.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
+import 'package:expense_tracker/core/auth/auth_session_service.dart';
 
 // Simple Listenable that refreshes GoRouter when the stream emits
 class GoRouterRefreshStream extends ChangeNotifier {
@@ -177,6 +186,48 @@ class AppRouter {
     routes: [
       // Initial Setup Route - This is the route for the initial screen
       GoRoute(
+      GoRoute(
+        path: RouteNames.auth,
+        builder: (context, state) => BlocProvider<AuthBloc>(
+          create: (_) => AuthBloc(sl<AuthSessionService>()),
+          child: const AuthPage(),
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.groups,
+        builder: (context, state) => BlocProvider<GroupListBloc>(
+          create: (_) => GroupListBloc(
+            getGroupsUseCase: sl(),
+            createGroupUseCase: sl(),
+            syncGroupsUseCase: sl(),
+          )..add(LoadGroups()),
+          child: const GroupsPage(),
+        ),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final id = state.pathParameters['id']!;
+              final group = state.extra as GroupEntity?;
+              return BlocProvider<GroupDetailBloc>(
+                create: (_) => GroupDetailBloc(
+                  getGroupUseCase: sl(),
+                  getMembersUseCase: sl(),
+                  getExpensesUseCase: sl(),
+                  addExpenseUseCase: sl(),
+                )..add(LoadGroup(id, group: group)),
+                child: GroupDetailPage(groupId: id, initialGroup: group),
+              );
+            },
+          ),
+        ],
+      ),
+      GoRoute(
+        path: RouteNames.joinGroup,
+        builder: (context, state) => JoinGroupPage(
+          token: state.pathParameters['token']!,
+        ),
+      ),
         path: RouteNames.initialSetup,
         name: RouteNames.initialSetup,
         builder: (context, state) => const InitialSetupScreen(),

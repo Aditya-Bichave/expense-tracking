@@ -1,0 +1,7 @@
+project_id = "your-project-id"
+
+[functions.create-invite]
+verify_jwt = true
+
+[functions.accept-invite]
+verify_jwt = true

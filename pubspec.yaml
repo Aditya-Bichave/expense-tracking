@@ -31,6 +31,10 @@ dependencies:
   # Utilities
   intl: 0.20.2 # For date formatting
   uuid: ^4.1.0 # For generating unique IDs
+  supabase_flutter: ^2.5.0
+  flutter_secure_storage: ^9.0.0
+  app_links: ^6.1.1
+  connectivity_plus: ^5.0.2
   dartz: ^0.10.1
   url_launcher: ^6.3.1
   multi_select_flutter: ^4.1.3

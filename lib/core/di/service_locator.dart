@@ -24,6 +24,10 @@ import 'package:expense_tracker/core/di/service_configurations/analytics_depende
 import 'package:expense_tracker/core/di/service_configurations/budget_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/goal_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/recurring_transactions_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/sync_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/groups_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/invites_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/settlements_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/report_dependencies.dart';
 import 'package:expense_tracker/core/services/downloader_service_locator.dart';
 import 'package:expense_tracker/core/services/clock.dart';
@@ -39,6 +43,7 @@ import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 
 // --- MODIFIED: Import Hive DataSources ---
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
@@ -63,6 +68,11 @@ Future<void> initLocator({
   required Box<GoalContributionModel> contributionBox,
   required Box<RecurringRuleModel> recurringRuleBox,
   required Box<RecurringRuleAuditLogModel> recurringRuleAuditLogBox,
+    );
+  }
+  if (!sl.isRegistered<Box<OutboxItem>>()) {
+    sl.registerLazySingleton<Box<OutboxItem>>(() => outboxBox);
+  required Box<OutboxItem> outboxBox,
 }) async {
   log.info("Initializing Service Locator...");
 
@@ -126,6 +136,10 @@ Future<void> initLocator({
       () => recurringRuleAuditLogBox,
     );
   }
+  if (!sl.isRegistered<Box<OutboxItem>>()) {
+    sl.registerLazySingleton<Box<OutboxItem>>(() => outboxBox);
+    );
+  }
   log.info(
     "Registered SharedPreferences and Hive Boxes (incl. Budgets, Goals, Contributions).",
   );
@@ -178,6 +192,10 @@ Future<void> initLocator({
     AnalyticsDependencies.register();
     ReportDependencies.register();
     RecurringTransactionsDependencies.register();
+    SyncDependencies.register();
+    await GroupsDependencies.register();
+    await InvitesDependencies.register();
+    await SettlementsDependencies.register();
     log.info("Feature dependencies registered.");
   } else {
     log.warning(

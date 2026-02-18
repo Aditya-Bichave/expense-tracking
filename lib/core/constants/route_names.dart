@@ -2,6 +2,10 @@
 abstract class RouteNames {
   // --- ADDED: Initial Setup Route ---
   static const String initialSetup = '/setup';
+  static const String auth = '/auth';
+  static const String groups = '/groups';
+  static const String groupDetail = 'detail';
+  static const String joinGroup = '/join/:token';
   // --- END ADDED ---
 
   // --- Shell Root Paths (Keep as relative paths for ShellBranch) ---

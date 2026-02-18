@@ -21,6 +21,13 @@ import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/core/sync/models/entity_type.dart';
+import 'package:expense_tracker/core/sync/models/op_type.dart';
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
+import 'package:expense_tracker/core/sync/services/sync_coordinator.dart';
+import 'package:expense_tracker/core/services/deep_link_service.dart';
+import 'package:expense_tracker/router.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -79,6 +86,7 @@ Future<void> main() async {
   log.setLevel(Level.INFO, includeCallerInfo: false);
   log.info("==========================================");
   log.info(" Spend Savvy Application Starting...");
+  await SupabaseClientProvider.initialize();
   log.info("==========================================");
 
   try {
@@ -105,6 +113,9 @@ Future<void> main() async {
     Hive.registerAdapter(GoalContributionModelAdapter());
     Hive.registerAdapter(RecurringRuleModelAdapter());
     Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
+    Hive.registerAdapter(OutboxItemAdapter());
+    Hive.registerAdapter(EntityTypeAdapter());
+    Hive.registerAdapter(OpTypeAdapter());
 
     log.info("Opening Hive boxes...");
     final expenseBox = await Hive.openBox<ExpenseModel>(
@@ -136,6 +147,8 @@ Future<void> main() async {
         await Hive.openBox<RecurringRuleAuditLogModel>(
           HiveConstants.recurringRuleAuditLogBoxName,
         );
+    final outboxBox = await Hive.openBox<OutboxItem>('outbox');
+        );
     log.info("All Hive boxes opened.");
     log.info("SharedPreferences instance obtained.");
 
@@ -151,8 +164,11 @@ Future<void> main() async {
       contributionBox: contributionBox,
       recurringRuleBox: recurringRuleBox,
       recurringRuleAuditLogBox: recurringRuleAuditLogBox,
+      outboxBox: outboxBox,
     );
     log.info("Hive, SharedPreferences, and Service Locator initialized.");
+    sl<SyncCoordinator>().initialize();
+    DeepLinkService(AppRouter.router).initialize();
   } catch (e, s) {
     log.severe("!!! CRITICAL INITIALIZATION FAILURE !!!");
     log.severe("Error: $e");
