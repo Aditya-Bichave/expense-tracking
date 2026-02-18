@@ -41,9 +41,7 @@ class AppearanceSettingsSection extends StatelessWidget {
           AppTheme.aetherPalette4,
         ];
       case UIMode.stitch:
-        return [
-          AppTheme.stitchPalette1,
-        ];
+        return [AppTheme.stitchPalette1];
     }
   }
 
