@@ -33,8 +33,9 @@ void main() {
 
   test('should update income in repository when validation passes', () async {
     // Arrange
-    when(() => mockRepository.updateIncome(any()))
-        .thenAnswer((_) async => Right(tIncome));
+    when(
+      () => mockRepository.updateIncome(any()),
+    ).thenAnswer((_) async => Right(tIncome));
 
     // Act
     final result = await useCase(UpdateIncomeParams(tIncome));
@@ -57,17 +58,20 @@ void main() {
     verifyZeroInteractions(mockRepository);
   });
 
-  test('should return ValidationFailure when amount is zero or negative', () async {
-    // Arrange
-    final invalidIncome = tIncome.copyWith(amount: 0);
+  test(
+    'should return ValidationFailure when amount is zero or negative',
+    () async {
+      // Arrange
+      final invalidIncome = tIncome.copyWith(amount: 0);
 
-    // Act
-    final result = await useCase(UpdateIncomeParams(invalidIncome));
+      // Act
+      final result = await useCase(UpdateIncomeParams(invalidIncome));
 
-    // Assert
-    expect(result, const Left(ValidationFailure("Amount must be positive.")));
-    verifyZeroInteractions(mockRepository);
-  });
+      // Assert
+      expect(result, const Left(ValidationFailure("Amount must be positive.")));
+      verifyZeroInteractions(mockRepository);
+    },
+  );
 
   test('should return ValidationFailure when accountId is empty', () async {
     // Arrange
@@ -83,8 +87,9 @@ void main() {
 
   test('should return Failure when repository fails', () async {
     // Arrange
-    when(() => mockRepository.updateIncome(any()))
-        .thenAnswer((_) async => const Left(CacheFailure("Cache Error")));
+    when(
+      () => mockRepository.updateIncome(any()),
+    ).thenAnswer((_) async => const Left(CacheFailure("Cache Error")));
 
     // Act
     final result = await useCase(UpdateIncomeParams(tIncome));

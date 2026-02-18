@@ -20,8 +20,9 @@ void main() {
 
   test('should delete income from repository', () async {
     // Arrange
-    when(() => mockRepository.deleteIncome(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteIncome(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     final result = await useCase(const DeleteIncomeParams(tId));
@@ -34,8 +35,9 @@ void main() {
 
   test('should return Failure when repository fails', () async {
     // Arrange
-    when(() => mockRepository.deleteIncome(any()))
-        .thenAnswer((_) async => const Left(CacheFailure("Delete failed")));
+    when(
+      () => mockRepository.deleteIncome(any()),
+    ).thenAnswer((_) async => const Left(CacheFailure("Delete failed")));
 
     // Act
     final result = await useCase(const DeleteIncomeParams(tId));

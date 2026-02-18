@@ -33,8 +33,9 @@ void main() {
 
   test('should add expense to repository when validation passes', () async {
     // Arrange
-    when(() => mockRepository.addExpense(any()))
-        .thenAnswer((_) async => Right(tExpense));
+    when(
+      () => mockRepository.addExpense(any()),
+    ).thenAnswer((_) async => Right(tExpense));
 
     // Act
     final result = await useCase(AddExpenseParams(tExpense));
@@ -57,17 +58,20 @@ void main() {
     verifyZeroInteractions(mockRepository);
   });
 
-  test('should return ValidationFailure when amount is zero or negative', () async {
-    // Arrange
-    final invalidExpense = tExpense.copyWith(amount: 0);
+  test(
+    'should return ValidationFailure when amount is zero or negative',
+    () async {
+      // Arrange
+      final invalidExpense = tExpense.copyWith(amount: 0);
 
-    // Act
-    final result = await useCase(AddExpenseParams(invalidExpense));
+      // Act
+      final result = await useCase(AddExpenseParams(invalidExpense));
 
-    // Assert
-    expect(result, const Left(ValidationFailure("Amount must be positive.")));
-    verifyZeroInteractions(mockRepository);
-  });
+      // Assert
+      expect(result, const Left(ValidationFailure("Amount must be positive.")));
+      verifyZeroInteractions(mockRepository);
+    },
+  );
 
   test('should return ValidationFailure when accountId is empty', () async {
     // Arrange
@@ -83,8 +87,9 @@ void main() {
 
   test('should return Failure when repository fails', () async {
     // Arrange
-    when(() => mockRepository.addExpense(any()))
-        .thenAnswer((_) async => const Left(CacheFailure("Cache Error")));
+    when(
+      () => mockRepository.addExpense(any()),
+    ).thenAnswer((_) async => const Left(CacheFailure("Cache Error")));
 
     // Act
     final result = await useCase(AddExpenseParams(tExpense));
