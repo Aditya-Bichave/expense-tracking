@@ -1,6 +1,5 @@
-// lib/core/di/service_locator.dart
 import 'dart:async';
-import 'package:expense_tracker/core/services/demo_mode_service.dart'; // Added
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -11,7 +10,6 @@ import 'package:uuid/uuid.dart';
 import 'package:expense_tracker/main.dart'; // Logger
 import 'package:expense_tracker/core/events/data_change_event.dart';
 
-// --- Import Feature Dependency Configuration Files ---
 import 'package:expense_tracker/core/di/service_configurations/settings_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/data_management_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/categories_dependencies.dart';
@@ -32,7 +30,6 @@ import 'package:expense_tracker/core/di/service_configurations/report_dependenci
 import 'package:expense_tracker/core/services/downloader_service_locator.dart';
 import 'package:expense_tracker/core/services/clock.dart';
 
-// Import models only needed for Box types here
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
@@ -45,14 +42,12 @@ import 'package:expense_tracker/features/recurring_transactions/data/models/recu
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 
-// --- MODIFIED: Import Hive DataSources ---
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
 import 'package:expense_tracker/features/accounts/data/datasources/asset_account_local_data_source.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
-// --- END MODIFIED ---
 
 final sl = GetIt.instance;
 
@@ -68,26 +63,18 @@ Future<void> initLocator({
   required Box<GoalContributionModel> contributionBox,
   required Box<RecurringRuleModel> recurringRuleBox,
   required Box<RecurringRuleAuditLogModel> recurringRuleAuditLogBox,
-    );
-  }
-  if (!sl.isRegistered<Box<OutboxItem>>()) {
-    sl.registerLazySingleton<Box<OutboxItem>>(() => outboxBox);
   required Box<OutboxItem> outboxBox,
 }) async {
   log.info("Initializing Service Locator...");
 
-  // *** Register Demo Mode Service (Singleton) ***
   if (!sl.isRegistered<DemoModeService>()) {
     sl.registerLazySingleton<DemoModeService>(() => DemoModeService());
-    log.info("Registered DemoModeService.");
   }
 
-  // *** Register Clock Service ***
   if (!sl.isRegistered<Clock>()) {
     sl.registerLazySingleton<Clock>(() => SystemClock());
   }
 
-  // *** Data Change Event Stream ***
   if (!sl.isRegistered<StreamController<DataChangedEvent>>()) {
     final dataChangeController = StreamController<DataChangedEvent>.broadcast();
     sl.registerSingleton<StreamController<DataChangedEvent>>(
@@ -95,12 +82,8 @@ Future<void> initLocator({
       instanceName: 'dataChangeController',
     );
     sl.registerSingleton<Stream<DataChangedEvent>>(dataChangeController.stream);
-    log.info("Registered DataChangedEvent StreamController and Stream.");
-  } else {
-    log.warning("DataChangedEvent StreamController already registered.");
   }
 
-  // *** Register Pre-initialized External Dependencies (LazySingleton) ***
   if (!sl.isRegistered<SharedPreferences>()) {
     sl.registerLazySingleton<SharedPreferences>(() => prefs);
   }
@@ -138,47 +121,47 @@ Future<void> initLocator({
   }
   if (!sl.isRegistered<Box<OutboxItem>>()) {
     sl.registerLazySingleton<Box<OutboxItem>>(() => outboxBox);
+  }
+
+  // Register Data Sources if not already registered
+  if (!sl.isRegistered<HiveExpenseLocalDataSource>()) {
+    sl.registerLazySingleton<HiveExpenseLocalDataSource>(
+      () => HiveExpenseLocalDataSource(sl()),
     );
   }
-  log.info(
-    "Registered SharedPreferences and Hive Boxes (incl. Budgets, Goals, Contributions).",
-  );
+  if (!sl.isRegistered<HiveIncomeLocalDataSource>()) {
+    sl.registerLazySingleton<HiveIncomeLocalDataSource>(
+      () => HiveIncomeLocalDataSource(sl()),
+    );
+  }
+  if (!sl.isRegistered<HiveAssetAccountLocalDataSource>()) {
+    sl.registerLazySingleton<HiveAssetAccountLocalDataSource>(
+      () => HiveAssetAccountLocalDataSource(sl()),
+    );
+  }
+  if (!sl.isRegistered<HiveBudgetLocalDataSource>()) {
+    sl.registerLazySingleton<HiveBudgetLocalDataSource>(
+      () => HiveBudgetLocalDataSource(sl()),
+    );
+  }
+  if (!sl.isRegistered<HiveGoalLocalDataSource>()) {
+    sl.registerLazySingleton<HiveGoalLocalDataSource>(
+      () => HiveGoalLocalDataSource(sl()),
+    );
+  }
+  if (!sl.isRegistered<HiveContributionLocalDataSource>()) {
+    sl.registerLazySingleton<HiveContributionLocalDataSource>(
+      () => HiveContributionLocalDataSource(sl()),
+    );
+  }
 
-  // --- Register REAL Hive DataSources (needed by Proxies) ---
-  sl.registerLazySingleton<HiveExpenseLocalDataSource>(
-    () => HiveExpenseLocalDataSource(sl()),
-  );
-  sl.registerLazySingleton<HiveIncomeLocalDataSource>(
-    () => HiveIncomeLocalDataSource(sl()),
-  );
-  sl.registerLazySingleton<HiveAssetAccountLocalDataSource>(
-    () => HiveAssetAccountLocalDataSource(sl()),
-  );
-  sl.registerLazySingleton<HiveBudgetLocalDataSource>(
-    () => HiveBudgetLocalDataSource(sl()),
-  );
-  sl.registerLazySingleton<HiveGoalLocalDataSource>(
-    () => HiveGoalLocalDataSource(sl()),
-  );
-  sl.registerLazySingleton<HiveContributionLocalDataSource>(
-    () => HiveContributionLocalDataSource(sl()),
-  );
-  // Keep HiveCategoryLocalDataSource and HiveUserHistoryLocalDataSource registrations
-  // (if they exist in categories_dependencies.dart, ensure they are registered there)
-  log.info("Registered REAL Hive DataSources.");
-  // --- END ---
-
-  // *** Other External Dependencies (LazySingleton) ***
   if (!sl.isRegistered<Uuid>()) {
     sl.registerLazySingleton(() => const Uuid());
   }
-  sl.registerLazySingleton(() => getDownloaderService());
-  log.info("Registered Uuid generator.");
 
-  // *** Call Feature Dependency Initializers ***
-  log.info("Registering feature dependencies...");
+  sl.registerLazySingleton(() => getDownloaderService());
+
   if (!sl.isRegistered<SettingsRepository>()) {
-    // These will now register the PROXY datasources where applicable
     SettingsDependencies.register();
     DataManagementDependencies.register();
     IncomeDependencies.register();
@@ -196,17 +179,11 @@ Future<void> initLocator({
     await GroupsDependencies.register();
     await InvitesDependencies.register();
     await SettlementsDependencies.register();
-    log.info("Feature dependencies registered.");
-  } else {
-    log.warning(
-      "Feature dependencies seem to be already registered. Skipping registration call.",
-    );
   }
 
   log.info("Service Locator initialization complete.");
 }
 
-// --- publishDataChangedEvent ---
 void publishDataChangedEvent({
   required DataChangeType type,
   required DataChangeReason reason,
@@ -218,13 +195,8 @@ void publishDataChangedEvent({
       sl<StreamController<DataChangedEvent>>(
         instanceName: 'dataChangeController',
       ).add(DataChangedEvent(type: type, reason: reason));
-      log.fine("Published DataChangedEvent: Type=$type, Reason=$reason");
     } catch (e, s) {
       log.severe("Error publishing DataChangedEvent: $e\n$s");
     }
-  } else {
-    log.warning(
-      "Attempted to publish DataChangedEvent, but StreamController 'dataChangeController' is not registered.",
-    );
   }
 }

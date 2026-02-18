@@ -32,8 +32,14 @@ class SyncCoordinator {
     });
 
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
-       // Check if ANY result is not none
-       bool isConnected = results.any((r) => r != ConnectivityResult.none);
+       // Handle both single (legacy) and list (new) return types safely
+       bool isConnected = false;
+       if (results is List) {
+         isConnected = results.any((r) => r.toString() != 'ConnectivityResult.none');
+       } else {
+         isConnected = results.toString() != 'ConnectivityResult.none';
+       }
+
        if (isConnected && _authService.isAuthenticated) {
          log.info("[SyncCoordinator] Connectivity restored. Triggering sync.");
          _syncService.processOutbox();
@@ -48,10 +54,7 @@ class SyncCoordinator {
   }
 
   void _startSyncLoop() {
-    // Process outbox immediately
     _syncService.processOutbox();
-    // Maybe schedule periodic sync? Or rely on events.
-    // For now, just one-shot on start/reconnect.
   }
 
   void dispose() {

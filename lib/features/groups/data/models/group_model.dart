@@ -4,30 +4,22 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'group_model.g.dart';
 
-@HiveType(typeId: 13)
+@HiveType(typeId: 10)
 @JsonSerializable()
 class GroupModel extends HiveObject {
   @HiveField(0)
   final String id;
-
   @HiveField(1)
   final String name;
-
   @HiveField(2)
   @JsonKey(name: 'created_by')
   final String createdBy;
-
   @HiveField(3)
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
-
   @HiveField(4)
   @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
-
-  // We might not persist memberCount in Hive or it might be computed
-  @JsonKey(ignore: true)
-  final int memberCount;
 
   GroupModel({
     required this.id,
@@ -35,7 +27,6 @@ class GroupModel extends HiveObject {
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
-    this.memberCount = 1,
   });
 
   factory GroupModel.fromEntity(GroupEntity entity) {
@@ -45,7 +36,6 @@ class GroupModel extends HiveObject {
       createdBy: entity.createdBy,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
-      memberCount: entity.memberCount,
     );
   }
 
@@ -56,12 +46,9 @@ class GroupModel extends HiveObject {
       createdBy: createdBy,
       createdAt: createdAt,
       updatedAt: updatedAt,
-      memberCount: memberCount,
     );
   }
 
-  factory GroupModel.fromJson(Map<String, dynamic> json) =>
-      _(json);
-
-  Map<String, dynamic> toJson() => _(this);
+  factory GroupModel.fromJson(Map<String, dynamic> json) => _$GroupModelFromJson(json);
+  Map<String, dynamic> toJson() => _$GroupModelToJson(this);
 }

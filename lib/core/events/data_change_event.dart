@@ -1,16 +1,17 @@
-// lib/core/events/data_change_event.dart
-
-// Describes the type of data operation
 enum DataChangeReason {
   added,
   updated,
   deleted,
-  reset, // Added for system reset
+  reset,
+  localChange,
+  remoteSync,
+  clearData,
 }
 
-// Describes the type of data affected
 enum DataChangeType {
   account,
+  accountUpdated,
+  accountDeleted,
   income,
   expense,
   settings,
@@ -19,14 +20,27 @@ enum DataChangeType {
   goalContribution,
   budget,
   recurringRule,
-  system, // Added for global/system events like reset
+  system,
+  initialLoad,
+  settlement,
+  transactionAdded,
+  transactionUpdated,
+  transactionDeleted,
+  categoryAdded,
+  categoryUpdated,
+  categoryDeleted,
+  budgetAdded,
+  budgetUpdated,
+  budgetDeleted,
+  goalAdded,
+  goalUpdated,
+  goalDeleted,
+  settingsUpdated,
 }
 
 class DataChangedEvent {
   final DataChangeType type;
   final DataChangeReason reason;
-  // Optionally add ID of changed item if needed by specific listeners
-  // final String? id;
 
   const DataChangedEvent({required this.type, required this.reason});
 

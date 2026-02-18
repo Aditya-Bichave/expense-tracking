@@ -5,23 +5,19 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'group_member_model.g.dart';
 
-@HiveType(typeId: 14)
+@HiveType(typeId: 12)
 @JsonSerializable()
 class GroupMemberModel extends HiveObject {
   @HiveField(0)
   final String id;
-
   @HiveField(1)
   @JsonKey(name: 'group_id')
   final String groupId;
-
   @HiveField(2)
   @JsonKey(name: 'user_id')
   final String userId;
-
   @HiveField(3)
   final GroupRole role;
-
   @HiveField(4)
   @JsonKey(name: 'joined_at')
   final DateTime joinedAt;
@@ -54,8 +50,6 @@ class GroupMemberModel extends HiveObject {
     );
   }
 
-  factory GroupMemberModel.fromJson(Map<String, dynamic> json) =>
-      _(json);
-
-  Map<String, dynamic> toJson() => _(this);
+  factory GroupMemberModel.fromJson(Map<String, dynamic> json) => _$GroupMemberModelFromJson(json);
+  Map<String, dynamic> toJson() => _$GroupMemberModelToJson(this);
 }
