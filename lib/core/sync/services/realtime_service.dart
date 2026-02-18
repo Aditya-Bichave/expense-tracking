@@ -45,15 +45,15 @@ class RealtimeService {
             if (op == null) return;
 
             // payload.newRecord or payload.oldRecord depending on op
-            final data = op == OpType.delete ? payload.oldRecord : payload.newRecord;
+            final data = op == OpType.delete
+                ? payload.oldRecord
+                : payload.newRecord;
 
             if (data == null) return;
 
-            _eventController.add(RealtimeEvent(
-              entityType: entityType,
-              opType: op,
-              payload: data,
-            ));
+            _eventController.add(
+              RealtimeEvent(entityType: entityType, opType: op, payload: data),
+            );
           },
         )
         .subscribe();

@@ -13,9 +13,7 @@ class GroupMembersLocalDataSourceImpl implements GroupMembersLocalDataSource {
 
   @override
   Future<void> cacheMembers(List<GroupMemberModel> members) async {
-    final Map<String, GroupMemberModel> map = {
-      for (var m in members) m.id: m,
-    };
+    final Map<String, GroupMemberModel> map = {for (var m in members) m.id: m};
     await _box.putAll(map);
   }
 

@@ -49,6 +49,7 @@ class GroupModel extends HiveObject {
     );
   }
 
-  factory GroupModel.fromJson(Map<String, dynamic> json) => _$GroupModelFromJson(json);
+  factory GroupModel.fromJson(Map<String, dynamic> json) =>
+      _$GroupModelFromJson(json);
   Map<String, dynamic> toJson() => _$GroupModelToJson(this);
 }

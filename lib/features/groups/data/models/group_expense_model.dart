@@ -64,6 +64,7 @@ class GroupExpenseModel extends HiveObject {
     );
   }
 
-  factory GroupExpenseModel.fromJson(Map<String, dynamic> json) => _$GroupExpenseModelFromJson(json);
+  factory GroupExpenseModel.fromJson(Map<String, dynamic> json) =>
+      _$GroupExpenseModelFromJson(json);
   Map<String, dynamic> toJson() => _$GroupExpenseModelToJson(this);
 }

@@ -14,13 +14,20 @@ class InvitesRemoteDataSourceImpl implements InvitesRemoteDataSource {
 
   @override
   Future<InviteModel> createInvite(String groupId) async {
-    final token = DateTime.now().millisecondsSinceEpoch.toString(); // Simple token for now
+    final token = DateTime.now().millisecondsSinceEpoch
+        .toString(); // Simple token for now
 
-    final response = await _client.from('invites').insert({
-      'group_id': groupId,
-      'token': token,
-      'expires_at': DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-    }).select().single();
+    final response = await _client
+        .from('invites')
+        .insert({
+          'group_id': groupId,
+          'token': token,
+          'expires_at': DateTime.now()
+              .add(const Duration(days: 7))
+              .toIso8601String(),
+        })
+        .select()
+        .single();
 
     return InviteModel.fromJson(response);
   }

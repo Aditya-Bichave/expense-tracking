@@ -19,11 +19,7 @@ class AuthSessionService {
   }
 
   Future<void> verifyOtp({required String phone, required String token}) async {
-    await _client.auth.verifyOTP(
-      phone: phone,
-      token: token,
-      type: OtpType.sms,
-    );
+    await _client.auth.verifyOTP(phone: phone, token: token, type: OtpType.sms);
   }
 
   Future<void> signOut() async {

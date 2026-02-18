@@ -20,5 +20,13 @@ class SettlementEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, groupId, fromUserId, toUserId, amount, currency, createdAt];
+  List<Object?> get props => [
+    id,
+    groupId,
+    fromUserId,
+    toUserId,
+    amount,
+    currency,
+    createdAt,
+  ];
 }

@@ -12,12 +12,14 @@ abstract class AuthEvent extends Equatable {
 }
 
 class CheckAuth extends AuthEvent {}
+
 class SendOtp extends AuthEvent {
   final String phone;
   const SendOtp(this.phone);
   @override
   List<Object?> get props => [phone];
 }
+
 class VerifyOtp extends AuthEvent {
   final String phone;
   final String token;
@@ -25,6 +27,7 @@ class VerifyOtp extends AuthEvent {
   @override
   List<Object?> get props => [phone, token];
 }
+
 class SignOut extends AuthEvent {}
 
 // States
@@ -35,20 +38,25 @@ abstract class AuthState extends Equatable {
 }
 
 class AuthInitial extends AuthState {}
+
 class AuthLoading extends AuthState {}
+
 class OtpSent extends AuthState {
   final String phone;
   const OtpSent(this.phone);
   @override
   List<Object?> get props => [phone];
 }
+
 class Authenticated extends AuthState {
   final User user;
   const Authenticated(this.user);
   @override
   List<Object?> get props => [user];
 }
+
 class Unauthenticated extends AuthState {}
+
 class AuthError extends AuthState {
   final String message;
   const AuthError(this.message);

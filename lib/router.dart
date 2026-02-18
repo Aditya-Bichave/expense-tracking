@@ -105,7 +105,8 @@ class AppRouter {
       final bool isAuthenticated = authService.isAuthenticated;
 
       final String currentRoute = state.uri.path;
-      final bool isGoingToInitialSetup = currentRoute == RouteNames.initialSetup;
+      final bool isGoingToInitialSetup =
+          currentRoute == RouteNames.initialSetup;
       final bool isGoingToAuth = currentRoute == RouteNames.auth;
       final bool isGoingToJoin = currentRoute.startsWith('/join');
 
@@ -161,14 +162,12 @@ class AppRouter {
             "[RouterRedirect] Not authenticated, already on InitialSetup. Allowing.",
           );
           return null;
-        }
-        else if (setupSkipped && isGoingToShellRoute) {
+        } else if (setupSkipped && isGoingToShellRoute) {
           log.info(
             "[RouterRedirect] Not authenticated, but setup was skipped. Allowing navigation to $currentRoute.",
           );
           return null;
-        }
-        else {
+        } else {
           log.info(
             "[RouterRedirect] Not authenticated & setup not skipped/not going to setup, redirecting to InitialSetup.",
           );
@@ -218,9 +217,8 @@ class AppRouter {
       ),
       GoRoute(
         path: RouteNames.joinGroup,
-        builder: (context, state) => JoinGroupPage(
-          token: state.pathParameters['token']!,
-        ),
+        builder: (context, state) =>
+            JoinGroupPage(token: state.pathParameters['token']!),
       ),
       GoRoute(
         path: RouteNames.initialSetup,
@@ -242,7 +240,8 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.dashboard,
                 name: RouteNames.dashboard,
-                pageBuilder: (context, state) => const NoTransitionPage(child: DashboardPage()),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: DashboardPage()),
                 routes: _buildReportSubRoutes(_rootNavigatorKey),
               ),
             ],
@@ -254,9 +253,12 @@ class AppRouter {
                 path: RouteNames.transactionsList,
                 name: RouteNames.transactionsList,
                 pageBuilder: (context, state) {
-                  final Map<String, dynamic> queryParams = state.uri.queryParameters;
-                  final Map<String, dynamic>? extra = state.extra as Map<String, dynamic>?;
-                  Map<String, dynamic>? filtersFromExtra = extra?['filters'] as Map<String, dynamic>?;
+                  final Map<String, dynamic> queryParams =
+                      state.uri.queryParameters;
+                  final Map<String, dynamic>? extra =
+                      state.extra as Map<String, dynamic>?;
+                  Map<String, dynamic>? filtersFromExtra =
+                      extra?['filters'] as Map<String, dynamic>?;
                   return NoTransitionPage(
                     child: TransactionListPage(
                       initialFilters: filtersFromExtra ?? queryParams,
@@ -269,7 +271,8 @@ class AppRouter {
                     name: RouteNames.addTransaction,
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
-                      final merchantId = state.uri.queryParameters['merchantId'];
+                      final merchantId =
+                          state.uri.queryParameters['merchantId'];
                       String? merchantIdFromExtra;
                       if (state.extra is String) {
                         merchantIdFromExtra = state.extra as String;
@@ -284,13 +287,15 @@ class AppRouter {
                     },
                   ),
                   GoRoute(
-                    path: '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}',
+                    path:
+                        '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}',
                     name: RouteNames.editTransaction,
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: _buildEditTransactionPage,
                   ),
                   GoRoute(
-                    path: '${RouteNames.transactionDetail}/:${RouteNames.paramTransactionId}',
+                    path:
+                        '${RouteNames.transactionDetail}/:${RouteNames.paramTransactionId}',
                     name: RouteNames.transactionDetail,
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: _buildTransactionDetailPage,
@@ -305,22 +310,26 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.budgetsAndCats,
                 name: RouteNames.budgetsAndCats,
-                pageBuilder: (context, state) => const NoTransitionPage(child: BudgetsAndCatsTabPage()),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: BudgetsAndCatsTabPage()),
                 routes: [
                   GoRoute(
                     path: RouteNames.manageCategories,
                     name: RouteNames.manageCategories,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const CategoryManagementScreen(),
+                    builder: (context, state) =>
+                        const CategoryManagementScreen(),
                     routes: [
                       GoRoute(
                         path: RouteNames.addCategory,
                         name: RouteNames.addCategory,
                         parentNavigatorKey: _rootNavigatorKey,
-                        builder: (context, state) => const AddEditCategoryScreen(),
+                        builder: (context, state) =>
+                            const AddEditCategoryScreen(),
                       ),
                       GoRoute(
-                        path: '${RouteNames.editCategory}/:${RouteNames.paramId}',
+                        path:
+                            '${RouteNames.editCategory}/:${RouteNames.paramId}',
                         name: RouteNames.editCategory,
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: _buildEditCategoryPage,
@@ -373,7 +382,8 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.accounts,
                 name: RouteNames.accounts,
-                pageBuilder: (context, state) => const NoTransitionPage(child: AccountsTabPage()),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: AccountsTabPage()),
                 routes: [
                   GoRoute(
                     path: RouteNames.addAccount,
@@ -382,7 +392,8 @@ class AppRouter {
                     builder: (context, state) => const AddEditAccountPage(),
                   ),
                   GoRoute(
-                    path: '${RouteNames.editAccount}/:${RouteNames.paramAccountId}',
+                    path:
+                        '${RouteNames.editAccount}/:${RouteNames.paramAccountId}',
                     name: RouteNames.editAccount,
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: _buildEditAccountPage,
@@ -403,22 +414,24 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.recurring,
                 name: RouteNames.recurring,
-                pageBuilder: (context, state) => const NoTransitionPage(child: RecurringRuleListPage()),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: RecurringRuleListPage()),
                 routes: [
                   GoRoute(
                     path: RouteNames.addRecurring,
                     name: RouteNames.addRecurring,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) => const AddEditRecurringRulePage(),
+                    builder: (context, state) =>
+                        const AddEditRecurringRulePage(),
                   ),
                   GoRoute(
                     path: '${RouteNames.editRecurring}/:${RouteNames.paramId}',
                     name: RouteNames.editRecurring,
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
-                       final id = state.pathParameters[RouteNames.paramId]!;
-                       final rule = state.extra as RecurringRule?;
-                       return AddEditRecurringRulePage(initialRule: rule);
+                      final id = state.pathParameters[RouteNames.paramId]!;
+                      final rule = state.extra as RecurringRule?;
+                      return AddEditRecurringRulePage(initialRule: rule);
                     },
                   ),
                 ],
@@ -431,9 +444,13 @@ class AppRouter {
               GoRoute(
                 path: RouteNames.settings,
                 name: RouteNames.settings,
-                pageBuilder: (context, state) => const NoTransitionPage(child: SettingsPage()),
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: SettingsPage()),
                 routes: [
-                   GoRoute(path: RouteNames.settingsExport, builder: (context, state) => const SizedBox(),),
+                  GoRoute(
+                    path: RouteNames.settingsExport,
+                    builder: (context, state) => const SizedBox(),
+                  ),
                 ],
               ),
             ],
@@ -443,7 +460,9 @@ class AppRouter {
     ],
   );
 
-  static List<RouteBase> _buildReportSubRoutes(GlobalKey<NavigatorState> parentKey) {
+  static List<RouteBase> _buildReportSubRoutes(
+    GlobalKey<NavigatorState> parentKey,
+  ) {
     return [
       GoRoute(
         path: RouteNames.reportSpendingCategory,
@@ -456,7 +475,8 @@ class AppRouter {
             child: BlocProvider<ReportFilterBloc>(
               create: (_) => filterBloc,
               child: BlocProvider<SpendingCategoryReportBloc>(
-                create: (_) => sl<SpendingCategoryReportBloc>(param1: filterBloc),
+                create: (_) =>
+                    sl<SpendingCategoryReportBloc>(param1: filterBloc),
                 child: const SpendingByCategoryPage(),
               ),
             ),
@@ -510,7 +530,8 @@ class AppRouter {
             child: BlocProvider<ReportFilterBloc>(
               create: (_) => filterBloc,
               child: BlocProvider<BudgetPerformanceReportBloc>(
-                create: (_) => sl<BudgetPerformanceReportBloc>(param1: filterBloc),
+                create: (_) =>
+                    sl<BudgetPerformanceReportBloc>(param1: filterBloc),
                 child: const BudgetPerformancePage(),
               ),
             ),

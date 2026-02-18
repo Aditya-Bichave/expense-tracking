@@ -11,15 +11,18 @@ class DeepLinkService {
   DeepLinkService(this._router) : _appLinks = AppLinks();
 
   void initialize() {
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
-      log.info("[DeepLinkService] Received link: $uri");
-      // Handle custom scheme or path
-      // GoRouter should handle it automatically if platform passes it.
-      // But if we need to force navigation:
-      _router.go(uri.path);
-    }, onError: (err) {
-      log.severe("[DeepLinkService] Error: $err");
-    });
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (uri) {
+        log.info("[DeepLinkService] Received link: $uri");
+        // Handle custom scheme or path
+        // GoRouter should handle it automatically if platform passes it.
+        // But if we need to force navigation:
+        _router.go(uri.path);
+      },
+      onError: (err) {
+        log.severe("[DeepLinkService] Error: $err");
+      },
+    );
   }
 
   void dispose() {

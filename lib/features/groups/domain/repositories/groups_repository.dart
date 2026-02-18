@@ -8,5 +8,7 @@ abstract class GroupsRepository {
   Future<Either<Failure, GroupEntity>> createGroup(String name);
   Future<Either<Failure, GroupEntity>> getGroup(String id);
   Future<Either<Failure, void>> syncGroups();
-  Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(String groupId);
+  Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(
+    String groupId,
+  );
 }

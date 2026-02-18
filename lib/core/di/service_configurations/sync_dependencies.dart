@@ -13,9 +13,7 @@ class SyncDependencies {
   static void register() {
     // AuthSessionService
     if (!sl.isRegistered<AuthSessionService>()) {
-      sl.registerLazySingleton<AuthSessionService>(
-        () => AuthSessionService(),
-      );
+      sl.registerLazySingleton<AuthSessionService>(() => AuthSessionService());
     }
 
     // OutboxRepository
@@ -28,18 +26,14 @@ class SyncDependencies {
     // SyncService
     if (!sl.isRegistered<SyncService>()) {
       sl.registerLazySingleton<SyncService>(
-        () => SyncService(
-          sl<OutboxRepository>(),
-          SupabaseClientProvider.client,
-        ),
+        () =>
+            SyncService(sl<OutboxRepository>(), SupabaseClientProvider.client),
       );
     }
 
     // RealtimeService
     if (!sl.isRegistered<RealtimeService>()) {
-      sl.registerLazySingleton<RealtimeService>(
-        () => RealtimeService(),
-      );
+      sl.registerLazySingleton<RealtimeService>(() => RealtimeService());
     }
 
     // SyncCoordinator

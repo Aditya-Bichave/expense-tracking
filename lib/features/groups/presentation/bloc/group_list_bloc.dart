@@ -14,12 +14,14 @@ abstract class GroupListEvent extends Equatable {
 }
 
 class LoadGroups extends GroupListEvent {}
+
 class CreateGroup extends GroupListEvent {
   final String name;
   const CreateGroup(this.name);
   @override
   List<Object?> get props => [name];
 }
+
 class RefreshGroups extends GroupListEvent {}
 
 // States
@@ -30,13 +32,16 @@ abstract class GroupListState extends Equatable {
 }
 
 class GroupListInitial extends GroupListState {}
+
 class GroupListLoading extends GroupListState {}
+
 class GroupListLoaded extends GroupListState {
   final List<GroupEntity> groups;
   const GroupListLoaded(this.groups);
   @override
   List<Object?> get props => [groups];
 }
+
 class GroupListError extends GroupListState {
   final String message;
   const GroupListError(this.message);
@@ -53,16 +58,19 @@ class GroupListBloc extends Bloc<GroupListEvent, GroupListState> {
     required GetGroupsUseCase getGroupsUseCase,
     required CreateGroupUseCase createGroupUseCase,
     required SyncGroupsUseCase syncGroupsUseCase,
-  })  : _getGroupsUseCase = getGroupsUseCase,
-        _createGroupUseCase = createGroupUseCase,
-        _syncGroupsUseCase = syncGroupsUseCase,
-        super(GroupListInitial()) {
+  }) : _getGroupsUseCase = getGroupsUseCase,
+       _createGroupUseCase = createGroupUseCase,
+       _syncGroupsUseCase = syncGroupsUseCase,
+       super(GroupListInitial()) {
     on<LoadGroups>(_onLoadGroups);
     on<CreateGroup>(_onCreateGroup);
     on<RefreshGroups>(_onRefreshGroups);
   }
 
-  Future<void> _onLoadGroups(LoadGroups event, Emitter<GroupListState> emit) async {
+  Future<void> _onLoadGroups(
+    LoadGroups event,
+    Emitter<GroupListState> emit,
+  ) async {
     emit(GroupListLoading());
     final result = await _getGroupsUseCase(const NoParams());
     result.fold(
@@ -71,23 +79,28 @@ class GroupListBloc extends Bloc<GroupListEvent, GroupListState> {
     );
   }
 
-  Future<void> _onCreateGroup(CreateGroup event, Emitter<GroupListState> emit) async {
+  Future<void> _onCreateGroup(
+    CreateGroup event,
+    Emitter<GroupListState> emit,
+  ) async {
     // Optimistic update handled by repository but Bloc needs to reload or append
-    final result = await _createGroupUseCase(CreateGroupParams(name: event.name));
-    result.fold(
-      (failure) => emit(GroupListError(failure.message)),
-      (group) {
-        if (state is GroupListLoaded) {
-          final currentGroups = (state as GroupListLoaded).groups;
-          emit(GroupListLoaded([...currentGroups, group]));
-        } else {
-          add(LoadGroups());
-        }
-      },
+    final result = await _createGroupUseCase(
+      CreateGroupParams(name: event.name),
     );
+    result.fold((failure) => emit(GroupListError(failure.message)), (group) {
+      if (state is GroupListLoaded) {
+        final currentGroups = (state as GroupListLoaded).groups;
+        emit(GroupListLoaded([...currentGroups, group]));
+      } else {
+        add(LoadGroups());
+      }
+    });
   }
 
-  Future<void> _onRefreshGroups(RefreshGroups event, Emitter<GroupListState> emit) async {
+  Future<void> _onRefreshGroups(
+    RefreshGroups event,
+    Emitter<GroupListState> emit,
+  ) async {
     await _syncGroupsUseCase(const NoParams());
     add(LoadGroups());
   }

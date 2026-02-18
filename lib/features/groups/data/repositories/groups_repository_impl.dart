@@ -35,13 +35,13 @@ class GroupsRepositoryImpl implements GroupsRepository {
     required OutboxRepository outboxRepository,
     required AuthSessionService authService,
     required Uuid uuid,
-  })  : _localDataSource = localDataSource,
-        _remoteDataSource = remoteDataSource,
-        _membersLocalDataSource = membersLocalDataSource,
-        _membersRemoteDataSource = membersRemoteDataSource,
-        _outboxRepository = outboxRepository,
-        _authService = authService,
-        _uuid = uuid;
+  }) : _localDataSource = localDataSource,
+       _remoteDataSource = remoteDataSource,
+       _membersLocalDataSource = membersLocalDataSource,
+       _membersRemoteDataSource = membersRemoteDataSource,
+       _outboxRepository = outboxRepository,
+       _authService = authService,
+       _uuid = uuid;
 
   @override
   Future<Either<Failure, List<GroupEntity>>> getGroups() async {
@@ -129,7 +129,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   @override
-  Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(String groupId) async {
+  Future<Either<Failure, List<GroupMemberEntity>>> getGroupMembers(
+    String groupId,
+  ) async {
     try {
       // Return local first
       final local = _membersLocalDataSource.getMembersForGroup(groupId);

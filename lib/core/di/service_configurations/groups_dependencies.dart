@@ -45,13 +45,17 @@ class GroupsDependencies {
       () => GroupsRemoteDataSourceImpl(),
     );
     sl.registerLazySingleton<GroupMembersLocalDataSource>(
-      () => GroupMembersLocalDataSourceImpl(Hive.box<GroupMemberModel>('group_members')),
+      () => GroupMembersLocalDataSourceImpl(
+        Hive.box<GroupMemberModel>('group_members'),
+      ),
     );
     sl.registerLazySingleton<GroupMembersRemoteDataSource>(
       () => GroupMembersRemoteDataSourceImpl(),
     );
     sl.registerLazySingleton<GroupExpensesLocalDataSource>(
-      () => GroupExpensesLocalDataSourceImpl(Hive.box<GroupExpenseModel>('group_expenses')),
+      () => GroupExpensesLocalDataSourceImpl(
+        Hive.box<GroupExpenseModel>('group_expenses'),
+      ),
     );
     sl.registerLazySingleton<GroupExpensesRemoteDataSource>(
       () => GroupExpensesRemoteDataSourceImpl(),

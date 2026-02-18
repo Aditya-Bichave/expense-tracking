@@ -22,5 +22,14 @@ class GroupExpenseEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, groupId, title, amount, currency, occurredAt, createdBy, notes];
+  List<Object?> get props => [
+    id,
+    groupId,
+    title,
+    amount,
+    currency,
+    occurredAt,
+    createdBy,
+    notes,
+  ];
 }

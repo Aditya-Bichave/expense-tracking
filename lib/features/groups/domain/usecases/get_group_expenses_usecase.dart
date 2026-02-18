@@ -9,13 +9,16 @@ class GetGroupExpensesParams {
   GetGroupExpensesParams(this.groupId);
 }
 
-class GetGroupExpensesUseCase implements UseCase<List<GroupExpenseEntity>, GetGroupExpensesParams> {
+class GetGroupExpensesUseCase
+    implements UseCase<List<GroupExpenseEntity>, GetGroupExpensesParams> {
   final GroupExpensesRepository repository;
 
   GetGroupExpensesUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<GroupExpenseEntity>>> call(GetGroupExpensesParams params) {
+  Future<Either<Failure, List<GroupExpenseEntity>>> call(
+    GetGroupExpensesParams params,
+  ) {
     return repository.getExpenses(params.groupId);
   }
 }

@@ -5,25 +5,25 @@ import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_event.dart';
+
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
-import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_event.dart';
+
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_event.dart';
+
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
-import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_event.dart';
+
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
-import 'package:expense_tracker/features/analytics/presentation/bloc/summary_event.dart';
+
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -113,16 +113,35 @@ Future<void> main() async {
     Hive.registerAdapter(OpTypeAdapter());
 
     log.info("Opening Hive boxes...");
-    final expenseBox = await Hive.openBox<ExpenseModel>(HiveConstants.expenseBoxName);
-    final accountBox = await Hive.openBox<AssetAccountModel>(HiveConstants.accountBoxName);
-    final incomeBox = await Hive.openBox<IncomeModel>(HiveConstants.incomeBoxName);
-    final categoryBox = await Hive.openBox<CategoryModel>(HiveConstants.categoryBoxName);
-    final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(HiveConstants.userHistoryRuleBoxName);
-    final budgetBox = await Hive.openBox<BudgetModel>(HiveConstants.budgetBoxName);
+    final expenseBox = await Hive.openBox<ExpenseModel>(
+      HiveConstants.expenseBoxName,
+    );
+    final accountBox = await Hive.openBox<AssetAccountModel>(
+      HiveConstants.accountBoxName,
+    );
+    final incomeBox = await Hive.openBox<IncomeModel>(
+      HiveConstants.incomeBoxName,
+    );
+    final categoryBox = await Hive.openBox<CategoryModel>(
+      HiveConstants.categoryBoxName,
+    );
+    final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
+      HiveConstants.userHistoryRuleBoxName,
+    );
+    final budgetBox = await Hive.openBox<BudgetModel>(
+      HiveConstants.budgetBoxName,
+    );
     final goalBox = await Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
-    final contributionBox = await Hive.openBox<GoalContributionModel>(HiveConstants.goalContributionBoxName);
-    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(HiveConstants.recurringRuleBoxName);
-    final recurringRuleAuditLogBox = await Hive.openBox<RecurringRuleAuditLogModel>(HiveConstants.recurringRuleAuditLogBoxName);
+    final contributionBox = await Hive.openBox<GoalContributionModel>(
+      HiveConstants.goalContributionBoxName,
+    );
+    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
+      HiveConstants.recurringRuleBoxName,
+    );
+    final recurringRuleAuditLogBox =
+        await Hive.openBox<RecurringRuleAuditLogModel>(
+          HiveConstants.recurringRuleAuditLogBoxName,
+        );
     final outboxBox = await Hive.openBox<OutboxItem>('outbox');
 
     log.info("All Hive boxes opened.");
@@ -171,11 +190,13 @@ Future<void> main() async {
           lazy: false,
         ),
         BlocProvider<TransactionListBloc>(
-          create: (context) => sl<TransactionListBloc>()..add(const LoadTransactions()),
+          create: (context) =>
+              sl<TransactionListBloc>()..add(const LoadTransactions()),
           lazy: false,
         ),
         BlocProvider<CategoryManagementBloc>(
-          create: (context) => sl<CategoryManagementBloc>()..add(const LoadCategories()),
+          create: (context) =>
+              sl<CategoryManagementBloc>()..add(const LoadCategories()),
           lazy: true,
         ),
         BlocProvider<BudgetListBloc>(

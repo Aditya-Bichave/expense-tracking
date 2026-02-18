@@ -13,16 +13,14 @@ class SyncCoordinator {
   StreamSubscription? _authSubscription;
   StreamSubscription? _connectivitySubscription;
 
-  SyncCoordinator(
-    this._authService,
-    this._syncService,
-    this._realtimeService,
-  );
+  SyncCoordinator(this._authService, this._syncService, this._realtimeService);
 
   void initialize() {
     _authSubscription = _authService.onAuthStateChange.listen((state) {
       if (_authService.isAuthenticated) {
-        log.info("[SyncCoordinator] User authenticated. Starting sync & realtime.");
+        log.info(
+          "[SyncCoordinator] User authenticated. Starting sync & realtime.",
+        );
         _startSyncLoop();
         _realtimeService.start();
       } else {
@@ -31,19 +29,23 @@ class SyncCoordinator {
       }
     });
 
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((dynamic results) {
-       // Handle both single (legacy) and list (new) return types dynamically to satisfy analyzer
-       bool isConnected = false;
-       if (results is List) {
-         isConnected = results.any((r) => r.toString() != 'ConnectivityResult.none');
-       } else {
-         isConnected = results.toString() != 'ConnectivityResult.none';
-       }
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      dynamic results,
+    ) {
+      // Handle both single (legacy) and list (new) return types dynamically to satisfy analyzer
+      bool isConnected = false;
+      if (results is List) {
+        isConnected = results.any(
+          (r) => r.toString() != 'ConnectivityResult.none',
+        );
+      } else {
+        isConnected = results.toString() != 'ConnectivityResult.none';
+      }
 
-       if (isConnected && _authService.isAuthenticated) {
-         log.info("[SyncCoordinator] Connectivity restored. Triggering sync.");
-         _syncService.processOutbox();
-       }
+      if (isConnected && _authService.isAuthenticated) {
+        log.info("[SyncCoordinator] Connectivity restored. Triggering sync.");
+        _syncService.processOutbox();
+      }
     });
 
     // Initial check

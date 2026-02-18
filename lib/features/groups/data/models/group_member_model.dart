@@ -50,6 +50,7 @@ class GroupMemberModel extends HiveObject {
     );
   }
 
-  factory GroupMemberModel.fromJson(Map<String, dynamic> json) => _$GroupMemberModelFromJson(json);
+  factory GroupMemberModel.fromJson(Map<String, dynamic> json) =>
+      _$GroupMemberModelFromJson(json);
   Map<String, dynamic> toJson() => _$GroupMemberModelToJson(this);
 }

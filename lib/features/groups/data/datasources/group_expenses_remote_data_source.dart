@@ -7,7 +7,8 @@ abstract class GroupExpensesRemoteDataSource {
   Future<void> addExpense(GroupExpenseModel expense);
 }
 
-class GroupExpensesRemoteDataSourceImpl implements GroupExpensesRemoteDataSource {
+class GroupExpensesRemoteDataSourceImpl
+    implements GroupExpensesRemoteDataSource {
   final SupabaseClient _client;
 
   GroupExpensesRemoteDataSourceImpl() : _client = SupabaseClientProvider.client;
@@ -19,7 +20,9 @@ class GroupExpensesRemoteDataSourceImpl implements GroupExpensesRemoteDataSource
         .select()
         .eq('group_id', groupId)
         .order('occurred_at', ascending: false);
-    return (response as List).map((e) => GroupExpenseModel.fromJson(e)).toList();
+    return (response as List)
+        .map((e) => GroupExpenseModel.fromJson(e))
+        .toList();
   }
 
   @override

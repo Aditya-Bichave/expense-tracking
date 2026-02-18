@@ -31,9 +31,9 @@ class _AuthPageState extends State<AuthPage> {
           } else if (state is Authenticated) {
             context.go('/groups'); // Navigate to groups after login
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         builder: (context, state) {
@@ -58,28 +58,26 @@ class _AuthPageState extends State<AuthPage> {
                   ElevatedButton(
                     onPressed: () {
                       context.read<AuthBloc>().add(
-                            SendOtp(_phoneController.text.trim()),
-                          );
+                        SendOtp(_phoneController.text.trim()),
+                      );
                     },
                     child: const Text('Send OTP'),
                   ),
                 ] else ...[
                   TextField(
                     controller: _otpController,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter OTP',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Enter OTP'),
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () {
                       context.read<AuthBloc>().add(
-                            VerifyOtp(
-                              _phoneController.text.trim(),
-                              _otpController.text.trim(),
-                            ),
-                          );
+                        VerifyOtp(
+                          _phoneController.text.trim(),
+                          _otpController.text.trim(),
+                        ),
+                      );
                     },
                     child: const Text('Verify OTP'),
                   ),

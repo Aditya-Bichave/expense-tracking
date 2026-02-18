@@ -25,13 +25,15 @@ class SettlementsRepositoryImpl implements SettlementsRepository {
     required SettlementsRemoteDataSource remoteDataSource,
     required OutboxRepository outboxRepository,
     required Uuid uuid,
-  })  : _localDataSource = localDataSource,
-        _remoteDataSource = remoteDataSource,
-        _outboxRepository = outboxRepository,
-        _uuid = uuid;
+  }) : _localDataSource = localDataSource,
+       _remoteDataSource = remoteDataSource,
+       _outboxRepository = outboxRepository,
+       _uuid = uuid;
 
   @override
-  Future<Either<Failure, List<SettlementEntity>>> getSettlements(String groupId) async {
+  Future<Either<Failure, List<SettlementEntity>>> getSettlements(
+    String groupId,
+  ) async {
     try {
       final local = _localDataSource.getSettlements(groupId);
       return Right(local.map((e) => e.toEntity()).toList());
@@ -41,7 +43,9 @@ class SettlementsRepositoryImpl implements SettlementsRepository {
   }
 
   @override
-  Future<Either<Failure, SettlementEntity>> addSettlement(SettlementEntity settlement) async {
+  Future<Either<Failure, SettlementEntity>> addSettlement(
+    SettlementEntity settlement,
+  ) async {
     try {
       final model = SettlementModel.fromEntity(settlement);
       await _localDataSource.addSettlement(model);

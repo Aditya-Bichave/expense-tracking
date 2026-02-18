@@ -8,7 +8,8 @@ class SyncGroupExpensesParams {
   SyncGroupExpensesParams(this.groupId);
 }
 
-class SyncGroupExpensesUseCase implements UseCase<void, SyncGroupExpensesParams> {
+class SyncGroupExpensesUseCase
+    implements UseCase<void, SyncGroupExpensesParams> {
   final GroupExpensesRepository repository;
 
   SyncGroupExpensesUseCase(this.repository);

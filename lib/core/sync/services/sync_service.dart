@@ -57,11 +57,16 @@ class SyncService {
 
   String _getTableName(EntityType type) {
     switch (type) {
-      case EntityType.group: return 'groups';
-      case EntityType.groupExpense: return 'expenses'; // Fixed enum case
-      case EntityType.settlement: return 'settlements';
-      case EntityType.groupMember: return 'group_members'; // Fixed enum case
-      case EntityType.invite: return 'invites';
+      case EntityType.group:
+        return 'groups';
+      case EntityType.groupExpense:
+        return 'expenses'; // Fixed enum case
+      case EntityType.settlement:
+        return 'settlements';
+      case EntityType.groupMember:
+        return 'group_members'; // Fixed enum case
+      case EntityType.invite:
+        return 'invites';
     }
   }
 }

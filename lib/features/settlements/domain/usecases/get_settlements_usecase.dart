@@ -9,13 +9,16 @@ class GetSettlementsParams {
   GetSettlementsParams(this.groupId);
 }
 
-class GetSettlementsUseCase implements UseCase<List<SettlementEntity>, GetSettlementsParams> {
+class GetSettlementsUseCase
+    implements UseCase<List<SettlementEntity>, GetSettlementsParams> {
   final SettlementsRepository repository;
 
   GetSettlementsUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<SettlementEntity>>> call(GetSettlementsParams params) {
+  Future<Either<Failure, List<SettlementEntity>>> call(
+    GetSettlementsParams params,
+  ) {
     return repository.getSettlements(params.groupId);
   }
 }

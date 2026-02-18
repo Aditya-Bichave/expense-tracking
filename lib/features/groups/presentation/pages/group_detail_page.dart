@@ -18,7 +18,9 @@ class GroupDetailPage extends StatelessWidget {
       listener: (context, state) {},
       builder: (context, state) {
         if (state is GroupDetailLoading && initialGroup == null) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
         GroupEntity? group;
@@ -39,7 +41,9 @@ class GroupDetailPage extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.share),
                 onPressed: () {
-                  Share.share('Join my group ${group!.name}: https://yourapp.com/join/${group.id}');
+                  Share.share(
+                    'Join my group ${group!.name}: https://yourapp.com/join/${group.id}',
+                  );
                 },
               ),
             ],
@@ -69,7 +73,9 @@ class GroupDetailPage extends StatelessWidget {
                       return ListTile(
                         title: Text(expense.title),
                         subtitle: Text('${expense.amount} ${expense.currency}'),
-                        trailing: Text(expense.occurredAt.toString().split(' ')[0]),
+                        trailing: Text(
+                          expense.occurredAt.toString().split(' ')[0],
+                        ),
                       );
                     },
                   ),

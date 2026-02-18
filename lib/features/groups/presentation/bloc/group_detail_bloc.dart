@@ -45,7 +45,9 @@ abstract class GroupDetailState extends Equatable {
 }
 
 class GroupDetailInitial extends GroupDetailState {}
+
 class GroupDetailLoading extends GroupDetailState {}
+
 class GroupDetailLoaded extends GroupDetailState {
   final GroupEntity group;
   final List<GroupMemberEntity> members;
@@ -72,6 +74,7 @@ class GroupDetailLoaded extends GroupDetailState {
     );
   }
 }
+
 class GroupDetailError extends GroupDetailState {
   final String message;
   const GroupDetailError(this.message);
@@ -90,22 +93,27 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
     required GetGroupMembersUseCase getMembersUseCase,
     required GetGroupExpensesUseCase getExpensesUseCase,
     required AddGroupExpenseUseCase addExpenseUseCase,
-  })  : _getGroupUseCase = getGroupUseCase,
-        _getMembersUseCase = getMembersUseCase,
-        _getExpensesUseCase = getExpensesUseCase,
-        _addExpenseUseCase = addExpenseUseCase,
-        super(GroupDetailInitial()) {
+  }) : _getGroupUseCase = getGroupUseCase,
+       _getMembersUseCase = getMembersUseCase,
+       _getExpensesUseCase = getExpensesUseCase,
+       _addExpenseUseCase = addExpenseUseCase,
+       super(GroupDetailInitial()) {
     on<LoadGroup>(_onLoadGroup);
     on<AddExpense>(_onAddExpense);
     on<RefreshGroup>(_onRefreshGroup);
   }
 
-  Future<void> _onLoadGroup(LoadGroup event, Emitter<GroupDetailState> emit) async {
+  Future<void> _onLoadGroup(
+    LoadGroup event,
+    Emitter<GroupDetailState> emit,
+  ) async {
     emit(GroupDetailLoading());
     try {
       GroupEntity? group = event.group;
       if (group == null) {
-        final groupResult = await _getGroupUseCase(GetGroupParams(event.groupId));
+        final groupResult = await _getGroupUseCase(
+          GetGroupParams(event.groupId),
+        );
         group = groupResult.fold((l) => null, (r) => r);
       }
 
@@ -114,38 +122,51 @@ class GroupDetailBloc extends Bloc<GroupDetailEvent, GroupDetailState> {
         return;
       }
 
-      final membersResult = await _getMembersUseCase(GetGroupMembersParams(event.groupId));
-      final expensesResult = await _getExpensesUseCase(GetGroupExpensesParams(event.groupId));
+      final membersResult = await _getMembersUseCase(
+        GetGroupMembersParams(event.groupId),
+      );
+      final expensesResult = await _getExpensesUseCase(
+        GetGroupExpensesParams(event.groupId),
+      );
 
-      final members = membersResult.fold((l) => <GroupMemberEntity>[], (r) => r);
-      final expenses = expensesResult.fold((l) => <GroupExpenseEntity>[], (r) => r);
+      final members = membersResult.fold(
+        (l) => <GroupMemberEntity>[],
+        (r) => r,
+      );
+      final expenses = expensesResult.fold(
+        (l) => <GroupExpenseEntity>[],
+        (r) => r,
+      );
 
-      emit(GroupDetailLoaded(
-        group: group,
-        members: members,
-        expenses: expenses,
-      ));
+      emit(
+        GroupDetailLoaded(group: group, members: members, expenses: expenses),
+      );
     } catch (e) {
       emit(GroupDetailError(e.toString()));
     }
   }
 
-  Future<void> _onAddExpense(AddExpense event, Emitter<GroupDetailState> emit) async {
+  Future<void> _onAddExpense(
+    AddExpense event,
+    Emitter<GroupDetailState> emit,
+  ) async {
     final result = await _addExpenseUseCase(event.expense);
-    result.fold(
-      (failure) => emit(GroupDetailError(failure.message)),
-      (expense) {
-        if (state is GroupDetailLoaded) {
-          final currentState = state as GroupDetailLoaded;
-          emit(currentState.copyWith(
-            expenses: [expense, ...currentState.expenses],
-          ));
-        }
-      },
-    );
+    result.fold((failure) => emit(GroupDetailError(failure.message)), (
+      expense,
+    ) {
+      if (state is GroupDetailLoaded) {
+        final currentState = state as GroupDetailLoaded;
+        emit(
+          currentState.copyWith(expenses: [expense, ...currentState.expenses]),
+        );
+      }
+    });
   }
 
-  Future<void> _onRefreshGroup(RefreshGroup event, Emitter<GroupDetailState> emit) async {
+  Future<void> _onRefreshGroup(
+    RefreshGroup event,
+    Emitter<GroupDetailState> emit,
+  ) async {
     if (state is GroupDetailLoaded) {
       final currentGroup = (state as GroupDetailLoaded).group;
       add(LoadGroup(currentGroup.id, group: currentGroup));

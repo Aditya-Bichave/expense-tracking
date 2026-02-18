@@ -18,5 +18,12 @@ class InviteEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, groupId, token, expiresAt, maxUses, usesCount];
+  List<Object?> get props => [
+    id,
+    groupId,
+    token,
+    expiresAt,
+    maxUses,
+    usesCount,
+  ];
 }

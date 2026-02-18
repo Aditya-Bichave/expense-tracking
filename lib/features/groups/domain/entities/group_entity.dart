@@ -18,5 +18,12 @@ class GroupEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, name, createdBy, createdAt, updatedAt, memberCount];
+  List<Object?> get props => [
+    id,
+    name,
+    createdBy,
+    createdAt,
+    updatedAt,
+    memberCount,
+  ];
 }

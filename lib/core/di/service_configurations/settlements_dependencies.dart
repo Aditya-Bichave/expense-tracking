@@ -17,7 +17,9 @@ class SettlementsDependencies {
     }
 
     sl.registerLazySingleton<SettlementsLocalDataSource>(
-      () => SettlementsLocalDataSourceImpl(Hive.box<SettlementModel>('settlements')),
+      () => SettlementsLocalDataSourceImpl(
+        Hive.box<SettlementModel>('settlements'),
+      ),
     );
     sl.registerLazySingleton<SettlementsRemoteDataSource>(
       () => SettlementsRemoteDataSourceImpl(),

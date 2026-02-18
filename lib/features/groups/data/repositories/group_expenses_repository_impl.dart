@@ -25,13 +25,15 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
     required GroupExpensesRemoteDataSource remoteDataSource,
     required OutboxRepository outboxRepository,
     required Uuid uuid,
-  })  : _localDataSource = localDataSource,
-        _remoteDataSource = remoteDataSource,
-        _outboxRepository = outboxRepository,
-        _uuid = uuid;
+  }) : _localDataSource = localDataSource,
+       _remoteDataSource = remoteDataSource,
+       _outboxRepository = outboxRepository,
+       _uuid = uuid;
 
   @override
-  Future<Either<Failure, List<GroupExpenseEntity>>> getExpenses(String groupId) async {
+  Future<Either<Failure, List<GroupExpenseEntity>>> getExpenses(
+    String groupId,
+  ) async {
     try {
       final local = _localDataSource.getExpensesForGroup(groupId);
       // Trigger sync?
@@ -43,7 +45,9 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
   }
 
   @override
-  Future<Either<Failure, GroupExpenseEntity>> addExpense(GroupExpenseEntity expense) async {
+  Future<Either<Failure, GroupExpenseEntity>> addExpense(
+    GroupExpenseEntity expense,
+  ) async {
     try {
       final model = GroupExpenseModel.fromEntity(expense);
       await _localDataSource.addExpense(model);

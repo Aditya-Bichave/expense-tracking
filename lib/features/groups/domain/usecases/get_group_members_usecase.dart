@@ -9,13 +9,16 @@ class GetGroupMembersParams {
   GetGroupMembersParams(this.groupId);
 }
 
-class GetGroupMembersUseCase implements UseCase<List<GroupMemberEntity>, GetGroupMembersParams> {
+class GetGroupMembersUseCase
+    implements UseCase<List<GroupMemberEntity>, GetGroupMembersParams> {
   final GroupsRepository repository;
 
   GetGroupMembersUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<GroupMemberEntity>>> call(GetGroupMembersParams params) {
+  Future<Either<Failure, List<GroupMemberEntity>>> call(
+    GetGroupMembersParams params,
+  ) {
     return repository.getGroupMembers(params.groupId);
   }
 }
