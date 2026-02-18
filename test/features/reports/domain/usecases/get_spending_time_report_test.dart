@@ -31,8 +31,8 @@ void main() {
   final tSpendingData = [
     TimeSeriesDataPoint(
       date: DateTime(2023, 1, 1),
-      amount: const ComparisonValue(currentValue: 100.0)
-    )
+      amount: const ComparisonValue(currentValue: 100.0),
+    ),
   ];
 
   final tReportData = SpendingTimeReportData(
@@ -42,66 +42,81 @@ void main() {
 
   test('should get spending over time report from the repository', () async {
     // arrange
-    when(() => mockReportRepository.getSpendingOverTime(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          granularity: any(named: 'granularity'),
-          accountIds: any(named: 'accountIds'),
-          categoryIds: any(named: 'categoryIds'),
-        )).thenAnswer((_) async => Right(tReportData));
+    when(
+      () => mockReportRepository.getSpendingOverTime(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        granularity: any(named: 'granularity'),
+        accountIds: any(named: 'accountIds'),
+        categoryIds: any(named: 'categoryIds'),
+      ),
+    ).thenAnswer((_) async => Right(tReportData));
 
     // act
-    final result = await useCase(GetSpendingTimeReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      granularity: tGranularity,
-      accountIds: tAccountIds,
-      categoryIds: tCategoryIds,
-      compareToPrevious: false,
-      transactionType: TransactionType.expense,
-    ));
+    final result = await useCase(
+      GetSpendingTimeReportParams(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        granularity: tGranularity,
+        accountIds: tAccountIds,
+        categoryIds: tCategoryIds,
+        compareToPrevious: false,
+        transactionType: TransactionType.expense,
+      ),
+    );
 
     // assert
     expect(result, Right(tReportData));
-    verify(() => mockReportRepository.getSpendingOverTime(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          granularity: tGranularity,
-          accountIds: tAccountIds,
-          categoryIds: tCategoryIds,
-        ));
+    verify(
+      () => mockReportRepository.getSpendingOverTime(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        granularity: tGranularity,
+        accountIds: tAccountIds,
+        categoryIds: tCategoryIds,
+      ),
+    );
     verifyNoMoreInteractions(mockReportRepository);
   });
 
-  test('should return a failure when repository call is unsuccessful', () async {
-    // arrange
-    when(() => mockReportRepository.getSpendingOverTime(
+  test(
+    'should return a failure when repository call is unsuccessful',
+    () async {
+      // arrange
+      when(
+        () => mockReportRepository.getSpendingOverTime(
           startDate: any(named: 'startDate'),
           endDate: any(named: 'endDate'),
           granularity: any(named: 'granularity'),
           accountIds: any(named: 'accountIds'),
           categoryIds: any(named: 'categoryIds'),
-        )).thenAnswer((_) async => Left(ServerFailure()));
+        ),
+      ).thenAnswer((_) async => Left(ServerFailure()));
 
-    // act
-    final result = await useCase(GetSpendingTimeReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      granularity: tGranularity,
-      accountIds: tAccountIds,
-      categoryIds: tCategoryIds,
-      compareToPrevious: false,
-    ));
-
-    // assert
-    expect(result, Left(ServerFailure()));
-    verify(() => mockReportRepository.getSpendingOverTime(
+      // act
+      final result = await useCase(
+        GetSpendingTimeReportParams(
           startDate: tStartDate,
           endDate: tEndDate,
           granularity: tGranularity,
           accountIds: tAccountIds,
           categoryIds: tCategoryIds,
-        ));
-    verifyNoMoreInteractions(mockReportRepository);
-  });
+          compareToPrevious: false,
+        ),
+      );
+
+      // assert
+      expect(result, Left(ServerFailure()));
+      verify(
+        () => mockReportRepository.getSpendingOverTime(
+          startDate: tStartDate,
+          endDate: tEndDate,
+          granularity: tGranularity,
+          accountIds: tAccountIds,
+          categoryIds: tCategoryIds,
+        ),
+      );
+      verifyNoMoreInteractions(mockReportRepository);
+    },
+  );
 }

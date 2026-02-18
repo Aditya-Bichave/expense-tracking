@@ -41,13 +41,10 @@ void main() {
 
     // Assert
     expect(result.isRight(), isTrue);
-    result.fold(
-      (failure) => fail('Should have returned Right'),
-      (budgets) {
-        expect(budgets.length, 1);
-        expect(budgets.first, tBudget);
-      },
-    );
+    result.fold((failure) => fail('Should have returned Right'), (budgets) {
+      expect(budgets.length, 1);
+      expect(budgets.first, tBudget);
+    });
     verify(() => mockRepository.getBudgets()).called(1);
   });
 }

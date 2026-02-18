@@ -30,7 +30,7 @@ void main() {
       categoryColor: Colors.red,
       totalAmount: ComparisonValue(currentValue: 100.0),
       percentage: 20.0,
-    )
+    ),
   ];
 
   final tReportData = SpendingCategoryReportData(
@@ -40,54 +40,69 @@ void main() {
 
   test('should get spending category report from the repository', () async {
     // arrange
-    when(() => mockReportRepository.getSpendingByCategory(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          accountIds: any(named: 'accountIds'),
-        )).thenAnswer((_) async => Right(tReportData));
+    when(
+      () => mockReportRepository.getSpendingByCategory(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        accountIds: any(named: 'accountIds'),
+      ),
+    ).thenAnswer((_) async => Right(tReportData));
 
     // act
-    final result = await useCase(GetSpendingCategoryReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      accountIds: tAccountIds,
-      compareToPrevious: false,
-      transactionType: TransactionType.expense,
-    ));
+    final result = await useCase(
+      GetSpendingCategoryReportParams(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        accountIds: tAccountIds,
+        compareToPrevious: false,
+        transactionType: TransactionType.expense,
+      ),
+    );
 
     // assert
     expect(result, Right(tReportData));
-    verify(() => mockReportRepository.getSpendingByCategory(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          accountIds: tAccountIds,
-        ));
+    verify(
+      () => mockReportRepository.getSpendingByCategory(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        accountIds: tAccountIds,
+      ),
+    );
     verifyNoMoreInteractions(mockReportRepository);
   });
 
-  test('should return a failure when repository call is unsuccessful', () async {
-    // arrange
-    when(() => mockReportRepository.getSpendingByCategory(
+  test(
+    'should return a failure when repository call is unsuccessful',
+    () async {
+      // arrange
+      when(
+        () => mockReportRepository.getSpendingByCategory(
           startDate: any(named: 'startDate'),
           endDate: any(named: 'endDate'),
           accountIds: any(named: 'accountIds'),
-        )).thenAnswer((_) async => Left(ServerFailure()));
+        ),
+      ).thenAnswer((_) async => Left(ServerFailure()));
 
-    // act
-    final result = await useCase(GetSpendingCategoryReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      accountIds: tAccountIds,
-      compareToPrevious: false,
-    ));
-
-    // assert
-    expect(result, Left(ServerFailure()));
-    verify(() => mockReportRepository.getSpendingByCategory(
+      // act
+      final result = await useCase(
+        GetSpendingCategoryReportParams(
           startDate: tStartDate,
           endDate: tEndDate,
           accountIds: tAccountIds,
-        ));
-    verifyNoMoreInteractions(mockReportRepository);
-  });
+          compareToPrevious: false,
+        ),
+      );
+
+      // assert
+      expect(result, Left(ServerFailure()));
+      verify(
+        () => mockReportRepository.getSpendingByCategory(
+          startDate: tStartDate,
+          endDate: tEndDate,
+          accountIds: tAccountIds,
+        ),
+      );
+      verifyNoMoreInteractions(mockReportRepository);
+    },
+  );
 }

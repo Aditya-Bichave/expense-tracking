@@ -52,63 +52,78 @@ void main() {
 
   test('should get budget performance report from the repository', () async {
     // arrange
-    when(() => mockReportRepository.getBudgetPerformance(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          budgetIds: any(named: 'budgetIds'),
-          accountIds: any(named: 'accountIds'),
-          compareToPrevious: any(named: 'compareToPrevious'),
-        )).thenAnswer((_) async => Right(tReportData));
+    when(
+      () => mockReportRepository.getBudgetPerformance(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        budgetIds: any(named: 'budgetIds'),
+        accountIds: any(named: 'accountIds'),
+        compareToPrevious: any(named: 'compareToPrevious'),
+      ),
+    ).thenAnswer((_) async => Right(tReportData));
 
     // act
-    final result = await useCase(GetBudgetPerformanceReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      budgetIds: tBudgetIds,
-      accountIds: tAccountIds,
-      compareToPrevious: false,
-    ));
+    final result = await useCase(
+      GetBudgetPerformanceReportParams(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        budgetIds: tBudgetIds,
+        accountIds: tAccountIds,
+        compareToPrevious: false,
+      ),
+    );
 
     // assert
     expect(result, Right(tReportData));
-    verify(() => mockReportRepository.getBudgetPerformance(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          budgetIds: tBudgetIds,
-          accountIds: tAccountIds,
-          compareToPrevious: false,
-        ));
+    verify(
+      () => mockReportRepository.getBudgetPerformance(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        budgetIds: tBudgetIds,
+        accountIds: tAccountIds,
+        compareToPrevious: false,
+      ),
+    );
     verifyNoMoreInteractions(mockReportRepository);
   });
 
-  test('should return a failure when repository call is unsuccessful', () async {
-    // arrange
-    when(() => mockReportRepository.getBudgetPerformance(
+  test(
+    'should return a failure when repository call is unsuccessful',
+    () async {
+      // arrange
+      when(
+        () => mockReportRepository.getBudgetPerformance(
           startDate: any(named: 'startDate'),
           endDate: any(named: 'endDate'),
           budgetIds: any(named: 'budgetIds'),
           accountIds: any(named: 'accountIds'),
           compareToPrevious: any(named: 'compareToPrevious'),
-        )).thenAnswer((_) async => Left(ServerFailure()));
+        ),
+      ).thenAnswer((_) async => Left(ServerFailure()));
 
-    // act
-    final result = await useCase(GetBudgetPerformanceReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      budgetIds: tBudgetIds,
-      accountIds: tAccountIds,
-      compareToPrevious: false,
-    ));
-
-    // assert
-    expect(result, Left(ServerFailure()));
-    verify(() => mockReportRepository.getBudgetPerformance(
+      // act
+      final result = await useCase(
+        GetBudgetPerformanceReportParams(
           startDate: tStartDate,
           endDate: tEndDate,
           budgetIds: tBudgetIds,
           accountIds: tAccountIds,
           compareToPrevious: false,
-        ));
-    verifyNoMoreInteractions(mockReportRepository);
-  });
+        ),
+      );
+
+      // assert
+      expect(result, Left(ServerFailure()));
+      verify(
+        () => mockReportRepository.getBudgetPerformance(
+          startDate: tStartDate,
+          endDate: tEndDate,
+          budgetIds: tBudgetIds,
+          accountIds: tAccountIds,
+          compareToPrevious: false,
+        ),
+      );
+      verifyNoMoreInteractions(mockReportRepository);
+    },
+  );
 }

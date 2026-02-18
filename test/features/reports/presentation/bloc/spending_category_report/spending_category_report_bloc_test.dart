@@ -11,7 +11,8 @@ import 'package:mocktail/mocktail.dart';
 class MockGetSpendingCategoryReportUseCase extends Mock
     implements GetSpendingCategoryReportUseCase {}
 
-class MockReportFilterBloc extends MockBloc<ReportFilterEvent, ReportFilterState>
+class MockReportFilterBloc
+    extends MockBloc<ReportFilterEvent, ReportFilterState>
     implements ReportFilterBloc {}
 
 void main() {
@@ -46,7 +47,9 @@ void main() {
   blocTest<SpendingCategoryReportBloc, SpendingCategoryReportState>(
     'emits [Loading, Loaded] when initialized and use case succeeds',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tReportData));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
       return SpendingCategoryReportBloc(
         getSpendingCategoryReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -54,15 +57,25 @@ void main() {
     },
     // The LoadSpendingCategoryReport event is added in constructor
     expect: () => [
-      isA<SpendingCategoryReportLoading>().having((s) => s.compareToPrevious, 'compare', false),
-      isA<SpendingCategoryReportLoaded>().having((s) => s.reportData, 'data', tReportData),
+      isA<SpendingCategoryReportLoading>().having(
+        (s) => s.compareToPrevious,
+        'compare',
+        false,
+      ),
+      isA<SpendingCategoryReportLoaded>().having(
+        (s) => s.reportData,
+        'data',
+        tReportData,
+      ),
     ],
   );
 
   blocTest<SpendingCategoryReportBloc, SpendingCategoryReportState>(
     'emits [Loading, Error] when use case fails',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Error')));
       return SpendingCategoryReportBloc(
         getSpendingCategoryReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -70,7 +83,11 @@ void main() {
     },
     expect: () => [
       isA<SpendingCategoryReportLoading>(),
-      isA<SpendingCategoryReportError>().having((s) => s.message, 'message', 'Error'),
+      isA<SpendingCategoryReportError>().having(
+        (s) => s.message,
+        'message',
+        'Error',
+      ),
     ],
   );
 
@@ -82,7 +99,9 @@ void main() {
   blocTest<SpendingCategoryReportBloc, SpendingCategoryReportState>(
     'emits [Loading, Loaded] with compare=true when ToggleSpendingComparison is added',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tReportData));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
       return SpendingCategoryReportBloc(
         getSpendingCategoryReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -92,8 +111,16 @@ void main() {
     act: (bloc) => bloc.add(const ToggleSpendingComparison()),
     expect: () => [
       // Since initial state was loaded with compare=false (default), toggle makes it true
-      isA<SpendingCategoryReportLoading>().having((s) => s.compareToPrevious, 'compare', true),
-      isA<SpendingCategoryReportLoaded>().having((s) => s.showComparison, 'compare', true),
+      isA<SpendingCategoryReportLoading>().having(
+        (s) => s.compareToPrevious,
+        'compare',
+        true,
+      ),
+      isA<SpendingCategoryReportLoaded>().having(
+        (s) => s.showComparison,
+        'compare',
+        true,
+      ),
     ],
   );
 }

@@ -11,7 +11,8 @@ import 'package:mocktail/mocktail.dart';
 class MockGetBudgetPerformanceReportUseCase extends Mock
     implements GetBudgetPerformanceReportUseCase {}
 
-class MockReportFilterBloc extends MockBloc<ReportFilterEvent, ReportFilterState>
+class MockReportFilterBloc
+    extends MockBloc<ReportFilterEvent, ReportFilterState>
     implements ReportFilterBloc {}
 
 void main() {
@@ -46,7 +47,9 @@ void main() {
   blocTest<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
     'emits [Loading, Loaded] when initialized and use case succeeds',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tReportData));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
       return BudgetPerformanceReportBloc(
         getBudgetPerformanceReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -54,7 +57,11 @@ void main() {
     },
     // The LoadBudgetPerformanceReport event is added in constructor
     expect: () => [
-      isA<BudgetPerformanceReportLoading>().having((s) => s.compareToPrevious, 'compare', false),
+      isA<BudgetPerformanceReportLoading>().having(
+        (s) => s.compareToPrevious,
+        'compare',
+        false,
+      ),
       isA<BudgetPerformanceReportLoaded>()
           .having((s) => s.reportData, 'data', tReportData)
           .having((s) => s.showComparison, 'compare', false),
@@ -64,7 +71,9 @@ void main() {
   blocTest<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
     'emits [Loading, Error] when use case fails',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Error')));
       return BudgetPerformanceReportBloc(
         getBudgetPerformanceReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -72,14 +81,20 @@ void main() {
     },
     expect: () => [
       isA<BudgetPerformanceReportLoading>(),
-      isA<BudgetPerformanceReportError>().having((s) => s.message, 'message', 'Error'),
+      isA<BudgetPerformanceReportError>().having(
+        (s) => s.message,
+        'message',
+        'Error',
+      ),
     ],
   );
 
   blocTest<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
     'emits [Loading, Loaded] with compare=true when ToggleBudgetComparison is added',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tReportData));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
       return BudgetPerformanceReportBloc(
         getBudgetPerformanceReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -88,8 +103,16 @@ void main() {
     skip: 2, // Skip initial loading/loaded
     act: (bloc) => bloc.add(const ToggleBudgetComparison()),
     expect: () => [
-      isA<BudgetPerformanceReportLoading>().having((s) => s.compareToPrevious, 'compare', true),
-      isA<BudgetPerformanceReportLoaded>().having((s) => s.showComparison, 'compare', true),
+      isA<BudgetPerformanceReportLoading>().having(
+        (s) => s.compareToPrevious,
+        'compare',
+        true,
+      ),
+      isA<BudgetPerformanceReportLoaded>().having(
+        (s) => s.showComparison,
+        'compare',
+        true,
+      ),
     ],
   );
 }

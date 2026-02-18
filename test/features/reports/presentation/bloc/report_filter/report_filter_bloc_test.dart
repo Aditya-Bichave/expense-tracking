@@ -18,8 +18,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetCategoriesUseCase extends Mock implements GetCategoriesUseCase {}
-class MockGetAssetAccountsUseCase extends Mock implements GetAssetAccountsUseCase {}
+
+class MockGetAssetAccountsUseCase extends Mock
+    implements GetAssetAccountsUseCase {}
+
 class MockGetBudgetsUseCase extends Mock implements GetBudgetsUseCase {}
+
 class MockGetGoalsUseCase extends Mock implements GetGoalsUseCase {}
 
 void main() {
@@ -40,10 +44,18 @@ void main() {
     mockGetGoalsUseCase = MockGetGoalsUseCase();
 
     // Default mocks to return empty lists
-    when(() => mockGetCategoriesUseCase(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockGetAssetAccountsUseCase(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockGetBudgetsUseCase(any())).thenAnswer((_) async => const Right([]));
-    when(() => mockGetGoalsUseCase(any())).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetCategoriesUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetAssetAccountsUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetBudgetsUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetGoalsUseCase(any()),
+    ).thenAnswer((_) async => const Right([]));
 
     // We do NOT initialize bloc here because it triggers LoadFilterOptions immediately
   });
@@ -88,12 +100,20 @@ void main() {
   blocTest<ReportFilterBloc, ReportFilterState>(
     'emits [loading, loaded] when initialized and options load successfully',
     build: () {
-       when(() => mockGetCategoriesUseCase(any())).thenAnswer((_) async => Right([tCategory]));
-       when(() => mockGetAssetAccountsUseCase(any())).thenAnswer((_) async => Right([tAccount]));
-       when(() => mockGetBudgetsUseCase(any())).thenAnswer((_) async => Right([tBudget]));
-       when(() => mockGetGoalsUseCase(any())).thenAnswer((_) async => Right([tGoal]));
+      when(
+        () => mockGetCategoriesUseCase(any()),
+      ).thenAnswer((_) async => Right([tCategory]));
+      when(
+        () => mockGetAssetAccountsUseCase(any()),
+      ).thenAnswer((_) async => Right([tAccount]));
+      when(
+        () => mockGetBudgetsUseCase(any()),
+      ).thenAnswer((_) async => Right([tBudget]));
+      when(
+        () => mockGetGoalsUseCase(any()),
+      ).thenAnswer((_) async => Right([tGoal]));
 
-       return ReportFilterBloc(
+      return ReportFilterBloc(
         categoryRepository: mockGetCategoriesUseCase,
         accountRepository: mockGetAssetAccountsUseCase,
         budgetRepository: mockGetBudgetsUseCase,
@@ -102,7 +122,11 @@ void main() {
     },
     // The event LoadFilterOptions is added in constructor, so we don't add it here
     expect: () => [
-      isA<ReportFilterState>().having((s) => s.optionsStatus, 'status', FilterOptionsStatus.loading),
+      isA<ReportFilterState>().having(
+        (s) => s.optionsStatus,
+        'status',
+        FilterOptionsStatus.loading,
+      ),
       isA<ReportFilterState>()
           .having((s) => s.optionsStatus, 'status', FilterOptionsStatus.loaded)
           .having((s) => s.availableCategories, 'categories', [tCategory])
@@ -115,7 +139,9 @@ void main() {
   blocTest<ReportFilterBloc, ReportFilterState>(
     'emits [loading, error] when loading options fails',
     build: () {
-      when(() => mockGetCategoriesUseCase(any())).thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => mockGetCategoriesUseCase(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
       // Others succeed
 
       return ReportFilterBloc(
@@ -126,10 +152,18 @@ void main() {
       );
     },
     expect: () => [
-      isA<ReportFilterState>().having((s) => s.optionsStatus, 'status', FilterOptionsStatus.loading),
+      isA<ReportFilterState>().having(
+        (s) => s.optionsStatus,
+        'status',
+        FilterOptionsStatus.loading,
+      ),
       isA<ReportFilterState>()
           .having((s) => s.optionsStatus, 'status', FilterOptionsStatus.error)
-          .having((s) => s.optionsError, 'error', contains('Failed to load categories')),
+          .having(
+            (s) => s.optionsError,
+            'error',
+            contains('Failed to load categories'),
+          ),
     ],
   );
 
@@ -142,14 +176,16 @@ void main() {
         budgetRepository: mockGetBudgetsUseCase,
         goalRepository: mockGetGoalsUseCase,
       ),
-      act: (bloc) => bloc.add(const UpdateReportFilters(
-        startDate: null,
-        endDate: null,
-        categoryIds: ['1'],
-        accountIds: ['2'],
-        budgetIds: ['3'],
-        goalIds: ['4'],
-      )),
+      act: (bloc) => bloc.add(
+        const UpdateReportFilters(
+          startDate: null,
+          endDate: null,
+          categoryIds: ['1'],
+          accountIds: ['2'],
+          budgetIds: ['3'],
+          goalIds: ['4'],
+        ),
+      ),
       skip: 2, // Skip initial loading/loaded
       expect: () {
         final now = DateTime.now();
@@ -157,17 +193,17 @@ void main() {
         final defaultEnd = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
 
         return [
-        isA<ReportFilterState>()
-            .having((s) => s.selectedCategoryIds, 'categories', ['1'])
-            .having((s) => s.selectedAccountIds, 'accounts', ['2'])
-            .having((s) => s.selectedBudgetIds, 'budgets', ['3'])
-            .having((s) => s.selectedGoalIds, 'goals', ['4'])
-            // Since we passed null startDate/endDate, it should reset to defaults because the event logic sets clearDates=true if both are null
-            // Wait, logic: clearDates: event.startDate == null && event.endDate == null
-            // If clearDates is true, copyWith sets startDate to defaultStart.
-            .having((s) => s.startDate, 'startDate', defaultStart)
-            .having((s) => s.endDate, 'endDate', defaultEnd)
-      ];
+          isA<ReportFilterState>()
+              .having((s) => s.selectedCategoryIds, 'categories', ['1'])
+              .having((s) => s.selectedAccountIds, 'accounts', ['2'])
+              .having((s) => s.selectedBudgetIds, 'budgets', ['3'])
+              .having((s) => s.selectedGoalIds, 'goals', ['4'])
+              // Since we passed null startDate/endDate, it should reset to defaults because the event logic sets clearDates=true if both are null
+              // Wait, logic: clearDates: event.startDate == null && event.endDate == null
+              // If clearDates is true, copyWith sets startDate to defaultStart.
+              .having((s) => s.startDate, 'startDate', defaultStart)
+              .having((s) => s.endDate, 'endDate', defaultEnd),
+        ];
       },
     );
   });

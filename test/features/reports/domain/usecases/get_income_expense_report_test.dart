@@ -39,59 +39,74 @@ void main() {
 
   test('should get income expense report from the repository', () async {
     // arrange
-    when(() => mockReportRepository.getIncomeVsExpense(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          periodType: any(named: 'periodType'),
-          accountIds: any(named: 'accountIds'),
-        )).thenAnswer((_) async => Right(tReportData));
+    when(
+      () => mockReportRepository.getIncomeVsExpense(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        periodType: any(named: 'periodType'),
+        accountIds: any(named: 'accountIds'),
+      ),
+    ).thenAnswer((_) async => Right(tReportData));
 
     // act
-    final result = await useCase(GetIncomeExpenseReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      periodType: tPeriodType,
-      accountIds: tAccountIds,
-      compareToPrevious: false,
-    ));
+    final result = await useCase(
+      GetIncomeExpenseReportParams(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        periodType: tPeriodType,
+        accountIds: tAccountIds,
+        compareToPrevious: false,
+      ),
+    );
 
     // assert
     expect(result, Right(tReportData));
-    verify(() => mockReportRepository.getIncomeVsExpense(
-          startDate: tStartDate,
-          endDate: tEndDate,
-          periodType: tPeriodType,
-          accountIds: tAccountIds,
-        ));
+    verify(
+      () => mockReportRepository.getIncomeVsExpense(
+        startDate: tStartDate,
+        endDate: tEndDate,
+        periodType: tPeriodType,
+        accountIds: tAccountIds,
+      ),
+    );
     verifyNoMoreInteractions(mockReportRepository);
   });
 
-  test('should return a failure when repository call is unsuccessful', () async {
-    // arrange
-    when(() => mockReportRepository.getIncomeVsExpense(
+  test(
+    'should return a failure when repository call is unsuccessful',
+    () async {
+      // arrange
+      when(
+        () => mockReportRepository.getIncomeVsExpense(
           startDate: any(named: 'startDate'),
           endDate: any(named: 'endDate'),
           periodType: any(named: 'periodType'),
           accountIds: any(named: 'accountIds'),
-        )).thenAnswer((_) async => Left(ServerFailure()));
+        ),
+      ).thenAnswer((_) async => Left(ServerFailure()));
 
-    // act
-    final result = await useCase(GetIncomeExpenseReportParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-      periodType: tPeriodType,
-      accountIds: tAccountIds,
-      compareToPrevious: false,
-    ));
-
-    // assert
-    expect(result, Left(ServerFailure()));
-    verify(() => mockReportRepository.getIncomeVsExpense(
+      // act
+      final result = await useCase(
+        GetIncomeExpenseReportParams(
           startDate: tStartDate,
           endDate: tEndDate,
           periodType: tPeriodType,
           accountIds: tAccountIds,
-        ));
-    verifyNoMoreInteractions(mockReportRepository);
-  });
+          compareToPrevious: false,
+        ),
+      );
+
+      // assert
+      expect(result, Left(ServerFailure()));
+      verify(
+        () => mockReportRepository.getIncomeVsExpense(
+          startDate: tStartDate,
+          endDate: tEndDate,
+          periodType: tPeriodType,
+          accountIds: tAccountIds,
+        ),
+      );
+      verifyNoMoreInteractions(mockReportRepository);
+    },
+  );
 }

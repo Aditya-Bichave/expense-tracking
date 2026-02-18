@@ -67,9 +67,11 @@ void main() {
     GetIt.I.registerSingleton<SettingsBloc>(mockSettingsBloc);
 
     if (GetIt.I.isRegistered<StreamController<DataChangedEvent>>(
-        instanceName: 'dataChangeController')) {
+      instanceName: 'dataChangeController',
+    )) {
       GetIt.I.unregister<StreamController<DataChangedEvent>>(
-          instanceName: 'dataChangeController');
+        instanceName: 'dataChangeController',
+      );
     }
     GetIt.I.registerSingleton<StreamController<DataChangedEvent>>(
       dataChangeController,
@@ -129,7 +131,11 @@ void main() {
       expect: () => [
         isA<AddEditRecurringRuleState>()
             .having((s) => s.isEditMode, 'isEditMode', true)
-            .having((s) => s.description, 'description', tRecurringRule.description)
+            .having(
+              (s) => s.description,
+              'description',
+              tRecurringRule.description,
+            )
             .having((s) => s.amount, 'amount', tRecurringRule.amount)
             .having((s) => s.accountId, 'accountId', tRecurringRule.accountId),
       ],
@@ -144,8 +150,11 @@ void main() {
       ),
       act: (bloc) => bloc.add(const DescriptionChanged('New Desc')),
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.description, 'description', 'New Desc'),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.description,
+          'description',
+          'New Desc',
+        ),
       ],
     );
 
@@ -158,8 +167,11 @@ void main() {
       ),
       act: (bloc) => bloc.add(const AmountChanged('123.45')),
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.amount, 'amount', 123.45),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.amount,
+          'amount',
+          123.45,
+        ),
       ],
     );
 
@@ -185,13 +197,21 @@ void main() {
         updateRecurringRule: mockUpdateRecurringRule,
         uuid: mockUuid,
       ),
-      act: (bloc) => bloc.add(const FormSubmitted(description: 'Desc', amount: '0')),
+      act: (bloc) =>
+          bloc.add(const FormSubmitted(description: 'Desc', amount: '0')),
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.inProgress),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
         isA<AddEditRecurringRuleState>()
             .having((s) => s.status, 'status', FormStatus.failure)
-            .having((s) => s.errorMessage, 'error', contains('valid, positive amount')),
+            .having(
+              (s) => s.errorMessage,
+              'error',
+              contains('valid, positive amount'),
+            ),
       ],
     );
 
@@ -199,8 +219,9 @@ void main() {
       'FormSubmitted emits success when adding rule succeeds',
       setUp: () {
         when(() => mockUuid.v4()).thenReturn('newId');
-        when(() => mockAddRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockAddRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
       },
       build: () => AddEditRecurringRuleBloc(
         addRecurringRule: mockAddRecurringRule,
@@ -212,12 +233,19 @@ void main() {
         categoryId: 'cat1',
         startDate: DateTime.now(),
       ),
-      act: (bloc) => bloc.add(const FormSubmitted(description: 'Desc', amount: '100')),
+      act: (bloc) =>
+          bloc.add(const FormSubmitted(description: 'Desc', amount: '100')),
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.inProgress),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.success),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.success,
+        ),
       ],
       verify: (_) {
         verify(() => mockAddRecurringRule(any())).called(1);
@@ -227,8 +255,9 @@ void main() {
     blocTest<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
       'FormSubmitted emits success when updating rule succeeds',
       setUp: () {
-        when(() => mockUpdateRecurringRule(any()))
-            .thenAnswer((_) async => const Right(null));
+        when(
+          () => mockUpdateRecurringRule(any()),
+        ).thenAnswer((_) async => const Right(null));
       },
       build: () => AddEditRecurringRuleBloc(
         addRecurringRule: mockAddRecurringRule,
@@ -242,12 +271,19 @@ void main() {
         categoryId: 'cat1',
         startDate: DateTime.now(),
       ),
-      act: (bloc) => bloc.add(const FormSubmitted(description: 'Desc', amount: '100')),
+      act: (bloc) =>
+          bloc.add(const FormSubmitted(description: 'Desc', amount: '100')),
       expect: () => [
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.inProgress),
-        isA<AddEditRecurringRuleState>()
-            .having((s) => s.status, 'status', FormStatus.success),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.inProgress,
+        ),
+        isA<AddEditRecurringRuleState>().having(
+          (s) => s.status,
+          'status',
+          FormStatus.success,
+        ),
       ],
       verify: (_) {
         verify(() => mockUpdateRecurringRule(any())).called(1);

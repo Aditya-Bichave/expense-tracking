@@ -64,7 +64,9 @@ void main() {
 
     // Assert
     expect(result, const Right(null));
-    verify(() => mockRepository.getRecurringRuleById(tRecurringRule.id)).called(1);
+    verify(
+      () => mockRepository.getRecurringRuleById(tRecurringRule.id),
+    ).called(1);
     final updatedRule = tRecurringRule.copyWith(status: RuleStatus.paused);
     verify(() => mockUpdateRecurringRule(updatedRule)).called(1);
   });

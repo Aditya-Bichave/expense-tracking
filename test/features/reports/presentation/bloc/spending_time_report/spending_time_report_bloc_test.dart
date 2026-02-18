@@ -11,7 +11,8 @@ import 'package:mocktail/mocktail.dart';
 class MockGetSpendingTimeReportUseCase extends Mock
     implements GetSpendingTimeReportUseCase {}
 
-class MockReportFilterBloc extends MockBloc<ReportFilterEvent, ReportFilterState>
+class MockReportFilterBloc
+    extends MockBloc<ReportFilterEvent, ReportFilterState>
     implements ReportFilterBloc {}
 
 void main() {
@@ -48,7 +49,9 @@ void main() {
   blocTest<SpendingTimeReportBloc, SpendingTimeReportState>(
     'emits [Loading, Loaded] when initialized and use case succeeds',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tReportData));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
       return SpendingTimeReportBloc(
         getSpendingTimeReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -57,7 +60,11 @@ void main() {
     // The LoadSpendingTimeReport event is added in constructor
     expect: () => [
       isA<SpendingTimeReportLoading>()
-          .having((s) => s.granularity, 'granularity', TimeSeriesGranularity.daily)
+          .having(
+            (s) => s.granularity,
+            'granularity',
+            TimeSeriesGranularity.daily,
+          )
           .having((s) => s.compareToPrevious, 'compare', false),
       isA<SpendingTimeReportLoaded>()
           .having((s) => s.reportData, 'data', tReportData)
@@ -68,7 +75,9 @@ void main() {
   blocTest<SpendingTimeReportBloc, SpendingTimeReportState>(
     'emits [Loading, Error] when use case fails',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Error')));
       return SpendingTimeReportBloc(
         getSpendingTimeReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -76,24 +85,34 @@ void main() {
     },
     expect: () => [
       isA<SpendingTimeReportLoading>(),
-      isA<SpendingTimeReportError>().having((s) => s.message, 'message', 'Error'),
+      isA<SpendingTimeReportError>().having(
+        (s) => s.message,
+        'message',
+        'Error',
+      ),
     ],
   );
 
   blocTest<SpendingTimeReportBloc, SpendingTimeReportState>(
     'emits [Loading, Loaded] with new granularity when ChangeGranularity is added',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tReportData));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
       return SpendingTimeReportBloc(
         getSpendingTimeReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
       );
     },
     skip: 2, // Skip initial loading/loaded
-    act: (bloc) => bloc.add(const ChangeGranularity(TimeSeriesGranularity.weekly)),
+    act: (bloc) =>
+        bloc.add(const ChangeGranularity(TimeSeriesGranularity.weekly)),
     expect: () => [
-      isA<SpendingTimeReportLoading>()
-          .having((s) => s.granularity, 'granularity', TimeSeriesGranularity.weekly),
+      isA<SpendingTimeReportLoading>().having(
+        (s) => s.granularity,
+        'granularity',
+        TimeSeriesGranularity.weekly,
+      ),
       isA<SpendingTimeReportLoaded>(),
     ],
   );

@@ -19,11 +19,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockAssetAccountRepository extends Mock implements AssetAccountRepository {}
+class MockAssetAccountRepository extends Mock
+    implements AssetAccountRepository {}
+
 class MockIncomeRepository extends Mock implements IncomeRepository {}
+
 class MockExpenseRepository extends Mock implements ExpenseRepository {}
+
 class MockBudgetRepository extends Mock implements BudgetRepository {}
+
 class MockGoalRepository extends Mock implements GoalRepository {}
+
 class MockReportRepository extends Mock implements ReportRepository {}
 
 class FakeBudget extends Fake implements Budget {}
@@ -102,61 +108,74 @@ void main() {
     TimeSeriesDataPoint(
       date: DateTime(2023, 1, 1),
       amount: const ComparisonValue(currentValue: 10.0),
-    )
+    ),
   ];
 
   test('should get financial overview successfully', () async {
     // Arrange
-    when(() => mockAccountRepo.getAssetAccounts()).thenAnswer((_) async => Right([tAccount]));
+    when(
+      () => mockAccountRepo.getAssetAccounts(),
+    ).thenAnswer((_) async => Right([tAccount]));
 
-    when(() => mockIncomeRepo.getTotalIncomeForAccount(
-          any(),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-        )).thenAnswer((_) async => const Right(200.0));
+    when(
+      () => mockIncomeRepo.getTotalIncomeForAccount(
+        any(),
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+      ),
+    ).thenAnswer((_) async => const Right(200.0));
 
-    when(() => mockExpenseRepo.getTotalExpensesForAccount(
-          any(),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-        )).thenAnswer((_) async => const Right(100.0));
+    when(
+      () => mockExpenseRepo.getTotalExpensesForAccount(
+        any(),
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+      ),
+    ).thenAnswer((_) async => const Right(100.0));
 
-    when(() => mockBudgetRepo.getBudgets()).thenAnswer((_) async => Right([tBudget]));
-    when(() => mockBudgetRepo.calculateAmountSpent(
-      budget: any(named: 'budget'),
-      periodStart: any(named: 'periodStart'),
-      periodEnd: any(named: 'periodEnd'),
-    )).thenAnswer((_) async => const Right(50.0));
+    when(
+      () => mockBudgetRepo.getBudgets(),
+    ).thenAnswer((_) async => Right([tBudget]));
+    when(
+      () => mockBudgetRepo.calculateAmountSpent(
+        budget: any(named: 'budget'),
+        periodStart: any(named: 'periodStart'),
+        periodEnd: any(named: 'periodEnd'),
+      ),
+    ).thenAnswer((_) async => const Right(50.0));
 
-    when(() => mockGoalRepo.getGoals(includeArchived: any(named: 'includeArchived')))
-        .thenAnswer((_) async => Right([tGoal]));
+    when(
+      () =>
+          mockGoalRepo.getGoals(includeArchived: any(named: 'includeArchived')),
+    ).thenAnswer((_) async => Right([tGoal]));
 
-    when(() => mockReportRepo.getRecentDailySpending(days: any(named: 'days')))
-        .thenAnswer((_) async => Right(tSpendingData));
+    when(
+      () => mockReportRepo.getRecentDailySpending(days: any(named: 'days')),
+    ).thenAnswer((_) async => Right(tSpendingData));
 
-    when(() => mockReportRepo.getRecentDailyContributions(any(), days: any(named: 'days')))
-        .thenAnswer((_) async => const Right([]));
+    when(
+      () => mockReportRepo.getRecentDailyContributions(
+        any(),
+        days: any(named: 'days'),
+      ),
+    ).thenAnswer((_) async => const Right([]));
 
     // Act
-    final result = await useCase(GetFinancialOverviewParams(
-      startDate: tStartDate,
-      endDate: tEndDate,
-    ));
+    final result = await useCase(
+      GetFinancialOverviewParams(startDate: tStartDate, endDate: tEndDate),
+    );
 
     // Assert
     expect(result.isRight(), isTrue);
-    result.fold(
-      (failure) => fail('Should calculate correctly'),
-      (overview) {
-        expect(overview.totalIncome, 200.0);
-        expect(overview.totalExpenses, 100.0);
-        expect(overview.netFlow, 100.0);
-        expect(overview.overallBalance, 100.0);
-        expect(overview.accounts.length, 1);
-        expect(overview.activeBudgetsSummary.length, 1);
-        expect(overview.activeGoalsSummary.length, 1);
-        expect(overview.recentSpendingSparkline, tSpendingData);
-      },
-    );
+    result.fold((failure) => fail('Should calculate correctly'), (overview) {
+      expect(overview.totalIncome, 200.0);
+      expect(overview.totalExpenses, 100.0);
+      expect(overview.netFlow, 100.0);
+      expect(overview.overallBalance, 100.0);
+      expect(overview.accounts.length, 1);
+      expect(overview.activeBudgetsSummary.length, 1);
+      expect(overview.activeGoalsSummary.length, 1);
+      expect(overview.recentSpendingSparkline, tSpendingData);
+    });
   });
 }

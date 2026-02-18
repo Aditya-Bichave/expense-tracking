@@ -41,14 +41,17 @@ void main() {
     dataChangeController = StreamController<DataChangedEvent>.broadcast();
 
     // Default stub for getRecurringRules to avoid Null errors when LoadRecurringRules is triggered indirectly
-    when(() => mockGetRecurringRules(any()))
-        .thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetRecurringRules(any()),
+    ).thenAnswer((_) async => const Right([]));
 
     // Register StreamController in GetIt for publishDataChangedEvent
     if (GetIt.I.isRegistered<StreamController<DataChangedEvent>>(
-        instanceName: 'dataChangeController')) {
+      instanceName: 'dataChangeController',
+    )) {
       GetIt.I.unregister<StreamController<DataChangedEvent>>(
-          instanceName: 'dataChangeController');
+        instanceName: 'dataChangeController',
+      );
     }
     GetIt.I.registerSingleton<StreamController<DataChangedEvent>>(
       dataChangeController,
@@ -80,8 +83,9 @@ void main() {
   blocTest<RecurringListBloc, RecurringListState>(
     'emits [Loading, Loaded] when LoadRecurringRules is added and succeeds',
     build: () {
-      when(() => mockGetRecurringRules(any()))
-          .thenAnswer((_) async => Right([tRecurringRule]));
+      when(
+        () => mockGetRecurringRules(any()),
+      ).thenAnswer((_) async => Right([tRecurringRule]));
       return RecurringListBloc(
         getRecurringRules: mockGetRecurringRules,
         pauseResumeRecurringRule: mockPauseResumeRecurringRule,
@@ -99,8 +103,9 @@ void main() {
   blocTest<RecurringListBloc, RecurringListState>(
     'emits [Loading, Error] when LoadRecurringRules fails',
     build: () {
-      when(() => mockGetRecurringRules(any()))
-          .thenAnswer((_) async => const Left(CacheFailure('Error')));
+      when(
+        () => mockGetRecurringRules(any()),
+      ).thenAnswer((_) async => const Left(CacheFailure('Error')));
       return RecurringListBloc(
         getRecurringRules: mockGetRecurringRules,
         pauseResumeRecurringRule: mockPauseResumeRecurringRule,
@@ -109,17 +114,15 @@ void main() {
       );
     },
     act: (bloc) => bloc.add(LoadRecurringRules()),
-    expect: () => [
-      RecurringListLoading(),
-      const RecurringListError('Error'),
-    ],
+    expect: () => [RecurringListLoading(), const RecurringListError('Error')],
   );
 
   blocTest<RecurringListBloc, RecurringListState>(
     'calls PauseResumeUseCase when PauseResumeRule is added',
     build: () {
-      when(() => mockPauseResumeRecurringRule(any()))
-          .thenAnswer((_) async => const Right(null));
+      when(
+        () => mockPauseResumeRecurringRule(any()),
+      ).thenAnswer((_) async => const Right(null));
       return RecurringListBloc(
         getRecurringRules: mockGetRecurringRules,
         pauseResumeRecurringRule: mockPauseResumeRecurringRule,
@@ -136,8 +139,9 @@ void main() {
   blocTest<RecurringListBloc, RecurringListState>(
     'calls DeleteRecurringRule when DeleteRule is added',
     build: () {
-      when(() => mockDeleteRecurringRule(any()))
-          .thenAnswer((_) async => const Right(null));
+      when(
+        () => mockDeleteRecurringRule(any()),
+      ).thenAnswer((_) async => const Right(null));
       return RecurringListBloc(
         getRecurringRules: mockGetRecurringRules,
         pauseResumeRecurringRule: mockPauseResumeRecurringRule,
@@ -154,8 +158,9 @@ void main() {
   blocTest<RecurringListBloc, RecurringListState>(
     'reloads when DataChangedEvent type is recurringRule',
     build: () {
-      when(() => mockGetRecurringRules(any()))
-          .thenAnswer((_) async => Right([tRecurringRule]));
+      when(
+        () => mockGetRecurringRules(any()),
+      ).thenAnswer((_) async => Right([tRecurringRule]));
       return RecurringListBloc(
         getRecurringRules: mockGetRecurringRules,
         pauseResumeRecurringRule: mockPauseResumeRecurringRule,
@@ -164,10 +169,12 @@ void main() {
       );
     },
     act: (bloc) {
-      dataChangeController.add(const DataChangedEvent(
-        type: DataChangeType.recurringRule,
-        reason: DataChangeReason.updated,
-      ));
+      dataChangeController.add(
+        const DataChangedEvent(
+          type: DataChangeType.recurringRule,
+          reason: DataChangeReason.updated,
+        ),
+      );
     },
     expect: () => [
       RecurringListLoading(),

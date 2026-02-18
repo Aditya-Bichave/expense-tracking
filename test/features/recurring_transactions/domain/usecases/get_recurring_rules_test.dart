@@ -48,13 +48,10 @@ void main() {
 
     // Assert
     expect(result.isRight(), isTrue);
-    result.fold(
-      (failure) => fail('Should have returned Right'),
-      (rules) {
-        expect(rules.length, 1);
-        expect(rules.first, tRecurringRule);
-      }
-    );
+    result.fold((failure) => fail('Should have returned Right'), (rules) {
+      expect(rules.length, 1);
+      expect(rules.first, tRecurringRule);
+    });
     verify(() => mockRepository.getRecurringRules()).called(1);
     verifyNoMoreInteractions(mockRepository);
   });

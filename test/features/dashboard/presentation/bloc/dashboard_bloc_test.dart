@@ -59,16 +59,15 @@ void main() {
       );
     },
     act: (bloc) => bloc.add(const LoadDashboard()),
-    expect: () => [
-      const DashboardLoading(),
-      DashboardLoaded(tOverview),
-    ],
+    expect: () => [const DashboardLoading(), DashboardLoaded(tOverview)],
   );
 
   blocTest<DashboardBloc, DashboardState>(
     'emits [Loading, Error] when LoadDashboard fails',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Error')));
       return DashboardBloc(
         getFinancialOverviewUseCase: mockUseCase,
         dataChangeStream: dataChangeController.stream,
@@ -93,7 +92,12 @@ void main() {
     act: (bloc) async {
       bloc.add(const LoadDashboard());
       await Future.delayed(Duration.zero); // Wait for first load
-      dataChangeController.add(const DataChangedEvent(type: DataChangeType.expense, reason: DataChangeReason.added));
+      dataChangeController.add(
+        const DataChangedEvent(
+          type: DataChangeType.expense,
+          reason: DataChangeReason.added,
+        ),
+      );
     },
     // We expect Loading -> Loaded (initial), then Loading (reloading) -> Loaded (reload)
     // But since act adds LoadDashboard, we get the first two.
@@ -117,7 +121,12 @@ void main() {
       );
     },
     act: (bloc) {
-      dataChangeController.add(const DataChangedEvent(type: DataChangeType.system, reason: DataChangeReason.reset));
+      dataChangeController.add(
+        const DataChangedEvent(
+          type: DataChangeType.system,
+          reason: DataChangeReason.reset,
+        ),
+      );
     },
     expect: () => [
       DashboardInitial(),

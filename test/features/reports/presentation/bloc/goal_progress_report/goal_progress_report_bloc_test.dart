@@ -11,7 +11,8 @@ import 'package:mocktail/mocktail.dart';
 class MockGetGoalProgressReportUseCase extends Mock
     implements GetGoalProgressReportUseCase {}
 
-class MockReportFilterBloc extends MockBloc<ReportFilterEvent, ReportFilterState>
+class MockReportFilterBloc
+    extends MockBloc<ReportFilterEvent, ReportFilterState>
     implements ReportFilterBloc {}
 
 void main() {
@@ -32,14 +33,14 @@ void main() {
     when(() => mockFilterBloc.stream).thenAnswer((_) => const Stream.empty());
   });
 
-  final tReportData = GoalProgressReportData(
-    progressData: const [],
-  );
+  final tReportData = GoalProgressReportData(progressData: const []);
 
   blocTest<GoalProgressReportBloc, GoalProgressReportState>(
     'emits [Loading, Loaded] when initialized and use case succeeds',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tReportData));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
       return GoalProgressReportBloc(
         getGoalProgressReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -48,14 +49,20 @@ void main() {
     // The LoadGoalProgressReport event is added in constructor
     expect: () => [
       isA<GoalProgressReportLoading>(),
-      isA<GoalProgressReportLoaded>().having((s) => s.reportData, 'data', tReportData),
+      isA<GoalProgressReportLoaded>().having(
+        (s) => s.reportData,
+        'data',
+        tReportData,
+      ),
     ],
   );
 
   blocTest<GoalProgressReportBloc, GoalProgressReportState>(
     'emits [Loading, Error] when use case fails',
     build: () {
-      when(() => mockUseCase(any())).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Error')));
       return GoalProgressReportBloc(
         getGoalProgressReportUseCase: mockUseCase,
         reportFilterBloc: mockFilterBloc,
@@ -63,7 +70,11 @@ void main() {
     },
     expect: () => [
       isA<GoalProgressReportLoading>(),
-      isA<GoalProgressReportError>().having((s) => s.message, 'message', 'Error'),
+      isA<GoalProgressReportError>().having(
+        (s) => s.message,
+        'message',
+        'Error',
+      ),
     ],
   );
 }
