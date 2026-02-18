@@ -35,7 +35,11 @@ class StitchAmountInput extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.arrow_drop_down, size: 16, color: theme.colorScheme.primary),
+              Icon(
+                Icons.arrow_drop_down,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
             ],
           ),
         ),
@@ -59,7 +63,9 @@ class StitchAmountInput extends StatelessWidget {
             IntrinsicWidth(
               child: TextField(
                 controller: controller,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 textAlign: TextAlign.center,
                 style: theme.textTheme.displayLarge?.copyWith(
                   fontWeight: FontWeight.bold,

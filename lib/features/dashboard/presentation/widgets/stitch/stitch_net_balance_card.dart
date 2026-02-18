@@ -81,7 +81,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                     currencySymbol,
                   ),
                   style: theme.textTheme.headlineMedium?.copyWith(
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
                   ),
@@ -135,7 +135,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                             Text(
                               '-${CurrencyFormatter.format(overview.totalExpenses, currencySymbol)}',
                               style: theme.textTheme.titleSmall?.copyWith(
-                                color: Colors.white,
+                                color: theme.colorScheme.onSurface,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -162,7 +162,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                       TextSpan(
                         text: '${(progress * 100).toInt()}%',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white,
+                          color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                         ),
                         children: [

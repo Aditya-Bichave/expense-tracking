@@ -105,7 +105,10 @@ void main() {
           expect(card.color, Colors.transparent);
           expect(card.shape, isA<RoundedRectangleBorder>());
           final shape = card.shape as RoundedRectangleBorder;
-          expect(shape.side.color.opacity, closeTo(0.05, 0.01)); // Light mode default
+          expect(
+            shape.side.color.opacity,
+            closeTo(0.05, 0.01),
+          ); // Light mode default
         } else {
           expect(card.shape, cardTheme.shape);
           expect(card.color, cardTheme.color);

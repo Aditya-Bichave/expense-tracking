@@ -16,7 +16,9 @@ class MonthlyCommitmentsSummary extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withOpacity(0.4),
-            border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+            border: Border.all(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

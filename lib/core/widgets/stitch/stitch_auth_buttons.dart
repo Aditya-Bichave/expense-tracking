@@ -31,7 +31,9 @@ class StitchAuthButtons extends StatelessWidget {
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),
@@ -41,7 +43,10 @@ class StitchAuthButtons extends StatelessWidget {
           height: 56,
           child: OutlinedButton.icon(
             onPressed: onEmailTap,
-            icon: Icon(Icons.email_outlined, color: theme.colorScheme.onSurface),
+            icon: Icon(
+              Icons.email_outlined,
+              color: theme.colorScheme.onSurface,
+            ),
             label: Text(
               'Continue with Email',
               style: TextStyle(
@@ -50,9 +55,14 @@ class StitchAuthButtons extends StatelessWidget {
               ),
             ),
             style: OutlinedButton.styleFrom(
-              backgroundColor: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
-              side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.2)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              backgroundColor: theme.colorScheme.surfaceContainerHighest
+                  .withOpacity(0.5),
+              side: BorderSide(
+                color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),

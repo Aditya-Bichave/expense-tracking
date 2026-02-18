@@ -25,7 +25,9 @@ class CategoryListItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+        ),
       ),
       child: ListTile(
         onTap: onTap,
@@ -40,8 +42,17 @@ class CategoryListItem extends StatelessWidget {
           child: Icon(icon, color: iconColor),
         ),
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(description, style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
-        trailing: Icon(Icons.more_vert, color: theme.colorScheme.onSurfaceVariant),
+        subtitle: Text(
+          description,
+          style: TextStyle(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
+        ),
+        trailing: Icon(
+          Icons.more_vert,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

@@ -34,7 +34,9 @@ class RecurringPaymentItem extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: theme.colorScheme.surface.withOpacity(0.4),
-            border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.1)),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withOpacity(0.1),
+            ),
           ),
           child: Row(
             children: [
@@ -79,7 +81,10 @@ class RecurringPaymentItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),

@@ -74,21 +74,21 @@ class SpendingTrendsChart extends StatelessWidget {
           SizedBox(
             height: 150,
             width: double.infinity,
-            child: CustomPaint(
-              painter: _MockChartPainter(color: primaryColor),
-            ),
+            child: CustomPaint(painter: _MockChartPainter(color: primaryColor)),
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-                .map((day) => Text(
-                      day,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ))
+                .map(
+                  (day) => Text(
+                    day,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ],
@@ -114,14 +114,20 @@ class _MockChartPainter extends CustomPainter {
     // Simple cubic bezier curve mock
     path.moveTo(0, size.height * 0.8);
     path.cubicTo(
-      size.width * 0.25, size.height * 0.9,
-      size.width * 0.5, size.height * 0.2,
-      size.width * 0.75, size.height * 0.5,
+      size.width * 0.25,
+      size.height * 0.9,
+      size.width * 0.5,
+      size.height * 0.2,
+      size.width * 0.75,
+      size.height * 0.5,
     );
     path.cubicTo(
-        size.width * 0.85, size.height * 0.6,
-        size.width * 0.95, size.height * 0.3,
-        size.width, size.height * 0.4
+      size.width * 0.85,
+      size.height * 0.6,
+      size.width * 0.95,
+      size.height * 0.3,
+      size.width,
+      size.height * 0.4,
     );
 
     // Draw Line

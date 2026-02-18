@@ -33,17 +33,45 @@ class TopCategoriesList extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _buildCategoryItem(context, Icons.restaurant, Colors.orange, 'Food & Drinks', '\$840.20', 0.75),
+          _buildCategoryItem(
+            context,
+            Icons.restaurant,
+            Colors.orange,
+            'Food & Drinks',
+            '\$840.20',
+            0.75,
+          ),
           const SizedBox(height: 16),
-          _buildCategoryItem(context, Icons.directions_car, Colors.blue, 'Transport', '\$320.50', 0.40),
+          _buildCategoryItem(
+            context,
+            Icons.directions_car,
+            Colors.blue,
+            'Transport',
+            '\$320.50',
+            0.40,
+          ),
           const SizedBox(height: 16),
-          _buildCategoryItem(context, Icons.shopping_bag, Colors.purple, 'Shopping', '\$210.00', 0.25),
+          _buildCategoryItem(
+            context,
+            Icons.shopping_bag,
+            Colors.purple,
+            'Shopping',
+            '\$210.00',
+            0.25,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryItem(BuildContext context, IconData icon, Color color, String name, String amount, double progress) {
+  Widget _buildCategoryItem(
+    BuildContext context,
+    IconData icon,
+    Color color,
+    String name,
+    String amount,
+    double progress,
+  ) {
     final theme = Theme.of(context);
     return Row(
       children: [
@@ -65,11 +93,15 @@ class TopCategoriesList extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   Text(
                     amount,
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
