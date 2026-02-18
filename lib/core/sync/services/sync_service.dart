@@ -60,9 +60,9 @@ class SyncService {
   String _getTableName(EntityType type) {
     switch (type) {
       case EntityType.group: return 'groups';
-      case EntityType.expense: return 'expenses';
+      case EntityType.groupExpense: return 'expenses';
       case EntityType.settlement: return 'settlements';
-      case EntityType.member: return 'group_members';
+      case EntityType.groupMember: return 'group_members';
       case EntityType.invite: return 'invites';
     }
   }

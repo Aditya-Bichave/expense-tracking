@@ -4,20 +4,21 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list_bloc.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // Corrected
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_event.dart'; // Added
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
+import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart'; // Corrected
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_event.dart';
-import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list_bloc.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart'; // Corrected
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_event.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management_bloc.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
+import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart'; // Corrected
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_event.dart';
-import 'package:expense_tracker/features/goals/presentation/bloc/goal_list_bloc.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';

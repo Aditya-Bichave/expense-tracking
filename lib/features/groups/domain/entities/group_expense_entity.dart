@@ -8,10 +8,7 @@ class GroupExpenseEntity extends Equatable {
   final String currency;
   final DateTime occurredAt;
   final String createdBy;
-  // Simplified for now, complex splits can be separate entities or nested
-  // For V1, assume equal split or just basic record.
-  // But requirements mention expense_payers and expense_splits.
-  // I'll keep it simple for now and maybe add List<Payer> later.
+  final String? notes;
 
   const GroupExpenseEntity({
     required this.id,
@@ -21,8 +18,9 @@ class GroupExpenseEntity extends Equatable {
     required this.currency,
     required this.occurredAt,
     required this.createdBy,
+    this.notes,
   });
 
   @override
-  List<Object?> get props => [id, groupId, title, amount, currency, occurredAt, createdBy];
+  List<Object?> get props => [id, groupId, title, amount, currency, occurredAt, createdBy, notes];
 }

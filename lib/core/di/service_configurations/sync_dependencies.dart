@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/auth/auth_session_service.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
 import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 import 'package:expense_tracker/core/sync/repositories/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/services/realtime_service.dart';
@@ -27,7 +28,10 @@ class SyncDependencies {
     // SyncService
     if (!sl.isRegistered<SyncService>()) {
       sl.registerLazySingleton<SyncService>(
-        () => SyncService(sl<OutboxRepository>()),
+        () => SyncService(
+          sl<OutboxRepository>(),
+          SupabaseClientProvider.client,
+        ),
       );
     }
 
