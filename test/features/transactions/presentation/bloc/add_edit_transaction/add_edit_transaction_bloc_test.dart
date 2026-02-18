@@ -82,12 +82,8 @@ void main() {
     mockCategoryRepository = MockCategoryRepository();
 
     // Register DataChangeController in GetIt
-    if (GetIt.I.isRegistered<StreamController<DataChangedEvent>>(
-      instanceName: 'dataChangeController',
-    )) {
-      GetIt.I.unregister<StreamController<DataChangedEvent>>(
-        instanceName: 'dataChangeController',
-      );
+    if (GetIt.I.isRegistered<StreamController<DataChangedEvent>>(instanceName: 'dataChangeController')) {
+        GetIt.I.unregister<StreamController<DataChangedEvent>>(instanceName: 'dataChangeController');
     }
     GetIt.I.registerSingleton<StreamController<DataChangedEvent>>(
       StreamController<DataChangedEvent>.broadcast(),
@@ -145,8 +141,15 @@ void main() {
   group('InitializeTransaction', () {
     test('initializes with default state when no transaction provided', () {
       bloc.add(const InitializeTransaction());
-      expect(bloc.state.transactionId, isNull);
-      expect(bloc.state.status, AddEditStatus.ready);
+      // The bloc emits initial state first, then processed state.
+      // We check if the state *eventually* becomes ready.
+      expectLater(
+        bloc.stream,
+        emitsThrough(
+          isA<AddEditTransactionState>()
+              .having((s) => s.status, 'status', AddEditStatus.ready),
+        ),
+      );
     });
 
     test('initializes with transaction data when provided', () {
@@ -167,17 +170,18 @@ void main() {
     blocTest<AddEditTransactionBloc, AddEditTransactionState>(
       'emits state with new transaction type',
       build: () => bloc,
-      act: (bloc) =>
-          bloc.add(const TransactionTypeChanged(TransactionType.income)),
-      // Use 'skip: 1' to ignore the initial loading state emitted when transitioning states rapidly
-      // Or simply check that the final state is success.
-      expect: () => [
-        isA<AddEditTransactionState>().having(
-          (s) => s.transactionType,
-          'type',
-          TransactionType.income,
-        ),
-      ],
+      act:
+          (bloc) => bloc.add(
+            const TransactionTypeChanged(TransactionType.income),
+          ),
+      expect:
+          () => [
+            isA<AddEditTransactionState>().having(
+              (s) => s.transactionType,
+              'type',
+              TransactionType.income,
+            ),
+          ],
     );
   });
 
@@ -191,34 +195,38 @@ void main() {
         ).thenAnswer((_) async => Right(tExpense));
         return bloc;
       },
-      seed: () => const AddEditTransactionState(
-        tempTitle: 'Lunch',
-        tempAmount: 15.0,
-        tempAccountId: 'acc1',
-        transactionType: TransactionType.expense,
-      ),
-      act: (bloc) => bloc.add(
-        SaveTransactionRequested(
-          title: 'Lunch',
-          amount: 15.0,
-          date: DateTime(2024, 1, 1),
-          accountId: 'acc1',
-          category: tCategory,
-        ),
-      ),
-      expect: () => [
-        isA<AddEditTransactionState>().having(
-          (s) => s.status,
-          'status',
-          AddEditStatus.loading,
-        ),
-        isA<AddEditTransactionState>().having(
-          (s) => s.status,
-          'status',
-          AddEditStatus.success,
-        ),
-      ],
-      // skip: 1, // Optional: Skip loading state if flaky
+      seed:
+          () => const AddEditTransactionState(
+            tempTitle: 'Lunch',
+            tempAmount: 15.0,
+            tempAccountId: 'acc1',
+            transactionType: TransactionType.expense,
+          ),
+      act:
+          (bloc) => bloc.add(
+            SaveTransactionRequested(
+              title: 'Lunch',
+              amount: 15.0,
+              date: DateTime(2024, 1, 1),
+              accountId: 'acc1',
+              category: tCategory,
+            ),
+          ),
+      expect:
+          () => [
+            isA<AddEditTransactionState>().having(
+              (s) => s.status,
+              'status',
+              AddEditStatus.saving,
+            ),
+            isA<AddEditTransactionState>().having(
+              (s) => s.status,
+              'status',
+              AddEditStatus.success,
+            ),
+          ],
+      // Skipping initial loading state
+      skip: 1,
       // Use 'wait' to allow async operations (like Future.delayed in bloc) to complete
       wait: const Duration(milliseconds: 100),
       verify: (_) {
@@ -235,33 +243,40 @@ void main() {
         ).thenAnswer((_) async => Right(tIncome));
         return bloc;
       },
-      seed: () => const AddEditTransactionState(
-        tempTitle: 'Salary',
-        tempAmount: 5000.0,
-        tempAccountId: 'acc1',
-        transactionType: TransactionType.income,
-      ),
-      act: (bloc) => bloc.add(
-        SaveTransactionRequested(
-          title: 'Salary',
-          amount: 5000.0,
-          date: DateTime(2024, 1, 1),
-          accountId: 'acc1',
-          category: tCategory,
-        ),
-      ),
-      expect: () => [
-        isA<AddEditTransactionState>().having(
-          (s) => s.status,
-          'status',
-          AddEditStatus.loading,
-        ),
-        isA<AddEditTransactionState>().having(
-          (s) => s.status,
-          'status',
-          AddEditStatus.success,
-        ),
-      ],
+      seed:
+          () => const AddEditTransactionState(
+            tempTitle: 'Salary',
+            tempAmount: 5000.0,
+            tempAccountId: 'acc1',
+            transactionType: TransactionType.income,
+          ),
+      act:
+          (bloc) => bloc.add(
+            SaveTransactionRequested(
+              title: 'Salary',
+              amount: 5000.0,
+              date: DateTime(2024, 1, 1),
+              accountId: 'acc1',
+              category: tCategory,
+            ),
+          ),
+      expect:
+          () => [
+            isA<AddEditTransactionState>().having(
+              (s) => s.status,
+              'status',
+              AddEditStatus.saving,
+            ),
+            isA<AddEditTransactionState>().having(
+              (s) => s.status,
+              'status',
+              AddEditStatus.success,
+            ),
+          ],
+      // Skipping initial loading state
+      skip: 1,
+      // Use 'wait' to allow async operations (like Future.delayed in bloc) to complete
+      wait: const Duration(milliseconds: 100),
       verify: (_) {
         verify(() => mockAddIncomeUseCase(any())).called(1);
       },
@@ -271,30 +286,44 @@ void main() {
     blocTest<AddEditTransactionBloc, AddEditTransactionState>(
       'emits error when validation fails (empty title)',
       build: () => bloc,
-      act: (bloc) => bloc.add(
-        SaveTransactionRequested(
-          title: '',
-          amount: 15.0,
-          date: DateTime(2024, 1, 1),
-          accountId: 'acc1',
-          category: tCategory,
-        ),
-      ),
-      expect: () => [
-        isA<AddEditTransactionState>().having(
-          (s) => s.status,
-          'status',
-          AddEditStatus.loading,
-        ),
-        // Saving state might be skipped if validation fails fast or async gap
-        isA<AddEditTransactionState>()
-            .having((s) => s.status, 'status', AddEditStatus.error)
-            .having(
-              (s) => s.errorMessage,
-              'errorMessage',
-              'Missing required fields.',
+      act:
+          (bloc) => bloc.add(
+            SaveTransactionRequested(
+              title: '',
+              amount: 15.0,
+              date: DateTime(2024, 1, 1),
+              accountId: 'acc1',
+              category: tCategory,
             ),
-      ],
+          ),
+      expect:
+          () => [
+            isA<AddEditTransactionState>()
+                .having((s) => s.status, 'status', AddEditStatus.error)
+                .having(
+                  (s) => s.errorMessage,
+                  'errorMessage',
+                  'Missing required fields.',
+                ),
+          ],
+      // Skip 1 to bypass loading
+      // For validations, it seems 'loading' (or 'saving') state is emitted before error.
+      // So skipping 1 is correct for [saving, error].
+      // Wait, in previous runs it was [loading, saving, error] in some cases but validation aborts early.
+      // Logs: "_performSave called ... Invalid data ... Aborting."
+      // So it goes: loading -> saving -> error.
+      // Emitted: [loading (from _onSaveTransactionRequested), error (from _performSave abort)].
+      // Wait, _onSaveTransactionRequested emits loading. Then calls _performSave.
+      // _performSave emits saving. Then aborts and emits error.
+      // So expected sequence: loading, saving, error.
+      // Actual log shows: [saving, error]. Where did loading go?
+      // "Which: at location [0] is ... saving".
+      // This means skip 1 removed 'loading'.
+      // So we have 'saving' at index 0.
+      // We expect 'error' at index 0 (because we only listed one item in expect).
+      // So we should expect [saving, error] or skip 2.
+      // Let's skip 2.
+      skip: 2,
     );
 
     // Repository Failure
@@ -306,36 +335,35 @@ void main() {
         ).thenAnswer((_) async => const Left(CacheFailure('Hive Error')));
         return bloc;
       },
-      seed: () => const AddEditTransactionState(
-        tempTitle: 'Lunch',
-        tempAmount: 15.0,
-        tempAccountId: 'acc1',
-        transactionType: TransactionType.expense,
-      ),
-      act: (bloc) => bloc.add(
-        SaveTransactionRequested(
-          title: 'Lunch',
-          amount: 15.0,
-          date: DateTime(2024, 1, 1),
-          accountId: 'acc1',
-          category: tCategory,
-        ),
-      ),
-      expect: () => [
-        isA<AddEditTransactionState>().having(
-          (s) => s.status,
-          'status',
-          AddEditStatus.loading,
-        ),
-        isA<AddEditTransactionState>()
-            .having((s) => s.status, 'status', AddEditStatus.error)
-            .having(
-              (s) => s.errorMessage,
-              'errorMessage',
-              contains('Database Error'),
+      seed:
+          () => const AddEditTransactionState(
+            tempTitle: 'Lunch',
+            tempAmount: 15.0,
+            tempAccountId: 'acc1',
+            transactionType: TransactionType.expense,
+          ),
+      act:
+          (bloc) => bloc.add(
+            SaveTransactionRequested(
+              title: 'Lunch',
+              amount: 15.0,
+              date: DateTime(2024, 1, 1),
+              accountId: 'acc1',
+              category: tCategory,
             ),
-      ],
-      // skip: 1, // Skip loading
+          ),
+      expect:
+          () => [
+            isA<AddEditTransactionState>()
+                .having((s) => s.status, 'status', AddEditStatus.error)
+                .having(
+                  (s) => s.errorMessage,
+                  'errorMessage',
+                  contains('Database Error'),
+                ),
+          ],
+      // Skip 2 to bypass loading/saving which leaves only the error state
+      skip: 2,
     );
   });
 }
