@@ -39,8 +39,9 @@ void main() {
 
   test('should update goal in repository', () async {
     // Arrange
-    when(() => mockRepository.updateGoal(any()))
-        .thenAnswer((_) async => Right(tGoal));
+    when(
+      () => mockRepository.updateGoal(any()),
+    ).thenAnswer((_) async => Right(tGoal));
 
     // Act
     final result = await useCase(UpdateGoalParams(goal: tGoal));

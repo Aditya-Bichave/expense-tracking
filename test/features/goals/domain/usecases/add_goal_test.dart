@@ -51,8 +51,9 @@ void main() {
     // Arrange
     when(() => mockUuid.v4()).thenReturn('1');
     when(() => mockClock.now()).thenReturn(DateTime(2024, 1, 1));
-    when(() => mockRepository.addGoal(any()))
-        .thenAnswer((_) async => Right(tGoal));
+    when(
+      () => mockRepository.addGoal(any()),
+    ).thenAnswer((_) async => Right(tGoal));
 
     // Act
     final result = await useCase(
@@ -74,8 +75,9 @@ void main() {
     // Arrange
     when(() => mockUuid.v4()).thenReturn('1');
     when(() => mockClock.now()).thenReturn(DateTime(2024, 1, 1));
-    when(() => mockRepository.addGoal(any()))
-        .thenAnswer((_) async => const Left(CacheFailure("Fail")));
+    when(
+      () => mockRepository.addGoal(any()),
+    ).thenAnswer((_) async => const Left(CacheFailure("Fail")));
 
     // Act
     final result = await useCase(
