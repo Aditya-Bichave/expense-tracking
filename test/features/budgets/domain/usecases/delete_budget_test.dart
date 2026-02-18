@@ -20,8 +20,9 @@ void main() {
 
   test('should delete budget from repository', () async {
     // Arrange
-    when(() => mockRepository.deleteBudget(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteBudget(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     final result = await useCase(const DeleteBudgetParams(id: tId));

@@ -43,7 +43,9 @@ void main() {
     ).thenAnswer((_) async => const Right(null));
 
     // Act
-    final result = await useCase(const UpdateCustomCategoryParams(category: tCategory));
+    final result = await useCase(
+      const UpdateCustomCategoryParams(category: tCategory),
+    );
 
     // Assert
     expect(result, const Right(null));
@@ -55,7 +57,9 @@ void main() {
     final nonCustom = tCategory.copyWith(isCustom: false);
 
     // Act
-    final result = await useCase(UpdateCustomCategoryParams(category: nonCustom));
+    final result = await useCase(
+      UpdateCustomCategoryParams(category: nonCustom),
+    );
 
     // Assert
     expect(result.isLeft(), isTrue);

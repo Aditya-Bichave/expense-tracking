@@ -32,11 +32,13 @@ void main() {
 
   test('should add custom category when validation passes', () async {
     // Arrange
-    when(() => mockRepository.getAllCategories())
-        .thenAnswer((_) async => const Right([]));
+    when(
+      () => mockRepository.getAllCategories(),
+    ).thenAnswer((_) async => const Right([]));
     when(() => mockUuid.v4()).thenReturn('new-id');
-    when(() => mockRepository.addCustomCategory(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.addCustomCategory(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     final result = await useCase(tParams);
@@ -63,24 +65,28 @@ void main() {
     expect(result.fold((l) => l, (r) => null), isA<ValidationFailure>());
   });
 
-  test('should return ValidationFailure when category already exists', () async {
-    // Arrange
-    final existingCategory = Category(
-      id: '1',
-      name: 'New Cat',
-      iconName: 'icon',
-      colorHex: '#000000',
-      type: CategoryType.expense,
-      isCustom: true,
-    );
-    when(() => mockRepository.getAllCategories())
-        .thenAnswer((_) async => Right([existingCategory]));
+  test(
+    'should return ValidationFailure when category already exists',
+    () async {
+      // Arrange
+      final existingCategory = Category(
+        id: '1',
+        name: 'New Cat',
+        iconName: 'icon',
+        colorHex: '#000000',
+        type: CategoryType.expense,
+        isCustom: true,
+      );
+      when(
+        () => mockRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([existingCategory]));
 
-    // Act
-    final result = await useCase(tParams);
+      // Act
+      final result = await useCase(tParams);
 
-    // Assert
-    expect(result.isLeft(), isTrue);
-    expect(result.fold((l) => l, (r) => null), isA<ValidationFailure>());
-  });
+      // Assert
+      expect(result.isLeft(), isTrue);
+      expect(result.fold((l) => l, (r) => null), isA<ValidationFailure>());
+    },
+  );
 }

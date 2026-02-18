@@ -20,8 +20,9 @@ void main() {
 
   test('should delete goal from repository', () async {
     // Arrange
-    when(() => mockRepository.deleteGoal(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.deleteGoal(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     final result = await useCase(const DeleteGoalParams(id: tId));
