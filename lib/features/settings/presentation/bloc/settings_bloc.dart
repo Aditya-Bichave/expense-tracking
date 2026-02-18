@@ -316,6 +316,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           case UIMode.aether:
             defaultPalette = AppTheme.aetherPalette1;
             break;
+          case UIMode.stitch:
+            defaultPalette = AppTheme.stitchPalette1;
+            break;
         }
         log.info("[SettingsBloc] Saving default palette: $defaultPalette");
         _settingsRepository.savePaletteIdentifier(

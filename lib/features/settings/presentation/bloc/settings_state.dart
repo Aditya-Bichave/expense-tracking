@@ -7,7 +7,7 @@ enum SettingsStatus { initial, loading, loaded, error }
 enum PackageInfoStatus { initial, loading, loaded, error }
 
 // --- UI Mode Enum ---
-enum UIMode { elemental, quantum, aether }
+enum UIMode { elemental, quantum, aether, stitch }
 
 class SettingsState extends Equatable {
   // --- Main settings ---

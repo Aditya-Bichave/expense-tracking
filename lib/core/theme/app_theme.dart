@@ -12,6 +12,7 @@ import 'config/theme_config_interface.dart';
 import 'config/elemental_configs.dart';
 import 'config/quantum_configs.dart';
 import 'config/aether_configs.dart';
+import 'config/stitch_configs.dart';
 
 // Structure to hold both light and dark theme data (Keep as is)
 class AppThemeDataPair {
@@ -38,12 +39,14 @@ class AppTheme {
   static const String aetherPalette3 = 'aether_mystic';
   static const String aetherPalette4 = 'aether_calm_sky';
 
+  static const String stitchPalette1 = 'stitch_neon_green';
+
   // --- Palette Names (Display Names) ---
   static final Map<String, String> paletteNames = {
     elementalPalette1: 'Soft Neutrals',
     elementalPalette2: 'Ocean Calm',
     elementalPalette3: 'Light & Airy',
-    elementalPalette4: 'Elemental Dark', // UPDATED Display Name
+    elementalPalette4: 'Elemental Dark',
 
     quantumPalette1: 'Cyan Tech',
     quantumPalette2: 'Cool Blue',
@@ -54,6 +57,8 @@ class AppTheme {
     aetherPalette2: 'Garden',
     aetherPalette3: 'Mystic',
     aetherPalette4: 'Calm Sky',
+
+    stitchPalette1: 'Stitch Neon',
   };
 
   // --- UI Mode Names (Keep as is) ---
@@ -61,6 +66,7 @@ class AppTheme {
     UIMode.elemental: 'Elemental',
     UIMode.quantum: 'Quantum',
     UIMode.aether: 'Aether',
+    UIMode.stitch: 'Stitch',
   };
 
   // --- Central Factory Method (Refactored) ---
@@ -110,6 +116,9 @@ class AppTheme {
         case UIMode.aether:
           validPaletteId = aetherPalette1;
           break;
+        case UIMode.stitch:
+          validPaletteId = stitchPalette1;
+          break;
       }
     }
 
@@ -120,6 +129,8 @@ class AppTheme {
         return QuantumConfigs.getConfig(validPaletteId);
       case UIMode.aether:
         return AetherConfigs.getConfig(validPaletteId);
+      case UIMode.stitch:
+        return StitchConfigs.getConfig(validPaletteId);
     }
   }
 
@@ -172,6 +183,7 @@ class AppTheme {
             ? GoogleFonts.quicksandTextTheme(ThemeData.light().textTheme)
             : GoogleFonts.quicksandTextTheme(ThemeData.dark().textTheme);
         break;
+      case 'stitch':
       case 'elemental':
       default:
         baseTextTheme = colorScheme.brightness == Brightness.light
@@ -191,11 +203,10 @@ class AppTheme {
           labelLarge: baseTextTheme.labelLarge?.copyWith(
             fontWeight: FontWeight.w500,
           ),
-          // Mode-specific tweaks (example for Quantum)
+          // Mode-specific tweaks
           bodySmall: modePrefix == 'quantum'
               ? baseTextTheme.bodySmall?.copyWith(fontSize: 11)
               : baseTextTheme.bodySmall,
-          // ... add other common or conditional tweaks
         )
         .apply(
           // Apply base colors
@@ -230,7 +241,9 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: modeTheme.cardStyle == CardStyle.flat
             ? 0
-            : (modeTheme.cardStyle == CardStyle.floating ? 6 : 1.5),
+            : (modeTheme.cardStyle == CardStyle.floating
+                  ? 6
+                  : (modeTheme.cardStyle == CardStyle.glass ? 0 : 1.5)),
         margin: modeTheme.layoutDensity == LayoutDensity.compact
             ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
             : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -245,8 +258,12 @@ class AppTheme {
             ? colorScheme.surfaceVariant.withOpacity(0.85)
             : (modePrefix == 'quantum'
                   ? colorScheme.surface
-                  : colorScheme.surfaceContainer),
-        clipBehavior: modePrefix == 'aether' ? Clip.antiAlias : Clip.none,
+                  : (modePrefix == 'stitch'
+                        ? Colors.transparent
+                        : colorScheme.surfaceContainer)),
+        clipBehavior: (modePrefix == 'aether' || modePrefix == 'stitch')
+            ? Clip.antiAlias
+            : Clip.none,
       ),
 
       listTileTheme: ListTileThemeData(
@@ -273,16 +290,20 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
-            color: modePrefix == 'aether'
+            color: (modePrefix == 'aether' || modePrefix == 'stitch')
                 ? Colors.transparent
                 : colorScheme.outlineVariant,
             width: 0.8,
           ),
           borderRadius: BorderRadius.circular(
-            modePrefix == 'quantum' ? 6 : (modePrefix == 'aether' ? 16 : 12),
+            modePrefix == 'quantum'
+                ? 6
+                : ((modePrefix == 'aether' || modePrefix == 'stitch')
+                      ? 16
+                      : 12),
           ),
         ),
-        focusedBorder: modePrefix == 'aether'
+        focusedBorder: (modePrefix == 'aether' || modePrefix == 'stitch')
             ? OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
@@ -293,9 +314,9 @@ class AppTheme {
                   modePrefix == 'quantum' ? 6 : 12,
                 ),
               ),
-        filled: modePrefix == 'aether',
-        fillColor: modePrefix == 'aether'
-            ? colorScheme.surfaceVariant.withOpacity(0.7)
+        filled: modePrefix == 'aether' || modePrefix == 'stitch',
+        fillColor: (modePrefix == 'aether' || modePrefix == 'stitch')
+            ? colorScheme.surface.withOpacity(0.05) // Generic low opacity fill
             : null,
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
             ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
@@ -304,7 +325,7 @@ class AppTheme {
         floatingLabelBehavior: modePrefix == 'quantum'
             ? FloatingLabelBehavior.always
             : FloatingLabelBehavior.auto,
-        floatingLabelStyle: modePrefix == 'aether'
+        floatingLabelStyle: (modePrefix == 'aether' || modePrefix == 'stitch')
             ? TextStyle(color: colorScheme.primary)
             : null,
         prefixIconColor: colorScheme.onSurfaceVariant,
@@ -350,14 +371,18 @@ class AppTheme {
 
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
-        backgroundColor: modePrefix == 'aether'
-            ? colorScheme.surfaceVariant.withOpacity(0.9)
+        backgroundColor: (modePrefix == 'aether' || modePrefix == 'stitch')
+            ? colorScheme.background.withOpacity(0.8) // Glass effect base
             : colorScheme.surfaceContainerHighest, // Adjusted BG
         selectedItemColor: colorScheme.primary,
         unselectedItemColor: colorScheme.onSurfaceVariant.withOpacity(
           modePrefix == 'quantum' ? 0.6 : 0.7,
         ),
-        elevation: modeTheme.cardStyle == CardStyle.flat ? 0 : 2,
+        elevation:
+            (modeTheme.cardStyle == CardStyle.flat ||
+                modeTheme.cardStyle == CardStyle.glass)
+            ? 0
+            : 2,
         selectedLabelStyle: modePrefix == 'quantum'
             ? textTheme.labelSmall
             : textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w500),
