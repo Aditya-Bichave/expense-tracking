@@ -9,9 +9,15 @@ import 'package:mocktail/mocktail.dart';
 
 class MockBudgetRepository extends Mock implements BudgetRepository {}
 
+class FakeBudget extends Fake implements Budget {}
+
 void main() {
   late UpdateBudgetUseCase useCase;
   late MockBudgetRepository mockRepository;
+
+  setUpAll(() {
+    registerFallbackValue(FakeBudget());
+  });
 
   setUp(() {
     mockRepository = MockBudgetRepository();

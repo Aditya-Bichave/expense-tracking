@@ -40,7 +40,14 @@ void main() {
     final result = await useCase(const NoParams());
 
     // Assert
-    expect(result, Right([tBudget]));
+    expect(result.isRight(), isTrue);
+    result.fold(
+      (failure) => fail('Should have returned Right'),
+      (budgets) {
+        expect(budgets.length, 1);
+        expect(budgets.first, tBudget);
+      },
+    );
     verify(() => mockRepository.getBudgets()).called(1);
   });
 }

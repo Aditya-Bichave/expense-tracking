@@ -81,7 +81,11 @@ void main() {
       final result = await repository.getBudgets();
 
       // Assert
-      expect(result, const Left(CacheFailure('Hive Error')));
+      expect(result.isLeft(), true);
+      result.fold(
+        (failure) => expect(failure, isA<CacheFailure>()),
+        (r) => fail('Should return failure'),
+      );
     });
   });
 

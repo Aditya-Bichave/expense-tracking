@@ -12,10 +12,16 @@ class MockBudgetRepository extends Mock implements BudgetRepository {}
 
 class MockUuid extends Mock implements Uuid {}
 
+class FakeBudget extends Fake implements Budget {}
+
 void main() {
   late AddBudgetUseCase useCase;
   late MockBudgetRepository mockRepository;
   late MockUuid mockUuid;
+
+  setUpAll(() {
+    registerFallbackValue(FakeBudget());
+  });
 
   setUp(() {
     mockRepository = MockBudgetRepository();

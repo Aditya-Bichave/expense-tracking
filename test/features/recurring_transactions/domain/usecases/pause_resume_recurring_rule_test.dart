@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
@@ -13,69 +14,78 @@ class MockRecurringTransactionRepository extends Mock
 
 class MockUpdateRecurringRule extends Mock implements UpdateRecurringRule {}
 
+class FakeRecurringRule extends Fake implements RecurringRule {}
+
 void main() {
-  late PauseResumeRecurringRule usecase;
+  late PauseResumeRecurringRule useCase;
   late MockRecurringTransactionRepository mockRepository;
   late MockUpdateRecurringRule mockUpdateRecurringRule;
+
+  setUpAll(() {
+    registerFallbackValue(FakeRecurringRule());
+  });
 
   setUp(() {
     mockRepository = MockRecurringTransactionRepository();
     mockUpdateRecurringRule = MockUpdateRecurringRule();
-    usecase = PauseResumeRecurringRule(
+    useCase = PauseResumeRecurringRule(
       repository: mockRepository,
       updateRecurringRule: mockUpdateRecurringRule,
     );
-    registerFallbackValue(
-      RecurringRule(
-        id: '',
-        description: '',
-        amount: 0,
-        transactionType: TransactionType.expense,
-        accountId: '',
-        categoryId: '',
-        frequency: Frequency.monthly,
-        interval: 1,
-        startDate: DateTime.now(),
-        endConditionType: EndConditionType.never,
-        status: RuleStatus.active,
-        nextOccurrenceDate: DateTime.now(),
-        occurrencesGenerated: 0,
-      ),
-    );
   });
 
-  final tActiveRule = RecurringRule(
+  final tRecurringRule = RecurringRule(
     id: '1',
-    description: 'Test',
-    amount: 100,
-    transactionType: TransactionType.expense,
-    accountId: 'acc1',
-    categoryId: 'cat1',
+    description: 'Rent',
+    amount: 1000.0,
     frequency: Frequency.monthly,
     interval: 1,
-    startDate: DateTime(2023, 1, 1),
-    endConditionType: EndConditionType.never,
+    nextOccurrenceDate: DateTime.now(),
+    startDate: DateTime.now(),
     status: RuleStatus.active,
-    nextOccurrenceDate: DateTime(2023, 2, 1),
-    occurrencesGenerated: 1,
+    occurrencesGenerated: 0,
+    categoryId: 'cat1',
+    accountId: 'acc1',
+    transactionType: TransactionType.expense,
+    endConditionType: EndConditionType.never,
   );
 
   test('should pause an active rule', () async {
     // Arrange
     when(
       () => mockRepository.getRecurringRuleById(any()),
-    ).thenAnswer((_) async => Right(tActiveRule));
+    ).thenAnswer((_) async => Right(tRecurringRule));
     when(
       () => mockUpdateRecurringRule(any()),
     ).thenAnswer((_) async => const Right(null));
 
     // Act
-    await usecase('1');
+    final result = await useCase(tRecurringRule.id);
 
     // Assert
-    final captured = verify(
-      () => mockUpdateRecurringRule(captureAny()),
-    ).captured;
-    expect(captured.single.status, RuleStatus.paused);
+    expect(result, const Right(null));
+    verify(() => mockRepository.getRecurringRuleById(tRecurringRule.id)).called(1);
+    final updatedRule = tRecurringRule.copyWith(status: RuleStatus.paused);
+    verify(() => mockUpdateRecurringRule(updatedRule)).called(1);
+  });
+
+  test('should resume a paused rule', () async {
+    // Arrange
+    final tPausedRule = tRecurringRule.copyWith(status: RuleStatus.paused);
+    when(
+      () => mockRepository.getRecurringRuleById(any()),
+    ).thenAnswer((_) async => Right(tPausedRule));
+    when(
+      () => mockUpdateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
+
+    // Act
+    final result = await useCase(tPausedRule.id);
+
+    // Assert
+    expect(result, const Right(null));
+    verify(() => mockRepository.getRecurringRuleById(tPausedRule.id)).called(1);
+    final updatedRule = tPausedRule.copyWith(status: RuleStatus.active);
+    verify(() => mockUpdateRecurringRule(updatedRule)).called(1);
   });
 }

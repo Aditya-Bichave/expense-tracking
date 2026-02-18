@@ -14,6 +14,7 @@ class DashboardDependencies {
         expenseRepository: sl(),
         budgetRepository: sl(),
         goalRepository: sl(),
+        reportRepository: sl(),
       ),
     );
     // Bloc
