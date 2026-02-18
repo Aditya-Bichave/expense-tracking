@@ -92,18 +92,21 @@ void main() {
       },
     );
 
-    test('should return CacheFailure when data source throws CacheFailure', () async {
-      // Arrange
-      when(
-        () => mockLocalDataSource.addIncome(any()),
-      ).thenThrow(const CacheFailure('Hive Error'));
+    test(
+      'should return CacheFailure when data source throws CacheFailure',
+      () async {
+        // Arrange
+        when(
+          () => mockLocalDataSource.addIncome(any()),
+        ).thenThrow(const CacheFailure('Hive Error'));
 
-      // Act
-      final result = await repository.addIncome(tIncome);
+        // Act
+        final result = await repository.addIncome(tIncome);
 
-      // Assert
-      expect(result, const Left(CacheFailure('Hive Error')));
-    });
+        // Assert
+        expect(result, const Left(CacheFailure('Hive Error')));
+      },
+    );
   });
 
   group('deleteIncome', () {
@@ -248,7 +251,9 @@ void main() {
 
     test('should return CacheFailure if income not found', () async {
       // Arrange
-      when(() => mockLocalDataSource.getIncomeById(any())).thenAnswer((_) async => null);
+      when(
+        () => mockLocalDataSource.getIncomeById(any()),
+      ).thenAnswer((_) async => null);
 
       // Act
       final result = await repository.updateIncomeCategorization(

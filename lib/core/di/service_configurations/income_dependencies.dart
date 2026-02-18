@@ -23,10 +23,8 @@ class IncomeDependencies {
     // --- END MODIFIED ---
 
     sl.registerLazySingleton<IncomeRepository>(
-      () => IncomeRepositoryImpl(
-        localDataSource: sl(),
-        categoryRepository: sl(),
-      ),
+      () =>
+          IncomeRepositoryImpl(localDataSource: sl(), categoryRepository: sl()),
     );
     // Domain
     sl.registerLazySingleton(() => AddIncomeUseCase(sl()));
