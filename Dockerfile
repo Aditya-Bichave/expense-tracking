@@ -10,7 +10,7 @@ RUN flutter pub get
 
 # Build Flutter web release
 ARG API_BASE_URL
-RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
+RUN flutter build web --release --no-wasm-dry-run --dart-define=API_BASE_URL=${API_BASE_URL}
 
 # ---------- Run stage ----------
 FROM nginx:alpine
