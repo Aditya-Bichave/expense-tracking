@@ -11,74 +11,64 @@ import 'package:mocktail/mocktail.dart';
 class MockRecurringTransactionRepository extends Mock
     implements RecurringTransactionRepository {}
 
+class FakeRecurringRule extends Fake implements RecurringRule {}
+
 void main() {
   late AddRecurringRule useCase;
   late MockRecurringTransactionRepository mockRepository;
 
+  setUpAll(() {
+    registerFallbackValue(FakeRecurringRule());
+  });
+
   setUp(() {
     mockRepository = MockRecurringTransactionRepository();
     useCase = AddRecurringRule(mockRepository);
-    registerFallbackValue(
-      RecurringRule(
-        id: '1',
-        amount: 100.0,
-        description: 'Rent',
-        categoryId: 'cat1',
-        accountId: 'acc1',
-        transactionType: TransactionType.expense,
-        frequency: Frequency.monthly,
-        interval: 1,
-        startDate: DateTime(2023, 1, 1),
-        endConditionType: EndConditionType.never,
-        status: RuleStatus.active,
-        nextOccurrenceDate: DateTime(2023, 2, 1),
-        occurrencesGenerated: 0,
-      ),
-    );
   });
 
-  final tRule = RecurringRule(
+  final tRecurringRule = RecurringRule(
     id: '1',
-    amount: 100.0,
     description: 'Rent',
+    amount: 1000.0,
+    frequency: Frequency.monthly,
+    interval: 1,
+    nextOccurrenceDate: DateTime.now(),
+    startDate: DateTime.now(),
+    status: RuleStatus.active,
+    occurrencesGenerated: 0,
     categoryId: 'cat1',
     accountId: 'acc1',
     transactionType: TransactionType.expense,
-    frequency: Frequency.monthly,
-    interval: 1,
-    startDate: DateTime(2023, 1, 1),
     endConditionType: EndConditionType.never,
-    status: RuleStatus.active,
-    nextOccurrenceDate: DateTime(2023, 2, 1),
-    occurrencesGenerated: 0,
   );
 
-  test('should add a recurring rule to the repository', () async {
-    // arrange
+  test('should add recurring rule to repository', () async {
+    // Arrange
     when(
       () => mockRepository.addRecurringRule(any()),
     ).thenAnswer((_) async => const Right(null));
-    // act
-    final result = await useCase(tRule);
-    // assert
+
+    // Act
+    final result = await useCase(tRecurringRule);
+
+    // Assert
     expect(result, const Right(null));
-    verify(() => mockRepository.addRecurringRule(tRule));
+    verify(() => mockRepository.addRecurringRule(tRecurringRule)).called(1);
     verifyNoMoreInteractions(mockRepository);
   });
 
-  test(
-    'should return a failure when the repository call is unsuccessful',
-    () async {
-      // arrange
-      when(
-        () => mockRepository.addRecurringRule(any()),
-      ).thenAnswer((_) async => Left(ServerFailure('Server Failure')));
-      // act
-      final result = await useCase(tRule);
-      // assert
-      expect(result, Left(ServerFailure('Server Failure')));
-      verify(() => mockRepository.addRecurringRule(tRule));
-      verifyNoMoreInteractions(mockRepository);
-    },
-  );
+  test('should return failure when repository fails', () async {
+    // Arrange
+    when(
+      () => mockRepository.addRecurringRule(any()),
+    ).thenAnswer((_) async => const Left(CacheFailure('Error')));
+
+    // Act
+    final result = await useCase(tRecurringRule);
+
+    // Assert
+    expect(result, const Left(CacheFailure('Error')));
+    verify(() => mockRepository.addRecurringRule(tRecurringRule)).called(1);
+    verifyNoMoreInteractions(mockRepository);
+  });
 }

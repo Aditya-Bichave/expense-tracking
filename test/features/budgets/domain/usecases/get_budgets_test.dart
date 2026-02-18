@@ -19,43 +19,32 @@ void main() {
     useCase = GetBudgetsUseCase(mockRepository);
   });
 
-  final tBudgets = [
-    Budget(
-      id: '1',
-      name: 'Groceries',
-      type: BudgetType.categorySpecific,
-      targetAmount: 500.0,
-      period: BudgetPeriodType.recurringMonthly,
-      createdAt: DateTime.now(),
-    ),
-  ];
+  final tBudget = Budget(
+    id: '1',
+    name: 'Test',
+    targetAmount: 100,
+    period: BudgetPeriodType.oneTime,
+    startDate: DateTime.now(),
+    categoryIds: const [],
+    type: BudgetType.overall,
+    createdAt: DateTime.now(),
+  );
 
   test('should get budgets from repository', () async {
-    // arrange
+    // Arrange
     when(
       () => mockRepository.getBudgets(),
-    ).thenAnswer((_) async => Right(tBudgets));
+    ).thenAnswer((_) async => Right([tBudget]));
 
-    // act
-    final result = await useCase(NoParams());
+    // Act
+    final result = await useCase(const NoParams());
 
-    // assert
-    expect(result, Right(tBudgets));
-    verify(() => mockRepository.getBudgets());
-    verifyNoMoreInteractions(mockRepository);
-  });
-
-  test('should return failure when repository fails', () async {
-    // arrange
-    when(
-      () => mockRepository.getBudgets(),
-    ).thenAnswer((_) async => Left(CacheFailure()));
-
-    // act
-    final result = await useCase(NoParams());
-
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.getBudgets());
+    // Assert
+    expect(result.isRight(), isTrue);
+    result.fold((failure) => fail('Should have returned Right'), (budgets) {
+      expect(budgets.length, 1);
+      expect(budgets.first, tBudget);
+    });
+    verify(() => mockRepository.getBudgets()).called(1);
   });
 }

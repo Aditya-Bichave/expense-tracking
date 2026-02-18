@@ -17,34 +17,35 @@ void main() {
     useCase = DeleteRecurringRule(mockRepository);
   });
 
-  const tRuleId = '1';
+  const tId = '1';
 
-  test('should delete a recurring rule from the repository', () async {
-    // arrange
+  test('should delete recurring rule from repository', () async {
+    // Arrange
     when(
       () => mockRepository.deleteRecurringRule(any()),
     ).thenAnswer((_) async => const Right(null));
-    // act
-    final result = await useCase(tRuleId);
-    // assert
+
+    // Act
+    final result = await useCase(tId);
+
+    // Assert
     expect(result, const Right(null));
-    verify(() => mockRepository.deleteRecurringRule(tRuleId));
+    verify(() => mockRepository.deleteRecurringRule(tId)).called(1);
     verifyNoMoreInteractions(mockRepository);
   });
 
-  test(
-    'should return a failure when the repository call is unsuccessful',
-    () async {
-      // arrange
-      when(
-        () => mockRepository.deleteRecurringRule(any()),
-      ).thenAnswer((_) async => Left(ServerFailure('Server Failure')));
-      // act
-      final result = await useCase(tRuleId);
-      // assert
-      expect(result, Left(ServerFailure('Server Failure')));
-      verify(() => mockRepository.deleteRecurringRule(tRuleId));
-      verifyNoMoreInteractions(mockRepository);
-    },
-  );
+  test('should return failure when repository fails', () async {
+    // Arrange
+    when(
+      () => mockRepository.deleteRecurringRule(any()),
+    ).thenAnswer((_) async => const Left(CacheFailure('Error')));
+
+    // Act
+    final result = await useCase(tId);
+
+    // Assert
+    expect(result, const Left(CacheFailure('Error')));
+    verify(() => mockRepository.deleteRecurringRule(tId)).called(1);
+    verifyNoMoreInteractions(mockRepository);
+  });
 }

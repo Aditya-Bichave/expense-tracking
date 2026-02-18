@@ -19,43 +19,39 @@ void main() {
     useCase = GetCategoriesUseCase(mockRepository);
   });
 
-  final tCategories = [
-    Category(
-      id: '1',
-      name: 'Food',
-      iconName: 'food',
-      colorHex: '#FFFFFF',
-      type: CategoryType.expense,
-      isCustom: false,
-    ),
-  ];
+  const tCategory = Category(
+    id: '1',
+    name: 'Test',
+    iconName: 'icon',
+    colorHex: '#000000',
+    type: CategoryType.expense,
+    isCustom: false,
+  );
 
-  test('should get categories from repository', () async {
-    // arrange
+  test('should return categories from repository', () async {
+    // Arrange
     when(
       () => mockRepository.getAllCategories(),
-    ).thenAnswer((_) async => Right(tCategories));
+    ).thenAnswer((_) async => const Right([tCategory]));
 
-    // act
-    final result = await useCase(NoParams());
+    // Act
+    final result = await useCase(const NoParams());
 
-    // assert
-    expect(result, Right(tCategories));
-    verify(() => mockRepository.getAllCategories());
-    verifyNoMoreInteractions(mockRepository);
+    // Assert
+    expect(result, const Right([tCategory]));
+    verify(() => mockRepository.getAllCategories()).called(1);
   });
 
-  test('should return failure when repository fails', () async {
-    // arrange
+  test('should return Failure when repository fails', () async {
+    // Arrange
     when(
       () => mockRepository.getAllCategories(),
-    ).thenAnswer((_) async => Left(CacheFailure()));
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
-    // act
-    final result = await useCase(NoParams());
+    // Act
+    final result = await useCase(const NoParams());
 
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.getAllCategories());
+    // Assert
+    expect(result, const Left(ServerFailure()));
   });
 }

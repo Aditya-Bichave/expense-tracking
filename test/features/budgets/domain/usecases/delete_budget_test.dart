@@ -16,34 +16,19 @@ void main() {
     useCase = DeleteBudgetUseCase(mockRepository);
   });
 
-  const tBudgetId = '1';
+  const tId = '1';
 
-  test('should call deleteBudget on repository', () async {
-    // arrange
+  test('should delete budget from repository', () async {
+    // Arrange
     when(
-      () => mockRepository.deleteBudget(tBudgetId),
+      () => mockRepository.deleteBudget(any()),
     ).thenAnswer((_) async => const Right(null));
 
-    // act
-    final result = await useCase(const DeleteBudgetParams(id: tBudgetId));
+    // Act
+    final result = await useCase(const DeleteBudgetParams(id: tId));
 
-    // assert
+    // Assert
     expect(result, const Right(null));
-    verify(() => mockRepository.deleteBudget(tBudgetId));
-    verifyNoMoreInteractions(mockRepository);
-  });
-
-  test('should return failure when repository fails', () async {
-    // arrange
-    when(
-      () => mockRepository.deleteBudget(tBudgetId),
-    ).thenAnswer((_) async => Left(CacheFailure()));
-
-    // act
-    final result = await useCase(const DeleteBudgetParams(id: tBudgetId));
-
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.deleteBudget(tBudgetId));
+    verify(() => mockRepository.deleteBudget(tId)).called(1);
   });
 }

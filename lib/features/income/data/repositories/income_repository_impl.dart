@@ -8,14 +8,16 @@ import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // For Uncategorized
 
 class IncomeRepositoryImpl implements IncomeRepository {
   final IncomeLocalDataSource localDataSource;
-  CategoryRepository get categoryRepository => sl<CategoryRepository>();
+  final CategoryRepository categoryRepository;
 
-  IncomeRepositoryImpl({required this.localDataSource});
+  IncomeRepositoryImpl({
+    required this.localDataSource,
+    required this.categoryRepository,
+  });
 
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Income>> _hydrateSingleModel(IncomeModel model) async {

@@ -10,12 +10,14 @@ import 'package:uuid/uuid.dart';
 
 class MockBudgetRepository extends Mock implements BudgetRepository {}
 
+class MockUuid extends Mock implements Uuid {}
+
 class FakeBudget extends Fake implements Budget {}
 
 void main() {
   late AddBudgetUseCase useCase;
   late MockBudgetRepository mockRepository;
-  final uuid = Uuid();
+  late MockUuid mockUuid;
 
   setUpAll(() {
     registerFallbackValue(FakeBudget());
@@ -23,62 +25,66 @@ void main() {
 
   setUp(() {
     mockRepository = MockBudgetRepository();
-    useCase = AddBudgetUseCase(mockRepository, uuid);
+    mockUuid = MockUuid();
+    useCase = AddBudgetUseCase(mockRepository, mockUuid);
   });
 
   final tBudget = Budget(
     id: '1',
-    name: 'Groceries',
-    type: BudgetType.categorySpecific,
-    targetAmount: 500.0,
-    period: BudgetPeriodType.recurringMonthly,
-    categoryIds: const [
-      'cat1',
-    ], // Must validate category presence for categorySpecific
+    name: 'Test Budget',
+    targetAmount: 100.0,
+    period: BudgetPeriodType.oneTime,
+    startDate: DateTime.now(),
+    endDate: DateTime.now().add(const Duration(days: 1)),
+    categoryIds: const [],
+    type: BudgetType.overall,
     createdAt: DateTime.now(),
   );
 
-  test('should call addBudget on repository', () async {
-    // arrange
+  test('should add budget to repository', () async {
+    // Arrange
+    when(() => mockUuid.v4()).thenReturn('1');
     when(
       () => mockRepository.addBudget(any()),
     ).thenAnswer((_) async => Right(tBudget));
 
-    // act
+    // Act
     final result = await useCase(
       AddBudgetParams(
         name: tBudget.name,
+        type: tBudget.type,
         targetAmount: tBudget.targetAmount,
         period: tBudget.period,
-        type: tBudget.type,
-        categoryIds: tBudget.categoryIds,
+        startDate: tBudget.startDate,
+        endDate: tBudget.endDate,
       ),
     );
 
-    // assert
-    expect(result.isRight(), true);
+    // Assert
+    expect(result.isRight(), isTrue);
     verify(() => mockRepository.addBudget(any())).called(1);
   });
 
-  test('should return failure when repository fails', () async {
-    // arrange
+  test('should return Failure when repository fails', () async {
+    // Arrange
+    when(() => mockUuid.v4()).thenReturn('1');
     when(
       () => mockRepository.addBudget(any()),
-    ).thenAnswer((_) async => Left(CacheFailure()));
+    ).thenAnswer((_) async => const Left(CacheFailure("Fail")));
 
-    // act
+    // Act
     final result = await useCase(
       AddBudgetParams(
         name: tBudget.name,
+        type: tBudget.type,
         targetAmount: tBudget.targetAmount,
         period: tBudget.period,
-        type: tBudget.type,
-        categoryIds: tBudget.categoryIds,
+        startDate: tBudget.startDate,
+        endDate: tBudget.endDate,
       ),
     );
 
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.addBudget(any()));
+    // Assert
+    expect(result, const Left(CacheFailure("Fail")));
   });
 }

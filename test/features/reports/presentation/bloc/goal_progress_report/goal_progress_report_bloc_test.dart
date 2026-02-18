@@ -11,93 +11,70 @@ import 'package:mocktail/mocktail.dart';
 class MockGetGoalProgressReportUseCase extends Mock
     implements GetGoalProgressReportUseCase {}
 
-class MockReportFilterBloc extends Mock implements ReportFilterBloc {}
+class MockReportFilterBloc
+    extends MockBloc<ReportFilterEvent, ReportFilterState>
+    implements ReportFilterBloc {}
 
 void main() {
   late GoalProgressReportBloc bloc;
   late MockGetGoalProgressReportUseCase mockUseCase;
-  late MockReportFilterBloc mockReportFilterBloc;
+  late MockReportFilterBloc mockFilterBloc;
 
-  const tReportData = GoalProgressReportData(progressData: []);
-  final tFailure = CacheFailure();
+  setUpAll(() {
+    registerFallbackValue(const GetGoalProgressReportParams());
+  });
 
   setUp(() {
     mockUseCase = MockGetGoalProgressReportUseCase();
-    mockReportFilterBloc = MockReportFilterBloc();
+    mockFilterBloc = MockReportFilterBloc();
 
-    when(
-      () => mockReportFilterBloc.stream,
-    ).thenAnswer((_) => const Stream.empty());
-    when(() => mockReportFilterBloc.state).thenReturn(
-      ReportFilterState(
-        optionsStatus: FilterOptionsStatus.loaded,
-        availableCategories: const [],
-        availableAccounts: const [],
-        availableBudgets: const [],
-        availableGoals: const [],
-        startDate: DateTime(2023, 1, 1),
-        endDate: DateTime(2023, 1, 31),
-        selectedAccountIds: const [],
-        selectedBudgetIds: const [],
-        selectedCategoryIds: const [],
-        selectedGoalIds: const [],
+    // Default filter state
+    when(() => mockFilterBloc.state).thenReturn(ReportFilterState.initial());
+    when(() => mockFilterBloc.stream).thenAnswer((_) => const Stream.empty());
+  });
+
+  final tReportData = GoalProgressReportData(progressData: const []);
+
+  blocTest<GoalProgressReportBloc, GoalProgressReportState>(
+    'emits [Loading, Loaded] when initialized and use case succeeds',
+    build: () {
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => Right(tReportData));
+      return GoalProgressReportBloc(
+        getGoalProgressReportUseCase: mockUseCase,
+        reportFilterBloc: mockFilterBloc,
+      );
+    },
+    // The LoadGoalProgressReport event is added in constructor
+    expect: () => [
+      isA<GoalProgressReportLoading>(),
+      isA<GoalProgressReportLoaded>().having(
+        (s) => s.reportData,
+        'data',
+        tReportData,
       ),
-    );
+    ],
+  );
 
-    registerFallbackValue(const GetGoalProgressReportParams());
-
-    // Stub the usecase for default behavior
-    when(
-      () => mockUseCase(any()),
-    ).thenAnswer((_) async => const Right(tReportData));
-
-    bloc = GoalProgressReportBloc(
-      getGoalProgressReportUseCase: mockUseCase,
-      reportFilterBloc: mockReportFilterBloc,
-    );
-  });
-
-  tearDown(() {
-    bloc.close();
-  });
-
-  group('GoalProgressReportBloc', () {
-    blocTest<GoalProgressReportBloc, GoalProgressReportState>(
-      'emits [loading, loaded] when LoadGoalProgressReport is successful',
-      build: () {
-        // Mock default behavior for success
-        when(
-          () => mockUseCase(any()),
-        ).thenAnswer((_) async => const Right(tReportData));
-        return GoalProgressReportBloc(
-          getGoalProgressReportUseCase: mockUseCase,
-          reportFilterBloc: mockReportFilterBloc,
-        );
-      },
-      skip: 2, // Skip initial constructor load
-      act: (bloc) => bloc.add(const LoadGoalProgressReport()),
-      expect: () => [
-        GoalProgressReportLoading(),
-        const GoalProgressReportLoaded(tReportData),
-      ],
-    );
-
-    blocTest<GoalProgressReportBloc, GoalProgressReportState>(
-      'emits [loading, error] when LoadGoalProgressReport fails',
-      build: () {
-        // Override with failure
-        when(() => mockUseCase(any())).thenAnswer((_) async => Left(tFailure));
-        return GoalProgressReportBloc(
-          getGoalProgressReportUseCase: mockUseCase,
-          reportFilterBloc: mockReportFilterBloc,
-        );
-      },
-      skip: 2, // Skip initial constructor load
-      act: (bloc) => bloc.add(const LoadGoalProgressReport()),
-      expect: () => [
-        GoalProgressReportLoading(),
-        const GoalProgressReportError('A local data storage error occurred.'),
-      ],
-    );
-  });
+  blocTest<GoalProgressReportBloc, GoalProgressReportState>(
+    'emits [Loading, Error] when use case fails',
+    build: () {
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      return GoalProgressReportBloc(
+        getGoalProgressReportUseCase: mockUseCase,
+        reportFilterBloc: mockFilterBloc,
+      );
+    },
+    expect: () => [
+      isA<GoalProgressReportLoading>(),
+      isA<GoalProgressReportError>().having(
+        (s) => s.message,
+        'message',
+        'Error',
+      ),
+    ],
+  );
 }
