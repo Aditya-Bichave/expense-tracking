@@ -45,7 +45,9 @@ Future<void> pumpWidgetWithProviders({
       const [], // For other feature-specific Blocs
   GetIt? getIt, // Pass a pre-configured service locator if needed
   GoRouter? router, // Optional router configuration
-  bool settle = true, ThemeData? theme, ThemeData? darkTheme,
+  bool settle = true,
+  ThemeData? theme,
+  ThemeData? darkTheme,
 }) async {
   // 1. Determine router configuration
   final routerConfig =
@@ -97,14 +99,18 @@ Future<void> pumpWidgetWithProviders({
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         // Build the theme dynamically based on the provided settingsState
-        theme: theme ?? AppTheme.buildTheme(
-          settingsState?.uiMode ?? UIMode.elemental,
-          settingsState?.paletteIdentifier ?? AppTheme.elementalPalette1,
-        ).light,
-        darkTheme: darkTheme ?? AppTheme.buildTheme(
-          settingsState?.uiMode ?? UIMode.elemental,
-          settingsState?.paletteIdentifier ?? AppTheme.elementalPalette1,
-        ).dark,
+        theme:
+            theme ??
+            AppTheme.buildTheme(
+              settingsState?.uiMode ?? UIMode.elemental,
+              settingsState?.paletteIdentifier ?? AppTheme.elementalPalette1,
+            ).light,
+        darkTheme:
+            darkTheme ??
+            AppTheme.buildTheme(
+              settingsState?.uiMode ?? UIMode.elemental,
+              settingsState?.paletteIdentifier ?? AppTheme.elementalPalette1,
+            ).dark,
         themeMode: settingsState?.themeMode ?? ThemeMode.system,
 
         // Provide the router configuration

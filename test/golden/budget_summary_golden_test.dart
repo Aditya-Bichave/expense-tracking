@@ -71,7 +71,8 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        theme: testTheme, darkTheme: testTheme,
+        theme: testTheme,
+        darkTheme: testTheme,
         settingsState: const SettingsState(themeMode: ThemeMode.light),
         widget: Scaffold(
           body: BudgetSummaryWidget(
