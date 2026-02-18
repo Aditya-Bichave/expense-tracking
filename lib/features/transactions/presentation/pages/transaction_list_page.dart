@@ -45,7 +45,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  // Transactions for selected day are derived directly from bloc state
+
+  // Optimized lookup cache
+  Map<DateTime, List<TransactionEntity>> _transactionsByDay = {};
+  List<TransactionEntity>? _lastTransactions;
 
   @override
   void initState() {
@@ -308,19 +311,23 @@ class _TransactionListPageState extends State<TransactionListPage> {
     _focusedDay = focusedDay;
   }
 
-  List<TransactionEntity> _getEventsForDay(
-    DateTime day,
-    List<TransactionEntity> transactions,
-  ) {
+  void _updateTransactionsMap(List<TransactionEntity> transactions) {
+    if (identical(transactions, _lastTransactions)) return;
+
+    _transactionsByDay = {};
+    for (final txn in transactions) {
+      final date = DateTime(txn.date.year, txn.date.month, txn.date.day);
+      if (!_transactionsByDay.containsKey(date)) {
+        _transactionsByDay[date] = [];
+      }
+      _transactionsByDay[date]!.add(txn);
+    }
+    _lastTransactions = transactions;
+  }
+
+  List<TransactionEntity> _getEventsForDay(DateTime day) {
     final normalizedDay = DateTime(day.year, day.month, day.day);
-    return transactions.where((txn) {
-      final normalizedTxnDate = DateTime(
-        txn.date.year,
-        txn.date.month,
-        txn.date.day,
-      );
-      return isSameDay(normalizedTxnDate, normalizedDay);
-    }).toList();
+    return _transactionsByDay[normalizedDay] ?? [];
   }
 
   // --- Main Build Method (Keep as is) ---
@@ -358,9 +365,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 }
               },
               builder: (context, state) {
+                _updateTransactionsMap(state.transactions);
                 final selectedTransactions = _selectedDay == null
                     ? <TransactionEntity>[]
-                    : _getEventsForDay(_selectedDay!, state.transactions);
+                    : _getEventsForDay(_selectedDay!);
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionListBloc>().add(
@@ -388,8 +396,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                               selectedDayTransactions: selectedTransactions,
                               currentTransactionsForCalendar:
                                   state.transactions,
-                              getEventsForDay: (day) =>
-                                  _getEventsForDay(day, state.transactions),
+                              getEventsForDay: _getEventsForDay,
                               onDaySelected: _onDaySelected,
                               onFormatChanged: _onFormatChanged,
                               onPageChanged: _onPageChanged,
