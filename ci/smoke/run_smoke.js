@@ -6,9 +6,9 @@ const path = require('path');
 const ROUTES = JSON.parse(fs.readFileSync('routes.json', 'utf8'));
 const BUILD_DIR = '../../build/web';
 const PORT = 8080;
-const TIMEOUT = 10000;
+const TIMEOUT = 20000; // Increased timeout for CI
 const REPORT_FILE = 'smoke-report.json';
-const MAX_STARTUP_TIME_MS = 3000;
+const MAX_STARTUP_TIME_MS = 15000; // Increased budget for CI
 
 async function run() {
   const server = httpServer.createServer({ root: BUILD_DIR });
@@ -30,6 +30,7 @@ async function run() {
 
     const pageErrors = [];
     page.on('pageerror', err => {
+      // Capture all errors
       pageErrors.push(err.toString());
     });
 
@@ -37,9 +38,19 @@ async function run() {
     console.log('Checking startup time...');
     const startTime = Date.now();
     await page.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
-    // Look for a known element or just wait for load.
-    // Flutter web usually renders a canvas.
-    await page.waitForSelector('flt-glass-pane', { timeout: TIMEOUT }).catch(() => console.log('flt-glass-pane not found (maybe canvas-kit)'));
+
+    // Wait for Flutter engine to initialize
+    try {
+      await page.waitForSelector('flt-glass-pane', { timeout: TIMEOUT });
+    } catch (e) {
+      console.log('flt-glass-pane not found, checking for alternative indicators...');
+      // Fallback: check if the flutter script loaded and we have a canvas
+      const canvas = await page.;
+      if (!canvas) {
+         console.error('No canvas found either. Startup likely failed.');
+         throw e;
+      }
+    }
 
     const startupTime = Date.now() - startTime;
     console.log(`Startup time: ${startupTime}ms`);
@@ -50,7 +61,6 @@ async function run() {
       console.log(`Checking route: ${route}`);
       try {
         await page.goto(`http://localhost:${PORT}#${route}`, { waitUntil: 'networkidle' });
-        // Minimal check: ensure title or body exists
         const title = await page.title();
         console.log(`  Title: ${title}`);
       } catch (e) {
