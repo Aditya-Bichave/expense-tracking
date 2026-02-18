@@ -45,7 +45,7 @@ async function run() {
     } catch (e) {
       console.log('flt-glass-pane not found, checking for alternative indicators...');
       // Fallback: check if the flutter script loaded and we have a canvas
-      const canvas = await page.;
+      const canvas = await page.$('canvas');
       if (!canvas) {
          console.error('No canvas found either. Startup likely failed.');
          throw e;
