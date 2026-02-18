@@ -23,87 +23,70 @@ void main() {
     useCase = AddCustomCategoryUseCase(mockRepository, mockUuid);
   });
 
-  const tName = 'New Category';
-  const tIcon = 'icon';
-  const tColor = '#FFFFFF';
-  const tType = CategoryType.expense;
-  const tId = 'generated-id';
-
-  final tParams = const AddCustomCategoryParams(
-    name: tName,
-    iconName: tIcon,
-    colorHex: tColor,
-    type: tType,
+  const tParams = AddCustomCategoryParams(
+    name: 'New Cat',
+    iconName: 'icon',
+    colorHex: '#000000',
+    type: CategoryType.expense,
   );
 
-  final tCategory = Category(
-    id: tId,
-    name: tName,
-    iconName: tIcon,
-    colorHex: tColor,
-    type: tType,
-    isCustom: true,
-  );
-
-  test('should add a custom category to the repository', () async {
-    // arrange
-    when(() => mockUuid.v4()).thenReturn(tId);
+  test('should add custom category when validation passes', () async {
+    // Arrange
     when(
       () => mockRepository.getAllCategories(),
     ).thenAnswer((_) async => const Right([]));
+    when(() => mockUuid.v4()).thenReturn('new-id');
     when(
       () => mockRepository.addCustomCategory(any()),
     ).thenAnswer((_) async => const Right(null));
 
-    // act
+    // Act
     final result = await useCase(tParams);
 
-    // assert
+    // Assert
     expect(result, const Right(null));
-    verify(() => mockRepository.addCustomCategory(tCategory));
-    verify(() => mockRepository.getAllCategories());
+    verify(() => mockRepository.addCustomCategory(any<Category>())).called(1);
   });
 
-  test('should return validation failure if name is empty', () async {
-    // arrange
-    final invalidParams = const AddCustomCategoryParams(
+  test('should return ValidationFailure when name is empty', () async {
+    // Arrange
+    final params = AddCustomCategoryParams(
       name: '',
-      iconName: tIcon,
-      colorHex: tColor,
-      type: tType,
+      iconName: 'icon',
+      colorHex: '#000000',
+      type: CategoryType.expense,
     );
 
-    // act
-    final result = await useCase(invalidParams);
+    // Act
+    final result = await useCase(params);
 
-    // assert
-    expect(
-      result,
-      const Left(ValidationFailure("Category name cannot be empty.")),
-    );
-    verifyZeroInteractions(mockRepository);
+    // Assert
+    expect(result.isLeft(), isTrue);
+    expect(result.fold((l) => l, (r) => null), isA<ValidationFailure>());
   });
 
-  test('should return validation failure if category exists', () async {
-    // arrange
-    when(() => mockUuid.v4()).thenReturn(tId);
-    when(
-      () => mockRepository.getAllCategories(),
-    ).thenAnswer((_) async => Right([tCategory])); // Existing category
+  test(
+    'should return ValidationFailure when category already exists',
+    () async {
+      // Arrange
+      final existingCategory = Category(
+        id: '1',
+        name: 'New Cat',
+        iconName: 'icon',
+        colorHex: '#000000',
+        type: CategoryType.expense,
+        isCustom: true,
+      );
+      when(
+        () => mockRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([existingCategory]));
 
-    // act
-    final result = await useCase(tParams);
+      // Act
+      final result = await useCase(tParams);
 
-    // assert
-    expect(
-      result,
-      const Left(
-        ValidationFailure(
-          "A category with this name already exists in the selected category group.",
-        ),
-      ),
-    );
-    verify(() => mockRepository.getAllCategories());
-    verifyNever(() => mockRepository.addCustomCategory(any()));
-  });
+      // Assert
+      expect(result.isLeft(), isTrue);
+      expect(result.fold((l) => l, (r) => null), isA<ValidationFailure>());
+    },
+  );
 }

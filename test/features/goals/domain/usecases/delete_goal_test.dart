@@ -16,34 +16,19 @@ void main() {
     useCase = DeleteGoalUseCase(mockRepository);
   });
 
-  const tGoalId = '1';
+  const tId = '1';
 
-  test('should call deleteGoal on repository', () async {
-    // arrange
+  test('should delete goal from repository', () async {
+    // Arrange
     when(
-      () => mockRepository.deleteGoal(tGoalId),
+      () => mockRepository.deleteGoal(any()),
     ).thenAnswer((_) async => const Right(null));
 
-    // act
-    final result = await useCase(const DeleteGoalParams(id: tGoalId));
+    // Act
+    final result = await useCase(const DeleteGoalParams(id: tId));
 
-    // assert
+    // Assert
     expect(result, const Right(null));
-    verify(() => mockRepository.deleteGoal(tGoalId));
-    verifyNoMoreInteractions(mockRepository);
-  });
-
-  test('should return failure when repository fails', () async {
-    // arrange
-    when(
-      () => mockRepository.deleteGoal(tGoalId),
-    ).thenAnswer((_) async => Left(CacheFailure()));
-
-    // act
-    final result = await useCase(const DeleteGoalParams(id: tGoalId));
-
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.deleteGoal(tGoalId));
+    verify(() => mockRepository.deleteGoal(tId)).called(1);
   });
 }

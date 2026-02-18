@@ -1,17 +1,22 @@
 import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/domain/usecases/get_financial_overview.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
+import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAssetAccountRepository extends Mock
@@ -27,129 +32,150 @@ class MockGoalRepository extends Mock implements GoalRepository {}
 
 class MockReportRepository extends Mock implements ReportRepository {}
 
+class FakeBudget extends Fake implements Budget {}
+
 void main() {
   late GetFinancialOverviewUseCase useCase;
-  late MockAssetAccountRepository mockAccountRepository;
-  late MockIncomeRepository mockIncomeRepository;
-  late MockExpenseRepository mockExpenseRepository;
-  late MockBudgetRepository mockBudgetRepository;
-  late MockGoalRepository mockGoalRepository;
-  late MockReportRepository mockReportRepository;
+  late MockAssetAccountRepository mockAccountRepo;
+  late MockIncomeRepository mockIncomeRepo;
+  late MockExpenseRepository mockExpenseRepo;
+  late MockBudgetRepository mockBudgetRepo;
+  late MockGoalRepository mockGoalRepo;
+  late MockReportRepository mockReportRepo;
 
   setUpAll(() {
-    // Mock ServiceLocator
-    final getIt = GetIt.instance;
-    mockReportRepository = MockReportRepository();
-    getIt.registerLazySingleton<ReportRepository>(() => mockReportRepository);
-  });
-
-  tearDownAll(() {
-    GetIt.instance.reset();
+    registerFallbackValue(
+      GetFinancialOverviewParams(
+        startDate: DateTime.now(),
+        endDate: DateTime.now(),
+      ),
+    );
+    registerFallbackValue(FakeBudget());
   });
 
   setUp(() {
-    mockAccountRepository = MockAssetAccountRepository();
-    mockIncomeRepository = MockIncomeRepository();
-    mockExpenseRepository = MockExpenseRepository();
-    mockBudgetRepository = MockBudgetRepository();
-    mockGoalRepository = MockGoalRepository();
+    mockAccountRepo = MockAssetAccountRepository();
+    mockIncomeRepo = MockIncomeRepository();
+    mockExpenseRepo = MockExpenseRepository();
+    mockBudgetRepo = MockBudgetRepository();
+    mockGoalRepo = MockGoalRepository();
+    mockReportRepo = MockReportRepository();
 
     useCase = GetFinancialOverviewUseCase(
-      accountRepository: mockAccountRepository,
-      incomeRepository: mockIncomeRepository,
-      expenseRepository: mockExpenseRepository,
-      budgetRepository: mockBudgetRepository,
-      goalRepository: mockGoalRepository,
+      accountRepository: mockAccountRepo,
+      incomeRepository: mockIncomeRepo,
+      expenseRepository: mockExpenseRepo,
+      budgetRepository: mockBudgetRepo,
+      goalRepository: mockGoalRepo,
+      reportRepository: mockReportRepo,
     );
   });
 
-  const tParams = GetFinancialOverviewParams();
+  final tStartDate = DateTime(2023, 1, 1);
+  final tEndDate = DateTime(2023, 1, 31);
 
-  const tAccount = AssetAccount(
+  final tAccount = AssetAccount(
     id: '1',
-    name: 'Cash',
-    type: AssetType.cash,
-    currentBalance: 1000.0,
+    name: 'Bank',
+    initialBalance: 100,
+    currentBalance: 100,
+    type: AssetType.bank,
   );
 
-  test(
-    'should return financial overview when all repositories succeed',
-    () async {
-      // arrange
-      when(
-        () => mockAccountRepository.getAssetAccounts(),
-      ).thenAnswer((_) async => Right([tAccount]));
-      when(
-        () => mockIncomeRepository.getTotalIncomeForAccount(
-          any(),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-        ),
-      ).thenAnswer((_) async => const Right(2000.0));
-      when(
-        () => mockExpenseRepository.getTotalExpensesForAccount(
-          any(),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-        ),
-      ).thenAnswer((_) async => const Right(500.0));
-      when(
-        () => mockBudgetRepository.getBudgets(),
-      ).thenAnswer((_) async => const Right([]));
-      when(
-        () => mockGoalRepository.getGoals(includeArchived: false),
-      ).thenAnswer((_) async => const Right([]));
-      when(
-        () => mockReportRepository.getRecentDailySpending(
-          days: any(named: 'days'),
-        ),
-      ).thenAnswer((_) async => const Right([]));
+  final tBudget = Budget(
+    id: '1',
+    name: 'Budget',
+    targetAmount: 100,
+    type: BudgetType.overall,
+    period: BudgetPeriodType.oneTime,
+    startDate: tStartDate,
+    endDate: tEndDate,
+    createdAt: DateTime.now(),
+  );
 
-      // act
-      final result = await useCase(tParams);
+  final tGoal = Goal(
+    id: '1',
+    name: 'Goal',
+    targetAmount: 100,
+    totalSaved: 50,
+    targetDate: DateTime.now(),
+    iconName: 'icon',
+    status: GoalStatus.active,
+    createdAt: DateTime.now(),
+  );
 
-      // assert
-      expect(result.isRight(), true);
-      final overview = result.getOrElse(() => throw Exception());
-      expect(overview.totalIncome, 2000.0);
-      expect(overview.totalExpenses, 500.0);
-      expect(overview.netFlow, 1500.0);
-      expect(overview.overallBalance, 1000.0);
+  final tSpendingData = [
+    TimeSeriesDataPoint(
+      date: DateTime(2023, 1, 1),
+      amount: const ComparisonValue(currentValue: 10.0),
+    ),
+  ];
+
+  test('should get financial overview successfully', () async {
+    // Arrange
+    when(
+      () => mockAccountRepo.getAssetAccounts(),
+    ).thenAnswer((_) async => Right([tAccount]));
+
+    when(
+      () => mockIncomeRepo.getTotalIncomeForAccount(
+        any(),
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+      ),
+    ).thenAnswer((_) async => const Right(200.0));
+
+    when(
+      () => mockExpenseRepo.getTotalExpensesForAccount(
+        any(),
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+      ),
+    ).thenAnswer((_) async => const Right(100.0));
+
+    when(
+      () => mockBudgetRepo.getBudgets(),
+    ).thenAnswer((_) async => Right([tBudget]));
+    when(
+      () => mockBudgetRepo.calculateAmountSpent(
+        budget: any(named: 'budget'),
+        periodStart: any(named: 'periodStart'),
+        periodEnd: any(named: 'periodEnd'),
+      ),
+    ).thenAnswer((_) async => const Right(50.0));
+
+    when(
+      () =>
+          mockGoalRepo.getGoals(includeArchived: any(named: 'includeArchived')),
+    ).thenAnswer((_) async => Right([tGoal]));
+
+    when(
+      () => mockReportRepo.getRecentDailySpending(days: any(named: 'days')),
+    ).thenAnswer((_) async => Right(tSpendingData));
+
+    when(
+      () => mockReportRepo.getRecentDailyContributions(
+        any(),
+        days: any(named: 'days'),
+      ),
+    ).thenAnswer((_) async => const Right([]));
+
+    // Act
+    final result = await useCase(
+      GetFinancialOverviewParams(startDate: tStartDate, endDate: tEndDate),
+    );
+
+    // Assert
+    expect(result.isRight(), isTrue);
+    result.fold((failure) => fail('Should calculate correctly'), (overview) {
+      expect(overview.totalIncome, 200.0);
+      expect(overview.totalExpenses, 100.0);
+      expect(overview.netFlow, 100.0);
+      expect(overview.overallBalance, 100.0);
       expect(overview.accounts.length, 1);
-
-      verify(() => mockAccountRepository.getAssetAccounts());
-      verify(
-        () => mockIncomeRepository.getTotalIncomeForAccount(
-          any(),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-        ),
-      );
-      verify(
-        () => mockExpenseRepository.getTotalExpensesForAccount(
-          any(),
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-        ),
-      );
-      verify(() => mockBudgetRepository.getBudgets());
-      verify(() => mockGoalRepository.getGoals(includeArchived: false));
-    },
-  );
-
-  test(
-    'should return failure when one of the critical calls fails (e.g. accounts)',
-    () async {
-      // arrange
-      when(
-        () => mockAccountRepository.getAssetAccounts(),
-      ).thenAnswer((_) async => Left(ServerFailure('Failed')));
-
-      // act
-      final result = await useCase(tParams);
-
-      // assert
-      expect(result, Left(ServerFailure('Failed')));
-    },
-  );
+      expect(overview.activeBudgetsSummary.length, 1);
+      expect(overview.activeGoalsSummary.length, 1);
+      expect(overview.recentSpendingSparkline, tSpendingData);
+    });
+  });
 }

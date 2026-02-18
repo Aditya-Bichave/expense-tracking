@@ -11,6 +11,8 @@ import 'package:uuid/uuid.dart';
 
 class MockGoalRepository extends Mock implements GoalRepository {}
 
+class MockUuid extends Mock implements Uuid {}
+
 class MockClock extends Mock implements Clock {}
 
 class FakeGoal extends Fake implements Goal {}
@@ -18,8 +20,8 @@ class FakeGoal extends Fake implements Goal {}
 void main() {
   late AddGoalUseCase useCase;
   late MockGoalRepository mockRepository;
+  late MockUuid mockUuid;
   late MockClock mockClock;
-  final uuid = Uuid();
 
   setUpAll(() {
     registerFallbackValue(FakeGoal());
@@ -27,49 +29,68 @@ void main() {
 
   setUp(() {
     mockRepository = MockGoalRepository();
+    mockUuid = MockUuid();
     mockClock = MockClock();
-    when(() => mockClock.now()).thenReturn(DateTime(2023, 1, 1));
-    useCase = AddGoalUseCase(mockRepository, uuid, mockClock);
+    useCase = AddGoalUseCase(mockRepository, mockUuid, mockClock);
   });
 
   final tGoal = Goal(
     id: '1',
-    name: 'Vacation',
-    targetAmount: 1000.0,
-    status: GoalStatus.active,
+    name: 'Car',
+    targetAmount: 5000.0,
     totalSaved: 0.0,
-    createdAt: DateTime.now(),
+    targetDate: DateTime(2025, 1, 1),
+    iconName: 'car',
+    description: 'Save for car',
+    status: GoalStatus.active,
+    createdAt: DateTime(2024, 1, 1),
+    achievedAt: null,
   );
 
-  test('should call addGoal on repository', () async {
-    // arrange
+  test('should add goal to repository', () async {
+    // Arrange
+    when(() => mockUuid.v4()).thenReturn('1');
+    when(() => mockClock.now()).thenReturn(DateTime(2024, 1, 1));
     when(
       () => mockRepository.addGoal(any()),
     ).thenAnswer((_) async => Right(tGoal));
 
-    // act
+    // Act
     final result = await useCase(
-      AddGoalParams(name: tGoal.name, targetAmount: tGoal.targetAmount),
+      AddGoalParams(
+        name: tGoal.name,
+        targetAmount: tGoal.targetAmount,
+        targetDate: tGoal.targetDate,
+        iconName: tGoal.iconName,
+        description: tGoal.description,
+      ),
     );
 
-    // assert
-    expect(result.isRight(), true);
+    // Assert
+    expect(result.isRight(), isTrue);
     verify(() => mockRepository.addGoal(any())).called(1);
   });
 
-  test('should return failure when repository fails', () async {
-    // arrange
+  test('should return Failure when repository fails', () async {
+    // Arrange
+    when(() => mockUuid.v4()).thenReturn('1');
+    when(() => mockClock.now()).thenReturn(DateTime(2024, 1, 1));
     when(
       () => mockRepository.addGoal(any()),
-    ).thenAnswer((_) async => Left(CacheFailure()));
+    ).thenAnswer((_) async => const Left(CacheFailure("Fail")));
 
-    // act
+    // Act
     final result = await useCase(
-      AddGoalParams(name: tGoal.name, targetAmount: tGoal.targetAmount),
+      AddGoalParams(
+        name: tGoal.name,
+        targetAmount: tGoal.targetAmount,
+        targetDate: tGoal.targetDate,
+        iconName: tGoal.iconName,
+        description: tGoal.description,
+      ),
     );
 
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.addGoal(any()));
+    // Assert
+    expect(result, const Left(CacheFailure("Fail")));
   });
 }

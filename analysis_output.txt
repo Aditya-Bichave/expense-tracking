@@ -1,37 +1,59 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 91.0.0 (95.0.0 available)
+  analyzer 8.4.1 (10.1.0 available)
+  app_links 6.4.1 (7.0.0 available)
+  characters 1.4.0 (1.4.1 available)
+  confetti 0.7.0 (0.8.0 available)
+  connectivity_plus 5.0.2 (7.0.0 available)
+  connectivity_plus_platform_interface 1.2.4 (2.0.1 available)
+  csv 6.0.0 (7.1.0 available)
+  dart_jsonwebtoken 3.1.1 (3.3.1 available)
+  dart_style 3.1.3 (3.1.5 available)
+  file_picker 8.3.7 (10.3.10 available)
+  fl_chart 0.68.0 (1.1.1 available)
+  flutter_lints 2.0.3 (6.0.0 available)
+  flutter_secure_storage 9.2.4 (10.0.0 available)
+  flutter_secure_storage_linux 1.2.3 (3.0.0 available)
+  flutter_secure_storage_macos 3.1.3 (4.0.0 available)
+  flutter_secure_storage_platform_interface 1.1.2 (2.0.1 available)
+  flutter_secure_storage_web 1.2.1 (2.1.0 available)
+  flutter_secure_storage_windows 3.1.2 (4.1.0 available)
+  get_it 7.7.0 (9.2.0 available)
+  go_router 12.1.3 (17.1.0 available)
+  google_fonts 6.3.3 (8.0.1 available)
+  hive_ce_generator 1.10.0 (1.11.1 available)
+  js 0.6.7 (0.7.2 available)
+  json_annotation 4.9.0 (4.10.0 available)
+  json_serializable 6.11.2 (6.12.0 available)
+  lints 2.1.1 (6.1.0 available)
+  local_auth 2.3.0 (3.0.0 available)
+  local_auth_android 1.0.56 (2.0.4 available)
+  local_auth_darwin 1.6.1 (2.0.2 available)
+  local_auth_windows 1.0.11 (2.0.1 available)
+  matcher 0.12.17 (0.12.18 available)
+  material_color_utilities 0.11.1 (0.13.0 available)
+  meta 1.17.0 (1.18.1 available)
+  mime 1.0.6 (2.0.0 available)
+  package_info_plus 8.3.1 (9.0.0 available)
+  permission_handler 11.4.0 (12.0.1 available)
+  permission_handler_android 12.1.0 (13.0.1 available)
+  pointycastle 3.9.1 (4.0.0 available)
+  share_plus 7.2.2 (12.0.1 available)
+  share_plus_platform_interface 3.4.0 (6.1.0 available)
+  source_helper 1.3.8 (1.3.10 available)
+  test 1.26.3 (1.29.0 available)
+  test_api 0.7.7 (0.7.9 available)
+  test_core 0.6.12 (0.6.15 available)
+Got dependencies!
+45 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
 Analyzing app...
 
-  error • 2 positional arguments expected by 'SyncService.new', but 1 found • lib/core/di/service_configurations/sync_dependencies.dart:30:49 • not_enough_positional_arguments
    info • The private field _channels could be 'final' • lib/core/sync/services/realtime_service.dart:18:25 • prefer_final_fields
-warning • The operand can't be 'null', so the condition is always 'false' • lib/core/sync/services/realtime_service.dart:50:22 • unnecessary_null_comparison
-  error • The method 'any' isn't defined for the type 'ConnectivityResult' • lib/core/sync/services/sync_coordinator.dart:38:32 • undefined_method
-  error • There's no constant named 'expense' in 'EntityType' • lib/core/sync/services/sync_service.dart:63:23 • undefined_enum_constant
-  error • There's no constant named 'member' in 'EntityType' • lib/core/sync/services/sync_service.dart:65:23 • undefined_enum_constant
-  error • The getter 'notes' isn't defined for the type 'GroupExpenseEntity' • lib/features/groups/data/models/group_expense_model.dart:50:21 • undefined_getter
-  error • The named parameter 'notes' isn't defined • lib/features/groups/data/models/group_expense_model.dart:63:7 • undefined_named_parameter
+warning • The operand can't be 'null', so the condition is always 'false' • lib/core/sync/services/realtime_service.dart:52:22 • unnecessary_null_comparison
+  error • Too many positional arguments: 1 expected, but 3 found • lib/core/sync/services/sync_service.dart:35:74 • extra_positional_arguments_could_be_named
+  error • Too many positional arguments: 1 expected, but 3 found • lib/core/sync/services/sync_service.dart:39:63 • extra_positional_arguments_could_be_named
 warning • The value of the field '_membersRemoteDataSource' isn't used • lib/features/groups/data/repositories/groups_repository_impl.dart:25:38 • unused_field
-  error • The method '_' isn't defined for the type 'InviteModel' • lib/features/invites/data/models/invite_model.dart:64:7 • undefined_method
-warning • The declaration '_$InviteModelFromJson' isn't referenced • lib/features/invites/data/models/invite_model.g.dart:62:13 • unused_element
-  error • The method '_' isn't defined for the type 'SettlementModel' • lib/features/settlements/data/models/settlement_model.dart:70:7 • undefined_method
-warning • The declaration '_$SettlementModelFromJson' isn't referenced • lib/features/settlements/data/models/settlement_model.g.dart:65:17 • unused_element
-  error • Target of URI doesn't exist: 'package:expense_tracker/features/accounts/presentation/bloc/account_list_bloc.dart' • lib/main.dart:7:8 • uri_does_not_exist
-  error • The imported library 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_event.dart' can't have a part-of directive • lib/main.dart:9:8 • import_of_non_library
-  error • Target of URI doesn't exist: 'package:expense_tracker/features/budgets/presentation/bloc/budget_list_bloc.dart' • lib/main.dart:10:8 • uri_does_not_exist
-  error • The imported library 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_event.dart' can't have a part-of directive • lib/main.dart:13:8 • import_of_non_library
-  error • Target of URI doesn't exist: 'package:expense_tracker/features/categories/presentation/bloc/category_management_bloc.dart' • lib/main.dart:14:8 • uri_does_not_exist
-  error • The imported library 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_event.dart' can't have a part-of directive • lib/main.dart:19:8 • import_of_non_library
-  error • Target of URI doesn't exist: 'package:expense_tracker/features/goals/presentation/bloc/goal_list_bloc.dart' • lib/main.dart:20:8 • uri_does_not_exist
-  error • The imported library 'package:expense_tracker/features/analytics/presentation/bloc/summary_event.dart' can't have a part-of directive • lib/main.dart:25:8 • import_of_non_library
-  error • The name 'AccountListBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:168:22 • non_type_as_type_argument
-  error • The name 'AccountListBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:169:35 • non_type_as_type_argument
-  error • The name 'LoadAccounts' isn't a class • lib/main.dart:169:65 • creation_with_non_type
-  error • The name 'CategoryManagementBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:176:22 • non_type_as_type_argument
-  error • The name 'CategoryManagementBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:177:35 • non_type_as_type_argument
-  error • The name 'LoadCategories' isn't a class • lib/main.dart:177:72 • creation_with_non_type
-  error • The name 'BudgetListBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:180:22 • non_type_as_type_argument
-  error • The name 'BudgetListBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:181:35 • non_type_as_type_argument
-  error • The name 'LoadBudgets' isn't a class • lib/main.dart:181:64 • creation_with_non_type
-  error • The name 'GoalListBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:184:22 • non_type_as_type_argument
-  error • The name 'GoalListBloc' isn't a type, so it can't be used as a type argument • lib/main.dart:185:35 • non_type_as_type_argument
-  error • The name 'LoadGoals' isn't a class • lib/main.dart:185:62 • creation_with_non_type
 
-33 issues found. (ran in 29.8s)
+5 issues found. (ran in 20.4s)

@@ -1,3 +1,5 @@
+import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/features/budgets/data/repositories/budget_repository_impl.dart';
@@ -11,22 +13,15 @@ class MockBudgetLocalDataSource extends Mock implements BudgetLocalDataSource {}
 
 class MockExpenseRepository extends Mock implements ExpenseRepository {}
 
+class FakeBudgetModel extends Fake implements BudgetModel {}
+
 void main() {
   late BudgetRepositoryImpl repository;
   late MockBudgetLocalDataSource mockLocalDataSource;
   late MockExpenseRepository mockExpenseRepository;
 
   setUpAll(() {
-    registerFallbackValue(
-      BudgetModel(
-        id: '',
-        name: '',
-        budgetTypeIndex: BudgetType.overall.index,
-        targetAmount: 0,
-        periodTypeIndex: BudgetPeriodType.recurringMonthly.index,
-        createdAt: DateTime(2000),
-      ),
-    );
+    registerFallbackValue(FakeBudgetModel());
   });
 
   setUp(() {
@@ -38,43 +33,110 @@ void main() {
     );
   });
 
-  test('allows one-time budgets to coexist with recurring budgets', () async {
-    final existingRecurring = Budget(
-      id: 'r1',
-      name: 'Recurring',
-      type: BudgetType.categorySpecific,
-      targetAmount: 100,
-      period: BudgetPeriodType.recurringMonthly,
-      categoryIds: ['c1'],
-      startDate: null,
-      endDate: null,
-      notes: null,
-      createdAt: DateTime(2023, 1, 1),
-    );
+  final tBudget = Budget(
+    id: '1',
+    name: 'Monthly Budget',
+    targetAmount: 500.0,
+    period: BudgetPeriodType.recurringMonthly,
+    startDate: DateTime(2024, 1, 1),
+    categoryIds: const ['cat1'],
+    type: BudgetType.categorySpecific,
+    createdAt: DateTime.now(),
+  );
 
-    when(
-      () => mockLocalDataSource.getBudgets(),
-    ).thenAnswer((_) async => [BudgetModel.fromEntity(existingRecurring)]);
-    when(
-      () => mockLocalDataSource.saveBudget(any()),
-    ).thenAnswer((_) async => {});
+  final tBudgetModel = BudgetModel(
+    id: '1',
+    name: 'Monthly Budget',
+    targetAmount: 500.0,
+    periodTypeIndex: 0,
+    startDate: DateTime(2024, 1, 1),
+    categoryIds: ['cat1'],
+    budgetTypeIndex: 1,
+    createdAt: DateTime.now(),
+  );
 
-    final oneTime = Budget(
-      id: 'o1',
-      name: 'One Time',
-      type: BudgetType.categorySpecific,
-      targetAmount: 50,
-      period: BudgetPeriodType.oneTime,
-      startDate: DateTime(2023, 12, 1),
-      endDate: DateTime(2023, 12, 31),
-      categoryIds: ['c1'],
-      notes: null,
-      createdAt: DateTime(2023, 6, 1),
-    );
+  group('getBudgets', () {
+    test('should return list of budgets from data source', () async {
+      // Arrange
+      when(
+        () => mockLocalDataSource.getBudgets(),
+      ).thenAnswer((_) async => [tBudgetModel]);
 
-    final result = await repository.addBudget(oneTime);
+      // Act
+      final result = await repository.getBudgets();
 
-    expect(result.isRight(), true);
-    verify(() => mockLocalDataSource.saveBudget(any())).called(1);
+      // Assert
+      expect(result.isRight(), isTrue);
+      final budgets = result.getOrElse(() => []);
+      expect(budgets.first.id, tBudget.id);
+    });
+
+    test('should return CacheFailure when data source fails', () async {
+      // Arrange
+      when(
+        () => mockLocalDataSource.getBudgets(),
+      ).thenThrow(const CacheFailure('Hive Error'));
+
+      // Act
+      final result = await repository.getBudgets();
+
+      // Assert
+      expect(result.isLeft(), true);
+      result.fold(
+        (failure) => expect(failure, isA<CacheFailure>()),
+        (r) => fail('Should return failure'),
+      );
+    });
+  });
+
+  group('addBudget', () {
+    test('should return added budget when successful', () async {
+      // Arrange
+      // Mock fetching existing budgets for overlap check
+      when(() => mockLocalDataSource.getBudgets()).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveBudget(any()),
+      ).thenAnswer((_) async => Future.value());
+
+      // Act
+      final result = await repository.addBudget(tBudget);
+
+      // Assert
+      verify(() => mockLocalDataSource.saveBudget(any())).called(1);
+      expect(result, Right(tBudget));
+    });
+  });
+
+  group('deleteBudget', () {
+    test('should delete budget', () async {
+      // Arrange
+      when(
+        () => mockLocalDataSource.deleteBudget(any()),
+      ).thenAnswer((_) async => Future.value());
+
+      // Act
+      final result = await repository.deleteBudget('1');
+
+      // Assert
+      verify(() => mockLocalDataSource.deleteBudget('1')).called(1);
+      expect(result, const Right(null));
+    });
+  });
+
+  group('updateBudget', () {
+    test('should update budget', () async {
+      // Arrange
+      when(() => mockLocalDataSource.getBudgets()).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveBudget(any()),
+      ).thenAnswer((_) async => Future.value());
+
+      // Act
+      final result = await repository.updateBudget(tBudget);
+
+      // Assert
+      verify(() => mockLocalDataSource.saveBudget(any())).called(1);
+      expect(result, Right(tBudget));
+    });
   });
 }

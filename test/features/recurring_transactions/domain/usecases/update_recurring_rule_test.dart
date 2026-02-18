@@ -21,6 +21,10 @@ class MockAddAuditLog extends Mock implements AddAuditLog {}
 
 class MockUuid extends Mock implements Uuid {}
 
+class FakeRecurringRule extends Fake implements RecurringRule {}
+
+class FakeRecurringRuleAuditLog extends Fake implements RecurringRuleAuditLog {}
+
 void main() {
   late UpdateRecurringRule useCase;
   late MockRecurringTransactionRepository mockRepository;
@@ -28,11 +32,17 @@ void main() {
   late MockAddAuditLog mockAddAuditLog;
   late MockUuid mockUuid;
 
+  setUpAll(() {
+    registerFallbackValue(FakeRecurringRule());
+    registerFallbackValue(FakeRecurringRuleAuditLog());
+  });
+
   setUp(() {
     mockRepository = MockRecurringTransactionRepository();
     mockGetRecurringRuleById = MockGetRecurringRuleById();
     mockAddAuditLog = MockAddAuditLog();
     mockUuid = MockUuid();
+
     useCase = UpdateRecurringRule(
       repository: mockRepository,
       getRecurringRuleById: mockGetRecurringRuleById,
@@ -40,108 +50,62 @@ void main() {
       uuid: mockUuid,
       userId: 'user1',
     );
-
-    registerFallbackValue(
-      RecurringRule(
-        id: '1',
-        amount: 100.0,
-        description: 'Rent',
-        categoryId: 'cat1',
-        accountId: 'acc1',
-        transactionType: TransactionType.expense,
-        frequency: Frequency.monthly,
-        interval: 1,
-        startDate: DateTime(2023, 1, 1),
-        endConditionType: EndConditionType.never,
-        status: RuleStatus.active,
-        nextOccurrenceDate: DateTime(2023, 2, 1),
-        occurrencesGenerated: 0,
-      ),
-    );
-    registerFallbackValue(
-      RecurringRuleAuditLog(
-        id: '1',
-        ruleId: '1',
-        timestamp: DateTime(2023, 1, 1),
-        userId: 'user1',
-        fieldChanged: 'amount',
-        oldValue: '100.0',
-        newValue: '120.0',
-      ),
-    );
   });
 
-  final tRule = RecurringRule(
+  final tRecurringRule = RecurringRule(
     id: '1',
-    amount: 120.0, // Changed amount
     description: 'Rent',
+    amount: 1000.0,
+    frequency: Frequency.monthly,
+    interval: 1,
+    nextOccurrenceDate: DateTime.now(),
+    startDate: DateTime.now(),
+    status: RuleStatus.active,
+    occurrencesGenerated: 0,
     categoryId: 'cat1',
     accountId: 'acc1',
     transactionType: TransactionType.expense,
-    frequency: Frequency.monthly,
-    interval: 1,
-    startDate: DateTime(2023, 1, 1),
     endConditionType: EndConditionType.never,
-    status: RuleStatus.active,
-    nextOccurrenceDate: DateTime(2023, 2, 1),
-    occurrencesGenerated: 0,
   );
 
-  final tOldRule = RecurringRule(
-    id: '1',
-    amount: 100.0,
-    description: 'Rent',
-    categoryId: 'cat1',
-    accountId: 'acc1',
-    transactionType: TransactionType.expense,
-    frequency: Frequency.monthly,
-    interval: 1,
-    startDate: DateTime(2023, 1, 1),
-    endConditionType: EndConditionType.never,
-    status: RuleStatus.active,
-    nextOccurrenceDate: DateTime(2023, 2, 1),
-    occurrencesGenerated: 0,
-  );
+  final tUpdatedRule = tRecurringRule.copyWith(amount: 1200.0);
 
-  test(
-    'should update a recurring rule in the repository and add audit logs',
-    () async {
-      // arrange
-      when(
-        () => mockGetRecurringRuleById(any()),
-      ).thenAnswer((_) async => Right(tOldRule));
-      when(() => mockUuid.v4()).thenReturn('log1');
-      when(
-        () => mockAddAuditLog(any()),
-      ).thenAnswer((_) async => const Right(null));
-      when(
-        () => mockRepository.updateRecurringRule(any()),
-      ).thenAnswer((_) async => const Right(null));
-
-      // act
-      final result = await useCase(tRule);
-
-      // assert
-      expect(result, const Right(null));
-      verify(() => mockGetRecurringRuleById(tRule.id));
-      // Verify audit log for amount change
-      verify(() => mockAddAuditLog(any())).called(1);
-      verify(() => mockRepository.updateRecurringRule(tRule));
-    },
-  );
-
-  test('should return failure when getting old rule fails', () async {
-    // arrange
+  test('should update recurring rule and add audit logs', () async {
+    // Arrange
     when(
       () => mockGetRecurringRuleById(any()),
-    ).thenAnswer((_) async => Left(ServerFailure('Fetch Failed')));
+    ).thenAnswer((_) async => Right(tRecurringRule));
+    when(() => mockUuid.v4()).thenReturn('log1');
+    when(
+      () => mockAddAuditLog(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.updateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
 
-    // act
-    final result = await useCase(tRule);
+    // Act
+    final result = await useCase(tUpdatedRule);
 
-    // assert
-    expect(result, Left(ServerFailure('Fetch Failed')));
-    verify(() => mockGetRecurringRuleById(tRule.id));
+    // Assert
+    expect(result, const Right(null));
+    verify(() => mockGetRecurringRuleById(tUpdatedRule.id)).called(1);
+    // Should add log because amount changed
+    verify(() => mockAddAuditLog(any())).called(1);
+    verify(() => mockRepository.updateRecurringRule(tUpdatedRule)).called(1);
+  });
+
+  test('should return failure when getRecurringRuleById fails', () async {
+    // Arrange
+    when(
+      () => mockGetRecurringRuleById(any()),
+    ).thenAnswer((_) async => const Left(CacheFailure('Error')));
+
+    // Act
+    final result = await useCase(tUpdatedRule);
+
+    // Assert
+    expect(result, const Left(CacheFailure('Error')));
+    verify(() => mockGetRecurringRuleById(tUpdatedRule.id)).called(1);
     verifyZeroInteractions(mockAddAuditLog);
     verifyZeroInteractions(mockRepository);
   });

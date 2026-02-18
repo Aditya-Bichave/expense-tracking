@@ -1,0 +1,11 @@
+{
+  "name": "smoke-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "smoke": "node run_smoke.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "http-server": "^14.1.1"
+  }
+}

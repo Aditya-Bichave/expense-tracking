@@ -24,8 +24,7 @@ class GetFinancialOverviewUseCase
   final ExpenseRepository expenseRepository;
   final BudgetRepository budgetRepository;
   final GoalRepository goalRepository;
-  // Use sl to get ReportRepository
-  ReportRepository get reportRepository => sl<ReportRepository>();
+  final ReportRepository reportRepository;
 
   GetFinancialOverviewUseCase({
     required this.accountRepository,
@@ -33,6 +32,7 @@ class GetFinancialOverviewUseCase
     required this.expenseRepository,
     required this.budgetRepository,
     required this.goalRepository,
+    required this.reportRepository,
   });
 
   @override
