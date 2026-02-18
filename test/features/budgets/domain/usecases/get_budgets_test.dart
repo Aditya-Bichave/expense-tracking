@@ -32,8 +32,9 @@ void main() {
 
   test('should get budgets from repository', () async {
     // Arrange
-    when(() => mockRepository.getBudgets())
-        .thenAnswer((_) async => Right([tBudget]));
+    when(
+      () => mockRepository.getBudgets(),
+    ).thenAnswer((_) async => Right([tBudget]));
 
     // Act
     final result = await useCase(const NoParams());

@@ -9,9 +9,15 @@ import 'package:mocktail/mocktail.dart';
 
 class MockGoalRepository extends Mock implements GoalRepository {}
 
+class FakeGoal extends Fake implements Goal {}
+
 void main() {
   late UpdateGoalUseCase useCase;
   late MockGoalRepository mockRepository;
+
+  setUpAll(() {
+    registerFallbackValue(FakeGoal());
+  });
 
   setUp(() {
     mockRepository = MockGoalRepository();

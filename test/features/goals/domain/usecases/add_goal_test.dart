@@ -15,11 +15,17 @@ class MockUuid extends Mock implements Uuid {}
 
 class MockClock extends Mock implements Clock {}
 
+class FakeGoal extends Fake implements Goal {}
+
 void main() {
   late AddGoalUseCase useCase;
   late MockGoalRepository mockRepository;
   late MockUuid mockUuid;
   late MockClock mockClock;
+
+  setUpAll(() {
+    registerFallbackValue(FakeGoal());
+  });
 
   setUp(() {
     mockRepository = MockGoalRepository();

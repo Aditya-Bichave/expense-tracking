@@ -41,7 +41,11 @@ void main() {
     final result = await useCase(const NoParams());
 
     // Assert
-    expect(result, Right([tGoal]));
+    expect(result.isRight(), isTrue);
+    result.fold(
+      (l) => fail("Should be Right"),
+      (r) => expect(r.first.id, tGoal.id),
+    );
     verify(() => mockRepository.getGoals()).called(1);
   });
 }
