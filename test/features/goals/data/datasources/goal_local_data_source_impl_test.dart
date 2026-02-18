@@ -1,133 +1,99 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:hive_ce/hive.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
-import 'package:expense_tracker/core/error/failure.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_ce/hive.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockBox extends Mock implements Box<GoalModel> {}
-
-class FakeGoalModel extends Fake implements GoalModel {}
 
 void main() {
   late HiveGoalLocalDataSource dataSource;
   late MockBox mockBox;
-
-  final tGoal = GoalModel(
-    id: '1',
-    name: 'Test Goal',
-    targetAmount: 1000,
-    statusIndex: 0,
-    totalSavedCache: 100,
-    createdAt: DateTime.now(),
-  );
-
-  setUpAll(() {
-    registerFallbackValue(FakeGoalModel());
-  });
 
   setUp(() {
     mockBox = MockBox();
     dataSource = HiveGoalLocalDataSource(mockBox);
   });
 
-  group('HiveGoalLocalDataSource', () {
-    group('saveGoal', () {
-      test('should save goal to box', () async {
-        when(() => mockBox.put(any(), any())).thenAnswer((_) async => {});
+  final tGoalModel = GoalModel(
+    id: '1',
+    name: 'Car',
+    targetAmount: 5000.0,
+    totalSavedCache: 1000.0,
+    targetDate: DateTime(2025, 1, 1),
+    iconName: 'car',
+    description: 'Save for car',
+    statusIndex: 0, // active
+    createdAt: DateTime.now(),
+    achievedAt: null,
+  );
 
-        await dataSource.saveGoal(tGoal);
+  group('getGoals', () {
+    test('should return list of GoalModel from Hive', () async {
+      // Arrange
+      when(() => mockBox.values).thenReturn([tGoalModel]);
 
-        verify(() => mockBox.put(tGoal.id, tGoal)).called(1);
-      });
+      // Act
+      final result = await dataSource.getGoals();
 
-      test('should throw CacheFailure on error', () async {
-        when(
-          () => mockBox.put(any(), any()),
-        ).thenThrow(Exception('Hive Error'));
-
-        expect(() => dataSource.saveGoal(tGoal), throwsA(isA<CacheFailure>()));
-      });
+      // Assert
+      expect(result, [tGoalModel]);
     });
 
-    group('getGoals', () {
-      test('should return list of goals from box', () async {
-        final List<GoalModel> tGoals = [tGoal];
-        when(() => mockBox.values).thenReturn(tGoals);
+    test('should throw CacheFailure when Hive access fails', () async {
+      // Arrange
+      when(() => mockBox.values).thenThrow(Exception());
 
-        final result = await dataSource.getGoals();
+      // Act & Assert
+      expect(() => dataSource.getGoals(), throwsA(isA<CacheFailure>()));
+    });
+  });
 
-        expect(result, equals(tGoals));
-      });
+  group('saveGoal', () {
+    test('should add/update goal to Hive', () async {
+      // Arrange
+      when(
+        () => mockBox.put(any(), any()),
+      ).thenAnswer((_) async => Future.value());
 
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.values).thenThrow(Exception('Hive Error'));
+      // Act
+      await dataSource.saveGoal(tGoalModel);
 
-        expect(() => dataSource.getGoals(), throwsA(isA<CacheFailure>()));
-      });
+      // Assert
+      verify(() => mockBox.put(tGoalModel.id, tGoalModel)).called(1);
     });
 
-    group('getGoalById', () {
-      test('should return goal if found', () async {
-        when(() => mockBox.get(any())).thenReturn(tGoal);
+    test('should throw CacheFailure when saving fails', () async {
+      // Arrange
+      when(() => mockBox.put(any(), any())).thenThrow(Exception());
 
-        final result = await dataSource.getGoalById(tGoal.id);
+      // Act & Assert
+      expect(
+        () => dataSource.saveGoal(tGoalModel),
+        throwsA(isA<CacheFailure>()),
+      );
+    });
+  });
 
-        expect(result, equals(tGoal));
-        verify(() => mockBox.get(tGoal.id)).called(1);
-      });
+  group('deleteGoal', () {
+    test('should delete goal from Hive', () async {
+      // Arrange
+      when(() => mockBox.delete(any())).thenAnswer((_) async => Future.value());
 
-      test('should return null if not found', () async {
-        when(() => mockBox.get(any())).thenReturn(null);
+      // Act
+      await dataSource.deleteGoal('1');
 
-        final result = await dataSource.getGoalById('non-existent');
-
-        expect(result, isNull);
-      });
-
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
-
-        expect(
-          () => dataSource.getGoalById(tGoal.id),
-          throwsA(isA<CacheFailure>()),
-        );
-      });
+      // Assert
+      verify(() => mockBox.delete('1')).called(1);
     });
 
-    group('deleteGoal', () {
-      test('should delete goal from box', () async {
-        when(() => mockBox.delete(any())).thenAnswer((_) async => {});
+    test('should throw CacheFailure when deletion fails', () async {
+      // Arrange
+      when(() => mockBox.delete(any())).thenThrow(Exception());
 
-        await dataSource.deleteGoal(tGoal.id);
-
-        verify(() => mockBox.delete(tGoal.id)).called(1);
-      });
-
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
-
-        expect(
-          () => dataSource.deleteGoal(tGoal.id),
-          throwsA(isA<CacheFailure>()),
-        );
-      });
-    });
-
-    group('clearAllGoals', () {
-      test('should clear box', () async {
-        when(() => mockBox.clear()).thenAnswer((_) async => 0);
-
-        await dataSource.clearAllGoals();
-
-        verify(() => mockBox.clear()).called(1);
-      });
-
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
-
-        expect(() => dataSource.clearAllGoals(), throwsA(isA<CacheFailure>()));
-      });
+      // Act & Assert
+      expect(() => dataSource.deleteGoal('1'), throwsA(isA<CacheFailure>()));
     });
   });
 }

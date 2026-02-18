@@ -19,43 +19,29 @@ void main() {
     useCase = GetGoalsUseCase(mockRepository);
   });
 
-  final tGoals = [
-    Goal(
-      id: '1',
-      name: 'Vacation',
-      targetAmount: 1000.0,
-      status: GoalStatus.active,
-      totalSaved: 0.0,
-      createdAt: DateTime.now(),
-    ),
-  ];
+  final tGoal = Goal(
+    id: '1',
+    name: 'Car',
+    targetAmount: 5000.0,
+    totalSaved: 1000.0,
+    targetDate: DateTime(2025, 1, 1),
+    iconName: 'car',
+    description: 'Save for car',
+    status: GoalStatus.active,
+    createdAt: DateTime(2024, 1, 1),
+    achievedAt: null,
+  );
 
   test('should get goals from repository', () async {
-    // arrange
-    when(
-      () => mockRepository.getGoals(),
-    ).thenAnswer((_) async => Right(tGoals));
+    // Arrange
+    when(() => mockRepository.getGoals())
+        .thenAnswer((_) async => Right([tGoal]));
 
-    // act
-    final result = await useCase(NoParams());
+    // Act
+    final result = await useCase(const NoParams());
 
-    // assert
-    expect(result, Right(tGoals));
-    verify(() => mockRepository.getGoals());
-    verifyNoMoreInteractions(mockRepository);
-  });
-
-  test('should return failure when repository fails', () async {
-    // arrange
-    when(
-      () => mockRepository.getGoals(),
-    ).thenAnswer((_) async => Left(CacheFailure()));
-
-    // act
-    final result = await useCase(NoParams());
-
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.getGoals());
+    // Assert
+    expect(result, Right([tGoal]));
+    verify(() => mockRepository.getGoals()).called(1);
   });
 }

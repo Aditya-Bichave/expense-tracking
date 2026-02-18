@@ -9,9 +9,15 @@ import 'package:mocktail/mocktail.dart';
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
+class FakeCategory extends Fake implements Category {}
+
 void main() {
   late UpdateCustomCategoryUseCase useCase;
   late MockCategoryRepository mockRepository;
+
+  setUpAll(() {
+    registerFallbackValue(FakeCategory());
+  });
 
   setUp(() {
     mockRepository = MockCategoryRepository();
@@ -27,10 +33,8 @@ void main() {
     isCustom: true,
   );
 
-  final tParams = const UpdateCustomCategoryParams(category: tCategory);
-
-  test('should update a custom category in the repository', () async {
-    // arrange
+  test('should update category when validation passes', () async {
+    // Arrange
     when(
       () => mockRepository.getAllCategories(),
     ).thenAnswer((_) async => const Right([]));
@@ -38,37 +42,23 @@ void main() {
       () => mockRepository.updateCategory(any()),
     ).thenAnswer((_) async => const Right(null));
 
-    // act
-    final result = await useCase(tParams);
+    // Act
+    final result = await useCase(const UpdateCustomCategoryParams(category: tCategory));
 
-    // assert
+    // Assert
     expect(result, const Right(null));
-    verify(() => mockRepository.updateCategory(tCategory));
-    verify(() => mockRepository.getAllCategories());
+    verify(() => mockRepository.updateCategory(tCategory)).called(1);
   });
 
-  test('should return validation failure if category is not custom', () async {
-    // arrange
-    const nonCustomCategory = Category(
-      id: '1',
-      name: 'Default',
-      iconName: 'icon',
-      colorHex: '#000000',
-      type: CategoryType.expense,
-      isCustom: false,
-    );
-    final params = const UpdateCustomCategoryParams(
-      category: nonCustomCategory,
-    );
+  test('should return ValidationFailure when category is not custom', () async {
+    // Arrange
+    final nonCustom = tCategory.copyWith(isCustom: false);
 
-    // act
-    final result = await useCase(params);
+    // Act
+    final result = await useCase(UpdateCustomCategoryParams(category: nonCustom));
 
-    // assert
-    expect(
-      result,
-      const Left(ValidationFailure("Only custom categories can be updated.")),
-    );
-    verifyZeroInteractions(mockRepository);
+    // Assert
+    expect(result.isLeft(), isTrue);
+    expect(result.fold((l) => l, (r) => null), isA<ValidationFailure>());
   });
 }

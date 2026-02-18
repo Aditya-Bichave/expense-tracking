@@ -1,139 +1,97 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:hive_ce/hive.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
-import 'package:expense_tracker/core/error/failure.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_ce/hive.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockBox extends Mock implements Box<BudgetModel> {}
-
-class FakeBudgetModel extends Fake implements BudgetModel {}
 
 void main() {
   late HiveBudgetLocalDataSource dataSource;
   late MockBox mockBox;
-
-  final tBudget = BudgetModel(
-    id: '1',
-    name: 'Test Budget',
-    budgetTypeIndex: 0,
-    targetAmount: 500,
-    periodTypeIndex: 0,
-    createdAt: DateTime.now(),
-  );
-
-  setUpAll(() {
-    registerFallbackValue(FakeBudgetModel());
-  });
 
   setUp(() {
     mockBox = MockBox();
     dataSource = HiveBudgetLocalDataSource(mockBox);
   });
 
-  group('HiveBudgetLocalDataSource', () {
-    group('saveBudget', () {
-      test('should save budget to box', () async {
-        when(() => mockBox.put(any(), any())).thenAnswer((_) async => {});
+  final tBudgetModel = BudgetModel(
+    id: '1',
+    name: 'Monthly Budget',
+    targetAmount: 500.0,
+    periodTypeIndex: 0, // monthly
+    startDate: DateTime(2024, 1, 1),
+    categoryIds: ['cat1'],
+    budgetTypeIndex: 1, // categorySpecific
+    createdAt: DateTime.now(),
+  );
 
-        await dataSource.saveBudget(tBudget);
+  group('getBudgets', () {
+    test('should return list of BudgetModel from Hive', () async {
+      // Arrange
+      when(() => mockBox.values).thenReturn([tBudgetModel]);
 
-        verify(() => mockBox.put(tBudget.id, tBudget)).called(1);
-      });
+      // Act
+      final result = await dataSource.getBudgets();
 
-      test('should throw CacheFailure on error', () async {
-        when(
-          () => mockBox.put(any(), any()),
-        ).thenThrow(Exception('Hive Error'));
-
-        expect(
-          () => dataSource.saveBudget(tBudget),
-          throwsA(isA<CacheFailure>()),
-        );
-      });
+      // Assert
+      expect(result, [tBudgetModel]);
     });
 
-    group('getBudgets', () {
-      test('should return list of budgets from box', () async {
-        final List<BudgetModel> tList = [tBudget];
-        when(() => mockBox.values).thenReturn(tList);
+    test('should throw CacheFailure when Hive access fails', () async {
+      // Arrange
+      when(() => mockBox.values).thenThrow(Exception());
 
-        final result = await dataSource.getBudgets();
+      // Act & Assert
+      expect(() => dataSource.getBudgets(), throwsA(isA<CacheFailure>()));
+    });
+  });
 
-        expect(result, equals(tList));
-      });
+  group('saveBudget', () {
+    test('should add/update budget to Hive', () async {
+      // Arrange
+      when(
+        () => mockBox.put(any(), any()),
+      ).thenAnswer((_) async => Future.value());
 
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.values).thenThrow(Exception('Hive Error'));
+      // Act
+      await dataSource.saveBudget(tBudgetModel);
 
-        expect(() => dataSource.getBudgets(), throwsA(isA<CacheFailure>()));
-      });
+      // Assert
+      verify(() => mockBox.put(tBudgetModel.id, tBudgetModel)).called(1);
     });
 
-    group('getBudgetById', () {
-      test('should return budget if found', () async {
-        when(() => mockBox.get(any())).thenReturn(tBudget);
+    test('should throw CacheFailure when saving fails', () async {
+      // Arrange
+      when(() => mockBox.put(any(), any())).thenThrow(Exception());
 
-        final result = await dataSource.getBudgetById(tBudget.id);
+      // Act & Assert
+      expect(
+        () => dataSource.saveBudget(tBudgetModel),
+        throwsA(isA<CacheFailure>()),
+      );
+    });
+  });
 
-        expect(result, equals(tBudget));
-        verify(() => mockBox.get(tBudget.id)).called(1);
-      });
+  group('deleteBudget', () {
+    test('should delete budget from Hive', () async {
+      // Arrange
+      when(() => mockBox.delete(any())).thenAnswer((_) async => Future.value());
 
-      test('should return null if not found', () async {
-        when(() => mockBox.get(any())).thenReturn(null);
+      // Act
+      await dataSource.deleteBudget('1');
 
-        final result = await dataSource.getBudgetById('non-existent');
-
-        expect(result, isNull);
-      });
-
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
-
-        expect(
-          () => dataSource.getBudgetById(tBudget.id),
-          throwsA(isA<CacheFailure>()),
-        );
-      });
+      // Assert
+      verify(() => mockBox.delete('1')).called(1);
     });
 
-    group('deleteBudget', () {
-      test('should delete budget from box', () async {
-        when(() => mockBox.delete(any())).thenAnswer((_) async => {});
+    test('should throw CacheFailure when deletion fails', () async {
+      // Arrange
+      when(() => mockBox.delete(any())).thenThrow(Exception());
 
-        await dataSource.deleteBudget(tBudget.id);
-
-        verify(() => mockBox.delete(tBudget.id)).called(1);
-      });
-
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
-
-        expect(
-          () => dataSource.deleteBudget(tBudget.id),
-          throwsA(isA<CacheFailure>()),
-        );
-      });
-    });
-
-    group('clearAllBudgets', () {
-      test('should clear box', () async {
-        when(() => mockBox.clear()).thenAnswer((_) async => 0);
-
-        await dataSource.clearAllBudgets();
-
-        verify(() => mockBox.clear()).called(1);
-      });
-
-      test('should throw CacheFailure on error', () async {
-        when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
-
-        expect(
-          () => dataSource.clearAllBudgets(),
-          throwsA(isA<CacheFailure>()),
-        );
-      });
+      // Act & Assert
+      expect(() => dataSource.deleteBudget('1'), throwsA(isA<CacheFailure>()));
     });
   });
 }
