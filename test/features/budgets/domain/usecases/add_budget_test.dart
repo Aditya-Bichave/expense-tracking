@@ -38,9 +38,8 @@ void main() {
   test('should add budget to repository', () async {
     // Arrange
     when(() => mockUuid.v4()).thenReturn('1');
-    when(
-      () => mockRepository.addBudget(any()),
-    ).thenAnswer((_) async => Right(tBudget));
+    when(() => mockRepository.addBudget(any()))
+        .thenAnswer((_) async => Right(tBudget));
 
     // Act
     final result = await useCase(
@@ -62,9 +61,8 @@ void main() {
   test('should return Failure when repository fails', () async {
     // Arrange
     when(() => mockUuid.v4()).thenReturn('1');
-    when(
-      () => mockRepository.addBudget(any()),
-    ).thenAnswer((_) async => const Left(CacheFailure("Fail")));
+    when(() => mockRepository.addBudget(any()))
+        .thenAnswer((_) async => const Left(CacheFailure("Fail")));
 
     // Act
     final result = await useCase(

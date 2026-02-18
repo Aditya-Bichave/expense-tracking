@@ -32,9 +32,8 @@ void main() {
 
   test('should update budget in repository', () async {
     // Arrange
-    when(
-      () => mockRepository.updateBudget(any()),
-    ).thenAnswer((_) async => Right(tBudget));
+    when(() => mockRepository.updateBudget(any()))
+        .thenAnswer((_) async => Right(tBudget));
 
     // Act
     final result = await useCase(UpdateBudgetParams(budget: tBudget));

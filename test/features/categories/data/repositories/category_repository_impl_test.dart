@@ -96,7 +96,10 @@ void main() {
 
       // Assert
       expect(result.isLeft(), isTrue);
-      expect(result.fold((l) => l, (r) => null), isA<CacheFailure>());
+      expect(
+        result.fold((l) => l, (r) => null),
+        isA<CacheFailure>(),
+      );
     });
   });
 

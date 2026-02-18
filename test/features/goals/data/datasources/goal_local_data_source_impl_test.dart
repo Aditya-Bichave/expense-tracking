@@ -7,9 +7,15 @@ import 'package:mocktail/mocktail.dart';
 
 class MockBox extends Mock implements Box<GoalModel> {}
 
+class FakeGoalModel extends Fake implements GoalModel {}
+
 void main() {
   late HiveGoalLocalDataSource dataSource;
   late MockBox mockBox;
+
+  setUpAll(() {
+    registerFallbackValue(FakeGoalModel());
+  });
 
   setUp(() {
     mockBox = MockBox();

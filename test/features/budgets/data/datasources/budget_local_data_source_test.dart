@@ -7,9 +7,15 @@ import 'package:mocktail/mocktail.dart';
 
 class MockBox extends Mock implements Box<BudgetModel> {}
 
+class FakeBudgetModel extends Fake implements BudgetModel {}
+
 void main() {
   late HiveBudgetLocalDataSource dataSource;
   late MockBox mockBox;
+
+  setUpAll(() {
+    registerFallbackValue(FakeBudgetModel());
+  });
 
   setUp(() {
     mockBox = MockBox();

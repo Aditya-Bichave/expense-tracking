@@ -34,9 +34,8 @@ void main() {
 
   test('should get goals from repository', () async {
     // Arrange
-    when(
-      () => mockRepository.getGoals(),
-    ).thenAnswer((_) async => Right([tGoal]));
+    when(() => mockRepository.getGoals())
+        .thenAnswer((_) async => Right([tGoal]));
 
     // Act
     final result = await useCase(const NoParams());
