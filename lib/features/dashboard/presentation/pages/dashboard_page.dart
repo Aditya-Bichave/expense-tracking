@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_di
 import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/stitch_dashboard_body.dart';
 // Removed Expense/Income entity imports as they are handled by TransactionEntity
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
@@ -315,6 +316,13 @@ class _DashboardPageState extends State<DashboardPage> {
                     context,
                     overview,
                     settingsState,
+                  );
+                  break;
+                case UIMode.stitch:
+                  bodyContent = StitchDashboardBody(
+                    overview: overview,
+                    navigateToDetailOrEdit: _navigateToDetailOrEdit,
+                    onRefresh: _refreshDashboard,
                   );
                   break;
                 case UIMode.quantum:

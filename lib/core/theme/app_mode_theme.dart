@@ -6,7 +6,7 @@ import 'dart:ui' as ui; // Import dart:ui for lerpDouble
 // --- Enums ---
 enum LayoutDensity { compact, comfortable, spacious }
 
-enum CardStyle { flat, elevated, floating }
+enum CardStyle { flat, elevated, floating, glass }
 
 enum ListEntranceAnimation {
   none,
