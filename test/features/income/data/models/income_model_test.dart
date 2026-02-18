@@ -1,115 +1,137 @@
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final tDate = DateTime(2023, 1, 1);
+  final tDate = DateTime(2024, 1, 1);
   final tIncomeModel = IncomeModel(
     id: '1',
     title: 'Test Income',
-    amount: 1000.0,
+    amount: 5000.0,
     date: tDate,
     accountId: 'acc1',
     categoryId: 'cat1',
+    notes: 'Bonus',
     categorizationStatusValue: 'categorized',
     confidenceScoreValue: 0.9,
+    merchantId: 'merch1',
     isRecurring: true,
-    notes: 'Test note',
   );
 
-  group('IncomeModel', () {
-    test('should be a subclass of HiveObject', () {
-      expect(tIncomeModel, isA<Object>());
-    });
+  final tIncomeEntity = Income(
+    id: '1',
+    title: 'Test Income',
+    amount: 5000.0,
+    date: tDate,
+    accountId: 'acc1',
+    category: const Category(
+      id: 'cat1',
+      name: 'Test Category',
+      iconName: 'test_icon',
+      colorHex: '#000000',
+      type: CategoryType.income,
+      isCustom: false,
+    ),
+    notes: 'Bonus',
+    status: CategorizationStatus.categorized,
+    confidenceScore: 0.9,
+    merchantId: 'merch1',
+    isRecurring: true,
+  );
 
-    test('fromJson should return a valid model', () {
-      final Map<String, dynamic> jsonMap = {
-        'id': '1',
-        'title': 'Test Income',
-        'amount': 1000.0,
-        'date': tDate.toIso8601String(),
-        'accountId': 'acc1',
-        'categoryId': 'cat1',
-        'categorizationStatusValue': 'categorized',
-        'confidenceScoreValue': 0.9,
-        'isRecurring': true,
-        'notes': 'Test note',
-      };
+  test('should return a valid model from JSON', () {
+    // Arrange
+    final jsonMap = {
+      'id': '1',
+      'title': 'Test Income',
+      'amount': 5000.0,
+      'date': '2024-01-01T00:00:00.000',
+      'accountId': 'acc1',
+      'categoryId': 'cat1',
+      'notes': 'Bonus',
+      'categorizationStatusValue': 'categorized',
+      'confidenceScoreValue': 0.9,
+      'merchantId': 'merch1',
+      'isRecurring': true,
+    };
 
-      final result = IncomeModel.fromJson(jsonMap);
+    // Act
+    final result = IncomeModel.fromJson(jsonMap);
 
-      expect(result.id, '1');
-      expect(result.title, 'Test Income');
-      expect(result.amount, 1000.0);
-      expect(result.date, tDate);
-      expect(result.categoryId, 'cat1');
-      expect(result.categorizationStatusValue, 'categorized');
-      expect(result.confidenceScoreValue, 0.9);
-      expect(result.isRecurring, true);
-      expect(result.notes, 'Test note');
-    });
+    // Assert
+    expect(result.id, tIncomeModel.id);
+    expect(result.title, tIncomeModel.title);
+    expect(result.amount, tIncomeModel.amount);
+    expect(result.date, tIncomeModel.date);
+    expect(result.accountId, tIncomeModel.accountId);
+    expect(result.categoryId, tIncomeModel.categoryId);
+    expect(result.notes, tIncomeModel.notes);
+    expect(
+      result.categorizationStatusValue,
+      tIncomeModel.categorizationStatusValue,
+    );
+    expect(result.confidenceScoreValue, tIncomeModel.confidenceScoreValue);
+    expect(result.merchantId, tIncomeModel.merchantId);
+    expect(result.isRecurring, tIncomeModel.isRecurring);
+  });
 
-    test('toJson should return a JSON map', () {
-      final result = tIncomeModel.toJson();
+  test('should return a JSON map containing proper data', () {
+    // Act
+    final result = tIncomeModel.toJson();
 
-      final expectedMap = {
-        'id': '1',
-        'title': 'Test Income',
-        'amount': 1000.0,
-        'date': tDate.toIso8601String(),
-        'accountId': 'acc1',
-        'categoryId': 'cat1',
-        'categorizationStatusValue': 'categorized',
-        'confidenceScoreValue': 0.9,
-        'isRecurring': true,
-        'notes': 'Test note',
-      };
+    // Assert
+    final expectedMap = {
+      'id': '1',
+      'title': 'Test Income',
+      'amount': 5000.0,
+      'date': '2024-01-01T00:00:00.000',
+      'accountId': 'acc1',
+      'categoryId': 'cat1',
+      'notes': 'Bonus',
+      'categorizationStatusValue': 'categorized',
+      'confidenceScoreValue': 0.9,
+      'merchantId': 'merch1',
+      'isRecurring': true,
+    };
+    expect(result, expectedMap);
+  });
 
-      expect(result, expectedMap);
-    });
+  test('should convert from Entity to Model correctly', () {
+    // Act
+    final result = IncomeModel.fromEntity(tIncomeEntity);
 
-    test('toEntity should return a valid Entity', () {
-      final result = tIncomeModel.toEntity();
+    // Assert
+    expect(result.id, tIncomeEntity.id);
+    expect(result.title, tIncomeEntity.title);
+    expect(result.amount, tIncomeEntity.amount);
+    expect(result.date, tIncomeEntity.date);
+    expect(result.accountId, tIncomeEntity.accountId);
+    expect(result.categoryId, tIncomeEntity.category?.id);
+    expect(result.notes, tIncomeEntity.notes);
+    expect(result.categorizationStatusValue, 'categorized'); // Enum value check
+    expect(result.confidenceScoreValue, tIncomeEntity.confidenceScore);
+    expect(result.merchantId, tIncomeEntity.merchantId);
+    expect(result.isRecurring, tIncomeEntity.isRecurring);
+  });
 
-      expect(result, isA<Income>());
-      expect(result.id, '1');
-      expect(result.title, 'Test Income');
-      expect(result.amount, 1000.0);
-      expect(result.date, tDate);
-      expect(result.category, null);
-      expect(result.accountId, 'acc1');
-      expect(result.status, CategorizationStatus.categorized);
-      expect(result.confidenceScore, 0.9);
-      expect(result.isRecurring, true);
-      expect(result.notes, 'Test note');
-    });
+  test('should convert from Model to Entity correctly (category is null)', () {
+    // Act
+    final result = tIncomeModel.toEntity();
 
-    test('fromEntity should return a valid Model', () {
-      final tIncome = Income(
-        id: '1',
-        title: 'Test Income',
-        amount: 1000.0,
-        date: tDate,
-        accountId: 'acc1',
-        category: null,
-        status: CategorizationStatus.uncategorized,
-        confidenceScore: null,
-        isRecurring: false,
-        notes: 'Test note',
-      );
-
-      final result = IncomeModel.fromEntity(tIncome);
-
-      expect(result.id, '1');
-      expect(result.title, 'Test Income');
-      expect(result.amount, 1000.0);
-      expect(result.date, tDate);
-      expect(result.categoryId, null);
-      expect(result.categorizationStatusValue, 'uncategorized');
-      expect(result.confidenceScoreValue, null);
-      expect(result.isRecurring, false);
-      expect(result.notes, 'Test note');
-    });
+    // Assert
+    expect(result.id, tIncomeModel.id);
+    expect(result.title, tIncomeModel.title);
+    expect(result.amount, tIncomeModel.amount);
+    expect(result.date, tIncomeModel.date);
+    expect(result.accountId, tIncomeModel.accountId);
+    expect(result.category, isNull); // Category is not hydrated in toEntity
+    expect(result.notes, tIncomeModel.notes);
+    expect(result.status, CategorizationStatus.categorized);
+    expect(result.confidenceScore, tIncomeModel.confidenceScoreValue);
+    expect(result.merchantId, tIncomeModel.merchantId);
+    expect(result.isRecurring, tIncomeModel.isRecurring);
   });
 }
