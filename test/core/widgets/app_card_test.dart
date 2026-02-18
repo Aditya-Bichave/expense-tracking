@@ -99,8 +99,17 @@ void main() {
 
         // ASSERT
         // We check if the card's properties match the theme's cardTheme properties
-        expect(card.shape, cardTheme.shape);
-        expect(card.color, cardTheme.color);
+        if (uiMode == UIMode.stitch) {
+          // Stitch uses glass style which forces a transparent color and adds a border
+          // at runtime, differing from the static cardTheme.
+          expect(card.color, Colors.transparent);
+          expect(card.shape, isA<RoundedRectangleBorder>());
+          final shape = card.shape as RoundedRectangleBorder;
+          expect(shape.side.color.opacity, closeTo(0.05, 0.01)); // Light mode default
+        } else {
+          expect(card.shape, cardTheme.shape);
+          expect(card.color, cardTheme.color);
+        }
         expect(card.margin, cardTheme.margin);
         // Elevation can be tricky due to modeTheme overrides, let's check it's non-null
         expect(card.elevation, isNotNull);
