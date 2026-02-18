@@ -61,7 +61,7 @@ class InviteModel extends HiveObject {
   }
 
   factory InviteModel.fromJson(Map<String, dynamic> json) =>
-      _(json);
+      _$InviteModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$InviteModelToJson(this);
 }

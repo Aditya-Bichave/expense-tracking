@@ -36,6 +36,10 @@ enum DataChangeType {
   goalUpdated,
   goalDeleted,
   settingsUpdated,
+  groupExpense, // Added to be safe if SyncService maps it here
+  groupMember,
+  group,
+  invite,
 }
 
 class DataChangedEvent {

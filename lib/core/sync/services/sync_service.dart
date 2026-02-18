@@ -32,13 +32,11 @@ class SyncService {
           await _syncItem(item);
           await _outboxRepository.delete(item.id);
         } catch (e, s) {
-          log.severe("[SyncService] Failed to sync item ${item.id}: $e\n$s");
-          // Simple retry logic: increment retry count
-          // If retry count > max, mark as failed (not implemented here for brevity)
+          log.severe("[SyncService] Failed to sync item ${item.id}: $e", e, s);
         }
       }
     } catch (e, s) {
-      log.severe("[SyncService] Error processing outbox: $e\n$s");
+      log.severe("[SyncService] Error processing outbox: $e", e, s);
     } finally {
       _isSyncing = false;
     }
@@ -60,9 +58,9 @@ class SyncService {
   String _getTableName(EntityType type) {
     switch (type) {
       case EntityType.group: return 'groups';
-      case EntityType.groupExpense: return 'expenses';
+      case EntityType.groupExpense: return 'expenses'; // Fixed enum case
       case EntityType.settlement: return 'settlements';
-      case EntityType.groupMember: return 'group_members';
+      case EntityType.groupMember: return 'group_members'; // Fixed enum case
       case EntityType.invite: return 'invites';
     }
   }

@@ -31,8 +31,8 @@ class SyncCoordinator {
       }
     });
 
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
-       // Handle both single (legacy) and list (new) return types safely
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((dynamic results) {
+       // Handle both single (legacy) and list (new) return types dynamically to satisfy analyzer
        bool isConnected = false;
        if (results is List) {
          isConnected = results.any((r) => r.toString() != 'ConnectivityResult.none');

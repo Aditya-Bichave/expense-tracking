@@ -67,7 +67,7 @@ class SettlementModel extends HiveObject {
   }
 
   factory SettlementModel.fromJson(Map<String, dynamic> json) =>
-      _(json);
+      _$SettlementModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$SettlementModelToJson(this);
 }
