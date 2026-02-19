@@ -40,9 +40,12 @@ void main() {
         id: '1',
         entityId: '1',
         entityType: EntityType.expense,
-        operationType: OpType.insert,
-        payload: {},
+        opType: OpType.create,
+        payloadJson: '{}',
         createdAt: DateTime.now()));
+
+    // Register fake for MockHiveObject to fix "any()" error
+    registerFallbackValue(MockHiveObject());
   });
 
   group('UnifiedRepository', () {

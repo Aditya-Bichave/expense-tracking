@@ -34,6 +34,20 @@ enum EntityType {
   settlement,
   @HiveField(4)
   invite,
+  @HiveField(5)
+  expense,
+  @HiveField(6)
+  income,
+  @HiveField(7)
+  category,
+  @HiveField(8)
+  budget,
+  @HiveField(9)
+  goal,
+  @HiveField(10)
+  contribution,
+  @HiveField(11)
+  recurringRule,
 }
 
 @HiveType(typeId: 12)
@@ -62,8 +76,12 @@ class OutboxItem extends HiveObject {
   @HiveField(7)
   String? lastError;
 
+  @HiveField(8)
+  final String entityId;
+
   OutboxItem({
     required this.id,
+    required this.entityId,
     required this.entityType,
     required this.opType,
     required this.payloadJson,

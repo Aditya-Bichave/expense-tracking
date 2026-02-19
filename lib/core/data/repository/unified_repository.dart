@@ -33,14 +33,16 @@ abstract class UnifiedRepository<Model extends HiveObject> {
       await localBox.add(item);
       // Note: Hive might not set 'id' if using auto-increment int keys,
       // but our models usually use UUID strings.
-      // If the model relies on 'id', ensure it is generated before calling this.
+
+      final entityId = (item as dynamic).id as String; // Explicitly cast to String
 
       // 2. Queue to Outbox
       final outboxItem = OutboxItem(
         id: uuid.v4(),
+        entityId: entityId,
         entityType: _mapTableNameToEntityType(tableName),
         opType: OpType.create, // Enum uses 'create', not 'insert'
-        payloadJson: jsonEncode(toJson(item)), // Requires String payloadJson, not map
+        payloadJson: jsonEncode(toJson(item)),
         createdAt: DateTime.now(),
       );
       await outboxRepository.add(outboxItem);
@@ -61,9 +63,12 @@ abstract class UnifiedRepository<Model extends HiveObject> {
       // 1. Save to local Hive box
       await item.save();
 
+      final entityId = (item as dynamic).id as String;
+
       // 2. Queue to Outbox
       final outboxItem = OutboxItem(
         id: uuid.v4(),
+        entityId: entityId,
         entityType: _mapTableNameToEntityType(tableName),
         opType: OpType.update,
         payloadJson: jsonEncode(toJson(item)),
@@ -83,7 +88,7 @@ abstract class UnifiedRepository<Model extends HiveObject> {
     required String tableName,
   }) async {
     try {
-      final id = (item as dynamic).id;
+      final id = (item as dynamic).id as String;
 
       // 1. Delete from local Hive box
       await item.delete();
@@ -91,6 +96,7 @@ abstract class UnifiedRepository<Model extends HiveObject> {
       // 2. Queue to Outbox
       final outboxItem = OutboxItem(
         id: uuid.v4(),
+        entityId: id,
         entityType: _mapTableNameToEntityType(tableName),
         opType: OpType.delete,
         payloadJson: jsonEncode({'id': id}),
@@ -105,12 +111,12 @@ abstract class UnifiedRepository<Model extends HiveObject> {
   }
 
   EntityType _mapTableNameToEntityType(String tableName) {
-    // This mapping needs to be robust. Ideally passed in or static.
-    // For now, simple switch.
     switch (tableName) {
       case 'groups': return EntityType.group;
       case 'group_members': return EntityType.groupMember;
       case 'group_expenses': return EntityType.groupExpense;
+      case 'expenses': return EntityType.expense;
+      case 'income': return EntityType.income;
       default: return EntityType.groupExpense; // Fallback or throw
     }
   }
