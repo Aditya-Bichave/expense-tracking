@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/accounts/domain/repositories/asset_acco
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class AssetAccountRepositoryImpl implements AssetAccountRepository {
   final AssetAccountLocalDataSource localDataSource;
