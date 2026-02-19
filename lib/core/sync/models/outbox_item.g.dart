@@ -18,6 +18,7 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
     };
     return OutboxItem(
       id: fields[0] as String,
+      entityId: fields[9] as String,
       entityType: fields[1] as EntityType,
       opType: fields[2] as OpType,
       payloadJson: fields[3] as String,
@@ -34,6 +35,7 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
   @override
   void write(BinaryWriter writer, OutboxItem obj) {
     writer
+      ..writeByte(10)
       ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
@@ -52,6 +54,10 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
       ..writeByte(7)
       ..write(obj.lastError)
       ..writeByte(8)
+      ..write(obj.nextRetryAt)
+      ..writeByte(9)
+      ..write(obj.entityId);
+      ..writeByte(10)
       ..write(obj.nextRetryAt);
   }
 
@@ -165,6 +171,20 @@ class EntityTypeAdapter extends TypeAdapter<EntityType> {
         return EntityType.settlement;
       case 4:
         return EntityType.invite;
+      case 5:
+        return EntityType.expense;
+      case 6:
+        return EntityType.income;
+      case 7:
+        return EntityType.category;
+      case 8:
+        return EntityType.budget;
+      case 9:
+        return EntityType.goal;
+      case 10:
+        return EntityType.contribution;
+      case 11:
+        return EntityType.recurringRule;
       default:
         return EntityType.group;
     }
@@ -183,6 +203,20 @@ class EntityTypeAdapter extends TypeAdapter<EntityType> {
         writer.writeByte(3);
       case EntityType.invite:
         writer.writeByte(4);
+      case EntityType.expense:
+        writer.writeByte(5);
+      case EntityType.income:
+        writer.writeByte(6);
+      case EntityType.category:
+        writer.writeByte(7);
+      case EntityType.budget:
+        writer.writeByte(8);
+      case EntityType.goal:
+        writer.writeByte(9);
+      case EntityType.contribution:
+        writer.writeByte(10);
+      case EntityType.recurringRule:
+        writer.writeByte(11);
     }
   }
 

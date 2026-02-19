@@ -13,3 +13,10 @@ windows/
 test/
 coverage/
 *.md
+.github
+.gitignore
+.vscode
+build/
+doc/
+test/
+coverage/

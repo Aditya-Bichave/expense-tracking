@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:expense_tracker/core/sync/realtime_service.dart';
+import 'package:expense_tracker/core/sync/realtime_service.dart';
+import 'package:expense_tracker/features/group_expenses/data/datasources/group_expenses_local_data_source.dart';
+import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -8,111 +11,59 @@ class MockSupabaseClient extends Mock implements SupabaseClient {}
 
 class MockRealtimeChannel extends Mock implements RealtimeChannel {}
 
-class MockPostgresChangePayload extends Mock implements PostgresChangePayload {}
+class MockGroupsLocalDataSource extends Mock implements GroupsLocalDataSource {}
 
-class FakePostgresChangeFilter extends Fake implements PostgresChangeFilter {}
+class MockGroupExpensesLocalDataSource extends Mock
+    implements GroupExpensesLocalDataSource {}
 
 void main() {
-  late RealtimeService realtimeService;
-  late MockSupabaseClient mockSupabaseClient;
-  late MockRealtimeChannel mockRealtimeChannel;
-  late StreamController<PostgresChangePayload> changesController;
+  late RealtimeService service;
+  late MockSupabaseClient mockClient;
+  late MockRealtimeChannel mockChannel;
+  late MockGroupsLocalDataSource mockGroupsDataSource;
+  late MockGroupExpensesLocalDataSource mockExpensesDataSource;
 
   setUpAll(() {
     registerFallbackValue(PostgresChangeEvent.all);
-    registerFallbackValue(FakePostgresChangeFilter());
     registerFallbackValue(MockRealtimeChannel());
   });
 
   setUp(() {
-    mockSupabaseClient = MockSupabaseClient();
-    mockRealtimeChannel = MockRealtimeChannel();
-    changesController = StreamController<PostgresChangePayload>.broadcast();
+    mockClient = MockSupabaseClient();
+    mockChannel = MockRealtimeChannel();
+    mockGroupsDataSource = MockGroupsLocalDataSource();
+    mockExpensesDataSource = MockGroupExpensesLocalDataSource();
+    service = RealtimeService(
+      mockClient,
+      mockGroupsDataSource,
+      mockExpensesDataSource,
+    );
 
-    // Default stubs
+    when(() => mockClient.channel(any())).thenReturn(mockChannel);
     when(
-      () => mockSupabaseClient.channel(any()),
-    ).thenReturn(mockRealtimeChannel);
-    when(
-      () => mockRealtimeChannel.onPostgresChanges(
+      () => mockChannel.onPostgresChanges(
         event: any(named: 'event'),
         schema: any(named: 'schema'),
         table: any(named: 'table'),
-        filter: any(named: 'filter'),
         callback: any(named: 'callback'),
       ),
-    ).thenReturn(mockRealtimeChannel);
+    ).thenReturn(mockChannel);
 
-    // Stub subscribe to return self for chaining
-    when(() => mockRealtimeChannel.subscribe()).thenReturn(mockRealtimeChannel);
-
-    // Stub removeChannel to return a Future<String>
-    when(
-      () => mockSupabaseClient.removeChannel(any()),
-    ).thenAnswer((_) async => 'ok');
+    when(() => mockChannel.subscribe()).thenReturn(mockChannel);
+    when(() => mockClient.removeChannel(any())).thenAnswer((_) async => 'ok');
   });
 
-  test(
-    'subscribeToGroup subscribes to channel and listens for changes',
-    () async {
-      realtimeService = RealtimeService(mockSupabaseClient);
-      const groupId = 'test_group_id';
+  test('subscribe should initialize subscription', () {
+    service.subscribe();
 
-      realtimeService.subscribeToGroup(groupId);
-
-      verify(() => mockSupabaseClient.channel('group_$groupId')).called(1);
-      verify(
-        () => mockRealtimeChannel.onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'expenses',
-          filter: any(named: 'filter'),
-          callback: any(named: 'callback'),
-        ),
-      ).called(1);
-      verify(() => mockRealtimeChannel.subscribe()).called(1);
-    },
-  );
-
-  test('unsubscribe calls removeChannel', () {
-    realtimeService = RealtimeService(mockSupabaseClient);
-    // Subscribe first to set _channel
-    realtimeService.subscribeToGroup('test_group');
-
-    realtimeService.unsubscribe();
-
-    verify(
-      () => mockSupabaseClient.removeChannel(mockRealtimeChannel),
-    ).called(1);
+    verify(() => mockClient.channel('public:all')).called(1);
+    verify(() => mockChannel.subscribe()).called(1);
   });
 
-  test('changes stream emits payload when callback is triggered', () async {
-    // Capture the callback
-    Function? capturedCallback;
+  test('unsubscribe should remove channel', () {
+    service.subscribe();
+    service.unsubscribe();
 
-    when(
-      () => mockRealtimeChannel.onPostgresChanges(
-        event: any(named: 'event'),
-        schema: any(named: 'schema'),
-        table: any(named: 'table'),
-        filter: any(named: 'filter'),
-        callback: any(named: 'callback'),
-      ),
-    ).thenAnswer((invocation) {
-      capturedCallback = invocation.namedArguments[#callback] as Function;
-      return mockRealtimeChannel;
-    });
-
-    realtimeService = RealtimeService(mockSupabaseClient);
-    realtimeService.subscribeToGroup('test_group');
-
-    expect(capturedCallback, isNotNull);
-
-    final mockPayload = MockPostgresChangePayload();
-
-    expectLater(realtimeService.changes, emits(mockPayload));
-
-    // Invoke callback.
-    (capturedCallback as dynamic)(mockPayload);
+    verify(() => mockClient.removeChannel(mockChannel)).called(1);
   });
 }
