@@ -22,13 +22,16 @@ class GetIncomesParams extends Equatable {
   List<Object?> get props => [startDate, endDate, categoryId, accountId];
 }
 
-class GetIncomesUseCase implements UseCase<List<IncomeModel>, GetIncomesParams> {
+class GetIncomesUseCase
+    implements UseCase<List<IncomeModel>, GetIncomesParams> {
   final IncomeRepository repository;
 
   GetIncomesUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<IncomeModel>>> call(GetIncomesParams params) async {
+  Future<Either<Failure, List<IncomeModel>>> call(
+    GetIncomesParams params,
+  ) async {
     return await repository.getIncomes(
       startDate: params.startDate,
       endDate: params.endDate,

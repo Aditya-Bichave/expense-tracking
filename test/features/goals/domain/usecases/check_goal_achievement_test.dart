@@ -43,42 +43,56 @@ void main() {
 
   final tGoalAchieved = tGoalActive.copyWith(totalSaved: 100);
 
-  test('should return false if goal is not achieved and status is active', () async {
-    // Arrange
-    when(() => mockRepository.getGoalById(tGoalId))
-        .thenAnswer((_) async => Right(tGoalActive));
+  test(
+    'should return false if goal is not achieved and status is active',
+    () async {
+      // Arrange
+      when(
+        () => mockRepository.getGoalById(tGoalId),
+      ).thenAnswer((_) async => Right(tGoalActive));
 
-    // Act
-    final result = await usecase(const CheckGoalParams(goalId: tGoalId));
+      // Act
+      final result = await usecase(const CheckGoalParams(goalId: tGoalId));
 
-    // Assert
-    expect(result, const Right(false));
-    verify(() => mockRepository.getGoalById(tGoalId)).called(1);
-    verifyNever(() => mockRepository.updateGoal(any()));
-  });
+      // Assert
+      expect(result, const Right(false));
+      verify(() => mockRepository.getGoalById(tGoalId)).called(1);
+      verifyNever(() => mockRepository.updateGoal(any()));
+    },
+  );
 
-  test('should update status and return true if goal is newly achieved', () async {
-    // Arrange
-    when(() => mockRepository.getGoalById(tGoalId))
-        .thenAnswer((_) async => Right(tGoalAchieved));
-    when(() => mockRepository.updateGoal(any()))
-        .thenAnswer((_) async => Right(tGoalAchieved.copyWith(status: GoalStatus.achieved)));
+  test(
+    'should update status and return true if goal is newly achieved',
+    () async {
+      // Arrange
+      when(
+        () => mockRepository.getGoalById(tGoalId),
+      ).thenAnswer((_) async => Right(tGoalAchieved));
+      when(() => mockRepository.updateGoal(any())).thenAnswer(
+        (_) async => Right(tGoalAchieved.copyWith(status: GoalStatus.achieved)),
+      );
 
-    // Act
-    final result = await usecase(const CheckGoalParams(goalId: tGoalId));
+      // Act
+      final result = await usecase(const CheckGoalParams(goalId: tGoalId));
 
-    // Assert
-    expect(result, const Right(true));
-    verify(() => mockRepository.getGoalById(tGoalId)).called(1);
-    final captured = verify(() => mockRepository.updateGoal(captureAny())).captured.single as Goal;
-    expect(captured.status, GoalStatus.achieved);
-  });
+      // Assert
+      expect(result, const Right(true));
+      verify(() => mockRepository.getGoalById(tGoalId)).called(1);
+      final captured =
+          verify(() => mockRepository.updateGoal(captureAny())).captured.single
+              as Goal;
+      expect(captured.status, GoalStatus.achieved);
+    },
+  );
 
   test('should return false if goal is already achieved', () async {
     // Arrange
-    final tGoalAlreadyAchieved = tGoalAchieved.copyWith(status: GoalStatus.achieved);
-    when(() => mockRepository.getGoalById(tGoalId))
-        .thenAnswer((_) async => Right(tGoalAlreadyAchieved));
+    final tGoalAlreadyAchieved = tGoalAchieved.copyWith(
+      status: GoalStatus.achieved,
+    );
+    when(
+      () => mockRepository.getGoalById(tGoalId),
+    ).thenAnswer((_) async => Right(tGoalAlreadyAchieved));
 
     // Act
     final result = await usecase(const CheckGoalParams(goalId: tGoalId));
@@ -91,8 +105,9 @@ void main() {
 
   test('should return failure if goal not found', () async {
     // Arrange
-    when(() => mockRepository.getGoalById(tGoalId))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.getGoalById(tGoalId),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     final result = await usecase(const CheckGoalParams(goalId: tGoalId));

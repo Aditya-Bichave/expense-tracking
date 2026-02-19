@@ -30,9 +30,7 @@ void main() {
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: Scaffold(
-          body: SingleChildScrollView(child: section),
-        ),
+        home: Scaffold(body: SingleChildScrollView(child: section)),
       ),
     );
   }
@@ -60,7 +58,10 @@ void main() {
 
       await tester.pumpWidget(
         pumpSection(
-          GeneralSettingsSection(state: const SettingsState(), isLoading: false),
+          GeneralSettingsSection(
+            state: const SettingsState(),
+            isLoading: false,
+          ),
         ),
       );
 
@@ -127,9 +128,7 @@ void main() {
 
     testWidgets('AboutSettingsSection displays version', (tester) async {
       when(() => mockSettingsBloc.state).thenReturn(
-        const SettingsState(
-          packageInfoStatus: PackageInfoStatus.loaded,
-        ),
+        const SettingsState(packageInfoStatus: PackageInfoStatus.loaded),
       );
 
       // We need to override the state passed to the widget as well if it uses it directly
@@ -142,9 +141,7 @@ void main() {
       await tester.pumpWidget(
         pumpSection(
           AboutSettingsSection(
-            state: SettingsState(
-               packageInfoStatus: PackageInfoStatus.loaded,
-            ),
+            state: SettingsState(packageInfoStatus: PackageInfoStatus.loaded),
             isLoading: false,
           ),
         ),

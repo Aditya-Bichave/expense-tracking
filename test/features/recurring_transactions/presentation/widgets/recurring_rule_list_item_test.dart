@@ -55,8 +55,10 @@ void main() {
     expect(tapped, isTrue);
   });
 
-  testWidgets('RecurringRuleListItem renders paused icon when paused', (tester) async {
-     final rule = RecurringRule(
+  testWidgets('RecurringRuleListItem renders paused icon when paused', (
+    tester,
+  ) async {
+    final rule = RecurringRule(
       id: '1',
       description: 'Test Rule',
       amount: 100.0,
@@ -75,10 +77,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: RecurringRuleListItem(
-            rule: rule,
-            onTap: () {},
-          ),
+          body: RecurringRuleListItem(rule: rule, onTap: () {}),
         ),
       ),
     );

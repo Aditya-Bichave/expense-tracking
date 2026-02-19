@@ -39,8 +39,9 @@ void main() {
 
   test('should get recurring rule by id from repository', () async {
     // Arrange
-    when(() => mockRepository.getRecurringRuleById(tId))
-        .thenAnswer((_) async => Right(tRule));
+    when(
+      () => mockRepository.getRecurringRuleById(tId),
+    ).thenAnswer((_) async => Right(tRule));
 
     // Act
     final result = await usecase(tId);
@@ -53,8 +54,9 @@ void main() {
 
   test('should return failure if repository fails', () async {
     // Arrange
-    when(() => mockRepository.getRecurringRuleById(tId))
-        .thenAnswer((_) async => const Left(CacheFailure('Failed')));
+    when(
+      () => mockRepository.getRecurringRuleById(tId),
+    ).thenAnswer((_) async => const Left(CacheFailure('Failed')));
 
     // Act
     final result = await usecase(tId);

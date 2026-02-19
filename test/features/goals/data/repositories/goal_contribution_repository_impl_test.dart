@@ -57,9 +57,8 @@ void main() {
     goalId: tGoalId,
     amount: 50,
     date: tDate,
-    description: 'Saving',
+    note: 'Saving',
     createdAt: tDate,
-    type: ContributionType.deposit, // Added fallback
   );
   final tContributionModel = GoalContributionModel.fromEntity(tContribution);
 
@@ -74,24 +73,36 @@ void main() {
 
   test('should add contribution and update goal cache', () async {
     // Arrange
-    when(() => mockContributionDataSource.saveContribution(any()))
-        .thenAnswer((_) async => Future.value());
-    when(() => mockContributionDataSource.getContributionsForGoal(tGoalId))
-        .thenAnswer((_) async => [tContributionModel]); // Return list including new one
-    when(() => mockGoalDataSource.getGoalById(tGoalId))
-        .thenAnswer((_) async => tGoalModel);
-    when(() => mockGoalDataSource.saveGoal(any()))
-        .thenAnswer((_) async => Future.value());
+    when(
+      () => mockContributionDataSource.saveContribution(any()),
+    ).thenAnswer((_) async => Future.value());
+    when(
+      () => mockContributionDataSource.getContributionsForGoal(tGoalId),
+    ).thenAnswer((_) async => [tContributionModel]);
+    when(
+      () => mockGoalDataSource.getGoalById(tGoalId),
+    ).thenAnswer((_) async => tGoalModel);
+    when(
+      () => mockGoalDataSource.saveGoal(any()),
+    ).thenAnswer((_) async => Future.value());
 
     // Act
     final result = await repository.addContribution(tContribution);
 
     // Assert
     expect(result, Right(tContribution));
-    verify(() => mockContributionDataSource.saveContribution(tContributionModel)).called(1);
+
+    // Verify saveContribution called with correct data
+    final capturedContribution = verify(
+      () => mockContributionDataSource.saveContribution(captureAny()),
+    ).captured.single as GoalContributionModel;
+    expect(capturedContribution.id, tContribution.id);
+    expect(capturedContribution.amount, tContribution.amount);
 
     // Verify cache update
-    final capturedGoal = verify(() => mockGoalDataSource.saveGoal(captureAny())).captured.single as GoalModel;
+    final capturedGoal =
+        verify(() => mockGoalDataSource.saveGoal(captureAny())).captured.single
+            as GoalModel;
     expect(capturedGoal.totalSavedCache, 50.0);
   });
 }

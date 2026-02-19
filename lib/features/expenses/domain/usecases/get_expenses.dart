@@ -22,13 +22,16 @@ class GetExpensesParams extends Equatable {
   List<Object?> get props => [startDate, endDate, categoryId, accountId];
 }
 
-class GetExpensesUseCase implements UseCase<List<ExpenseModel>, GetExpensesParams> {
+class GetExpensesUseCase
+    implements UseCase<List<ExpenseModel>, GetExpensesParams> {
   final ExpenseRepository repository;
 
   GetExpensesUseCase(this.repository);
 
   @override
-  Future<Either<Failure, List<ExpenseModel>>> call(GetExpensesParams params) async {
+  Future<Either<Failure, List<ExpenseModel>>> call(
+    GetExpensesParams params,
+  ) async {
     return await repository.getExpenses(
       startDate: params.startDate,
       endDate: params.endDate,

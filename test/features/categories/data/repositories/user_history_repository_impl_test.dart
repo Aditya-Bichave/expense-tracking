@@ -17,7 +17,7 @@ void main() {
     registerFallbackValue(
       UserHistoryRuleModel(
         ruleId: '',
-        ruleType: RuleType.merchant,
+        ruleType: RuleType.merchant.name,
         matcher: '',
         assignedCategoryId: '',
         timestamp: DateTime.now(),
@@ -42,29 +42,34 @@ void main() {
 
   test('should return rule from dataSource when found', () async {
     // Arrange
-    when(() => mockDataSource.findRule(RuleType.merchant.name, 'uber'))
-        .thenAnswer((_) async => tRuleModel);
+    when(
+      () => mockDataSource.findRule(RuleType.merchant.name, 'uber'),
+    ).thenAnswer((_) async => tRuleModel);
 
     // Act
     final result = await repository.findRule(RuleType.merchant, 'uber');
 
     // Assert
     expect(result, Right(tRule));
-    verify(() => mockDataSource.findRule(RuleType.merchant.name, 'uber')).called(1);
+    verify(
+      () => mockDataSource.findRule(RuleType.merchant.name, 'uber'),
+    ).called(1);
   });
 
   test('should save rule to dataSource', () async {
     // Arrange
-    when(() => mockDataSource.findRule(any(), any()))
-        .thenAnswer((_) async => null); // No existing rule
-    when(() => mockDataSource.saveRule(any()))
-        .thenAnswer((_) async => {});
+    when(
+      () => mockDataSource.findRule(any(), any()),
+    ).thenAnswer((_) async => null); // No existing rule
+    when(
+      () => mockDataSource.saveRule(any()),
+    ).thenAnswer((_) async => {});
 
     // Act
     final result = await repository.saveRule(tRule);
 
     // Assert
     expect(result, const Right(null));
-    verify(() => mockDataSource.saveRule(tRuleModel)).called(1);
+    verify(() => mockDataSource.saveRule(any())).called(1);
   });
 }

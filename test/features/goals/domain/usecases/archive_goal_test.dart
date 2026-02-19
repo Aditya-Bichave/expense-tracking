@@ -29,8 +29,9 @@ void main() {
 
   test('should archive goal using repository', () async {
     // Arrange
-    when(() => mockGoalRepository.archiveGoal(any()))
-        .thenAnswer((_) async => Right(tGoal));
+    when(
+      () => mockGoalRepository.archiveGoal(any()),
+    ).thenAnswer((_) async => Right(tGoal));
 
     // Act
     final result = await usecase(const ArchiveGoalParams(id: tGoalId));

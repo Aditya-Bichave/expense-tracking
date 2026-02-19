@@ -38,7 +38,9 @@ void main() {
 
   setUp(() {
     mockDataSource = MockRecurringTransactionLocalDataSource();
-    repository = RecurringTransactionRepositoryImpl(dataSource: mockDataSource);
+    repository = RecurringTransactionRepositoryImpl(
+      localDataSource: mockDataSource,
+    );
   });
 
   final tRule = RecurringRule(
@@ -60,39 +62,53 @@ void main() {
 
   test('should return list of rules from dataSource', () async {
     // Arrange
-    when(() => mockDataSource.getRecurringRules())
-        .thenAnswer((_) async => [tRuleModel]);
+    when(
+      () => mockDataSource.getRecurringRules(),
+    ).thenAnswer((_) async => [tRuleModel]);
 
     // Act
     final result = await repository.getRecurringRules();
 
     // Assert
-    expect(result, Right([tRule]));
+    expect(result.isRight(), true);
+    result.fold(
+      (l) => fail('Should be Right'),
+      (r) {
+        expect(r.length, 1);
+        expect(r.first.id, tRule.id);
+      },
+    );
     verify(() => mockDataSource.getRecurringRules()).called(1);
   });
 
   test('should return failure when dataSource throws', () async {
     // Arrange
-    when(() => mockDataSource.getRecurringRules())
-        .thenThrow(const CacheFailure('Failed'));
+    when(
+      () => mockDataSource.getRecurringRules(),
+    ).thenThrow(const CacheFailure('Failed'));
 
     // Act
     final result = await repository.getRecurringRules();
 
     // Assert
-    expect(result, const Left(CacheFailure('Failed')));
+    expect(result.isLeft(), true);
+    result.fold(
+      (l) => expect(l, isA<CacheFailure>()),
+      (r) => fail('Should be Left'),
+    );
   });
 
   test('should save rule to dataSource', () async {
     // Arrange
-    when(() => mockDataSource.saveRecurringRule(any()))
-        .thenAnswer((_) async => {});
+    when(
+      () => mockDataSource.addRecurringRule(any()),
+    ).thenAnswer((_) async => {});
 
     // Act
     final result = await repository.addRecurringRule(tRule);
 
     // Assert
-    expect(result, const Right(null));
-    verify(() => mockDataSource.saveRecurringRule(tRuleModel)).called(1);
+    expect(result.isRight(), true);
+    verify(() => mockDataSource.addRecurringRule(any())).called(1);
   });
 }

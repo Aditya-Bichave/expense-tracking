@@ -19,8 +19,9 @@ void main() {
 
   test('should call auditGoalTotals on repository', () async {
     // Arrange
-    when(() => mockRepository.auditGoalTotals())
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.auditGoalTotals(),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     final result = await usecase(const NoParams());

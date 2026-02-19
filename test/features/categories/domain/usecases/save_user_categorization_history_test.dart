@@ -47,9 +47,9 @@ void main() {
   test('should save merchant rule when merchantId is provided', () async {
     // Arrange
     when(() => mockUuid.v4()).thenReturn('rule1');
-    when(() => mockRepository.saveRule(any())).thenAnswer(
-      (_) async => const Right(null),
-    );
+    when(
+      () => mockRepository.saveRule(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     final params = SaveUserCategorizationHistoryParams(
       transactionData: const TransactionMatchData(
@@ -75,9 +75,9 @@ void main() {
   test('should save description rule when merchantId is missing', () async {
     // Arrange
     when(() => mockUuid.v4()).thenReturn('rule2');
-    when(() => mockRepository.saveRule(any())).thenAnswer(
-      (_) async => const Right(null),
-    );
+    when(
+      () => mockRepository.saveRule(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     final params = SaveUserCategorizationHistoryParams(
       transactionData: const TransactionMatchData(

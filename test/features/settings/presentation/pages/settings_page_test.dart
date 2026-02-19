@@ -40,12 +40,12 @@ void main() {
 
   group('SettingsPage Tests', () {
     testWidgets('renders loading state when initial', (tester) async {
-      when(() => mockSettingsBloc.state).thenReturn(
-        const SettingsState(status: SettingsStatus.initial),
-      );
-      when(() => mockDataManagementBloc.state).thenReturn(
-        const DataManagementState(),
-      );
+      when(
+        () => mockSettingsBloc.state,
+      ).thenReturn(const SettingsState(status: SettingsStatus.initial));
+      when(
+        () => mockDataManagementBloc.state,
+      ).thenReturn(const DataManagementState());
 
       await tester.pumpWidget(createWidgetUnderTest());
 
@@ -53,12 +53,12 @@ void main() {
     });
 
     testWidgets('renders sections when loaded', (tester) async {
-      when(() => mockSettingsBloc.state).thenReturn(
-        const SettingsState(status: SettingsStatus.loaded),
-      );
-      when(() => mockDataManagementBloc.state).thenReturn(
-        const DataManagementState(),
-      );
+      when(
+        () => mockSettingsBloc.state,
+      ).thenReturn(const SettingsState(status: SettingsStatus.loaded));
+      when(
+        () => mockDataManagementBloc.state,
+      ).thenReturn(const DataManagementState());
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -99,9 +99,9 @@ void main() {
     testWidgets('shows loading overlay when data management is loading', (
       tester,
     ) async {
-      when(() => mockSettingsBloc.state).thenReturn(
-        const SettingsState(status: SettingsStatus.loaded),
-      );
+      when(
+        () => mockSettingsBloc.state,
+      ).thenReturn(const SettingsState(status: SettingsStatus.loaded));
       when(() => mockDataManagementBloc.state).thenReturn(
         const DataManagementState(status: DataManagementStatus.loading),
       );
@@ -110,7 +110,10 @@ void main() {
       await tester.pump(); // Pump frame
 
       expect(find.text('Processing data...'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget); // One in overlay
+      expect(
+        find.byType(CircularProgressIndicator),
+        findsOneWidget,
+      ); // One in overlay
     });
 
     testWidgets('shows snackbar on settings error', (tester) async {
@@ -124,9 +127,9 @@ void main() {
         ]),
         initialState: const SettingsState(),
       );
-      when(() => mockDataManagementBloc.state).thenReturn(
-        const DataManagementState(),
-      );
+      when(
+        () => mockDataManagementBloc.state,
+      ).thenReturn(const DataManagementState());
 
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
@@ -135,9 +138,9 @@ void main() {
     });
 
     testWidgets('shows snackbar on data management message', (tester) async {
-      when(() => mockSettingsBloc.state).thenReturn(
-        const SettingsState(status: SettingsStatus.loaded),
-      );
+      when(
+        () => mockSettingsBloc.state,
+      ).thenReturn(const SettingsState(status: SettingsStatus.loaded));
       whenListen(
         mockDataManagementBloc,
         Stream.fromIterable([

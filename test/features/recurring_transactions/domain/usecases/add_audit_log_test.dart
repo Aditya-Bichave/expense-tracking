@@ -43,8 +43,9 @@ void main() {
 
   test('should add audit log to repository', () async {
     // Arrange
-    when(() => mockRepository.addAuditLog(any()))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockRepository.addAuditLog(any()),
+    ).thenAnswer((_) async => const Right(null));
 
     // Act
     final result = await usecase(tLog);

@@ -23,12 +23,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(
-      AssetAccountModel(
-        id: '',
-        name: '',
-        typeIndex: 0,
-        initialBalance: 0,
-      ),
+      AssetAccountModel(id: '', name: '', typeIndex: 0, initialBalance: 0),
     );
   });
 
@@ -48,29 +43,34 @@ void main() {
     name: 'Cash',
     type: AssetType.cash,
     initialBalance: 100,
-    currentBalance: 100, // Should be recalculated
+    currentBalance: 100,
   );
   final tAccountModel = AssetAccountModel.fromEntity(tAccount);
 
   test('should add account and recalculate balance', () async {
     // Arrange
-    when(() => mockDataSource.addAssetAccount(any()))
-        .thenAnswer((_) async => tAccountModel);
-    when(() => mockIncomeRepository.getTotalIncomeForAccount('1'))
-        .thenAnswer((_) async => const Right(50.0));
-    when(() => mockExpenseRepository.getTotalExpensesForAccount('1'))
-        .thenAnswer((_) async => const Right(20.0));
+    when(
+      () => mockDataSource.addAssetAccount(any()),
+    ).thenAnswer((_) async => tAccountModel);
+    when(
+      () => mockIncomeRepository.getTotalIncomeForAccount('1'),
+    ).thenAnswer((_) async => const Right(50.0));
+    when(
+      () => mockExpenseRepository.getTotalExpensesForAccount('1'),
+    ).thenAnswer((_) async => const Right(20.0));
 
     // Act
     final result = await repository.addAssetAccount(tAccount);
 
     // Assert
     // 100 + 50 - 20 = 130
-
     expect(result.isRight(), true);
     result.fold(
-      (l) => fail('Should be right'),
-      (r) => expect(r.currentBalance, 130.0),
+      (l) => fail('Should be Right, but was Left: $l'),
+      (r) {
+        expect(r.currentBalance, 130.0);
+        expect(r.id, tAccount.id);
+      },
     );
 
     verify(() => mockDataSource.addAssetAccount(any())).called(1);
@@ -78,12 +78,15 @@ void main() {
 
   test('should delete account if no transactions linked', () async {
     // Arrange
-    when(() => mockIncomeRepository.getIncomes(accountId: '1'))
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockExpenseRepository.getExpenses(accountId: '1'))
-        .thenAnswer((_) async => const Right([]));
-    when(() => mockDataSource.deleteAssetAccount('1'))
-        .thenAnswer((_) async => Future.value());
+    when(
+      () => mockIncomeRepository.getIncomes(accountId: '1'),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockExpenseRepository.getExpenses(accountId: '1'),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockDataSource.deleteAssetAccount('1'),
+    ).thenAnswer((_) async => Future.value());
 
     // Act
     final result = await repository.deleteAssetAccount('1');

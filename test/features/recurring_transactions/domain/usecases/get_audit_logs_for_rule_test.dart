@@ -30,14 +30,19 @@ void main() {
 
   test('should get audit logs for rule from repository', () async {
     // Arrange
-    when(() => mockRepository.getAuditLogsForRule(tRuleId))
-        .thenAnswer((_) async => Right([tLog]));
+    when(
+      () => mockRepository.getAuditLogsForRule(tRuleId),
+    ).thenAnswer((_) async => Right([tLog]));
 
     // Act
     final result = await usecase(tRuleId);
 
     // Assert
-    expect(result.getOrElse(() => []), [tLog]);
+    expect(result.isRight(), true);
+    result.fold(
+      (l) => fail('Should be Right'),
+      (r) => expect(r, [tLog]),
+    );
     verify(() => mockRepository.getAuditLogsForRule(tRuleId)).called(1);
     verifyNoMoreInteractions(mockRepository);
   });

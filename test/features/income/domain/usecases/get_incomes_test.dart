@@ -48,7 +48,11 @@ void main() {
     );
 
     // Assert
-    expect(result, Right([tIncomeModel]));
+    expect(result.isRight(), true);
+    result.fold(
+      (l) => fail('Should be Right'),
+      (r) => expect(r, [tIncomeModel]),
+    );
     verify(
       () => mockIncomeRepository.getIncomes(
         startDate: tDate,

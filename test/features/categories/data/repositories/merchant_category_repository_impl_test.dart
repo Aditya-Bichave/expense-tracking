@@ -22,8 +22,9 @@ void main() {
 
   test('should return categoryId from dataSource when success', () async {
     // Arrange
-    when(() => mockDataSource.getDefaultCategoryId(tMerchantId))
-        .thenAnswer((_) async => tCategoryId);
+    when(
+      () => mockDataSource.getDefaultCategoryId(tMerchantId),
+    ).thenAnswer((_) async => tCategoryId);
 
     // Act
     final result = await repository.getDefaultCategoryId(tMerchantId);
@@ -33,16 +34,20 @@ void main() {
     verify(() => mockDataSource.getDefaultCategoryId(tMerchantId)).called(1);
   });
 
-  test('should return CacheFailure when dataSource throws CacheFailure', () async {
-    // Arrange
-    when(() => mockDataSource.getDefaultCategoryId(tMerchantId))
-        .thenThrow(const CacheFailure('Failed'));
+  test(
+    'should return CacheFailure when dataSource throws CacheFailure',
+    () async {
+      // Arrange
+      when(
+        () => mockDataSource.getDefaultCategoryId(tMerchantId),
+      ).thenThrow(const CacheFailure('Failed'));
 
-    // Act
-    final result = await repository.getDefaultCategoryId(tMerchantId);
+      // Act
+      final result = await repository.getDefaultCategoryId(tMerchantId);
 
-    // Assert
-    expect(result, const Left(CacheFailure('Failed')));
-    verify(() => mockDataSource.getDefaultCategoryId(tMerchantId)).called(1);
-  });
+      // Assert
+      expect(result, const Left(CacheFailure('Failed')));
+      verify(() => mockDataSource.getDefaultCategoryId(tMerchantId)).called(1);
+    },
+  );
 }

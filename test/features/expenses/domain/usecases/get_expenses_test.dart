@@ -1,6 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/get_expenses.dart';
@@ -50,7 +48,11 @@ void main() {
     );
 
     // Assert
-    expect(result, Right([tExpenseModel]));
+    expect(result.isRight(), true);
+    result.fold(
+      (l) => fail('Should be Right'),
+      (r) => expect(r, [tExpenseModel]),
+    );
     verify(
       () => mockExpenseRepository.getExpenses(
         startDate: tDate,

@@ -86,11 +86,13 @@ void main() {
   }
 
   testWidgets('AddEditRecurringRulePage renders correctly', (tester) async {
-    when(() => mockBloc.state).thenReturn(AddEditRecurringRuleState(startDate: DateTime.now()));
-    when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
     when(
-      () => mockCategoryManagementBloc.state,
-    ).thenReturn(const CategoryManagementState(predefinedExpenseCategories: [tCategory]));
+      () => mockBloc.state,
+    ).thenReturn(AddEditRecurringRuleState(startDate: DateTime.now()));
+    when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
+    when(() => mockCategoryManagementBloc.state).thenReturn(
+      const CategoryManagementState(predefinedExpenseCategories: [tCategory]),
+    );
     when(
       () => mockAccountListBloc.state,
     ).thenReturn(AccountListLoaded(accounts: [tAccount]));
@@ -98,7 +100,9 @@ void main() {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
-    debugPrint('Found AddEditRecurringRuleView: ${find.byType(AddEditRecurringRuleView).evaluate().length}');
+    debugPrint(
+      'Found AddEditRecurringRuleView: ${find.byType(AddEditRecurringRuleView).evaluate().length}',
+    );
     verify(() => mockBloc.state).called(greaterThan(0));
 
     expect(find.text('Add Recurring Rule'), findsOneWidget);
@@ -107,8 +111,12 @@ void main() {
     expect(find.text('Select Account'), findsOneWidget);
   });
 
-  testWidgets('AddEditRecurringRulePage toggles transaction type', (tester) async {
-    when(() => mockBloc.state).thenReturn(AddEditRecurringRuleState(startDate: DateTime.now()));
+  testWidgets('AddEditRecurringRulePage toggles transaction type', (
+    tester,
+  ) async {
+    when(
+      () => mockBloc.state,
+    ).thenReturn(AddEditRecurringRuleState(startDate: DateTime.now()));
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
     when(
       () => mockCategoryManagementBloc.state,
@@ -122,7 +130,8 @@ void main() {
 
     // Tap Income
     await tester.tap(find.text('Income'));
-    verify(() => mockBloc.add(const TransactionTypeChanged(TransactionType.income)))
-        .called(1);
+    verify(
+      () => mockBloc.add(const TransactionTypeChanged(TransactionType.income)),
+    ).called(1);
   });
 }

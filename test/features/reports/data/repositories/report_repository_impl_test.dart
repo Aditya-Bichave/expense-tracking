@@ -21,7 +21,8 @@ class MockIncomeRepository extends Mock implements IncomeRepository {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
-class MockAssetAccountRepository extends Mock implements AssetAccountRepository {}
+class MockAssetAccountRepository extends Mock
+    implements AssetAccountRepository {}
 
 class MockBudgetRepository extends Mock implements BudgetRepository {}
 
@@ -91,8 +92,9 @@ void main() {
       ),
     ).thenAnswer((_) async => Right([expense]));
 
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => const Right([tCategory]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => const Right([tCategory]));
 
     // Act
     final result = await repository.getSpendingByCategory(
@@ -103,15 +105,12 @@ void main() {
 
     // Assert
     expect(result.isRight(), true);
-    result.fold(
-      (l) => fail('Should be right'),
-      (data) {
-        expect(data.currentTotalSpending, 100.0);
-        expect(data.spendingByCategory.length, 1);
-        expect(data.spendingByCategory.first.categoryId, tCategoryId);
-        expect(data.spendingByCategory.first.categoryName, 'Food');
-      },
-    );
+    result.fold((l) => fail('Should be right'), (data) {
+      expect(data.currentTotalSpending, 100.0);
+      expect(data.spendingByCategory.length, 1);
+      expect(data.spendingByCategory.first.categoryId, tCategoryId);
+      expect(data.spendingByCategory.first.categoryName, 'Food');
+    });
   });
 
   test('getSpendingByCategory returns empty if no expenses', () async {
@@ -133,12 +132,9 @@ void main() {
 
     // Assert
     expect(result.isRight(), true);
-    result.fold(
-      (l) => fail('Should be right'),
-      (data) {
-        expect(data.currentTotalSpending, 0.0);
-        expect(data.spendingByCategory, isEmpty);
-      },
-    );
+    result.fold((l) => fail('Should be right'), (data) {
+      expect(data.currentTotalSpending, 0.0);
+      expect(data.spendingByCategory, isEmpty);
+    });
   });
 }
