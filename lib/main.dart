@@ -233,9 +233,9 @@ Future<void> main() async {
           lazy: false,
         ),
         // BlocProvider<SummaryBloc>(
-          // create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
-          // lazy: true,
-//        ),
+        // create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
+        // lazy: true,
+        //        ),
         BlocProvider<AuthBloc>(
           create: (context) => sl<AuthBloc>()..add(AuthCheckStatus()),
           lazy: false,
