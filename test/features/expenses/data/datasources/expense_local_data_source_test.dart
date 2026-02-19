@@ -50,7 +50,7 @@ void main() {
       when(() => mockBox.put(any(), any())).thenThrow(Exception('Hive Error'));
 
       // Act & Assert
-      expect(
+      await expectLater(
         () => dataSource.addExpense(tExpenseModel),
         throwsA(isA<CacheFailure>()),
       );
@@ -74,7 +74,10 @@ void main() {
       when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
 
       // Act & Assert
-      expect(() => dataSource.deleteExpense('1'), throwsA(isA<CacheFailure>()));
+      await expectLater(
+        () => dataSource.deleteExpense('1'),
+        throwsA(isA<CacheFailure>()),
+      );
     });
   });
 
@@ -107,7 +110,7 @@ void main() {
       when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
 
       // Act & Assert
-      expect(
+      await expectLater(
         () => dataSource.getExpenseById('1'),
         throwsA(isA<CacheFailure>()),
       );
@@ -134,7 +137,7 @@ void main() {
       when(() => mockBox.containsKey(any())).thenReturn(false);
 
       // Act & Assert
-      expect(
+      await expectLater(
         () => dataSource.updateExpense(tExpenseModel),
         throwsA(isA<CacheFailure>()),
       );

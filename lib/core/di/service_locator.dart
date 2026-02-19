@@ -8,7 +8,9 @@ import 'package:get_it/get_it.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/main.dart';
+
 import 'package:expense_tracker/core/events/data_change_event.dart';
 
 import 'package:expense_tracker/core/di/service_configurations/settings_dependencies.dart';
