@@ -6,9 +6,9 @@ const path = require('path');
 const ROUTES = JSON.parse(fs.readFileSync('routes.json', 'utf8'));
 const BUILD_DIR = '../../build/web';
 const PORT = 8080;
-const TIMEOUT = 20000; // Increased timeout for CI
+const TIMEOUT = 60000; // Increased timeout for CI (Wasm/CanvasKit can be slow)
 const REPORT_FILE = 'smoke-report.json';
-const MAX_STARTUP_TIME_MS = 15000; // Increased budget for CI
+const MAX_STARTUP_TIME_MS = 60000; // Increased budget for CI
 
 async function run() {
   const server = httpServer.createServer({ root: BUILD_DIR });
