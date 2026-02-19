@@ -1,14 +1,15 @@
-// lib/main.dart
 import 'dart:async';
 import 'dart:io';
+
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/constants/hive_constants.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
-// Removed DemoModeService import, not directly needed here
+import 'package:expense_tracker/core/events/data_change_event.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/utils/bloc_observer.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
@@ -22,11 +23,11 @@ import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
+// import package:expense_tracker/features/reports/presentation/bloc/summary/summary_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/router.dart';
-// Removed InitialSetupScreen import, handled by router
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -39,15 +40,21 @@ import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 export 'package:expense_tracker/core/utils/logger.dart';
 
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/features/groups/data/models/group_model.dart';
+import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
+import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+
 File? _startupLogFile;
 
 Future<void> _initFileLogger() async {
   try {
     final dir = await getApplicationDocumentsDirectory();
     _startupLogFile = File('${dir.path}/startup.log');
-  } catch (_) {
-    // If path_provider fails, continue without file logging
-  }
+  } catch (_) {}
 }
 
 Future<void> _writeStartupLog(String message) async {
@@ -57,9 +64,7 @@ Future<void> _writeStartupLog(String message) async {
       final timestamp = DateTime.now().toIso8601String();
       await file.writeAsString('$timestamp $message\n', mode: FileMode.append);
     }
-  } catch (_) {
-    // Swallow errors to avoid failing startup logging
-  }
+  } catch (_) {}
 }
 
 Future<void> _runMigrations(int fromVersion) async {
@@ -67,7 +72,6 @@ Future<void> _runMigrations(int fromVersion) async {
     'Running Hive migrations from v$fromVersion to '
     '${HiveConstants.dataVersion}',
   );
-  // TODO: Implement actual migration logic when data models change.
 }
 
 Future<void> main() async {
@@ -94,7 +98,9 @@ Future<void> main() async {
       );
     }
 
-    // Register All Adapters BEFORE opening boxes
+    log.info("Initializing Supabase...");
+    await SupabaseClientProvider.initialize();
+
     Hive.registerAdapter(ExpenseModelAdapter());
     Hive.registerAdapter(AssetAccountModelAdapter());
     Hive.registerAdapter(IncomeModelAdapter());
@@ -105,6 +111,16 @@ Future<void> main() async {
     Hive.registerAdapter(GoalContributionModelAdapter());
     Hive.registerAdapter(RecurringRuleModelAdapter());
     Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
+
+    Hive.registerAdapter(OutboxItemAdapter());
+    Hive.registerAdapter(OutboxStatusAdapter());
+    Hive.registerAdapter(OpTypeAdapter());
+    Hive.registerAdapter(EntityTypeAdapter());
+    Hive.registerAdapter(GroupModelAdapter());
+    Hive.registerAdapter(GroupMemberModelAdapter());
+    Hive.registerAdapter(GroupExpenseModelAdapter());
+    Hive.registerAdapter(ExpensePayerModelAdapter());
+    Hive.registerAdapter(ExpenseSplitModelAdapter());
 
     log.info("Opening Hive boxes...");
     final expenseBox = await Hive.openBox<ExpenseModel>(
@@ -136,6 +152,18 @@ Future<void> main() async {
         await Hive.openBox<RecurringRuleAuditLogModel>(
           HiveConstants.recurringRuleAuditLogBoxName,
         );
+
+    final outboxBox = await Hive.openBox<OutboxItem>(
+      HiveConstants.outboxBoxName,
+    );
+    final groupBox = await Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
+    final groupMemberBox = await Hive.openBox<GroupMemberModel>(
+      HiveConstants.groupMemberBoxName,
+    );
+    final groupExpenseBox = await Hive.openBox<GroupExpenseModel>(
+      HiveConstants.groupExpenseBoxName,
+    );
+
     log.info("All Hive boxes opened.");
     log.info("SharedPreferences instance obtained.");
 
@@ -151,6 +179,10 @@ Future<void> main() async {
       contributionBox: contributionBox,
       recurringRuleBox: recurringRuleBox,
       recurringRuleAuditLogBox: recurringRuleAuditLogBox,
+      outboxBox: outboxBox,
+      groupBox: groupBox,
+      groupMemberBox: groupMemberBox,
+      groupExpenseBox: groupExpenseBox,
     );
     log.info("Hive, SharedPreferences, and Service Locator initialized.");
   } catch (e, s) {
@@ -163,22 +195,20 @@ Future<void> main() async {
     return;
   }
 
-  // --- Global Bloc Providers ---
   runApp(
     MultiBlocProvider(
       providers: [
-        // SettingsBloc MUST be provided early for Router redirect logic
         BlocProvider<SettingsBloc>(
           create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
-          lazy: false, // Load settings immediately
+          lazy: false,
         ),
         BlocProvider<DataManagementBloc>(
           create: (context) => sl<DataManagementBloc>(),
-          lazy: true,
+          // lazy: true,
         ),
         BlocProvider<AccountListBloc>(
           create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
-          lazy: false, // Load immediately for dashboard dependencies
+          lazy: false,
         ),
         BlocProvider<TransactionListBloc>(
           create: (context) =>
@@ -188,7 +218,7 @@ Future<void> main() async {
         BlocProvider<CategoryManagementBloc>(
           create: (context) =>
               sl<CategoryManagementBloc>()..add(const LoadCategories()),
-          lazy: true,
+          // lazy: true,
         ),
         BlocProvider<BudgetListBloc>(
           create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
@@ -202,12 +232,16 @@ Future<void> main() async {
           create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
           lazy: false,
         ),
-        BlocProvider<SummaryBloc>(
-          create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
-          lazy: true,
+        // BlocProvider<SummaryBloc>(
+          // create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
+          // lazy: true,
+//        ),
+        BlocProvider<AuthBloc>(
+          create: (context) => sl<AuthBloc>()..add(AuthCheckStatus()),
+          lazy: false,
         ),
       ],
-      child: const MyApp(), // Use MyApp directly, router handles initial screen
+      child: const MyApp(),
     ),
   );
 }
@@ -218,7 +252,6 @@ class InitializationErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Provide default theme data even if settings failed
     final defaultThemePair = AppTheme.buildTheme(
       SettingsState.defaultUIMode,
       SettingsState.defaultPaletteIdentifier,
@@ -261,7 +294,6 @@ class InitializationErrorApp extends StatelessWidget {
   }
 }
 
-// --- MyApp (Consumes Router) ---
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 

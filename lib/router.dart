@@ -1,7 +1,7 @@
 // lib/router.dart
 import 'dart:async';
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/screens/initial_setup_screen.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_account_page.dart';
@@ -34,26 +34,33 @@ import 'package:expense_tracker/features/reports/presentation/pages/goal_progres
 import 'package:expense_tracker/features/reports/presentation/pages/income_vs_expense_page.dart';
 import 'package:expense_tracker/features/reports/presentation/pages/spending_by_category_page.dart';
 import 'package:expense_tracker/features/reports/presentation/pages/spending_over_time_page.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/add_edit_transaction_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/main_shell.dart';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-// Simple Listenable that refreshes GoRouter when the stream emits
-class GoRouterRefreshStream extends ChangeNotifier {
-  GoRouterRefreshStream(Stream<dynamic> stream) {
-    _subscription = stream.listen((_) => notifyListeners());
-  }
+import 'package:expense_tracker/features/auth/presentation/pages/login_page.dart';
+import 'package:expense_tracker/features/auth/presentation/pages/verify_otp_page.dart';
+import 'package:expense_tracker/features/groups/presentation/pages/group_list_page.dart';
+import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
 
+class GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
+
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
 
   @override
   void dispose() {
@@ -62,138 +69,65 @@ class GoRouterRefreshStream extends ChangeNotifier {
   }
 }
 
-// --- Navigator Keys ---
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
-  debugLabel: 'root',
-);
-final GlobalKey<NavigatorState> _shellNavigatorKeyDashboard =
-    GlobalKey<NavigatorState>(debugLabel: 'shellDashboard');
-final GlobalKey<NavigatorState> _shellNavigatorKeyTransactions =
-    GlobalKey<NavigatorState>(debugLabel: 'shellTransactions');
-final GlobalKey<NavigatorState> _shellNavigatorKeyBudgetsCats =
-    GlobalKey<NavigatorState>(debugLabel: 'shellBudgetsCats');
-final GlobalKey<NavigatorState> _shellNavigatorKeyAccounts =
-    GlobalKey<NavigatorState>(debugLabel: 'shellAccounts');
-final GlobalKey<NavigatorState> _shellNavigatorKeyRecurring =
-    GlobalKey<NavigatorState>(debugLabel: 'shellRecurring');
-final GlobalKey<NavigatorState> _shellNavigatorKeySettings =
-    GlobalKey<NavigatorState>(debugLabel: 'shellSettings');
-
-// --- Router Configuration ---
 class AppRouter {
-  static final SettingsBloc _settingsBloc = sl<SettingsBloc>();
+  static final GlobalKey<NavigatorState> _rootNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'root');
 
   static final GoRouter router = GoRouter(
-    // --- FIXED: Set initialLocation to /setup ---
-    initialLocation: RouteNames.initialSetup,
-    // --- END FIXED ---
     navigatorKey: _rootNavigatorKey,
-    debugLogDiagnostics: kDebugMode,
-    observers: [GoRouterObserver()],
-    refreshListenable: GoRouterRefreshStream(_settingsBloc.stream),
-    redirect: (BuildContext context, GoRouterState state) {
-      final settingsState = _settingsBloc.state;
-      final bool isInDemo = settingsState.isInDemoMode;
-      final bool isInitialized =
-          settingsState.status == SettingsStatus.loaded ||
-          settingsState.status == SettingsStatus.error;
-      final bool setupSkipped = settingsState.setupSkipped;
+    initialLocation: RouteNames.initialSetup,
+    refreshListenable: GoRouterRefreshStream(sl<SettingsBloc>().stream),
+    redirect: (context, state) {
+      final settingsState = sl<SettingsBloc>().state;
+      final isSetupCompleted = settingsState.isSetupCompleted;
+      final isLoggingIn = state.uri.path == RouteNames.initialSetup;
 
-      const bool isAuthenticated = false; // MOCK
+      if (!isSetupCompleted && !isLoggingIn) {
+        return RouteNames.initialSetup;
+      }
 
-      final String currentRoute = state.matchedLocation;
-      final bool isGoingToInitialSetup =
-          currentRoute == RouteNames.initialSetup;
-      final bool isGoingToShellRoute =
-          currentRoute == RouteNames.dashboard ||
-          currentRoute == RouteNames.transactionsList ||
-          currentRoute == RouteNames.budgetsAndCats ||
-          currentRoute == RouteNames.accounts ||
-          currentRoute == RouteNames.settings ||
-          currentRoute.startsWith(RouteNames.recurring);
-
-      log.info(
-        "[RouterRedirect] To: $currentRoute, IsInDemo: $isInDemo, IsAuth: $isAuthenticated, IsInit: $isInitialized, SetupSkipped: $setupSkipped",
-      );
-
-      if (setupSkipped && isGoingToInitialSetup) {
-        log.info(
-          "[RouterRedirect] Setup skipped, redirecting from InitialSetup to Dashboard.",
-        );
+      if (isSetupCompleted && isLoggingIn) {
         return RouteNames.dashboard;
       }
 
-      // Don't redirect if settings aren't initialized unless going to setup
-      if (!isInitialized && !isGoingToInitialSetup) {
-        log.info(
-          "[RouterRedirect] Settings not initialized, staying put (or default).",
-        );
-        return null;
-      }
-
-      // If in demo mode, allow access to shell routes, redirect away from setup
-      if (isInDemo) {
-        if (isGoingToInitialSetup) {
-          log.info(
-            "[RouterRedirect] In Demo Mode, redirecting from InitialSetup to Dashboard.",
-          );
-          return RouteNames.dashboard;
-        }
-        log.info(
-          "[RouterRedirect] In Demo Mode, allowing access to $currentRoute.",
-        );
-        return null; // No redirection needed
-      }
-
-      // If NOT authenticated AND NOT in demo mode
-      if (!isAuthenticated && !isInDemo) {
-        // If already on the setup page, allow it
-        if (isGoingToInitialSetup) {
-          log.info(
-            "[RouterRedirect] Not authenticated, already on InitialSetup. Allowing.",
-          );
-          return null;
-        }
-        // If setup was skipped AND trying to access a shell route, allow it
-        else if (setupSkipped && isGoingToShellRoute) {
-          log.info(
-            "[RouterRedirect] Not authenticated, but setup was skipped. Allowing navigation to $currentRoute.",
-          );
-          return null; // Allow navigation
-        }
-        // Otherwise, redirect to InitialSetup
-        else {
-          log.info(
-            "[RouterRedirect] Not authenticated & setup not skipped/not going to setup, redirecting to InitialSetup.",
-          );
-          return RouteNames.initialSetup;
-        }
-      }
-
-      // Default: Allow navigation to the intended route (if reached here, conditions are met)
-      log.info("[RouterRedirect] Allowing access to $currentRoute.");
       return null;
     },
+    observers: [GoRouterObserver()],
     routes: [
-      // Initial Setup Route - This is the route for the initial screen
+      GoRoute(
+        path: RouteNames.login,
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: RouteNames.verifyOtp,
+        builder: (context, state) =>
+            VerifyOtpPage(phone: state.extra as String),
+      ),
+      GoRoute(
+        path: RouteNames.groups,
+        builder: (context, state) => const GroupListPage(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            name: RouteNames.groupDetail,
+            builder: (context, state) =>
+                GroupDetailPage(groupId: state.pathParameters['id']!),
+          ),
+        ],
+      ),
+
       GoRoute(
         path: RouteNames.initialSetup,
         name: RouteNames.initialSetup,
         builder: (context, state) => const InitialSetupScreen(),
       ),
 
-      // Main App Shell Routes - These are the main screens accessible after setup/login
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return BlocProvider.value(
-            value: sl<ReportFilterBloc>(),
-            child: MainShell(navigationShell: navigationShell),
-          );
+          return MainShell(navigationShell: navigationShell);
         },
         branches: [
-          // --- Branch 0: Dashboard ---
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeyDashboard,
             routes: [
               GoRoute(
                 path: RouteNames.dashboard,
@@ -204,9 +138,7 @@ class AppRouter {
               ),
             ],
           ),
-          // --- Branch 1: Transactions ---
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeyTransactions,
             routes: [
               GoRoute(
                 path: RouteNames.transactionsList,
@@ -218,9 +150,7 @@ class AppRouter {
                       state.extra as Map<String, dynamic>?;
                   Map<String, dynamic>? filtersFromExtra =
                       extra?['filters'] as Map<String, dynamic>?;
-                  log.fine(
-                    "[Router] TransactionsListPage: queryParams=$queryParams, extra=$extra, filtersFromExtra=$filtersFromExtra",
-                  );
+
                   return NoTransitionPage(
                     child: TransactionListPage(
                       initialFilters: filtersFromExtra ?? queryParams,
@@ -235,17 +165,14 @@ class AppRouter {
                     builder: (context, state) {
                       final merchantId =
                           state.uri.queryParameters['merchantId'];
-                      // Safely handle extra, which might be a String or a Map or null
                       String? merchantIdFromExtra;
                       if (state.extra is String) {
                         merchantIdFromExtra = state.extra as String;
-                      } else if (state.extra is Map<String, dynamic>) {
-                        final extraMap = state.extra as Map<String, dynamic>;
-                        merchantIdFromExtra = extraMap['merchantId'] as String?;
+                      } else if (state.extra is Map) {
+                        merchantIdFromExtra =
+                            (state.extra as Map)['merchantId'];
                       }
-
                       return AddEditTransactionPage(
-                        initialTransactionData: null,
                         merchantId: merchantId ?? merchantIdFromExtra,
                       );
                     },
@@ -255,22 +182,22 @@ class AppRouter {
                         '${RouteNames.editTransaction}/:${RouteNames.paramTransactionId}',
                     name: RouteNames.editTransaction,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: _buildEditTransactionPage,
+                    builder: (context, state) =>
+                        _buildEditTransactionPage(context, state),
                   ),
                   GoRoute(
                     path:
                         '${RouteNames.transactionDetail}/:${RouteNames.paramTransactionId}',
                     name: RouteNames.transactionDetail,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: _buildTransactionDetailPage,
+                    builder: (context, state) =>
+                        _buildTransactionDetailPage(context, state),
                   ),
                 ],
               ),
             ],
           ),
-          // --- Branch 2: Budgets/Goals ---
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeyBudgetsCats,
             routes: [
               GoRoute(
                 path: RouteNames.budgetsAndCats,
@@ -304,7 +231,8 @@ class AppRouter {
                             '${RouteNames.editCategory}/:${RouteNames.paramId}',
                         name: RouteNames.editCategory,
                         parentNavigatorKey: _rootNavigatorKey,
-                        builder: _buildEditCategoryPage,
+                        builder: (context, state) =>
+                            _buildEditCategoryPage(context, state),
                       ),
                     ],
                   ),
@@ -312,47 +240,47 @@ class AppRouter {
                     path: RouteNames.addBudget,
                     name: RouteNames.addBudget,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const AddEditBudgetPage(initialBudget: null),
+                    builder: (context, state) => const AddEditBudgetPage(),
                   ),
                   GoRoute(
                     path: '${RouteNames.editBudget}/:${RouteNames.paramId}',
                     name: RouteNames.editBudget,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: _buildEditBudgetPage,
+                    builder: (context, state) =>
+                        _buildEditBudgetPage(context, state),
                   ),
                   GoRoute(
                     path: '${RouteNames.budgetDetail}/:${RouteNames.paramId}',
                     name: RouteNames.budgetDetail,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: _buildBudgetDetailPage,
+                    builder: (context, state) =>
+                        _buildBudgetDetailPage(context, state),
                   ),
                   GoRoute(
                     path: RouteNames.addGoal,
                     name: RouteNames.addGoal,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) =>
-                        const AddEditGoalPage(initialGoal: null),
+                    builder: (context, state) => const AddEditGoalPage(),
                   ),
                   GoRoute(
                     path: '${RouteNames.editGoal}/:${RouteNames.paramId}',
                     name: RouteNames.editGoal,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: _buildEditGoalPage,
+                    builder: (context, state) =>
+                        _buildEditGoalPage(context, state),
                   ),
                   GoRoute(
                     path: '${RouteNames.goalDetail}/:${RouteNames.paramId}',
                     name: RouteNames.goalDetail,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: _buildGoalDetailPage,
+                    builder: (context, state) =>
+                        _buildGoalDetailPage(context, state),
                   ),
                 ],
               ),
             ],
           ),
-          // --- Branch 3: Accounts ---
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeyAccounts,
             routes: [
               GoRoute(
                 path: RouteNames.accounts,
@@ -371,15 +299,14 @@ class AppRouter {
                         '${RouteNames.editAccount}/:${RouteNames.paramAccountId}',
                     name: RouteNames.editAccount,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: _buildEditAccountPage,
+                    builder: (context, state) =>
+                        _buildEditAccountPage(context, state),
                   ),
                 ],
               ),
             ],
           ),
-          // --- Branch 4: Recurring ---
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeyRecurring,
             routes: [
               GoRoute(
                 path: RouteNames.recurring,
@@ -398,18 +325,14 @@ class AppRouter {
                     path: '${RouteNames.editRecurring}/:${RouteNames.paramId}',
                     name: RouteNames.editRecurring,
                     parentNavigatorKey: _rootNavigatorKey,
-                    builder: (context, state) {
-                      final rule = state.extra as RecurringRule?;
-                      return AddEditRecurringRulePage(initialRule: rule);
-                    },
+                    builder: (context, state) =>
+                        const AddEditRecurringRulePage(),
                   ),
                 ],
               ),
             ],
           ),
-          // --- Branch 5: Settings ---
           StatefulShellBranch(
-            navigatorKey: _shellNavigatorKeySettings,
             routes: [
               GoRoute(
                 path: RouteNames.settings,
@@ -424,15 +347,14 @@ class AppRouter {
     ],
   );
 
-  // --- Report Sub-Routes Builder (Unchanged) ---
   static List<RouteBase> _buildReportSubRoutes(
     GlobalKey<NavigatorState> parentKey,
   ) {
     return [
       GoRoute(
-        path: RouteNames.reportSpendingCategory, // Relative path
+        path: RouteNames.reportSpendingCategory,
         name: RouteNames.reportSpendingCategory,
-        parentNavigatorKey: parentKey, // Ensure it pushes onto root
+        parentNavigatorKey: parentKey,
         pageBuilder: (context, state) {
           final filterBloc = sl<ReportFilterBloc>();
           return MaterialPage(
@@ -524,7 +446,6 @@ class AppRouter {
     ];
   }
 
-  // --- Helper Builder Functions (Unchanged) ---
   static Widget _buildTransactionDetailPage(
     BuildContext context,
     GoRouterState state,
@@ -684,9 +605,7 @@ class AppRouter {
   }
 }
 
-// --- GoRouterObserver (Unchanged) ---
 class GoRouterObserver extends NavigatorObserver {
-  // ... (Implementation unchanged) ...
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     final String pushedRoute =

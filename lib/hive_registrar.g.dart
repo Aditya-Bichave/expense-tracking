@@ -3,6 +3,7 @@
 // Check in to version control
 
 import 'package:hive_ce/hive.dart';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
@@ -10,21 +11,35 @@ import 'package:expense_tracker/features/categories/data/models/user_history_rul
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
+import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
+import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
+import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
+import 'package:expense_tracker/features/settlements/data/models/settlement_model.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
     registerAdapter(AssetAccountModelAdapter());
     registerAdapter(BudgetModelAdapter());
     registerAdapter(CategoryModelAdapter());
+    registerAdapter(EntityTypeAdapter());
     registerAdapter(ExpenseModelAdapter());
+    registerAdapter(ExpensePayerModelAdapter());
+    registerAdapter(ExpenseSplitModelAdapter());
     registerAdapter(GoalContributionModelAdapter());
     registerAdapter(GoalModelAdapter());
+    registerAdapter(GroupExpenseModelAdapter());
+    registerAdapter(GroupMemberModelAdapter());
+    registerAdapter(GroupModelAdapter());
     registerAdapter(IncomeModelAdapter());
+    registerAdapter(OpTypeAdapter());
+    registerAdapter(OutboxItemAdapter());
+    registerAdapter(OutboxStatusAdapter());
     registerAdapter(RecurringRuleAuditLogModelAdapter());
     registerAdapter(RecurringRuleModelAdapter());
+    registerAdapter(SettlementModelAdapter());
     registerAdapter(UserHistoryRuleModelAdapter());
   }
 }
@@ -34,12 +49,22 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(AssetAccountModelAdapter());
     registerAdapter(BudgetModelAdapter());
     registerAdapter(CategoryModelAdapter());
+    registerAdapter(EntityTypeAdapter());
     registerAdapter(ExpenseModelAdapter());
+    registerAdapter(ExpensePayerModelAdapter());
+    registerAdapter(ExpenseSplitModelAdapter());
     registerAdapter(GoalContributionModelAdapter());
     registerAdapter(GoalModelAdapter());
+    registerAdapter(GroupExpenseModelAdapter());
+    registerAdapter(GroupMemberModelAdapter());
+    registerAdapter(GroupModelAdapter());
     registerAdapter(IncomeModelAdapter());
+    registerAdapter(OpTypeAdapter());
+    registerAdapter(OutboxItemAdapter());
+    registerAdapter(OutboxStatusAdapter());
     registerAdapter(RecurringRuleAuditLogModelAdapter());
     registerAdapter(RecurringRuleModelAdapter());
+    registerAdapter(SettlementModelAdapter());
     registerAdapter(UserHistoryRuleModelAdapter());
   }
 }

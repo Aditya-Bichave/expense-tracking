@@ -1,0 +1,29 @@
+name: Supabase CI
+
+on:
+  push:
+    paths:
+      - 'supabase/**'
+  pull_request:
+    paths:
+      - 'supabase/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Check Migration Files Structure
+        run: |
+          if [ -d "supabase/migrations" ]; then
+            echo "Migrations folder found."
+            ls -la supabase/migrations/
+          else
+            echo "Migrations folder missing!"
+            false
+          fi
+      - name: Lint SQL (Placeholder)
+        run: echo "SQL Linting would run here."
