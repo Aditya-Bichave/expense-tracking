@@ -16,6 +16,7 @@ class SimpleBlocObserver extends BlocObserver {
 
   @override
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
+    super.onError(bloc, error, stackTrace);
     log.severe('Bloc Error: ${bloc.runtimeType} $error\n$error\n$stackTrace');
   }
 }

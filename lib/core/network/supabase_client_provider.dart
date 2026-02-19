@@ -7,7 +7,16 @@ class SupabaseClientProvider {
   static Future<void> initialize() async {
     try {
       if (!SupabaseConfig.isValid) {
-        log.warning('Supabase configuration is invalid. Skipping initialization.');
+        log.warning(
+          'Supabase configuration is invalid. Initializing with placeholder values to prevent crashes.',
+        );
+        // Initialize with dummy values so Supabase.instance.client doesn't throw.
+        // This is critical for CI/Smoke tests where secrets might be missing.
+        await Supabase.initialize(
+          url: 'https://placeholder.supabase.co',
+          anonKey: 'placeholder',
+          debug: false,
+        );
         return;
       }
 
@@ -28,10 +37,8 @@ class SupabaseClientProvider {
 
   static SupabaseClient get client {
     if (!Supabase.instance.isInitialized) {
-        // Return a dummy client or throw a better error?
-        // Throwing might crash usage, but at least init didn't crash app start.
-        // Better: Check validity before access in repositories.
-        throw Exception('Supabase not initialized');
+      // Should not happen if initialize() is called, even with placeholders.
+      throw Exception('Supabase not initialized');
     }
     return Supabase.instance.client;
   }
