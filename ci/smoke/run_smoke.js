@@ -40,16 +40,12 @@ async function run() {
     await page.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
 
     // Wait for Flutter engine to initialize
+    // flt-glass-pane is standard for HTML renderer, canvas is used in CanvasKit/Wasm
     try {
-      await page.waitForSelector('flt-glass-pane', { timeout: TIMEOUT });
+      await page.waitForSelector('flt-glass-pane, canvas', { timeout: TIMEOUT });
     } catch (e) {
-      console.log('flt-glass-pane not found, checking for alternative indicators...');
-      // Fallback: check if the flutter script loaded and we have a canvas
-      const canvas = await page.$('canvas');
-      if (!canvas) {
-         console.error('No canvas found either. Startup likely failed.');
-         throw e;
-      }
+      console.error('No flt-glass-pane or canvas found. Startup likely failed.');
+      throw e;
     }
 
     const startupTime = Date.now() - startTime;
