@@ -38,14 +38,11 @@ void main() {
 
     // Assert
     expect(result.isRight(), true);
-    result.fold(
-      (failure) => fail('Should be Right'),
-      (allData) {
-        expect(allData.accounts, isEmpty);
-        expect(allData.expenses, isEmpty);
-        expect(allData.incomes, isEmpty);
-      },
-    );
+    result.fold((failure) => fail('Should be Right'), (allData) {
+      expect(allData.accounts, isEmpty);
+      expect(allData.expenses, isEmpty);
+      expect(allData.incomes, isEmpty);
+    });
   });
 
   test('should clear all data', () async {
