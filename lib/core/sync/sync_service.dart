@@ -26,7 +26,9 @@ class SyncService {
       for (final item in pendingItems) {
         // Check for max retries
         if (item.retryCount >= _maxRetries) {
-          log.severe('Item ${item.id} exceeded max retries. Mark as permanently failed.');
+          log.severe(
+            'Item ${item.id} exceeded max retries. Mark as permanently failed.',
+          );
           // Set nextRetryAt to distant future to prevent re-fetching
           await _outboxRepository.markAsFailed(
             item,
@@ -44,9 +46,15 @@ class SyncService {
 
           // Exponential backoff: 2^retryCount seconds
           final backoffSeconds = pow(2, item.retryCount).toInt();
-          final nextRetryAt = DateTime.now().add(Duration(seconds: backoffSeconds));
+          final nextRetryAt = DateTime.now().add(
+            Duration(seconds: backoffSeconds),
+          );
 
-          await _outboxRepository.markAsFailed(item, e.toString(), nextRetryAt: nextRetryAt);
+          await _outboxRepository.markAsFailed(
+            item,
+            e.toString(),
+            nextRetryAt: nextRetryAt,
+          );
         }
       }
     } finally {

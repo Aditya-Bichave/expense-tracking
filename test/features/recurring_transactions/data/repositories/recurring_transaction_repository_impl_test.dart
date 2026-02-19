@@ -71,13 +71,10 @@ void main() {
 
     // Assert
     expect(result.isRight(), true);
-    result.fold(
-      (l) => fail('Should be Right'),
-      (r) {
-        expect(r.length, 1);
-        expect(r.first.id, tRule.id);
-      },
-    );
+    result.fold((l) => fail('Should be Right'), (r) {
+      expect(r.length, 1);
+      expect(r.first.id, tRule.id);
+    });
     verify(() => mockDataSource.getRecurringRules()).called(1);
   });
 
