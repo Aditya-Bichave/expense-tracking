@@ -4,7 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockBloc extends Mock implements Bloc<Object, Object> {}
+
 class MockTransition extends Mock implements Transition<Object, Object> {}
+
 class MockChange extends Mock implements Change<Object> {}
 
 // Expose protected methods for testing
