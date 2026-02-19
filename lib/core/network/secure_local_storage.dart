@@ -2,12 +2,18 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SecureLocalStorage extends LocalStorage {
-  const SecureLocalStorage();
+  final FlutterSecureStorage _storage;
 
-  final _storage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-  );
+  const SecureLocalStorage({
+    FlutterSecureStorage storage = const FlutterSecureStorage(
+      aOptions: AndroidOptions(
+        encryptedSharedPreferences: true,
+      ),
+      iOptions: IOSOptions(
+        accessibility: KeychainAccessibility.first_unlock,
+      ),
+    ),
+  }) : _storage = storage;
 
   @override
   Future<void> initialize() async {}
@@ -29,9 +35,6 @@ class SecureLocalStorage extends LocalStorage {
 
   @override
   Future<void> persistSession(String persistSessionString) async {
-    await _storage.write(
-      key: supabasePersistSessionKey,
-      value: persistSessionString,
-    );
+    await _storage.write(key: supabasePersistSessionKey, value: persistSessionString);
   }
 }
