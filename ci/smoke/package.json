@@ -2,7 +2,8 @@
   "name": "smoke-tests",
   "version": "1.0.0",
   "scripts": {
-    "smoke": "node run_smoke.js"
+    "extract-routes": "node extract_routes.js",
+    "smoke": "npm run extract-routes && node run_smoke.js"
   },
   "dependencies": {
     "playwright": "^1.40.0",
