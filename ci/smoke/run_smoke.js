@@ -112,6 +112,15 @@ async function run() {
     // Navigate to root (which should redirect to /setup)
     await page.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
 
+    // --- CHECK FOR EARLY ERRORS ---
+    if (results.pageErrors.length > 0) {
+      console.error('❌ Critical page errors detected immediately after navigation.');
+      await takeScreenshot(page, 'startup_critical_failure');
+      results.passed = false;
+      // We stop here if the app is fundamentally broken
+      throw new Error('Critical Page Errors during startup: ' + results.pageErrors.join(', '));
+    }
+
     // Wait for Flutter to render something (flt-glass-pane is standard for CanvasKit)
     try {
       await page.waitForSelector('flt-glass-pane', { timeout: TIMEOUT });
