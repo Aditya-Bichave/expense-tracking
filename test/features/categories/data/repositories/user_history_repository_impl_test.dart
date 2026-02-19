@@ -61,9 +61,7 @@ void main() {
     when(
       () => mockDataSource.findRule(any(), any()),
     ).thenAnswer((_) async => null); // No existing rule
-    when(
-      () => mockDataSource.saveRule(any()),
-    ).thenAnswer((_) async => {});
+    when(() => mockDataSource.saveRule(any())).thenAnswer((_) async => {});
 
     // Act
     final result = await repository.saveRule(tRule);

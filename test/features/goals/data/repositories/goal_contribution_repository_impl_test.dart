@@ -93,9 +93,11 @@ void main() {
     expect(result, Right(tContribution));
 
     // Verify saveContribution called with correct data
-    final capturedContribution = verify(
-      () => mockContributionDataSource.saveContribution(captureAny()),
-    ).captured.single as GoalContributionModel;
+    final capturedContribution =
+        verify(
+              () => mockContributionDataSource.saveContribution(captureAny()),
+            ).captured.single
+            as GoalContributionModel;
     expect(capturedContribution.id, tContribution.id);
     expect(capturedContribution.amount, tContribution.amount);
 
