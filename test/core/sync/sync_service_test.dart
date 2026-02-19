@@ -8,10 +8,13 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockOutboxRepository extends Mock implements OutboxRepository {}
+
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
-class FakePostgrestFilterBuilder extends Fake implements PostgrestFilterBuilder {
+class FakePostgrestFilterBuilder extends Fake
+    implements PostgrestFilterBuilder {
   final Object? error;
   FakePostgrestFilterBuilder({this.error});
 
@@ -22,10 +25,16 @@ class FakePostgrestFilterBuilder extends Fake implements PostgrestFilterBuilder 
   }
 
   @override
-  Future<S> then<S>(FutureOr<S> Function(dynamic) onValue, {Function? onError}) {
-     if (error != null) {
+  Future<S> then<S>(
+    FutureOr<S> Function(dynamic) onValue, {
+    Function? onError,
+  }) {
+    if (error != null) {
       // Delegate to a real failed Future so it handles onError callback signature correctly
-      return Future.error(error!, StackTrace.current).then<S>((_) => onValue(null), onError: onError);
+      return Future.error(
+        error!,
+        StackTrace.current,
+      ).then<S>((_) => onValue(null), onError: onError);
     }
     return Future.value([]).then((val) => onValue(val));
   }
@@ -38,12 +47,15 @@ void main() {
   late MockSupabaseQueryBuilder mockQueryBuilder;
 
   setUpAll(() {
-    registerFallbackValue(OutboxItem(
+    registerFallbackValue(
+      OutboxItem(
         id: 'fallback',
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: '{}',
-        createdAt: DateTime.now()));
+        createdAt: DateTime.now(),
+      ),
+    );
   });
 
   setUp(() {
@@ -53,8 +65,13 @@ void main() {
     syncService = SyncService(mockSupabaseClient, mockOutboxRepository);
 
     // Default success for failures handling
-    when(() => mockOutboxRepository.markAsFailed(any(), any(), nextRetryAt: any(named: 'nextRetryAt')))
-        .thenAnswer((_) async {});
+    when(
+      () => mockOutboxRepository.markAsFailed(
+        any(),
+        any(),
+        nextRetryAt: any(named: 'nextRetryAt'),
+      ),
+    ).thenAnswer((_) async {});
   });
 
   group('processOutbox', () {
@@ -75,9 +92,15 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(() => mockSupabaseClient.from(any())).thenAnswer((_) => mockQueryBuilder);
-      when(() => mockQueryBuilder.insert(any())).thenAnswer((_) => FakePostgrestFilterBuilder());
-      when(() => mockOutboxRepository.markAsSent(any())).thenAnswer((_) async {});
+      when(
+        () => mockSupabaseClient.from(any()),
+      ).thenAnswer((_) => mockQueryBuilder);
+      when(
+        () => mockQueryBuilder.insert(any()),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder());
+      when(
+        () => mockOutboxRepository.markAsSent(any()),
+      ).thenAnswer((_) async {});
 
       await syncService.processOutbox();
 
@@ -97,19 +120,25 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(() => mockSupabaseClient.from(any())).thenAnswer((_) => mockQueryBuilder);
+      when(
+        () => mockSupabaseClient.from(any()),
+      ).thenAnswer((_) => mockQueryBuilder);
       // Simulate failure
-      when(() => mockQueryBuilder.insert(any())).thenAnswer((_) => FakePostgrestFilterBuilder(error: 'Network Error'));
+      when(
+        () => mockQueryBuilder.insert(any()),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder(error: 'Network Error'));
 
       await syncService.processOutbox();
 
       verify(() => mockQueryBuilder.insert(any())).called(1);
 
-      final captured = verify(() => mockOutboxRepository.markAsFailed(
-        item,
-        any(),
-        nextRetryAt: captureAny(named: 'nextRetryAt')
-      )).captured;
+      final captured = verify(
+        () => mockOutboxRepository.markAsFailed(
+          item,
+          any(),
+          nextRetryAt: captureAny(named: 'nextRetryAt'),
+        ),
+      ).captured;
 
       final nextRetryAt = captured.first as DateTime;
       final now = DateTime.now();
@@ -137,11 +166,13 @@ void main() {
       verifyNever(() => mockSupabaseClient.from(any()));
 
       // Should mark as permanently failed (very future date)
-       final captured = verify(() => mockOutboxRepository.markAsFailed(
-        item,
-        any(),
-        nextRetryAt: captureAny(named: 'nextRetryAt')
-      )).captured;
+      final captured = verify(
+        () => mockOutboxRepository.markAsFailed(
+          item,
+          any(),
+          nextRetryAt: captureAny(named: 'nextRetryAt'),
+        ),
+      ).captured;
 
       final nextRetryAt = captured.first as DateTime;
       expect(nextRetryAt.year, 9999);
@@ -153,7 +184,7 @@ void main() {
     Future<void> verifyOperation(
       EntityType entityType,
       OpType opType,
-      String expectedTable
+      String expectedTable,
     ) async {
       final item = OutboxItem(
         id: '123',
@@ -164,13 +195,17 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(() => mockSupabaseClient.from(any())).thenAnswer((_) => mockQueryBuilder);
+      when(
+        () => mockSupabaseClient.from(any()),
+      ).thenAnswer((_) => mockQueryBuilder);
 
       final builder = FakePostgrestFilterBuilder();
       when(() => mockQueryBuilder.insert(any())).thenAnswer((_) => builder);
       when(() => mockQueryBuilder.update(any())).thenAnswer((_) => builder);
       when(() => mockQueryBuilder.delete()).thenAnswer((_) => builder);
-      when(() => mockOutboxRepository.markAsSent(any())).thenAnswer((_) async {});
+      when(
+        () => mockOutboxRepository.markAsSent(any()),
+      ).thenAnswer((_) async {});
 
       await syncService.processOutbox();
 
@@ -196,7 +231,11 @@ void main() {
     });
 
     test('should handle groupMember update', () async {
-      await verifyOperation(EntityType.groupMember, OpType.update, 'group_members');
+      await verifyOperation(
+        EntityType.groupMember,
+        OpType.update,
+        'group_members',
+      );
     });
 
     test('should handle groupExpense delete', () async {
@@ -204,7 +243,11 @@ void main() {
     });
 
     test('should handle settlement create', () async {
-      await verifyOperation(EntityType.settlement, OpType.create, 'settlements');
+      await verifyOperation(
+        EntityType.settlement,
+        OpType.create,
+        'settlements',
+      );
     });
 
     test('should handle invite create', () async {
