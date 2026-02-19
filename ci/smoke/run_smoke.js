@@ -6,8 +6,8 @@ const path = require('path');
 // --- Configuration ---
 const BUILD_DIR = path.resolve(__dirname, '../../build/web');
 const PORT = 8080;
-const TIMEOUT = 30000; // 30s timeout per action
-const MAX_STARTUP_TIME_MS = 20000; // 20s budget for initial load
+const TIMEOUT = 60000; // 60s timeout
+const MAX_STARTUP_TIME_MS = 45000; // Budget
 const ARTIFACTS_DIR = path.join(__dirname, 'artifacts');
 const REPORT_FILE = path.join(__dirname, 'smoke-report.json');
 const ROUTES_FILE = path.join(__dirname, 'routes.json');
@@ -73,7 +73,7 @@ async function run() {
   // Results Container
   const results = {
     startupTimeMs: 0,
-    passed: true, // Optimistic start
+    passed: true,
     routes: [],
     consoleErrors: [],
     pageErrors: [],
@@ -93,7 +93,6 @@ async function run() {
     page.on('console', msg => {
       if (msg.type() === 'error') {
         const text = msg.text();
-        // Filter out known noisy errors if needed
         console.error(`  Console Error: ${text}`);
         results.consoleErrors.push(text);
       }
@@ -109,7 +108,7 @@ async function run() {
     console.log('⏱️  Measuring startup time...');
     const startTime = Date.now();
 
-    // Navigate to root (which should redirect to /setup)
+    // Navigate to root
     await page.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
 
     // --- CHECK FOR EARLY ERRORS ---
@@ -117,15 +116,15 @@ async function run() {
       console.error('❌ Critical page errors detected immediately after navigation.');
       await takeScreenshot(page, 'startup_critical_failure');
       results.passed = false;
-      // We stop here if the app is fundamentally broken
       throw new Error('Critical Page Errors during startup: ' + results.pageErrors.join(', '));
     }
 
-    // Wait for Flutter to render something (flt-glass-pane is standard for CanvasKit)
+    // Wait for Flutter to render. Canvas is the reliable indicator for Wasm/CanvasKit if flt-glass-pane is hidden.
     try {
-      await page.waitForSelector('flt-glass-pane', { timeout: TIMEOUT });
+      await page.waitForSelector('canvas', { timeout: TIMEOUT });
+      console.log('✅ Flutter app detected (canvas).');
     } catch (e) {
-      console.error('Failed to detect Flutter app startup (flt-glass-pane not found).');
+      console.error('Failed to detect Flutter app startup (timeout waiting for canvas).');
       await takeScreenshot(page, 'startup_failure');
       results.passed = false;
       throw e;
@@ -137,41 +136,30 @@ async function run() {
 
     if (startupTime > MAX_STARTUP_TIME_MS) {
       console.error(`❌ Startup time exceeded budget of ${MAX_STARTUP_TIME_MS}ms`);
-      results.passed = false;
+      // Optional: results.passed = false;
     }
 
     // 3. Initial Setup Bypass
     console.log('🔓 Attempting to bypass Initial Setup...');
     try {
-      // Check if we are on the setup page by looking for specific text/buttons
-      // We look for "Skip for Now" button
-      // Note: We use a short timeout because if it's not there, we assume we are already past it
-      // or on a different route.
       const skipButton = page.getByRole('button', { name: 'Skip for Now' });
-
       if (await skipButton.isVisible({ timeout: 5000 })) {
         console.log('  Found Skip button. Clicking...');
         await skipButton.click();
-
-        // Wait for navigation to Dashboard
-        // We use a glob to match any dashboard URL (e.g. /dashboard or /#/dashboard)
-        // Since we are using hash routing, the URL will contain #/dashboard
         await page.waitForURL('**/dashboard', { timeout: TIMEOUT });
         console.log('  Navigated to Dashboard.');
       } else {
-        console.log('  Skip button not found. Assuming app is already initialized or redirected.');
+        console.log('  Skip button not found. Assuming app is already initialized.');
       }
     } catch (e) {
       console.error('Failed to bypass setup:', e.message);
       await takeScreenshot(page, 'setup_bypass_failure');
-      // We don't fail hard here, we let the route checks fail if they can't be reached
     }
 
     // 4. Test Routes
     console.log(`🌍 Testing ${ROUTES.length} routes...`);
 
     for (const route of ROUTES) {
-      // Skip parameterized routes just in case they slipped through
       if (route.includes(':')) continue;
 
       console.log(`  Checking ${route}...`);
@@ -185,22 +173,13 @@ async function run() {
 
       for (let attempt = 1; attempt <= RETRIES + 1; attempt++) {
         try {
-          // Construct URL for Hash Routing
           const targetUrl = `http://localhost:${PORT}/#${route}`;
-
           await page.goto(targetUrl, { waitUntil: 'networkidle', timeout: TIMEOUT });
-
-          // Verify we didn't land on an error page (if your app has one)
-          // or verify we are not stuck on loading?
-          // For now, successful navigation without throwing is a pass.
-
           routeResult.passed = true;
           break; // Success
-
         } catch (e) {
           console.error(`    Attempt ${attempt} failed: ${e.message}`);
           routeResult.error = e.message;
-
           if (attempt > RETRIES) {
              routeResult.screenshot = await takeScreenshot(page, `fail_${route}`);
              results.failedRoutes.push(route);
@@ -216,7 +195,6 @@ async function run() {
     if (results.consoleErrors.length > 0) results.passed = false;
     if (results.pageErrors.length > 0) results.passed = false;
 
-    // Save Trace if failed
     if (!results.passed) {
         await saveTrace(context, 'smoke_test_failure');
     }

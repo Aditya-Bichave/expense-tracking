@@ -1,1 +1,22 @@
-["/", "/dashboard", "/expenses", "/settings"]
+[
+  "/accounts",
+  "/accounts/add_account",
+  "/dashboard",
+  "/dashboard/budget_performance",
+  "/dashboard/goal_progress",
+  "/dashboard/income_expense",
+  "/dashboard/spending_category",
+  "/dashboard/spending_time",
+  "/plan",
+  "/plan/add_budget",
+  "/plan/add_goal",
+  "/plan/manage_categories",
+  "/plan/manage_categories/add_category",
+  "/recurring",
+  "/recurring/add_recurring",
+  "/reports",
+  "/settings",
+  "/setup",
+  "/transactions",
+  "/transactions/add"
+]
