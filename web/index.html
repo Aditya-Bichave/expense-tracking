@@ -34,19 +34,7 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    var serviceWorkerVersion = null;
-    // We use a try-catch block or conditional assignment to safely handle the placeholder replacement.
-    // If the replacement logic injects a valid string, this assignment will override null.
-    // If the replacement logic fails or produces invalid syntax when interacting with quotes,
-    // we try to mitigate.
-
-    // Standard template uses: var serviceWorkerVersion = "{{flutter_service_worker_version}}";
-    // We use backticks to avoid issues with double/single quotes in the replaced value.
-    try {
-       serviceWorkerVersion = `{{flutter_service_worker_version}}`;
-    } catch (e) {
-       console.warn("Failed to set serviceWorkerVersion from placeholder", e);
-    }
+    var serviceWorkerVersion = '{{flutter_service_worker_version}}';
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
