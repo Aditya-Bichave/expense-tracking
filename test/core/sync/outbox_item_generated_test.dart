@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
-import 'package:path/path.dart' as path;
 
 void main() {
   group('OutboxItemAdapter Integration', () {
