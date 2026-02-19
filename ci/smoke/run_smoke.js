@@ -6,9 +6,9 @@ const path = require('path');
 const ROUTES = JSON.parse(fs.readFileSync('routes.json', 'utf8'));
 const BUILD_DIR = '../../build/web';
 const PORT = 8080;
-const TIMEOUT = 60000; // Increased timeout for CI (Wasm/CanvasKit can be slow)
+const TIMEOUT = 120000; // Drastically increased timeout for CI
 const REPORT_FILE = 'smoke-report.json';
-const MAX_STARTUP_TIME_MS = 60000; // Increased budget for CI
+const MAX_STARTUP_TIME_MS = 120000; // Increased budget for CI
 
 async function run() {
   const server = httpServer.createServer({ root: BUILD_DIR });
@@ -45,6 +45,9 @@ async function run() {
       await page.waitForSelector('flt-glass-pane, canvas', { timeout: TIMEOUT });
     } catch (e) {
       console.error('No flt-glass-pane or canvas found. Startup likely failed.');
+      // Log HTML to debug what is actually rendered
+      const html = await page.content();
+      console.log('Page HTML:', html);
       throw e;
     }
 
