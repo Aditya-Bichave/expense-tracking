@@ -39,10 +39,7 @@ void main() {
 
     // Assert
     expect(result.isRight(), true);
-    result.fold(
-      (l) => fail('Should be Right'),
-      (r) => expect(r, [tLog]),
-    );
+    result.fold((l) => fail('Should be Right'), (r) => expect(r, [tLog]));
     verify(() => mockRepository.getAuditLogsForRule(tRuleId)).called(1);
     verifyNoMoreInteractions(mockRepository);
   });

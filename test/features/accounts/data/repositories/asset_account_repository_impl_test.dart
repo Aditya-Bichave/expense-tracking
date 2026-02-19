@@ -65,13 +65,10 @@ void main() {
     // Assert
     // 100 + 50 - 20 = 130
     expect(result.isRight(), true);
-    result.fold(
-      (l) => fail('Should be Right, but was Left: $l'),
-      (r) {
-        expect(r.currentBalance, 130.0);
-        expect(r.id, tAccount.id);
-      },
-    );
+    result.fold((l) => fail('Should be Right, but was Left: $l'), (r) {
+      expect(r.currentBalance, 130.0);
+      expect(r.id, tAccount.id);
+    });
 
     verify(() => mockDataSource.addAssetAccount(any())).called(1);
   });

@@ -7,12 +7,18 @@ import 'package:expense_tracker/features/settings/domain/repositories/settings_r
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/domain/usecases/toggle_app_lock.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SettingsDependencies {
   static void register() {
+    // External
+    if (!sl.isRegistered<FlutterSecureStorage>()) {
+      sl.registerLazySingleton(() => const FlutterSecureStorage());
+    }
+
     // Data Source
     sl.registerLazySingleton<SettingsLocalDataSource>(
-      () => SettingsLocalDataSourceImpl(prefs: sl()),
+      () => SettingsLocalDataSourceImpl(prefs: sl(), secureStorage: sl()),
     );
     // Repository
     sl.registerLazySingleton<SettingsRepository>(
