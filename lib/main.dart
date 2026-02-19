@@ -47,6 +47,7 @@ import 'package:expense_tracker/features/groups/data/models/group_member_model.d
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 File? _startupLogFile;
 
@@ -75,174 +76,204 @@ Future<void> _runMigrations(int fromVersion) async {
 }
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await _initFileLogger();
-  final locale = WidgetsBinding.instance.platformDispatcher.locale;
-  Intl.defaultLocale = locale.toLanguageTag();
+  await runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await _initFileLogger();
+      final locale = WidgetsBinding.instance.platformDispatcher.locale;
+      Intl.defaultLocale = locale.toLanguageTag();
 
-  log.setLevel(Level.INFO, includeCallerInfo: false);
-  log.info("==========================================");
-  log.info(" Spend Savvy Application Starting...");
-  log.info("==========================================");
+      log.setLevel(Level.INFO, includeCallerInfo: false);
+      log.info("==========================================");
+      log.info(" Spend Savvy Application Starting...");
+      log.info("==========================================");
 
-  try {
-    await Hive.initFlutter();
-    final prefs = await SharedPreferences.getInstance();
-    final storedVersion =
-        prefs.getInt(HiveConstants.dataVersionKey) ?? HiveConstants.dataVersion;
-    if (storedVersion < HiveConstants.dataVersion) {
-      await _runMigrations(storedVersion);
-      await prefs.setInt(
-        HiveConstants.dataVersionKey,
-        HiveConstants.dataVersion,
+      await SentryFlutter.init(
+        (options) {
+          options.dsn = const String.fromEnvironment('SENTRY_DSN');
+          options.tracesSampleRate = 1.0;
+          options.enableAutoSessionTracking = true;
+        },
+        appRunner: () async {
+          try {
+            await Hive.initFlutter();
+            final prefs = await SharedPreferences.getInstance();
+            final storedVersion =
+                prefs.getInt(HiveConstants.dataVersionKey) ??
+                HiveConstants.dataVersion;
+            if (storedVersion < HiveConstants.dataVersion) {
+              await _runMigrations(storedVersion);
+              await prefs.setInt(
+                HiveConstants.dataVersionKey,
+                HiveConstants.dataVersion,
+              );
+            }
+
+            log.info("Initializing Supabase...");
+            await SupabaseClientProvider.initialize();
+
+            Hive.registerAdapter(ExpenseModelAdapter());
+            Hive.registerAdapter(AssetAccountModelAdapter());
+            Hive.registerAdapter(IncomeModelAdapter());
+            Hive.registerAdapter(CategoryModelAdapter());
+            Hive.registerAdapter(UserHistoryRuleModelAdapter());
+            Hive.registerAdapter(BudgetModelAdapter());
+            Hive.registerAdapter(GoalModelAdapter());
+            Hive.registerAdapter(GoalContributionModelAdapter());
+            Hive.registerAdapter(RecurringRuleModelAdapter());
+            Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
+
+            Hive.registerAdapter(OutboxItemAdapter());
+            Hive.registerAdapter(OutboxStatusAdapter());
+            Hive.registerAdapter(OpTypeAdapter());
+            Hive.registerAdapter(EntityTypeAdapter());
+            Hive.registerAdapter(GroupModelAdapter());
+            Hive.registerAdapter(GroupMemberModelAdapter());
+            Hive.registerAdapter(GroupExpenseModelAdapter());
+            Hive.registerAdapter(ExpensePayerModelAdapter());
+            Hive.registerAdapter(ExpenseSplitModelAdapter());
+
+            log.info("Opening Hive boxes...");
+            final expenseBox = await Hive.openBox<ExpenseModel>(
+              HiveConstants.expenseBoxName,
+            );
+            final accountBox = await Hive.openBox<AssetAccountModel>(
+              HiveConstants.accountBoxName,
+            );
+            final incomeBox = await Hive.openBox<IncomeModel>(
+              HiveConstants.incomeBoxName,
+            );
+            final categoryBox = await Hive.openBox<CategoryModel>(
+              HiveConstants.categoryBoxName,
+            );
+            final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
+              HiveConstants.userHistoryRuleBoxName,
+            );
+            final budgetBox = await Hive.openBox<BudgetModel>(
+              HiveConstants.budgetBoxName,
+            );
+            final goalBox = await Hive.openBox<GoalModel>(
+              HiveConstants.goalBoxName,
+            );
+            final contributionBox = await Hive.openBox<GoalContributionModel>(
+              HiveConstants.goalContributionBoxName,
+            );
+            final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
+              HiveConstants.recurringRuleBoxName,
+            );
+            final recurringRuleAuditLogBox =
+                await Hive.openBox<RecurringRuleAuditLogModel>(
+                  HiveConstants.recurringRuleAuditLogBoxName,
+                );
+
+            final outboxBox = await Hive.openBox<OutboxItem>(
+              HiveConstants.outboxBoxName,
+            );
+            final groupBox = await Hive.openBox<GroupModel>(
+              HiveConstants.groupBoxName,
+            );
+            final groupMemberBox = await Hive.openBox<GroupMemberModel>(
+              HiveConstants.groupMemberBoxName,
+            );
+            final groupExpenseBox = await Hive.openBox<GroupExpenseModel>(
+              HiveConstants.groupExpenseBoxName,
+            );
+
+            log.info("All Hive boxes opened.");
+            log.info("SharedPreferences instance obtained.");
+
+            await initLocator(
+              prefs: prefs,
+              expenseBox: expenseBox,
+              accountBox: accountBox,
+              incomeBox: incomeBox,
+              categoryBox: categoryBox,
+              userHistoryBox: userHistoryBox,
+              budgetBox: budgetBox,
+              goalBox: goalBox,
+              contributionBox: contributionBox,
+              recurringRuleBox: recurringRuleBox,
+              recurringRuleAuditLogBox: recurringRuleAuditLogBox,
+              outboxBox: outboxBox,
+              groupBox: groupBox,
+              groupMemberBox: groupMemberBox,
+              groupExpenseBox: groupExpenseBox,
+            );
+            log.info(
+              "Hive, SharedPreferences, and Service Locator initialized.",
+            );
+          } catch (e, s) {
+            log.severe("!!! CRITICAL INITIALIZATION FAILURE !!!");
+            log.severe("Error: $e");
+            log.severe("Stack Trace: $s");
+            await _writeStartupLog('Initialization failure: $e\n$s');
+            await Sentry.captureException(e, stackTrace: s);
+            log.severe("!!! APPLICATION CANNOT CONTINUE !!!");
+            runApp(InitializationErrorApp(error: e));
+            return;
+          }
+
+          runApp(
+            MultiBlocProvider(
+              providers: [
+                BlocProvider<SettingsBloc>(
+                  create: (context) =>
+                      sl<SettingsBloc>()..add(const LoadSettings()),
+                  lazy: false,
+                ),
+                BlocProvider<DataManagementBloc>(
+                  create: (context) => sl<DataManagementBloc>(),
+                  // lazy: true,
+                ),
+                BlocProvider<AccountListBloc>(
+                  create: (context) =>
+                      sl<AccountListBloc>()..add(const LoadAccounts()),
+                  lazy: false,
+                ),
+                BlocProvider<TransactionListBloc>(
+                  create: (context) =>
+                      sl<TransactionListBloc>()..add(const LoadTransactions()),
+                  lazy: false,
+                ),
+                BlocProvider<CategoryManagementBloc>(
+                  create: (context) =>
+                      sl<CategoryManagementBloc>()..add(const LoadCategories()),
+                  // lazy: true,
+                ),
+                BlocProvider<BudgetListBloc>(
+                  create: (context) =>
+                      sl<BudgetListBloc>()..add(const LoadBudgets()),
+                  lazy: false,
+                ),
+                BlocProvider<GoalListBloc>(
+                  create: (context) =>
+                      sl<GoalListBloc>()..add(const LoadGoals()),
+                  lazy: false,
+                ),
+                BlocProvider<DashboardBloc>(
+                  create: (context) =>
+                      sl<DashboardBloc>()..add(const LoadDashboard()),
+                  lazy: false,
+                ),
+                // BlocProvider<SummaryBloc>(
+                // create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
+                // lazy: true,
+                //        ),
+                BlocProvider<AuthBloc>(
+                  create: (context) => sl<AuthBloc>()..add(AuthCheckStatus()),
+                  lazy: false,
+                ),
+              ],
+              child: const MyApp(),
+            ),
+          );
+        },
       );
-    }
-
-    log.info("Initializing Supabase...");
-    await SupabaseClientProvider.initialize();
-
-    Hive.registerAdapter(ExpenseModelAdapter());
-    Hive.registerAdapter(AssetAccountModelAdapter());
-    Hive.registerAdapter(IncomeModelAdapter());
-    Hive.registerAdapter(CategoryModelAdapter());
-    Hive.registerAdapter(UserHistoryRuleModelAdapter());
-    Hive.registerAdapter(BudgetModelAdapter());
-    Hive.registerAdapter(GoalModelAdapter());
-    Hive.registerAdapter(GoalContributionModelAdapter());
-    Hive.registerAdapter(RecurringRuleModelAdapter());
-    Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
-
-    Hive.registerAdapter(OutboxItemAdapter());
-    Hive.registerAdapter(OutboxStatusAdapter());
-    Hive.registerAdapter(OpTypeAdapter());
-    Hive.registerAdapter(EntityTypeAdapter());
-    Hive.registerAdapter(GroupModelAdapter());
-    Hive.registerAdapter(GroupMemberModelAdapter());
-    Hive.registerAdapter(GroupExpenseModelAdapter());
-    Hive.registerAdapter(ExpensePayerModelAdapter());
-    Hive.registerAdapter(ExpenseSplitModelAdapter());
-
-    log.info("Opening Hive boxes...");
-    final expenseBox = await Hive.openBox<ExpenseModel>(
-      HiveConstants.expenseBoxName,
-    );
-    final accountBox = await Hive.openBox<AssetAccountModel>(
-      HiveConstants.accountBoxName,
-    );
-    final incomeBox = await Hive.openBox<IncomeModel>(
-      HiveConstants.incomeBoxName,
-    );
-    final categoryBox = await Hive.openBox<CategoryModel>(
-      HiveConstants.categoryBoxName,
-    );
-    final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
-      HiveConstants.userHistoryRuleBoxName,
-    );
-    final budgetBox = await Hive.openBox<BudgetModel>(
-      HiveConstants.budgetBoxName,
-    );
-    final goalBox = await Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
-    final contributionBox = await Hive.openBox<GoalContributionModel>(
-      HiveConstants.goalContributionBoxName,
-    );
-    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
-      HiveConstants.recurringRuleBoxName,
-    );
-    final recurringRuleAuditLogBox =
-        await Hive.openBox<RecurringRuleAuditLogModel>(
-          HiveConstants.recurringRuleAuditLogBoxName,
-        );
-
-    final outboxBox = await Hive.openBox<OutboxItem>(
-      HiveConstants.outboxBoxName,
-    );
-    final groupBox = await Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
-    final groupMemberBox = await Hive.openBox<GroupMemberModel>(
-      HiveConstants.groupMemberBoxName,
-    );
-    final groupExpenseBox = await Hive.openBox<GroupExpenseModel>(
-      HiveConstants.groupExpenseBoxName,
-    );
-
-    log.info("All Hive boxes opened.");
-    log.info("SharedPreferences instance obtained.");
-
-    await initLocator(
-      prefs: prefs,
-      expenseBox: expenseBox,
-      accountBox: accountBox,
-      incomeBox: incomeBox,
-      categoryBox: categoryBox,
-      userHistoryBox: userHistoryBox,
-      budgetBox: budgetBox,
-      goalBox: goalBox,
-      contributionBox: contributionBox,
-      recurringRuleBox: recurringRuleBox,
-      recurringRuleAuditLogBox: recurringRuleAuditLogBox,
-      outboxBox: outboxBox,
-      groupBox: groupBox,
-      groupMemberBox: groupMemberBox,
-      groupExpenseBox: groupExpenseBox,
-    );
-    log.info("Hive, SharedPreferences, and Service Locator initialized.");
-  } catch (e, s) {
-    log.severe("!!! CRITICAL INITIALIZATION FAILURE !!!");
-    log.severe("Error: $e");
-    log.severe("Stack Trace: $s");
-    await _writeStartupLog('Initialization failure: $e\n$s');
-    log.severe("!!! APPLICATION CANNOT CONTINUE !!!");
-    runApp(InitializationErrorApp(error: e));
-    return;
-  }
-
-  runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider<SettingsBloc>(
-          create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
-          lazy: false,
-        ),
-        BlocProvider<DataManagementBloc>(
-          create: (context) => sl<DataManagementBloc>(),
-          // lazy: true,
-        ),
-        BlocProvider<AccountListBloc>(
-          create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
-          lazy: false,
-        ),
-        BlocProvider<TransactionListBloc>(
-          create: (context) =>
-              sl<TransactionListBloc>()..add(const LoadTransactions()),
-          lazy: false,
-        ),
-        BlocProvider<CategoryManagementBloc>(
-          create: (context) =>
-              sl<CategoryManagementBloc>()..add(const LoadCategories()),
-          // lazy: true,
-        ),
-        BlocProvider<BudgetListBloc>(
-          create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
-          lazy: false,
-        ),
-        BlocProvider<GoalListBloc>(
-          create: (context) => sl<GoalListBloc>()..add(const LoadGoals()),
-          lazy: false,
-        ),
-        BlocProvider<DashboardBloc>(
-          create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
-          lazy: false,
-        ),
-        // BlocProvider<SummaryBloc>(
-        // create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
-        // lazy: true,
-        //        ),
-        BlocProvider<AuthBloc>(
-          create: (context) => sl<AuthBloc>()..add(AuthCheckStatus()),
-          lazy: false,
-        ),
-      ],
-      child: const MyApp(),
-    ),
+    },
+    (exception, stackTrace) async {
+      log.severe('Caught exception in runZonedGuarded: $exception');
+      await Sentry.captureException(exception, stackTrace: stackTrace);
+    },
   );
 }
 
