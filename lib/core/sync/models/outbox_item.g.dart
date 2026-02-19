@@ -27,13 +27,14 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
           ? OutboxStatus.pending
           : fields[6] as OutboxStatus,
       lastError: fields[7] as String?,
+      nextRetryAt: fields[8] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, OutboxItem obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -49,7 +50,9 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
       ..writeByte(6)
       ..write(obj.status)
       ..writeByte(7)
-      ..write(obj.lastError);
+      ..write(obj.lastError)
+      ..writeByte(8)
+      ..write(obj.nextRetryAt);
   }
 
   @override

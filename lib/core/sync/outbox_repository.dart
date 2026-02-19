@@ -11,11 +11,16 @@ class OutboxRepository {
   }
 
   List<OutboxItem> getPendingItems() {
+    final now = DateTime.now();
     return _box.values
         .where(
-          (item) =>
-              item.status == OutboxStatus.pending ||
-              item.status == OutboxStatus.failed,
+          (item) {
+            final isPending = item.status == OutboxStatus.pending;
+            final isFailedAndReady = item.status == OutboxStatus.failed &&
+                (item.nextRetryAt == null || item.nextRetryAt!.isBefore(now));
+
+            return isPending || isFailedAndReady;
+          },
         )
         .toList()
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -27,10 +32,13 @@ class OutboxRepository {
     await item.delete();
   }
 
-  Future<void> markAsFailed(OutboxItem item, String error) async {
+  Future<void> markAsFailed(OutboxItem item, String error, {DateTime? nextRetryAt}) async {
     item.status = OutboxStatus.failed;
     item.lastError = error;
     item.retryCount++;
+    if (nextRetryAt != null) {
+      item.nextRetryAt = nextRetryAt;
+    }
     await item.save();
   }
 
