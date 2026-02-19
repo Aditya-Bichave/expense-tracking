@@ -22,7 +22,7 @@ class SettingsState extends Equatable {
   // --- Demo Mode ---
   final bool isInDemoMode;
 
-  // --- Skip Setup Flag --- ADDED
+  // --- Skip Setup Flag ---
   final bool setupSkipped;
 
   // --- Package info ---
@@ -41,6 +41,8 @@ class SettingsState extends Equatable {
   String get currencySymbol =>
       AppCountries.getCurrencyForCountry(selectedCountryCode);
 
+  bool get isSetupCompleted => setupSkipped;
+
   // --- Constructor ---
   const SettingsState({
     this.status = SettingsStatus.initial,
@@ -51,7 +53,7 @@ class SettingsState extends Equatable {
     this.isAppLockEnabled = defaultAppLockEnabled,
     this.errorMessage,
     this.isInDemoMode = false,
-    this.setupSkipped = false, // Default to false // ADDED
+    this.setupSkipped = false,
     this.packageInfoStatus = PackageInfoStatus.initial,
     this.appVersion,
     this.packageInfoError,
@@ -67,7 +69,7 @@ class SettingsState extends Equatable {
     bool? isAppLockEnabled,
     ValueGetter<String?>? errorMessage,
     bool? isInDemoMode,
-    bool? setupSkipped, // ADDED
+    bool? setupSkipped,
     PackageInfoStatus? packageInfoStatus,
     ValueGetter<String?>? appVersion,
     ValueGetter<String?>? packageInfoError,
@@ -86,7 +88,7 @@ class SettingsState extends Equatable {
           ? errorMessage()
           : this.errorMessage,
       isInDemoMode: isInDemoMode ?? this.isInDemoMode,
-      setupSkipped: setupSkipped ?? this.setupSkipped, // ADDED
+      setupSkipped: setupSkipped ?? this.setupSkipped,
       packageInfoStatus: packageInfoStatus ?? this.packageInfoStatus,
       appVersion: appVersion != null ? appVersion() : this.appVersion,
       packageInfoError: clearAllMessages
@@ -109,7 +111,7 @@ class SettingsState extends Equatable {
     isAppLockEnabled,
     errorMessage,
     isInDemoMode,
-    setupSkipped, // ADDED
+    setupSkipped,
     packageInfoStatus,
     appVersion,
     packageInfoError,
