@@ -81,6 +81,51 @@ void main() {
     });
   });
 
+  group('getExpenses', () {
+    test('should return all expenses when no filters', () async {
+      // Arrange
+      when(() => mockBox.values).thenReturn([tExpenseModel]);
+
+      // Act
+      final result = await dataSource.getExpenses();
+
+      // Assert
+      expect(result, [tExpenseModel]);
+    });
+
+    test('should return filtered expenses by date', () async {
+      // Arrange
+      final oldExpense = ExpenseModel(
+        id: '2',
+        title: 'Old',
+        amount: 50,
+        date: DateTime(2023, 1, 1),
+        accountId: 'acc1',
+        categoryId: 'cat1',
+      );
+      when(() => mockBox.values).thenReturn([tExpenseModel, oldExpense]);
+
+      // Act
+      final result = await dataSource.getExpenses(
+        startDate: DateTime(2024, 1, 1),
+      );
+
+      // Assert
+      expect(result, [tExpenseModel]);
+    });
+
+    test('should throw CacheFailure when retrieval fails', () async {
+      // Arrange
+      when(() => mockBox.values).thenThrow(Exception('Hive Error'));
+
+      // Act & Assert
+      await expectLater(
+        () => dataSource.getExpenses(),
+        throwsA(isA<CacheFailure>()),
+      );
+    });
+  });
+
   group('getExpenseById', () {
     test('should return expense when found', () async {
       // Arrange
