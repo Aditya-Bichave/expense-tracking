@@ -22,18 +22,15 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
   final AddBudgetUseCase _addBudgetUseCase;
   final UpdateBudgetUseCase _updateBudgetUseCase; // ADDED
   final CategoryRepository _categoryRepository;
-  final Uuid _uuid;
 
   AddEditBudgetBloc({
     required AddBudgetUseCase addBudgetUseCase,
     required UpdateBudgetUseCase updateBudgetUseCase, // ADDED
     required CategoryRepository categoryRepository,
     Budget? initialBudget,
-    Uuid? uuid,
   }) : _addBudgetUseCase = addBudgetUseCase,
        _updateBudgetUseCase = updateBudgetUseCase, // ADDED
        _categoryRepository = categoryRepository,
-       _uuid = uuid ?? const Uuid(),
        super(AddEditBudgetState(initialBudget: initialBudget)) {
     on<InitializeBudgetForm>(_onInitializeBudgetForm);
     on<SaveBudget>(_onSaveBudget);
@@ -42,6 +39,8 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
     log.info(
       "[AddEditBudgetBloc] Initialized. Editing: ${initialBudget != null}",
     );
+    // Load categories immediately
+    add(InitializeBudgetForm(initialBudget: initialBudget));
   }
 
   Future<void> _onInitializeBudgetForm(
@@ -92,7 +91,7 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
     final budgetData = Budget(
       id:
           state.initialBudget?.id ??
-          _uuid.v4(), // Use existing ID or generate new
+          sl<Uuid>().v4(), // Use existing ID or generate new
       name: event.name.trim(),
       type: event.type,
       targetAmount: event.targetAmount,

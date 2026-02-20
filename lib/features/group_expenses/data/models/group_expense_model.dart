@@ -58,7 +58,7 @@ class ExpenseSplitModel {
   Map<String, dynamic> toJson() => _$ExpenseSplitModelToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 @HiveType(typeId: 15)
 class GroupExpenseModel extends HiveObject {
   @HiveField(0)

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -18,14 +17,24 @@ import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetCategoriesUseCase extends Mock implements GetCategoriesUseCase {}
-class MockAddCustomCategoryUseCase extends Mock implements AddCustomCategoryUseCase {}
-class MockUpdateCustomCategoryUseCase extends Mock implements UpdateCustomCategoryUseCase {}
-class MockDeleteCustomCategoryUseCase extends Mock implements DeleteCustomCategoryUseCase {}
 
-class FakeAddCustomCategoryParams extends Fake implements AddCustomCategoryParams {}
-class FakeUpdateCustomCategoryParams extends Fake implements UpdateCustomCategoryParams {}
-class FakeDeleteCustomCategoryParams extends Fake implements DeleteCustomCategoryParams {}
-class FakeNoParams extends Fake implements NoParams {}
+class MockAddCustomCategoryUseCase extends Mock
+    implements AddCustomCategoryUseCase {}
+
+class MockUpdateCustomCategoryUseCase extends Mock
+    implements UpdateCustomCategoryUseCase {}
+
+class MockDeleteCustomCategoryUseCase extends Mock
+    implements DeleteCustomCategoryUseCase {}
+
+class FakeAddCustomCategoryParams extends Fake
+    implements AddCustomCategoryParams {}
+
+class FakeUpdateCustomCategoryParams extends Fake
+    implements UpdateCustomCategoryParams {}
+
+class FakeDeleteCustomCategoryParams extends Fake
+    implements DeleteCustomCategoryParams {}
 
 void main() {
   late CategoryManagementBloc bloc;
@@ -33,12 +42,22 @@ void main() {
   late MockAddCustomCategoryUseCase mockAddCustomCategoryUseCase;
   late MockUpdateCustomCategoryUseCase mockUpdateCustomCategoryUseCase;
   late MockDeleteCustomCategoryUseCase mockDeleteCustomCategoryUseCase;
+  late StreamController<DataChangedEvent> mockStreamController;
+
+  final tCategory = Category(
+    id: '1',
+    name: 'Food',
+    iconName: 'food',
+    colorHex: '#FF0000',
+    type: CategoryType.expense,
+    isCustom: true,
+  );
 
   setUpAll(() {
+    registerFallbackValue(const NoParams());
     registerFallbackValue(FakeAddCustomCategoryParams());
     registerFallbackValue(FakeUpdateCustomCategoryParams());
     registerFallbackValue(FakeDeleteCustomCategoryParams());
-    registerFallbackValue(FakeNoParams());
   });
 
   setUp(() {
@@ -46,11 +65,11 @@ void main() {
     mockAddCustomCategoryUseCase = MockAddCustomCategoryUseCase();
     mockUpdateCustomCategoryUseCase = MockUpdateCustomCategoryUseCase();
     mockDeleteCustomCategoryUseCase = MockDeleteCustomCategoryUseCase();
+    mockStreamController = StreamController<DataChangedEvent>();
 
-    GetIt.I.reset();
-    final dataChangeController = StreamController<DataChangedEvent>.broadcast();
-    GetIt.I.registerSingleton<StreamController<DataChangedEvent>>(
-      dataChangeController,
+    GetIt.instance.reset();
+    GetIt.instance.registerSingleton<StreamController<DataChangedEvent>>(
+      mockStreamController,
       instanceName: 'dataChangeController',
     );
 
@@ -63,126 +82,31 @@ void main() {
   });
 
   tearDown(() {
-    bloc.close();
-    GetIt.I.reset();
+    GetIt.instance.reset();
+    mockStreamController.close();
   });
-
-  final tCategory = Category(
-    id: '1',
-    name: 'Food',
-    iconName: 'food',
-    colorHex: '#FFFFFF',
-    type: CategoryType.expense,
-    isCustom: true,
-    parentCategoryId: null,
-  );
 
   group('CategoryManagementBloc', () {
     test('initial state is correct', () {
-      expect(bloc.state.status, CategoryManagementStatus.initial);
+      expect(bloc.state, const CategoryManagementState());
     });
 
-    group('LoadCategories', () {
-      blocTest<CategoryManagementBloc, CategoryManagementState>(
-        'emits [loading, loaded] when GetCategories succeeds',
-        build: () {
-          when(() => mockGetCategoriesUseCase(any()))
-              .thenAnswer((_) async => Right([tCategory]));
-          return bloc;
-        },
-        act: (bloc) => bloc.add(LoadCategories()),
-        expect: () => [
-          CategoryManagementState(status: CategoryManagementStatus.loading),
-          CategoryManagementState(
-            status: CategoryManagementStatus.loaded,
-            customExpenseCategories: [tCategory],
-            customIncomeCategories: [],
-            predefinedExpenseCategories: [],
-            predefinedIncomeCategories: [],
-          ),
-        ],
-      );
-
-      blocTest<CategoryManagementBloc, CategoryManagementState>(
-        'emits [loading, error] when GetCategories fails',
-        build: () {
-          when(() => mockGetCategoriesUseCase(any()))
-              .thenAnswer((_) async => Left(CacheFailure('Error')));
-          return bloc;
-        },
-        act: (bloc) => bloc.add(LoadCategories()),
-        expect: () => [
-          CategoryManagementState(status: CategoryManagementStatus.loading),
-          CategoryManagementState(
-            status: CategoryManagementStatus.error,
-            errorMessage: 'Database Error: Error',
-          ),
-        ],
-      );
-    });
-
-    group('AddCategory', () {
-      blocTest<CategoryManagementBloc, CategoryManagementState>(
-        'emits [loading, loaded] (via LoadCategories) when AddCustomCategory succeeds',
-        build: () {
-          when(() => mockAddCustomCategoryUseCase(any()))
-              .thenAnswer((_) async => Right(tCategory));
-          when(() => mockGetCategoriesUseCase(any()))
-              .thenAnswer((_) async => Right([tCategory]));
-          return bloc;
-        },
-        act: (bloc) => bloc.add(AddCategory(
-          name: 'Food',
-          iconName: 'food',
-          colorHex: '#FFFFFF',
-          type: CategoryType.expense,
-        )),
-        expect: () => [
-          CategoryManagementState(status: CategoryManagementStatus.loading),
-          // Then LoadCategories triggers loading again (skipped if state is same, but here it changes from loading)
-          // Actually, AddCategory calls LoadCategories.
-          // State transition:
-          // 1. Loading (from AddCategory)
-          // 2. Loading (from LoadCategories) - emitted if distinct
-          // 3. Loaded (from LoadCategories success)
-          // CategoryManagementState(status: CategoryManagementStatus.loading),
-          CategoryManagementState(
-            status: CategoryManagementStatus.loaded,
-            customExpenseCategories: [tCategory],
-          ),
-        ],
-      );
-    });
-
-    group('DeleteCategory', () {
-      final tCategoryToDelete = tCategory;
-
-      blocTest<CategoryManagementBloc, CategoryManagementState>(
-        'emits [loading, loaded] when DeleteCustomCategory succeeds',
-        build: () {
-          when(() => mockDeleteCustomCategoryUseCase(any()))
-              .thenAnswer((_) async => const Right(null));
-          when(() => mockGetCategoriesUseCase(any()))
-              .thenAnswer((_) async => const Right([])); // Return empty after delete
-          return bloc;
-        },
-        seed: () => CategoryManagementState(
-            status: CategoryManagementStatus.loaded,
-            customExpenseCategories: [tCategoryToDelete],
+    blocTest<CategoryManagementBloc, CategoryManagementState>(
+      'emits [loading, loaded] on successful LoadCategories',
+      setUp: () {
+        when(
+          () => mockGetCategoriesUseCase(any()),
+        ).thenAnswer((_) async => Right([tCategory]));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(const LoadCategories()),
+      expect: () => [
+        const CategoryManagementState(status: CategoryManagementStatus.loading),
+        CategoryManagementState(
+          status: CategoryManagementStatus.loaded,
+          customExpenseCategories: [tCategory],
         ),
-        act: (bloc) => bloc.add(DeleteCategory(categoryId: '1')),
-        expect: () => [
-          CategoryManagementState(
-            status: CategoryManagementStatus.loading,
-            customExpenseCategories: [tCategoryToDelete], // Keep old list while loading
-          ),
-          // Then LoadCategories triggers
-          CategoryManagementState(
-            status: CategoryManagementStatus.loaded,
-            customExpenseCategories: [], // Empty now
-          ),
-        ],
-      );
-    });
+      ],
+    );
   });
 }

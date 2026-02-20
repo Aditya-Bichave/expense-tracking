@@ -1,4 +1,5 @@
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/features/auth/domain/repositories/auth_repository.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
@@ -10,6 +11,8 @@ import 'package:expense_tracker/features/expenses/domain/repositories/expense_re
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
+import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
+import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
@@ -28,6 +31,8 @@ import 'package:mocktail/mocktail.dart';
 class MockAssetAccountRepository extends Mock
     implements AssetAccountRepository {}
 
+class MockAuthRepository extends Mock implements AuthRepository {}
+
 class MockBudgetRepository extends Mock implements BudgetRepository {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
@@ -43,6 +48,11 @@ class MockGoalRepository extends Mock implements GoalRepository {}
 
 class MockGoalContributionRepository extends Mock
     implements GoalContributionRepository {}
+
+class MockGroupExpensesRepository extends Mock
+    implements GroupExpensesRepository {}
+
+class MockGroupsRepository extends Mock implements GroupsRepository {}
 
 class MockIncomeRepository extends Mock implements IncomeRepository {}
 
@@ -138,6 +148,11 @@ Future<void> registerAccountsMocks(GetIt getIt) async {
   );
 }
 
+// Registers mocks needed for the Auth feature
+Future<void> registerAuthMocks(GetIt getIt) async {
+  await _register<AuthRepository>(getIt, () => MockAuthRepository());
+}
+
 // Registers mocks needed for the Budgets feature
 Future<void> registerBudgetsMocks(GetIt getIt) async {
   await _register<BudgetRepository>(getIt, () => MockBudgetRepository());
@@ -169,6 +184,19 @@ Future<void> registerGoalsMocks(GetIt getIt) async {
     getIt,
     () => MockGoalContributionRepository(),
   );
+}
+
+// Registers mocks needed for the Group Expenses feature
+Future<void> registerGroupExpensesMocks(GetIt getIt) async {
+  await _register<GroupExpensesRepository>(
+    getIt,
+    () => MockGroupExpensesRepository(),
+  );
+}
+
+// Registers mocks needed for the Groups feature
+Future<void> registerGroupsMocks(GetIt getIt) async {
+  await _register<GroupsRepository>(getIt, () => MockGroupsRepository());
 }
 
 // Registers mocks needed for the Recurring Transactions feature
