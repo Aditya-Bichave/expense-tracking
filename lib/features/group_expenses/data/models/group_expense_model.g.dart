@@ -182,14 +182,14 @@ GroupExpenseModel _$GroupExpenseModelFromJson(
   Map<String, dynamic> json,
 ) => GroupExpenseModel(
   id: json['id'] as String,
-  groupId: json['groupId'] as String,
-  createdBy: json['createdBy'] as String,
+  groupId: json['group_id'] as String,
+  createdBy: json['created_by'] as String,
   title: json['title'] as String,
   amount: (json['amount'] as num).toDouble(),
   currency: json['currency'] as String,
-  occurredAt: DateTime.parse(json['occurredAt'] as String),
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  occurredAt: DateTime.parse(json['occurred_at'] as String),
+  createdAt: DateTime.parse(json['created_at'] as String),
+  updatedAt: DateTime.parse(json['updated_at'] as String),
   payers:
       (json['payers'] as List<dynamic>?)
           ?.map((e) => ExpensePayerModel.fromJson(e as Map<String, dynamic>))
@@ -205,14 +205,14 @@ GroupExpenseModel _$GroupExpenseModelFromJson(
 Map<String, dynamic> _$GroupExpenseModelToJson(GroupExpenseModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'groupId': instance.groupId,
-      'createdBy': instance.createdBy,
+      'group_id': instance.groupId,
+      'created_by': instance.createdBy,
       'title': instance.title,
       'amount': instance.amount,
       'currency': instance.currency,
-      'occurredAt': instance.occurredAt.toIso8601String(),
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
+      'occurred_at': instance.occurredAt.toIso8601String(),
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
       'payers': instance.payers,
       'splits': instance.splits,
     };
