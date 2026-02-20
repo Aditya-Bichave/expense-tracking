@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: expense_tracker
+    env: flutter
+    buildCommand: flutter build web --release
+    staticPublishPath: ./build/web
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false

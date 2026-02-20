@@ -62,6 +62,8 @@ void main() {
       expect: () => [
         GroupExpensesLoading(),
         GroupExpensesLoaded([tExpense]),
+        // Second loaded emitted after sync and fetch
+        GroupExpensesLoaded([tExpense]),
       ],
       verify: (_) {
         verify(() => mockRepository.getExpenses(tGroupId)).called(2);
@@ -82,11 +84,7 @@ void main() {
       expect: () => [
         GroupExpensesLoading(),
         GroupExpensesError('Error'),
-        // GroupExpensesError('Error'), // Duplicate error states are usually suppressed by Bloc unless configured otherwise, or maybe my expectation was wrong about suppression.
-        // Actually Equatable states that are equal are not emitted.
-        // The implementation calls emit(GroupExpensesError...) again.
-        // If it's the exact same object/value, it might be skipped.
-        // Let's assume it IS skipped if identical.
+        // Duplicate error states are skipped by Equatable
       ],
     );
 
@@ -104,6 +102,8 @@ void main() {
       act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
       expect: () => [
         GroupExpensesLoading(),
+        GroupExpensesLoaded([tExpense]),
+        // Second loaded emitted after sync and fetch
         GroupExpensesLoaded([tExpense]),
       ],
     );

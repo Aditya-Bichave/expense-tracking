@@ -139,6 +139,13 @@ void main() {
         )),
         expect: () => [
           CategoryManagementState(status: CategoryManagementStatus.loading),
+          // Then LoadCategories triggers loading again (skipped if state is same, but here it changes from loading)
+          // Actually, AddCategory calls LoadCategories.
+          // State transition:
+          // 1. Loading (from AddCategory)
+          // 2. Loading (from LoadCategories) - emitted if distinct
+          // 3. Loaded (from LoadCategories success)
+          // CategoryManagementState(status: CategoryManagementStatus.loading),
           CategoryManagementState(
             status: CategoryManagementStatus.loaded,
             customExpenseCategories: [tCategory],
@@ -169,6 +176,7 @@ void main() {
             status: CategoryManagementStatus.loading,
             customExpenseCategories: [tCategoryToDelete], // Keep old list while loading
           ),
+          // Then LoadCategories triggers
           CategoryManagementState(
             status: CategoryManagementStatus.loaded,
             customExpenseCategories: [], // Empty now

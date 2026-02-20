@@ -33,7 +33,7 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
   }) : _addBudgetUseCase = addBudgetUseCase,
        _updateBudgetUseCase = updateBudgetUseCase, // ADDED
        _categoryRepository = categoryRepository,
-       _uuid = uuid ?? sl<Uuid>(),
+       _uuid = uuid ?? const Uuid(),
        super(AddEditBudgetState(initialBudget: initialBudget)) {
     on<InitializeBudgetForm>(_onInitializeBudgetForm);
     on<SaveBudget>(_onSaveBudget);

@@ -63,12 +63,9 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
     );
 
     // Sync
-    await _repository.syncExpenses(event.groupId);
-    final syncResult = await _repository.getExpenses(event.groupId);
-    syncResult.fold(
-      (failure) => emit(GroupExpensesError(failure.message)),
-      (expenses) => emit(GroupExpensesLoaded(expenses)),
-    );
+    _repository.syncExpenses(event.groupId).then((_) {
+      add(LoadGroupExpenses(event.groupId));
+    });
   }
 
   Future<void> _onAddExpense(
