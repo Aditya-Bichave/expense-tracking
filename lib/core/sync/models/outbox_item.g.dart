@@ -18,7 +18,7 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
     };
     return OutboxItem(
       id: fields[0] as String,
-      entityId: fields[8] as String,
+      entityId: fields[9] as String,
       entityType: fields[1] as EntityType,
       opType: fields[2] as OpType,
       payloadJson: fields[3] as String,
@@ -28,13 +28,14 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
           ? OutboxStatus.pending
           : fields[6] as OutboxStatus,
       lastError: fields[7] as String?,
+      nextRetryAt: fields[8] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, OutboxItem obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -52,6 +53,8 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
       ..writeByte(7)
       ..write(obj.lastError)
       ..writeByte(8)
+      ..write(obj.nextRetryAt)
+      ..writeByte(9)
       ..write(obj.entityId);
   }
 

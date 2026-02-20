@@ -77,6 +77,9 @@ class OutboxItem extends HiveObject {
   String? lastError;
 
   @HiveField(8)
+  DateTime? nextRetryAt;
+
+  @HiveField(9)
   final String entityId;
 
   OutboxItem({
@@ -89,5 +92,6 @@ class OutboxItem extends HiveObject {
     this.retryCount = 0,
     this.status = OutboxStatus.pending,
     this.lastError,
+    this.nextRetryAt,
   });
 }

@@ -11,7 +11,8 @@ class MockOutboxRepository extends Mock implements OutboxRepository {}
 
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
-class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder {}
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder {}
 
 class FakeOutboxItem extends Fake implements OutboxItem {}
 

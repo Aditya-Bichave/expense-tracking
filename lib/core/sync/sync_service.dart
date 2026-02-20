@@ -9,10 +9,7 @@ class SyncService {
   final SupabaseClient _client;
   final OutboxRepository _outboxRepository;
   bool _isSyncing = false;
-
-  // Exponential backoff configuration
-  static const int maxRetries = 5;
-  static const int baseDelaySeconds = 2;
+  static const int _maxRetries = 5;
 
   SyncService(this._client, this._outboxRepository);
 
@@ -27,9 +24,17 @@ class SyncService {
       log.info('Syncing ${pendingItems.length} items...');
 
       for (final item in pendingItems) {
-        if (item.retryCount >= maxRetries) {
-          // Skip permanently failed items or move to dead letter queue
-          // For now, we just log and skip to prevent blocking
+        // Check for max retries
+        if (item.retryCount >= _maxRetries) {
+          log.severe(
+            'Item ${item.id} exceeded max retries. Mark as permanently failed.',
+          );
+          // Set nextRetryAt to distant future to prevent re-fetching
+          await _outboxRepository.markAsFailed(
+            item,
+            'Max retries exceeded. Last error: ${item.lastError}',
+            nextRetryAt: DateTime(9999),
+          );
           continue;
         }
 
@@ -39,17 +44,21 @@ class SyncService {
         } catch (e) {
           log.warning('Failed to sync item ${item.id}: $e');
 
-          final nextRetry = item.retryCount + 1;
-          final delay = pow(baseDelaySeconds, nextRetry);
-          log.info(
-            'Retrying item ${item.id} in $delay seconds (Attempt $nextRetry)',
+          // Exponential backoff: 2^retryCount seconds
+          final backoffSeconds = pow(2, item.retryCount).toInt();
+          final nextRetryAt = DateTime.now().add(
+            Duration(seconds: backoffSeconds),
           );
 
-          // In a real persistent queue, we would schedule a job.
-          // Here we just increment the counter and mark as failed so it's picked up next time
-          // (assuming processOutbox is called periodically or on connectivity change).
-          item.retryCount = nextRetry;
-          await _outboxRepository.markAsFailed(item, e.toString());
+          log.info(
+            'Retrying item ${item.id} in $backoffSeconds seconds (Attempt ${item.retryCount + 1})',
+          );
+
+          await _outboxRepository.markAsFailed(
+            item,
+            e.toString(),
+            nextRetryAt: nextRetryAt,
+          );
         }
       }
     } finally {
