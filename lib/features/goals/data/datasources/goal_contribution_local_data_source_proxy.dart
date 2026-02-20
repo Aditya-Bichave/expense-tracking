@@ -29,15 +29,25 @@ class DemoAwareGoalContributionDataSource
 
   @override
   Future<List<GoalContributionModel>> getContributionsForGoal(
-    String goalId,
-  ) async {
+    String goalId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     if (demoModeService.isDemoActive) {
       log.fine(
         "[DemoAwareContribDS] Getting demo contributions for Goal ID: $goalId",
       );
-      return demoModeService.getDemoContributionsForGoal(goalId);
+      return demoModeService.getDemoContributionsForGoal(
+        goalId,
+        startDate: startDate,
+        endDate: endDate,
+      );
     } else {
-      return hiveDataSource.getContributionsForGoal(goalId);
+      return hiveDataSource.getContributionsForGoal(
+        goalId,
+        startDate: startDate,
+        endDate: endDate,
+      );
     }
   }
 

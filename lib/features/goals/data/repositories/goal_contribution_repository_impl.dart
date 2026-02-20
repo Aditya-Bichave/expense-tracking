@@ -148,12 +148,18 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
 
   @override
   Future<Either<Failure, List<GoalContribution>>> getContributionsForGoal(
-    String goalId,
-  ) async {
-    log.fine("[ContributionRepo] Getting contributions for Goal ID: $goalId");
+    String goalId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    log.fine(
+      "[ContributionRepo] Getting contributions for Goal ID: $goalId (Start: $startDate, End: $endDate)",
+    );
     try {
       final models = await contributionDataSource.getContributionsForGoal(
         goalId,
+        startDate: startDate,
+        endDate: endDate,
       );
       final entities = models.map((m) => m.toEntity()).toList();
       // Sort by date descending
@@ -185,7 +191,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       );
       return Right(entities);
     } catch (e, s) {
-      log.severe("[ContributionRepo] Error getting all contributions$e$s");
+      log.severe("[ContributionDS] Error getting all contributions$e$s");
       return Left(
         CacheFailure("Failed to load contributions: ${e.toString()}"),
       );

@@ -1125,21 +1125,21 @@ class ReportRepositoryImpl implements ReportRepository {
         59,
       );
 
-      // 1. Fetch contributions for the goal
+      // 1. Fetch contributions for the goal (Optimized)
       final contribResult = await goalContributionRepository
-          .getContributionsForGoal(goalId);
+          .getContributionsForGoal(
+            goalId,
+            startDate: startDate,
+            endDate: endDateEndOfDay,
+          );
+
       if (contribResult.isLeft()) {
         return contribResult.fold(
           (l) => Left(l),
           (_) => const Left(CacheFailure("Failed")),
         );
       }
-      final allContributions = contribResult.getOrElse(() => []);
-
-      // 2. Filter contributions by date range
-      final contributionsInRange = allContributions.where((c) {
-        return !c.date.isBefore(startDate) && !c.date.isAfter(endDateEndOfDay);
-      }).toList();
+      final contributionsInRange = contribResult.getOrElse(() => []);
 
       // 3. Aggregate by day
       final Map<DateTime, double> aggregatedData = {};

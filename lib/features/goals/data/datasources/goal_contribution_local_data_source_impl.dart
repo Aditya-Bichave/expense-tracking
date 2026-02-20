@@ -84,14 +84,22 @@ class HiveContributionLocalDataSource
 
   @override
   Future<List<GoalContributionModel>> getContributionsForGoal(
-    String goalId,
-  ) async {
-    // In Hive, we have to fetch all and filter manually
+    String goalId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
-      final all = await getAllContributions();
-      final filtered = all.where((c) => c.goalId == goalId).toList();
+      // Optimize by filtering directly on the iterable (values)
+      // This avoids creating an intermediate list of ALL contributions and ALL goal contributions
+      final filtered = contributionBox.values.where((c) {
+        if (c.goalId != goalId) return false;
+        if (startDate != null && c.date.isBefore(startDate)) return false;
+        if (endDate != null && c.date.isAfter(endDate)) return false;
+        return true;
+      }).toList();
+
       log.fine(
-        "[ContributionDS] Filtered ${filtered.length} contributions for Goal ID $goalId.",
+        "[ContributionDS] Filtered ${filtered.length} contributions for Goal ID $goalId (Start: $startDate, End: $endDate).",
       );
       return filtered;
     } catch (e, s) {

@@ -5,8 +5,10 @@ abstract class GoalContributionLocalDataSource {
   Future<List<GoalContributionModel>>
   getAllContributions(); // Needed for recalculation
   Future<List<GoalContributionModel>> getContributionsForGoal(
-    String goalId,
-  ); // Convenience method
+    String goalId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }); // Convenience method
   Future<GoalContributionModel?> getContributionById(String id);
   Future<void> saveContribution(
     GoalContributionModel contribution,

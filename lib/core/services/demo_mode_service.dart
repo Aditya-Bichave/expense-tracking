@@ -152,8 +152,18 @@ class DemoModeService {
 
   // --- Goal Contribution Operations ---
   Future<List<GoalContributionModel>> getDemoContributionsForGoal(
-    String goalId,
-  ) async => _demoContributions.where((c) => c.goalId == goalId).toList();
+    String goalId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    return _demoContributions.where((c) {
+      if (c.goalId != goalId) return false;
+      if (startDate != null && c.date.isBefore(startDate)) return false;
+      if (endDate != null && c.date.isAfter(endDate)) return false;
+      return true;
+    }).toList();
+  }
+
   Future<List<GoalContributionModel>> getAllDemoContributions() async =>
       _demoContributions;
   Future<GoalContributionModel?> getDemoContributionById(String id) async =>

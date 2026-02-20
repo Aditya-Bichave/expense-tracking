@@ -5,8 +5,10 @@ import 'package:expense_tracker/features/goals/domain/entities/goal_contribution
 
 abstract class GoalContributionRepository {
   Future<Either<Failure, List<GoalContribution>>> getContributionsForGoal(
-    String goalId,
-  );
+    String goalId, {
+    DateTime? startDate,
+    DateTime? endDate,
+  });
   Future<Either<Failure, List<GoalContribution>>> getAllContributions();
   Future<Either<Failure, GoalContribution>> addContribution(
     GoalContribution contribution,

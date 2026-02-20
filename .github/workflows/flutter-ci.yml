@@ -122,7 +122,6 @@ jobs:
       - name: Check Diff Coverage (80%)
         if: github.event_name == 'pull_request'
         run: |
-          git fetch origin ${{ github.base_ref }} --depth=1 || true
           diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80
 
       - name: Enforce Total Coverage (35%)
