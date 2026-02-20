@@ -10,9 +10,15 @@ RUN flutter pub get
 
 # Build Flutter web release
 ARG API_BASE_URL
+ARG SUPABASE_URL
+ARG SUPABASE_ANON_KEY
+
 # Use --no-wasm-dry-run to suppress warnings about dart:ffi which is not supported on web
 # Use quoted dart-define to handle spaces/empty values safely
-RUN flutter build web --release --no-wasm-dry-run "--dart-define=API_BASE_URL=${API_BASE_URL}"
+RUN flutter build web --release --no-wasm-dry-run \
+    "--dart-define=API_BASE_URL=${API_BASE_URL}" \
+    "--dart-define=SUPABASE_URL=${SUPABASE_URL}" \
+    "--dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}"
 
 # ---------- Run stage ----------
 FROM nginx:alpine
