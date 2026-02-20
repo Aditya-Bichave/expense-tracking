@@ -1,0 +1,15 @@
+.git
+.gitignore
+.dockerignore
+.dart_tool/
+build/
+.idea/
+.vscode/
+android/
+ios/
+linux/
+macos/
+windows/
+test/
+coverage/
+*.md

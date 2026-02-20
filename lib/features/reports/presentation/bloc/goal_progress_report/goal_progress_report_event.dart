@@ -1,4 +1,3 @@
-// lib/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_event.dart
 part of 'goal_progress_report_bloc.dart';
 
 abstract class GoalProgressReportEvent extends Equatable {
@@ -15,4 +14,8 @@ class LoadGoalProgressReport extends GoalProgressReportEvent {
 // Internal event for filter changes
 class _FilterChanged extends GoalProgressReportEvent {
   const _FilterChanged();
+}
+
+class ToggleComparison extends GoalProgressReportEvent {
+  const ToggleComparison();
 }

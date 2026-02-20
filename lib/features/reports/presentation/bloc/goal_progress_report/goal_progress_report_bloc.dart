@@ -17,6 +17,9 @@ class GoalProgressReportBloc
   final ReportFilterBloc _reportFilterBloc;
   late final StreamSubscription _filterSubscription;
 
+  // Comparison state
+  bool _isComparisonEnabled = false;
+
   GoalProgressReportBloc({
     required GetGoalProgressReportUseCase getGoalProgressReportUseCase,
     required ReportFilterBloc reportFilterBloc,
@@ -25,11 +28,9 @@ class GoalProgressReportBloc
        super(GoalProgressReportInitial()) {
     on<LoadGoalProgressReport>(_onLoadReport);
     on<_FilterChanged>(_onFilterChanged);
+    on<ToggleComparison>(_onToggleComparison);
 
     _filterSubscription = _reportFilterBloc.stream.listen((filterState) {
-      // Only reload if the selected goal IDs potentially changed
-      // This requires comparing previous state's selectedGoalIds with new state's.
-      // A simpler approach for now: reload on any filter change.
       add(const _FilterChanged());
     });
 
@@ -47,21 +48,40 @@ class GoalProgressReportBloc
     add(const LoadGoalProgressReport());
   }
 
+  void _onToggleComparison(
+    ToggleComparison event,
+    Emitter<GoalProgressReportState> emit,
+  ) {
+    _isComparisonEnabled = !_isComparisonEnabled;
+    log.info(
+      "[GoalProgressReportBloc] Comparison toggled to: $_isComparisonEnabled",
+    );
+    add(const LoadGoalProgressReport());
+  }
+
   Future<void> _onLoadReport(
     LoadGoalProgressReport event,
     Emitter<GoalProgressReportState> emit,
   ) async {
-    if (state is GoalProgressReportLoading) return;
+    // Note: Removed the check 'if (state is GoalProgressReportLoading) return;'
+    // to ensure toggles/filters trigger a reload even if one was pending (though rare)
+    // or if we want to force refresh. Standard bloc pattern allows handling subsequent events.
+    // However, if we want to avoid double loading:
+    // if (state is GoalProgressReportLoading) return;
+    // But since _FilterChanged calls this, and ToggleComparison calls this,
+    // we should be careful. For now, I'll emit Loading.
 
     emit(GoalProgressReportLoading());
-    log.info("[GoalProgressReportBloc] Loading goal progress report...");
+    log.info(
+      "[GoalProgressReportBloc] Loading goal progress report. Comparison: $_isComparisonEnabled",
+    );
 
     final filterState = _reportFilterBloc.state;
     final params = GetGoalProgressReportParams(
       goalIds: filterState.selectedGoalIds.isEmpty
           ? null
-          : filterState.selectedGoalIds, // Use filtered IDs
-      // calculateComparisonRate: // Add comparison flag later
+          : filterState.selectedGoalIds,
+      calculateComparisonRate: _isComparisonEnabled,
     );
 
     final result = await _getReportUseCase(params);
@@ -75,7 +95,12 @@ class GoalProgressReportBloc
         log.info(
           "[GoalProgressReportBloc] Load successful. Goals: ${reportData.progressData.length}",
         );
-        emit(GoalProgressReportLoaded(reportData));
+        emit(
+          GoalProgressReportLoaded(
+            reportData,
+            isComparisonEnabled: _isComparisonEnabled,
+          ),
+        );
       },
     );
   }
