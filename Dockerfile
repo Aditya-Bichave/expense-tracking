@@ -10,7 +10,9 @@ RUN flutter pub get
 
 # Build Flutter web release
 ARG API_BASE_URL
-RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
+# Use --no-wasm-dry-run to suppress warnings about dart:ffi which is not supported on web
+# Use quoted dart-define to handle spaces/empty values safely
+RUN flutter build web --release --no-wasm-dry-run "--dart-define=API_BASE_URL=${API_BASE_URL}"
 
 # ---------- Run stage ----------
 FROM nginx:alpine
