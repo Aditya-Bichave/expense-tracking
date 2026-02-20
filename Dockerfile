@@ -1,33 +1,31 @@
-# Stage 1: Build
-FROM ubuntu:latest AS build
-
-# Prerequisites
-RUN apt-get update && apt-get install -y curl git unzip
-
-# Install Flutter
-RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter
-ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
-
-# Enable web
-RUN flutter config --enable-web
-
+# ---------- Build stage ----------
+FROM ghcr.io/cirruslabs/flutter:stable AS build
 WORKDIR /app
+
+# Copy project files
 COPY . .
 
-# Get dependencies
+# Install deps
 RUN flutter pub get
 
-# Build
-RUN flutter build web --release
+# Build Flutter web release
+ARG API_BASE_URL
+# Use --no-wasm-dry-run to suppress warnings about dart:ffi which is not supported on web
+# Use quoted dart-define to handle spaces/empty values safely
+RUN flutter build web --release --no-wasm-dry-run "--dart-define=API_BASE_URL=${API_BASE_URL}"
 
-# Stage 2: Serve
+# ---------- Run stage ----------
 FROM nginx:alpine
 
-# Copy build artifacts
+# Replace nginx config to support SPA routing + good caching
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy built web output
 COPY --from=build /app/build/web /usr/share/nginx/html
 
-# Expose port 80
+# Expose port (documentation only, Render sets PORT env var)
 EXPOSE 80
 
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start Nginx with dynamic port substitution
+CMD sh -c "sed -i 's/listen 80;/listen ${PORT:-80};/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"

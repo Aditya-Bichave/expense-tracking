@@ -30,7 +30,7 @@ class SupabaseClientProvider {
       );
       log.info('Supabase initialized successfully.');
     } catch (e) {
-      log.severe('Failed to initialize Supabase: ');
+      log.severe('Failed to initialize Supabase: $e');
       // Do not rethrow to prevent app crash in CI/Smoke tests
     }
   }

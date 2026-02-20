@@ -23,7 +23,6 @@ class SyncDependencies {
         sl<GroupExpensesLocalDataSource>(), // Add missing arguments
       ),
     );
-
     sl.registerLazySingleton<SyncCoordinator>(
       () => SyncCoordinator(sl(), sl(), sl(), sl()),
     );

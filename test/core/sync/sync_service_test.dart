@@ -95,9 +95,9 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(
-        () => mockSupabaseClient.from(any()),
-      ).thenReturn(mockQueryBuilder); // Use thenReturn for non-async property access
+      when(() => mockSupabaseClient.from(any())).thenReturn(
+        mockQueryBuilder,
+      ); // Use thenReturn for non-async property access
 
       when(
         () => mockQueryBuilder.insert(any()),
@@ -126,9 +126,7 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(
-        () => mockSupabaseClient.from(any()),
-      ).thenReturn(mockQueryBuilder);
+      when(() => mockSupabaseClient.from(any())).thenReturn(mockQueryBuilder);
 
       // Simulate failure
       when(
@@ -205,9 +203,7 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(
-        () => mockSupabaseClient.from(any()),
-      ).thenReturn(mockQueryBuilder);
+      when(() => mockSupabaseClient.from(any())).thenReturn(mockQueryBuilder);
 
       final builder = FakePostgrestFilterBuilder();
       when(() => mockQueryBuilder.insert(any())).thenAnswer((_) => builder);
