@@ -42,10 +42,7 @@ void main() {
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: ExpenseCard(
-        expense: tExpense,
-        accountName: 'Main Account',
-      ),
+      widget: ExpenseCard(expense: tExpense, accountName: 'Main Account'),
     );
 
     // Assert
@@ -60,10 +57,7 @@ void main() {
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: ExpenseCard(
-        expense: tExpense,
-        accountName: 'Deleted',
-      ),
+      widget: ExpenseCard(expense: tExpense, accountName: 'Deleted'),
     );
 
     // Assert

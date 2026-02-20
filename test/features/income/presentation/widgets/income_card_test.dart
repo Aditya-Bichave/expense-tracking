@@ -42,10 +42,7 @@ void main() {
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: IncomeCard(
-        income: tIncome,
-        accountName: 'Main Account',
-      ),
+      widget: IncomeCard(income: tIncome, accountName: 'Main Account'),
     );
 
     // Assert
@@ -60,10 +57,7 @@ void main() {
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: IncomeCard(
-        income: tIncome,
-        accountName: 'Deleted',
-      ),
+      widget: IncomeCard(income: tIncome, accountName: 'Deleted'),
     );
 
     // Assert
