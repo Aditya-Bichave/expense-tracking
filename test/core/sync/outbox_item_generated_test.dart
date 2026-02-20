@@ -35,7 +35,8 @@ void main() {
       final box = await Hive.openBox<OutboxItem>('outbox_items');
 
       final item = OutboxItem(
-        id: '1', entityId: 'test-entity',
+        id: '1',
+        entityId: 'test-entity',
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: '{"test": "data"}',

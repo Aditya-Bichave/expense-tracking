@@ -7,8 +7,8 @@ import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
-import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart'
-    hide group;
+import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart';
+
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
