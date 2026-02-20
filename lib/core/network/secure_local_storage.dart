@@ -6,12 +6,8 @@ class SecureLocalStorage extends LocalStorage {
 
   const SecureLocalStorage({
     FlutterSecureStorage storage = const FlutterSecureStorage(
-      aOptions: AndroidOptions(
-        encryptedSharedPreferences: true,
-      ),
-      iOptions: IOSOptions(
-        accessibility: KeychainAccessibility.first_unlock,
-      ),
+      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
     ),
   }) : _storage = storage;
 
@@ -35,6 +31,9 @@ class SecureLocalStorage extends LocalStorage {
 
   @override
   Future<void> persistSession(String persistSessionString) async {
-    await _storage.write(key: supabasePersistSessionKey, value: persistSessionString);
+    await _storage.write(
+      key: supabasePersistSessionKey,
+      value: persistSessionString,
+    );
   }
 }

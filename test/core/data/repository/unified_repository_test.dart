@@ -8,7 +8,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
 class MockBox<T> extends Mock implements Box<T> {}
+
 class MockOutboxRepository extends Mock implements OutboxRepository {}
+
 class MockHiveObject extends Mock implements HiveObject {
   String get id => 'test-id';
 }
@@ -36,13 +38,16 @@ void main() {
       outboxRepository: mockOutboxRepository,
     );
 
-    registerFallbackValue(OutboxItem(
+    registerFallbackValue(
+      OutboxItem(
         id: '1',
         entityId: '1',
         entityType: EntityType.expense,
         opType: OpType.create,
         payloadJson: '{}',
-        createdAt: DateTime.now()));
+        createdAt: DateTime.now(),
+      ),
+    );
 
     // Register fake for MockHiveObject to fix "any()" error
     registerFallbackValue(MockHiveObject());
@@ -61,7 +66,9 @@ void main() {
 
       expect(result.isRight(), true);
       verify(() => mockBox.add(mockItem)).called(1);
-      verify(() => mockOutboxRepository.add(any(that: isA<OutboxItem>()))).called(1);
+      verify(
+        () => mockOutboxRepository.add(any(that: isA<OutboxItem>())),
+      ).called(1);
     });
 
     test('update saves item and queues outbox item', () async {
@@ -76,21 +83,22 @@ void main() {
 
       expect(result.isRight(), true);
       verify(() => mockItem.save()).called(1);
-      verify(() => mockOutboxRepository.add(any(that: isA<OutboxItem>()))).called(1);
+      verify(
+        () => mockOutboxRepository.add(any(that: isA<OutboxItem>())),
+      ).called(1);
     });
 
     test('delete removes item and queues outbox item', () async {
       when(() => mockItem.delete()).thenAnswer((_) async => {});
       when(() => mockOutboxRepository.add(any())).thenAnswer((_) async => {});
 
-      final result = await repository.delete(
-        mockItem,
-        tableName: 'expenses',
-      );
+      final result = await repository.delete(mockItem, tableName: 'expenses');
 
       expect(result.isRight(), true);
       verify(() => mockItem.delete()).called(1);
-      verify(() => mockOutboxRepository.add(any(that: isA<OutboxItem>()))).called(1);
+      verify(
+        () => mockOutboxRepository.add(any(that: isA<OutboxItem>())),
+      ).called(1);
     });
   });
 }

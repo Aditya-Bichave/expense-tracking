@@ -34,7 +34,8 @@ abstract class UnifiedRepository<Model extends HiveObject> {
       // Note: Hive might not set 'id' if using auto-increment int keys,
       // but our models usually use UUID strings.
 
-      final entityId = (item as dynamic).id as String; // Explicitly cast to String
+      final entityId =
+          (item as dynamic).id as String; // Explicitly cast to String
 
       // 2. Queue to Outbox
       final outboxItem = OutboxItem(
@@ -112,12 +113,18 @@ abstract class UnifiedRepository<Model extends HiveObject> {
 
   EntityType _mapTableNameToEntityType(String tableName) {
     switch (tableName) {
-      case 'groups': return EntityType.group;
-      case 'group_members': return EntityType.groupMember;
-      case 'group_expenses': return EntityType.groupExpense;
-      case 'expenses': return EntityType.expense;
-      case 'income': return EntityType.income;
-      default: return EntityType.groupExpense; // Fallback or throw
+      case 'groups':
+        return EntityType.group;
+      case 'group_members':
+        return EntityType.groupMember;
+      case 'group_expenses':
+        return EntityType.groupExpense;
+      case 'expenses':
+        return EntityType.expense;
+      case 'income':
+        return EntityType.income;
+      default:
+        return EntityType.groupExpense; // Fallback or throw
     }
   }
 }

@@ -9,6 +9,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}
+
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 
 void main() {
@@ -45,7 +46,9 @@ void main() {
     });
 
     test('saveThemeMode saves correct string', () async {
-      when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
+      when(
+        () => mockPrefs.setString(any(), any()),
+      ).thenAnswer((_) async => true);
       await dataSource.saveThemeMode(ThemeMode.dark);
       verify(() => mockPrefs.setString(PrefKeys.themeMode, 'dark'));
     });
@@ -59,37 +62,53 @@ void main() {
     });
 
     test('saveUIMode saves correct string', () async {
-      when(() => mockPrefs.setString(any(), any())).thenAnswer((_) async => true);
+      when(
+        () => mockPrefs.setString(any(), any()),
+      ).thenAnswer((_) async => true);
       await dataSource.saveUIMode(UIMode.aether);
       verify(() => mockPrefs.setString(PrefKeys.uiMode, 'aether'));
     });
   });
 
   group('App Lock', () {
-    test('getAppLockEnabled returns true when stored value is "true"', () async {
-      when(() => mockSecureStorage.read(key: PrefKeys.appLockEnabled))
-          .thenAnswer((_) async => 'true');
-      final result = await dataSource.getAppLockEnabled();
-      expect(result, true);
-    });
+    test(
+      'getAppLockEnabled returns true when stored value is "true"',
+      () async {
+        when(
+          () => mockSecureStorage.read(key: PrefKeys.appLockEnabled),
+        ).thenAnswer((_) async => 'true');
+        final result = await dataSource.getAppLockEnabled();
+        expect(result, true);
+      },
+    );
 
-    test('getAppLockEnabled returns default when stored value is null', () async {
-      when(() => mockSecureStorage.read(key: PrefKeys.appLockEnabled))
-          .thenAnswer((_) async => null);
-      final result = await dataSource.getAppLockEnabled();
-      expect(result, AppConstants.defaultAppLockEnabled);
-    });
+    test(
+      'getAppLockEnabled returns default when stored value is null',
+      () async {
+        when(
+          () => mockSecureStorage.read(key: PrefKeys.appLockEnabled),
+        ).thenAnswer((_) async => null);
+        final result = await dataSource.getAppLockEnabled();
+        expect(result, AppConstants.defaultAppLockEnabled);
+      },
+    );
 
     test('saveAppLockEnabled saves to secure storage', () async {
-      when(() => mockSecureStorage.write(key: any(named: 'key'), value: any(named: 'value')))
-          .thenAnswer((_) async {});
+      when(
+        () => mockSecureStorage.write(
+          key: any(named: 'key'),
+          value: any(named: 'value'),
+        ),
+      ).thenAnswer((_) async {});
 
       await dataSource.saveAppLockEnabled(true);
 
-      verify(() => mockSecureStorage.write(
-        key: PrefKeys.appLockEnabled,
-        value: 'true',
-      )).called(1);
+      verify(
+        () => mockSecureStorage.write(
+          key: PrefKeys.appLockEnabled,
+          value: 'true',
+        ),
+      ).called(1);
     });
   });
 }

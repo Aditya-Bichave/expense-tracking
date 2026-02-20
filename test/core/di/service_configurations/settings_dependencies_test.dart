@@ -10,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}
+
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 
 void main() {
