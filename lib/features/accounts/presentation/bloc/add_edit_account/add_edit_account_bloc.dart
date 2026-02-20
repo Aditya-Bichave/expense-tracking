@@ -24,9 +24,10 @@ class AddEditAccountBloc
     required AddAssetAccountUseCase addAssetAccountUseCase,
     required UpdateAssetAccountUseCase updateAssetAccountUseCase,
     AssetAccount? initialAccount,
+    Uuid? uuid,
   }) : _addAssetAccountUseCase = addAssetAccountUseCase,
        _updateAssetAccountUseCase = updateAssetAccountUseCase,
-       _uuid = const Uuid(),
+       _uuid = uuid ?? const Uuid(),
        super(AddEditAccountState(initialAccount: initialAccount)) {
     on<SaveAccountRequested>(_onSaveAccountRequested);
     log.info(
