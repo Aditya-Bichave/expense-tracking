@@ -38,17 +38,14 @@ void main() {
 
   testWidgets('IncomeCard displays income details correctly', (tester) async {
     // Arrange
-    whenListen(
-      mockAccountListBloc,
-      Stream.value(const AccountListLoaded(accounts: [tAccount])),
-      initialState: const AccountListLoaded(accounts: [tAccount]),
-    );
 
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: IncomeCard(income: tIncome),
-      accountListBloc: mockAccountListBloc,
+      widget: IncomeCard(
+        income: tIncome,
+        accountName: 'Main Account',
+      ),
     );
 
     // Assert
@@ -59,17 +56,14 @@ void main() {
 
   testWidgets('IncomeCard handles missing account gracefully', (tester) async {
     // Arrange
-    whenListen(
-      mockAccountListBloc,
-      Stream.value(const AccountListLoaded(accounts: [])),
-      initialState: const AccountListLoaded(accounts: []),
-    );
 
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: IncomeCard(income: tIncome),
-      accountListBloc: mockAccountListBloc,
+      widget: IncomeCard(
+        income: tIncome,
+        accountName: 'Deleted',
+      ),
     );
 
     // Assert

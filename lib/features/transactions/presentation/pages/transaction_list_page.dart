@@ -335,6 +335,16 @@ class _TransactionListPageState extends State<TransactionListPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
+    // --- OPTIMIZATION: Prepare account map once here ---
+    // Instead of each card listening to the BLoC and searching the list.
+    final accountState = context.watch<AccountListBloc>().state;
+    final Map<String, String> accountNameMap = {};
+    if (accountState is AccountListLoaded) {
+      for (final acc in accountState.items) {
+        accountNameMap[acc.id] = acc.name;
+      }
+    }
+    // ---------------------------------------------------
 
     return Scaffold(
       body: Column(
@@ -408,6 +418,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                             child: TransactionListView(
                               state: state,
                               settings: settings,
+                              accountNameMap: accountNameMap,
                               navigateToDetailOrEdit: _navigateToDetailOrEdit,
                               handleChangeCategoryRequest:
                                   _handleChangeCategoryRequest,
