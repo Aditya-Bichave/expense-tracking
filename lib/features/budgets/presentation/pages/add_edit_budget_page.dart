@@ -21,8 +21,10 @@ class AddEditBudgetPage extends StatelessWidget {
     );
 
     return BlocProvider<AddEditBudgetBloc>(
-      // Use sl<>() to get the factory
-      create: (_) => sl<AddEditBudgetBloc>(param1: initialBudget),
+      // Use sl<>() to get the factory and trigger init
+      create:
+          (_) => sl<AddEditBudgetBloc>(param1: initialBudget)
+            ..add(InitializeBudgetForm(initialBudget: initialBudget)),
       child: BlocListener<AddEditBudgetBloc, AddEditBudgetState>(
         listener: (context, state) {
           if (state.status == AddEditBudgetStatus.success) {

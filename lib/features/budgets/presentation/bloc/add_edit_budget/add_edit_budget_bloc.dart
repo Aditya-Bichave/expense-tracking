@@ -42,8 +42,6 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
     log.info(
       "[AddEditBudgetBloc] Initialized. Editing: ${initialBudget != null}",
     );
-    // Load categories immediately
-    add(InitializeBudgetForm(initialBudget: initialBudget));
   }
 
   Future<void> _onInitializeBudgetForm(
