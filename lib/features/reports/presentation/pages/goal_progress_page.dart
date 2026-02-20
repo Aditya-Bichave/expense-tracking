@@ -1,19 +1,21 @@
 // lib/features/reports/presentation/pages/goal_progress_page.dart
+import 'package:dartz/dartz.dart' as dartz;
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
-import 'package:expense_tracker/features/goals/presentation/widgets/contribution_list_item.dart'; // Reuse contribution item
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
+import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_bloc.dart';
-import 'package:expense_tracker/features/reports/presentation/widgets/charts/goal_contribution_chart.dart'; // Specific chart
+import 'package:expense_tracker/features/reports/presentation/widgets/charts/goal_contribution_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:percent_indicator/linear_percent_indicator.dart'; // Or Circular
+import 'package:percent_indicator/linear_percent_indicator.dart';
 
 class GoalProgressPage extends StatelessWidget {
   const GoalProgressPage({super.key});
@@ -23,39 +25,81 @@ class GoalProgressPage extends StatelessWidget {
     final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
 
-    return ReportPageWrapper(
-      title: 'Goal Progress',
-      // TODO: Add actions like filter by goal, comparison toggle, export
-      body: BlocBuilder<GoalProgressReportBloc, GoalProgressReportState>(
-        builder: (context, state) {
-          if (state is GoalProgressReportLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is GoalProgressReportError) {
-            return Center(
-              child: Text(
-                "Error: ${state.message}",
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            );
-          }
-          if (state is GoalProgressReportLoaded) {
-            final reportData = state.reportData;
-            if (reportData.progressData.isEmpty) {
-              return const Center(child: Text("No active goals found."));
-            }
+    return BlocBuilder<GoalProgressReportBloc, GoalProgressReportState>(
+      builder: (context, state) {
+        final isComparisonEnabled = state is GoalProgressReportLoaded
+            ? state.isComparisonEnabled
+            : false;
 
-            return ListView.builder(
-              itemCount: reportData.progressData.length,
-              itemBuilder: (context, index) {
-                final goalData = reportData.progressData[index];
-                return _buildGoalProgressCard(context, goalData, settingsState);
+        return ReportPageWrapper(
+          title: 'Goal Progress',
+          actions: [
+            IconButton(
+              icon: Icon(
+                isComparisonEnabled
+                    ? Icons.compare_arrows
+                    : Icons.compare_arrows_outlined,
+              ),
+              color: isComparisonEnabled ? theme.colorScheme.primary : null,
+              tooltip: isComparisonEnabled ? "Hide Pacing" : "Show Pacing",
+              onPressed: () {
+                context.read<GoalProgressReportBloc>().add(
+                  const ToggleComparison(),
+                );
               },
+            ),
+          ],
+          onExportCSV: () async {
+            if (state is GoalProgressReportLoaded) {
+              final helper = sl<CsvExportHelper>();
+              return await helper.exportGoalProgressReport(
+                state.reportData,
+                settingsState.currencySymbol,
+              );
+            }
+            return dartz.Right(
+              const ExportFailure("Report not loaded. Cannot export."),
             );
-          }
-          return const Center(child: Text("Select filters to view report."));
-        },
-      ),
+          },
+          body: Builder(
+            builder: (context) {
+              if (state is GoalProgressReportLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (state is GoalProgressReportError) {
+                return Center(
+                  child: Text(
+                    "Error: ${state.message}",
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                );
+              }
+              if (state is GoalProgressReportLoaded) {
+                final reportData = state.reportData;
+                if (reportData.progressData.isEmpty) {
+                  return const Center(child: Text("No active goals found."));
+                }
+
+                return ListView.builder(
+                  itemCount: reportData.progressData.length,
+                  itemBuilder: (context, index) {
+                    final goalData = reportData.progressData[index];
+                    return _buildGoalProgressCard(
+                      context,
+                      goalData,
+                      settingsState,
+                      isComparisonEnabled,
+                    );
+                  },
+                );
+              }
+              return const Center(
+                child: Text("Select filters to view report."),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -63,6 +107,7 @@ class GoalProgressPage extends StatelessWidget {
     BuildContext context,
     GoalProgressData goalData,
     SettingsState settings,
+    bool isComparisonEnabled,
   ) {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
@@ -143,6 +188,44 @@ class GoalProgressPage extends StatelessWidget {
                   ),
                 ],
               ),
+
+              // Comparison / Pacing Info
+              if (isComparisonEnabled) ...[
+                const Divider(height: 24),
+                Text(
+                  "Pacing Information",
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 8,
+                  children: [
+                    _buildPacingItem(
+                      context,
+                      "Req. Daily",
+                      goalData.requiredDailySaving,
+                      currencySymbol,
+                    ),
+                    _buildPacingItem(
+                      context,
+                      "Req. Monthly",
+                      goalData.requiredMonthlySaving,
+                      currencySymbol,
+                    ),
+                    if (goalData.estimatedCompletionDate != null)
+                      _buildPacingDateItem(
+                        context,
+                        "Est. Finish",
+                        goalData.estimatedCompletionDate!,
+                      ),
+                  ],
+                ),
+              ],
+
               // Contribution Chart (Optional)
               if (goalData.contributions.isNotEmpty) ...[
                 const Divider(height: 24),
@@ -154,8 +237,6 @@ class GoalProgressPage extends StatelessWidget {
                     contributions: goalData.contributions,
                   ),
                 ),
-                // Or show list:
-                // _buildContributionList(context, goalData.contributions, settings)
               ],
             ],
           ),
@@ -164,5 +245,62 @@ class GoalProgressPage extends StatelessWidget {
     );
   }
 
-  // Optional: Helper to build a short list of recent contributions
+  Widget _buildPacingItem(
+    BuildContext context,
+    String label,
+    double? amount,
+    String currencySymbol,
+  ) {
+    final theme = Theme.of(context);
+    String valueText = "N/A";
+    if (amount != null && amount.isFinite) {
+      valueText = CurrencyFormatter.format(amount, currencySymbol);
+    } else if (amount != null && amount.isInfinite) {
+      valueText =
+          "Unreachable"; // Or "Finished" depending on context? Assuming positive infinity means unlikely
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          valueText,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPacingDateItem(
+    BuildContext context,
+    String label,
+    DateTime date,
+  ) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Text(
+          DateFormatter.formatDate(date),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -1,4 +1,3 @@
-// lib/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_state.dart
 part of 'goal_progress_report_bloc.dart';
 
 abstract class GoalProgressReportState extends Equatable {
@@ -13,9 +12,15 @@ class GoalProgressReportLoading extends GoalProgressReportState {}
 
 class GoalProgressReportLoaded extends GoalProgressReportState {
   final GoalProgressReportData reportData;
-  const GoalProgressReportLoaded(this.reportData);
+  final bool isComparisonEnabled;
+
+  const GoalProgressReportLoaded(
+    this.reportData, {
+    this.isComparisonEnabled = false,
+  });
+
   @override
-  List<Object?> get props => [reportData];
+  List<Object?> get props => [reportData, isComparisonEnabled];
 }
 
 class GoalProgressReportError extends GoalProgressReportState {
