@@ -48,5 +48,3 @@ ci/smoke/node_modules/
 ci/smoke/artifacts/
 ci/smoke/smoke-report.json
 ci/smoke/routes.json
-coverage/
-build/
