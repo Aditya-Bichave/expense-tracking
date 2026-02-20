@@ -1,0 +1,8 @@
+.git
+.github
+.gitignore
+.vscode
+build/
+doc/
+test/
+coverage/
