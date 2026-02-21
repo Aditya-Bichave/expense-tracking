@@ -19,6 +19,8 @@ import 'package:go_router/go_router.dart';
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
   final SettingsState settings;
+  final Map<String, String> accountNameMap;
+  final String currencySymbol;
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
   // --- ADD Handlers ---
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
@@ -30,6 +32,8 @@ class TransactionListView extends StatelessWidget {
     super.key,
     required this.state,
     required this.settings,
+    required this.accountNameMap,
+    required this.currencySymbol,
     required this.navigateToDetailOrEdit,
     // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
@@ -125,9 +129,12 @@ class TransactionListView extends StatelessWidget {
 
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
+        final accountName = accountNameMap[transaction.accountId] ?? 'Deleted';
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
+            accountName: accountName,
+            currencySymbol: currencySymbol,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -162,6 +169,8 @@ class TransactionListView extends StatelessWidget {
           // Income
           cardItem = IncomeCard(
             income: transaction.income!,
+            accountName: accountName,
+            currencySymbol: currencySymbol,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {
