@@ -123,46 +123,52 @@ Future<void> main() async {
     Hive.registerAdapter(ExpenseSplitModelAdapter());
 
     log.info("Opening Hive boxes...");
-    final expenseBox = await Hive.openBox<ExpenseModel>(
-      HiveConstants.expenseBoxName,
-    );
-    final accountBox = await Hive.openBox<AssetAccountModel>(
-      HiveConstants.accountBoxName,
-    );
-    final incomeBox = await Hive.openBox<IncomeModel>(
-      HiveConstants.incomeBoxName,
-    );
-    final categoryBox = await Hive.openBox<CategoryModel>(
-      HiveConstants.categoryBoxName,
-    );
-    final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
-      HiveConstants.userHistoryRuleBoxName,
-    );
-    final budgetBox = await Hive.openBox<BudgetModel>(
-      HiveConstants.budgetBoxName,
-    );
-    final goalBox = await Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
-    final contributionBox = await Hive.openBox<GoalContributionModel>(
-      HiveConstants.goalContributionBoxName,
-    );
-    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
-      HiveConstants.recurringRuleBoxName,
-    );
-    final recurringRuleAuditLogBox =
-        await Hive.openBox<RecurringRuleAuditLogModel>(
-          HiveConstants.recurringRuleAuditLogBoxName,
-        );
+    // Use records to parallelize box openings.
+    // Dart records currently have a limit of 9 for the .wait extension,
+    // so we split the 14 boxes into two parallel groups.
+    final group1Future = (
+      Hive.openBox<ExpenseModel>(HiveConstants.expenseBoxName),
+      Hive.openBox<AssetAccountModel>(HiveConstants.accountBoxName),
+      Hive.openBox<IncomeModel>(HiveConstants.incomeBoxName),
+      Hive.openBox<CategoryModel>(HiveConstants.categoryBoxName),
+      Hive.openBox<UserHistoryRuleModel>(HiveConstants.userHistoryRuleBoxName),
+      Hive.openBox<BudgetModel>(HiveConstants.budgetBoxName),
+      Hive.openBox<GoalModel>(HiveConstants.goalBoxName),
+      Hive.openBox<GoalContributionModel>(
+        HiveConstants.goalContributionBoxName,
+      ),
+      Hive.openBox<RecurringRuleModel>(HiveConstants.recurringRuleBoxName),
+    ).wait;
 
-    final outboxBox = await Hive.openBox<OutboxItem>(
-      HiveConstants.outboxBoxName,
-    );
-    final groupBox = await Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
-    final groupMemberBox = await Hive.openBox<GroupMemberModel>(
-      HiveConstants.groupMemberBoxName,
-    );
-    final groupExpenseBox = await Hive.openBox<GroupExpenseModel>(
-      HiveConstants.groupExpenseBoxName,
-    );
+    final group2Future = (
+      Hive.openBox<RecurringRuleAuditLogModel>(
+        HiveConstants.recurringRuleAuditLogBoxName,
+      ),
+      Hive.openBox<OutboxItem>(HiveConstants.outboxBoxName),
+      Hive.openBox<GroupModel>(HiveConstants.groupBoxName),
+      Hive.openBox<GroupMemberModel>(HiveConstants.groupMemberBoxName),
+      Hive.openBox<GroupExpenseModel>(HiveConstants.groupExpenseBoxName),
+    ).wait;
+
+    final (
+      expenseBox,
+      accountBox,
+      incomeBox,
+      categoryBox,
+      userHistoryBox,
+      budgetBox,
+      goalBox,
+      contributionBox,
+      recurringRuleBox,
+    ) = await group1Future;
+
+    final (
+      recurringRuleAuditLogBox,
+      outboxBox,
+      groupBox,
+      groupMemberBox,
+      groupExpenseBox,
+    ) = await group2Future;
 
     log.info("All Hive boxes opened.");
     log.info("SharedPreferences instance obtained.");
