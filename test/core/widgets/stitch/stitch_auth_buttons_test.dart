@@ -1,9 +1,9 @@
-import 'package:expense_tracker/core/widgets/stitch/stitch_auth_buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/core/widgets/stitch/stitch_auth_buttons.dart';
 
 void main() {
-  testWidgets('StitchAuthButtons renders buttons and handles taps', (
+  testWidgets('StitchAuthButtons renders and handles taps', (
     WidgetTester tester,
   ) async {
     bool phoneTapped = false;
@@ -24,9 +24,9 @@ void main() {
     expect(find.text('Continue with Email'), findsOneWidget);
 
     await tester.tap(find.text('Continue with Phone'));
-    expect(phoneTapped, isTrue);
+    expect(phoneTapped, true);
 
     await tester.tap(find.text('Continue with Email'));
-    expect(emailTapped, isTrue);
+    expect(emailTapped, true);
   });
 }
