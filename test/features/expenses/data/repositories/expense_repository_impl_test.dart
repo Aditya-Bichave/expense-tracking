@@ -1,5 +1,9 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
@@ -11,28 +15,41 @@ import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockExpenseLocalDataSource extends Mock
-    implements ExpenseLocalDataSource {}
-
+class MockExpenseLocalDataSource extends Mock implements ExpenseLocalDataSource {}
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+class MockOutboxRepository extends Mock implements OutboxRepository {}
+class MockSyncService extends Mock implements SyncService {}
+class MockConnectivity extends Mock implements Connectivity {}
 
 class FakeExpenseModel extends Fake implements ExpenseModel {}
+class FakeOutboxItem extends Fake implements OutboxItem {}
 
 void main() {
   late ExpenseRepositoryImpl repository;
   late MockExpenseLocalDataSource mockLocalDataSource;
   late MockCategoryRepository mockCategoryRepository;
+  late MockOutboxRepository mockOutboxRepository;
+  late MockSyncService mockSyncService;
+  late MockConnectivity mockConnectivity;
 
   setUpAll(() {
     registerFallbackValue(FakeExpenseModel());
+    registerFallbackValue(FakeOutboxItem());
   });
 
   setUp(() {
     mockLocalDataSource = MockExpenseLocalDataSource();
     mockCategoryRepository = MockCategoryRepository();
+    mockOutboxRepository = MockOutboxRepository();
+    mockSyncService = MockSyncService();
+    mockConnectivity = MockConnectivity();
+
     repository = ExpenseRepositoryImpl(
       localDataSource: mockLocalDataSource,
       categoryRepository: mockCategoryRepository,
+      outboxRepository: mockOutboxRepository,
+      syncService: mockSyncService,
+      connectivity: mockConnectivity,
     );
   });
 
@@ -72,20 +89,22 @@ void main() {
       'should return hydrated Expense when data source call is successful',
       () async {
         // Arrange
-        when(
-          () => mockLocalDataSource.addExpense(any()),
-        ).thenAnswer((_) async => tExpenseModel);
-        when(
-          () => mockCategoryRepository.getCategoryById(any()),
-        ).thenAnswer((_) async => const Right(tCategory));
+        when(() => mockLocalDataSource.addExpense(any()))
+            .thenAnswer((_) async => tExpenseModel);
+        when(() => mockCategoryRepository.getCategoryById(any()))
+            .thenAnswer((_) async => const Right(tCategory));
+        when(() => mockOutboxRepository.add(any()))
+            .thenAnswer((_) async => Future.value());
+        when(() => mockConnectivity.checkConnectivity())
+            .thenAnswer((_) async => [ConnectivityResult.wifi]);
+        when(() => mockSyncService.processOutbox())
+            .thenAnswer((_) async => Future.value());
 
         // Act
         final result = await repository.addExpense(tExpense);
 
         // Assert
-        verify(
-          () => mockLocalDataSource.addExpense(any<ExpenseModel>()),
-        ).called(1);
+        verify(() => mockLocalDataSource.addExpense(any<ExpenseModel>())).called(1);
         verify(() => mockCategoryRepository.getCategoryById('cat1')).called(1);
         expect(result, Right(tExpense));
       },
@@ -95,9 +114,8 @@ void main() {
       'should return CacheFailure when data source throws CacheFailure',
       () async {
         // Arrange
-        when(
-          () => mockLocalDataSource.addExpense(any()),
-        ).thenThrow(const CacheFailure('Hive Error'));
+        when(() => mockLocalDataSource.addExpense(any()))
+            .thenThrow(const CacheFailure('Hive Error'));
 
         // Act
         final result = await repository.addExpense(tExpense);
@@ -111,9 +129,14 @@ void main() {
   group('deleteExpense', () {
     test('should return void when delete is successful', () async {
       // Arrange
-      when(
-        () => mockLocalDataSource.deleteExpense(any()),
-      ).thenAnswer((_) async => Future.value());
+      when(() => mockLocalDataSource.deleteExpense(any()))
+          .thenAnswer((_) async => Future.value());
+      when(() => mockOutboxRepository.add(any()))
+          .thenAnswer((_) async => Future.value());
+      when(() => mockConnectivity.checkConnectivity())
+          .thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(() => mockSyncService.processOutbox())
+          .thenAnswer((_) async => Future.value());
 
       // Act
       final result = await repository.deleteExpense('1');
@@ -125,9 +148,8 @@ void main() {
 
     test('should return CacheFailure when delete fails', () async {
       // Arrange
-      when(
-        () => mockLocalDataSource.deleteExpense(any()),
-      ).thenThrow(const CacheFailure('Delete Error'));
+      when(() => mockLocalDataSource.deleteExpense(any()))
+          .thenThrow(const CacheFailure('Delete Error'));
 
       // Act
       final result = await repository.deleteExpense('1');
@@ -161,7 +183,6 @@ void main() {
           accountId: null,
         ),
       ).called(1);
-      // expect(result, Right([tExpenseModel])); // Fails due to list identity
       expect(result.isRight(), isTrue);
       result.fold((l) => fail('should be right'), (r) {
         expect(r, [tExpenseModel]);
@@ -190,28 +211,29 @@ void main() {
   group('updateExpense', () {
     test('should return updated Expense when successful', () async {
       // Arrange
-      when(
-        () => mockLocalDataSource.updateExpense(any()),
-      ).thenAnswer((_) async => tExpenseModel);
-      when(
-        () => mockCategoryRepository.getCategoryById(any()),
-      ).thenAnswer((_) async => const Right(tCategory));
+      when(() => mockLocalDataSource.updateExpense(any()))
+          .thenAnswer((_) async => tExpenseModel);
+      when(() => mockCategoryRepository.getCategoryById(any()))
+          .thenAnswer((_) async => const Right(tCategory));
+      when(() => mockOutboxRepository.add(any()))
+          .thenAnswer((_) async => Future.value());
+      when(() => mockConnectivity.checkConnectivity())
+          .thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(() => mockSyncService.processOutbox())
+          .thenAnswer((_) async => Future.value());
 
       // Act
       final result = await repository.updateExpense(tExpense);
 
       // Assert
-      verify(
-        () => mockLocalDataSource.updateExpense(any<ExpenseModel>()),
-      ).called(1);
+      verify(() => mockLocalDataSource.updateExpense(any<ExpenseModel>())).called(1);
       expect(result, Right(tExpense));
     });
 
     test('should return CacheFailure when update fails', () async {
       // Arrange
-      when(
-        () => mockLocalDataSource.updateExpense(any()),
-      ).thenThrow(const CacheFailure('Update Error'));
+      when(() => mockLocalDataSource.updateExpense(any()))
+          .thenThrow(const CacheFailure('Update Error'));
 
       // Act
       final result = await repository.updateExpense(tExpense);
@@ -224,12 +246,10 @@ void main() {
   group('updateExpenseCategorization', () {
     test('should update expense categorization successfully', () async {
       // Arrange
-      when(
-        () => mockLocalDataSource.getExpenseById(any()),
-      ).thenAnswer((_) async => tExpenseModel);
-      when(
-        () => mockLocalDataSource.updateExpense(any()),
-      ).thenAnswer((_) async => tExpenseModel);
+      when(() => mockLocalDataSource.getExpenseById(any()))
+          .thenAnswer((_) async => tExpenseModel);
+      when(() => mockLocalDataSource.updateExpense(any()))
+          .thenAnswer((_) async => tExpenseModel);
 
       // Act
       final result = await repository.updateExpenseCategorization(
@@ -241,17 +261,14 @@ void main() {
 
       // Assert
       verify(() => mockLocalDataSource.getExpenseById('1')).called(1);
-      verify(
-        () => mockLocalDataSource.updateExpense(any<ExpenseModel>()),
-      ).called(1);
+      verify(() => mockLocalDataSource.updateExpense(any<ExpenseModel>())).called(1);
       expect(result, const Right(null));
     });
 
     test('should return CacheFailure if expense not found', () async {
       // Arrange
-      when(
-        () => mockLocalDataSource.getExpenseById(any()),
-      ).thenAnswer((_) async => null);
+      when(() => mockLocalDataSource.getExpenseById(any()))
+          .thenAnswer((_) async => null);
 
       // Act
       final result = await repository.updateExpenseCategorization(

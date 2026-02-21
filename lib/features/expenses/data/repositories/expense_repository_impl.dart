@@ -11,14 +11,26 @@ import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/sync_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'dart:convert';
+import 'package:uuid/uuid.dart';
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseLocalDataSource localDataSource;
   final CategoryRepository categoryRepository;
+  final OutboxRepository outboxRepository;
+  final SyncService syncService;
+  final Connectivity connectivity;
 
   ExpenseRepositoryImpl({
     required this.localDataSource,
     required this.categoryRepository,
+    required this.outboxRepository,
+    required this.syncService,
+    required this.connectivity,
   });
 
   // Helper specifically for hydrating a single model after add/update
@@ -52,6 +64,32 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     try {
       final expenseModel = ExpenseModel.fromEntity(expense);
       final addedModel = await localDataSource.addExpense(expenseModel);
+
+      // --- Sync Logic ---
+      try {
+        final outboxItem = OutboxItem(
+          id: const Uuid().v4(),
+          entityId: addedModel.id,
+          entityType: EntityType.expense,
+          opType: OpType.create,
+          payloadJson: jsonEncode(addedModel.toJson()),
+          createdAt: DateTime.now(),
+        );
+        await outboxRepository.add(outboxItem);
+
+        final connectivityResult = await connectivity.checkConnectivity();
+        if (connectivityResult.contains(ConnectivityResult.mobile) ||
+            connectivityResult.contains(ConnectivityResult.wifi)) {
+          syncService.processOutbox();
+        }
+      } catch (syncError) {
+        log.warning(
+          "[ExpenseRepo] Failed to queue expense for sync: $syncError",
+        );
+        // Continue, as local save was successful
+      }
+      // ------------------
+
       log.info(
         "[ExpenseRepo] Add successful (ID: ${addedModel.id}). Hydrating category for return.",
       );
@@ -74,6 +112,31 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     try {
       final expenseModel = ExpenseModel.fromEntity(expense);
       final updatedModel = await localDataSource.updateExpense(expenseModel);
+
+      // --- Sync Logic ---
+      try {
+        final outboxItem = OutboxItem(
+          id: const Uuid().v4(),
+          entityId: updatedModel.id,
+          entityType: EntityType.expense,
+          opType: OpType.update,
+          payloadJson: jsonEncode(updatedModel.toJson()),
+          createdAt: DateTime.now(),
+        );
+        await outboxRepository.add(outboxItem);
+
+        final connectivityResult = await connectivity.checkConnectivity();
+        if (connectivityResult.contains(ConnectivityResult.mobile) ||
+            connectivityResult.contains(ConnectivityResult.wifi)) {
+          syncService.processOutbox();
+        }
+      } catch (syncError) {
+        log.warning(
+          "[ExpenseRepo] Failed to queue update for sync: $syncError",
+        );
+      }
+      // ------------------
+
       log.info(
         "[ExpenseRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.",
       );
@@ -131,6 +194,31 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     log.info("[ExpenseRepo] Deleting expense (ID: $id).");
     try {
       await localDataSource.deleteExpense(id);
+
+      // --- Sync Logic ---
+      try {
+        final outboxItem = OutboxItem(
+          id: const Uuid().v4(),
+          entityId: id,
+          entityType: EntityType.expense,
+          opType: OpType.delete,
+          payloadJson: jsonEncode({'id': id}),
+          createdAt: DateTime.now(),
+        );
+        await outboxRepository.add(outboxItem);
+
+        final connectivityResult = await connectivity.checkConnectivity();
+        if (connectivityResult.contains(ConnectivityResult.mobile) ||
+            connectivityResult.contains(ConnectivityResult.wifi)) {
+          syncService.processOutbox();
+        }
+      } catch (syncError) {
+        log.warning(
+          "[ExpenseRepo] Failed to queue delete for sync: $syncError",
+        );
+      }
+      // ------------------
+
       log.info("[ExpenseRepo] Delete successful for ID: $id.");
       return const Right(null);
     } on CacheFailure catch (e) {

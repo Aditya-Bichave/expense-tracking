@@ -10,6 +10,7 @@ import 'package:expense_tracker/features/expenses/domain/usecases/add_expense.da
 import 'package:expense_tracker/features/expenses/domain/usecases/delete_expense.dart';
 import 'package:expense_tracker/features/expenses/domain/usecases/update_expense.dart';
 import 'package:hive_ce/hive.dart'; // Keep for HiveExpenseLocalDataSource
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ExpensesDependencies {
   static void register() {
@@ -27,6 +28,9 @@ class ExpensesDependencies {
       () => ExpenseRepositoryImpl(
         localDataSource: sl(),
         categoryRepository: sl(),
+        outboxRepository: sl(),
+        syncService: sl(),
+        connectivity: Connectivity(),
       ),
     );
     // Domain
