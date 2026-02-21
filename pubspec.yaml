@@ -66,6 +66,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   app_links: ^6.4.1
   connectivity_plus: ^7.0.0
+  http: ^1.6.0
 
 
 dev_dependencies:
