@@ -14,13 +14,7 @@ void main() {
 
   group('GroupMember', () {
     test('props should contain all fields', () {
-      expect(tMember.props, [
-        '1',
-        'g1',
-        'u1',
-        GroupRole.admin,
-        tDate,
-      ]);
+      expect(tMember.props, ['1', 'g1', 'u1', GroupRole.admin, tDate]);
     });
 
     test('supports value equality', () {

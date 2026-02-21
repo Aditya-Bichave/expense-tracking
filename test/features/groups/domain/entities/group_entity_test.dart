@@ -13,13 +13,7 @@ void main() {
 
   group('GroupEntity', () {
     test('props should contain all fields', () {
-      expect(tGroup.props, [
-        '1',
-        'Test Group',
-        'user1',
-        tDate,
-        tDate,
-      ]);
+      expect(tGroup.props, ['1', 'Test Group', 'user1', tDate, tDate]);
     });
 
     test('supports value equality', () {

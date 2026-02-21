@@ -18,7 +18,9 @@ void main() {
     status: CategorizationStatus.categorized,
   );
 
-  testWidgets('TransactionListItem renders correctly for expense', (WidgetTester tester) async {
+  testWidgets('TransactionListItem renders correctly for expense', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -37,14 +39,19 @@ void main() {
     // We can check if it finds *something* with date.
 
     // Amount
-    expect(find.text('- \$100.00'), findsOneWidget); // Assuming standard formatting
+    expect(
+      find.text('- \$100.00'),
+      findsOneWidget,
+    ); // Assuming standard formatting
 
     // Subtitle contains Category name
     expect(find.textContaining('Uncategorized'), findsOneWidget);
   });
 
-  testWidgets('TransactionListItem renders correctly for income', (WidgetTester tester) async {
-     final tIncome = TransactionEntity(
+  testWidgets('TransactionListItem renders correctly for income', (
+    WidgetTester tester,
+  ) async {
+    final tIncome = TransactionEntity(
       id: '2',
       type: TransactionType.income,
       title: 'Test Income',

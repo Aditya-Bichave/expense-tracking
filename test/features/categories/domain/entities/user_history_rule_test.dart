@@ -17,13 +17,7 @@ void main() {
         assignedCategoryId: tCategoryId,
         timestamp: tTimestamp,
       );
-      expect(rule.props, [
-        tId,
-        tRuleType,
-        tMatcher,
-        tCategoryId,
-        tTimestamp,
-      ]);
+      expect(rule.props, [tId, tRuleType, tMatcher, tCategoryId, tTimestamp]);
     });
 
     test('supports value equality', () {

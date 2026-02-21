@@ -68,30 +68,26 @@ void main() {
       expect(archivedGoal.isArchived, true);
     });
 
-    test('displayIconData should return fallback icon if name is null or unknown', () {
-      // Assuming 'unknown_icon_name' is not in the map
-      final unknownIconGoal = tGoal.copyWith(
-        iconName: 'unknown_icon_name',
-      );
-      expect(unknownIconGoal.displayIconData, Icons.savings_outlined);
+    test(
+      'displayIconData should return fallback icon if name is null or unknown',
+      () {
+        // Assuming 'unknown_icon_name' is not in the map
+        final unknownIconGoal = tGoal.copyWith(iconName: 'unknown_icon_name');
+        expect(unknownIconGoal.displayIconData, Icons.savings_outlined);
 
-      final nullIconGoal = tGoal.copyWith(
-        iconNameOrNull: () => null,
-      );
-      expect(nullIconGoal.displayIconData, Icons.savings_outlined);
-    });
+        final nullIconGoal = tGoal.copyWith(iconNameOrNull: () => null);
+        expect(nullIconGoal.displayIconData, Icons.savings_outlined);
+      },
+    );
 
     test('copyWith should return updated copy', () {
-      final updated = tGoal.copyWith(
-        name: 'New Name',
-        totalSaved: 500.0,
-      );
+      final updated = tGoal.copyWith(name: 'New Name', totalSaved: 500.0);
       expect(updated.name, 'New Name');
       expect(updated.totalSaved, 500.0);
       expect(updated.id, tGoal.id);
     });
 
-     test('copyWith with value getter should allow nulling nullable fields', () {
+    test('copyWith with value getter should allow nulling nullable fields', () {
       final nulled = tGoal.copyWith(
         descriptionOrNull: () => null,
         targetDateOrNull: () => null,

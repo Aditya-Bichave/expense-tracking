@@ -36,20 +36,23 @@ void main() {
       expect(status.statusColor, tThrivingColor);
     });
 
-    test('calculate should return correct status for nearing limit (> 75% && <= 100%)', () {
-      final status = BudgetWithStatus.calculate(
-        budget: tBudget,
-        amountSpent: 80.0, // 80%
-        thrivingColor: tThrivingColor,
-        nearingLimitColor: tNearingLimitColor,
-        overLimitColor: tOverLimitColor,
-      );
+    test(
+      'calculate should return correct status for nearing limit (> 75% && <= 100%)',
+      () {
+        final status = BudgetWithStatus.calculate(
+          budget: tBudget,
+          amountSpent: 80.0, // 80%
+          thrivingColor: tThrivingColor,
+          nearingLimitColor: tNearingLimitColor,
+          overLimitColor: tOverLimitColor,
+        );
 
-      expect(status.health, BudgetHealth.nearingLimit);
-      expect(status.statusColor, tNearingLimitColor);
-      expect(status.percentageUsed, 0.8);
-      expect(status.amountRemaining, 20.0);
-    });
+        expect(status.health, BudgetHealth.nearingLimit);
+        expect(status.statusColor, tNearingLimitColor);
+        expect(status.percentageUsed, 0.8);
+        expect(status.amountRemaining, 20.0);
+      },
+    );
 
     test('calculate should return correct status for over limit (> 100%)', () {
       final status = BudgetWithStatus.calculate(

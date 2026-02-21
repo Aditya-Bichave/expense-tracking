@@ -48,9 +48,7 @@ void main() {
     });
 
     test('copyWith with value getter should allow nulling nullable fields', () {
-      final nulled = tContribution.copyWith(
-        noteOrNull: () => null,
-      );
+      final nulled = tContribution.copyWith(noteOrNull: () => null);
       expect(nulled.note, null);
     });
   });

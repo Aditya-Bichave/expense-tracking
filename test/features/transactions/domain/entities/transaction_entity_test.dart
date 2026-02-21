@@ -139,10 +139,7 @@ void main() {
 
     group('copyWith', () {
       test('should return a copy with updated fields', () {
-        final result = tTransaction.copyWith(
-          title: 'New Title',
-          amount: 200.0,
-        );
+        final result = tTransaction.copyWith(title: 'New Title', amount: 200.0);
 
         expect(result.title, 'New Title');
         expect(result.amount, 200.0);

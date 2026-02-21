@@ -15,15 +15,7 @@ void main() {
 
   group('RecurringRuleAuditLog', () {
     test('props should contain all fields', () {
-      expect(tLog.props, [
-        '1',
-        'r1',
-        tDate,
-        'u1',
-        'amount',
-        '100',
-        '200',
-      ]);
+      expect(tLog.props, ['1', 'r1', tDate, 'u1', 'amount', '100', '200']);
     });
 
     test('supports value equality', () {

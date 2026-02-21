@@ -4,12 +4,15 @@ import 'package:expense_tracker/core/utils/enums.dart';
 void main() {
   group('Core Enums', () {
     test('FormStatus values', () {
-      expect(FormStatus.values, containsAll([
-        FormStatus.initial,
-        FormStatus.submitting,
-        FormStatus.success,
-        FormStatus.error,
-      ]));
+      expect(
+        FormStatus.values,
+        containsAll([
+          FormStatus.initial,
+          FormStatus.submitting,
+          FormStatus.success,
+          FormStatus.error,
+        ]),
+      );
     });
   });
 }

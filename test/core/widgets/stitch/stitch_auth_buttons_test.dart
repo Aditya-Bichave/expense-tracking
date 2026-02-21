@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:expense_tracker/core/widgets/stitch/stitch_auth_buttons.dart';
 
 void main() {
-  testWidgets('StitchAuthButtons renders and handles taps', (WidgetTester tester) async {
+  testWidgets('StitchAuthButtons renders and handles taps', (
+    WidgetTester tester,
+  ) async {
     bool phoneTapped = false;
     bool emailTapped = false;
 
