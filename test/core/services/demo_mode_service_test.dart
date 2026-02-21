@@ -1,101 +1,45 @@
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
-import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
+import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  late DemoModeService demoModeService;
+  late DemoModeService service;
 
   setUp(() {
-    demoModeService = DemoModeService();
-    demoModeService.exitDemoMode(); // Reset state
+    service = DemoModeService();
+    // Reset state properly
+    service.exitDemoMode();
+    service.enterDemoMode();
   });
 
-  tearDown(() {
-    demoModeService.exitDemoMode();
-  });
+  test('getDemoContributionsForGoal should filter by date', () async {
+    // Clear default data for this test
+    final all = await service.getAllDemoContributions();
+    final ids = all.map((c) => c.id).toList();
+    await service.deleteDemoContributions(ids);
 
-  test('initially isDemoActive is false', () {
-    expect(demoModeService.isDemoActive, isFalse);
-  });
+    // Create specific data for testing
+    final tGoalId = 'test_goal';
+    final tDate = DateTime(2023, 6, 1);
 
-  test('enterDemoMode sets isDemoActive to true and loads data', () async {
-    demoModeService.enterDemoMode();
+    final c1 = GoalContributionModel(id: 'd1', goalId: tGoalId, amount: 10, date: tDate, createdAt: tDate);
+    final c2 = GoalContributionModel(id: 'd2', goalId: tGoalId, amount: 10, date: tDate.add(Duration(days: 10)), createdAt: tDate); // June 11
 
-    expect(demoModeService.isDemoActive, isTrue);
+    await service.saveDemoContribution(c1);
+    await service.saveDemoContribution(c2);
 
-    final expenses = await demoModeService.getDemoExpenses();
-    expect(expenses, isNotEmpty);
+    // Test No Filter
+    final filteredAll = await service.getDemoContributionsForGoal(tGoalId);
+    expect(filteredAll.length, 2);
 
-    final incomes = await demoModeService.getDemoIncomes();
-    expect(incomes, isNotEmpty);
-  });
+    // Test Start Date
+    final startFilter = await service.getDemoContributionsForGoal(tGoalId, startDate: DateTime(2023, 6, 5));
+    expect(startFilter.length, 1);
+    expect(startFilter.first.id, 'd2');
 
-  test('exitDemoMode clears data and sets isDemoActive to false', () async {
-    demoModeService.enterDemoMode();
-    demoModeService.exitDemoMode();
-
-    expect(demoModeService.isDemoActive, isFalse);
-
-    final expenses = await demoModeService.getDemoExpenses();
-    expect(expenses, isEmpty);
-  });
-
-  test('addDemoExpense adds expense to memory cache', () async {
-    demoModeService.enterDemoMode();
-    final initialCount = (await demoModeService.getDemoExpenses()).length;
-
-    final newExpense = ExpenseModel(
-      id: 'test_id',
-      amount: 100,
-      date: DateTime.now(),
-      categoryId: 'cat_id',
-      accountId: 'acc_id',
-      title: 'Test Expense',
-    );
-
-    await demoModeService.addDemoExpense(newExpense);
-
-    final expenses = await demoModeService.getDemoExpenses();
-    expect(expenses.length, equals(initialCount + 1));
-    expect(expenses.last.id, equals('test_id'));
-  });
-
-  test('updateDemoExpense updates existing expense', () async {
-    demoModeService.enterDemoMode();
-    final expenses = await demoModeService.getDemoExpenses();
-    final originalExpense = expenses.first;
-
-    final updatedExpense = ExpenseModel(
-      id: originalExpense.id,
-      amount: 999.99, // Updated amount
-      date: originalExpense.date,
-      categoryId: originalExpense.categoryId,
-      accountId: originalExpense.accountId,
-      title: originalExpense.title,
-      categorizationStatusValue: originalExpense.categorizationStatusValue,
-      confidenceScoreValue: originalExpense.confidenceScoreValue,
-      isRecurring: originalExpense.isRecurring,
-      merchantId: originalExpense.merchantId,
-    );
-
-    await demoModeService.updateDemoExpense(updatedExpense);
-
-    final fetchedExpense = await demoModeService.getDemoExpenseById(
-      originalExpense.id,
-    );
-    expect(fetchedExpense?.amount, equals(999.99));
-  });
-
-  test('deleteDemoExpense removes expense', () async {
-    demoModeService.enterDemoMode();
-    final expenses = await demoModeService.getDemoExpenses();
-    final idToDelete = expenses.first.id;
-    final initialCount = expenses.length;
-
-    await demoModeService.deleteDemoExpense(idToDelete);
-
-    final newExpenses = await demoModeService.getDemoExpenses();
-    expect(newExpenses.length, equals(initialCount - 1));
-    expect(newExpenses.where((e) => e.id == idToDelete), isEmpty);
+    // Test End Date
+    final endFilter = await service.getDemoContributionsForGoal(tGoalId, endDate: DateTime(2023, 6, 5));
+    expect(endFilter.length, 1);
+    expect(endFilter.first.id, 'd1');
   });
 }

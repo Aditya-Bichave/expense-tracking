@@ -10,7 +10,9 @@ RUN flutter pub get
 
 # Build Flutter web release
 ARG API_BASE_URL
-RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
+# Using --no-wasm-dry-run to suppress noisy warnings and potential failures due to non-wasm compatible deps like win32
+# but we are NOT building for wasm (--wasm is NOT passed), so it defaults to JS.
+RUN flutter build web --release --no-wasm-dry-run --dart-define=API_BASE_URL=${API_BASE_URL}
 
 # ---------- Run stage ----------
 FROM nginx:alpine

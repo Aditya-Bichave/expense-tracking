@@ -107,4 +107,19 @@ void main() {
             as GoalModel;
     expect(capturedGoal.totalSavedCache, 50.0);
   });
+
+  test('getContributionsForGoal should pass dates to data source', () async {
+    // Arrange
+    final startDate = DateTime(2023, 1, 1);
+    final endDate = DateTime(2023, 1, 31);
+    when(() => mockContributionDataSource.getContributionsForGoal(any(), startDate: any(named: 'startDate'), endDate: any(named: 'endDate')))
+        .thenAnswer((_) async => [tContributionModel]);
+
+    // Act
+    final result = await repository.getContributionsForGoal(tGoalId, startDate: startDate, endDate: endDate);
+
+    // Assert
+    expect(result.isRight(), true);
+    verify(() => mockContributionDataSource.getContributionsForGoal(tGoalId, startDate: startDate, endDate: endDate)).called(1);
+  });
 }
