@@ -63,3 +63,9 @@ You can run policy checks locally against `main`:
 ./ci/policy/check_new_code.sh main
 ./ci/policy/check_codegen.sh main
 ```
+
+## Docker Deployment Notes
+
+- Uses `nginx:alpine` as base image for smaller size.
+- Overwrites `/etc/nginx/nginx.conf` directly to avoid overlayfs issues with `conf.d` includes in some container environments.
+- Optimized build with `--no-tree-shake-icons` and disabled analytics to reduce memory usage during build (critical for Render Free Tier).
