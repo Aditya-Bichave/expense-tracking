@@ -123,46 +123,61 @@ Future<void> main() async {
     Hive.registerAdapter(ExpenseSplitModelAdapter());
 
     log.info("Opening Hive boxes...");
-    final expenseBox = await Hive.openBox<ExpenseModel>(
+    final expenseBoxFuture = Hive.openBox<ExpenseModel>(
       HiveConstants.expenseBoxName,
     );
-    final accountBox = await Hive.openBox<AssetAccountModel>(
+    final accountBoxFuture = Hive.openBox<AssetAccountModel>(
       HiveConstants.accountBoxName,
     );
-    final incomeBox = await Hive.openBox<IncomeModel>(
+    final incomeBoxFuture = Hive.openBox<IncomeModel>(
       HiveConstants.incomeBoxName,
     );
-    final categoryBox = await Hive.openBox<CategoryModel>(
+    final categoryBoxFuture = Hive.openBox<CategoryModel>(
       HiveConstants.categoryBoxName,
     );
-    final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
+    final userHistoryBoxFuture = Hive.openBox<UserHistoryRuleModel>(
       HiveConstants.userHistoryRuleBoxName,
     );
-    final budgetBox = await Hive.openBox<BudgetModel>(
+    final budgetBoxFuture = Hive.openBox<BudgetModel>(
       HiveConstants.budgetBoxName,
     );
-    final goalBox = await Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
-    final contributionBox = await Hive.openBox<GoalContributionModel>(
+    final goalBoxFuture = Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
+    final contributionBoxFuture = Hive.openBox<GoalContributionModel>(
       HiveConstants.goalContributionBoxName,
     );
-    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
+    final recurringRuleBoxFuture = Hive.openBox<RecurringRuleModel>(
       HiveConstants.recurringRuleBoxName,
     );
-    final recurringRuleAuditLogBox =
-        await Hive.openBox<RecurringRuleAuditLogModel>(
+    final recurringRuleAuditLogBoxFuture =
+        Hive.openBox<RecurringRuleAuditLogModel>(
           HiveConstants.recurringRuleAuditLogBoxName,
         );
 
-    final outboxBox = await Hive.openBox<OutboxItem>(
+    final outboxBoxFuture = Hive.openBox<OutboxItem>(
       HiveConstants.outboxBoxName,
     );
-    final groupBox = await Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
-    final groupMemberBox = await Hive.openBox<GroupMemberModel>(
+    final groupBoxFuture = Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
+    final groupMemberBoxFuture = Hive.openBox<GroupMemberModel>(
       HiveConstants.groupMemberBoxName,
     );
-    final groupExpenseBox = await Hive.openBox<GroupExpenseModel>(
+    final groupExpenseBoxFuture = Hive.openBox<GroupExpenseModel>(
       HiveConstants.groupExpenseBoxName,
     );
+
+    final expenseBox = await expenseBoxFuture;
+    final accountBox = await accountBoxFuture;
+    final incomeBox = await incomeBoxFuture;
+    final categoryBox = await categoryBoxFuture;
+    final userHistoryBox = await userHistoryBoxFuture;
+    final budgetBox = await budgetBoxFuture;
+    final goalBox = await goalBoxFuture;
+    final contributionBox = await contributionBoxFuture;
+    final recurringRuleBox = await recurringRuleBoxFuture;
+    final recurringRuleAuditLogBox = await recurringRuleAuditLogBoxFuture;
+    final outboxBox = await outboxBoxFuture;
+    final groupBox = await groupBoxFuture;
+    final groupMemberBox = await groupMemberBoxFuture;
+    final groupExpenseBox = await groupExpenseBoxFuture;
 
     log.info("All Hive boxes opened.");
     log.info("SharedPreferences instance obtained.");
