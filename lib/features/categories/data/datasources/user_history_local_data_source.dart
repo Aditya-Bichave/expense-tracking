@@ -1,7 +1,7 @@
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/utils/logger.dart'; // Import logger directly to avoid circular dependency
 
 abstract class UserHistoryLocalDataSource {
   /// Finds a specific rule based on its type and matcher string.
@@ -23,13 +23,34 @@ abstract class UserHistoryLocalDataSource {
 class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
   final Box<UserHistoryRuleModel> historyBox;
 
+  // In-memory index for O(1) lookups
+  Map<_HistoryRuleKey, UserHistoryRuleModel>? _index;
+
   HiveUserHistoryLocalDataSource(this.historyBox);
+
+  void _ensureIndex() {
+    if (_index != null) return;
+
+    _index = {};
+    for (var rule in historyBox.values) {
+      final key = _HistoryRuleKey(rule.ruleType, rule.matcher);
+      // Keep the first one found, matching the behavior of linear scan (iteration order)
+      if (!_index!.containsKey(key)) {
+        _index![key] = rule;
+      }
+    }
+  }
+
+  void _invalidateIndex() {
+    _index = null;
+  }
 
   @override
   Future<void> deleteRule(String ruleId) async {
     try {
       // Assuming ruleId is the key used in Hive. If not, need to find the key first.
       await historyBox.delete(ruleId);
+      _invalidateIndex();
       log.info("Deleted user history rule (ID: $ruleId) from Hive.");
     } catch (e, s) {
       log.severe(
@@ -45,16 +66,18 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
     String matcher,
   ) async {
     try {
-      // Hive boxes aren't easily queryable like SQL. We need to iterate.
-      // This could be slow for very large history sets. Consider optimization if needed.
-      for (var rule in historyBox.values) {
-        if (rule.ruleType == ruleType && rule.matcher == matcher) {
-          log.info(
-            "Found matching user history rule. Type: $ruleType, Matcher: $matcher, CategoryId: ${rule.assignedCategoryId}",
-          );
-          return rule;
-        }
+      _ensureIndex();
+
+      final key = _HistoryRuleKey(ruleType, matcher);
+      final rule = _index![key];
+
+      if (rule != null) {
+        log.info(
+          "Found matching user history rule. Type: $ruleType, Matcher: $matcher, CategoryId: ${rule.assignedCategoryId}",
+        );
+        return rule;
       }
+
       log.fine(
         "No matching user history rule found for Type: $ruleType, Matcher: $matcher",
       );
@@ -82,6 +105,7 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
     try {
       // Simple approach: Use ruleId as the key. Assumes ruleId is unique.
       await historyBox.put(rule.ruleId, rule);
+      _invalidateIndex();
       log.info(
         "Saved/Updated user history rule (ID: ${rule.ruleId}, Type: ${rule.ruleType}, Matcher: ${rule.matcher}) to Hive.",
       );
@@ -97,6 +121,7 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
   Future<void> clearAllRules() async {
     try {
       final count = await historyBox.clear();
+      _invalidateIndex();
       log.info(
         "Cleared user history rules box in Hive ($count items removed).",
       );
@@ -107,4 +132,22 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
       );
     }
   }
+}
+
+class _HistoryRuleKey {
+  final String ruleType;
+  final String matcher;
+
+  _HistoryRuleKey(this.ruleType, this.matcher);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _HistoryRuleKey &&
+          runtimeType == other.runtimeType &&
+          ruleType == other.ruleType &&
+          matcher == other.matcher;
+
+  @override
+  int get hashCode => ruleType.hashCode ^ matcher.hashCode;
 }

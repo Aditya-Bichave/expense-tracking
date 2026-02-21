@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/categories/data/datasources/user_histor
 import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
 import 'package:expense_tracker/features/categories/domain/entities/user_history_rule.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/user_history_repository.dart';
-import 'package:expense_tracker/main.dart'; // logger
+import 'package:expense_tracker/core/utils/logger.dart'; // Import logger directly
 
 class UserHistoryRepositoryImpl implements UserHistoryRepository {
   final UserHistoryLocalDataSource localDataSource;
