@@ -1,10 +1,12 @@
+<<<<<<< HEAD
 import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-
+=======
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
+>>>>>>> 1d52882 (feat: Implement Batch 2 tickets (Group Features & Sync))
 import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
 import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
@@ -18,6 +20,7 @@ class FakeGroupExpense extends Fake implements GroupExpense {}
 
 void main() {
   late GroupExpensesBloc bloc;
+<<<<<<< HEAD
   late MockGroupExpensesRepository mockRepository;
 
   final tExpense = GroupExpense(
@@ -31,13 +34,16 @@ void main() {
     createdAt: DateTime(2023, 10, 27),
     updatedAt: DateTime(2023, 10, 27),
   );
+=======
   late MockGroupExpensesRepository repository;
+>>>>>>> 1d52882 (feat: Implement Batch 2 tickets (Group Features & Sync))
 
   setUpAll(() {
     registerFallbackValue(FakeGroupExpense());
   });
 
   setUp(() {
+<<<<<<< HEAD
     mockRepository = MockGroupExpensesRepository();
     bloc = GroupExpensesBloc(mockRepository);
   });
@@ -94,7 +100,7 @@ void main() {
       build: () => bloc,
       act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
       expect: () => [GroupExpensesError('Error')],
-
+=======
     repository = MockGroupExpensesRepository();
     bloc = GroupExpensesBloc(repository);
   });
@@ -170,6 +176,7 @@ void main() {
       expect: () => [
         GroupExpensesError('Payers must sum to total amount: 100.0'),
       ],
+>>>>>>> 1d52882 (feat: Implement Batch 2 tickets (Group Features & Sync))
     );
   });
 }

@@ -3,6 +3,8 @@ import 'package:expense_tracker/features/accounts/domain/entities/asset_account.
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -26,15 +28,26 @@ void main() {
     accountId: 'acc1',
   );
 
+  const tAccount = AssetAccount(
+    id: 'acc1',
+    name: 'Main Account',
+    type: AssetType.bank,
+    initialBalance: 1000,
+    currentBalance: 950,
+  );
+
   testWidgets('IncomeCard displays income details correctly', (tester) async {
+    // Arrange
+    whenListen(
+      mockAccountListBloc,
+      Stream.value(const AccountListLoaded(accounts: [tAccount])),
+      initialState: const AccountListLoaded(accounts: [tAccount]),
+    );
+
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: IncomeCard(
-        income: tIncome,
-        accountName: 'Main Account',
-        currencySymbol: '\$',
-      ),
+      widget: IncomeCard(income: tIncome),
       accountListBloc: mockAccountListBloc,
     );
 
@@ -44,15 +57,18 @@ void main() {
     expect(find.textContaining('5,000.00'), findsOneWidget);
   });
 
-  testWidgets('IncomeCard displays provided account name', (tester) async {
+  testWidgets('IncomeCard handles missing account gracefully', (tester) async {
+    // Arrange
+    whenListen(
+      mockAccountListBloc,
+      Stream.value(const AccountListLoaded(accounts: [])),
+      initialState: const AccountListLoaded(accounts: []),
+    );
+
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: IncomeCard(
-        income: tIncome,
-        accountName: 'Deleted',
-        currencySymbol: '\$',
-      ),
+      widget: IncomeCard(income: tIncome),
       accountListBloc: mockAccountListBloc,
     );
 

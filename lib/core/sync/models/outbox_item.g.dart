@@ -36,7 +36,6 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
   void write(BinaryWriter writer, OutboxItem obj) {
     writer
       ..writeByte(10)
-      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -57,8 +56,6 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
       ..write(obj.nextRetryAt)
       ..writeByte(9)
       ..write(obj.entityId);
-      ..writeByte(10)
-      ..write(obj.nextRetryAt);
   }
 
   @override

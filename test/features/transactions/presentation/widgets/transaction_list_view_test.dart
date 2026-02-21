@@ -70,8 +70,6 @@ void main() {
       child: TransactionListView(
         state: state,
         settings: const SettingsState(),
-        accountNameMap: const {'a1': 'Account 1'},
-        currencySymbol: '\$',
         navigateToDetailOrEdit: mockCallbacks.navigateToDetailOrEdit,
         handleChangeCategoryRequest: mockCallbacks.handleChangeCategoryRequest,
         confirmDeletion: mockCallbacks.confirmDeletion,
