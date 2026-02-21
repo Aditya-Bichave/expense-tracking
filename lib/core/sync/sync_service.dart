@@ -50,6 +50,10 @@ class SyncService {
             Duration(seconds: backoffSeconds),
           );
 
+          log.info(
+            'Retrying item ${item.id} in $backoffSeconds seconds (Attempt ${item.retryCount + 1})',
+          );
+
           await _outboxRepository.markAsFailed(
             item,
             e.toString(),
@@ -65,16 +69,17 @@ class SyncService {
   Future<void> _processItem(OutboxItem item) async {
     final table = _getTableName(item.entityType);
     final payload = jsonDecode(item.payloadJson) as Map<String, dynamic>;
+    final entityId = item.entityId;
 
     switch (item.opType) {
       case OpType.create:
         await _client.from(table).insert(payload);
         break;
       case OpType.update:
-        await _client.from(table).update(payload).eq('id', item.id);
+        await _client.from(table).update(payload).eq('id', entityId);
         break;
       case OpType.delete:
-        await _client.from(table).delete().eq('id', item.id);
+        await _client.from(table).delete().eq('id', entityId);
         break;
     }
   }
@@ -86,11 +91,25 @@ class SyncService {
       case EntityType.groupMember:
         return 'group_members';
       case EntityType.groupExpense:
-        return 'expenses';
+        return 'expenses'; // Group expenses are in 'expenses' table
       case EntityType.settlement:
         return 'settlements';
       case EntityType.invite:
         return 'invites';
+      case EntityType.expense:
+        return 'expenses';
+      case EntityType.income:
+        return 'income';
+      case EntityType.category:
+        return 'categories';
+      case EntityType.budget:
+        return 'budgets';
+      case EntityType.goal:
+        return 'goals';
+      case EntityType.contribution:
+        return 'goal_contributions';
+      case EntityType.recurringRule:
+        return 'recurring_rules';
     }
   }
 }

@@ -1,28 +1,33 @@
-# ---------- Build stage ----------
-FROM ghcr.io/cirruslabs/flutter:stable AS build
-WORKDIR /app
+# Stage 1: Build
+FROM ubuntu:latest AS build
 
-# Copy project files
+# Prerequisites
+RUN apt-get update && apt-get install -y curl git unzip
+
+# Install Flutter
+RUN git clone https://github.com/flutter/flutter.git /usr/local/flutter
+ENV PATH="/usr/local/flutter/bin:/usr/local/flutter/bin/cache/dart-sdk/bin:${PATH}"
+
+# Enable web
+RUN flutter config --enable-web
+
+WORKDIR /app
 COPY . .
 
-# Install deps
+# Get dependencies
 RUN flutter pub get
 
-# Build Flutter web release
-ARG API_BASE_URL
-# Use --no-wasm-dry-run to suppress warnings about dart:ffi which is not supported on web
-# Use quoted dart-define to handle spaces/empty values safely
-RUN flutter build web --release --no-wasm-dry-run "--dart-define=API_BASE_URL=${API_BASE_URL}"
+# Build
+RUN flutter build web --release
 
-# ---------- Run stage ----------
+# Stage 2: Serve
 FROM nginx:alpine
 
-# Replace nginx config to support SPA routing + good caching
-RUN rm /etc/nginx/conf.d/default.conf
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Copy built web output
+# Copy build artifacts
 COPY --from=build /app/build/web /usr/share/nginx/html
 
+# Expose port 80
 EXPOSE 80
+
+# Start Nginx
 CMD ["nginx", "-g", "daemon off;"]

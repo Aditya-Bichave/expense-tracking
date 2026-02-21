@@ -10,6 +10,7 @@ import 'package:expense_tracker/features/group_expenses/data/datasources/group_e
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
 import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
 import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
   final GroupExpensesLocalDataSource _localDataSource;
@@ -37,7 +38,8 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       await _localDataSource.saveExpense(model);
 
       final outboxItem = OutboxItem(
-        id: expense.id,
+        id: const Uuid().v4(),
+        entityId: expense.id,
         entityType: EntityType.groupExpense,
         opType: OpType.create,
         payloadJson: jsonEncode(model.toJson()),

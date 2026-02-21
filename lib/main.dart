@@ -18,6 +18,7 @@ import 'package:expense_tracker/features/categories/presentation/bloc/category_m
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
+import 'package:expense_tracker/features/settings/presentation/widgets/lock_screen.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
@@ -303,6 +304,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final LocalAuthentication _localAuth = sl<LocalAuthentication>();
+  bool _isLocked = false;
 
   @override
   void initState() {
@@ -327,14 +329,20 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future<void> _checkLock() async {
     final settingsState = context.read<SettingsBloc>().state;
     if (!settingsState.isAppLockEnabled) return;
+
+    if (mounted) setState(() => _isLocked = true);
+
     try {
-      await _localAuth.authenticate(
+      final didAuth = await _localAuth.authenticate(
         localizedReason: 'Please authenticate to continue',
         options: const AuthenticationOptions(
           biometricOnly: false,
           stickyAuth: true,
         ),
       );
+      if (didAuth && mounted) {
+        setState(() => _isLocked = false);
+      }
     } catch (e) {
       log.warning('[MyApp] Authentication failed: $e');
     }
@@ -358,6 +366,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       routerConfig: AppRouter.router,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            if (child != null) child,
+            if (_isLocked)
+              Positioned.fill(child: LockScreen(onAuthenticate: _checkLock)),
+          ],
+        );
+      },
     );
   }
 }

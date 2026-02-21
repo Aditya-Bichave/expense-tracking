@@ -1,5 +1,5 @@
+import 'package:expense_tracker/core/network/secure_local_storage.dart';
 import 'package:expense_tracker/core/network/supabase_config.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 
@@ -20,17 +20,17 @@ class SupabaseClientProvider {
         return;
       }
 
-      const storage = FlutterSecureStorage();
       await Supabase.initialize(
         url: SupabaseConfig.supabaseUrl,
         anonKey: SupabaseConfig.supabaseAnonKey,
         authOptions: const FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
+          localStorage: SecureLocalStorage(),
         ),
       );
       log.info('Supabase initialized successfully.');
     } catch (e) {
-      log.severe('Failed to initialize Supabase: $e');
+      log.severe('Failed to initialize Supabase: ');
       // Do not rethrow to prevent app crash in CI/Smoke tests
     }
   }

@@ -72,6 +72,40 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
     AddGroupExpenseRequested event,
     Emitter<GroupExpensesState> emit,
   ) async {
+    final expense = event.expense;
+
+    // Validate Payers
+    if (expense.payers.isNotEmpty) {
+      final totalPayers = expense.payers.fold<double>(
+        0,
+        (sum, payer) => sum + payer.amount,
+      );
+      if ((totalPayers - expense.amount).abs() > 0.01) {
+        emit(
+          GroupExpensesError(
+            'Payers must sum to total amount: ${expense.amount}',
+          ),
+        );
+        return;
+      }
+    }
+
+    // Validate Splits
+    if (expense.splits.isNotEmpty) {
+      final totalSplits = expense.splits.fold<double>(
+        0,
+        (sum, split) => sum + split.amount,
+      );
+      if ((totalSplits - expense.amount).abs() > 0.01) {
+        emit(
+          GroupExpensesError(
+            'Splits must sum to total amount: ${expense.amount}',
+          ),
+        );
+        return;
+      }
+    }
+
     final result = await _repository.addExpense(event.expense);
     result.fold(
       (failure) => emit(GroupExpensesError(failure.message)),
