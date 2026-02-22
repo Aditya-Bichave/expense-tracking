@@ -51,6 +51,10 @@ import 'package:expense_tracker/features/auth/presentation/pages/login_page.dart
 import 'package:expense_tracker/features/auth/presentation/pages/verify_otp_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_list_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
+import 'package:expense_tracker/features/profile/presentation/pages/profile_setup_page.dart';
+import 'package:expense_tracker/features/auth/presentation/pages/lock_screen.dart';
+import 'package:expense_tracker/core/auth/session_state.dart';
+import 'package:expense_tracker/core/auth/session_cubit.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   late final StreamSubscription<dynamic> _subscription;
@@ -76,24 +80,49 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteNames.initialSetup,
-    refreshListenable: GoRouterRefreshStream(sl<SettingsBloc>().stream),
+    refreshListenable: GoRouterRefreshStream(sl<SessionCubit>().stream),
     redirect: (context, state) {
-      final settingsState = sl<SettingsBloc>().state;
-      final isSetupCompleted = settingsState.isSetupCompleted;
-      final isLoggingIn = state.uri.path == RouteNames.initialSetup;
+      final sessionState = sl<SessionCubit>().state;
+      final location = state.uri.toString();
+      final isLoggingIn =
+          location == RouteNames.login ||
+          location == RouteNames.initialSetup ||
+          location.startsWith(RouteNames.verifyOtp);
 
-      if (!isSetupCompleted && !isLoggingIn) {
+      if (sessionState is SessionLocked) {
+        if (location != '/lock') return '/lock';
+        return null;
+      }
+
+      if (sessionState is SessionUnauthenticated) {
+        if (isLoggingIn) return null;
         return RouteNames.initialSetup;
       }
 
-      if (isSetupCompleted && isLoggingIn) {
-        return RouteNames.dashboard;
+      if (sessionState is SessionNeedsProfileSetup) {
+        if (location != '/profile-setup') return '/profile-setup';
+        return null;
+      }
+
+      if (sessionState is SessionAuthenticated) {
+        if (isLoggingIn ||
+            location == '/lock' ||
+            location == '/profile-setup') {
+          return RouteNames.dashboard;
+        }
+        return null;
       }
 
       return null;
     },
     observers: [GoRouterObserver()],
     routes: [
+      GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
+      GoRoute(
+        path: '/profile-setup',
+        builder: (context, state) => const ProfileSetupPage(),
+      ),
+
       GoRoute(
         path: RouteNames.login,
         builder: (context, state) => const LoginPage(),

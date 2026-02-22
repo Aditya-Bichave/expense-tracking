@@ -29,3 +29,12 @@ class AuthVerifyOtpRequested extends AuthEvent {
 class AuthLogoutRequested extends AuthEvent {}
 
 class AuthCheckStatus extends AuthEvent {}
+
+class AuthLoginWithMagicLinkRequested extends AuthEvent {
+  final String email;
+
+  const AuthLoginWithMagicLinkRequested(this.email);
+
+  @override
+  List<Object?> get props => [email];
+}

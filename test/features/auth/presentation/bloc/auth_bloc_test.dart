@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/login_with_otp_usecase.dart';
+import 'package:expense_tracker/features/auth/domain/usecases/login_with_magic_link_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/verify_otp_usecase.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
@@ -13,6 +14,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 class MockLoginWithOtpUseCase extends Mock implements LoginWithOtpUseCase {}
+
+class MockLoginWithMagicLinkUseCase extends Mock implements LoginWithMagicLinkUseCase {}
 
 class MockVerifyOtpUseCase extends Mock implements VerifyOtpUseCase {}
 
@@ -32,6 +35,7 @@ class FakeAuthResponse extends Fake implements AuthResponse {
 void main() {
   late AuthBloc bloc;
   late MockLoginWithOtpUseCase mockLoginUseCase;
+  late MockLoginWithMagicLinkUseCase mockMagicLinkUseCase;
   late MockVerifyOtpUseCase mockVerifyUseCase;
   late MockLogoutUseCase mockLogoutUseCase;
   late MockGetCurrentUserUseCase mockGetCurrentUserUseCase;
@@ -39,6 +43,7 @@ void main() {
 
   setUp(() {
     mockLoginUseCase = MockLoginWithOtpUseCase();
+    mockMagicLinkUseCase = MockLoginWithMagicLinkUseCase();
     mockVerifyUseCase = MockVerifyOtpUseCase();
     mockLogoutUseCase = MockLogoutUseCase();
     mockGetCurrentUserUseCase = MockGetCurrentUserUseCase();
@@ -46,6 +51,7 @@ void main() {
 
     bloc = AuthBloc(
       mockLoginUseCase,
+      mockMagicLinkUseCase,
       mockVerifyUseCase,
       mockLogoutUseCase,
       mockGetCurrentUserUseCase,

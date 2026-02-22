@@ -1,6 +1,4 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/core/data/countries.dart';
-import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/about_settings_section.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/appearance_settings_section.dart';
@@ -13,15 +11,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:get_it/get_it.dart';
 
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
 
+class MockSecureStorageService extends Mock implements SecureStorageService {}
+
 void main() {
   late MockSettingsBloc mockSettingsBloc;
+  late MockSecureStorageService mockStorage;
 
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
+    mockStorage = MockSecureStorageService();
+    final sl = GetIt.instance;
+    if (sl.isRegistered<SecureStorageService>()) {
+      sl.unregister<SecureStorageService>();
+    }
+    sl.registerSingleton<SecureStorageService>(mockStorage);
   });
 
   Widget pumpSection(Widget section) {
@@ -70,22 +79,21 @@ void main() {
     });
 
     testWidgets('SecuritySettingsSection toggles app lock', (tester) async {
-      bool toggled = false;
+      when(() => mockStorage.isBiometricEnabled()).thenAnswer((_) async => false);
+      when(() => mockStorage.setBiometricEnabled(true)).thenAnswer((_) async {});
+      when(() => mockStorage.getPin()).thenAnswer((_) async => '1234');
+
       await tester.pumpWidget(
         pumpSection(
-          SecuritySettingsSection(
-            state: const SettingsState(isAppLockEnabled: false),
-            isLoading: false,
-            onAppLockToggle: (context, value) {
-              toggled = true;
-            },
-          ),
+          const SecuritySettingsSection(),
         ),
       );
+      await tester.pumpAndSettle();
 
-      expect(find.text('SECURITY'), findsOneWidget);
-      await tester.tap(find.byType(Switch));
-      expect(toggled, isTrue);
+      expect(find.text('App Lock'), findsOneWidget);
+      await tester.tap(find.byType(SwitchListTile));
+      await tester.pumpAndSettle();
+      verify(() => mockStorage.setBiometricEnabled(true)).called(1);
     });
 
     testWidgets('HelpSettingsSection triggers URL launch', (tester) async {
@@ -131,13 +139,6 @@ void main() {
         const SettingsState(packageInfoStatus: PackageInfoStatus.loaded),
       );
 
-      // We need to override the state passed to the widget as well if it uses it directly
-      // But the widget takes `state` as param.
-      // However, the test uses a specific state construction.
-      // We'll just pass a state with version info mock.
-
-      // Wait, SettingsState takes a callback for version.
-
       await tester.pumpWidget(
         pumpSection(
           AboutSettingsSection(
@@ -148,8 +149,6 @@ void main() {
       );
 
       expect(find.text('ABOUT'), findsOneWidget);
-      // Version text might depend on how it's formatted in the state/widget.
-      // Default state has appVersion returning null.
     });
   });
 }

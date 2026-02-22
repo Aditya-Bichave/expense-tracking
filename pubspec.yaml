@@ -66,7 +66,13 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   app_links: ^6.4.1
   connectivity_plus: ^7.0.0
+<<<<<<< HEAD
   http: ^1.6.0
+=======
+  flutter_timezone: ^5.0.1
+  image_picker: ^1.2.1
+  country_code_picker: ^3.4.1
+>>>>>>> 39daa88 (Implement Foundation Pack v1: Auth, Profile, Security, Local Storage)
 
 
 dev_dependencies:

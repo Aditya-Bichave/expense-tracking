@@ -1,4 +1,3 @@
-// lib/core/di/service_locator.dart
 import 'dart:async';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
@@ -30,6 +29,7 @@ import 'package:expense_tracker/core/services/downloader_service_locator.dart';
 import 'package:expense_tracker/core/services/clock.dart';
 
 import 'package:expense_tracker/core/di/service_configurations/auth_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/profile_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/groups_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/group_expenses_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/sync_dependencies.dart';
@@ -51,6 +51,7 @@ import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
+import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
 
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
 import 'package:expense_tracker/features/income/data/datasources/income_local_data_source.dart';
@@ -59,10 +60,13 @@ import 'package:expense_tracker/features/budgets/data/datasources/budget_local_d
 import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
 
+import 'package:expense_tracker/core/services/secure_storage_service.dart';
+
 final sl = GetIt.instance;
 
 Future<void> initLocator({
   required SharedPreferences prefs,
+  required SecureStorageService secureStorageService,
   required Box<ExpenseModel> expenseBox,
   required Box<AssetAccountModel> accountBox,
   required Box<IncomeModel> incomeBox,
@@ -77,6 +81,7 @@ Future<void> initLocator({
   required Box<GroupModel> groupBox,
   required Box<GroupMemberModel> groupMemberBox,
   required Box<GroupExpenseModel> groupExpenseBox,
+  required Box<ProfileModel> profileBox,
 }) async {
   log.info("Initializing Service Locator...");
 
@@ -100,6 +105,10 @@ Future<void> initLocator({
   if (!sl.isRegistered<SharedPreferences>()) {
     sl.registerLazySingleton<SharedPreferences>(() => prefs);
   }
+  if (!sl.isRegistered<SecureStorageService>()) {
+    sl.registerLazySingleton<SecureStorageService>(() => secureStorageService);
+  }
+
   if (!sl.isRegistered<Box<ExpenseModel>>()) {
     sl.registerLazySingleton<Box<ExpenseModel>>(() => expenseBox);
   }
@@ -145,6 +154,9 @@ Future<void> initLocator({
   if (!sl.isRegistered<Box<GroupExpenseModel>>()) {
     sl.registerLazySingleton<Box<GroupExpenseModel>>(() => groupExpenseBox);
   }
+  if (!sl.isRegistered<Box<ProfileModel>>()) {
+    sl.registerLazySingleton<Box<ProfileModel>>(() => profileBox);
+  }
 
   sl.registerLazySingleton<HiveExpenseLocalDataSource>(
     () => HiveExpenseLocalDataSource(sl()),
@@ -188,6 +200,7 @@ Future<void> initLocator({
     RecurringTransactionsDependencies.register();
 
     AuthDependencies.register();
+    ProfileDependencies.register();
     SyncDependencies.register();
     GroupsDependencies.register();
     GroupExpensesDependencies.register();

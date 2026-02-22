@@ -1,9 +1,9 @@
-// lib/features/settings/presentation/pages/settings_page.dart
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-// Import decomposed widgets
 import 'package:expense_tracker/features/settings/presentation/widgets/appearance_settings_section.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/general_settings_section.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/security_settings_section.dart';
@@ -11,14 +11,12 @@ import 'package:expense_tracker/features/settings/presentation/widgets/data_mana
 import 'package:expense_tracker/features/settings/presentation/widgets/help_settings_section.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/legal_settings_section.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/about_settings_section.dart';
-// Import Data Management Bloc
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
-// Other imports
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:expense_tracker/core/utils/app_dialogs.dart'; // Import AppDialogs
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -36,14 +34,11 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-  // --- URL Launcher (Remains in View State) ---
   void _launchURL(BuildContext context, String urlString) async {
     final Uri url = Uri.parse(urlString);
     try {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        log.warning(
-          "[SettingsPage] Could not launch URL (launchUrl returned false): $urlString",
-        );
+        log.warning("[SettingsPage] Could not launch URL: $urlString");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Could not open link: $urlString')),
@@ -69,7 +64,6 @@ class _SettingsViewState extends State<SettingsView> {
       listeners: [
         BlocListener<SettingsBloc, SettingsState>(
           listener: (context, state) {
-            // Handle main settings errors
             final errorMsg = state.errorMessage;
             if (state.status == SettingsStatus.error && errorMsg != null) {
               ScaffoldMessenger.of(context)
@@ -82,7 +76,6 @@ class _SettingsViewState extends State<SettingsView> {
                 );
               context.read<SettingsBloc>().add(const ClearSettingsMessage());
             }
-            // Handle package info errors
             final pkgErrorMsg = state.packageInfoError;
             if (state.packageInfoStatus == PackageInfoStatus.error &&
                 pkgErrorMsg != null) {
@@ -94,14 +87,11 @@ class _SettingsViewState extends State<SettingsView> {
                     backgroundColor: theme.colorScheme.error,
                   ),
                 );
-              // Optionally clear the error message if needed
-              // context.read<SettingsBloc>().add(const ClearPackageInfoErrorMessage());
             }
           },
         ),
         BlocListener<DataManagementBloc, DataManagementState>(
           listener: (context, state) {
-            // Handle Data Management success/error messages
             final dataMsg = state.message;
             if ((state.status == DataManagementStatus.success ||
                     state.status == DataManagementStatus.error) &&
@@ -125,14 +115,11 @@ class _SettingsViewState extends State<SettingsView> {
         ),
       ],
       child: Scaffold(
-        // --- AppBar is now provided by MainShell ---
-        // appBar: AppBar(title: const Text('Settings')),
         body: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, settingsState) {
             final dataManagementState = context
                 .watch<DataManagementBloc>()
                 .state;
-
             final isSettingsLoading =
                 settingsState.status == SettingsStatus.loading ||
                 settingsState.packageInfoStatus == PackageInfoStatus.loading;
@@ -160,20 +147,11 @@ class _SettingsViewState extends State<SettingsView> {
                       state: settingsState,
                       isLoading: isOverallLoading,
                     ),
-                    SecuritySettingsSection(
-                      state: settingsState,
-                      isLoading: isOverallLoading,
-                      onAppLockToggle: (_, enable) {
-                        context.read<SettingsBloc>().add(UpdateAppLock(enable));
-                      },
-                    ),
+                    const SecuritySettingsSection(),
                     DataManagementSettingsSection(
                       isDataManagementLoading: isDataManagementLoading,
                       isSettingsLoading: isSettingsLoading,
                       onBackup: () async {
-                        log.info(
-                          "[SettingsPage] Backup requested via section.",
-                        );
                         final password = await _promptForPassword(
                           context,
                           'Backup Password',
@@ -185,9 +163,6 @@ class _SettingsViewState extends State<SettingsView> {
                         }
                       },
                       onRestore: () async {
-                        log.info(
-                          "[SettingsPage] Restore requested via section.",
-                        );
                         final confirmed = await AppDialogs.showConfirmation(
                           context,
                           title: "Confirm Restore",
@@ -209,9 +184,6 @@ class _SettingsViewState extends State<SettingsView> {
                         }
                       },
                       onClearData: () async {
-                        log.info(
-                          "[SettingsPage] Clear data requested via section.",
-                        );
                         final confirmed = await AppDialogs.showStrongConfirmation(
                           context,
                           title: "Confirm Clear All Data",
@@ -240,11 +212,28 @@ class _SettingsViewState extends State<SettingsView> {
                       state: settingsState,
                       isLoading: isOverallLoading,
                     ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onError,
+                        ),
+                        onPressed: () {
+                          context.read<AuthBloc>().add(AuthLogoutRequested());
+                        },
+                        icon: const Icon(Icons.logout),
+                        label: const Text('Logout'),
+                      ),
+                    ),
                     const SizedBox(height: 40),
                   ],
                 ),
-
-                // Loading Overlay
                 if (isOverallLoading)
                   Positioned.fill(
                     child: Container(
