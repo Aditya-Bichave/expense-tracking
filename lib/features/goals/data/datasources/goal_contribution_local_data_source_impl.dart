@@ -86,10 +86,10 @@ class HiveContributionLocalDataSource
   Future<List<GoalContributionModel>> getContributionsForGoal(
     String goalId,
   ) async {
-    // In Hive, we have to fetch all and filter manually
+    // Optimize: Filter directly from values iterable to avoid creating intermediate list
     try {
-      final all = await getAllContributions();
-      final filtered = all.where((c) => c.goalId == goalId).toList();
+      final filtered =
+          contributionBox.values.where((c) => c.goalId == goalId).toList();
       log.fine(
         "[ContributionDS] Filtered ${filtered.length} contributions for Goal ID $goalId.",
       );

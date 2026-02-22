@@ -62,29 +62,21 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
           ? categoryId.split(',').toSet()
           : null;
 
+      // Optimize: Calculate date boundaries once outside the loop
+      final startDateOnly = startDate != null
+          ? DateTime(startDate.year, startDate.month, startDate.day)
+          : null;
+      final endDateInclusive = endDate != null
+          ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59)
+          : null;
+
       for (final income in incomeBox.values) {
-        if (startDate != null) {
-          final incDateOnly = DateTime(
-            income.date.year,
-            income.date.month,
-            income.date.day,
-          );
-          final startDateOnly = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day,
-          );
-          if (incDateOnly.isBefore(startDateOnly)) continue;
+        if (startDateOnly != null) {
+          // Compare directly: income.date >= startDate (normalized to midnight)
+          if (income.date.isBefore(startDateOnly)) continue;
         }
-        if (endDate != null) {
-          final endDateInclusive = DateTime(
-            endDate.year,
-            endDate.month,
-            endDate.day,
-            23,
-            59,
-            59,
-          );
+        if (endDateInclusive != null) {
+          // Compare directly: income.date <= endDate (normalized to end of day)
           if (income.date.isAfter(endDateInclusive)) continue;
         }
         if (accountIdSet != null && !accountIdSet.contains(income.accountId)) {
