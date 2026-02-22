@@ -2,7 +2,6 @@ const { chromium } = require('playwright');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const mime = require('mime-types'); // You might need to install this or map types manually
 
 // --- Configuration ---
 const BUILD_DIR = path.resolve(__dirname, '../../build/web');
@@ -127,12 +126,6 @@ const server = http.createServer((req, res) => {
 
     if (mimeTypes[ext]) {
       contentType = mimeTypes[ext];
-    } else {
-       try {
-         contentType = mime.lookup(filePath) || 'application/octet-stream';
-       } catch (e) {
-         // mime-types not found
-       }
     }
 
     fs.readFile(filePath, (err, data) => {
