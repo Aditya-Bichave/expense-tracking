@@ -25,14 +25,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<void> updateProfile(ProfileModel profile) async {
-    await _client.from('profiles').update({
-      'full_name': profile.fullName,
-      'email': profile.email,
-      'phone': profile.phone,
-      'avatar_url': profile.avatarUrl,
-      'currency': profile.currency,
-      'timezone': profile.timezone,
-    }).eq('id', profile.id);
+    await _client
+        .from('profiles')
+        .update({
+          'full_name': profile.fullName,
+          'email': profile.email,
+          'phone': profile.phone,
+          'avatar_url': profile.avatarUrl,
+          'currency': profile.currency,
+          'timezone': profile.timezone,
+        })
+        .eq('id', profile.id);
   }
 
   @override
@@ -44,11 +47,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
     final bytes = await file.readAsBytes();
 
-    await _client.storage.from('avatars').uploadBinary(
-      fileName,
-      bytes,
-      fileOptions: const FileOptions(upsert: true),
-    );
+    await _client.storage
+        .from('avatars')
+        .uploadBinary(
+          fileName,
+          bytes,
+          fileOptions: const FileOptions(upsert: true),
+        );
 
     return _client.storage.from('avatars').getPublicUrl(fileName);
   }

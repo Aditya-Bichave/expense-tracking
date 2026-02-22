@@ -1,10 +1,10 @@
 name: expense_tracker
 description: A basic expense tracking application.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.8.0 <4.0.0' # Use latest stable Dart SDK
+  sdk: ">=3.8.0 <4.0.0" # Use latest stable Dart SDK
 
 dependencies:
   flutter:
@@ -66,14 +66,10 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   app_links: ^6.4.1
   connectivity_plus: ^7.0.0
-<<<<<<< HEAD
   http: ^1.6.0
-=======
   flutter_timezone: ^5.0.1
   image_picker: ^1.2.1
   country_code_picker: ^3.4.1
->>>>>>> 39daa88 (Implement Foundation Pack v1: Auth, Profile, Security, Local Storage)
-
 
 dev_dependencies:
   flutter_test:
@@ -81,7 +77,7 @@ dev_dependencies:
   flutter_lints: ^2.0.0
 
   # Code Generation (for Hive)
-  hive_ce_generator: ^1.10.0
+  hive_ce_generator: ^1.9.3
   build_runner: ^2.4.6
   json_serializable: ^6.7.1
 
@@ -95,38 +91,37 @@ flutter:
   uses-material-design: true
 
   assets:
-      - assets/elemental/
-      - assets/elemental/backgrounds/
-      - assets/elemental/charts/
-      - assets/elemental/decorative/
-      - assets/elemental/icons/categories/
-      - assets/elemental/icons/common/
-      - assets/elemental/illustrations/
-      - assets/elemental/theme_palette1/
-      - assets/elemental/theme_palette2/
-      - assets/elemental/theme_palette3/
-      - assets/elemental/theme_palette4/
+    - assets/elemental/
+    - assets/elemental/backgrounds/
+    - assets/elemental/charts/
+    - assets/elemental/decorative/
+    - assets/elemental/icons/categories/
+    - assets/elemental/icons/common/
+    - assets/elemental/illustrations/
+    - assets/elemental/theme_palette1/
+    - assets/elemental/theme_palette2/
+    - assets/elemental/theme_palette3/
+    - assets/elemental/theme_palette4/
 
-      - assets/quantum/
-      - assets/quantum/backgrounds/
-      - assets/quantum/charts/
-      - assets/quantum/icons/categories/
-      - assets/quantum/icons/common/
-      - assets/quantum/illustrations/
-      - assets/quantum/theme_palette1/
-      - assets/quantum/theme_palette2/
-      - assets/quantum/theme_palette3/
-      - assets/quantum/theme_palette4/
+    - assets/quantum/
+    - assets/quantum/backgrounds/
+    - assets/quantum/charts/
+    - assets/quantum/icons/categories/
+    - assets/quantum/icons/common/
+    - assets/quantum/illustrations/
+    - assets/quantum/theme_palette1/
+    - assets/quantum/theme_palette2/
+    - assets/quantum/theme_palette3/
+    - assets/quantum/theme_palette4/
 
-      - assets/aether/
-      - assets/aether/backgrounds/
-      - assets/aether/charts/
-      - assets/aether/icons/common/
-      - assets/aether/illustrations/
-      - assets/aether/palette1_starfield/
-      - assets/aether/palette2_garden/
-      - assets/aether/palette3_mystic/
-      - assets/aether/palette4_calm_sky/
+    - assets/aether/
+    - assets/aether/backgrounds/
+    - assets/aether/charts/
+    - assets/aether/icons/common/
+    - assets/aether/illustrations/
+    - assets/aether/palette1_starfield/
+    - assets/aether/palette2_garden/
+    - assets/aether/palette3_mystic/
+    - assets/aether/palette4_calm_sky/
 
-      - assets/data/
-
+    - assets/data/

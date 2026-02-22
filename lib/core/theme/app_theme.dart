@@ -47,17 +47,14 @@ class AppTheme {
     elementalPalette2: 'Ocean Calm',
     elementalPalette3: 'Light & Airy',
     elementalPalette4: 'Elemental Dark',
-
     quantumPalette1: 'Cyan Tech',
     quantumPalette2: 'Cool Blue',
     quantumPalette3: 'Warm Red',
     quantumPalette4: 'Neutral Tech',
-
     aetherPalette1: 'Starfield',
     aetherPalette2: 'Garden',
     aetherPalette3: 'Mystic',
     aetherPalette4: 'Calm Sky',
-
     stitchPalette1: 'Stitch Neon',
   };
 

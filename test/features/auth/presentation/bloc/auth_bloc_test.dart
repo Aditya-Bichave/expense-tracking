@@ -15,7 +15,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
 class MockLoginWithOtpUseCase extends Mock implements LoginWithOtpUseCase {}
 
-class MockLoginWithMagicLinkUseCase extends Mock implements LoginWithMagicLinkUseCase {}
+class MockLoginWithMagicLinkUseCase extends Mock
+    implements LoginWithMagicLinkUseCase {}
 
 class MockVerifyOtpUseCase extends Mock implements VerifyOtpUseCase {}
 

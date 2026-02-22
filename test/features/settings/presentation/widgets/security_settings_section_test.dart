@@ -20,7 +20,9 @@ void main() {
     sl.registerSingleton<SecureStorageService>(mockStorage);
   });
 
-  testWidgets('SecuritySettingsSection renders and loads state', (WidgetTester tester) async {
+  testWidgets('SecuritySettingsSection renders and loads state', (
+    WidgetTester tester,
+  ) async {
     when(() => mockStorage.isBiometricEnabled()).thenAnswer((_) async => true);
 
     await pumpWidgetWithProviders(
@@ -30,12 +32,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SwitchListTile), findsOneWidget);
-    final switchTile = tester.widget<SwitchListTile>(find.byType(SwitchListTile));
+    final switchTile = tester.widget<SwitchListTile>(
+      find.byType(SwitchListTile),
+    );
     expect(switchTile.value, isTrue);
     verify(() => mockStorage.isBiometricEnabled()).called(1);
   });
 
-  testWidgets('SecuritySettingsSection toggles switch and saves', (WidgetTester tester) async {
+  testWidgets('SecuritySettingsSection toggles switch and saves', (
+    WidgetTester tester,
+  ) async {
     when(() => mockStorage.isBiometricEnabled()).thenAnswer((_) async => false);
     when(() => mockStorage.setBiometricEnabled(true)).thenAnswer((_) async {});
     when(() => mockStorage.getPin()).thenAnswer((_) async => '1234');

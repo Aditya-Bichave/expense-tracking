@@ -7,7 +7,8 @@ class SecuritySettingsSection extends StatefulWidget {
   const SecuritySettingsSection({super.key});
 
   @override
-  State<SecuritySettingsSection> createState() => _SecuritySettingsSectionState();
+  State<SecuritySettingsSection> createState() =>
+      _SecuritySettingsSectionState();
 }
 
 class _SecuritySettingsSectionState extends State<SecuritySettingsSection> {
@@ -27,26 +28,26 @@ class _SecuritySettingsSectionState extends State<SecuritySettingsSection> {
 
   Future<void> _toggleBiometric(bool value) async {
     if (value) {
-        final pin = await _storage.getPin();
+      final pin = await _storage.getPin();
+      if (!mounted) return;
+      if (pin == null) {
+        final pinSet = await showDialog<bool>(
+          context: context,
+          builder: (context) => const PinSetupDialog(),
+        );
         if (!mounted) return;
-        if (pin == null) {
-            final pinSet = await showDialog<bool>(
-                context: context,
-                builder: (context) => const PinSetupDialog(),
-            );
-            if (!mounted) return;
-            if (pinSet != true) return;
-        }
+        if (pinSet != true) return;
+      }
     }
     await _storage.setBiometricEnabled(value);
     if (mounted) setState(() => _biometricEnabled = value);
   }
 
   Future<void> _changePin() async {
-      await showDialog(
-          context: context,
-          builder: (context) => const PinSetupDialog(isChange: true),
-      );
+    await showDialog(
+      context: context,
+      builder: (context) => const PinSetupDialog(isChange: true),
+    );
   }
 
   @override
@@ -61,11 +62,11 @@ class _SecuritySettingsSectionState extends State<SecuritySettingsSection> {
           onChanged: _toggleBiometric,
         ),
         if (_biometricEnabled)
-            ListTile(
-                title: const Text('Change PIN'),
-                leading: const Icon(Icons.lock_outline),
-                onTap: _changePin,
-            ),
+          ListTile(
+            title: const Text('Change PIN'),
+            leading: const Icon(Icons.lock_outline),
+            onTap: _changePin,
+          ),
       ],
     );
   }
@@ -112,7 +113,9 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
               await _storage.savePin(pin);
               if (mounted) Navigator.pop(context, true);
             } else {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('PIN must be 4 digits')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('PIN must be 4 digits')),
+              );
             }
           },
           child: const Text('Save'),

@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/profile/data/models/profile_model.dart'
 import 'package:expense_tracker/features/profile/domain/entities/user_profile.dart';
 import 'package:expense_tracker/features/profile/domain/repositories/profile_repository.dart';
 import 'dart:io';
+import 'package:cross_file/cross_file.dart';
 
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource _remoteDataSource;
@@ -65,7 +66,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
         if (user == null) {
           return const Left(ServerFailure("No user logged in"));
         }
-        final url = await _remoteDataSource.uploadAvatar(user.id, file);
+        final url = await _remoteDataSource.uploadAvatar(
+          user.id,
+          XFile(file.path),
+        );
         return Right(url);
       });
     } catch (e) {

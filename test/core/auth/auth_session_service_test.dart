@@ -67,7 +67,9 @@ void main() {
   });
 
   test('signOut calls client.auth.signOut', () async {
-    when(() => mockGoTrueClient.signOut()).thenAnswer((_) async {});
+    when(() => mockGoTrueClient.signOut()).thenAnswer((_) async {
+      return;
+    });
 
     authSessionService = AuthSessionService(mockSupabaseClient);
     await authSessionService.signOut();

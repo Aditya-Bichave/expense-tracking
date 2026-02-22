@@ -43,9 +43,9 @@ void main() {
 
   group('RecurringTransactionLocalDataSource', () {
     test('addRecurringRule calls box.put', () async {
-      when(
-        () => mockRecurringRuleBox.put(any(), any()),
-      ).thenAnswer((_) async {});
+      when(() => mockRecurringRuleBox.put(any(), any())).thenAnswer((_) async {
+        return;
+      });
       await dataSource.addRecurringRule(FakeRecurringRuleModel());
       verify(() => mockRecurringRuleBox.put('1', any())).called(1);
     });
@@ -59,7 +59,9 @@ void main() {
     });
 
     test('addAuditLog calls box.put', () async {
-      when(() => mockAuditLogBox.put(any(), any())).thenAnswer((_) async {});
+      when(() => mockAuditLogBox.put(any(), any())).thenAnswer((_) async {
+        return;
+      });
       await dataSource.addAuditLog(FakeRecurringRuleAuditLogModel());
       verify(() => mockAuditLogBox.put('log1', any())).called(1);
     });

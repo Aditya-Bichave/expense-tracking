@@ -59,7 +59,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-
               ElevatedButton.icon(
                 icon: const Icon(Icons.language),
                 label: Text(
@@ -78,7 +77,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 onPressed: () => _showCurrencyPicker(context),
               ),
               const SizedBox(height: 24),
-
               OutlinedButton.icon(
                 icon: const Icon(Icons.explore_outlined),
                 label: const Text('Explore Demo Mode'),
@@ -105,7 +103,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -118,7 +115,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 child: const Text('Sign Up / Log In'),
               ),
               const SizedBox(height: 24),
-
               TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onSurfaceVariant,

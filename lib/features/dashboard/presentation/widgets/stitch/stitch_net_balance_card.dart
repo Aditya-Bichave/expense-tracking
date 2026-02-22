@@ -60,7 +60,6 @@ class StitchNetBalanceCard extends StatelessWidget {
               ),
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -86,9 +85,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                     fontSize: 32,
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
                 Row(
                   children: [
                     Expanded(
@@ -145,9 +142,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                     ),
                   ],
                 ),
-
                 const Spacer(),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [

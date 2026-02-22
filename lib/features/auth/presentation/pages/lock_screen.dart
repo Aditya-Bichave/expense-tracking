@@ -80,13 +80,15 @@ class _LockScreenState extends State<LockScreen> {
 
   void _verifyPin() {
     if (savedPin == null) {
-        log.severe('PIN verification attempted but saved PIN is null.');
-        setState(() => enteredPin = '');
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Security Error: PIN configuration missing.')),
-        );
-        // Optionally logout or similar
-        return;
+      log.severe('PIN verification attempted but saved PIN is null.');
+      setState(() => enteredPin = '');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Security Error: PIN configuration missing.'),
+        ),
+      );
+      // Optionally logout or similar
+      return;
     }
 
     if (enteredPin == savedPin) {
@@ -95,9 +97,9 @@ class _LockScreenState extends State<LockScreen> {
       setState(() {
         enteredPin = '';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Incorrect PIN')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Incorrect PIN')));
     }
   }
 

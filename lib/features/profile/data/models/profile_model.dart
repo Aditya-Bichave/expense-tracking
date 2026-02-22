@@ -1,3 +1,4 @@
+// ignore_for_file: overridden_fields
 import 'package:expense_tracker/features/profile/domain/entities/user_profile.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:json_annotation/json_annotation.dart';

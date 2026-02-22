@@ -13,7 +13,9 @@ class SecureLocalStorage extends LocalStorage {
 
   @override
   Future<bool> hasAccessToken() async {
-    return await storage.containsKey(key: SupabaseConfig.supabasePersistSessionKey);
+    return await storage.containsKey(
+      key: SupabaseConfig.supabasePersistSessionKey,
+    );
   }
 
   @override
@@ -28,7 +30,10 @@ class SecureLocalStorage extends LocalStorage {
 
   @override
   Future<void> persistSession(String persistSessionString) async {
-    await storage.write(key: SupabaseConfig.supabasePersistSessionKey, value: persistSessionString);
+    await storage.write(
+      key: SupabaseConfig.supabasePersistSessionKey,
+      value: persistSessionString,
+    );
   }
 }
 

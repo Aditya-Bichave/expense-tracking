@@ -41,7 +41,9 @@ void main() {
   });
 
   test('saveRule calls box.put', () async {
-    when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+    when(() => mockBox.put(any(), any())).thenAnswer((_) async {
+      return;
+    });
 
     await dataSource.saveRule(FakeUserHistoryRuleModel());
 

@@ -79,15 +79,15 @@ void main() {
     });
 
     testWidgets('SecuritySettingsSection toggles app lock', (tester) async {
-      when(() => mockStorage.isBiometricEnabled()).thenAnswer((_) async => false);
-      when(() => mockStorage.setBiometricEnabled(true)).thenAnswer((_) async {});
+      when(
+        () => mockStorage.isBiometricEnabled(),
+      ).thenAnswer((_) async => false);
+      when(
+        () => mockStorage.setBiometricEnabled(true),
+      ).thenAnswer((_) async {});
       when(() => mockStorage.getPin()).thenAnswer((_) async => '1234');
 
-      await tester.pumpWidget(
-        pumpSection(
-          const SecuritySettingsSection(),
-        ),
-      );
+      await tester.pumpWidget(pumpSection(const SecuritySettingsSection()));
       await tester.pumpAndSettle();
 
       expect(find.text('App Lock'), findsOneWidget);

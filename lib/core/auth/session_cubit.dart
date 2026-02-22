@@ -41,76 +41,78 @@ class SessionCubit extends Cubit<SessionState> {
 
   Future<void> checkSession() async {
     final userResult = _authRepository.getCurrentUser();
-    await userResult.fold(
-      (failure) async => emit(SessionUnauthenticated()),
-      (user) async {
-        if (user == null) {
-          emit(SessionUnauthenticated());
-          return;
-        }
+    await userResult.fold((failure) async => emit(SessionUnauthenticated()), (
+      user,
+    ) async {
+      if (user == null) {
+        emit(SessionUnauthenticated());
+        return;
+      }
 
-        final isLockEnabled = await _secureStorageService.isBiometricEnabled();
-        if (state is SessionLocked) return;
+      final isLockEnabled = await _secureStorageService.isBiometricEnabled();
+      if (state is SessionLocked) return;
 
-        if (isLockEnabled) {
-             emit(SessionLocked());
-             return;
-        }
+      if (isLockEnabled) {
+        emit(SessionLocked());
+        return;
+      }
 
-        await _loadProfile(user);
-      },
-    );
+      await _loadProfile(user);
+    });
   }
 
   Future<void> _loadProfile(User user) async {
-    final localResult = await _profileRepository.getProfile(forceRefresh: false);
+    final localResult = await _profileRepository.getProfile(
+      forceRefresh: false,
+    );
 
     localResult.fold(
       (failure) async {
-          await _fetchRemoteProfile(user);
+        await _fetchRemoteProfile(user);
       },
       (profile) {
-          _validateAndEmit(user, profile);
-          _fetchRemoteProfile(user, background: true);
+        _validateAndEmit(user, profile);
+        _fetchRemoteProfile(user, background: true);
       },
     );
   }
 
   Future<void> _fetchRemoteProfile(User user, {bool background = false}) async {
-      if (isClosed) return;
-      final remoteResult = await _profileRepository.getProfile(forceRefresh: true);
-      if (isClosed) return;
+    if (isClosed) return;
+    final remoteResult = await _profileRepository.getProfile(
+      forceRefresh: true,
+    );
+    if (isClosed) return;
 
-      remoteResult.fold(
-          (failure) {
-              if (!background && !isClosed) emit(SessionNeedsProfileSetup(user));
-          },
-          (profile) {
-              if (!isClosed) _validateAndEmit(user, profile);
-          }
-      );
+    remoteResult.fold(
+      (failure) {
+        if (!background && !isClosed) emit(SessionNeedsProfileSetup(user));
+      },
+      (profile) {
+        if (!isClosed) _validateAndEmit(user, profile);
+      },
+    );
   }
 
   void _validateAndEmit(User user, UserProfile profile) {
-      if (profile.fullName == null || profile.fullName!.isEmpty) {
-          emit(SessionNeedsProfileSetup(user));
-      } else {
-          emit(SessionAuthenticated(profile));
-      }
+    if (profile.fullName == null || profile.fullName!.isEmpty) {
+      emit(SessionNeedsProfileSetup(user));
+    } else {
+      emit(SessionAuthenticated(profile));
+    }
   }
 
   Future<void> unlock() async {
     final userResult = _authRepository.getCurrentUser();
-    await userResult.fold(
-        (l) async => emit(SessionUnauthenticated()),
-        (user) async {
-            if (user != null) {
-                await _loadProfile(user);
-            } else {
-                emit(SessionUnauthenticated());
-            }
-        }
-    );
+    await userResult.fold((l) async => emit(SessionUnauthenticated()), (
+      user,
+    ) async {
+      if (user != null) {
+        await _loadProfile(user);
+      } else {
+        emit(SessionUnauthenticated());
+      }
+    });
   }
 
   void lock() {
@@ -118,6 +120,6 @@ class SessionCubit extends Cubit<SessionState> {
   }
 
   void profileSetupCompleted() {
-      checkSession();
+    checkSession();
   }
 }
