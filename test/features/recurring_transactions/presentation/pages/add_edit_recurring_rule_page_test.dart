@@ -22,8 +22,7 @@ class MockCategoryManagementBloc
     extends MockBloc<CategoryManagementEvent, CategoryManagementState>
     implements CategoryManagementBloc {}
 
-class MockAccountListBloc
-    extends MockBloc<AccountListEvent, AccountListState>
+class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
     implements AccountListBloc {}
 
 void main() {
@@ -57,9 +56,7 @@ void main() {
         BlocProvider<CategoryManagementBloc>.value(
           value: mockCategoryManagementBloc,
         ),
-        BlocProvider<AccountListBloc>.value(
-          value: mockAccountListBloc,
-        ),
+        BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
       ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -69,12 +66,18 @@ void main() {
     );
   }
 
-  testWidgets(skip: 'Fails with SliverMultiBoxAdaptorElement in test environment', 'renders AddEditRecurringRulePage', (tester) async {
-    when(() => mockBloc.state).thenReturn(AddEditRecurringRuleState.initial());
+  testWidgets(
+    skip: true,
+    'renders AddEditRecurringRulePage',
+    (tester) async {
+      when(
+        () => mockBloc.state,
+      ).thenReturn(AddEditRecurringRuleState.initial());
 
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
 
-    expect(find.byType(AddEditRecurringRulePage), findsOneWidget);
-  });
+      expect(find.byType(AddEditRecurringRulePage), findsOneWidget);
+    },
+  );
 }
