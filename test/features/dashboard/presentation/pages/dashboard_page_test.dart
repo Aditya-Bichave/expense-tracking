@@ -1,17 +1,17 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
-import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_section.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-import '../../../../helpers/pump_app.dart';
+import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'
+    hide AuthState; // Hide conflicting AuthState
 
 class MockDashboardBloc extends MockBloc<DashboardEvent, DashboardState>
     implements DashboardBloc {}
@@ -19,112 +19,41 @@ class MockDashboardBloc extends MockBloc<DashboardEvent, DashboardState>
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
 
-class MockFinancialOverview extends Mock implements FinancialOverview {}
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class MockUser extends Mock implements User {}
 
 void main() {
-  late DashboardBloc mockDashboardBloc;
-  late SettingsBloc mockSettingsBloc;
-  late MockGoRouter mockGoRouter;
-  late FinancialOverview mockOverview;
+  late MockDashboardBloc mockDashboardBloc;
+  late MockSettingsBloc mockSettingsBloc;
+  late MockAuthBloc mockAuthBloc;
 
   setUp(() {
     mockDashboardBloc = MockDashboardBloc();
     mockSettingsBloc = MockSettingsBloc();
-    mockGoRouter = MockGoRouter();
-    mockOverview = MockFinancialOverview();
-
-    when(() => mockOverview.accountBalances).thenReturn({});
-    when(() => mockOverview.activeBudgetsSummary).thenReturn([]);
-    when(() => mockOverview.activeGoalsSummary).thenReturn([]);
-    when(() => mockOverview.recentSpendingSparkline).thenReturn([]);
-    when(() => mockOverview.recentContributionSparkline).thenReturn([]);
-    when(() => mockOverview.overallBalance).thenReturn(0);
+    mockAuthBloc = MockAuthBloc();
   });
 
-  Widget buildTestWidget() {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: mockDashboardBloc),
-        BlocProvider.value(value: mockSettingsBloc),
-      ],
-      child: const DashboardPage(),
-    );
-  }
+  testWidgets('DashboardPage renders loading', (tester) async {
+    when(() => mockDashboardBloc.state).thenReturn(const DashboardLoading());
+    when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(MockUser()));
 
-  group('DashboardPage', () {
-    testWidgets('shows loading indicator when state is DashboardLoading', (
-      tester,
-    ) async {
-      when(() => mockDashboardBloc.state).thenReturn(DashboardLoading());
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: buildTestWidget(),
-        settle: false,
-      );
-      await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
-
-    testWidgets('shows error and retry button when state is DashboardError', (
-      tester,
-    ) async {
-      when(
-        () => mockDashboardBloc.state,
-      ).thenReturn(const DashboardError('Failed'));
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
-
-      expect(find.text('Error loading dashboard: Failed'), findsOneWidget);
-      final retryButton = find.byKey(const ValueKey('button_dashboard_retry'));
-      expect(retryButton, findsOneWidget);
-
-      await tester.tap(retryButton);
-      verify(
-        () => mockDashboardBloc.add(const LoadDashboard(forceReload: true)),
-      ).called(1);
-    });
-
-    testWidgets('renders dashboard sections when state is DashboardLoaded', (
-      tester,
-    ) async {
-      when(
-        () => mockDashboardBloc.state,
-      ).thenReturn(DashboardLoaded(mockOverview));
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
-
-      expect(find.byType(AssetDistributionSection), findsOneWidget);
-      expect(find.byType(BudgetSummaryWidget), findsOneWidget);
-    });
-
-    testWidgets('report navigation buttons push correct routes', (
-      tester,
-    ) async {
-      when(
-        () => mockDashboardBloc.state,
-      ).thenReturn(DashboardLoaded(mockOverview));
-      when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-      when(() => mockGoRouter.push(any())).thenAnswer((_) async => null);
-
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: buildTestWidget(),
-        router: mockGoRouter,
-      );
-
-      final button = find.byKey(
-        const ValueKey('button_dashboard_to_spendingCategoryReport'),
-      );
-      expect(button, findsOneWidget);
-
-      await tester.tap(button);
-
-      verify(
-        () => mockGoRouter.push(
-          '${RouteNames.dashboard}/${RouteNames.reportSpendingCategory}',
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<DashboardBloc>.value(value: mockDashboardBloc),
+            BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
+            BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+          ],
+          child: const DashboardPage(),
         ),
-      ).called(1);
-    });
-  }, skip: true);
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
 }

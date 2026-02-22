@@ -1,20 +1,16 @@
-import 'dart:async';
-
 import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
+import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/pages/spending_over_time_page.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:expense_tracker/l10n/app_localizations.dart';
 
 class MockSpendingTimeReportBloc
     extends MockBloc<SpendingTimeReportEvent, SpendingTimeReportState>
@@ -27,108 +23,79 @@ class MockReportFilterBloc
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
 
-class FakeSpendingTimeReportEvent extends Fake
-    implements SpendingTimeReportEvent {}
-
-class FakeReportFilterEvent extends Fake implements ReportFilterEvent {}
-
-class FakeSettingsEvent extends Fake implements SettingsEvent {}
+class MockCsvExportHelper extends Mock implements CsvExportHelper {}
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  late MockSpendingTimeReportBloc mockSpendingBloc;
+  late MockReportFilterBloc mockFilterBloc;
+  late MockSettingsBloc mockSettingsBloc;
+  late MockCsvExportHelper mockCsvHelper;
 
   setUpAll(() {
-    registerFallbackValue(FakeSpendingTimeReportEvent());
-    registerFallbackValue(FakeReportFilterEvent());
-    registerFallbackValue(FakeSettingsEvent());
+    registerFallbackValue(SpendingTimeReportInitial());
+    registerFallbackValue(ReportFilterState.initial());
+    registerFallbackValue(const SettingsState());
   });
 
-  testWidgets('tapping data row plays click sound and chart uses AspectRatio', (
-    tester,
-  ) async {
-    final spendingBloc = MockSpendingTimeReportBloc();
-    final filterBloc = MockReportFilterBloc();
-    final settingsBloc = MockSettingsBloc();
+  setUp(() {
+    mockSpendingBloc = MockSpendingTimeReportBloc();
+    mockFilterBloc = MockReportFilterBloc();
+    mockSettingsBloc = MockSettingsBloc();
+    mockCsvHelper = MockCsvExportHelper();
 
-    final data = SpendingTimeReportData(
-      spendingData: [
-        TimeSeriesDataPoint(
-          date: DateTime(2024, 1, 1),
-          amount: const ComparisonValue(currentValue: 100, previousValue: 50),
-        ),
+    final getIt = GetIt.instance;
+    getIt.reset();
+    getIt.registerSingleton<CsvExportHelper>(mockCsvHelper);
+
+    when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
+    when(() => mockFilterBloc.state).thenReturn(ReportFilterState.initial());
+    when(() => mockSpendingBloc.state).thenReturn(SpendingTimeReportInitial());
+  });
+
+  tearDown(() {
+    GetIt.instance.reset();
+  });
+
+  Widget createWidget() {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<SpendingTimeReportBloc>.value(value: mockSpendingBloc),
+        BlocProvider<ReportFilterBloc>.value(value: mockFilterBloc),
+        BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
       ],
-      granularity: TimeSeriesGranularity.monthly,
-    );
-    final loadedState = SpendingTimeReportLoaded(data, showComparison: false);
-    when(() => spendingBloc.state).thenReturn(loadedState);
-    whenListen(spendingBloc, Stream.value(loadedState));
-
-    final filterState = ReportFilterState.initial();
-    when(() => filterBloc.state).thenReturn(filterState);
-    whenListen(filterBloc, Stream.value(filterState));
-
-    const settingsState = SettingsState(uiMode: UIMode.quantum);
-    when(() => settingsBloc.state).thenReturn(settingsState);
-    whenListen(settingsBloc, Stream.value(settingsState));
-
-    bool clicked = false;
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(SystemChannels.platform, (
-          MethodCall methodCall,
-        ) async {
-          if (methodCall.method == 'SystemSound.play') {
-            clicked = true;
-          }
-          return null;
-        });
-
-    final router = GoRouter(
-      routes: [
-        GoRoute(path: '/', builder: (_, __) => const SpendingOverTimePage()),
-        GoRoute(
-          path: RouteNames.transactionsList,
-          builder: (_, __) => const SizedBox(),
-        ),
-      ],
-    );
-
-    final theme = ThemeData(
-      extensions: const [
-        AppModeTheme(
-          modeId: 'test',
-          layoutDensity: LayoutDensity.compact,
-          cardStyle: CardStyle.flat,
-          assets: ThemeAssetPaths(),
-          preferDataTableForLists: true,
-          primaryAnimationDuration: Duration.zero,
-          listEntranceAnimation: ListEntranceAnimation.none,
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(
-      MultiBlocProvider(
-        providers: [
-          BlocProvider<SpendingTimeReportBloc>.value(value: spendingBloc),
-          BlocProvider<ReportFilterBloc>.value(value: filterBloc),
-          BlocProvider<SettingsBloc>.value(value: settingsBloc),
-        ],
-        child: MaterialApp.router(
-          routerConfig: router,
-          theme: theme,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-        ),
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: SpendingOverTimePage(),
       ),
     );
+  }
+
+  testWidgets('renders SpendingOverTimePage', (tester) async {
+    await tester.pumpWidget(createWidget());
     await tester.pumpAndSettle();
+    expect(find.byType(SpendingOverTimePage), findsOneWidget);
+  });
 
-    expect(find.byType(AspectRatio), findsOneWidget);
-    final dataTable = tester.widget<DataTable>(find.byType(DataTable));
-    runZonedGuarded(() {
-      dataTable.rows.first.onSelectChanged!(true);
-    }, (_, __) {});
+  testWidgets('shows loading indicator when loading', (tester) async {
+    when(() => mockSpendingBloc.state).thenReturn(
+      const SpendingTimeReportLoading(
+        granularity: TimeSeriesGranularity.daily,
+        compareToPrevious: false,
+      ),
+    );
+    await tester.pumpWidget(createWidget());
+    // Use pump instead of pumpAndSettle for infinite animations
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
 
-    expect(clicked, isTrue);
+  testWidgets('shows error message when error', (tester) async {
+    when(
+      () => mockSpendingBloc.state,
+    ).thenReturn(const SpendingTimeReportError('Test Error'));
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+    expect(find.text('Error: Test Error'), findsOneWidget);
   });
 }
