@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <rect width="512" height="512" fill="#1C1C1E"/>
+  <circle cx="256" cy="160" r="40" fill="#00BCD4"/>
+  <path d="M250 150 H262 V158 H270 V170 H262 V178 H250 V170 H242 V158 H250 Z" fill="#FFFFFF"/>
+  <text x="50%" y="380" fill="#AAAAAA" font-size="18" text-anchor="middle" font-family="sans-serif">
+    Tap to begin your journey
+  </text>
+</svg>

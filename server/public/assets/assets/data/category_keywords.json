@@ -1,0 +1,18 @@
+{
+    "transport": ["uber", "lyft", "taxi", "bus fare", "train ticket", "subway", "transportation", "gas", "fuel", "parking", "metro"],
+    "groceries": ["grocery", "supermarket", "market", "safeway", "kroger", "tesco", "waitrose", "aldi", "lidl", "whole foods"],
+    "subscriptions": ["netflix", "spotify", "hulu", "disney+", "prime video", "subscription", "membership", "patreon", "apple music", "youtube premium"],
+    "food": ["restaurant", "cafe", "coffee", "lunch", "dinner", "meal", "food", "takeaway", "delivery", "starbucks", "mcdonalds", "burger king", "fast food"],
+    "utilities": ["utility", "electric", "water bill", "gas bill", "internet", "phone bill", "power", "comcast", "verizon", "at&t"],
+    "rent": ["rent", "lease payment"],
+    "housing": ["mortgage", "housing", "hoa", "property tax"],
+    "shopping": ["amazon", "target", "walmart", "clothes", "shopping", "purchase", "best buy", "macys", "online order"],
+    "entertainment": ["entertainment", "movies", "concert", "cinema", "tickets", "event", "theater"],
+    "medical": ["medical", "doctor", "hospital", "pharmacy", "clinic", "dentist", "health"],
+    "other_expense": ["other", "misc", "miscellaneous"],
+    "salary": ["salary", "payroll", "paycheck", "direct deposit", "wages"],
+    "freelance": ["freelance", "invoice", "contract", "consulting"],
+    "interest": ["interest payment", "bank interest", "savings interest"],
+    "gift": ["gift", "present"],
+    "other_income": ["other income", "refund", "reimbursement"]
+}

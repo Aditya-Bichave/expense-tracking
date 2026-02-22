@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="2400">
+  <defs>
+    <radialGradient id="bgStarfield" cx="50%" cy="40%" r="80%">
+      <stop offset="0%" stop-color="#1C183F"/>
+      <stop offset="100%" stop-color="#0F0D2E"/>
+    </radialGradient>
+  </defs>
+  <rect width="1080" height="2400" fill="url(#bgStarfield)"/>
+  <g fill="#FFFFFF" opacity="0.6">
+    <circle cx="200" cy="300" r="2"/>
+    <circle cx="400" cy="800" r="1.5"/>
+    <circle cx="900" cy="1300" r="2.5"/>
+    <circle cx="600" cy="1900" r="1.8"/>
+    <circle cx="300" cy="2200" r="2"/>
+  </g>
+  <g fill="#A18BFF" opacity="0.4">
+    <circle cx="600" cy="300" r="3"/>
+    <circle cx="800" cy="600" r="2.5"/>
+  </g>
+</svg>

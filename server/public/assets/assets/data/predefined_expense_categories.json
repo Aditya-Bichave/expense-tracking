@@ -1,0 +1,14 @@
+[
+    { "id": "food", "name": "Food", "iconName": "food", "colorHex": "#FFA726", "isCustom": false, "typeIndex": 0  },
+    { "id": "groceries", "name": "Groceries", "iconName": "groceries", "colorHex": "#66BB6A", "isCustom": false, "typeIndex": 0 },
+    { "id": "transport", "name": "Transport", "iconName": "transport", "colorHex": "#42A5F5", "isCustom": false, "typeIndex": 0 },
+    { "id": "utilities", "name": "Utilities", "iconName": "utilities", "colorHex": "#FFCA28", "isCustom": false, "typeIndex": 0 },
+    { "id": "rent", "name": "Rent", "iconName": "rent", "colorHex": "#EF5350", "isCustom": false, "typeIndex": 0 },
+    { "id": "housing", "name": "Housing", "iconName": "mortgage", "colorHex": "#EC407A", "isCustom": false, "typeIndex": 0 },
+    { "id": "shopping", "name": "Shopping", "iconName": "shopping", "colorHex": "#AB47BC", "isCustom": false, "typeIndex": 0 },
+    { "id": "entertainment", "name": "Entertainment", "iconName": "entertainment", "colorHex": "#7E57C2", "isCustom": false, "typeIndex": 0 },
+    { "id": "subscriptions", "name": "Subscriptions", "iconName": "subscriptions", "colorHex": "#5C6BC0", "isCustom": false, "typeIndex": 0 },
+    { "id": "medical", "name": "Medical", "iconName": "medical", "colorHex": "#ef5350", "isCustom": false, "typeIndex": 0 },
+    { "id": "other_expense", "name": "Other Expense", "iconName": "default_category_icon", "colorHex": "#8D6E63", "isCustom": false, "typeIndex": 0 },
+    { "id": "uncategorized", "name": "Uncategorized", "iconName": "question", "colorHex": "#BDBDBD", "isCustom": false, "typeIndex": 0 }
+  ]
