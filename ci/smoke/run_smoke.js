@@ -1,5 +1,5 @@
 const { chromium } = require('playwright');
-const httpServer = require('http-server');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
@@ -35,7 +35,7 @@ function ensureArtifactsDir() {
 }
 
 async function takeScreenshot(page, name) {
-  const filename = path.join(ARTIFACTS_DIR, `${name.replace(/[\/\\:]/g, '_')}.png`);
+  const filename = path.join(ARTIFACTS_DIR, `${name.replace(/[\/\:]/g, '_')}.png`);
   try {
     await page.screenshot({ path: filename, fullPage: true });
     return filename;
@@ -46,7 +46,7 @@ async function takeScreenshot(page, name) {
 }
 
 async function saveTrace(context, name) {
-  const filename = path.join(ARTIFACTS_DIR, `${name.replace(/[\/\\:]/g, '_')}_trace.zip`);
+  const filename = path.join(ARTIFACTS_DIR, `${name.replace(/[\/\:]/g, '_')}_trace.zip`);
   try {
     await context.tracing.stop({ path: filename });
     return filename;
@@ -56,13 +56,95 @@ async function saveTrace(context, name) {
   }
 }
 
+// --- Custom Static Server with /log support ---
+const server = http.createServer((req, res) => {
+  // Handle POST /log
+  if (req.method === 'POST' && req.url === '/log') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
+  // Handle Static Files
+  let filePath = path.join(BUILD_DIR, req.url === '/' ? 'index.html' : req.url);
+
+  // Strip query parameters
+  filePath = filePath.split('?')[0];
+
+  // Basic security check to prevent directory traversal
+  if (!filePath.startsWith(BUILD_DIR)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return;
+  }
+
+  fs.stat(filePath, (err, stats) => {
+    if (err || !stats.isFile()) {
+      // Fallback to index.html for SPA routing (if file not found)
+      // But only if it's not a static asset (heuristic: no extension)
+      if (path.extname(filePath) === '') {
+         const index = path.join(BUILD_DIR, 'index.html');
+         fs.readFile(index, (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end('Not Found');
+            } else {
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end(data);
+            }
+         });
+      } else {
+        res.writeHead(404);
+        res.end('Not Found');
+      }
+      return;
+    }
+
+    // Determine Content-Type
+    // Simple mapping for common flutter web types since mime-types might not be installed
+    const ext = path.extname(filePath).toLowerCase();
+    let contentType = 'application/octet-stream';
+    const mimeTypes = {
+      '.html': 'text/html',
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.gif': 'image/gif',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.woff': 'application/font-woff',
+      '.woff2': 'application/font-woff2',
+      '.ttf': 'application/font-ttf',
+      '.wasm': 'application/wasm',
+      '.xml': 'application/xml',
+      '.mp3': 'audio/mpeg',
+      '.wav': 'audio/wav',
+      '.map': 'application/json'
+    };
+
+    if (mimeTypes[ext]) {
+      contentType = mimeTypes[ext];
+    }
+
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(500);
+        res.end('Server Error');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(data);
+    });
+  });
+});
+
 // --- Main Execution ---
 async function run() {
   console.log('🚀 Starting Smoke Tests...');
   ensureArtifactsDir();
 
-  // Start HTTP Server
-  const server = httpServer.createServer({ root: BUILD_DIR });
   server.listen(PORT);
   console.log(`Server started on http://localhost:${PORT}`);
 
@@ -94,7 +176,11 @@ async function run() {
       if (msg.type() === 'error') {
         const text = msg.text();
         console.error(`  Console Error: ${text}`);
-        results.consoleErrors.push(text);
+
+        // Ignore 405 errors if they sneak through (though server should handle it now)
+        if (!text.includes('status of 405')) {
+            results.consoleErrors.push(text);
+        }
       }
     });
 

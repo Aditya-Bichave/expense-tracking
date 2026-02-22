@@ -1,0 +1,48 @@
+name: Build + Commit Flutter Web
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - "server/public/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        run: flutter build web --release --pwa-strategy=none
+
+      - name: Copy to server/public
+        run: |
+          rm -rf server/public
+          mkdir -p server/public
+          cp -r build/web/* server/public/
+
+      - name: Commit built site
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add server/public
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update built web [skip ci]"
+            git push
+          fi
