@@ -88,8 +88,9 @@ class HiveContributionLocalDataSource
   ) async {
     // Optimize: Filter directly from values iterable to avoid creating intermediate list
     try {
-      final filtered =
-          contributionBox.values.where((c) => c.goalId == goalId).toList();
+      final filtered = contributionBox.values
+          .where((c) => c.goalId == goalId)
+          .toList();
       log.fine(
         "[ContributionDS] Filtered ${filtered.length} contributions for Goal ID $goalId.",
       );
