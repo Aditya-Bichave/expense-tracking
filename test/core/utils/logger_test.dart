@@ -26,11 +26,13 @@ void main() {
     final mockClient = MockHttpClient();
     debugLogClient = mockClient;
 
-    when(() => mockClient.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        )).thenAnswer((_) async => http.Response('{"ok":true}', 200));
+    when(
+      () => mockClient.post(
+        any(),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+      ),
+    ).thenAnswer((_) async => http.Response('{"ok":true}', 200));
 
     final info = LogInfo(
       level: Level.INFO,
@@ -43,22 +45,26 @@ void main() {
     await sendToServer(info);
 
     // Assert
-    verify(() => mockClient.post(
-          Uri.parse('/log'),
-          headers: {'Content-Type': 'application/json'},
-          body: any(named: 'body', that: contains('Test message')),
-        )).called(1);
+    verify(
+      () => mockClient.post(
+        Uri.parse('/log'),
+        headers: {'Content-Type': 'application/json'},
+        body: any(named: 'body', that: contains('Test message')),
+      ),
+    ).called(1);
   });
 
   test('sendToServer throttles requests', () async {
     final mockClient = MockHttpClient();
     debugLogClient = mockClient;
 
-    when(() => mockClient.post(
-          any(),
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-        )).thenAnswer((_) async => http.Response('{"ok":true}', 200));
+    when(
+      () => mockClient.post(
+        any(),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+      ),
+    ).thenAnswer((_) async => http.Response('{"ok":true}', 200));
 
     final info = LogInfo(
       level: Level.INFO,
@@ -78,7 +84,12 @@ void main() {
 
     // Assert
     // Should be called only once
-    verify(() => mockClient.post(any(), headers: any(named: 'headers'), body: any(named: 'body')))
-        .called(1);
+    verify(
+      () => mockClient.post(
+        any(),
+        headers: any(named: 'headers'),
+        body: any(named: 'body'),
+      ),
+    ).called(1);
   });
 }
