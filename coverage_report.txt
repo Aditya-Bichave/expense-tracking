@@ -1,0 +1,216 @@
+Files with low coverage (< 80%):
+lib/features/categories/presentation/bloc/category_management/category_management_bloc.dart: 25.98%
+lib/features/categories/presentation/bloc/category_management/category_management_event.dart: 18.75%
+lib/features/categories/presentation/bloc/category_management/category_management_state.dart: 77.27%
+lib/features/goals/presentation/bloc/log_contribution/log_contribution_event.dart: 36.36%
+lib/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart: 44.55%
+lib/features/accounts/presentation/bloc/account_list/account_list_event.dart: 45.45%
+lib/features/settings/domain/repositories/data_management_repository.dart: 31.25%
+lib/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_event.dart: 26.09%
+lib/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart: 77.56%
+lib/core/auth/session_state.dart: 11.11%
+lib/core/utils/logger.dart: 72.73%
+lib/core/common/base_list_state.dart: 59.09%
+lib/core/di/service_locator.dart: 5.62%
+lib/core/services/demo_mode_service.dart: 37.36%
+lib/features/accounts/data/repositories/asset_account_repository_impl.dart: 48.31%
+lib/features/accounts/domain/usecases/add_asset_account.dart: 75.00%
+lib/features/accounts/domain/usecases/update_asset_account.dart: 76.92%
+lib/features/accounts/presentation/bloc/add_edit_account/add_edit_account_event.dart: 33.33%
+lib/features/analytics/presentation/bloc/summary_event.dart: 50.00%
+lib/features/auth/data/repositories/auth_repository_impl.dart: 63.64%
+lib/features/auth/presentation/bloc/auth_bloc.dart: 78.38%
+lib/features/budgets/data/datasources/budget_local_data_source.dart: 60.71%
+lib/features/budgets/data/repositories/budget_repository_impl.dart: 35.25%
+lib/features/budgets/domain/usecases/add_budget.dart: 69.23%
+lib/features/budgets/presentation/bloc/add_edit_budget/add_edit_budget_event.dart: 11.11%
+lib/features/budgets/presentation/bloc/add_edit_budget/add_edit_budget_state.dart: 6.67%
+lib/features/budgets/presentation/bloc/budget_list/budget_list_event.dart: 63.64%
+lib/features/budgets/presentation/bloc/budget_list/budget_list_state.dart: 75.00%
+lib/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart: 72.73%
+lib/features/categories/data/datasources/category_local_data_source.dart: 76.19%
+lib/features/categories/data/datasources/user_history_local_data_source.dart: 51.79%
+lib/features/categories/data/repositories/category_repository_impl.dart: 46.02%
+lib/features/categories/data/repositories/merchant_category_repository_impl.dart: 73.33%
+lib/features/categories/data/repositories/user_history_repository_impl.dart: 51.52%
+lib/features/categories/domain/usecases/apply_category_to_batch.dart: 76.74%
+lib/features/categories/domain/usecases/categorize_transaction.dart: 33.64%
+lib/features/categories/domain/usecases/get_expense_categories.dart: 66.67%
+lib/features/categories/domain/usecases/get_income_categories.dart: 66.67%
+lib/features/categories/domain/usecases/save_user_categorization_history.dart: 78.57%
+lib/features/categories/domain/usecases/update_custom_category.dart: 58.82%
+lib/features/dashboard/domain/usecases/get_financial_overview.dart: 66.40%
+lib/features/dashboard/presentation/bloc/dashboard_event.dart: 50.00%
+lib/features/settings/data/repositories/data_management_repository_impl.dart: 38.00%
+lib/features/settings/domain/usecases/backup_data_usecase.dart: 52.24%
+lib/features/settings/domain/usecases/clear_all_data_usecase.dart: 69.23%
+lib/features/settings/domain/usecases/restore_data_usecase.dart: 41.43%
+lib/features/settings/presentation/bloc/data_management/data_management_bloc.dart: 47.06%
+lib/features/settings/presentation/bloc/data_management/data_management_event.dart: 27.27%
+lib/features/expenses/data/datasources/expense_local_data_source_proxy.dart: 11.54%
+lib/features/expenses/data/repositories/expense_repository_impl.dart: 35.36%
+lib/features/expenses/domain/usecases/delete_expense.dart: 71.43%
+lib/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart: 77.55%
+lib/features/goals/data/datasources/goal_local_data_source_impl.dart: 59.26%
+lib/features/goals/data/repositories/goal_contribution_repository_impl.dart: 29.46%
+lib/features/goals/data/repositories/goal_repository_impl.dart: 57.30%
+lib/features/goals/domain/usecases/add_goal.dart: 73.08%
+lib/features/goals/domain/usecases/check_goal_achievement.dart: 61.11%
+lib/features/goals/domain/usecases/delete_contribution.dart: 62.50%
+lib/features/goals/domain/usecases/get_contributions_for_goal.dart: 75.00%
+lib/features/goals/presentation/bloc/add_edit_goal/add_edit_goal_state.dart: 10.00%
+lib/features/goals/presentation/bloc/add_edit_goal/add_edit_goal_event.dart: 16.67%
+lib/features/goals/presentation/bloc/add_edit_goal/add_edit_goal_bloc.dart: 8.93%
+lib/features/goals/presentation/bloc/goal_list/goal_list_event.dart: 57.14%
+lib/features/goals/presentation/bloc/goal_list/goal_list_state.dart: 75.00%
+lib/features/groups/data/repositories/groups_repository_impl.dart: 63.89%
+lib/features/income/data/datasources/income_local_data_source_proxy.dart: 7.69%
+lib/features/income/data/repositories/income_repository_impl.dart: 44.52%
+lib/features/income/domain/usecases/delete_income.dart: 71.43%
+lib/features/profile/data/repositories/profile_repository_impl.dart: 34.62%
+lib/features/recurring_transactions/data/datasources/recurring_transaction_local_data_source.dart: 64.71%
+lib/features/recurring_transactions/data/repositories/recurring_transaction_repository_impl.dart: 28.12%
+lib/features/recurring_transactions/domain/services/transaction_generation_service.dart: 75.00%
+lib/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart: 79.49%
+lib/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_event.dart: 28.57%
+lib/features/recurring_transactions/presentation/bloc/recurring_list/recurring_list_event.dart: 33.33%
+lib/features/reports/data/repositories/report_repository_impl.dart: 22.02%
+lib/features/reports/domain/usecases/get_spending_time_report.dart: 61.11%
+lib/features/reports/domain/usecases/get_budget_performance_report.dart: 61.11%
+lib/features/reports/presentation/bloc/report_filter/report_filter_event.dart: 25.00%
+lib/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart: 76.56%
+lib/features/reports/presentation/bloc/spending_category_report/spending_category_report_event.dart: 37.50%
+lib/features/reports/presentation/bloc/spending_category_report/spending_category_report_bloc.dart: 79.31%
+lib/features/reports/presentation/bloc/spending_time_report/spending_time_report_event.dart: 27.27%
+lib/features/reports/presentation/bloc/spending_time_report/spending_time_report_bloc.dart: 72.73%
+lib/features/reports/presentation/bloc/income_expense_report/income_expense_report_event.dart: 27.27%
+lib/features/reports/presentation/bloc/income_expense_report/income_expense_report_bloc.dart: 73.44%
+lib/features/reports/presentation/bloc/budget_performance_report/budget_performance_report_event.dart: 37.50%
+lib/features/reports/presentation/bloc/budget_performance_report/budget_performance_report_bloc.dart: 76.27%
+lib/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_event.dart: 66.67%
+lib/features/reports/domain/helpers/csv_export_helper.dart: 17.10%
+lib/features/settings/data/repositories/settings_repository_impl.dart: 66.28%
+lib/features/settings/presentation/bloc/settings_event.dart: 29.17%
+lib/features/settings/presentation/bloc/settings_bloc.dart: 53.93%
+lib/features/settings/domain/usecases/toggle_app_lock.dart: 70.00%
+lib/features/transactions/presentation/bloc/transaction_list_event.dart: 38.46%
+lib/features/transactions/presentation/bloc/transaction_list_bloc.dart: 52.24%
+lib/main.dart: 0.69%
+lib/core/error/failure.dart: 78.95%
+lib/core/screens/initial_setup_screen.dart: 52.87%
+lib/core/theme/app_mode_theme.dart: 60.95%
+lib/core/usecases/usecase.dart: 33.33%
+lib/core/utils/bloc_observer.dart: 66.67%
+lib/features/accounts/presentation/pages/accounts_tab_page.dart: 26.57%
+lib/features/accounts/presentation/pages/add_edit_account_page.dart: 1.96%
+lib/features/analytics/domain/entities/expense_summary.dart: 66.67%
+lib/features/auth/presentation/bloc/auth_event.dart: 25.00%
+lib/features/auth/presentation/bloc/auth_state.dart: 66.67%
+lib/features/auth/presentation/pages/lock_screen.dart: 1.25%
+lib/features/auth/presentation/pages/login_page.dart: 1.45%
+lib/features/budgets/presentation/pages/add_edit_budget_page.dart: 62.75%
+lib/features/budgets/presentation/widgets/budget_form.dart: 38.18%
+lib/features/budgets/presentation/pages/budget_detail_page.dart: 48.57%
+lib/features/budgets/presentation/widgets/budget_card.dart: 64.42%
+lib/features/goals/presentation/pages/goals_sub_tab.dart: 75.00%
+lib/features/categories/presentation/widgets/category_appearance_form_section.dart: 66.04%
+lib/features/categories/presentation/pages/category_management_screen.dart: 44.05%
+lib/features/reports/domain/entities/report_data.dart: 66.67%
+lib/features/dashboard/presentation/pages/dashboard_page.dart: 14.94%
+lib/features/dashboard/presentation/widgets/budget_summary_widget.dart: 69.88%
+lib/features/reports/presentation/widgets/charts/chart_utils.dart: 76.09%
+lib/features/goals/presentation/pages/add_edit_goal_page.dart: 66.67%
+lib/features/goals/presentation/widgets/goal_form.dart: 69.77%
+lib/features/goals/presentation/pages/goal_detail_page.dart: 49.05%
+lib/features/goals/presentation/widgets/log_contribution_sheet.dart: 51.20%
+lib/features/reports/presentation/widgets/charts/goal_contribution_chart.dart: 68.32%
+lib/features/groups/presentation/pages/group_list_page.dart: 1.56%
+lib/features/profile/presentation/bloc/profile_event.dart: 16.67%
+lib/features/profile/presentation/pages/profile_setup_page.dart: 1.41%
+lib/features/recurring_transactions/presentation/pages/add_edit_recurring_rule_page.dart: 5.88%
+lib/features/recurring_transactions/presentation/pages/recurring_rule_list_page.dart: 36.11%
+lib/features/reports/presentation/pages/budget_performance_page.dart: 0.72%
+lib/features/reports/presentation/widgets/charts/budget_performance_bar_chart.dart: 49.00%
+lib/features/reports/presentation/widgets/report_page_wrapper.dart: 72.92%
+lib/features/reports/presentation/pages/income_vs_expense_page.dart: 20.61%
+lib/features/reports/presentation/widgets/charts/income_expense_bar_chart.dart: 57.66%
+lib/features/reports/presentation/pages/spending_by_category_page.dart: 58.04%
+lib/features/reports/presentation/widgets/charts/spending_bar_chart.dart: 58.06%
+lib/features/reports/presentation/widgets/charts/spending_pie_chart.dart: 63.89%
+lib/features/reports/presentation/pages/spending_over_time_page.dart: 17.26%
+lib/features/reports/presentation/widgets/charts/time_series_line_chart.dart: 4.43%
+lib/features/reports/presentation/widgets/report_filter_controls.dart: 1.08%
+lib/features/settings/presentation/pages/settings_page.dart: 58.87%
+lib/features/settings/presentation/widgets/appearance_settings_section.dart: 39.06%
+lib/features/settings/presentation/widgets/general_settings_section.dart: 73.68%
+lib/features/settings/presentation/widgets/security_settings_section.dart: 45.28%
+lib/features/settings/presentation/widgets/help_settings_section.dart: 76.92%
+lib/features/settings/presentation/widgets/about_settings_section.dart: 73.91%
+lib/features/transactions/presentation/pages/add_edit_transaction_page.dart: 25.82%
+lib/features/transactions/presentation/widgets/transaction_form.dart: 38.01%
+lib/features/transactions/presentation/pages/transaction_list_page.dart: 68.02%
+lib/features/transactions/presentation/widgets/transaction_filter_dialog.dart: 66.67%
+lib/features/transactions/presentation/widgets/transaction_list_view.dart: 79.31%
+lib/l10n/app_localizations_ar.dart: 6.25%
+lib/l10n/app_localizations_en.dart: 20.83%
+lib/router.dart: 33.91%
+lib/features/analytics/presentation/widgets/summary_card.dart: 23.53%
+lib/features/accounts/presentation/pages/account_list_page.dart: 0.82%
+
+Files with NO coverage (56 files):
+lib/core/auth/session_cubit.dart
+lib/features/profile/domain/entities/user_profile.dart
+lib/core/services/secure_storage_service.dart
+lib/core/di/service_configurations/accounts_dependencies.dart
+lib/core/di/service_configurations/analytics_dependencies.dart
+lib/core/di/service_configurations/auth_dependencies.dart
+lib/features/auth/domain/usecases/get_current_user_usecase.dart
+lib/features/auth/domain/usecases/login_with_magic_link_usecase.dart
+lib/core/di/service_configurations/budget_dependencies.dart
+lib/features/budgets/data/datasources/budget_local_data_source_proxy.dart
+lib/features/budgets/presentation/bloc/add_edit_budget/add_edit_budget_bloc.dart
+lib/core/di/service_configurations/categories_dependencies.dart
+lib/features/categories/data/datasources/category_predefined_data_source.dart
+lib/features/categories/data/datasources/merchant_category_data_source.dart
+lib/core/di/service_configurations/dashboard_dependencies.dart
+lib/core/di/service_configurations/data_management_dependencies.dart
+lib/core/di/service_configurations/expenses_dependencies.dart
+lib/core/di/service_configurations/goal_dependencies.dart
+lib/features/goals/data/datasources/goal_contribution_local_data_source_proxy.dart
+lib/features/goals/data/datasources/goal_local_data_source_proxy.dart
+lib/core/di/service_configurations/group_expenses_dependencies.dart
+lib/core/di/service_configurations/groups_dependencies.dart
+lib/features/groups/data/datasources/groups_local_data_source.dart
+lib/features/groups/data/datasources/groups_remote_data_source.dart
+lib/features/groups/data/models/group_member_model.dart
+lib/core/di/service_configurations/income_dependencies.dart
+lib/core/di/service_configurations/profile_dependencies.dart
+lib/features/profile/data/datasources/profile_local_data_source.dart
+lib/features/profile/data/datasources/profile_remote_data_source.dart
+lib/features/profile/domain/usecases/get_profile_usecase.dart
+lib/features/profile/domain/usecases/update_profile_usecase.dart
+lib/features/profile/domain/usecases/upload_avatar_usecase.dart
+lib/features/profile/domain/usecases/clear_profile_cache_usecase.dart
+lib/features/profile/presentation/bloc/profile_bloc.dart
+lib/core/di/service_configurations/recurring_transactions_dependencies.dart
+lib/core/di/service_configurations/report_dependencies.dart
+lib/core/di/service_configurations/settings_dependencies.dart
+lib/features/settings/data/datasources/settings_local_data_source.dart
+lib/core/di/service_configurations/sync_dependencies.dart
+lib/core/di/service_configurations/transactions_dependencies.dart
+lib/core/services/downloader_service_locator.dart
+lib/core/network/supabase_client_provider.dart
+lib/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart
+lib/features/profile/data/models/profile_model.dart
+lib/core/services/downloader_service_stub.dart
+lib/features/auth/presentation/pages/verify_otp_page.dart
+lib/features/budgets_cats/presentation/pages/budgets_sub_tab.dart
+lib/features/dashboard/presentation/widgets/asset_distribution_section.dart
+lib/features/dashboard/presentation/widgets/recent_transactions_section.dart
+lib/features/dashboard/presentation/widgets/goal_summary_widget.dart
+lib/features/dashboard/presentation/widgets/stitch/stitch_dashboard_body.dart
+lib/features/dashboard/presentation/widgets/asset_distribution_pie_chart.dart
+lib/features/group_expenses/presentation/pages/add_group_expense_page.dart
+lib/features/groups/presentation/pages/group_detail_page.dart
+lib/features/profile/presentation/bloc/profile_state.dart
+lib/main_shell.dart

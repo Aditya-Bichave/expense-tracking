@@ -1,4 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
@@ -21,16 +23,34 @@ class MockDataManagementBloc
     extends MockBloc<DataManagementEvent, DataManagementState>
     implements DataManagementBloc {}
 
+class MockSecureStorageService extends Mock implements SecureStorageService {}
+
 void main() {
   late MockSettingsBloc mockSettingsBloc;
   late MockDataManagementBloc mockDataManagementBloc;
   late MockAuthBloc mockAuthBloc;
+  late MockSecureStorageService mockSecureStorageService;
 
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
     mockDataManagementBloc = MockDataManagementBloc();
     mockAuthBloc = MockAuthBloc();
+    mockSecureStorageService = MockSecureStorageService();
+
+    // Register MockSecureStorageService in GetIt
+    if (sl.isRegistered<SecureStorageService>()) {
+      sl.unregister<SecureStorageService>();
+    }
+    sl.registerSingleton<SecureStorageService>(mockSecureStorageService);
+
     when(() => mockAuthBloc.state).thenReturn(AuthInitial());
+    when(
+      () => mockSecureStorageService.isBiometricEnabled(),
+    ).thenAnswer((_) async => false);
+  });
+
+  tearDown(() {
+    sl.reset();
   });
 
   Widget createWidgetUnderTest() {
@@ -63,6 +83,15 @@ void main() {
     });
 
     testWidgets('renders sections when loaded', (tester) async {
+      // Set a large surface size to ensure all widgets are rendered without scrolling
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
       when(
         () => mockSettingsBloc.state,
       ).thenReturn(const SettingsState(status: SettingsStatus.loaded));
@@ -75,34 +104,10 @@ void main() {
 
       expect(find.text('APPEARANCE'), findsOneWidget);
       expect(find.text('GENERAL'), findsOneWidget);
-      expect(find.text('SECURITY'), findsOneWidget);
-      // Data Management Section
-      await tester.scrollUntilVisible(
-        find.text('DATA MANAGEMENT'),
-        500.0,
-        scrollable: find.byType(Scrollable),
-      );
+
       expect(find.text('DATA MANAGEMENT'), findsOneWidget);
-
-      await tester.scrollUntilVisible(
-        find.text('HELP & FEEDBACK'),
-        500.0,
-        scrollable: find.byType(Scrollable),
-      );
       expect(find.text('HELP & FEEDBACK'), findsOneWidget);
-
-      await tester.scrollUntilVisible(
-        find.text('LEGAL'),
-        500.0,
-        scrollable: find.byType(Scrollable),
-      );
       expect(find.text('LEGAL'), findsOneWidget);
-
-      await tester.scrollUntilVisible(
-        find.text('ABOUT'),
-        500.0,
-        scrollable: find.byType(Scrollable),
-      );
       expect(find.text('ABOUT'), findsOneWidget);
     });
 

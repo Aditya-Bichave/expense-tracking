@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
@@ -9,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // Import AccountListBloc
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 
 class MockAddEditRecurringRuleBloc
     extends MockBloc<AddEditRecurringRuleEvent, AddEditRecurringRuleState>
@@ -22,9 +23,7 @@ class MockCategoryManagementBloc
     extends MockBloc<CategoryManagementEvent, CategoryManagementState>
     implements CategoryManagementBloc {}
 
-class MockAccountListBloc
-    extends
-        MockBloc<AccountListEvent, AccountListState> // Mock AccountListBloc
+class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
     implements AccountListBloc {}
 
 void main() {
@@ -39,26 +38,32 @@ void main() {
     mockCategoryManagementBloc = MockCategoryManagementBloc();
     mockAccountListBloc = MockAccountListBloc();
 
+    if (sl.isRegistered<AddEditRecurringRuleBloc>()) {
+      sl.unregister<AddEditRecurringRuleBloc>();
+    }
+    sl.registerFactory<AddEditRecurringRuleBloc>(() => mockBloc);
+
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
     when(
       () => mockCategoryManagementBloc.state,
     ).thenReturn(const CategoryManagementState());
     when(
       () => mockAccountListBloc.state,
-    ).thenReturn(const AccountListInitial()); // Stub AccountListBloc
+    ).thenReturn(const AccountListInitial());
+  });
+
+  tearDown(() {
+    sl.reset();
   });
 
   Widget createWidgetUnderTest() {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AddEditRecurringRuleBloc>.value(value: mockBloc),
         BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
         BlocProvider<CategoryManagementBloc>.value(
           value: mockCategoryManagementBloc,
         ),
-        BlocProvider<AccountListBloc>.value(
-          value: mockAccountListBloc,
-        ), // Provide AccountListBloc
+        BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
       ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -72,7 +77,7 @@ void main() {
     when(() => mockBloc.state).thenReturn(AddEditRecurringRuleState.initial());
 
     await tester.pumpWidget(createWidgetUnderTest());
-    await tester.pumpAndSettle();
+    await tester.pump();
 
     expect(find.byType(AddEditRecurringRulePage), findsOneWidget);
   });
