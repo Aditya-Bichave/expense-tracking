@@ -15,6 +15,7 @@ import 'package:expense_tracker/features/group_expenses/data/models/group_expens
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
+import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:expense_tracker/features/settlements/data/models/settlement_model.dart';
@@ -37,6 +38,7 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(OpTypeAdapter());
     registerAdapter(OutboxItemAdapter());
     registerAdapter(OutboxStatusAdapter());
+    registerAdapter(ProfileModelAdapter());
     registerAdapter(RecurringRuleAuditLogModelAdapter());
     registerAdapter(RecurringRuleModelAdapter());
     registerAdapter(SettlementModelAdapter());
@@ -62,6 +64,7 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(OpTypeAdapter());
     registerAdapter(OutboxItemAdapter());
     registerAdapter(OutboxStatusAdapter());
+    registerAdapter(ProfileModelAdapter());
     registerAdapter(RecurringRuleAuditLogModelAdapter());
     registerAdapter(RecurringRuleModelAdapter());
     registerAdapter(SettlementModelAdapter());

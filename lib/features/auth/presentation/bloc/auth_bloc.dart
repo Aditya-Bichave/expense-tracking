@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/login_with_otp_usecase.dart';
+import 'package:expense_tracker/features/auth/domain/usecases/login_with_magic_link_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/verify_otp_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/get_current_user_usecase.dart';
@@ -8,18 +9,21 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart'
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginWithOtpUseCase _loginWithOtpUseCase;
+  final LoginWithMagicLinkUseCase _loginWithMagicLinkUseCase;
   final VerifyOtpUseCase _verifyOtpUseCase;
   final LogoutUseCase _logoutUseCase;
   final GetCurrentUserUseCase _getCurrentUserUseCase;
 
   AuthBloc(
     this._loginWithOtpUseCase,
+    this._loginWithMagicLinkUseCase,
     this._verifyOtpUseCase,
     this._logoutUseCase,
     this._getCurrentUserUseCase,
   ) : super(AuthInitial()) {
     on<AuthCheckStatus>(_onCheckStatus);
     on<AuthLoginRequested>(_onLoginRequested);
+    on<AuthLoginWithMagicLinkRequested>(_onLoginWithMagicLinkRequested);
     on<AuthVerifyOtpRequested>(_onVerifyOtpRequested);
     on<AuthLogoutRequested>(_onLogoutRequested);
   }
@@ -44,6 +48,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (_) => emit(AuthOtpSent(event.phone)),
+    );
+  }
+
+  Future<void> _onLoginWithMagicLinkRequested(
+    AuthLoginWithMagicLinkRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    final result = await _loginWithMagicLinkUseCase(event.email);
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (_) => emit(AuthMagicLinkSent(event.email)),
     );
   }
 

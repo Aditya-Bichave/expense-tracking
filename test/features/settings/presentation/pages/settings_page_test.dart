@@ -8,8 +8,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
+
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 class MockDataManagementBloc
     extends MockBloc<DataManagementEvent, DataManagementState>
@@ -18,10 +24,13 @@ class MockDataManagementBloc
 void main() {
   late MockSettingsBloc mockSettingsBloc;
   late MockDataManagementBloc mockDataManagementBloc;
+  late MockAuthBloc mockAuthBloc;
 
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
     mockDataManagementBloc = MockDataManagementBloc();
+    mockAuthBloc = MockAuthBloc();
+    when(() => mockAuthBloc.state).thenReturn(AuthInitial());
   });
 
   Widget createWidgetUnderTest() {
@@ -29,6 +38,7 @@ void main() {
       providers: [
         BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
         BlocProvider<DataManagementBloc>.value(value: mockDataManagementBloc),
+        BlocProvider<AuthBloc>.value(value: mockAuthBloc),
       ],
       child: const MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -51,20 +51,30 @@ import 'package:expense_tracker/features/auth/presentation/pages/login_page.dart
 import 'package:expense_tracker/features/auth/presentation/pages/verify_otp_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_list_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
+import 'package:expense_tracker/features/profile/presentation/pages/profile_setup_page.dart';
+import 'package:expense_tracker/features/auth/presentation/pages/lock_screen.dart';
+import 'package:expense_tracker/core/auth/session_state.dart';
+import 'package:expense_tracker/core/auth/session_cubit.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
-  late final StreamSubscription<dynamic> _subscription;
+  late final List<StreamSubscription<dynamic>> _subscriptions;
 
-  GoRouterRefreshStream(Stream<dynamic> stream) {
+  GoRouterRefreshStream(List<Stream<dynamic>> streams) {
     notifyListeners();
-    _subscription = stream.asBroadcastStream().listen(
-      (dynamic _) => notifyListeners(),
-    );
+    _subscriptions = streams
+        .map(
+          (stream) => stream.asBroadcastStream().listen(
+            (dynamic _) => notifyListeners(),
+          ),
+        )
+        .toList();
   }
 
   @override
   void dispose() {
-    _subscription.cancel();
+    for (final sub in _subscriptions) {
+      sub.cancel();
+    }
     super.dispose();
   }
 }
@@ -76,24 +86,59 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: RouteNames.initialSetup,
-    refreshListenable: GoRouterRefreshStream(sl<SettingsBloc>().stream),
+    refreshListenable: GoRouterRefreshStream([
+      sl<SessionCubit>().stream,
+      sl<SettingsBloc>().stream,
+    ]),
     redirect: (context, state) {
+      final sessionState = sl<SessionCubit>().state;
       final settingsState = sl<SettingsBloc>().state;
-      final isSetupCompleted = settingsState.isSetupCompleted;
-      final isLoggingIn = state.uri.path == RouteNames.initialSetup;
+      final location = state.uri.toString();
+      final isLoggingIn =
+          location == RouteNames.login ||
+          location == RouteNames.initialSetup ||
+          location.startsWith(RouteNames.verifyOtp);
 
-      if (!isSetupCompleted && !isLoggingIn) {
+      if (sessionState is SessionLocked) {
+        if (location != '/lock') return '/lock';
+        return null;
+      }
+
+      final isGuestMode =
+          settingsState.setupSkipped || settingsState.isInDemoMode;
+
+      if (sessionState is SessionUnauthenticated) {
+        if (isGuestMode) {
+          if (location == RouteNames.initialSetup) return RouteNames.dashboard;
+          return null;
+        }
+        if (isLoggingIn) return null;
         return RouteNames.initialSetup;
       }
 
-      if (isSetupCompleted && isLoggingIn) {
-        return RouteNames.dashboard;
+      if (sessionState is SessionNeedsProfileSetup) {
+        if (location != '/profile-setup') return '/profile-setup';
+        return null;
+      }
+
+      if (sessionState is SessionAuthenticated) {
+        if (isLoggingIn ||
+            location == '/lock' ||
+            location == '/profile-setup') {
+          return RouteNames.dashboard;
+        }
+        return null;
       }
 
       return null;
     },
     observers: [GoRouterObserver()],
     routes: [
+      GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
+      GoRoute(
+        path: '/profile-setup',
+        builder: (context, state) => const ProfileSetupPage(),
+      ),
       GoRoute(
         path: RouteNames.login,
         builder: (context, state) => const LoginPage(),
@@ -115,13 +160,11 @@ class AppRouter {
           ),
         ],
       ),
-
       GoRoute(
         path: RouteNames.initialSetup,
         name: RouteNames.initialSetup,
         builder: (context, state) => const InitialSetupScreen(),
       ),
-
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainShell(navigationShell: navigationShell);

@@ -63,7 +63,9 @@ void main() {
 
   group('signOut', () {
     test('should call auth.signOut', () async {
-      when(() => mockAuth.signOut()).thenAnswer((_) async {});
+      when(() => mockAuth.signOut()).thenAnswer((_) async {
+        return;
+      });
 
       await dataSource.signOut();
 

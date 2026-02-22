@@ -40,3 +40,12 @@ class AuthError extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+class AuthMagicLinkSent extends AuthState {
+  final String email;
+
+  const AuthMagicLinkSent(this.email);
+
+  @override
+  List<Object?> get props => [email];
+}

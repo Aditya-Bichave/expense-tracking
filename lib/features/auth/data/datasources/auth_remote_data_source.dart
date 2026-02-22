@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class AuthRemoteDataSource {
   Future<void> signInWithOtp({required String phone});
+  Future<void> signInWithMagicLink({required String email});
   Future<AuthResponse> verifyOtp({
     required String phone,
     required String token,
@@ -19,6 +20,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> signInWithOtp({required String phone}) async {
     await _client.auth.signInWithOtp(phone: phone);
+  }
+
+  @override
+  Future<void> signInWithMagicLink({required String email}) async {
+    await _client.auth.signInWithOtp(
+      email: email,
+      emailRedirectTo: 'io.supabase.expensetracker://login-callback',
+    );
   }
 
   @override

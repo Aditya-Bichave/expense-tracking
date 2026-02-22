@@ -1,15 +1,12 @@
-// lib/screens/initial_setup_screen.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/main.dart'; // logger
+import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-// Removed Router import
 
 class InitialSetupScreen extends StatefulWidget {
-  // Changed to StatefulWidget
   const InitialSetupScreen({super.key});
 
   @override
@@ -20,7 +17,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
   @override
   void initState() {
     super.initState();
-    // Reset the skip flag if user lands on this screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<SettingsBloc>().add(const ResetSkipSetupFlag());
@@ -43,7 +39,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- Branding/Welcome ---
               Icon(
                 Icons.savings_outlined,
                 size: 80,
@@ -64,8 +59,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
-
-              // --- Currency Selection ---
               ElevatedButton.icon(
                 icon: const Icon(Icons.language),
                 label: Text(
@@ -84,8 +77,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 onPressed: () => _showCurrencyPicker(context),
               ),
               const SizedBox(height: 24),
-
-              // --- Demo Mode Button ---
               OutlinedButton.icon(
                 icon: const Icon(Icons.explore_outlined),
                 label: const Text('Explore Demo Mode'),
@@ -97,7 +88,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 onPressed: () {
                   log.info("[InitialSetup] Demo Mode button tapped.");
                   context.read<SettingsBloc>().add(const EnterDemoMode());
-                  // Router redirect will handle navigation now
                   context.go(RouteNames.dashboard);
                 },
               ),
@@ -113,8 +103,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-
-              // --- Authentication Buttons ---
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -122,40 +110,22 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   foregroundColor: theme.colorScheme.onSecondaryContainer,
                 ),
                 onPressed: () {
-                  log.warning("[InitialSetup] Sign Up navigation TBD");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Sign Up: Coming Soon!")),
-                  );
+                  context.go(RouteNames.login);
                 },
-                child: const Text('Sign Up'),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () {
-                  log.warning("[InitialSetup] Log In navigation TBD");
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Log In: Coming Soon!")),
-                  );
-                },
-                child: const Text('Log In'),
+                child: const Text('Sign Up / Log In'),
               ),
               const SizedBox(height: 24),
-
-              // --- Skip Button ---
               TextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onSurfaceVariant,
                 ),
                 onPressed: () {
                   log.info("[InitialSetup] Skip button tapped.");
-                  // --- MODIFIED: Dispatch SkipSetup event FIRST ---
                   context.read<SettingsBloc>().add(const SkipSetup());
-                  // --- END MODIFICATION ---
                   context.go(RouteNames.dashboard);
                 },
                 child: const Text('Skip for Now'),
               ),
-              // --- End Skip Button ---
             ],
           ),
         ),
@@ -176,7 +146,6 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
   }
 }
 
-// --- Currency Picker Sheet Widget (No changes needed here) ---
 class CurrencyPickerSheet extends StatelessWidget {
   const CurrencyPickerSheet({super.key});
 
@@ -208,7 +177,6 @@ class CurrencyPickerSheet extends StatelessWidget {
                 itemCount: AppCountries.availableCountries.length,
                 itemBuilder: (context, index) {
                   final country = AppCountries.availableCountries[index];
-                  final bool isSelected = country.code == currentCode;
                   return RadioListTile<String>(
                     title: Text('${country.name} (${country.currencySymbol})'),
                     value: country.code,

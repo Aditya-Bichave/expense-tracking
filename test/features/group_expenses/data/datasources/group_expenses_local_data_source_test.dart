@@ -35,7 +35,9 @@ void main() {
 
   group('saveExpense', () {
     test('should call box.put', () async {
-      when(() => mockBox.put(any(), any())).thenAnswer((_) async {});
+      when(() => mockBox.put(any(), any())).thenAnswer((_) async {
+        return;
+      });
       await dataSource.saveExpense(tExpense);
       verify(() => mockBox.put('1', tExpense)).called(1);
     });
@@ -43,7 +45,9 @@ void main() {
 
   group('saveExpenses', () {
     test('should call box.putAll', () async {
-      when(() => mockBox.putAll(any())).thenAnswer((_) async {});
+      when(() => mockBox.putAll(any())).thenAnswer((_) async {
+        return;
+      });
       await dataSource.saveExpenses([tExpense]);
       verify(() => mockBox.putAll({'1': tExpense})).called(1);
     });

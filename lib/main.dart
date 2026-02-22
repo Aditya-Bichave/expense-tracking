@@ -47,6 +47,10 @@ import 'package:expense_tracker/features/groups/data/models/group_member_model.d
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:expense_tracker/core/auth/session_cubit.dart';
+import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
+import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 File? _startupLogFile;
 
@@ -101,6 +105,12 @@ Future<void> main() async {
     log.info("Initializing Supabase...");
     await SupabaseClientProvider.initialize();
 
+    log.info("Initializing Secure Storage & Encryption...");
+    const secureStorage = FlutterSecureStorage();
+    final secureStorageService = SecureStorageService(secureStorage);
+    final hiveKey = await secureStorageService.getHiveKey();
+
+    Hive.registerAdapter(ProfileModelAdapter());
     Hive.registerAdapter(ExpenseModelAdapter());
     Hive.registerAdapter(AssetAccountModelAdapter());
     Hive.registerAdapter(IncomeModelAdapter());
@@ -123,6 +133,10 @@ Future<void> main() async {
     Hive.registerAdapter(ExpenseSplitModelAdapter());
 
     log.info("Opening Hive boxes...");
+    final profileBoxFuture = Hive.openBox<ProfileModel>(
+      'profile_box',
+      encryptionCipher: HiveAesCipher(hiveKey),
+    );
     final expenseBoxFuture = Hive.openBox<ExpenseModel>(
       HiveConstants.expenseBoxName,
     );
@@ -164,6 +178,7 @@ Future<void> main() async {
       HiveConstants.groupExpenseBoxName,
     );
 
+    final profileBox = await profileBoxFuture;
     final expenseBox = await expenseBoxFuture;
     final accountBox = await accountBoxFuture;
     final incomeBox = await incomeBoxFuture;
@@ -183,6 +198,8 @@ Future<void> main() async {
     log.info("SharedPreferences instance obtained.");
 
     await initLocator(
+      secureStorageService: secureStorageService,
+      profileBox: profileBox,
       prefs: prefs,
       expenseBox: expenseBox,
       accountBox: accountBox,
@@ -251,6 +268,10 @@ Future<void> main() async {
         // create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
         // lazy: true,
         //        ),
+        BlocProvider<SessionCubit>(
+          create: (context) => sl<SessionCubit>(),
+          lazy: false,
+        ),
         BlocProvider<AuthBloc>(
           create: (context) => sl<AuthBloc>()..add(AuthCheckStatus()),
           lazy: false,
@@ -317,13 +338,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  final LocalAuthentication _localAuth = sl<LocalAuthentication>();
+  DateTime? _pausedTime;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkLock());
   }
 
   @override
@@ -334,24 +354,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _checkLock();
-    }
-  }
-
-  Future<void> _checkLock() async {
-    final settingsState = context.read<SettingsBloc>().state;
-    if (!settingsState.isAppLockEnabled) return;
-    try {
-      await _localAuth.authenticate(
-        localizedReason: 'Please authenticate to continue',
-        options: const AuthenticationOptions(
-          biometricOnly: false,
-          stickyAuth: true,
-        ),
-      );
-    } catch (e) {
-      log.warning('[MyApp] Authentication failed: $e');
+    if (state == AppLifecycleState.paused) {
+      _pausedTime = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      if (_pausedTime != null) {
+        final diff = DateTime.now().difference(_pausedTime!);
+        if (diff.inSeconds >= 60) {
+          context.read<SessionCubit>().checkSession();
+        }
+      }
+      _pausedTime = null;
     }
   }
 

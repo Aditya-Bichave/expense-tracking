@@ -7,7 +7,12 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/router.dart' deferred as app_router;
 
+import 'package:expense_tracker/core/auth/session_cubit.dart';
+import 'package:expense_tracker/core/auth/session_state.dart';
+
 class MockSettingsBloc extends Mock implements SettingsBloc {}
+
+class MockSessionCubit extends Mock implements SessionCubit {}
 
 class FakeBuildContext extends Fake implements BuildContext {}
 
@@ -17,11 +22,18 @@ void main() {
 
   setUp(() async {
     settingsBloc = MockSettingsBloc();
+    final sessionCubit = MockSessionCubit();
+
     di.sl.registerSingleton<SettingsBloc>(settingsBloc);
+    di.sl.registerSingleton<SessionCubit>(sessionCubit);
+
     when(() => settingsBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => settingsBloc.state).thenReturn(
       const SettingsState(status: SettingsStatus.loaded, setupSkipped: true),
     );
+    when(() => sessionCubit.stream).thenAnswer((_) => const Stream.empty());
+    when(() => sessionCubit.state).thenReturn(SessionUnauthenticated());
+
     await app_router.loadLibrary();
   });
 

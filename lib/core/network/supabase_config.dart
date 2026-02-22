@@ -11,6 +11,9 @@ class SupabaseConfig {
     defaultValue: 'INSERT_ANON_KEY_HERE',
   );
 
+  static const String supabasePersistSessionKey =
+      'SUPABASE_PERSIST_SESSION_KEY';
+
   static bool get isValid =>
       supabaseUrl.isNotEmpty &&
       supabaseAnonKey.isNotEmpty &&
