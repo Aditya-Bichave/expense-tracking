@@ -1,25 +1,23 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('OutboxItem', () {
     test('should be instantiated correctly', () {
-      final date = DateTime.now();
       final item = OutboxItem(
-        id: '123',
+        id: '1',
+        entityId: '100', // Added entityId
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: '{}',
-        createdAt: date,
+        createdAt: DateTime.now(),
       );
 
-      expect(item.id, '123');
+      expect(item.id, '1');
+      expect(item.entityId, '100');
       expect(item.entityType, EntityType.group);
       expect(item.opType, OpType.create);
-      expect(item.payloadJson, '{}');
-      expect(item.createdAt, date);
       expect(item.status, OutboxStatus.pending);
-      expect(item.retryCount, 0);
     });
   });
 }

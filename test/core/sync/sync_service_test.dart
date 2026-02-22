@@ -7,49 +7,51 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class MockOutboxRepository extends Mock implements OutboxRepository {}
-
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
+class MockOutboxRepository extends Mock implements OutboxRepository {}
 
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
+// A fake builder to handle the fluent API of Supabase
 class FakePostgrestFilterBuilder extends Fake
     implements PostgrestFilterBuilder {
   final Object? error;
   FakePostgrestFilterBuilder({this.error});
 
-  // Mocking the 'eq' method as it returns a builder too
   @override
   PostgrestFilterBuilder eq(String column, Object value) {
     return this;
   }
 
+  // Handle the future interface
   @override
   Future<S> then<S>(
     FutureOr<S> Function(dynamic) onValue, {
     Function? onError,
   }) {
     if (error != null) {
-      // Delegate to a real failed Future so it handles onError callback signature correctly
       return Future.error(
         error!,
         StackTrace.current,
       ).then<S>((_) => onValue(null), onError: onError);
     }
+    // Return empty list/map as success response
     return Future.value([]).then((val) => onValue(val));
   }
 }
 
 void main() {
   late SyncService syncService;
-  late MockOutboxRepository mockOutboxRepository;
   late MockSupabaseClient mockSupabaseClient;
+  late MockOutboxRepository mockOutboxRepository;
   late MockSupabaseQueryBuilder mockQueryBuilder;
 
   setUpAll(() {
     registerFallbackValue(
       OutboxItem(
         id: 'fallback',
+        entityId: 'fallback_id',
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: '{}',
@@ -59,8 +61,8 @@ void main() {
   });
 
   setUp(() {
-    mockOutboxRepository = MockOutboxRepository();
     mockSupabaseClient = MockSupabaseClient();
+    mockOutboxRepository = MockOutboxRepository();
     mockQueryBuilder = MockSupabaseQueryBuilder();
     syncService = SyncService(mockSupabaseClient, mockOutboxRepository);
 
@@ -85,6 +87,7 @@ void main() {
     test('should succeed and mark as sent', () async {
       final item = OutboxItem(
         id: '1',
+        entityId: '100',
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: '{"name": "Test Group"}',
@@ -92,12 +95,14 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(
-        () => mockSupabaseClient.from(any()),
-      ).thenAnswer((_) => mockQueryBuilder);
+      when(() => mockSupabaseClient.from(any())).thenReturn(
+        mockQueryBuilder,
+      ); // Use thenReturn for non-async property access
+
       when(
         () => mockQueryBuilder.insert(any()),
       ).thenAnswer((_) => FakePostgrestFilterBuilder());
+
       when(
         () => mockOutboxRepository.markAsSent(any()),
       ).thenAnswer((_) async {});
@@ -112,6 +117,7 @@ void main() {
     test('should retry with backoff on failure', () async {
       final item = OutboxItem(
         id: '2',
+        entityId: '200',
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: '{"name": "Test Group"}',
@@ -120,9 +126,8 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(
-        () => mockSupabaseClient.from(any()),
-      ).thenAnswer((_) => mockQueryBuilder);
+      when(() => mockSupabaseClient.from(any())).thenReturn(mockQueryBuilder);
+
       // Simulate failure
       when(
         () => mockQueryBuilder.insert(any()),
@@ -144,6 +149,7 @@ void main() {
       final now = DateTime.now();
       final diff = nextRetryAt.difference(now).inMilliseconds;
 
+      // 2^0 = 1 second => 1000ms. Allow some margin.
       expect(diff, greaterThanOrEqualTo(900));
       expect(diff, lessThan(3000));
     });
@@ -151,6 +157,7 @@ void main() {
     test('should stop retrying after max retries', () async {
       final item = OutboxItem(
         id: '3',
+        entityId: '300',
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: '{"name": "Test Group"}',
@@ -188,6 +195,7 @@ void main() {
     ) async {
       final item = OutboxItem(
         id: '123',
+        entityId: '400',
         entityType: entityType,
         opType: opType,
         payloadJson: '{"test": "val"}',
@@ -195,14 +203,13 @@ void main() {
       );
 
       when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(
-        () => mockSupabaseClient.from(any()),
-      ).thenAnswer((_) => mockQueryBuilder);
+      when(() => mockSupabaseClient.from(any())).thenReturn(mockQueryBuilder);
 
       final builder = FakePostgrestFilterBuilder();
       when(() => mockQueryBuilder.insert(any())).thenAnswer((_) => builder);
       when(() => mockQueryBuilder.update(any())).thenAnswer((_) => builder);
       when(() => mockQueryBuilder.delete()).thenAnswer((_) => builder);
+
       when(
         () => mockOutboxRepository.markAsSent(any()),
       ).thenAnswer((_) async {});

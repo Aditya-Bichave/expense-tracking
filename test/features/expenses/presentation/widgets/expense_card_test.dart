@@ -3,6 +3,8 @@ import 'package:expense_tracker/features/accounts/domain/entities/asset_account.
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -26,15 +28,26 @@ void main() {
     accountId: 'acc1',
   );
 
+  const tAccount = AssetAccount(
+    id: 'acc1',
+    name: 'Main Account',
+    type: AssetType.bank,
+    initialBalance: 1000,
+    currentBalance: 950,
+  );
+
   testWidgets('ExpenseCard displays expense details correctly', (tester) async {
+    // Arrange
+    whenListen(
+      mockAccountListBloc,
+      Stream.value(AccountListLoaded(accounts: [tAccount])),
+      initialState: AccountListLoaded(accounts: [tAccount]),
+    );
+
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: ExpenseCard(
-        expense: tExpense,
-        accountName: 'Main Account',
-        currencySymbol: '\$',
-      ),
+      widget: ExpenseCard(expense: tExpense),
       accountListBloc: mockAccountListBloc,
     );
 
@@ -44,15 +57,18 @@ void main() {
     expect(find.textContaining('50.00'), findsOneWidget);
   });
 
-  testWidgets('ExpenseCard displays provided account name', (tester) async {
+  testWidgets('ExpenseCard handles missing account gracefully', (tester) async {
+    // Arrange
+    whenListen(
+      mockAccountListBloc,
+      Stream.value(const AccountListLoaded(accounts: [])),
+      initialState: const AccountListLoaded(accounts: []),
+    );
+
     // Act
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: ExpenseCard(
-        expense: tExpense,
-        accountName: 'Deleted',
-        currencySymbol: '\$',
-      ),
+      widget: ExpenseCard(expense: tExpense),
       accountListBloc: mockAccountListBloc,
     );
 

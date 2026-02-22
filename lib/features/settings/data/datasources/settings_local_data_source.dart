@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // Removed: import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/main.dart';
@@ -27,8 +28,12 @@ abstract class SettingsLocalDataSource {
 
 class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
   final SharedPreferences prefs;
+  final FlutterSecureStorage secureStorage;
 
-  SettingsLocalDataSourceImpl({required this.prefs});
+  SettingsLocalDataSourceImpl({
+    required this.prefs,
+    required this.secureStorage,
+  });
 
   @override
   Future<ThemeMode> getThemeMode() async {
@@ -119,17 +124,17 @@ class SettingsLocalDataSourceImpl implements SettingsLocalDataSource {
 
   @override
   Future<bool> getAppLockEnabled() async {
-    // Use constant key and default from AppConstants
-    final enabled =
-        prefs.getBool(PrefKeys.appLockEnabled) ??
-        AppConstants.defaultAppLockEnabled;
-    return enabled;
+    final String? val = await secureStorage.read(key: PrefKeys.appLockEnabled);
+    if (val == null) return AppConstants.defaultAppLockEnabled;
+    return val == 'true';
   }
 
   @override
   Future<void> saveAppLockEnabled(bool enabled) async {
-    // Use constant key
-    await prefs.setBool(PrefKeys.appLockEnabled, enabled);
-    log.info("[SettingsDS] Saved App Lock Enabled: $enabled");
+    await secureStorage.write(
+      key: PrefKeys.appLockEnabled,
+      value: enabled.toString(),
+    );
+    log.info("[SettingsDS] Saved App Lock Enabled: $enabled (Secure)");
   }
 }

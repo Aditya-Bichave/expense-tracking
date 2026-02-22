@@ -11,6 +11,7 @@ import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class GroupsRepositoryImpl implements GroupsRepository {
   final GroupsLocalDataSource _localDataSource;
@@ -38,7 +39,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroup(model);
 
       final outboxItem = OutboxItem(
-        id: group.id,
+        id: const Uuid().v4(), // Outbox ID
+        entityId: group.id, // Entity ID
         entityType: EntityType.group,
         opType: OpType.create,
         payloadJson: jsonEncode(model.toJson()),
