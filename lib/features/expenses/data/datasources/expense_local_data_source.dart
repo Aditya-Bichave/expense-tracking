@@ -62,29 +62,21 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
           ? categoryId.split(',').toSet()
           : null;
 
+      // Optimize: Calculate date boundaries once outside the loop
+      final startDateOnly = startDate != null
+          ? DateTime(startDate.year, startDate.month, startDate.day)
+          : null;
+      final endDateInclusive = endDate != null
+          ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59)
+          : null;
+
       for (final expense in expenseBox.values) {
-        if (startDate != null) {
-          final expenseDateOnly = DateTime(
-            expense.date.year,
-            expense.date.month,
-            expense.date.day,
-          );
-          final startDateOnly = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day,
-          );
-          if (expenseDateOnly.isBefore(startDateOnly)) continue;
+        if (startDateOnly != null) {
+          // Compare directly: expense.date >= startDate (normalized to midnight)
+          if (expense.date.isBefore(startDateOnly)) continue;
         }
-        if (endDate != null) {
-          final endDateInclusive = DateTime(
-            endDate.year,
-            endDate.month,
-            endDate.day,
-            23,
-            59,
-            59,
-          );
+        if (endDateInclusive != null) {
+          // Compare directly: expense.date <= endDate (normalized to end of day)
           if (expense.date.isAfter(endDateInclusive)) continue;
         }
         if (accountIdSet != null && !accountIdSet.contains(expense.accountId)) {
