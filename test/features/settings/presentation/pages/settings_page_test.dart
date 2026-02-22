@@ -79,70 +79,64 @@ void main() {
   }
 
   group('SettingsPage Tests', () {
-    testWidgets(
-      skip: true,
-      'renders loading state when initial',
-      (tester) async {
-        whenListen(
-          mockSettingsBloc,
-          Stream.value(const SettingsState(status: SettingsStatus.initial)),
-          initialState: const SettingsState(status: SettingsStatus.initial),
-        );
+    testWidgets(skip: true, 'renders loading state when initial', (
+      tester,
+    ) async {
+      whenListen(
+        mockSettingsBloc,
+        Stream.value(const SettingsState(status: SettingsStatus.initial)),
+        initialState: const SettingsState(status: SettingsStatus.initial),
+      );
 
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump();
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
 
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      },
-    );
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
 
-    testWidgets(
-      skip: true,
-      'renders sections when loaded',
-      (tester) async {
-        whenListen(
-          mockSettingsBloc,
-          Stream.value(const SettingsState(status: SettingsStatus.loaded)),
-          initialState: const SettingsState(status: SettingsStatus.loaded),
-        );
+    testWidgets(skip: true, 'renders sections when loaded', (tester) async {
+      whenListen(
+        mockSettingsBloc,
+        Stream.value(const SettingsState(status: SettingsStatus.loaded)),
+        initialState: const SettingsState(status: SettingsStatus.loaded),
+      );
 
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump(); // Build frame
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump(); // Build frame
 
-        expect(find.text('APPEARANCE'), findsOneWidget);
-        expect(find.text('GENERAL'), findsOneWidget);
-        expect(find.text('SECURITY'), findsOneWidget);
+      expect(find.text('APPEARANCE'), findsOneWidget);
+      expect(find.text('GENERAL'), findsOneWidget);
+      expect(find.text('SECURITY'), findsOneWidget);
 
-        // Data Management Section - needs scrolling
-        await tester.scrollUntilVisible(
-          find.text('DATA MANAGEMENT'),
-          500.0,
-          scrollable: find.byType(Scrollable),
-        );
-        expect(find.text('DATA MANAGEMENT'), findsOneWidget);
+      // Data Management Section - needs scrolling
+      await tester.scrollUntilVisible(
+        find.text('DATA MANAGEMENT'),
+        500.0,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('DATA MANAGEMENT'), findsOneWidget);
 
-        await tester.scrollUntilVisible(
-          find.text('HELP & FEEDBACK'),
-          500.0,
-          scrollable: find.byType(Scrollable),
-        );
-        expect(find.text('HELP & FEEDBACK'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('HELP & FEEDBACK'),
+        500.0,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('HELP & FEEDBACK'), findsOneWidget);
 
-        await tester.scrollUntilVisible(
-          find.text('LEGAL'),
-          500.0,
-          scrollable: find.byType(Scrollable),
-        );
-        expect(find.text('LEGAL'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.text('LEGAL'),
+        500.0,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('LEGAL'), findsOneWidget);
 
-        await tester.scrollUntilVisible(
-          find.text('ABOUT'),
-          500.0,
-          scrollable: find.byType(Scrollable),
-        );
-        expect(find.text('ABOUT'), findsOneWidget);
-      },
-    );
+      await tester.scrollUntilVisible(
+        find.text('ABOUT'),
+        500.0,
+        scrollable: find.byType(Scrollable),
+      );
+      expect(find.text('ABOUT'), findsOneWidget);
+    });
 
     testWidgets(
       skip: true,
@@ -171,59 +165,53 @@ void main() {
       },
     );
 
-    testWidgets(
-      skip: true,
-      'shows snackbar on settings error',
-      (tester) async {
-        whenListen(
-          mockSettingsBloc,
-          Stream.fromIterable([
-            const SettingsState(status: SettingsStatus.loaded),
-            const SettingsState(
-              status: SettingsStatus.error,
-              errorMessage: 'Settings Error',
-            ),
-          ]),
-          initialState: const SettingsState(status: SettingsStatus.loaded),
-        );
+    testWidgets(skip: true, 'shows snackbar on settings error', (tester) async {
+      whenListen(
+        mockSettingsBloc,
+        Stream.fromIterable([
+          const SettingsState(status: SettingsStatus.loaded),
+          const SettingsState(
+            status: SettingsStatus.error,
+            errorMessage: 'Settings Error',
+          ),
+        ]),
+        initialState: const SettingsState(status: SettingsStatus.loaded),
+      );
 
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump(); // Initial
-        await tester.pump(); // Error state
-        await tester.pump(); // SnackBar animation
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump(); // Initial
+      await tester.pump(); // Error state
+      await tester.pump(); // SnackBar animation
 
-        expect(find.text('Settings Error: Settings Error'), findsOneWidget);
-      },
-    );
+      expect(find.text('Settings Error: Settings Error'), findsOneWidget);
+    });
 
-    testWidgets(
-      skip: true,
-      'shows snackbar on data management message',
-      (tester) async {
-        whenListen(
-          mockSettingsBloc,
-          Stream.value(const SettingsState(status: SettingsStatus.loaded)),
-          initialState: const SettingsState(status: SettingsStatus.loaded),
-        );
-        whenListen(
-          mockDataManagementBloc,
-          Stream.fromIterable([
-            const DataManagementState(),
-            const DataManagementState(
-              status: DataManagementStatus.success,
-              message: 'Backup Successful',
-            ),
-          ]),
-          initialState: const DataManagementState(),
-        );
+    testWidgets(skip: true, 'shows snackbar on data management message', (
+      tester,
+    ) async {
+      whenListen(
+        mockSettingsBloc,
+        Stream.value(const SettingsState(status: SettingsStatus.loaded)),
+        initialState: const SettingsState(status: SettingsStatus.loaded),
+      );
+      whenListen(
+        mockDataManagementBloc,
+        Stream.fromIterable([
+          const DataManagementState(),
+          const DataManagementState(
+            status: DataManagementStatus.success,
+            message: 'Backup Successful',
+          ),
+        ]),
+        initialState: const DataManagementState(),
+      );
 
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump(); // Initial
-        await tester.pump(); // Success state
-        await tester.pump(); // SnackBar animation
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump(); // Initial
+      await tester.pump(); // Success state
+      await tester.pump(); // SnackBar animation
 
-        expect(find.text('Backup Successful'), findsOneWidget);
-      },
-    );
+      expect(find.text('Backup Successful'), findsOneWidget);
+    });
   });
 }

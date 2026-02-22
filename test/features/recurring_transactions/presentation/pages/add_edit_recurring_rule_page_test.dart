@@ -66,18 +66,12 @@ void main() {
     );
   }
 
-  testWidgets(
-    skip: true,
-    'renders AddEditRecurringRulePage',
-    (tester) async {
-      when(
-        () => mockBloc.state,
-      ).thenReturn(AddEditRecurringRuleState.initial());
+  testWidgets(skip: true, 'renders AddEditRecurringRulePage', (tester) async {
+    when(() => mockBloc.state).thenReturn(AddEditRecurringRuleState.initial());
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
 
-      expect(find.byType(AddEditRecurringRulePage), findsOneWidget);
-    },
-  );
+    expect(find.byType(AddEditRecurringRulePage), findsOneWidget);
+  });
 }
