@@ -33,14 +33,11 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // 1. Fetch categories and rules in parallel
-    final results = await Future.wait([
+    // 1. Fetch categories and rules in parallel using record destructuring
+    final (categoriesResult, rulesResult) = await (
       categoryRepository.getAllCategories(),
       recurringTransactionRepository.getRecurringRules(),
-    ]);
-
-    final categoriesResult = results[0] as Either<Failure, List<Category>>;
-    final rulesResult = results[1] as Either<Failure, List<RecurringRule>>;
+    ).wait;
 
     return await categoriesResult.fold<Future<Either<Failure, void>>>(
       (failure) async => Left(failure),
@@ -54,26 +51,14 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
                 .where((rule) => rule.status == RuleStatus.active)
                 .toList();
 
-            final futures = <Future<Either<Failure, void>>>[];
-
             for (var rule in activeRules) {
               if (rule.nextOccurrenceDate.isBefore(today) ||
                   rule.nextOccurrenceDate.isAtSameMomentAs(today)) {
                 final category = categoryMap[rule.categoryId];
-                futures.add(_processRule(rule, category));
-              }
-            }
-
-            if (futures.isEmpty) {
-              return const Right(null);
-            }
-
-            final results = await Future.wait(futures);
-
-            // Return the first failure if any occurred
-            for (var result in results) {
-              if (result.isLeft()) {
-                return result;
+                final result = await _processRule(rule, category);
+                if (result.isLeft()) {
+                  return result;
+                }
               }
             }
             return const Right(null);
@@ -123,10 +108,11 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
 
         RuleStatus newStatus = rule.status;
 
-        // 3. Check end condition
+        // 3. Check end condition with safe null checks
         bool hasEnded = false;
         if (rule.endConditionType == EndConditionType.afterOccurrences) {
-          if (newOccurrencesGenerated >= rule.totalOccurrences!) {
+          if (rule.totalOccurrences != null &&
+              newOccurrencesGenerated >= rule.totalOccurrences!) {
             hasEnded = true;
           }
         } else if (rule.endConditionType == EndConditionType.onDate) {
