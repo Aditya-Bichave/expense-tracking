@@ -33,100 +33,121 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final rulesOrFailure = await recurringTransactionRepository
-        .getRecurringRules();
-    return await rulesOrFailure.fold<Future<Either<Failure, void>>>(
-      (failure) async => Left(failure),
-      (rules) async {
-        final activeRules = rules
-            .where((rule) => rule.status == RuleStatus.active)
-            .toList();
+    // 1. Fetch categories and rules in parallel
+    final results = await Future.wait([
+      categoryRepository.getAllCategories(),
+      recurringTransactionRepository.getRecurringRules(),
+    ]);
 
-        for (var rule in activeRules) {
-          if (rule.nextOccurrenceDate.isBefore(today) ||
-              rule.nextOccurrenceDate.isAtSameMomentAs(today)) {
-            final result = await _processRule(rule);
-            if (result.isLeft()) {
-              return result;
+    final categoriesResult = results[0] as Either<Failure, List<Category>>;
+    final rulesResult = results[1] as Either<Failure, List<RecurringRule>>;
+
+    return await categoriesResult.fold<Future<Either<Failure, void>>>(
+      (failure) async => Left(failure),
+      (categories) async {
+        final categoryMap = {for (var cat in categories) cat.id: cat};
+
+        return await rulesResult.fold<Future<Either<Failure, void>>>(
+          (failure) async => Left(failure),
+          (rules) async {
+            final activeRules = rules
+                .where((rule) => rule.status == RuleStatus.active)
+                .toList();
+
+            final futures = <Future<Either<Failure, void>>>[];
+
+            for (var rule in activeRules) {
+              if (rule.nextOccurrenceDate.isBefore(today) ||
+                  rule.nextOccurrenceDate.isAtSameMomentAs(today)) {
+                final category = categoryMap[rule.categoryId];
+                futures.add(_processRule(rule, category));
+              }
             }
-          }
-        }
-        return const Right(null);
+
+            if (futures.isEmpty) {
+              return const Right(null);
+            }
+
+            final results = await Future.wait(futures);
+
+            // Return the first failure if any occurred
+            for (var result in results) {
+              if (result.isLeft()) {
+                return result;
+              }
+            }
+            return const Right(null);
+          },
+        );
       },
     );
   }
 
-  Future<Either<Failure, void>> _processRule(RecurringRule rule) async {
-    final categoryOrFailure = await categoryRepository.getCategoryById(
-      rule.categoryId,
-    );
+  Future<Either<Failure, void>> _processRule(
+    RecurringRule rule,
+    Category? category,
+  ) async {
+    // 1. Generate transaction
+    late Either<Failure, void> transactionResult;
+    if (rule.transactionType == TransactionType.expense) {
+      final newExpense = Expense(
+        id: uuid.v4(),
+        title: rule.description,
+        amount: rule.amount,
+        date: rule.nextOccurrenceDate,
+        category: category,
+        accountId: rule.accountId,
+        isRecurring: true,
+      );
+      transactionResult = await addExpense(AddExpenseParams(newExpense));
+    } else {
+      final newIncome = Income(
+        id: uuid.v4(),
+        title: rule.description,
+        amount: rule.amount,
+        date: rule.nextOccurrenceDate,
+        category: category,
+        accountId: rule.accountId,
+        notes: '',
+        isRecurring: true,
+      );
+      transactionResult = await addIncome(AddIncomeParams(newIncome));
+    }
 
-    return await categoryOrFailure.fold<Future<Either<Failure, void>>>(
+    return await transactionResult.fold<Future<Either<Failure, void>>>(
       (failure) async => Left(failure),
-      (category) async {
-        // 1. Generate transaction
-        late Either<Failure, void> transactionResult;
-        if (rule.transactionType == TransactionType.expense) {
-          final newExpense = Expense(
-            id: uuid.v4(),
-            title: rule.description,
-            amount: rule.amount,
-            date: rule.nextOccurrenceDate,
-            category: category,
-            accountId: rule.accountId,
-            isRecurring: true,
-          );
-          transactionResult = await addExpense(AddExpenseParams(newExpense));
-        } else {
-          final newIncome = Income(
-            id: uuid.v4(),
-            title: rule.description,
-            amount: rule.amount,
-            date: rule.nextOccurrenceDate,
-            category: category,
-            accountId: rule.accountId,
-            notes: '',
-            isRecurring: true,
-          );
-          transactionResult = await addIncome(AddIncomeParams(newIncome));
+      (_) async {
+        // 2. Update rule
+        final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
+        final newNextOccurrenceDate = _calculateNextOccurrence(rule);
+
+        RuleStatus newStatus = rule.status;
+
+        // 3. Check end condition
+        bool hasEnded = false;
+        if (rule.endConditionType == EndConditionType.afterOccurrences) {
+          if (newOccurrencesGenerated >= rule.totalOccurrences!) {
+            hasEnded = true;
+          }
+        } else if (rule.endConditionType == EndConditionType.onDate) {
+          if (rule.endDate != null &&
+              newNextOccurrenceDate.isAfter(rule.endDate!)) {
+            hasEnded = true;
+          }
         }
 
-        return await transactionResult.fold<Future<Either<Failure, void>>>(
-          (failure) async => Left(failure),
-          (_) async {
-            // 2. Update rule
-            final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
-            final newNextOccurrenceDate = _calculateNextOccurrence(rule);
+        if (hasEnded) {
+          newStatus = RuleStatus.completed;
+        }
 
-            RuleStatus newStatus = rule.status;
-
-            // 3. Check end condition
-            bool hasEnded = false;
-            if (rule.endConditionType == EndConditionType.afterOccurrences) {
-              if (newOccurrencesGenerated >= rule.totalOccurrences!) {
-                hasEnded = true;
-              }
-            } else if (rule.endConditionType == EndConditionType.onDate) {
-              if (rule.endDate != null &&
-                  newNextOccurrenceDate.isAfter(rule.endDate!)) {
-                hasEnded = true;
-              }
-            }
-
-            if (hasEnded) {
-              newStatus = RuleStatus.completed;
-            }
-
-            final updatedRule = rule.copyWith(
-              status: newStatus,
-              nextOccurrenceDate: newNextOccurrenceDate,
-              occurrencesGenerated: newOccurrencesGenerated,
-            );
-            final updateResult = await recurringTransactionRepository
-                .updateRecurringRule(updatedRule);
-            return updateResult;
-          },
+        final updatedRule = rule.copyWith(
+          status: newStatus,
+          nextOccurrenceDate: newNextOccurrenceDate,
+          occurrencesGenerated: newOccurrencesGenerated,
         );
+        final updateResult = await recurringTransactionRepository
+            .updateRecurringRule(updatedRule);
+        return updateResult;
       },
     );
   }

@@ -38,43 +38,44 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(
-      AddExpenseParams(
-        Expense(
-          id: '',
-          title: '',
-          amount: 0,
-          date: DateTime.now(),
-          accountId: '',
-        ),
-      ),
-    );
-    registerFallbackValue(
-      AddIncomeParams(
-        Income(
-          id: '',
-          title: '',
-          amount: 0,
-          date: DateTime.now(),
-          accountId: '',
-        ),
-      ),
-    );
-    registerFallbackValue(
       RecurringRule(
-        id: '',
-        description: '',
-        amount: 0,
+        id: 'fallback',
+        description: 'fallback',
+        amount: 1,
         transactionType: TransactionType.expense,
-        accountId: '',
-        categoryId: '',
+        accountId: 'acc1',
+        categoryId: 'cat1',
         frequency: Frequency.monthly,
-        dayOfMonth: 1,
         interval: 1,
         startDate: DateTime.now(),
         endConditionType: EndConditionType.never,
         status: RuleStatus.active,
         nextOccurrenceDate: DateTime.now(),
         occurrencesGenerated: 0,
+      ),
+    );
+    registerFallbackValue(
+      AddExpenseParams(
+        Expense(
+          id: '1',
+          title: 'test',
+          amount: 1,
+          date: DateTime.now(),
+          accountId: '1',
+        ),
+      ),
+    );
+    registerFallbackValue(
+      AddIncomeParams(
+        Income(
+          id: '1',
+          title: 'test',
+          amount: 1,
+          date: DateTime.now(),
+          category: null,
+          accountId: '1',
+          notes: '',
+        ),
       ),
     );
   });
@@ -85,7 +86,7 @@ void main() {
     mockAddExpenseUseCase = MockAddExpenseUseCase();
     mockAddIncomeUseCase = MockAddIncomeUseCase();
     mockUuid = MockUuid();
-    when(() => mockUuid.v4()).thenReturn('new_id');
+
     usecase = GenerateTransactionsOnLaunch(
       recurringTransactionRepository: mockRecurringTransactionRepository,
       categoryRepository: mockCategoryRepository,
@@ -93,36 +94,36 @@ void main() {
       addIncome: mockAddIncomeUseCase,
       uuid: mockUuid,
     );
+    when(() => mockUuid.v4()).thenReturn('id');
   });
 
   final tRule = RecurringRule(
     id: '1',
-    description: 'Test Expense',
-    amount: 50,
+    description: 'Test Rule',
+    amount: 10,
     transactionType: TransactionType.expense,
     accountId: 'acc1',
     categoryId: 'cat1',
     frequency: Frequency.monthly,
-    dayOfMonth: 15,
     interval: 1,
-    startDate: DateTime(2023, 1, 15),
+    startDate: DateTime(2023, 1, 1),
     endConditionType: EndConditionType.never,
     status: RuleStatus.active,
-    nextOccurrenceDate: DateTime.now().subtract(const Duration(days: 1)),
-    occurrencesGenerated: 5,
+    nextOccurrenceDate: DateTime(2023, 1, 1), // Due
+    occurrencesGenerated: 0,
   );
 
-  const tCategory = Category(
+  final tCategory = Category(
     id: 'cat1',
     name: 'Test Category',
     iconName: 'icon',
-    colorHex: '#FFFFFF',
+    colorHex: '#000000',
     type: CategoryType.expense,
     isCustom: false,
   );
 
   final tExpense = Expense(
-    id: 'new_id',
+    id: 'id',
     title: tRule.description,
     amount: tRule.amount,
     date: tRule.nextOccurrenceDate,
@@ -138,13 +139,24 @@ void main() {
     categoryId: 'cat2',
   );
 
-  final tIncomeCategory = const Category(
+  final tIncomeCategory = Category(
     id: 'cat2',
     name: 'Income Category',
     iconName: 'icon',
     colorHex: '#FFFFFF',
     type: CategoryType.income,
     isCustom: false,
+  );
+
+  final tIncome = Income(
+    id: 'id',
+    title: tIncomeRule.description,
+    amount: tIncomeRule.amount,
+    date: tIncomeRule.nextOccurrenceDate,
+    category: tIncomeCategory,
+    accountId: tIncomeRule.accountId,
+    notes: '',
+    isRecurring: true,
   );
 
   test('should clamp next occurrence date for monthly rules', () async {
@@ -158,9 +170,10 @@ void main() {
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([janRule]));
+    // Changed: Mock getAllCategories instead of getCategoryById
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => const Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => Right(tExpense));
@@ -190,8 +203,8 @@ void main() {
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => const Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => Right(tExpense));
@@ -203,6 +216,7 @@ void main() {
     await usecase(const NoParams());
 
     // Assert
+    verify(() => mockCategoryRepository.getAllCategories()).called(1);
     verify(() => mockAddExpenseUseCase(any())).called(1);
     verify(
       () => mockRecurringTransactionRepository.updateRecurringRule(any()),
@@ -231,6 +245,9 @@ void main() {
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([futureRule]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
 
     // Act
     await usecase(const NoParams());
@@ -250,8 +267,8 @@ void main() {
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => const Left(failure));
@@ -274,8 +291,8 @@ void main() {
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tIncomeRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => Right(tIncomeCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tIncomeCategory]));
     when(
       () => mockAddIncomeUseCase(any()),
     ).thenAnswer((_) async => const Left(failure));
@@ -298,8 +315,8 @@ void main() {
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => Right(tExpense));
@@ -318,14 +335,15 @@ void main() {
     ).called(1);
   });
 
-  test('should return failure when category lookup fails', () async {
+  test('should return failure when category fetch fails', () async {
     // Arrange
-    const failure = ServerFailure('getCategoryById failed');
+    const failure = ServerFailure('getAllCategories failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
+    // Changed: Mock getAllCategories failure
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
+      () => mockCategoryRepository.getAllCategories(),
     ).thenAnswer((_) async => const Left(failure));
 
     // Act
@@ -333,7 +351,7 @@ void main() {
 
     // Assert
     expect(result, equals(const Left(failure)));
-    verify(() => mockCategoryRepository.getCategoryById(any())).called(1);
+    verify(() => mockCategoryRepository.getAllCategories()).called(1);
     verifyNever(() => mockAddExpenseUseCase(any()));
     verifyNever(
       () => mockRecurringTransactionRepository.updateRecurringRule(any()),
@@ -366,8 +384,8 @@ void main() {
         () => mockRecurringTransactionRepository.getRecurringRules(),
       ).thenAnswer((_) async => Right([ruleWithoutDayOfMonth]));
       when(
-        () => mockCategoryRepository.getCategoryById(any()),
-      ).thenAnswer((_) async => Right(tCategory));
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([tCategory]));
       when(
         () => mockAddExpenseUseCase(any()),
       ).thenAnswer((_) async => Right(tExpense));
@@ -417,8 +435,8 @@ void main() {
         () => mockRecurringTransactionRepository.getRecurringRules(),
       ).thenAnswer((_) async => Right([ruleAfterShortMonth]));
       when(
-        () => mockCategoryRepository.getCategoryById(any()),
-      ).thenAnswer((_) async => Right(tCategory));
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([tCategory]));
       when(
         () => mockAddExpenseUseCase(any()),
       ).thenAnswer((_) async => Right(tExpense));
