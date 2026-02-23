@@ -17,7 +17,17 @@ void main() {
 
   group('GroupEntity', () {
     test('props should contain all fields', () {
-      expect(tGroup.props, ['1', 'Test Group', GroupType.trip, 'USD', null, 'user1', tDate, tDate, false]);
+      expect(tGroup.props, [
+        '1',
+        'Test Group',
+        GroupType.trip,
+        'USD',
+        null,
+        'user1',
+        tDate,
+        tDate,
+        false,
+      ]);
     });
 
     test('supports value equality', () {

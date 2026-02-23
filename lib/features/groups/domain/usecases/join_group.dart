@@ -7,7 +7,7 @@ class JoinGroup {
 
   JoinGroup(this.repository);
 
-  Future<Either<Failure, void>> call(String token) async {
+  Future<Either<Failure, Map<String, dynamic>>> call(String token) async {
     return await repository.acceptInvite(token);
   }
 }

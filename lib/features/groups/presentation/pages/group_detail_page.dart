@@ -45,7 +45,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
       providers: [
         BlocProvider(
           create: (context) =>
-              GroupExpensesBloc(sl())..add(LoadGroupExpenses(widget.groupId)),
+              sl<GroupExpensesBloc>()..add(LoadGroupExpenses(widget.groupId)),
         ),
         BlocProvider(
           create: (context) =>
@@ -84,18 +84,19 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                 bool canEdit = false;
 
                 if (membersState is GroupMembersLoaded) {
-                  final currentUser =
-                      (context.read<AuthBloc>().state as AuthAuthenticated)
-                          .user;
-                  try {
-                    final member = membersState.members.firstWhere(
-                      (m) => m.userId == currentUser.id,
-                    );
-                    isAdmin = member.role == GroupRole.admin;
-                    // Viewers cannot add, edit, or settle
-                    canAddExpense = member.role != GroupRole.viewer;
-                    canEdit = member.role != GroupRole.viewer;
-                  } catch (_) {}
+                  final authState = context.read<AuthBloc>().state;
+                  if (authState is AuthAuthenticated) {
+                    final currentUser = authState.user;
+                    try {
+                      final member = membersState.members.firstWhere(
+                        (m) => m.userId == currentUser.id,
+                      );
+                      isAdmin = member.role == GroupRole.admin;
+                      // Viewers cannot add, edit, or settle
+                      canAddExpense = member.role != GroupRole.viewer;
+                      canEdit = member.role != GroupRole.viewer;
+                    } catch (_) {}
+                  }
                 }
 
                 return Scaffold(

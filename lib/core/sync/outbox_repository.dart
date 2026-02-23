@@ -14,8 +14,7 @@ class OutboxRepository {
     return _box.values.where((item) {
       return item.status == SyncStatus.pending ||
           item.status == SyncStatus.failed;
-    }).toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    }).toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
   }
 
   Future<void> markAsSent(SyncMutationModel item) async {
@@ -23,10 +22,7 @@ class OutboxRepository {
     await item.delete();
   }
 
-  Future<void> markAsFailed(
-    SyncMutationModel item,
-    String error,
-  ) async {
+  Future<void> markAsFailed(SyncMutationModel item, String error) async {
     item.status = SyncStatus.failed;
     item.lastError = error;
     item.retryCount++;

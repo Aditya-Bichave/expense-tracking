@@ -15,16 +15,19 @@ class GroupModel extends HiveObject {
   final String name;
 
   @HiveField(2)
+  @JsonKey(name: 'created_by')
   final String createdBy;
 
   @HiveField(3)
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
   @HiveField(4)
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
 
   @HiveField(5, defaultValue: 'custom')
-  @JsonKey(defaultValue: 'custom')
+  @JsonKey(name: 'type', defaultValue: 'custom')
   final String typeValue;
 
   @HiveField(6, defaultValue: 'USD')

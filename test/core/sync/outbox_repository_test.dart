@@ -99,28 +99,39 @@ void main() {
     });
   });
 
+  group('markAsSent', () {
+    test('should call delete on the item', () async {
+      final mockItem = MockSyncMutationModel();
+      when(() => mockItem.delete()).thenAnswer((_) async {});
+
+      await repository.markAsSent(mockItem);
+
+      verify(() => mockItem.delete()).called(1);
+    });
+  });
+
   group('markAsFailed', () {
-    test('should mark as failed and update properties', () async {
-      final item = SyncMutationModel(
-        id: '1',
-        table: 'groups',
-        operation: OpType.create,
-        payload: {},
-        createdAt: DateTime.now(),
-      );
+    test('should mark as failed, update properties, and save', () async {
+      final mockItem = MockSyncMutationModel();
 
-      try {
-        await repository.markAsFailed(
-          item,
-          'error',
-        );
-      } catch (e) {
-        // Expected to fail on save() in unit test environment
-      }
+      // Since it's a mock, setting properties doesn't do anything by default
+      // but we can verify the setters are called with correct values,
+      // OR we can just use a real model and mock the box (which the previous test did).
+      // But a real model fails on `save()` if not in a box. We will mock `save()` using Mock.
 
-      expect(item.status, SyncStatus.failed);
-      expect(item.lastError, 'error');
-      expect(item.retryCount, 1);
+      var retryCount = 0;
+      when(() => mockItem.retryCount).thenReturn(retryCount);
+      when(
+        () => mockItem.retryCount = any(),
+      ).thenAnswer((i) => retryCount = i.positionalArguments.first);
+
+      when(() => mockItem.save()).thenAnswer((_) async {});
+
+      await repository.markAsFailed(mockItem, 'error');
+
+      verify(() => mockItem.lastError = 'error').called(1);
+      verify(() => mockItem.retryCount = 1).called(1);
+      verify(() => mockItem.save()).called(1);
     });
   });
 
@@ -132,3 +143,5 @@ void main() {
     });
   });
 }
+
+class MockSyncMutationModel extends Mock implements SyncMutationModel {}

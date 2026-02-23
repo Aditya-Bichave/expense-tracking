@@ -12,7 +12,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockWatchGroups extends Mock implements WatchGroups {}
+
 class MockSyncGroups extends Mock implements SyncGroups {}
+
 class MockJoinGroup extends Mock implements JoinGroup {}
 
 void main() {
@@ -51,12 +53,10 @@ void main() {
     blocTest<GroupsBloc, GroupsState>(
       'emits [Loading, Loaded] when LoadGroups is added',
       setUp: () {
-        when(() => mockWatchGroups()).thenAnswer(
-          (_) => Stream.value(Right([tGroup])),
-        );
-        when(() => mockSyncGroups()).thenAnswer(
-          (_) async => const Right(null),
-        );
+        when(
+          () => mockWatchGroups(),
+        ).thenAnswer((_) => Stream.value(Right([tGroup])));
+        when(() => mockSyncGroups()).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
       act: (bloc) => bloc.add(LoadGroups()),
@@ -72,19 +72,14 @@ void main() {
     blocTest<GroupsBloc, GroupsState>(
       'emits [Loading, Error] when WatchGroups fails',
       setUp: () {
-        when(() => mockWatchGroups()).thenAnswer(
-          (_) => Stream.value(Left(CacheFailure('Error'))),
-        );
-        when(() => mockSyncGroups()).thenAnswer(
-          (_) async => const Right(null),
-        );
+        when(
+          () => mockWatchGroups(),
+        ).thenAnswer((_) => Stream.value(Left(CacheFailure('Error'))));
+        when(() => mockSyncGroups()).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
       act: (bloc) => bloc.add(LoadGroups()),
-      expect: () => [
-        GroupsLoading(),
-        GroupsError('Error'),
-      ],
+      expect: () => [GroupsLoading(), GroupsError('Error')],
     );
   });
 }

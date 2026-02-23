@@ -71,12 +71,15 @@ class GroupsRepositoryImpl implements GroupsRepository {
 
   @override
   Stream<Either<Failure, List<GroupEntity>>> watchGroups() {
-    return _localDataSource.watchGroups()
+    return _localDataSource
+        .watchGroups()
         .map<Either<Failure, List<GroupEntity>>>((models) {
           return Right(models.map((e) => e.toEntity()).toList());
         })
         .onErrorReturnWith((error, stackTrace) {
-          return Left<Failure, List<GroupEntity>>(CacheFailure(error.toString()));
+          return Left<Failure, List<GroupEntity>>(
+            CacheFailure(error.toString()),
+          );
         });
   }
 

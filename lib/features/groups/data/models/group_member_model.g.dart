@@ -62,19 +62,19 @@ class GroupMemberModelAdapter extends TypeAdapter<GroupMemberModel> {
 GroupMemberModel _$GroupMemberModelFromJson(Map<String, dynamic> json) =>
     GroupMemberModel(
       id: json['id'] as String,
-      groupId: json['groupId'] as String,
-      userId: json['userId'] as String,
-      roleValue: json['roleValue'] as String,
-      joinedAt: DateTime.parse(json['joinedAt'] as String),
+      groupId: json['group_id'] as String,
+      userId: json['user_id'] as String,
+      roleValue: json['role'] as String,
+      joinedAt: DateTime.parse(json['joined_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
 
 Map<String, dynamic> _$GroupMemberModelToJson(GroupMemberModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'groupId': instance.groupId,
-      'userId': instance.userId,
-      'roleValue': instance.roleValue,
-      'joinedAt': instance.joinedAt.toIso8601String(),
+      'group_id': instance.groupId,
+      'user_id': instance.userId,
+      'role': instance.roleValue,
+      'joined_at': instance.joinedAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
     };

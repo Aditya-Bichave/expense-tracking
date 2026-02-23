@@ -51,6 +51,7 @@ void main() {
 
     // Stub processOutbox to return a completed Future
     when(() => mockSyncService.processOutbox()).thenAnswer((_) async {});
+    when(() => mockSyncService.initializeRealtime()).thenAnswer((_) async {});
     when(() => mockRealtimeService.unsubscribe()).thenAnswer((_) {});
 
     syncCoordinator = SyncCoordinator(

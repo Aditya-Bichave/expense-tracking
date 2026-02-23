@@ -10,6 +10,7 @@ import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
+import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -134,6 +135,79 @@ void main() {
         (groups) => expect(groups.length, 1),
       );
     });
+
+    test('should return CacheFailure on exception', () async {
+      // Arrange
+      when(() => mockLocalDataSource.getGroups()).thenThrow(Exception('Error'));
+
+      // Act
+      final result = await repository.getGroups();
+
+      // Assert
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<CacheFailure>());
+    });
+  });
+
+  group('watchGroups', () {
+    final tGroupModel = GroupModel(
+      id: '1',
+      name: 'Test Group',
+      typeValue: 'trip',
+      currency: 'USD',
+      createdBy: 'user1',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      isArchived: false,
+    );
+
+    test('should return a stream of Right(List<GroupEntity>)', () {
+      when(
+        () => mockLocalDataSource.watchGroups(),
+      ).thenAnswer((_) => Stream.value([tGroupModel]));
+      final stream = repository.watchGroups();
+      expect(stream, emits(isA<Right<Failure, List<GroupEntity>>>()));
+    });
+
+    test('should return a stream with Left(CacheFailure) on error', () {
+      when(
+        () => mockLocalDataSource.watchGroups(),
+      ).thenAnswer((_) => Stream.error(Exception('Error')));
+      final stream = repository.watchGroups();
+      expect(stream, emits(isA<Left<Failure, List<GroupEntity>>>()));
+    });
+  });
+
+  group('getGroupMembers', () {
+    final tModel = GroupMemberModel(
+      id: 'm1',
+      groupId: 'g1',
+      userId: 'u1',
+      roleValue: 'admin',
+      joinedAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    test('should return members from local source', () async {
+      when(
+        () => mockLocalDataSource.getGroupMembers('g1'),
+      ).thenReturn([tModel]);
+      final result = await repository.getGroupMembers('g1');
+      expect(result.isRight(), true);
+      result.fold(
+        (l) => fail('Should be right'),
+        (members) => expect(members.length, 1),
+      );
+    });
+
+    test('should return CacheFailure on exception', () async {
+      when(
+        () => mockLocalDataSource.getGroupMembers('g1'),
+      ).thenThrow(Exception('Error'));
+      final result = await repository.getGroupMembers('g1');
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<CacheFailure>());
+    });
   });
 
   group('syncGroups', () {
@@ -168,6 +242,23 @@ void main() {
       verify(() => mockRemoteDataSource.getGroups()).called(1);
       verify(() => mockLocalDataSource.saveGroups([tGroupModel])).called(1);
     });
+
+    test(
+      'should return ServerFailure on exception during remote fetch',
+      () async {
+        when(
+          () => mockConnectivity.checkConnectivity(),
+        ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+        when(
+          () => mockRemoteDataSource.getGroups(),
+        ).thenThrow(Exception('Error'));
+
+        final result = await repository.syncGroups();
+
+        expect(result.isLeft(), true);
+        expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+      },
+    );
 
     test('should do nothing when offline', () async {
       // Arrange

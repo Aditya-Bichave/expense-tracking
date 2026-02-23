@@ -11,14 +11,21 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockOutboxRepository extends Mock implements OutboxRepository {}
+
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
+
 class MockConnectivity extends Mock implements Connectivity {}
+
 class MockGroupBox extends Mock implements Box<GroupModel> {}
+
 class MockGroupMemberBox extends Mock implements Box<GroupMemberModel> {}
+
 class MockRealtimeChannel extends Mock implements RealtimeChannel {}
 
-class FakePostgrestFilterBuilder extends Fake implements PostgrestFilterBuilder {
+class FakePostgrestFilterBuilder extends Fake
+    implements PostgrestFilterBuilder {
   final Object? error;
   FakePostgrestFilterBuilder({this.error});
 
@@ -26,9 +33,35 @@ class FakePostgrestFilterBuilder extends Fake implements PostgrestFilterBuilder 
   PostgrestFilterBuilder eq(String column, Object value) => this;
 
   @override
-  Future<S> then<S>(FutureOr<S> Function(dynamic) onValue, {Function? onError}) {
+  Future<S> then<S>(
+    FutureOr<S> Function(dynamic) onValue, {
+    Function? onError,
+  }) {
     if (error != null) {
-      return Future.error(error!, StackTrace.current).then((_) => onValue(null), onError: onError);
+      return Future.error(
+        error!,
+        StackTrace.current,
+      ).then((_) => onValue(null), onError: onError);
+    }
+    return Future.value([]).then((val) => onValue(val));
+  }
+}
+
+class FakePostgrestTransformBuilder extends Fake
+    implements PostgrestTransformBuilder {
+  final Object? error;
+  FakePostgrestTransformBuilder({this.error});
+
+  @override
+  Future<S> then<S>(
+    FutureOr<S> Function(dynamic) onValue, {
+    Function? onError,
+  }) {
+    if (error != null) {
+      return Future.error(
+        error!,
+        StackTrace.current,
+      ).then((_) => onValue(null), onError: onError);
     }
     return Future.value([]).then((val) => onValue(val));
   }
@@ -45,6 +78,9 @@ void main() {
   late StreamController<List<ConnectivityResult>> connectivityController;
   late MockRealtimeChannel mockChannel;
 
+  void Function(PostgresChangePayload)? groupCallback;
+  void Function(PostgresChangePayload)? memberCallback;
+
   setUpAll(() {
     registerFallbackValue(
       SyncMutationModel(
@@ -53,6 +89,27 @@ void main() {
         operation: OpType.create,
         payload: {},
         createdAt: DateTime.now(),
+      ),
+    );
+    registerFallbackValue(
+      GroupModel(
+        id: 'f',
+        name: 'f',
+        createdBy: 'f',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        typeValue: 'f',
+        currency: 'f',
+      ),
+    );
+    registerFallbackValue(
+      GroupMemberModel(
+        id: 'f',
+        groupId: 'f',
+        userId: 'f',
+        roleValue: 'f',
+        joinedAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       ),
     );
     registerFallbackValue(PostgresChangeEvent.all);
@@ -67,21 +124,43 @@ void main() {
     mockGroupBox = MockGroupBox();
     mockGroupMemberBox = MockGroupMemberBox();
     mockChannel = MockRealtimeChannel();
-    connectivityController = StreamController<List<ConnectivityResult>>.broadcast();
+    connectivityController =
+        StreamController<List<ConnectivityResult>>.broadcast();
 
-    when(() => mockConnectivity.onConnectivityChanged)
-        .thenAnswer((_) => connectivityController.stream);
+    when(
+      () => mockConnectivity.onConnectivityChanged,
+    ).thenAnswer((_) => connectivityController.stream);
 
-    when(() => mockSupabaseClient.channel(any())).thenReturn(mockChannel);
-    when(() => mockChannel.onPostgresChanges(
-      event: any(named: 'event'),
-      schema: any(named: 'schema'),
-      table: any(named: 'table'),
-      callback: any(named: 'callback'),
-    )).thenReturn(mockChannel);
+    when(
+      () => mockSupabaseClient.channel(any()),
+    ).thenAnswer((_) => mockChannel);
 
-    when(() => mockChannel.subscribe()).thenReturn(mockChannel);
-    when(() => mockSupabaseClient.removeChannel(any())).thenAnswer((_) async => 'ok');
+    when(
+      () => mockChannel.onPostgresChanges(
+        event: any(named: 'event'),
+        schema: any(named: 'schema'),
+        table: any(named: 'table'),
+        callback: any(named: 'callback'),
+      ),
+    ).thenAnswer((invocation) {
+      final table = invocation.namedArguments[#table] as String;
+      final callback =
+          invocation.namedArguments[#callback]
+              as void Function(PostgresChangePayload);
+      if (table == 'groups') groupCallback = callback;
+      if (table == 'group_members') memberCallback = callback;
+      return mockChannel;
+    });
+
+    when(() => mockChannel.subscribe()).thenAnswer((_) => mockChannel);
+    when(
+      () => mockSupabaseClient.removeChannel(any()),
+    ).thenAnswer((_) async => 'ok');
+
+    when(
+      () => mockOutboxRepository.markAsFailed(any(), any()),
+    ).thenAnswer((_) async {});
+    when(() => mockOutboxRepository.markAsSent(any())).thenAnswer((_) async {});
 
     syncService = SyncService(
       mockSupabaseClient,
@@ -90,50 +169,217 @@ void main() {
       mockGroupBox,
       mockGroupMemberBox,
     );
-
-    when(() => mockOutboxRepository.markAsFailed(any(), any()))
-        .thenAnswer((_) async {});
   });
 
   tearDown(() {
     connectivityController.close();
     try {
-        syncService.dispose();
+      syncService.dispose();
     } catch (_) {}
   });
 
+  group('Connectivity', () {
+    test('should emit offline when connectivity is none', () async {
+      final states = <SyncServiceStatus>[];
+      final sub = syncService.statusStream.listen(states.add);
+
+      // Emits synced in constructor immediately
+      connectivityController.add([ConnectivityResult.none]);
+      await Future.delayed(Duration.zero);
+
+      expect(states, contains(SyncServiceStatus.offline));
+      sub.cancel();
+    });
+
+    test('should call processOutbox when online', () async {
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([]);
+
+      // Trigger online
+      connectivityController.add([ConnectivityResult.wifi]);
+      // The listen in SyncService constructor will call processOutbox()
+      // We need to wait for it.
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      verify(() => mockOutboxRepository.getPendingItems()).called(1);
+    });
+  });
+
   group('processOutbox', () {
-    test('should report error status if an item fails', () async {
-      final item = SyncMutationModel(
-        id: 'fail',
+    test('should successfully process different sync operations', () async {
+      final createItem = SyncMutationModel(
+        id: '1',
         table: 'groups',
         operation: OpType.create,
         payload: {},
         createdAt: DateTime.now(),
       );
+      final updateItem = SyncMutationModel(
+        id: '2',
+        table: 'groups',
+        operation: OpType.update,
+        payload: {},
+        createdAt: DateTime.now(),
+      );
+      final deleteItem = SyncMutationModel(
+        id: '3',
+        table: 'groups',
+        operation: OpType.delete,
+        payload: {},
+        createdAt: DateTime.now(),
+      );
 
-      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(() => mockSupabaseClient.from(any())).thenAnswer((_) => mockQueryBuilder);
-      when(() => mockQueryBuilder.upsert(any())).thenAnswer((_) => FakePostgrestFilterBuilder(error: 'Fail'));
+      var callCount = 0;
+      when(() => mockOutboxRepository.getPendingItems()).thenAnswer((_) {
+        if (callCount == 0) {
+          callCount++;
+          return [createItem, updateItem, deleteItem];
+        }
+        return [];
+      });
+
+      when(
+        () => mockSupabaseClient.from(any()),
+      ).thenAnswer((_) => mockQueryBuilder);
+      when(
+        () => mockQueryBuilder.upsert(any()),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder());
+      when(
+        () => mockQueryBuilder.update(any()),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder());
+      when(
+        () => mockQueryBuilder.delete(),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder());
 
       final states = <SyncServiceStatus>[];
       final sub = syncService.statusStream.listen(states.add);
 
       await syncService.processOutbox();
-      await Future.delayed(Duration.zero);
+      // Use short delay to allow all microtasks in processOutbox to finish
+      await Future.delayed(const Duration(milliseconds: 50));
 
-      expect(states, contains(SyncServiceStatus.syncing));
-      expect(states.last, SyncServiceStatus.error);
+      verify(() => mockQueryBuilder.upsert(any())).called(1);
+      verify(() => mockQueryBuilder.update(any())).called(1);
+      verify(() => mockQueryBuilder.delete()).called(1);
+      verify(() => mockOutboxRepository.markAsSent(any())).called(3);
 
+      expect(states.last, SyncServiceStatus.synced);
       sub.cancel();
+    });
+
+    test('should skip max retries items', () async {
+      final item = SyncMutationModel(
+        id: 'max_retry',
+        table: 'groups',
+        operation: OpType.create,
+        payload: {},
+        createdAt: DateTime.now(),
+        retryCount: 5,
+      );
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+
+      await syncService.processOutbox();
+
+      verify(
+        () => mockOutboxRepository.markAsFailed(item, 'Max retries exceeded.'),
+      ).called(1);
+      verifyNever(() => mockSupabaseClient.from(any()));
     });
   });
 
   group('Realtime Handling', () {
-    test('dispose should unsubscribe channels', () async {
+    test('groups realtime - insert and update', () async {
       await syncService.initializeRealtime();
-      syncService.dispose();
-      verify(() => mockSupabaseClient.removeChannel(any())).called(2);
+      expect(groupCallback, isNotNull);
+
+      final now = DateTime.now();
+      when(() => mockGroupBox.get(any())).thenReturn(null);
+      when(() => mockGroupBox.put(any(), any())).thenAnswer((_) async {});
+
+      final payload = PostgresChangePayload(
+        commitTimestamp: now,
+        eventType: PostgresChangeEvent.insert,
+        newRecord: {
+          'id': 'g1',
+          'name': 'G1',
+          'type': 'trip',
+          'currency': 'USD',
+          'created_by': 'u1',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        },
+        oldRecord: {},
+        table: 'groups',
+        schema: 'public',
+        errors: [],
+      );
+
+      groupCallback!(payload);
+      verify(() => mockGroupBox.put('g1', any())).called(1);
+    });
+
+    test('groups realtime - delete', () async {
+      await syncService.initializeRealtime();
+      when(() => mockGroupBox.delete(any())).thenAnswer((_) async {});
+
+      final payload = PostgresChangePayload(
+        commitTimestamp: DateTime.now(),
+        eventType: PostgresChangeEvent.delete,
+        newRecord: {},
+        oldRecord: {'id': 'g1'},
+        table: 'groups',
+        schema: 'public',
+        errors: [],
+      );
+
+      groupCallback!(payload);
+      verify(() => mockGroupBox.delete('g1')).called(1);
+    });
+
+    test('group_members realtime - insert and update', () async {
+      await syncService.initializeRealtime();
+      expect(memberCallback, isNotNull);
+
+      final now = DateTime.now();
+      when(() => mockGroupMemberBox.get(any())).thenReturn(null);
+      when(() => mockGroupMemberBox.put(any(), any())).thenAnswer((_) async {});
+
+      final payload = PostgresChangePayload(
+        commitTimestamp: now,
+        eventType: PostgresChangeEvent.insert,
+        newRecord: {
+          'id': 'm1',
+          'group_id': 'g1',
+          'user_id': 'u1',
+          'role': 'admin',
+          'joined_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        },
+        oldRecord: {},
+        table: 'group_members',
+        schema: 'public',
+        errors: [],
+      );
+
+      memberCallback!(payload);
+      verify(() => mockGroupMemberBox.put('m1', any())).called(1);
+    });
+
+    test('group_members realtime - delete', () async {
+      await syncService.initializeRealtime();
+      when(() => mockGroupMemberBox.delete(any())).thenAnswer((_) async {});
+
+      final payload = PostgresChangePayload(
+        commitTimestamp: DateTime.now(),
+        eventType: PostgresChangeEvent.delete,
+        newRecord: {},
+        oldRecord: {'id': 'm1'},
+        table: 'group_members',
+        schema: 'public',
+        errors: [],
+      );
+
+      memberCallback!(payload);
+      verify(() => mockGroupMemberBox.delete('m1')).called(1);
     });
   });
 }

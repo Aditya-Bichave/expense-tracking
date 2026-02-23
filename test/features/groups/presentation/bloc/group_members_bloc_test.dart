@@ -35,6 +35,7 @@ void main() {
         userId: 'u1',
         role: GroupRole.admin,
         joinedAt: DateTime.now(),
+        updatedAt: DateTime.now(),
       ),
     ];
 

@@ -35,8 +35,9 @@ class SyncService {
     this._groupMemberBox,
   ) {
     _statusController.add(SyncServiceStatus.synced);
-    _connectivitySubscription =
-        _connectivity.onConnectivityChanged.listen((result) {
+    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((
+      result,
+    ) {
       if (result.contains(ConnectivityResult.none)) {
         _statusController.add(SyncServiceStatus.offline);
       } else {
@@ -73,7 +74,8 @@ class SyncService {
               table: 'group_members',
               callback: (payload) {
                 log.info(
-                    'Realtime update for group_members: ${payload.eventType}');
+                  'Realtime update for group_members: ${payload.eventType}',
+                );
                 _handleGroupMemberChange(payload);
               },
             )
