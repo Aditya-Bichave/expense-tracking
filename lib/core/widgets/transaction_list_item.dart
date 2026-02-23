@@ -53,6 +53,8 @@ class TransactionListItem extends StatelessWidget {
         ? theme.colorScheme.error
         : theme.colorScheme.primary; // Income as primary
 
+    final formattedAmount = CurrencyFormatter.format(transaction.amount, currencySymbol);
+
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: category.displayColor.withOpacity(0.15),
@@ -91,23 +93,23 @@ class TransactionListItem extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      trailing: Text(
-        '${isExpense ? '-' : '+'} ${CurrencyFormatter.format(transaction.amount, currencySymbol)}',
-        style: theme.textTheme.bodyLarge?.copyWith(
-          color: amountColor,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.5,
+      trailing: Semantics(
+        label: '${isExpense ? 'Expense' : 'Income'} of $formattedAmount',
+        child: Text(
+          '${isExpense ? '-' : '+'} $formattedAmount',
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: amountColor,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
       onTap: onTap, // Use the passed onTap callback
       // onLongPress: onLongPress, // Uncomment if adding long press
-      dense: true,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16.0,
         vertical: 4.0,
       ),
-      // --- ADDED: Visual density for slightly tighter spacing ---
-      visualDensity: VisualDensity.compact,
     );
   }
 }

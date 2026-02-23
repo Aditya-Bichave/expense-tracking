@@ -105,6 +105,16 @@ class _LoginPageState extends State<LoginPage>
                   hintText: '1234567890',
                 ),
                 keyboardType: TextInputType.phone,
+                autofillHints: const [AutofillHints.telephoneNumber],
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) {
+                  final phone = _phoneController.text.trim();
+                  if (phone.isNotEmpty) {
+                    context.read<AuthBloc>().add(
+                      AuthLoginRequested('$_countryCode$phone'),
+                    );
+                  }
+                },
               ),
             ),
           ],
@@ -112,11 +122,9 @@ class _LoginPageState extends State<LoginPage>
         const SizedBox(height: 16),
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            if (state is AuthLoading) {
-              return const CircularProgressIndicator();
-            }
+            final isLoading = state is AuthLoading;
             return ElevatedButton(
-              onPressed: () {
+              onPressed: isLoading ? null : () {
                 final phone = _phoneController.text.trim();
                 if (phone.isNotEmpty) {
                   context.read<AuthBloc>().add(
@@ -124,7 +132,13 @@ class _LoginPageState extends State<LoginPage>
                   );
                 }
               },
-              child: const Text('Send OTP'),
+              child: isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Send OTP'),
             );
           },
         ),
@@ -143,15 +157,23 @@ class _LoginPageState extends State<LoginPage>
             hintText: 'you@example.com',
           ),
           keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            final email = _emailController.text.trim();
+            if (email.isNotEmpty) {
+              context.read<AuthBloc>().add(
+                AuthLoginWithMagicLinkRequested(email),
+              );
+            }
+          },
         ),
         const SizedBox(height: 16),
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            if (state is AuthLoading) {
-              return const CircularProgressIndicator();
-            }
+            final isLoading = state is AuthLoading;
             return ElevatedButton(
-              onPressed: () {
+              onPressed: isLoading ? null : () {
                 final email = _emailController.text.trim();
                 if (email.isNotEmpty) {
                   context.read<AuthBloc>().add(
@@ -159,7 +181,13 @@ class _LoginPageState extends State<LoginPage>
                   );
                 }
               },
-              child: const Text('Send Magic Link'),
+              child: isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Send Magic Link'),
             );
           },
         ),

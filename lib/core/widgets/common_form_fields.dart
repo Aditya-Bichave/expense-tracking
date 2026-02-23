@@ -55,6 +55,11 @@ class CommonFormFields {
     TextCapitalization textCapitalization = TextCapitalization.words,
     String? Function(String?)? validator,
     bool isRequired = false,
+    // --- ADDED ---
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onFieldSubmitted,
+    Iterable<String>? autofillHints,
+    // --- END ADDED ---
   }) {
     return AppTextFormField(
       controller: controller,
@@ -73,6 +78,11 @@ class CommonFormFields {
             return isValid ? null : 'Only letters and numbers allowed';
           },
       isRequired: isRequired,
+      // --- ADDED ---
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted,
+      autofillHints: autofillHints,
+      // --- END ADDED ---
     );
   }
 
@@ -87,6 +97,11 @@ class CommonFormFields {
     String? Function(String?)? validator,
     ValueChanged<String>? onChanged,
     bool isRequired = false,
+    // --- ADDED ---
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onFieldSubmitted,
+    Iterable<String>? autofillHints,
+    // --- END ADDED ---
   }) {
     return AppTextFormField(
       controller: controller,
@@ -112,6 +127,11 @@ class CommonFormFields {
           },
       onChanged: onChanged,
       isRequired: isRequired,
+      // --- ADDED ---
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted,
+      autofillHints: autofillHints,
+      // --- END ADDED ---
     );
   }
 
@@ -125,6 +145,11 @@ class CommonFormFields {
     String iconKey = 'notes',
     IconData fallbackIcon = Icons.note_alt_outlined,
     bool isRequired = false,
+    // --- ADDED ---
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onFieldSubmitted,
+    Iterable<String>? autofillHints,
+    // --- END ADDED ---
   }) {
     return AppTextFormField(
       controller: controller,
@@ -135,6 +160,11 @@ class CommonFormFields {
       textCapitalization: TextCapitalization.sentences,
       validator: null,
       isRequired: isRequired,
+      // --- ADDED ---
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted,
+      autofillHints: autofillHints,
+      // --- END ADDED ---
     );
   }
 
