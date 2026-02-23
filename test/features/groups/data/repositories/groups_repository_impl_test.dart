@@ -173,4 +173,120 @@ void main() {
       verifyNever(() => mockRemoteDataSource.getGroups());
     });
   });
+
+  group('createInvite', () {
+    test('should call remoteDataSource.createInvite', () async {
+      when(
+        () => mockRemoteDataSource.createInvite(
+          any(),
+          role: any(named: 'role'),
+          expiryDays: any(named: 'expiryDays'),
+          maxUses: any(named: 'maxUses'),
+        ),
+      ).thenAnswer((_) async => 'https://link.com');
+
+      final result = await repository.createInvite('1');
+
+      expect(result.isRight(), true);
+      result.fold((l) => null, (r) => expect(r, 'https://link.com'));
+      verify(
+        () => mockRemoteDataSource.createInvite(
+          '1',
+          role: 'member',
+          expiryDays: 7,
+          maxUses: 0,
+        ),
+      ).called(1);
+    });
+
+    test('should return ServerFailure on exception', () async {
+      when(
+        () => mockRemoteDataSource.createInvite(
+          any(),
+          role: any(named: 'role'),
+          expiryDays: any(named: 'expiryDays'),
+          maxUses: any(named: 'maxUses'),
+        ),
+      ).thenThrow(Exception('Error'));
+
+      final result = await repository.createInvite('1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('acceptInvite', () {
+    test('should call remoteDataSource.acceptInvite', () async {
+      when(
+        () => mockRemoteDataSource.acceptInvite(any()),
+      ).thenAnswer((_) async => {'group_id': '1'});
+
+      final result = await repository.acceptInvite('token');
+
+      expect(result.isRight(), true);
+      verify(() => mockRemoteDataSource.acceptInvite('token')).called(1);
+    });
+
+    test('should return ServerFailure on exception', () async {
+      when(
+        () => mockRemoteDataSource.acceptInvite(any()),
+      ).thenThrow(Exception('Error'));
+
+      final result = await repository.acceptInvite('token');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('updateMemberRole', () {
+    test('should call remoteDataSource.updateMemberRole', () async {
+      when(
+        () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
+      ).thenAnswer((_) async {});
+
+      final result = await repository.updateMemberRole('1', 'u1', 'admin');
+
+      expect(result.isRight(), true);
+      verify(
+        () => mockRemoteDataSource.updateMemberRole('1', 'u1', 'admin'),
+      ).called(1);
+    });
+
+    test('should return ServerFailure on exception', () async {
+      when(
+        () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
+      ).thenThrow(Exception('Error'));
+
+      final result = await repository.updateMemberRole('1', 'u1', 'admin');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
+
+  group('removeMember', () {
+    test('should call remoteDataSource.removeMember', () async {
+      when(
+        () => mockRemoteDataSource.removeMember(any(), any()),
+      ).thenAnswer((_) async {});
+
+      final result = await repository.removeMember('1', 'u1');
+
+      expect(result.isRight(), true);
+      verify(() => mockRemoteDataSource.removeMember('1', 'u1')).called(1);
+    });
+
+    test('should return ServerFailure on exception', () async {
+      when(
+        () => mockRemoteDataSource.removeMember(any(), any()),
+      ).thenThrow(Exception('Error'));
+
+      final result = await repository.removeMember('1', 'u1');
+
+      expect(result.isLeft(), true);
+      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+    });
+  });
 }

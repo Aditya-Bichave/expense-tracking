@@ -38,8 +38,9 @@ void main() {
       ),
     ];
 
+    // LoadGroupMembers
     blocTest<GroupMembersBloc, GroupMembersState>(
-      'emits [GroupMembersLoading, GroupMembersLoaded] when LoadGroupMembers is added and successful',
+      'emits [GroupMembersLoading, GroupMembersLoaded] when LoadGroupMembers is successful',
       setUp: () {
         when(
           () => mockGroupsRepository.getGroupMembers(any()),
@@ -50,6 +51,19 @@ void main() {
       expect: () => [GroupMembersLoading(), GroupMembersLoaded(members)],
     );
 
+    blocTest<GroupMembersBloc, GroupMembersState>(
+      'emits [GroupMembersLoading, GroupMembersError] when LoadGroupMembers fails',
+      setUp: () {
+        when(
+          () => mockGroupsRepository.getGroupMembers(any()),
+        ).thenAnswer((_) async => const Left(CacheFailure('Error')));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(const LoadGroupMembers('g1')),
+      expect: () => [GroupMembersLoading(), const GroupMembersError('Error')],
+    );
+
+    // GenerateInviteLink
     blocTest<GroupMembersBloc, GroupMembersState>(
       'emits [GroupInviteGenerated] when GenerateInviteLink is successful',
       setUp: () {
@@ -65,6 +79,91 @@ void main() {
       build: () => bloc,
       act: (bloc) => bloc.add(const GenerateInviteLink(groupId: 'g1')),
       expect: () => [const GroupInviteGenerated('https://link.com')],
+    );
+
+    blocTest<GroupMembersBloc, GroupMembersState>(
+      'emits [GroupInviteGenerationError] when GenerateInviteLink fails',
+      setUp: () {
+        when(
+          () => mockGroupsRepository.createInvite(
+            any(),
+            role: any(named: 'role'),
+            expiryDays: any(named: 'expiryDays'),
+            maxUses: any(named: 'maxUses'),
+          ),
+        ).thenAnswer((_) async => const Left(ServerFailure('Failed')));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(const GenerateInviteLink(groupId: 'g1')),
+      expect: () => [const GroupInviteGenerationError('Failed')],
+    );
+
+    // ChangeMemberRole
+    blocTest<GroupMembersBloc, GroupMembersState>(
+      'calls updateMemberRole and reloads on success',
+      setUp: () {
+        when(
+          () => mockGroupsRepository.updateMemberRole(any(), any(), any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGroupsRepository.getGroupMembers(any()),
+        ).thenAnswer((_) async => Right(members));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(
+        const ChangeMemberRole(groupId: 'g1', userId: 'u1', newRole: 'member'),
+      ),
+      verify: (_) {
+        verify(
+          () => mockGroupsRepository.updateMemberRole('g1', 'u1', 'member'),
+        ).called(1);
+        verify(() => mockGroupsRepository.getGroupMembers('g1')).called(1);
+      },
+    );
+
+    blocTest<GroupMembersBloc, GroupMembersState>(
+      'emits GroupMembersError on ChangeMemberRole failure',
+      setUp: () {
+        when(
+          () => mockGroupsRepository.updateMemberRole(any(), any(), any()),
+        ).thenAnswer((_) async => const Left(ServerFailure('Update failed')));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(
+        const ChangeMemberRole(groupId: 'g1', userId: 'u1', newRole: 'member'),
+      ),
+      expect: () => [const GroupMembersError('Update failed')],
+    );
+
+    // KickMember
+    blocTest<GroupMembersBloc, GroupMembersState>(
+      'calls removeMember and reloads on success',
+      setUp: () {
+        when(
+          () => mockGroupsRepository.removeMember(any(), any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGroupsRepository.getGroupMembers(any()),
+        ).thenAnswer((_) async => Right(members));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(const KickMember(groupId: 'g1', userId: 'u1')),
+      verify: (_) {
+        verify(() => mockGroupsRepository.removeMember('g1', 'u1')).called(1);
+        verify(() => mockGroupsRepository.getGroupMembers('g1')).called(1);
+      },
+    );
+
+    blocTest<GroupMembersBloc, GroupMembersState>(
+      'emits GroupMembersError on KickMember failure',
+      setUp: () {
+        when(
+          () => mockGroupsRepository.removeMember(any(), any()),
+        ).thenAnswer((_) async => const Left(ServerFailure('Remove failed')));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(const KickMember(groupId: 'g1', userId: 'u1')),
+      expect: () => [const GroupMembersError('Remove failed')],
     );
   });
 }

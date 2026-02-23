@@ -19,18 +19,22 @@ class MockAuthRepository extends Mock implements AuthRepository {}
 
 class MockUser extends Mock implements User {}
 
+class MockAuthResponse extends Mock implements AuthResponse {}
+
 void main() {
   late DeepLinkBloc bloc;
   late MockAppLinks mockAppLinks;
   late MockGroupsRepository mockGroupsRepository;
   late MockAuthRepository mockAuthRepository;
   late MockUser mockUser;
+  late MockAuthResponse mockAuthResponse;
 
   setUp(() {
     mockAppLinks = MockAppLinks();
     mockGroupsRepository = MockGroupsRepository();
     mockAuthRepository = MockAuthRepository();
     mockUser = MockUser();
+    mockAuthResponse = MockAuthResponse();
 
     when(
       () => mockAppLinks.uriLinkStream,
@@ -49,6 +53,34 @@ void main() {
       expect(bloc.state, DeepLinkInitial());
     });
 
+    // Test Initial Link
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'emits success when initial link is a valid join link',
+      setUp: () {
+        when(() => mockAppLinks.getInitialLink()).thenAnswer(
+          (_) async => Uri.parse('https://spendos.app/join?token=123'),
+        );
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Right(mockUser));
+        when(() => mockGroupsRepository.acceptInvite(any())).thenAnswer(
+          (_) async =>
+              const Right({'group_id': '123', 'group_name': 'Initial Group'}),
+        );
+        when(
+          () => mockGroupsRepository.syncGroups(),
+        ).thenAnswer((_) async => const Right(null));
+      },
+      build: () =>
+          DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
+      act: (bloc) => bloc.add(const DeepLinkStarted()),
+      expect: () => [
+        DeepLinkProcessing(),
+        const DeepLinkSuccess(groupId: '123', groupName: 'Initial Group'),
+      ],
+    );
+
+    // Test Manual Entry Success
     blocTest<DeepLinkBloc, DeepLinkState>(
       'emits [DeepLinkProcessing, DeepLinkSuccess] when DeepLinkManualEntry is added and join is successful',
       setUp: () {
@@ -71,6 +103,7 @@ void main() {
       ],
     );
 
+    // Test Manual Entry Failure
     blocTest<DeepLinkBloc, DeepLinkState>(
       'emits [DeepLinkProcessing, DeepLinkError] when DeepLinkManualEntry fails',
       setUp: () {
@@ -86,6 +119,84 @@ void main() {
       expect: () => [
         DeepLinkProcessing(),
         const DeepLinkError('Invalid token'),
+      ],
+    );
+
+    // Test Anonymous Auth Success
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'signs in anonymously if user is null',
+      setUp: () {
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Left(CacheFailure('No user')));
+        when(() => mockAuthResponse.user).thenReturn(mockUser);
+        when(
+          () => mockAuthRepository.signInAnonymously(),
+        ).thenAnswer((_) async => Right(mockAuthResponse));
+        when(() => mockGroupsRepository.acceptInvite(any())).thenAnswer(
+          (_) async =>
+              const Right({'group_id': '123', 'group_name': 'Anon Group'}),
+        );
+        when(
+          () => mockGroupsRepository.syncGroups(),
+        ).thenAnswer((_) async => const Right(null));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('token')),
+      expect: () => [
+        DeepLinkProcessing(),
+        const DeepLinkSuccess(groupId: '123', groupName: 'Anon Group'),
+      ],
+      verify: (_) {
+        verify(() => mockAuthRepository.signInAnonymously()).called(1);
+      },
+    );
+
+    // Test Anonymous Auth Failure
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'emits error if anonymous sign in fails',
+      setUp: () {
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Left(CacheFailure('No user')));
+        when(
+          () => mockAuthRepository.signInAnonymously(),
+        ).thenAnswer((_) async => const Left(ServerFailure('Auth failed')));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('token')),
+      expect: () => [
+        DeepLinkProcessing(),
+        const DeepLinkError("Failed to sign in anonymously"),
+      ],
+    );
+
+    // Test Stream Handling
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'emits success when link received from stream',
+      setUp: () {
+        when(() => mockAppLinks.uriLinkStream).thenAnswer(
+          (_) => Stream.fromIterable([
+            Uri.parse('https://spendos.app/join?token=stream'),
+          ]),
+        );
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Right(mockUser));
+        when(() => mockGroupsRepository.acceptInvite(any())).thenAnswer(
+          (_) async =>
+              const Right({'group_id': '456', 'group_name': 'Stream Group'}),
+        );
+        when(
+          () => mockGroupsRepository.syncGroups(),
+        ).thenAnswer((_) async => const Right(null));
+      },
+      build: () =>
+          DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
+      act: (bloc) => bloc.add(const DeepLinkStarted()),
+      expect: () => [
+        DeepLinkProcessing(),
+        const DeepLinkSuccess(groupId: '456', groupName: 'Stream Group'),
       ],
     );
   });
