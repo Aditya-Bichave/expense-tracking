@@ -27,7 +27,7 @@ void main() {
   late MockAuthRepository authRepository;
   late MockProfileRepository profileRepository;
   late MockSecureStorageService secureStorageService;
-  late SessionCubit sessionCubit;
+  SessionCubit? sessionCubit;
   // ignore: close_sinks
   late StreamController<AuthState> authStateController;
 
@@ -39,7 +39,7 @@ void main() {
     currency: 'USD',
     timezone: 'UTC',
   );
-  // ignore: unused_local_variable
+
   final incompleteProfile = const UserProfile(
     id: '1',
     email: 'test@example.com',
@@ -81,10 +81,7 @@ void main() {
 
   tearDown(() {
     authStateController.close();
-    // Only close if it was initialized
-    try {
-      sessionCubit.close();
-    } catch (_) {}
+    sessionCubit?.close();
   });
 
   SessionCubit buildCubit() {
@@ -93,13 +90,13 @@ void main() {
       profileRepository,
       secureStorageService,
     );
-    return sessionCubit;
+    return sessionCubit!;
   }
 
   group('SessionCubit', () {
     test('initial state is SessionUnauthenticated', () {
       buildCubit();
-      expect(sessionCubit.state, SessionUnauthenticated());
+      expect(sessionCubit!.state, SessionUnauthenticated());
     });
 
     blocTest<SessionCubit, SessionState>(
