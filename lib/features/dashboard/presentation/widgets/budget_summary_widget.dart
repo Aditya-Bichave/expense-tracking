@@ -64,7 +64,8 @@ class BudgetSummaryWidget extends StatelessWidget {
                       ),
                       TextButton(
                         key: const ValueKey('button_budgetSummary_create'),
-                        onPressed: () => context.pushNamed(RouteNames.addBudget),
+                        onPressed: () =>
+                            context.pushNamed(RouteNames.addBudget),
                         child: const Text('Create Budget'),
                       ),
                     ],
@@ -125,7 +126,8 @@ class BudgetSummaryWidget extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
-                                status.statusMessage, // "On Track", "Over Limit", etc.
+                                status
+                                    .statusMessage, // "On Track", "Over Limit", etc.
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: progressColor,
                                   fontWeight: FontWeight.bold,

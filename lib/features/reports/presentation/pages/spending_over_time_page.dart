@@ -36,23 +36,23 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     setState(() => _showComparison = newComparisonState);
     final currentGranularity =
         context.read<SpendingTimeReportBloc>().state is SpendingTimeReportLoaded
-            ? (context.read<SpendingTimeReportBloc>().state
-                    as SpendingTimeReportLoaded)
-                .reportData
-                .granularity
-            : (context.read<SpendingTimeReportBloc>().state
-                    is SpendingTimeReportLoading)
-                ? (context.read<SpendingTimeReportBloc>().state
-                        as SpendingTimeReportLoading)
-                    .granularity
-                : TimeSeriesGranularity.daily;
+        ? (context.read<SpendingTimeReportBloc>().state
+                  as SpendingTimeReportLoaded)
+              .reportData
+              .granularity
+        : (context.read<SpendingTimeReportBloc>().state
+              is SpendingTimeReportLoading)
+        ? (context.read<SpendingTimeReportBloc>().state
+                  as SpendingTimeReportLoading)
+              .granularity
+        : TimeSeriesGranularity.daily;
 
     context.read<SpendingTimeReportBloc>().add(
-          LoadSpendingTimeReport(
-            compareToPrevious: newComparisonState,
-            granularity: currentGranularity,
-          ),
-        );
+      LoadSpendingTimeReport(
+        compareToPrevious: newComparisonState,
+        granularity: currentGranularity,
+      ),
+    );
     log.info(
       "[SpendingOverTimePage] Toggled comparison to: $newComparisonState",
     );
@@ -139,17 +139,17 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             final currentGranularity = (state is SpendingTimeReportLoaded)
                 ? state.reportData.granularity
                 : (state is SpendingTimeReportLoading)
-                    ? state.granularity
-                    : TimeSeriesGranularity.daily;
+                ? state.granularity
+                : TimeSeriesGranularity.daily;
             return PopupMenuButton<TimeSeriesGranularity>(
               initialValue: currentGranularity,
               onSelected: (g) {
                 context.read<SpendingTimeReportBloc>().add(
-                      LoadSpendingTimeReport(
-                        granularity: g,
-                        compareToPrevious: _showComparison,
-                      ),
-                    );
+                  LoadSpendingTimeReport(
+                    granularity: g,
+                    compareToPrevious: _showComparison,
+                  ),
+                );
               },
               icon: const Icon(Icons.timeline_outlined),
               tooltip: AppLocalizations.of(context)!.changeGranularity,
@@ -278,7 +278,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         (context, index) {
           final int itemIndex = index ~/ 2;
           if (index.isOdd) {
-             return const Divider(height: 0.5);
+            return const Divider(height: 0.5);
           }
 
           final item = data.spendingData[itemIndex];
@@ -328,7 +328,9 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             ),
           );
         },
-        childCount: data.spendingData.isEmpty ? 0 : data.spendingData.length * 2 - 1,
+        childCount: data.spendingData.isEmpty
+            ? 0
+            : data.spendingData.length * 2 - 1,
       ),
     );
   }

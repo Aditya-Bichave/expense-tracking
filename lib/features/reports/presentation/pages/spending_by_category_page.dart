@@ -75,8 +75,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final bool useBarChart =
         uiMode == UIMode.quantum || _showComparison || !_showPieChart;
     final bool showAlternateChartOption =
-        uiMode != UIMode.aether &&
-        !_showComparison;
+        uiMode != UIMode.aether && !_showComparison;
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
