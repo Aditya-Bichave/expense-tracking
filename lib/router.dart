@@ -148,18 +148,7 @@ class AppRouter {
         builder: (context, state) =>
             VerifyOtpPage(phone: state.extra as String),
       ),
-      GoRoute(
-        path: RouteNames.groups,
-        builder: (context, state) => const GroupListPage(),
-        routes: [
-          GoRoute(
-            path: ':id',
-            name: RouteNames.groupDetail,
-            builder: (context, state) =>
-                GroupDetailPage(groupId: state.pathParameters['id']!),
-          ),
-        ],
-      ),
+
       GoRoute(
         path: RouteNames.initialSetup,
         name: RouteNames.initialSetup,
@@ -235,6 +224,24 @@ class AppRouter {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) =>
                         _buildTransactionDetailPage(context, state),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: RouteNames.groups,
+                name: RouteNames.groups,
+                pageBuilder: (context, state) =>
+                    const NoTransitionPage(child: GroupListPage()),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    name: RouteNames.groupDetail,
+                    builder: (context, state) =>
+                        GroupDetailPage(groupId: state.pathParameters['id']!),
                   ),
                 ],
               ),

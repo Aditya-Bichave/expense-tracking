@@ -1,7 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/groups/data/datasources/groups_remote_d
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -25,7 +26,7 @@ class MockConnectivity extends Mock implements Connectivity {}
 
 class FakeGroupModel extends Fake implements GroupModel {}
 
-class FakeOutboxItem extends Fake implements OutboxItem {}
+class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
 
 void main() {
   late GroupsRepositoryImpl repository;
@@ -37,7 +38,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeGroupModel());
-    registerFallbackValue(FakeOutboxItem());
+    registerFallbackValue(FakeSyncMutationModel());
   });
 
   setUp(() {
@@ -60,9 +61,12 @@ void main() {
     final tGroup = GroupEntity(
       id: '1',
       name: 'Test Group',
+      type: GroupType.trip,
+      currency: 'USD',
       createdBy: 'user1',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      isArchived: false,
     );
 
     test(
@@ -108,9 +112,12 @@ void main() {
     final tGroupModel = GroupModel(
       id: '1',
       name: 'Test Group',
+      typeValue: 'trip',
+      currency: 'USD',
       createdBy: 'user1',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      isArchived: false,
     );
 
     test('should return groups from local source', () async {
@@ -133,9 +140,12 @@ void main() {
     final tGroupModel = GroupModel(
       id: '1',
       name: 'Test Group',
+      typeValue: 'trip',
+      currency: 'USD',
       createdBy: 'user1',
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      isArchived: false,
     );
 
     test('should fetch from remote and save to local when connected', () async {

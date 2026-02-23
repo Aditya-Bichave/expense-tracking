@@ -1,8 +1,11 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
-import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
-import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/watch_groups.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/sync_groups.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/join_group.dart';
+import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 
 // Events
 abstract class GroupsEvent extends Equatable {
@@ -11,17 +14,6 @@ abstract class GroupsEvent extends Equatable {
 }
 
 class LoadGroups extends GroupsEvent {}
-
-class CreateGroupRequested extends GroupsEvent {
-  final String name;
-  final String userId;
-  CreateGroupRequested(this.name, this.userId);
-}
-
-class JoinGroupRequested extends GroupsEvent {
-  final String token;
-  JoinGroupRequested(this.token);
-}
 
 // States
 abstract class GroupsState extends Equatable {
@@ -48,13 +40,21 @@ class GroupsError extends GroupsState {
 }
 
 class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
-  final GroupsRepository _repository;
-  final Uuid _uuid = const Uuid();
+  final WatchGroups _watchGroups;
+  final SyncGroups _syncGroups;
 
-  GroupsBloc(this._repository) : super(GroupsInitial()) {
+  // JoinGroup is ignored in Phase 2A, removed to simplify BLoC and avoid concurrency issues.
+  // final JoinGroup _joinGroup;
+
+  GroupsBloc({
+    required WatchGroups watchGroups,
+    required SyncGroups syncGroups,
+    required JoinGroup
+    joinGroup, // Constructor still accepts it to avoid breaking DI immediately, but unused
+  }) : _watchGroups = watchGroups,
+       _syncGroups = syncGroups,
+       super(GroupsInitial()) {
     on<LoadGroups>(_onLoadGroups);
-    on<CreateGroupRequested>(_onCreateGroup);
-    on<JoinGroupRequested>(_onJoinGroup);
   }
 
   Future<void> _onLoadGroups(
@@ -62,45 +62,16 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
     Emitter<GroupsState> emit,
   ) async {
     emit(GroupsLoading());
-    final result = await _repository.getGroups();
-    result.fold(
-      (failure) => emit(GroupsError(failure.message)),
-      (groups) => emit(GroupsLoaded(groups)),
-    );
+    _syncGroups(); // Trigger sync in background
 
-    _repository.syncGroups().then((_) {
-      add(LoadGroups());
-    });
-  }
-
-  Future<void> _onCreateGroup(
-    CreateGroupRequested event,
-    Emitter<GroupsState> emit,
-  ) async {
-    final newGroup = GroupEntity(
-      id: _uuid.v4(),
-      name: event.name,
-      createdBy: event.userId,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
-    final result = await _repository.createGroup(newGroup);
-    result.fold(
-      (failure) => emit(GroupsError(failure.message)),
-      (group) => add(LoadGroups()),
-    );
-  }
-
-  Future<void> _onJoinGroup(
-    JoinGroupRequested event,
-    Emitter<GroupsState> emit,
-  ) async {
-    emit(GroupsLoading());
-    final result = await _repository.acceptInvite(event.token);
-    result.fold(
-      (failure) => emit(GroupsError(failure.message)),
-      (_) => add(LoadGroups()),
+    await emit.forEach<Either<Failure, List<GroupEntity>>>(
+      _watchGroups(),
+      onData: (result) {
+        return result.fold(
+          (failure) => GroupsError(failure.message),
+          (groups) => GroupsLoaded(groups),
+        );
+      },
     );
   }
 }

@@ -3,34 +3,44 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
-import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/join_group.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/sync_groups.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/watch_groups.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGroupsRepository extends Mock implements GroupsRepository {}
-
-class FakeGroupEntity extends Fake implements GroupEntity {}
+class MockWatchGroups extends Mock implements WatchGroups {}
+class MockSyncGroups extends Mock implements SyncGroups {}
+class MockJoinGroup extends Mock implements JoinGroup {}
 
 void main() {
   late GroupsBloc bloc;
-  late MockGroupsRepository mockRepository;
+  late MockWatchGroups mockWatchGroups;
+  late MockSyncGroups mockSyncGroups;
+  late MockJoinGroup mockJoinGroup;
 
   final tGroup = GroupEntity(
     id: '1',
     name: 'Group 1',
+    type: GroupType.trip,
+    currency: 'USD',
     createdBy: 'u1',
     createdAt: DateTime(2023, 1, 1),
     updatedAt: DateTime(2023, 1, 1),
+    isArchived: false,
   );
 
-  setUpAll(() {
-    registerFallbackValue(FakeGroupEntity());
-  });
-
   setUp(() {
-    mockRepository = MockGroupsRepository();
-    bloc = GroupsBloc(mockRepository);
+    mockWatchGroups = MockWatchGroups();
+    mockSyncGroups = MockSyncGroups();
+    mockJoinGroup = MockJoinGroup();
+    bloc = GroupsBloc(
+      watchGroups: mockWatchGroups,
+      syncGroups: mockSyncGroups,
+      joinGroup: mockJoinGroup,
+    );
   });
 
   group('GroupsBloc', () {
@@ -41,12 +51,12 @@ void main() {
     blocTest<GroupsBloc, GroupsState>(
       'emits [Loading, Loaded] when LoadGroups is added',
       setUp: () {
-        when(
-          () => mockRepository.getGroups(),
-        ).thenAnswer((_) async => Right([tGroup]));
-        when(
-          () => mockRepository.syncGroups(),
-        ).thenAnswer((_) => Completer<Either<Failure, void>>().future);
+        when(() => mockWatchGroups()).thenAnswer(
+          (_) => Stream.value(Right([tGroup])),
+        );
+        when(() => mockSyncGroups()).thenAnswer(
+          (_) async => const Right(null),
+        );
       },
       build: () => bloc,
       act: (bloc) => bloc.add(LoadGroups()),
@@ -54,30 +64,27 @@ void main() {
         GroupsLoading(),
         GroupsLoaded([tGroup]),
       ],
+      verify: (_) {
+        verify(() => mockSyncGroups()).called(1);
+      },
     );
 
     blocTest<GroupsBloc, GroupsState>(
-      'emits [GroupsError] when CreateGroupRequested fails',
+      'emits [Loading, Error] when WatchGroups fails',
       setUp: () {
-        when(
-          () => mockRepository.createGroup(any()),
-        ).thenAnswer((_) async => Left(ServerFailure('Error')));
+        when(() => mockWatchGroups()).thenAnswer(
+          (_) => Stream.value(Left(CacheFailure('Error'))),
+        );
+        when(() => mockSyncGroups()).thenAnswer(
+          (_) async => const Right(null),
+        );
       },
       build: () => bloc,
-      act: (bloc) => bloc.add(CreateGroupRequested('New Group', 'u1')),
-      expect: () => [GroupsError('Error')],
-    );
-
-    blocTest<GroupsBloc, GroupsState>(
-      'emits [Loading, GroupsError] when JoinGroupRequested fails',
-      setUp: () {
-        when(
-          () => mockRepository.acceptInvite(any()),
-        ).thenAnswer((_) async => Left(ServerFailure('Invalid token')));
-      },
-      build: () => bloc,
-      act: (bloc) => bloc.add(JoinGroupRequested('token')),
-      expect: () => [GroupsLoading(), GroupsError('Invalid token')],
+      act: (bloc) => bloc.add(LoadGroups()),
+      expect: () => [
+        GroupsLoading(),
+        GroupsError('Error'),
+      ],
     );
   });
 }

@@ -1,48 +1,45 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'outbox_item.dart';
+part of 'sync_mutation_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
+class SyncMutationModelAdapter extends TypeAdapter<SyncMutationModel> {
   @override
   final typeId = 12;
 
   @override
-  OutboxItem read(BinaryReader reader) {
+  SyncMutationModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return OutboxItem(
+    return SyncMutationModel(
       id: fields[0] as String,
-      entityType: fields[1] as EntityType,
-      opType: fields[2] as OpType,
-      payloadJson: fields[3] as String,
+      table: fields[1] as String,
+      operation: fields[2] as OpType,
+      payload: (fields[3] as Map).cast<String, dynamic>(),
       createdAt: fields[4] as DateTime,
       retryCount: fields[5] == null ? 0 : (fields[5] as num).toInt(),
-      status: fields[6] == null
-          ? OutboxStatus.pending
-          : fields[6] as OutboxStatus,
+      status: fields[6] == null ? SyncStatus.pending : fields[6] as SyncStatus,
       lastError: fields[7] as String?,
-      nextRetryAt: fields[8] as DateTime?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, OutboxItem obj) {
+  void write(BinaryWriter writer, SyncMutationModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.entityType)
+      ..write(obj.table)
       ..writeByte(2)
-      ..write(obj.opType)
+      ..write(obj.operation)
       ..writeByte(3)
-      ..write(obj.payloadJson)
+      ..write(obj.payload)
       ..writeByte(4)
       ..write(obj.createdAt)
       ..writeByte(5)
@@ -50,9 +47,7 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
       ..writeByte(6)
       ..write(obj.status)
       ..writeByte(7)
-      ..write(obj.lastError)
-      ..writeByte(8)
-      ..write(obj.nextRetryAt);
+      ..write(obj.lastError);
   }
 
   @override
@@ -61,55 +56,14 @@ class OutboxItemAdapter extends TypeAdapter<OutboxItem> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is OutboxItemAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
-}
-
-class OutboxStatusAdapter extends TypeAdapter<OutboxStatus> {
-  @override
-  final typeId = 20;
-
-  @override
-  OutboxStatus read(BinaryReader reader) {
-    switch (reader.readByte()) {
-      case 0:
-        return OutboxStatus.pending;
-      case 1:
-        return OutboxStatus.sent;
-      case 2:
-        return OutboxStatus.failed;
-      default:
-        return OutboxStatus.pending;
-    }
-  }
-
-  @override
-  void write(BinaryWriter writer, OutboxStatus obj) {
-    switch (obj) {
-      case OutboxStatus.pending:
-        writer.writeByte(0);
-      case OutboxStatus.sent:
-        writer.writeByte(1);
-      case OutboxStatus.failed:
-        writer.writeByte(2);
-    }
-  }
-
-  @override
-  int get hashCode => typeId.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is OutboxStatusAdapter &&
+      other is SyncMutationModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
 
 class OpTypeAdapter extends TypeAdapter<OpType> {
   @override
-  final typeId = 21;
+  final typeId = 23;
 
   @override
   OpType read(BinaryReader reader) {
@@ -148,41 +102,33 @@ class OpTypeAdapter extends TypeAdapter<OpType> {
           typeId == other.typeId;
 }
 
-class EntityTypeAdapter extends TypeAdapter<EntityType> {
+class SyncStatusAdapter extends TypeAdapter<SyncStatus> {
   @override
   final typeId = 22;
 
   @override
-  EntityType read(BinaryReader reader) {
+  SyncStatus read(BinaryReader reader) {
     switch (reader.readByte()) {
       case 0:
-        return EntityType.group;
+        return SyncStatus.pending;
       case 1:
-        return EntityType.groupMember;
+        return SyncStatus.sent;
       case 2:
-        return EntityType.groupExpense;
-      case 3:
-        return EntityType.settlement;
-      case 4:
-        return EntityType.invite;
+        return SyncStatus.failed;
       default:
-        return EntityType.group;
+        return SyncStatus.pending;
     }
   }
 
   @override
-  void write(BinaryWriter writer, EntityType obj) {
+  void write(BinaryWriter writer, SyncStatus obj) {
     switch (obj) {
-      case EntityType.group:
+      case SyncStatus.pending:
         writer.writeByte(0);
-      case EntityType.groupMember:
+      case SyncStatus.sent:
         writer.writeByte(1);
-      case EntityType.groupExpense:
+      case SyncStatus.failed:
         writer.writeByte(2);
-      case EntityType.settlement:
-        writer.writeByte(3);
-      case EntityType.invite:
-        writer.writeByte(4);
     }
   }
 
@@ -192,7 +138,7 @@ class EntityTypeAdapter extends TypeAdapter<EntityType> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is EntityTypeAdapter &&
+      other is SyncStatusAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

@@ -22,13 +22,17 @@ class GroupModelAdapter extends TypeAdapter<GroupModel> {
       createdBy: fields[2] as String,
       createdAt: fields[3] as DateTime,
       updatedAt: fields[4] as DateTime,
+      typeValue: fields[5] == null ? 'custom' : fields[5] as String,
+      currency: fields[6] == null ? 'USD' : fields[6] as String,
+      photoUrl: fields[7] as String?,
+      isArchived: fields[8] == null ? false : fields[8] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, GroupModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -38,7 +42,15 @@ class GroupModelAdapter extends TypeAdapter<GroupModel> {
       ..writeByte(3)
       ..write(obj.createdAt)
       ..writeByte(4)
-      ..write(obj.updatedAt);
+      ..write(obj.updatedAt)
+      ..writeByte(5)
+      ..write(obj.typeValue)
+      ..writeByte(6)
+      ..write(obj.currency)
+      ..writeByte(7)
+      ..write(obj.photoUrl)
+      ..writeByte(8)
+      ..write(obj.isArchived);
   }
 
   @override
@@ -62,6 +74,10 @@ GroupModel _$GroupModelFromJson(Map<String, dynamic> json) => GroupModel(
   createdBy: json['createdBy'] as String,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
+  typeValue: json['typeValue'] as String? ?? 'custom',
+  currency: json['currency'] as String? ?? 'USD',
+  photoUrl: json['photoUrl'] as String?,
+  isArchived: json['isArchived'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$GroupModelToJson(GroupModel instance) =>
@@ -71,4 +87,8 @@ Map<String, dynamic> _$GroupModelToJson(GroupModel instance) =>
       'createdBy': instance.createdBy,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
+      'typeValue': instance.typeValue,
+      'currency': instance.currency,
+      'photoUrl': instance.photoUrl,
+      'isArchived': instance.isArchived,
     };

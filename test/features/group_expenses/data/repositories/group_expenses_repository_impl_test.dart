@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/group_expenses/data/datasources/group_expenses_local_data_source.dart';
@@ -25,7 +25,7 @@ class MockSyncService extends Mock implements SyncService {}
 
 class MockConnectivity extends Mock implements Connectivity {}
 
-class FakeOutboxItem extends Fake implements OutboxItem {}
+class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
 
 class FakeGroupExpenseModel extends Fake implements GroupExpenseModel {}
 
@@ -38,7 +38,7 @@ void main() {
   late MockConnectivity mockConnectivity;
 
   setUpAll(() {
-    registerFallbackValue(FakeOutboxItem());
+    registerFallbackValue(FakeSyncMutationModel());
     registerFallbackValue(FakeGroupExpenseModel());
   });
 

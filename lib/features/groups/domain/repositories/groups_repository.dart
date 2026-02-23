@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/groups/domain/entities/group_member.dar
 abstract class GroupsRepository {
   Future<Either<Failure, GroupEntity>> createGroup(GroupEntity group);
   Future<Either<Failure, List<GroupEntity>>> getGroups();
+  Stream<Either<Failure, List<GroupEntity>>> watchGroups();
   Future<Either<Failure, List<GroupMember>>> getGroupMembers(String groupId);
   Future<Either<Failure, void>> syncGroups();
   Future<Either<Failure, String>> createInvite(

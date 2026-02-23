@@ -7,6 +7,7 @@ class GroupMember extends Equatable {
   final String userId;
   final GroupRole role;
   final DateTime joinedAt;
+  final DateTime updatedAt;
 
   const GroupMember({
     required this.id,
@@ -14,8 +15,9 @@ class GroupMember extends Equatable {
     required this.userId,
     required this.role,
     required this.joinedAt,
+    required this.updatedAt,
   });
 
   @override
-  List<Object?> get props => [id, groupId, userId, role, joinedAt];
+  List<Object?> get props => [id, groupId, userId, role, joinedAt, updatedAt];
 }
