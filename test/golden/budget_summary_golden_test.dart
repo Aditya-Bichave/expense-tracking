@@ -70,7 +70,7 @@ void main() {
       );
 
       await pumpWidgetWithProviders(
-        tester: tester,
+        tester: tester, settle: true,
         theme: testTheme,
         darkTheme: testTheme,
         settingsState: const SettingsState(themeMode: ThemeMode.light),

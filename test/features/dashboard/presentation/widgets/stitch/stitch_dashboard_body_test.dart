@@ -26,8 +26,8 @@ void main() {
 
     when(
       () => mockTransactionListBloc.state,
-    ).thenReturn(const TransactionListState());
-    when(() => mockGoalListBloc.state).thenReturn(const GoalListState());
+    ).thenReturn(const TransactionListState(status: ListStatus.success));
+    when(() => mockGoalListBloc.state).thenReturn(const GoalListState(status: GoalListStatus.success));
   });
 
   testWidgets('StitchDashboardBody renders correctly', (tester) async {

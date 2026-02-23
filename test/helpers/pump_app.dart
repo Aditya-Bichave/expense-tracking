@@ -45,7 +45,7 @@ Future<void> pumpWidgetWithProviders({
       const [], // For other feature-specific Blocs
   GetIt? getIt, // Pass a pre-configured service locator if needed
   GoRouter? router, // Optional router configuration
-  bool settle = true,
+  bool settle = false,
   ThemeData? theme,
   ThemeData? darkTheme,
 }) async {
