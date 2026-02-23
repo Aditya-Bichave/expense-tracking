@@ -1,3 +1,4 @@
+import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,6 +29,7 @@ class _GroupListPageState extends State<GroupListPage> {
           IconButton(
             icon: const Icon(Icons.link),
             onPressed: () => _showJoinGroupDialog(context),
+            tooltip: 'Join via Code',
           ),
         ],
       ),
@@ -126,7 +128,8 @@ class _GroupListPageState extends State<GroupListPage> {
               onPressed: () {
                 final token = tokenController.text.trim();
                 if (token.isNotEmpty) {
-                  context.read<GroupsBloc>().add(JoinGroupRequested(token));
+                  // Use DeepLinkBloc for consistent logic
+                  context.read<DeepLinkBloc>().add(DeepLinkManualEntry(token));
                   Navigator.pop(context);
                 }
               },

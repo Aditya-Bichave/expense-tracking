@@ -10,20 +10,23 @@ abstract class MerchantCategoryDataSource {
 
 class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
   Map<String, String>? _cachedDb; // Cache the loaded JSON map
+  Future<Map<String, String>>?
+  _loadingFuture; // Future to handle concurrent loads
   final String _assetPath = 'assets/data/merchant_categories.json';
-  bool _isLoading = false; // Prevent concurrent loading
 
   Future<Map<String, String>> _loadDb() async {
+    // If already loaded, return cache
     if (_cachedDb != null) return _cachedDb!;
-    if (_isLoading) {
-      // Avoid race conditions if called multiple times before completion
-      await Future.delayed(
-        const Duration(milliseconds: 100),
-      ); // Small delay and retry
-      return _loadDb();
-    }
 
-    _isLoading = true;
+    // If currently loading, return the ongoing future
+    if (_loadingFuture != null) return _loadingFuture!;
+
+    // Start loading
+    _loadingFuture = _doLoad();
+    return _loadingFuture!;
+  }
+
+  Future<Map<String, String>> _doLoad() async {
     log.info("Loading merchant category database from asset: $_assetPath");
     try {
       final jsonString = await rootBundle.loadString(_assetPath);
@@ -55,7 +58,9 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
       _cachedDb = {}; // Set empty cache on error
       throw CacheFailure('Could not load merchant categories: ${e.toString()}');
     } finally {
-      _isLoading = false;
+      // Clear the future so subsequent calls (if any failed) might try again
+      // or if we want to allow reloading (though _cachedDb prevents that for success case)
+      _loadingFuture = null;
     }
   }
 
