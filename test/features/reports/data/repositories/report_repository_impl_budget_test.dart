@@ -35,6 +35,10 @@ void main() {
   late MockExpenseRepository mockExpenseRepository;
   late MockBudgetRepository mockBudgetRepository;
 
+  setUpAll(() {
+    registerFallbackValue(DateTime(2023));
+  });
+
   setUp(() {
     mockExpenseRepository = MockExpenseRepository();
     mockBudgetRepository = MockBudgetRepository();
