@@ -148,10 +148,24 @@ class _CategoryPickerDialogContentState
           Expanded(
             child: _filteredCategories.isEmpty
                 ? Center(
-                    child: Text(
-                      _searchController.text.isEmpty
-                          ? 'No Categories Found'
-                          : 'No matching categories found.',
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 48,
+                          color: theme.colorScheme.outline,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchController.text.isEmpty
+                              ? 'No Categories Found'
+                              : 'No matching categories found.',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : ListView.builder(

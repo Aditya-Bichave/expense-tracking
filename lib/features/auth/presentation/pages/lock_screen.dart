@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
@@ -60,6 +61,7 @@ class _LockScreenState extends State<LockScreen> {
 
   void _onPinDigit(String digit) {
     if (!_pinLoaded) return;
+    HapticFeedback.selectionClick();
     if (enteredPin.length < 4) {
       setState(() {
         enteredPin += digit;
@@ -71,6 +73,7 @@ class _LockScreenState extends State<LockScreen> {
   }
 
   void _onDeleteDigit() {
+    HapticFeedback.selectionClick();
     if (enteredPin.isNotEmpty) {
       setState(() {
         enteredPin = enteredPin.substring(0, enteredPin.length - 1);
@@ -117,21 +120,24 @@ class _LockScreenState extends State<LockScreen> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(4, (index) {
-                return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: index < enteredPin.length
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey.shade300,
-                  ),
-                );
-              }),
+            Semantics(
+              label: '${enteredPin.length} of 4 digits entered',
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(4, (index) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: index < enteredPin.length
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey.shade300,
+                    ),
+                  );
+                }),
+              ),
             ),
             const Spacer(),
             if (_canCheckBiometrics)
@@ -171,9 +177,12 @@ class _LockScreenState extends State<LockScreen> {
           return SizedBox(
             width: 80,
             height: 80,
-            child: IconButton(
-              onPressed: _onDeleteDigit,
-              icon: const Icon(Icons.backspace_outlined),
+            child: Semantics(
+              label: 'Delete digit',
+              child: IconButton(
+                onPressed: _onDeleteDigit,
+                icon: const Icon(Icons.backspace_outlined),
+              ),
             ),
           );
         }

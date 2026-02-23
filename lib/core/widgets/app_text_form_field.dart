@@ -60,9 +60,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   @override
   void initState() {
     super.initState();
-    _showClearButton =
-        widget.controller.text.isNotEmpty &&
-        !widget.readOnly;
+    _showClearButton = widget.controller.text.isNotEmpty && !widget.readOnly;
     widget.controller.addListener(_handleTextChange);
   }
 
@@ -74,9 +72,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
 
   void _handleTextChange() {
     if (mounted) {
-      final shouldShow =
-          widget.controller.text.isNotEmpty &&
-          !widget.readOnly;
+      final shouldShow = widget.controller.text.isNotEmpty && !widget.readOnly;
       if (_showClearButton != shouldShow) {
         setState(() {
           _showClearButton = shouldShow;

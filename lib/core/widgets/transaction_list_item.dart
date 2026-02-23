@@ -53,7 +53,10 @@ class TransactionListItem extends StatelessWidget {
         ? theme.colorScheme.error
         : theme.colorScheme.primary; // Income as primary
 
-    final formattedAmount = CurrencyFormatter.format(transaction.amount, currencySymbol);
+    final formattedAmount = CurrencyFormatter.format(
+      transaction.amount,
+      currencySymbol,
+    );
 
     return ListTile(
       leading: CircleAvatar(

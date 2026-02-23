@@ -135,6 +135,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
           children: [
             TextField(
               controller: _searchController,
+              autofocus: true, // --- ADDED ---
               decoration: InputDecoration(
                 hintText: "Search icons by name...",
                 prefixIcon: const Icon(Icons.search),

@@ -124,14 +124,16 @@ class _LoginPageState extends State<LoginPage>
           builder: (context, state) {
             final isLoading = state is AuthLoading;
             return ElevatedButton(
-              onPressed: isLoading ? null : () {
-                final phone = _phoneController.text.trim();
-                if (phone.isNotEmpty) {
-                  context.read<AuthBloc>().add(
-                    AuthLoginRequested('$_countryCode$phone'),
-                  );
-                }
-              },
+              onPressed: isLoading
+                  ? null
+                  : () {
+                      final phone = _phoneController.text.trim();
+                      if (phone.isNotEmpty) {
+                        context.read<AuthBloc>().add(
+                          AuthLoginRequested('$_countryCode$phone'),
+                        );
+                      }
+                    },
               child: isLoading
                   ? const SizedBox(
                       height: 20,
@@ -173,14 +175,16 @@ class _LoginPageState extends State<LoginPage>
           builder: (context, state) {
             final isLoading = state is AuthLoading;
             return ElevatedButton(
-              onPressed: isLoading ? null : () {
-                final email = _emailController.text.trim();
-                if (email.isNotEmpty) {
-                  context.read<AuthBloc>().add(
-                    AuthLoginWithMagicLinkRequested(email),
-                  );
-                }
-              },
+              onPressed: isLoading
+                  ? null
+                  : () {
+                      final email = _emailController.text.trim();
+                      if (email.isNotEmpty) {
+                        context.read<AuthBloc>().add(
+                          AuthLoginWithMagicLinkRequested(email),
+                        );
+                      }
+                    },
               child: isLoading
                   ? const SizedBox(
                       height: 20,
