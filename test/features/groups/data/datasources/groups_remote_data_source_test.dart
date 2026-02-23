@@ -95,6 +95,8 @@ void main() {
     createdBy: 'user1',
     createdAt: tDate,
     updatedAt: tDate,
+    typeValue: 'custom',
+    currency: 'USD',
   );
 
   final tGroupJson = {

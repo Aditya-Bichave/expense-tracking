@@ -11,25 +11,28 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockAuthBloc extends Mock implements AuthBloc {}
+
 class MockGroupExpensesBloc extends Mock implements GroupExpensesBloc {}
+
 class MockUser extends Mock implements User {}
 
 class FakeAddGroupExpenseRequested extends AddGroupExpenseRequested {
-  FakeAddGroupExpenseRequested() : super(
-    GroupExpense(
-      id: 'id',
-      groupId: 'g',
-      createdBy: 'u',
-      title: 't',
-      amount: 0,
-      currency: 'USD',
-      occurredAt: DateTime.now(),
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      payers: [],
-      splits: []
-    )
-  );
+  FakeAddGroupExpenseRequested()
+    : super(
+        GroupExpense(
+          id: 'id',
+          groupId: 'g',
+          createdBy: 'u',
+          title: 't',
+          amount: 0,
+          currency: 'USD',
+          occurredAt: DateTime.now(),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          payers: [],
+          splits: [],
+        ),
+      );
 }
 
 // Fallback for abstract Event
@@ -51,7 +54,9 @@ void main() {
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => mockAuthBloc.state).thenReturn(AuthInitial());
 
-    when(() => mockGroupExpensesBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockGroupExpensesBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
   });
 
@@ -83,12 +88,20 @@ void main() {
 
     await tester.pumpWidget(createWidgetUnderTest());
 
-    await tester.enterText(find.byKey(const Key('group_expense_title_field')), 'Lunch');
-    await tester.enterText(find.byKey(const Key('group_expense_amount_field')), '50');
+    await tester.enterText(
+      find.byKey(const Key('group_expense_title_field')),
+      'Lunch',
+    );
+    await tester.enterText(
+      find.byKey(const Key('group_expense_amount_field')),
+      '50',
+    );
     await tester.tap(find.text('Add'));
     await tester.pumpAndSettle();
 
-    final captured = verify(() => mockGroupExpensesBloc.add(captureAny())).captured;
+    final captured = verify(
+      () => mockGroupExpensesBloc.add(captureAny()),
+    ).captured;
     final event = captured.first as AddGroupExpenseRequested;
     expect(event.expense.title, 'Lunch');
     expect(event.expense.amount, 50.0);

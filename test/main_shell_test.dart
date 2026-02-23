@@ -7,14 +7,16 @@ import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 // Use StatefulWidget to satisfy inheritance
-class FakeStatefulNavigationShell extends StatefulWidget implements StatefulNavigationShell {
+class FakeStatefulNavigationShell extends StatefulWidget
+    implements StatefulNavigationShell {
   @override
   final int currentIndex;
 
   const FakeStatefulNavigationShell({this.currentIndex = 0, super.key});
 
   @override
-  State<FakeStatefulNavigationShell> createState() => _FakeStatefulNavigationShellState();
+  State<FakeStatefulNavigationShell> createState() =>
+      _FakeStatefulNavigationShellState();
 
   @override
   void goBranch(int index, {bool initialLocation = false}) {}
@@ -23,7 +25,8 @@ class FakeStatefulNavigationShell extends StatefulWidget implements StatefulNavi
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _FakeStatefulNavigationShellState extends State<FakeStatefulNavigationShell> {
+class _FakeStatefulNavigationShellState
+    extends State<FakeStatefulNavigationShell> {
   @override
   Widget build(BuildContext context) => Container();
 }

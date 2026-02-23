@@ -36,6 +36,8 @@ void main() {
     createdBy: 'user1',
     createdAt: tDate,
     updatedAt: tDate,
+    typeValue: 'custom',
+    currency: 'USD',
   );
 
   final tGroupMemberModel = GroupMemberModel(
@@ -44,6 +46,7 @@ void main() {
     userId: 'user1',
     roleValue: 'owner',
     joinedAt: tDate,
+    updatedAt: tDate,
   );
 
   group('GroupsLocalDataSource', () {
@@ -83,6 +86,7 @@ void main() {
         userId: 'user2',
         roleValue: 'member',
         joinedAt: tDate,
+        updatedAt: tDate,
       );
       when(
         () => mockMemberBox.values,
