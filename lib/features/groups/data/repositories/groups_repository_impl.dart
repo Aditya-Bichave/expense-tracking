@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
@@ -11,6 +11,7 @@ import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
+import 'package:rxdart/rxdart.dart';
 
 class GroupsRepositoryImpl implements GroupsRepository {
   final GroupsLocalDataSource _localDataSource;
@@ -37,11 +38,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final model = GroupModel.fromEntity(group);
       await _localDataSource.saveGroup(model);
 
-      final outboxItem = OutboxItem(
+      final outboxItem = SyncMutationModel(
         id: group.id,
-        entityType: EntityType.group,
-        opType: OpType.create,
-        payloadJson: jsonEncode(model.toJson()),
+        table: 'groups',
+        operation: OpType.create,
+        payload: model.toJson(),
         createdAt: DateTime.now(),
       );
       await _outboxRepository.add(outboxItem);
@@ -66,6 +67,20 @@ class GroupsRepositoryImpl implements GroupsRepository {
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
+  }
+
+  @override
+  Stream<Either<Failure, List<GroupEntity>>> watchGroups() {
+    return _localDataSource
+        .watchGroups()
+        .map<Either<Failure, List<GroupEntity>>>((models) {
+          return Right(models.map((e) => e.toEntity()).toList());
+        })
+        .onErrorReturnWith((error, stackTrace) {
+          return Left<Failure, List<GroupEntity>>(
+            CacheFailure(error.toString()),
+          );
+        });
   }
 
   @override

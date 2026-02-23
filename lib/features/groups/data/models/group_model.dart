@@ -1,4 +1,5 @@
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -14,13 +15,31 @@ class GroupModel extends HiveObject {
   final String name;
 
   @HiveField(2)
+  @JsonKey(name: 'created_by')
   final String createdBy;
 
   @HiveField(3)
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
   @HiveField(4)
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
+
+  @HiveField(5, defaultValue: 'custom')
+  @JsonKey(name: 'type', defaultValue: 'custom')
+  final String typeValue;
+
+  @HiveField(6, defaultValue: 'USD')
+  @JsonKey(defaultValue: 'USD')
+  final String currency;
+
+  @HiveField(7)
+  final String? photoUrl;
+
+  @HiveField(8, defaultValue: false)
+  @JsonKey(defaultValue: false)
+  final bool isArchived;
 
   GroupModel({
     required this.id,
@@ -28,6 +47,10 @@ class GroupModel extends HiveObject {
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
+    required this.typeValue,
+    required this.currency,
+    this.photoUrl,
+    this.isArchived = false,
   });
 
   factory GroupModel.fromEntity(GroupEntity entity) {
@@ -37,6 +60,10 @@ class GroupModel extends HiveObject {
       createdBy: entity.createdBy,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      typeValue: entity.type.value,
+      currency: entity.currency,
+      photoUrl: entity.photoUrl,
+      isArchived: entity.isArchived,
     );
   }
 
@@ -47,6 +74,10 @@ class GroupModel extends HiveObject {
       createdBy: createdBy,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      type: GroupType.fromValue(typeValue),
+      currency: currency,
+      photoUrl: photoUrl,
+      isArchived: isArchived,
     );
   }
 

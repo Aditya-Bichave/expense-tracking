@@ -3,7 +3,7 @@
 // Check in to version control
 
 import 'package:hive_ce/hive.dart';
-import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
@@ -25,7 +25,6 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(AssetAccountModelAdapter());
     registerAdapter(BudgetModelAdapter());
     registerAdapter(CategoryModelAdapter());
-    registerAdapter(EntityTypeAdapter());
     registerAdapter(ExpenseModelAdapter());
     registerAdapter(ExpensePayerModelAdapter());
     registerAdapter(ExpenseSplitModelAdapter());
@@ -36,12 +35,12 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(GroupModelAdapter());
     registerAdapter(IncomeModelAdapter());
     registerAdapter(OpTypeAdapter());
-    registerAdapter(OutboxItemAdapter());
-    registerAdapter(OutboxStatusAdapter());
     registerAdapter(ProfileModelAdapter());
     registerAdapter(RecurringRuleAuditLogModelAdapter());
     registerAdapter(RecurringRuleModelAdapter());
     registerAdapter(SettlementModelAdapter());
+    registerAdapter(SyncMutationModelAdapter());
+    registerAdapter(SyncStatusAdapter());
     registerAdapter(UserHistoryRuleModelAdapter());
   }
 }
@@ -51,7 +50,6 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(AssetAccountModelAdapter());
     registerAdapter(BudgetModelAdapter());
     registerAdapter(CategoryModelAdapter());
-    registerAdapter(EntityTypeAdapter());
     registerAdapter(ExpenseModelAdapter());
     registerAdapter(ExpensePayerModelAdapter());
     registerAdapter(ExpenseSplitModelAdapter());
@@ -62,12 +60,12 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(GroupModelAdapter());
     registerAdapter(IncomeModelAdapter());
     registerAdapter(OpTypeAdapter());
-    registerAdapter(OutboxItemAdapter());
-    registerAdapter(OutboxStatusAdapter());
     registerAdapter(ProfileModelAdapter());
     registerAdapter(RecurringRuleAuditLogModelAdapter());
     registerAdapter(RecurringRuleModelAdapter());
     registerAdapter(SettlementModelAdapter());
+    registerAdapter(SyncMutationModelAdapter());
+    registerAdapter(SyncStatusAdapter());
     registerAdapter(UserHistoryRuleModelAdapter());
   }
 }

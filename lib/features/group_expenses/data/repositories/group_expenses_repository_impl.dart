@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/sync/models/outbox_item.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/group_expenses/data/datasources/group_expenses_local_data_source.dart';
@@ -36,11 +36,11 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       final model = GroupExpenseModel.fromEntity(expense);
       await _localDataSource.saveExpense(model);
 
-      final outboxItem = OutboxItem(
+      final outboxItem = SyncMutationModel(
         id: expense.id,
-        entityType: EntityType.groupExpense,
-        opType: OpType.create,
-        payloadJson: jsonEncode(model.toJson()),
+        table: 'expenses', // Assumed table name
+        operation: OpType.create,
+        payload: model.toJson(),
         createdAt: DateTime.now(),
       );
       await _outboxRepository.add(outboxItem);

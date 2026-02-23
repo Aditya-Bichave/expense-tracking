@@ -29,15 +29,17 @@ class MainShell extends StatelessWidget {
         return isActive
             ? Icons.receipt_long_rounded
             : Icons.receipt_long_outlined;
-      case 2: // Plan (Budgets/Goals)
+      case 2: // Groups
+        return isActive ? Icons.group_rounded : Icons.group_outlined;
+      case 3: // Plan (Budgets/Goals)
         return isActive ? Icons.savings_rounded : Icons.savings_outlined;
-      case 3: // Accounts
+      case 4: // Accounts
         return isActive
             ? Icons.account_balance_wallet_rounded
             : Icons.account_balance_wallet_outlined;
-      case 4: // Recurring
+      case 5: // Recurring
         return isActive ? Icons.autorenew_rounded : Icons.autorenew_outlined;
-      case 5: // Settings
+      case 6: // Settings
         return isActive ? Icons.settings_rounded : Icons.settings_outlined;
       default:
         return Icons.help_outline; // Fallback
@@ -52,12 +54,14 @@ class MainShell extends StatelessWidget {
       case 1:
         return 'Transactions';
       case 2:
-        return 'Plan';
+        return 'Groups';
       case 3:
-        return 'Accounts';
+        return 'Plan';
       case 4:
-        return 'Recurring';
+        return 'Accounts';
       case 5:
+        return 'Recurring';
+      case 6:
         return 'Settings';
       default:
         return '';
@@ -77,8 +81,8 @@ class MainShell extends StatelessWidget {
     final bool showFab =
         (currentTabIndex == 0 || // Dashboard
         currentTabIndex == 1 || // Transactions
-        currentTabIndex == 3 || // Accounts
-        currentTabIndex == 4); // Recurring
+        currentTabIndex == 4 || // Accounts
+        currentTabIndex == 5); // Recurring
 
     return Scaffold(
       // --- Wrap body with DemoIndicatorWidget ---
@@ -112,7 +116,7 @@ class MainShell extends StatelessWidget {
         showSelectedLabels: navTheme.showSelectedLabels ?? true,
         showUnselectedLabels: navTheme.showUnselectedLabels ?? true,
         elevation: navTheme.elevation ?? 8.0,
-        items: List.generate(6, (index) {
+        items: List.generate(7, (index) {
           return BottomNavigationBarItem(
             icon: Icon(_getIconForIndex(index, false)),
             activeIcon: Icon(_getIconForIndex(index, true)),
@@ -135,7 +139,7 @@ class MainShell extends StatelessWidget {
                       '${RouteNames.transactionsList}/${RouteNames.addTransaction}',
                     ); // Use full path relative to shell
                     break;
-                  case 3: // Accounts -> Add Account
+                  case 4: // Accounts -> Add Account
                     log.info(
                       "[MainShell FAB] Navigating to Add Account from tab $currentTabIndex.",
                     );
@@ -143,7 +147,7 @@ class MainShell extends StatelessWidget {
                       '${RouteNames.accounts}/${RouteNames.addAccount}',
                     ); // Use full path relative to shell
                     break;
-                  case 4: // Recurring -> Add Recurring
+                  case 5: // Recurring -> Add Recurring
                     log.info(
                       "[MainShell FAB] Navigating to Add Recurring from tab $currentTabIndex.",
                     );

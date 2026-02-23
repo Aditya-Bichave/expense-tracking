@@ -11,8 +11,8 @@ class SyncCoordinator {
   final Connectivity _connectivity;
   final SupabaseClient _client;
 
-  StreamSubscription? _connectivitySubscription;
-  StreamSubscription? _authSubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  StreamSubscription<AuthState>? _authSubscription;
 
   SyncCoordinator(
     this._syncService,
@@ -34,17 +34,28 @@ class SyncCoordinator {
 
     _authSubscription = _client.auth.onAuthStateChange.listen((data) {
       if (data.session != null) {
-        log.info('User logged in. Initializing sync...');
+        log.info('User logged in. Initializing sync and realtime...');
         _syncService.processOutbox();
+        _syncService.initializeRealtime();
       } else {
+        log.info('User logged out. Disposing sync services...');
         _realtimeService.unsubscribe();
+        _syncService.dispose();
       }
     });
+
+    // Check if already logged in
+    if (_client.auth.currentSession != null) {
+      log.info('Existing session found. Initializing sync and realtime...');
+      _syncService.processOutbox();
+      _syncService.initializeRealtime();
+    }
   }
 
   void dispose() {
     _connectivitySubscription?.cancel();
     _authSubscription?.cancel();
     _realtimeService.unsubscribe();
+    _syncService.dispose();
   }
 }

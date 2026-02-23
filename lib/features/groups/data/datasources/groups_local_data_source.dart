@@ -1,11 +1,13 @@
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:rxdart/rxdart.dart';
 
 abstract class GroupsLocalDataSource {
   Future<void> saveGroup(GroupModel group);
   Future<void> saveGroups(List<GroupModel> groups);
   List<GroupModel> getGroups();
+  Stream<List<GroupModel>> watchGroups();
   Future<void> saveGroupMembers(List<GroupMemberModel> members);
   List<GroupMemberModel> getGroupMembers(String groupId);
 }
@@ -30,6 +32,16 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
   @override
   List<GroupModel> getGroups() {
     return _groupBox.values.toList();
+  }
+
+  @override
+  Stream<List<GroupModel>> watchGroups() {
+    return _groupBox
+        .watch()
+        .map((_) {
+          return _groupBox.values.toList();
+        })
+        .startWith(_groupBox.values.toList());
   }
 
   @override
