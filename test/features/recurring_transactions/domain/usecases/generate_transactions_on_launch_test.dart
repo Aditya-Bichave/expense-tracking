@@ -94,7 +94,7 @@ void main() {
       addIncome: mockAddIncomeUseCase,
       uuid: mockUuid,
     );
-    when(() => mockUuid.v4()).thenReturn('id');
+    when(() => mockUuid.v4()).thenReturn('new_id'); // Match tExpense ID
   });
 
   final tRule = RecurringRule(
@@ -122,8 +122,9 @@ void main() {
     isCustom: false,
   );
 
+  // Updated tExpense to match mockUuid.v4() return value 'new_id'
   final tExpense = Expense(
-    id: 'id',
+    id: 'new_id',
     title: tRule.description,
     amount: tRule.amount,
     date: tRule.nextOccurrenceDate,
@@ -148,8 +149,9 @@ void main() {
     isCustom: false,
   );
 
+  // Updated tIncome to match mockUuid.v4() return value 'new_id'
   final tIncome = Income(
-    id: 'id',
+    id: 'new_id',
     title: tIncomeRule.description,
     amount: tIncomeRule.amount,
     date: tIncomeRule.nextOccurrenceDate,
@@ -365,7 +367,8 @@ void main() {
       when(
         () => mockRecurringTransactionRepository.updateRecurringRule(any()),
       ).thenAnswer((_) async => const Right(null));
-      when(() => mockUuid.v4()).thenReturn('new_id');
+
+      // Removed repetitive mockUuid setup as it's in setUp()
 
       await usecase(const NoParams());
 
@@ -413,7 +416,6 @@ void main() {
       when(
         () => mockRecurringTransactionRepository.updateRecurringRule(any()),
       ).thenAnswer((_) async => const Right(null));
-      when(() => mockUuid.v4()).thenReturn('new_id');
 
       await usecase(const NoParams());
 
@@ -555,4 +557,43 @@ void main() {
 
     expect(capturedRule.status, RuleStatus.completed);
   });
+
+  // Verify Leap Year Handling
+  test(
+    'should clamp Feb 29 to Feb 28 in non-leap years for yearly rules',
+    () async {
+      final leapYearRule = tRule.copyWith(
+        frequency: Frequency.yearly,
+        interval: 1,
+        // Feb 29, 2024 is a leap year date
+        startDate: DateTime(2024, 2, 29),
+        nextOccurrenceDate: DateTime(2024, 2, 29),
+      );
+
+      when(
+        () => mockRecurringTransactionRepository.getRecurringRules(),
+      ).thenAnswer((_) async => Right([leapYearRule]));
+      when(
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([tCategory]));
+      when(
+        () => mockAddExpenseUseCase(any()),
+      ).thenAnswer((_) async => Right(tExpense));
+
+      RecurringRule? capturedRule;
+      when(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+      ).thenAnswer((invocation) async {
+        capturedRule = invocation.positionalArguments.first as RecurringRule;
+        return const Right(null);
+      });
+
+      await usecase(const NoParams());
+
+      expect(capturedRule, isNotNull);
+      // 2025 is NOT a leap year, so Feb 29 becomes Feb 28.
+      // Standard DateTime(2025, 2, 29) would normalize to Mar 1.
+      expect(capturedRule!.nextOccurrenceDate, equals(DateTime(2025, 2, 28)));
+    },
+  );
 }
