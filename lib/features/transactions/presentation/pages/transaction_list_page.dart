@@ -372,10 +372,15 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 }
               },
               builder: (context, state) {
-                _updateTransactionsMap(state.transactions);
-                final selectedTransactions = _selectedDay == null
-                    ? <TransactionEntity>[]
-                    : _getEventsForDay(_selectedDay!);
+                // Optimize: Only update map and get events if calendar is shown
+                if (_showCalendarView) {
+                  _updateTransactionsMap(state.transactions);
+                }
+                final selectedTransactions =
+                    (_showCalendarView && _selectedDay != null)
+                        ? _getEventsForDay(_selectedDay!)
+                        : <TransactionEntity>[];
+
                 return RefreshIndicator(
                   onRefresh: () async {
                     context.read<TransactionListBloc>().add(
