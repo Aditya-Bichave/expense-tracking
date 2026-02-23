@@ -43,7 +43,7 @@ class SyncService {
       } else {
         // Online: Do not emit 'synced' here to avoid flicker.
         // processOutbox will emit 'syncing' then 'synced'/'error'.
-        processOutbox();
+        unawaited(processOutbox());
       }
     });
   }

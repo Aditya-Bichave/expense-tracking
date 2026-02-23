@@ -152,12 +152,12 @@ class TransactionFormState extends State<TransactionForm> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (pickedDate != null && mounted) {
+    if (pickedDate != null && context.mounted) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDate),
       );
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _selectedDate = DateTime(
             pickedDate.year,

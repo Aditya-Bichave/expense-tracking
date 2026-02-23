@@ -127,6 +127,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           log.info("[AddEditTxnPage] User chose to create a new category.");
           final formState = _formKey.currentState;
           if (formState != null) {
+            if (!context.mounted) return;
             final settings = context.read<SettingsBloc>().state;
             final locale = settings.selectedCountryCode;
             final title = formState.currentTitle.trim();
@@ -150,6 +151,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
             _bloc.state.copyWith(status: AddEditStatus.ready),
           ); // Go back to ready
           if (create == false) {
+            if (!context.mounted) return;
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(

@@ -37,7 +37,9 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
               DropdownMenuItem(value: 'member', child: Text('Member')),
               DropdownMenuItem(value: 'viewer', child: Text('Viewer')),
             ],
-            onChanged: (val) => setState(() => _role = val!),
+            onChanged: (val) {
+              if (val != null) setState(() => _role = val);
+            },
           ),
           const SizedBox(height: 12),
           AppDropdownFormField<int>(
@@ -48,7 +50,9 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
               DropdownMenuItem(value: 7, child: Text('7 Days')),
               DropdownMenuItem(value: 0, child: Text('Never')),
             ],
-            onChanged: (val) => setState(() => _expiry = val!),
+            onChanged: (val) {
+              if (val != null) setState(() => _expiry = val);
+            },
           ),
           const SizedBox(height: 12),
           AppDropdownFormField<int>(
@@ -58,7 +62,9 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
               DropdownMenuItem(value: 0, child: Text('Unlimited')),
               DropdownMenuItem(value: 1, child: Text('Single Use')),
             ],
-            onChanged: (val) => setState(() => _limit = val!),
+            onChanged: (val) {
+              if (val != null) setState(() => _limit = val);
+            },
           ),
           const SizedBox(height: 24),
           ElevatedButton(

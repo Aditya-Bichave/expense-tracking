@@ -12,6 +12,7 @@ import 'package:expense_tracker/features/groups/domain/entities/group_entity.dar
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:rxdart/rxdart.dart';
+import 'dart:async'; // For unawaited
 
 class GroupsRepositoryImpl implements GroupsRepository {
   final GroupsLocalDataSource _localDataSource;
@@ -50,7 +51,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final connectivityResult = await _connectivity.checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.mobile) ||
           connectivityResult.contains(ConnectivityResult.wifi)) {
-        _syncService.processOutbox();
+        unawaited(_syncService.processOutbox());
       }
 
       return Right(group);
@@ -65,6 +66,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final models = _localDataSource.getGroups();
       return Right(models.map((e) => e.toEntity()).toList());
     } catch (e) {
+      if (e is Failure) return Left(e);
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -91,6 +93,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final models = _localDataSource.getGroupMembers(groupId);
       return Right(models.map((e) => e.toEntity()).toList());
     } catch (e) {
+      if (e is Failure) return Left(e);
       return Left(CacheFailure(e.toString()));
     }
   }

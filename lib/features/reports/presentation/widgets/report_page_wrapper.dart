@@ -57,6 +57,7 @@ class ReportPageWrapper extends StatelessWidget {
             csvData: csvData,
             fileName: fileName,
           );
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text("CSV export successful!"),
@@ -65,6 +66,7 @@ class ReportPageWrapper extends StatelessWidget {
           );
         } catch (e) {
           log.severe("[ReportWrapper] Error saving CSV file: $e");
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text("Error saving CSV: $e"),

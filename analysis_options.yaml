@@ -3,7 +3,7 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   errors:
     deprecated_member_use: ignore
-    use_build_context_synchronously: ignore
+    use_build_context_synchronously: warning
     prefer_const_declarations: ignore
     prefer_const_literals_to_create_immutables: ignore
     unused_import: ignore

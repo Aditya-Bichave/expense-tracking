@@ -36,9 +36,10 @@ class AddGoalUseCase implements UseCase<Goal, AddGoalParams> {
       // return const Left(ValidationFailure("Target date cannot be in the past."));
       // Let's allow past dates for flexibility (e.g., logging a past goal)
     }
+    // Use a default if not provided, so no validation failure needed
+    // Could log a warning if desired.
     if (params.iconName == null || params.iconName!.isEmpty) {
-      // Use a default if not provided, so no validation failure needed
-      // Could log a warning if desired.
+      log.fine("Icon name is empty or null, using default.");
     }
 
     final newGoal = Goal(
