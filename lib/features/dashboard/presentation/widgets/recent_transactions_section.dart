@@ -4,7 +4,7 @@ import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart'; // Updated path
+import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +32,7 @@ class RecentTransactionsSection extends StatelessWidget {
         transactionState.status == ListStatus.reloading) {
       recentItems = transactionState.transactions
           .take(5)
-          .toList(); // Show latest 5
+          .toList();
     }
 
     return Column(
@@ -77,21 +77,14 @@ class RecentTransactionsSection extends StatelessWidget {
             ),
           )
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: recentItems.length,
-            itemBuilder: (ctx, index) {
-              final item = recentItems[index];
-              return TransactionListItem(
-                // Use the moved widget
-                transaction: item,
-                currencySymbol: currencySymbol,
-                onTap: () => navigateToDetailOrEdit(context, item),
-              );
-            },
-          ),
-        // "View All" Button
+          // OPTIMIZATION: Replaced ListView.builder(shrinkWrap: true) with Column + map
+          ...recentItems.map((item) {
+            return TransactionListItem(
+              transaction: item,
+              currencySymbol: currencySymbol,
+              onTap: () => navigateToDetailOrEdit(context, item),
+            );
+          }),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: Center(

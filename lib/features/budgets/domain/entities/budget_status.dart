@@ -1,16 +1,15 @@
 // lib/features/budgets/domain/entities/budget_status.dart
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
-import 'package:flutter/material.dart'; // For Color
+import 'package:flutter/material.dart';
 
 enum BudgetHealth { thriving, nearingLimit, overLimit, unknown }
 
-// Wrapper to hold budget entity along with calculated status
 class BudgetWithStatus extends Equatable {
   final Budget budget;
   final double amountSpent;
   final double amountRemaining;
-  final double percentageUsed; // 0.0 to 1.0+
+  final double percentageUsed;
   final BudgetHealth health;
   final Color statusColor;
 
@@ -23,18 +22,32 @@ class BudgetWithStatus extends Equatable {
     required this.statusColor,
   });
 
+  // Getters for compatibility/readability
+  double get spentAmount => amountSpent;
+  bool get isOverLimit => health == BudgetHealth.overLimit;
+  bool get isNearingLimit => health == BudgetHealth.nearingLimit;
+  String get statusMessage {
+    switch (health) {
+      case BudgetHealth.thriving:
+        return 'On Track';
+      case BudgetHealth.nearingLimit:
+        return 'Nearing Limit';
+      case BudgetHealth.overLimit:
+        return 'Over Limit';
+      case BudgetHealth.unknown:
+        return 'Unknown';
+    }
+  }
+
   factory BudgetWithStatus.calculate({
     required Budget budget,
     required double amountSpent,
-    required Color thrivingColor, // Pass colors for flexibility
+    required Color thrivingColor,
     required Color nearingLimitColor,
     required Color overLimitColor,
   }) {
     final target = budget.targetAmount;
-    final remaining = (target - amountSpent).clamp(
-      double.negativeInfinity,
-      target,
-    ); // Can't remain more than target
+    final remaining = (target - amountSpent); // Negative if over
     final percentage = target > 0 ? (amountSpent / target) : 0.0;
 
     BudgetHealth health;

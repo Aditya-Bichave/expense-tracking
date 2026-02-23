@@ -6,11 +6,8 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-// Keep this
-// --- Import Expense/Income Card Widgets ---
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:expense_tracker/features/income/presentation/widgets/income_card.dart';
-// --- End Import ---
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,11 +19,9 @@ class TransactionListView extends StatelessWidget {
   final Map<String, String> accountNameMap;
   final String currencySymbol;
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
-  // --- ADD Handlers ---
   final Function(BuildContext, TransactionEntity) handleChangeCategoryRequest;
   final Function(BuildContext, TransactionEntity) confirmDeletion;
   final bool enableAnimations;
-  // --- END Handlers ---
 
   const TransactionListView({
     super.key,
@@ -35,11 +30,9 @@ class TransactionListView extends StatelessWidget {
     required this.accountNameMap,
     required this.currencySymbol,
     required this.navigateToDetailOrEdit,
-    // --- Add to constructor ---
     required this.handleChangeCategoryRequest,
     required this.confirmDeletion,
     this.enableAnimations = true,
-    // --- End Add ---
   });
 
   @override
@@ -95,8 +88,7 @@ class TransactionListView extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              if (!state
-                  .filtersApplied) // Show add button only if no filters applied
+              if (!state.filtersApplied)
                 ElevatedButton.icon(
                   key: const ValueKey('button_listView_addFirst'),
                   icon: const Icon(Icons.add),
@@ -119,7 +111,7 @@ class TransactionListView extends StatelessWidget {
       padding: const EdgeInsets.only(
         top: 0,
         bottom: 80,
-      ), // Ensure padding for FAB
+      ),
       itemCount: state.transactions.length,
       itemBuilder: (ctx, index) {
         final transaction = state.transactions[index];
@@ -127,7 +119,6 @@ class TransactionListView extends StatelessWidget {
           transaction.id,
         );
 
-        // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
         final accountName = accountNameMap[transaction.accountId] ?? 'Deleted';
         if (transaction.type == TransactionType.expense) {
@@ -135,8 +126,8 @@ class TransactionListView extends StatelessWidget {
             expense: transaction.expense!,
             accountName: accountName,
             currencySymbol: currencySymbol,
+            transaction: transaction, // OPTIMIZATION: Pass entity
             onCardTap: (exp) {
-              // Pass original Expense
               if (state.isInBatchEditMode) {
                 context.read<TransactionListBloc>().add(
                   SelectTransaction(exp.id),
@@ -145,7 +136,7 @@ class TransactionListView extends StatelessWidget {
                 navigateToDetailOrEdit(
                   context,
                   transaction,
-                ); // Pass the TransactionEntity
+                );
               }
             },
             onChangeCategoryRequest: (exp) =>
@@ -166,13 +157,12 @@ class TransactionListView extends StatelessWidget {
             },
           );
         } else {
-          // Income
           cardItem = IncomeCard(
             income: transaction.income!,
             accountName: accountName,
             currencySymbol: currencySymbol,
+            transaction: transaction, // OPTIMIZATION: Pass entity
             onCardTap: (inc) {
-              // Pass original Income
               if (state.isInBatchEditMode) {
                 context.read<TransactionListBloc>().add(
                   SelectTransaction(inc.id),
@@ -181,7 +171,7 @@ class TransactionListView extends StatelessWidget {
                 navigateToDetailOrEdit(
                   context,
                   transaction,
-                ); // Pass the TransactionEntity
+                );
               }
             },
             onChangeCategoryRequest: (inc) =>
@@ -202,17 +192,16 @@ class TransactionListView extends StatelessWidget {
             },
           );
         }
-        // --- END USE ---
 
         final animatedCard = enableAnimations
             ? cardItem
                   .animate()
-                  .fadeIn(delay: (20 * index).ms)
+                  .fadeIn(delay: (20 * (index % 15)).ms)
                   .slideY(begin: 0.1)
             : cardItem;
 
         return Dismissible(
-          key: Key("${transaction.id}_dismissible"), // More specific key
+          key: Key("${transaction.id}_dismissible"),
           direction: DismissDirection.endToStart,
           background: Container(
             color: theme.colorScheme.errorContainer,
@@ -226,14 +215,12 @@ class TransactionListView extends StatelessWidget {
           confirmDismiss: (_) async =>
               await confirmDeletion(context, transaction),
           onDismissed: (direction) {
-            // BLoC event is dispatched by confirmDismiss callback now
-            // context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
           },
           child: Container(
             color: isSelected
                 ? theme.colorScheme.primaryContainer.withOpacity(0.3)
                 : Colors.transparent,
-            child: animatedCard, // Use the determined ExpenseCard or IncomeCard
+            child: animatedCard,
           ),
         );
       },

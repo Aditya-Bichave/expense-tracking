@@ -1,6 +1,4 @@
 // lib/features/income/presentation/widgets/income_card.dart
-// MODIFIED FILE (Implement interactive prompts)
-
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -21,6 +19,7 @@ class IncomeCard extends StatelessWidget {
   final Function(Income income)? onCardTap;
   final Function(Income income, Category selectedCategory)? onUserCategorized;
   final Function(Income income)? onChangeCategoryRequest;
+  final TransactionEntity? transaction;
 
   const IncomeCard({
     super.key,
@@ -30,26 +29,23 @@ class IncomeCard extends StatelessWidget {
     this.onCardTap,
     this.onUserCategorized,
     this.onChangeCategoryRequest,
+    this.transaction,
   });
 
   Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
-    /* ... Same as before ... */
     Theme.of(context);
     final category = income.category ?? Category.uncategorized;
     IconData fallbackIcon = Icons.attach_money;
     try {
       fallbackIcon = _getElementalIncomeCategoryIcon(category.name);
     } catch (_) {}
-    log.info(
-      "[IncomeCard] Building icon for category '${category.name}' (IconName: ${category.iconName})",
-    );
+
     if (modeTheme != null) {
       String svgPath = modeTheme.assets.getCategoryIcon(
         category.iconName,
         defaultPath: '',
       );
       if (svgPath.isNotEmpty) {
-        log.info("[IncomeCard] Using SVG: $svgPath");
         return SvgPicture.asset(
           svgPath,
           width: 22,
@@ -58,12 +54,10 @@ class IncomeCard extends StatelessWidget {
         );
       }
     }
-    log.info("[IncomeCard] Falling back to IconData: $fallbackIcon");
     return Icon(fallbackIcon, size: 22, color: category.displayColor);
   }
 
   IconData _getElementalIncomeCategoryIcon(String categoryName) {
-    /* ... Same as before ... */
     switch (categoryName.toLowerCase()) {
       case 'salary':
         return Icons.work_outline;
@@ -82,8 +76,6 @@ class IncomeCard extends StatelessWidget {
     }
   }
 
-  // Removed _buildStatusUI, replaced by CategorizationStatusWidget
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -92,6 +84,10 @@ class IncomeCard extends StatelessWidget {
 
     final Color incomeAmountColor =
         modeTheme?.incomeGlowColor ?? Colors.green.shade700;
+
+    // OPTIMIZATION: Use passed transaction entity if available
+    final txEntity = transaction ?? TransactionEntity.fromIncome(income);
+
     return AppCard(
       onTap: () => onCardTap?.call(income),
       child: Row(
@@ -114,7 +110,7 @@ class IncomeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 CategorizationStatusWidget(
-                  transaction: TransactionEntity.fromIncome(income),
+                  transaction: txEntity,
                   onUserCategorized: onUserCategorized == null
                       ? null
                       : (tx, cat) => onUserCategorized!(income, cat),

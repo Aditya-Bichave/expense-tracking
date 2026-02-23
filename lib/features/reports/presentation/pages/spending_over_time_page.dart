@@ -4,7 +4,7 @@ import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart' as df; // Alias
+import 'package:expense_tracker/core/utils/date_formatter.dart' as df;
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
@@ -12,14 +12,14 @@ import 'package:expense_tracker/features/reports/presentation/bloc/spending_time
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/time_series_line_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:expense_tracker/main.dart'; // Logger
+import 'package:expense_tracker/main.dart';
 
 class SpendingOverTimePage extends StatefulWidget {
   const SpendingOverTimePage({super.key});
@@ -34,26 +34,25 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
   void _toggleComparison() {
     final newComparisonState = !_showComparison;
     setState(() => _showComparison = newComparisonState);
-    // Get current granularity from state
     final currentGranularity =
         context.read<SpendingTimeReportBloc>().state is SpendingTimeReportLoaded
-        ? (context.read<SpendingTimeReportBloc>().state
-                  as SpendingTimeReportLoaded)
-              .reportData
-              .granularity
-        : (context.read<SpendingTimeReportBloc>().state
-              is SpendingTimeReportLoading)
-        ? (context.read<SpendingTimeReportBloc>().state
-                  as SpendingTimeReportLoading)
-              .granularity
-        : TimeSeriesGranularity.daily; // Default
+            ? (context.read<SpendingTimeReportBloc>().state
+                    as SpendingTimeReportLoaded)
+                .reportData
+                .granularity
+            : (context.read<SpendingTimeReportBloc>().state
+                    is SpendingTimeReportLoading)
+                ? (context.read<SpendingTimeReportBloc>().state
+                        as SpendingTimeReportLoading)
+                    .granularity
+                : TimeSeriesGranularity.daily;
 
     context.read<SpendingTimeReportBloc>().add(
-      LoadSpendingTimeReport(
-        compareToPrevious: newComparisonState, // Pass new comparison state
-        granularity: currentGranularity,
-      ),
-    );
+          LoadSpendingTimeReport(
+            compareToPrevious: newComparisonState,
+            granularity: currentGranularity,
+          ),
+        );
     log.info(
       "[SpendingOverTimePage] Toggled comparison to: $newComparisonState",
     );
@@ -64,7 +63,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     TimeSeriesDataPoint dataPoint,
     TimeSeriesGranularity granularity,
   ) {
-    // ... (implementation unchanged) ...
     final filterBlocState = context.read<ReportFilterBloc>().state;
     DateTime periodStart = dataPoint.date;
     DateTime periodEnd;
@@ -100,7 +98,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
       'endDate': periodEnd.toIso8601String(),
       'type':
           filterBlocState.selectedTransactionType?.name ??
-          TransactionType.expense.name, // Use filter or default
+          TransactionType.expense.name,
     };
     if (filterBlocState.selectedAccountIds.isNotEmpty) {
       filters['accountId'] = filterBlocState.selectedAccountIds.join(',');
@@ -141,18 +139,17 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             final currentGranularity = (state is SpendingTimeReportLoaded)
                 ? state.reportData.granularity
                 : (state is SpendingTimeReportLoading)
-                ? state.granularity
-                : TimeSeriesGranularity.daily;
+                    ? state.granularity
+                    : TimeSeriesGranularity.daily;
             return PopupMenuButton<TimeSeriesGranularity>(
               initialValue: currentGranularity,
               onSelected: (g) {
-                // When granularity changes, also pass current comparison state
                 context.read<SpendingTimeReportBloc>().add(
-                  LoadSpendingTimeReport(
-                    granularity: g,
-                    compareToPrevious: _showComparison,
-                  ),
-                );
+                      LoadSpendingTimeReport(
+                        granularity: g,
+                        compareToPrevious: _showComparison,
+                      ),
+                    );
               },
               icon: const Icon(Icons.timeline_outlined),
               tooltip: AppLocalizations.of(context)!.changeGranularity,
@@ -184,8 +181,9 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
       },
       body: BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
         builder: (context, state) {
-          if (state is SpendingTimeReportLoading)
+          if (state is SpendingTimeReportLoading) {
             return const Center(child: CircularProgressIndicator());
+          }
           if (state is SpendingTimeReportError) {
             return Center(
               child: Text(
@@ -217,22 +215,26 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                 settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
-            return ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16.0,
-                    horizontal: 8.0,
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16.0,
+                      horizontal: 8.0,
+                    ),
+                    child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
                   ),
-                  child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
                 ),
-                const Divider(),
+                const SliverToBoxAdapter(child: Divider()),
                 if (showTable)
-                  _buildDataTable(
-                    context,
-                    reportData,
-                    settingsState,
-                    _showComparison,
+                  SliverToBoxAdapter(
+                    child: _buildDataTable(
+                      context,
+                      reportData,
+                      settingsState,
+                      _showComparison,
+                    ),
                   )
                 else
                   _buildDataList(
@@ -241,7 +243,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                     settingsState,
                     _showComparison,
                   ),
-                const SizedBox(height: 80),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             );
           }
@@ -258,7 +260,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
       case TimeSeriesGranularity.weekly:
         return "Wk of ${df.DateFormatter.formatDate(date)}";
       case TimeSeriesGranularity.monthly:
-        return DateFormat('MMM yyyy').format(date);
+        return df.DateFormatter.formatMonthYear(date);
     }
   }
 
@@ -271,57 +273,63 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: data.spendingData.length,
-      itemBuilder: (context, index) {
-        final item = data.spendingData[index];
-        double? changePercent = item.amount.percentageChange;
-        Color changeColor = theme.disabledColor;
-        String changeText = "";
-
-        if (showComparison && changePercent != null) {
-          if (changePercent.isInfinite) {
-            changeText = changePercent.isNegative ? '-∞' : '+∞';
-            // Spending increase is bad (red)
-            changeColor = changePercent.isNegative
-                ? Colors.green.shade700
-                : theme.colorScheme.error;
-          } else if (!changePercent.isNaN) {
-            changeText =
-                '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
-            changeColor = changePercent > 0
-                ? theme.colorScheme.error
-                : Colors.green.shade700;
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final int itemIndex = index ~/ 2;
+          if (index.isOdd) {
+             return const Divider(height: 0.5);
           }
-        }
 
-        return ListTile(
-          dense: true,
-          title: Text(_formatDateHeader(item.date, data.granularity)),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showComparison && changeText.isNotEmpty)
-                Text(
-                  changeText,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: changeColor,
+          final item = data.spendingData[itemIndex];
+          double? changePercent = item.amount.percentageChange;
+          Color changeColor = theme.disabledColor;
+          String changeText = "";
+
+          if (showComparison && changePercent != null) {
+            if (changePercent.isInfinite) {
+              changeText = changePercent.isNegative ? '-∞' : '+∞';
+              changeColor = changePercent.isNegative
+                  ? Colors.green.shade700
+                  : theme.colorScheme.error;
+            } else if (!changePercent.isNaN) {
+              changeText =
+                  '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
+              changeColor = changePercent > 0
+                  ? theme.colorScheme.error
+                  : Colors.green.shade700;
+            }
+          }
+
+          return ListTile(
+            dense: true,
+            title: Text(_formatDateHeader(item.date, data.granularity)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showComparison && changeText.isNotEmpty)
+                  Text(
+                    changeText,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: changeColor,
+                    ),
                   ),
+                if (showComparison && changeText.isNotEmpty)
+                  const SizedBox(width: 8),
+                Text(
+                  CurrencyFormatter.format(item.currentAmount, currencySymbol),
                 ),
-              if (showComparison && changeText.isNotEmpty)
-                const SizedBox(width: 8),
-              Text(
-                CurrencyFormatter.format(item.currentAmount, currencySymbol),
-              ),
-            ],
-          ),
-          onTap: () =>
-              _navigateToFilteredTransactions(context, item, data.granularity),
-        );
-      },
-      separatorBuilder: (_, __) => const Divider(height: 0.5),
+              ],
+            ),
+            onTap: () => _navigateToFilteredTransactions(
+              context,
+              item,
+              data.granularity,
+            ),
+          );
+        },
+        childCount: data.spendingData.isEmpty ? 0 : data.spendingData.length * 2 - 1,
+      ),
     );
   }
 
@@ -338,7 +346,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
       const DataColumn(label: Text('Period')),
       DataColumn(label: const Text('Total Spent'), numeric: true),
     ];
-    // Add comparison columns dynamically
     if (showComparison) {
       columns.addAll([
         DataColumn(label: const Text('Prev Spent'), numeric: true),
@@ -382,7 +389,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                   CurrencyFormatter.format(item.currentAmount, currencySymbol),
                 ),
               ),
-              // Conditionally add comparison cells
               if (showComparison)
                 DataCell(
                   Text(

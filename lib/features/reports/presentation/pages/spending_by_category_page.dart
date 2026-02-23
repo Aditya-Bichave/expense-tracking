@@ -31,7 +31,7 @@ class SpendingByCategoryPage extends StatefulWidget {
 }
 
 class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
-  bool _showPieChart = true; // Default remains pie chart for non-Quantum
+  bool _showPieChart = true;
   bool _showComparison = false;
 
   void _toggleComparison() {
@@ -39,7 +39,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     setState(() => _showComparison = newComparisonState);
     context.read<SpendingCategoryReportBloc>().add(
       LoadSpendingCategoryReport(compareToPrevious: newComparisonState),
-    ); // Pass the flag
+    );
     log.info(
       "[SpendingByCategoryPage] Toggled comparison to: $newComparisonState",
     );
@@ -53,7 +53,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final Map<String, String> filters = {
       'startDate': filterBlocState.startDate.toIso8601String(),
       'endDate': filterBlocState.endDate.toIso8601String(),
-      'type': TransactionType.expense.name, // Spending report is always expense
+      'type': TransactionType.expense.name,
       'categoryId': categoryData.categoryId,
     };
     if (filterBlocState.selectedAccountIds.isNotEmpty) {
@@ -72,12 +72,11 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final uiMode = settingsState.uiMode;
     final modeTheme = context.modeTheme;
     final bool preferTables = modeTheme?.preferDataTableForLists ?? false;
-    // Bar chart is default for Quantum, or if comparison active, or if toggled
     final bool useBarChart =
         uiMode == UIMode.quantum || _showComparison || !_showPieChart;
     final bool showAlternateChartOption =
         uiMode != UIMode.aether &&
-        !_showComparison; // Can toggle if not Aether and not comparing
+        !_showComparison;
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
@@ -148,7 +147,6 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                 if (useBarChart) {
                   chartWidget = SpendingBarChart(
                     data: reportData.spendingByCategory,
-                    // Pass previous data if comparison is active
                     previousData:
                         (_showComparison &&
                             reportData.previousSpendingByCategory != null)
@@ -160,7 +158,6 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                     ),
                   );
                 } else {
-                  // Pie Chart for Elemental/Aether (no comparison shown on pie)
                   chartWidget = SpendingPieChart(
                     data: reportData.spendingByCategory,
                     onTapSlice: (index) => _navigateToFilteredTransactions(
@@ -182,7 +179,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                       reportData,
                       settingsState,
                       _showComparison,
-                    ), // Pass comparison flag
+                    ),
                     const SizedBox(height: 80),
                   ],
                 );
@@ -205,12 +202,12 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final currencySymbol = settings.currencySymbol;
     final percentFormat = NumberFormat('##0.0%');
 
-    List<DataColumn> columns = const [
-      DataColumn(label: Text('Category')),
-      DataColumn(label: Text('Amount'), numeric: true),
-      DataColumn(label: Text('%'), numeric: true),
+    // BUG FIX: Make list mutable to allow addAll, use const elements
+    List<DataColumn> columns = [
+      const DataColumn(label: Text('Category')),
+      const DataColumn(label: Text('Amount'), numeric: true),
+      const DataColumn(label: Text('%'), numeric: true),
     ];
-    // Add comparison columns dynamically
     if (showComparison && data.previousSpendingByCategory != null) {
       columns.addAll([
         const DataColumn(label: Text('Prev Amt'), numeric: true),
@@ -218,7 +215,6 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
       ]);
     }
 
-    // Create a map for quick lookup of previous data
     final Map<String, CategorySpendingData> previousDataMap =
         (showComparison && data.previousSpendingByCategory != null)
         ? {
@@ -248,7 +244,6 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
           if (showComparison && changePercent != null) {
             if (changePercent.isInfinite) {
               changeText = changePercent.isNegative ? '-∞' : '+∞';
-              // Spending increase is bad (red), decrease is good (green)
               changeColor = changePercent.isNegative
                   ? Colors.green.shade700
                   : theme.colorScheme.error;
@@ -285,7 +280,6 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                 ),
               ),
               DataCell(Text(percentFormat.format(item.percentage))),
-              // Conditionally add comparison cells
               if (showComparison && data.previousSpendingByCategory != null)
                 DataCell(
                   Text(

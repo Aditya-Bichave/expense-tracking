@@ -1,6 +1,4 @@
 // lib/features/expenses/presentation/widgets/expense_card.dart
-// MODIFIED FILE (Implement interactive prompts)
-
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -21,6 +19,7 @@ class ExpenseCard extends StatelessWidget {
   final Function(Expense expense)? onCardTap;
   final Function(Expense expense, Category selectedCategory)? onUserCategorized;
   final Function(Expense expense)? onChangeCategoryRequest;
+  final TransactionEntity? transaction;
 
   const ExpenseCard({
     super.key,
@@ -30,26 +29,23 @@ class ExpenseCard extends StatelessWidget {
     this.onCardTap,
     this.onUserCategorized,
     this.onChangeCategoryRequest,
+    this.transaction,
   });
 
   Widget _buildIcon(BuildContext context, AppModeTheme? modeTheme) {
-    /* ... Same as before ... */
     Theme.of(context);
     final category = expense.category ?? Category.uncategorized;
     IconData fallbackIcon = Icons.label_outline;
     try {
       fallbackIcon = _getElementalCategoryIcon(category.name);
     } catch (_) {}
-    log.info(
-      "[ExpenseCard] Building icon for category '${category.name}' (IconName: ${category.iconName})",
-    );
+
     if (modeTheme != null) {
       String svgPath = modeTheme.assets.getCategoryIcon(
         category.iconName,
         defaultPath: '',
       );
       if (svgPath.isNotEmpty) {
-        log.info("[ExpenseCard] Using SVG: $svgPath");
         return SvgPicture.asset(
           svgPath,
           width: 22,
@@ -58,12 +54,10 @@ class ExpenseCard extends StatelessWidget {
         );
       }
     }
-    log.info("[ExpenseCard] Falling back to IconData: $fallbackIcon");
     return Icon(fallbackIcon, size: 22, color: category.displayColor);
   }
 
   IconData _getElementalCategoryIcon(String categoryName) {
-    /* ... Same as before ... */
     switch (categoryName.toLowerCase()) {
       case 'food':
         return Icons.restaurant;
@@ -92,13 +86,14 @@ class ExpenseCard extends StatelessWidget {
     }
   }
 
-  // Removed _buildStatusUI, replaced by CategorizationStatusWidget
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
     final category = expense.category ?? Category.uncategorized;
+
+    // OPTIMIZATION: Use passed transaction entity if available to avoid recreation
+    final txEntity = transaction ?? TransactionEntity.fromExpense(expense);
 
     return AppCard(
       onTap: () => onCardTap?.call(expense),
@@ -122,7 +117,7 @@ class ExpenseCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 CategorizationStatusWidget(
-                  transaction: TransactionEntity.fromExpense(expense),
+                  transaction: txEntity,
                   onUserCategorized: onUserCategorized == null
                       ? null
                       : (tx, cat) => onUserCategorized!(expense, cat),

@@ -1,3 +1,4 @@
+// lib/features/dashboard/presentation/widgets/goal_summary_widget.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
@@ -80,107 +81,101 @@ class GoalSummaryWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: 'Goal Progress (${goals.length})'),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: goals.length,
-          itemBuilder: (context, index) {
-            final goal = goals[index];
-            final progress = goal.percentageComplete;
-            final progressColor = goal.isAchieved
-                ? Colors.green.shade600
-                : theme.colorScheme.primary;
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              child: InkWell(
-                onTap: () => context.pushNamed(
-                  RouteNames.goalDetail,
-                  pathParameters: {'id': goal.id},
-                  extra: goal,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Wrap the inner Row with Flexible
-                          Flexible(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min, // Important
-                              children: [
-                                Icon(
-                                  goal.displayIconData,
-                                  color: progressColor,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                // Use Flexible instead of Expanded
-                                Flexible(
-                                  child: Text(
-                                    goal.name,
-                                    style: theme.textTheme.titleSmall,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (sparklineSpots.isNotEmpty &&
-                              sparklineSpots.length > 1)
-                            SizedBox(
-                              height: 20,
-                              width: 50, // Ensure sparkline has width
-                              child: LineChart(
-                                ChartUtils.sparklineChartData(
-                                  sparklineSpots,
-                                  progressColor,
-                                ),
-                                duration: Duration.zero,
+        // OPTIMIZATION: Replaced ListView.builder(shrinkWrap: true) with Column + map
+        // This avoids the overhead of ListView when we know items are few (dashboard summary)
+        ...goals.map((goal) {
+          final progress = goal.percentageComplete;
+          final progressColor = goal.isAchieved
+              ? Colors.green.shade600
+              : theme.colorScheme.primary;
+          return Card(
+            margin: const EdgeInsets.symmetric(vertical: 4.0),
+            child: InkWell(
+              onTap: () => context.pushNamed(
+                RouteNames.goalDetail,
+                pathParameters: {'id': goal.id},
+                extra: goal,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Flexible(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                goal.displayIconData,
+                                color: progressColor,
+                                size: 20,
                               ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      LinearPercentIndicator(
-                        padding: EdgeInsets.zero,
-                        lineHeight: 8.0,
-                        percent: progress.clamp(0.0, 1.0),
-                        barRadius: const Radius.circular(4),
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                        progressColor: progressColor,
-                        animation: true,
-                        animationDuration: 600,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Saved: ${CurrencyFormatter.format(goal.totalSaved, currency)}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: progressColor,
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  goal.name,
+                                  style: theme.textTheme.titleSmall,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (sparklineSpots.isNotEmpty &&
+                            sparklineSpots.length > 1)
+                          SizedBox(
+                            height: 20,
+                            width: 50,
+                            child: LineChart(
+                              ChartUtils.sparklineChartData(
+                                sparklineSpots,
+                                progressColor,
+                              ),
+                              duration: Duration.zero,
                             ),
                           ),
-                          Text(
-                            '${(progress * 100).toStringAsFixed(0)}%',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearPercentIndicator(
+                      padding: EdgeInsets.zero,
+                      lineHeight: 8.0,
+                      percent: progress.clamp(0.0, 1.0),
+                      barRadius: const Radius.circular(4),
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                      progressColor: progressColor,
+                      animation: true,
+                      animationDuration: 600,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Saved: ${CurrencyFormatter.format(goal.totalSaved, currency)}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: progressColor,
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                        Text(
+                          '${(progress * 100).toStringAsFixed(0)}%',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        }),
         if (goals.length >= 3)
           Padding(
             padding: const EdgeInsets.only(top: 4.0),
@@ -190,7 +185,7 @@ class GoalSummaryWidget extends StatelessWidget {
                 onPressed: () => context.go(
                   RouteNames.budgetsAndCats,
                   extra: {
-                    'initialTabIndex': 1, // Navigate to Goals tab
+                    'initialTabIndex': 1,
                   },
                 ),
                 style: TextButton.styleFrom(

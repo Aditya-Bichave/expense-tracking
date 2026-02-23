@@ -10,7 +10,6 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_t
 import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/stitch_dashboard_body.dart';
-// Removed Expense/Income entity imports as they are handled by TransactionEntity
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
@@ -44,7 +43,6 @@ class _DashboardPageState extends State<DashboardPage> {
     _dashboardBloc.add(const LoadDashboard(forceReload: true));
 
     try {
-      // Wait for dashboard bloc to finish loading/erroring
       await _dashboardBloc.stream
           .firstWhere(
             (state) => state is DashboardLoaded || state is DashboardError,
@@ -80,32 +78,36 @@ class _DashboardPageState extends State<DashboardPage> {
     final modeTheme = context.modeTheme;
     return RefreshIndicator(
       onRefresh: _refreshDashboard,
-      child: ListView(
+      child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding:
-            modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-            const EdgeInsets.only(top: 8.0, bottom: 80.0),
-        children: [
-          DashboardHeader(overview: overview),
-          const SizedBox(height: 8),
-          AssetDistributionSection(accountBalances: overview.accountBalances),
-          const SizedBox(height: 16),
-          BudgetSummaryWidget(
-            budgets: overview.activeBudgetsSummary,
-            recentSpendingData:
-                overview.recentSpendingSparkline, // Pass correct data
-          ),
-          const SizedBox(height: 16),
-          GoalSummaryWidget(
-            goals: overview.activeGoalsSummary,
-            // Pass correct data to the correct parameter
-            recentContributionData: overview.recentContributionSparkline,
-          ),
-          const SizedBox(height: 16),
-          _buildReportNavigationButtons(context),
-          const SizedBox(height: 16),
-          RecentTransactionsSection(
-            navigateToDetailOrEdit: _navigateToDetailOrEdit,
+        slivers: [
+          SliverPadding(
+            padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+                const EdgeInsets.only(top: 8.0, bottom: 80.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                DashboardHeader(overview: overview),
+                const SizedBox(height: 8),
+                AssetDistributionSection(
+                    accountBalances: overview.accountBalances),
+                const SizedBox(height: 16),
+                BudgetSummaryWidget(
+                  budgets: overview.activeBudgetsSummary,
+                  recentSpendingData: overview.recentSpendingSparkline,
+                ),
+                const SizedBox(height: 16),
+                GoalSummaryWidget(
+                  goals: overview.activeGoalsSummary,
+                  recentContributionData: overview.recentContributionSparkline,
+                ),
+                const SizedBox(height: 16),
+                _buildReportNavigationButtons(context),
+                const SizedBox(height: 16),
+                RecentTransactionsSection(
+                  navigateToDetailOrEdit: _navigateToDetailOrEdit,
+                ),
+              ]),
+            ),
           ),
         ],
       ),
@@ -133,43 +135,50 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           if (bgPath != null && bgPath.isNotEmpty)
             Positioned.fill(child: SvgPicture.asset(bgPath, fit: BoxFit.cover)),
-          ListView(
+          CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding:
-                modeTheme?.pagePadding.copyWith(
-                  top: kToolbarHeight + MediaQuery.of(context).padding.top + 8,
-                  bottom: 80,
-                ) ??
-                EdgeInsets.only(
-                  top:
-                      kToolbarHeight + MediaQuery.of(context).padding.top + 8.0,
-                  bottom: 80.0,
+            slivers: [
+              SliverPadding(
+                padding: modeTheme?.pagePadding.copyWith(
+                      top: kToolbarHeight +
+                          MediaQuery.of(context).padding.top +
+                          8,
+                      bottom: 80,
+                    ) ??
+                    EdgeInsets.only(
+                      top: kToolbarHeight +
+                          MediaQuery.of(context).padding.top +
+                          8.0,
+                      bottom: 80.0,
+                    ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    Container(
+                      height: 300,
+                      alignment: Alignment.center,
+                      child: aetherContent,
+                    ),
+                    const SizedBox(height: 16),
+                    DashboardHeader(overview: overview),
+                    const SizedBox(height: 16),
+                    BudgetSummaryWidget(
+                      budgets: overview.activeBudgetsSummary,
+                      recentSpendingData: overview.recentSpendingSparkline,
+                    ),
+                    const SizedBox(height: 16),
+                    GoalSummaryWidget(
+                      goals: overview.activeGoalsSummary,
+                      recentContributionData:
+                          overview.recentContributionSparkline,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildReportNavigationButtons(context),
+                    const SizedBox(height: 16),
+                    RecentTransactionsSection(
+                      navigateToDetailOrEdit: _navigateToDetailOrEdit,
+                    ),
+                  ]),
                 ),
-            children: [
-              Container(
-                height: 300,
-                alignment: Alignment.center,
-                child: aetherContent,
-              ),
-              const SizedBox(height: 16),
-              DashboardHeader(overview: overview),
-              const SizedBox(height: 16),
-              BudgetSummaryWidget(
-                budgets: overview.activeBudgetsSummary,
-                recentSpendingData:
-                    overview.recentSpendingSparkline, // Pass correct data
-              ),
-              const SizedBox(height: 16),
-              GoalSummaryWidget(
-                goals: overview.activeGoalsSummary,
-                recentContributionData:
-                    overview.recentContributionSparkline, // Pass correct data
-              ),
-              const SizedBox(height: 16),
-              _buildReportNavigationButtons(context),
-              const SizedBox(height: 16),
-              RecentTransactionsSection(
-                navigateToDetailOrEdit: _navigateToDetailOrEdit,
               ),
             ],
           ),
@@ -179,7 +188,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _buildReportNavigationButtons(BuildContext context) {
-    // ... (implementation unchanged) ...
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -300,15 +308,15 @@ class _DashboardPageState extends State<DashboardPage> {
             final overview = (state is DashboardLoaded)
                 ? state.overview
                 : (context.read<DashboardBloc>().state as DashboardLoaded?)
-                      ?.overview; // Use previous data if reloading
+                    ?.overview;
             if (overview == null && state is DashboardLoading) {
               bodyContent = const Center(
                 child: CircularProgressIndicator(),
-              ); // Still loading initial data
+              );
             } else if (overview == null) {
               bodyContent = const Center(
                 child: Text("Failed to load overview data."),
-              ); // Error case if overview somehow null after loading
+              );
             } else {
               switch (uiMode) {
                 case UIMode.aether:
@@ -359,7 +367,6 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             );
           } else {
-            // Initial state
             bodyContent = const Center(child: CircularProgressIndicator());
           }
 
