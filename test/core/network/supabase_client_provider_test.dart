@@ -25,11 +25,27 @@ void main() {
       expect(await localStorage.hasAccessToken(), true);
     });
 
+    test('hasAccessToken returns false when key does not exist', () async {
+      when(
+        () => mockStorage.containsKey(
+          key: SupabaseConfig.supabasePersistSessionKey,
+        ),
+      ).thenAnswer((_) async => false);
+      expect(await localStorage.hasAccessToken(), false);
+    });
+
     test('accessToken returns token when it exists', () async {
       when(
         () => mockStorage.read(key: SupabaseConfig.supabasePersistSessionKey),
       ).thenAnswer((_) async => 'token');
       expect(await localStorage.accessToken(), 'token');
+    });
+
+    test('accessToken returns null when it does not exist', () async {
+      when(
+        () => mockStorage.read(key: SupabaseConfig.supabasePersistSessionKey),
+      ).thenAnswer((_) async => null);
+      expect(await localStorage.accessToken(), isNull);
     });
 
     test('removePersistedSession deletes key', () async {

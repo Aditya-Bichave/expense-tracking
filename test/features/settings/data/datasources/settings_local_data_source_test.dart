@@ -52,6 +52,12 @@ void main() {
       expect(result, UIMode.quantum);
     });
 
+    test('getUIMode should return default when null', () async {
+      when(() => mockPrefs.getString(PrefKeys.uiMode)).thenReturn(null);
+      final result = await dataSource.getUIMode();
+      expect(result, SettingsState.defaultUIMode);
+    });
+
     test('saveAppLockEnabled should save to prefs', () async {
       when(() => mockPrefs.setBool(any(), any())).thenAnswer((_) async => true);
       await dataSource.saveAppLockEnabled(true);
@@ -60,6 +66,12 @@ void main() {
 
     test('getAppLockEnabled should return saved value', () async {
       when(() => mockPrefs.getBool(PrefKeys.appLockEnabled)).thenReturn(false);
+      final result = await dataSource.getAppLockEnabled();
+      expect(result, false);
+    });
+
+    test('getAppLockEnabled should return default (false) when null', () async {
+      when(() => mockPrefs.getBool(PrefKeys.appLockEnabled)).thenReturn(null);
       final result = await dataSource.getAppLockEnabled();
       expect(result, false);
     });

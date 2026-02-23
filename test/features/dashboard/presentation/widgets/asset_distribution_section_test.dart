@@ -1,11 +1,10 @@
+import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_pie_chart.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/asset_distribution_section.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
-class MockSettingsBloc extends Mock implements SettingsBloc {}
+import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockSettingsBloc mockSettingsBloc;
@@ -13,7 +12,9 @@ void main() {
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-    when(() => mockSettingsBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockSettingsBloc.stream,
+    ).thenAnswer((_) => Stream<SettingsState>.empty().asBroadcastStream());
   });
 
   testWidgets('AssetDistributionSection renders chart', (tester) async {
@@ -34,5 +35,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AssetDistributionSection), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AssetDistributionSection),
+        matching: find.byType(AssetDistributionPieChart),
+      ),
+      findsOneWidget,
+    );
   });
 }

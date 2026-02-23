@@ -7,13 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cross_file/cross_file.dart';
 import 'dart:typed_data';
 
-class MockSupabaseClient extends Mock implements SupabaseClient {}
-
-class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
-
-class MockSupabaseStorageClient extends Mock implements SupabaseStorageClient {}
-
-class MockStorageFileApi extends Mock implements StorageFileApi {}
+import 'package:expense_tracker/core/network/supabase_config.dart';
+import '../../../../helpers/mocks.dart';
 
 class FakeProfileModel extends Fake implements ProfileModel {}
 
@@ -106,7 +101,7 @@ void main() {
 
   final tProfileJson = {
     'id': '1',
-    'fullName': 'Test User',
+    'full_name': 'Test User',
     'currency': 'USD',
     'timezone': 'UTC',
   };
@@ -122,7 +117,7 @@ void main() {
       final result = await dataSource.getProfile('1');
 
       expect(result, equals(tProfileModel));
-      verify(() => mockClient.from('profiles')).called(1);
+      verify(() => mockClient.from(SupabaseConfig.profilesTable)).called(1);
       verify(() => mockQueryBuilder.select()).called(1);
     });
 
@@ -132,7 +127,7 @@ void main() {
 
       await dataSource.updateProfile(tProfileModel);
 
-      verify(() => mockClient.from('profiles')).called(1);
+      verify(() => mockClient.from(SupabaseConfig.profilesTable)).called(1);
       verify(() => mockQueryBuilder.update(any())).called(1);
     });
 
@@ -154,7 +149,9 @@ void main() {
       final result = await dataSource.uploadAvatar('1', tFile);
 
       expect(result, 'https://url.com/avatar.jpg');
-      verify(() => mockStorageClient.from('avatars')).called(2);
+      verify(
+        () => mockStorageClient.from(SupabaseConfig.profileAvatarsBucket),
+      ).called(2);
     });
   });
 }

@@ -9,37 +9,53 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 
-class MockSettingsBloc extends Mock implements SettingsBloc {}
-
-class MockTransactionListBloc extends Mock implements TransactionListBloc {}
-
-class MockAccountListBloc extends Mock implements AccountListBloc {}
+import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockSettingsBloc mockSettingsBloc;
   late MockTransactionListBloc mockTransactionListBloc;
   late MockAccountListBloc mockAccountListBloc;
+  late MockGoRouter mockGoRouter;
 
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
     mockTransactionListBloc = MockTransactionListBloc();
     mockAccountListBloc = MockAccountListBloc();
+    mockGoRouter = MockGoRouter();
 
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-    when(() => mockSettingsBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockSettingsBloc.stream,
+    ).thenAnswer((_) => Stream<SettingsState>.empty().asBroadcastStream());
 
     when(
       () => mockAccountListBloc.state,
     ).thenReturn(const AccountListLoaded(accounts: []));
     when(
       () => mockAccountListBloc.stream,
-    ).thenAnswer((_) => const Stream.empty());
+    ).thenAnswer((_) => Stream<AccountListState>.empty().asBroadcastStream());
 
-    sl.registerFactory(() => mockAccountListBloc);
+    when(
+      () => mockGoRouter.go(any(), extra: any(named: 'extra')),
+    ).thenReturn(null);
+    when(
+      () => mockGoRouter.pushNamed(
+        any(),
+        pathParameters: any(named: 'pathParameters'),
+        queryParameters: any(named: 'queryParameters'),
+        extra: any(named: 'extra'),
+      ),
+    ).thenAnswer((_) async => null);
+
+    if (!sl.isRegistered<AccountListBloc>()) {
+      sl.registerFactory<AccountListBloc>(() => mockAccountListBloc);
+    }
   });
 
   tearDown(() {
-    sl.reset();
+    if (sl.isRegistered<AccountListBloc>()) {
+      sl.unregister<AccountListBloc>();
+    }
   });
 
   testWidgets('RecentTransactionsSection renders list of transactions', (
@@ -62,9 +78,9 @@ void main() {
         transactions: transactions,
       ),
     );
-    when(
-      () => mockTransactionListBloc.stream,
-    ).thenAnswer((_) => const Stream.empty());
+    when(() => mockTransactionListBloc.stream).thenAnswer(
+      (_) => Stream<TransactionListState>.empty().asBroadcastStream(),
+    );
 
     await tester.pumpWidget(
       MaterialApp(
@@ -77,7 +93,12 @@ void main() {
             BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
           ],
           child: Scaffold(
-            body: RecentTransactionsSection(navigateToDetailOrEdit: (_, __) {}),
+            body: MockGoRouterProvider(
+              router: mockGoRouter,
+              child: RecentTransactionsSection(
+                navigateToDetailOrEdit: (_, __) {},
+              ),
+            ),
           ),
         ),
       ),
@@ -85,6 +106,113 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('RECENT ACTIVITY'), findsOneWidget);
-    expect(find.textContaining('50.00'), findsOneWidget);
+    // Use regex for locale-agnostic currency check
+    expect(find.textContaining(RegExp(r'50\.00')), findsOneWidget);
+  });
+
+  testWidgets('RecentTransactionsSection renders loading state', (
+    tester,
+  ) async {
+    when(
+      () => mockTransactionListBloc.state,
+    ).thenReturn(const TransactionListState(status: ListStatus.loading));
+    when(() => mockTransactionListBloc.stream).thenAnswer(
+      (_) => Stream<TransactionListState>.empty().asBroadcastStream(),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
+            BlocProvider<TransactionListBloc>.value(
+              value: mockTransactionListBloc,
+            ),
+            BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
+          ],
+          child: Scaffold(
+            body: MockGoRouterProvider(
+              router: mockGoRouter,
+              child: RecentTransactionsSection(
+                navigateToDetailOrEdit: (_, __) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
+
+  testWidgets('RecentTransactionsSection renders empty state', (tester) async {
+    when(() => mockTransactionListBloc.state).thenReturn(
+      const TransactionListState(status: ListStatus.success, transactions: []),
+    );
+    when(() => mockTransactionListBloc.stream).thenAnswer(
+      (_) => Stream<TransactionListState>.empty().asBroadcastStream(),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
+            BlocProvider<TransactionListBloc>.value(
+              value: mockTransactionListBloc,
+            ),
+            BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
+          ],
+          child: Scaffold(
+            body: MockGoRouterProvider(
+              router: mockGoRouter,
+              child: RecentTransactionsSection(
+                navigateToDetailOrEdit: (_, __) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('No transactions recorded yet.'), findsOneWidget);
+  });
+
+  testWidgets('tapping See All invokes navigation', (tester) async {
+    when(() => mockTransactionListBloc.state).thenReturn(
+      const TransactionListState(status: ListStatus.success, transactions: []),
+    );
+    when(() => mockTransactionListBloc.stream).thenAnswer(
+      (_) => Stream<TransactionListState>.empty().asBroadcastStream(),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
+            BlocProvider<TransactionListBloc>.value(
+              value: mockTransactionListBloc,
+            ),
+            BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
+          ],
+          child: Scaffold(
+            body: MockGoRouterProvider(
+              router: mockGoRouter,
+              child: RecentTransactionsSection(
+                navigateToDetailOrEdit: (_, __) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final seeAllButton = find.text('View All Transactions');
+    expect(seeAllButton, findsOneWidget);
+    await tester.tap(seeAllButton);
+    await tester.pumpAndSettle();
   });
 }

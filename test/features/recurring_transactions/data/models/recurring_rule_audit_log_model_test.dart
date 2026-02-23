@@ -29,6 +29,11 @@ void main() {
       final result = RecurringRuleAuditLogModel.fromEntity(tEntity);
       expect(result.id, tModel.id);
       expect(result.ruleId, tModel.ruleId);
+      expect(result.timestamp, tModel.timestamp);
+      expect(result.userId, tModel.userId);
+      expect(result.fieldChanged, tModel.fieldChanged);
+      expect(result.oldValue, tModel.oldValue);
+      expect(result.newValue, tModel.newValue);
     });
 
     test('toEntity should return valid entity', () {

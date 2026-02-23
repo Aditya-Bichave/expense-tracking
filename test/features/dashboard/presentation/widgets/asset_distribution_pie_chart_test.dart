@@ -4,9 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
-class MockSettingsBloc extends Mock implements SettingsBloc {}
+import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockSettingsBloc mockSettingsBloc;
@@ -14,13 +12,19 @@ void main() {
   setUp(() {
     mockSettingsBloc = MockSettingsBloc();
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-    when(() => mockSettingsBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockSettingsBloc.stream,
+    ).thenAnswer((_) => Stream<SettingsState>.empty().asBroadcastStream());
   });
 
   testWidgets('AssetDistributionPieChart renders pie chart', (tester) async {
     // Increase surface size to avoid overflow
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 3.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
 
     final accountBalances = {'Bank': 100.0, 'Cash': 20.0};
 
@@ -41,8 +45,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(PieChart), findsOneWidget);
-
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
   });
 }

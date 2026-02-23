@@ -48,7 +48,7 @@ function getVersion(cmd) {
 function getGitImpact() {
   try {
     // Files changed, additions, deletions
-    const stats = execSync(`git diff --shortstat origin/${BASE_REF}...${HEAD_REF}`).toString().trim();
+    const stats = execSync(`git diff --shortstat origin/${BASE_REF}...HEAD`).toString().trim();
     console.log(`[DEBUG] Git Shortstat: ${stats}`);
     const files = (stats.match(/(\d+) files? changed/) || [0, 0])[1];
     const adds = (stats.match(/(\d+) insertions?/) || [0, 0])[1];
@@ -206,6 +206,13 @@ function calculateQualityScore(cov, smoke, bundle, jobs) {
   return Math.round(score);
 }
 
+function computeOverallStatus(hasFailures, hasWarnings, score) {
+  if (hasFailures || score < 70) return "Failure";
+  if (hasWarnings) return "Warning";
+  if (score >= 90) return "Success";
+  return "Warning";
+}
+
 // --- DATA AGGREGATION ---
 
 const impact = getGitImpact();
@@ -222,7 +229,7 @@ const nodeVer = getVersion("node -v");
 const hasFailures = jobs.static === "❌" || jobs.unit === "❌" || jobs.build === "❌" || jobs.smoke === "❌";
 const hasWarnings = coverage.diff < 80 || (jobs.build === "✅" && !bundle.passed) || (jobs.smoke === "✅" && !smoke.passed);
 
-const overallStatus = !hasFailures && !hasWarnings && score >= 90 ? "Success" : ((hasFailures || score < 70) ? "Failure" : "Warning");
+const overallStatus = computeOverallStatus(hasFailures, hasWarnings, score);
 const statusLabel = overallStatus === 'Success' ? 'Passing' : (overallStatus === 'Warning' ? 'Attention Needed' : 'Issues Found');
 const verdictEmoji = hasFailures ? "❌" : (overallStatus === "Warning" ? "⚠️" : "✅");
 const statusEmoji = hasFailures ? "🔴" : (overallStatus === "Warning" ? "🟡" : "🟢");

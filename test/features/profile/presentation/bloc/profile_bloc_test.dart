@@ -45,6 +45,10 @@ void main() {
     );
   });
 
+  tearDown(() {
+    bloc.close();
+  });
+
   const tProfile = UserProfile(
     id: '1',
     fullName: 'Test User',

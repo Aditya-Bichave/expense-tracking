@@ -6,9 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockBudgetListBloc extends Mock implements BudgetListBloc {}
-
-class MockSettingsBloc extends Mock implements SettingsBloc {}
+import '../../../../helpers/mocks.dart';
 
 void main() {
   late MockBudgetListBloc mockBudgetListBloc;
@@ -21,10 +19,9 @@ void main() {
     when(() => mockBudgetListBloc.state).thenReturn(const BudgetListState());
     when(
       () => mockBudgetListBloc.stream,
-    ).thenAnswer((_) => const Stream.empty());
+    ).thenAnswer((_) => Stream<BudgetListState>.empty().asBroadcastStream());
 
-    when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-    when(() => mockSettingsBloc.stream).thenAnswer((_) => const Stream.empty());
+    // SettingsBloc stubs removed as they are not used in this test
   });
 
   testWidgets('BudgetsSubTab renders list', (tester) async {

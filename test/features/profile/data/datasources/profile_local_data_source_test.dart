@@ -1,23 +1,20 @@
 import 'package:expense_tracker/features/profile/data/datasources/profile_local_data_source.dart';
 import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive_ce/hive.dart';
-import 'package:mocktail/mocktail.dart';
-
-class MockBox extends Mock implements Box<ProfileModel> {}
+import '../../../../helpers/mocks.dart';
 
 class FakeProfileModel extends Fake implements ProfileModel {}
 
 void main() {
   late ProfileLocalDataSourceImpl dataSource;
-  late MockBox mockBox;
+  late MockBox<ProfileModel> mockBox;
 
   setUpAll(() {
     registerFallbackValue(FakeProfileModel());
   });
 
   setUp(() {
-    mockBox = MockBox();
+    mockBox = MockBox<ProfileModel>();
     dataSource = ProfileLocalDataSourceImpl(mockBox);
   });
 
@@ -47,7 +44,7 @@ void main() {
         // act
         final result = await dataSource.getLastProfile();
         // assert
-        verify(() => mockBox.get('current_profile'));
+        verify(() => mockBox.get('current_profile')).called(1);
         expect(result, equals(tProfileModel));
       },
     );
@@ -58,7 +55,7 @@ void main() {
       // act
       final result = await dataSource.getLastProfile();
       // assert
-      verify(() => mockBox.get('current_profile'));
+      verify(() => mockBox.get('current_profile')).called(1);
       expect(result, isNull);
     });
 
@@ -68,7 +65,7 @@ void main() {
       // act
       await dataSource.clearProfile();
       // assert
-      verify(() => mockBox.delete('current_profile'));
+      verify(() => mockBox.delete('current_profile')).called(1);
     });
   });
 }

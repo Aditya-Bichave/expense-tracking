@@ -1,4 +1,5 @@
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/stitch_dashboard_body.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -9,11 +10,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockSettingsBloc extends Mock implements SettingsBloc {}
-
-class MockTransactionListBloc extends Mock implements TransactionListBloc {}
-
-class MockAccountListBloc extends Mock implements AccountListBloc {}
+import '../../../../../helpers/mocks.dart';
 
 void main() {
   late MockSettingsBloc mockSettingsBloc;
@@ -26,29 +23,33 @@ void main() {
     mockAccountListBloc = MockAccountListBloc();
 
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-    when(() => mockSettingsBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockSettingsBloc.stream,
+    ).thenAnswer((_) => Stream<SettingsState>.empty().asBroadcastStream());
 
     when(
       () => mockTransactionListBloc.state,
     ).thenReturn(const TransactionListState());
-    when(
-      () => mockTransactionListBloc.stream,
-    ).thenAnswer((_) => const Stream.empty());
+    when(() => mockTransactionListBloc.stream).thenAnswer(
+      (_) => Stream<TransactionListState>.empty().asBroadcastStream(),
+    );
 
     when(
       () => mockAccountListBloc.state,
     ).thenReturn(const AccountListLoaded(accounts: []));
     when(
       () => mockAccountListBloc.stream,
-    ).thenAnswer((_) => const Stream.empty());
+    ).thenAnswer((_) => Stream<AccountListState>.empty().asBroadcastStream());
 
     if (!sl.isRegistered<AccountListBloc>()) {
-      sl.registerFactory(() => mockAccountListBloc);
+      sl.registerFactory<AccountListBloc>(() => mockAccountListBloc);
     }
   });
 
   tearDown(() {
-    sl.reset();
+    if (sl.isRegistered<AccountListBloc>()) {
+      sl.unregister<AccountListBloc>();
+    }
   });
 
   testWidgets('StitchDashboardBody renders', (tester) async {
@@ -88,5 +89,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(StitchDashboardBody), findsOneWidget);
+    // Deep assertion for child components
+    expect(find.byType(RecentTransactionsSection), findsOneWidget);
   });
 }

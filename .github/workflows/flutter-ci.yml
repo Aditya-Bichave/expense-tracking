@@ -141,7 +141,7 @@ jobs:
       - name: Enforce Total Coverage (50%)
         if: always()
         run: |
-          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<50) { print "Coverage below 35%!"; exit 1 } }' coverage/lcov.info > coverage/total-coverage.txt || true
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<50) { print "Coverage below 50%!"; exit 1 } }' coverage/lcov.info | tee coverage/total-coverage.txt
           cat coverage/total-coverage.txt
 
       - name: Upload Coverage Artifact
@@ -262,7 +262,7 @@ jobs:
 
       - name: Fetch Base Branch for Git Analysis
         if: github.event_name == 'pull_request'
-        run: git fetch origin ${{ github.base_ref }} --depth=1
+        run: git fetch origin ${{ github.base_ref }}
 
       - name: Generate Comment Body
         id: generate_body

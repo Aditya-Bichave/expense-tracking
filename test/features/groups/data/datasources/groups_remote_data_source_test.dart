@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -103,11 +102,10 @@ void main() {
     'id': '1',
     'name': 'Test Group',
     'created_by': 'user1',
-    'createdBy': 'user1',
     'created_at': tDate.toIso8601String(),
-    'createdAt': tDate.toIso8601String(),
     'updated_at': tDate.toIso8601String(),
-    'updatedAt': tDate.toIso8601String(),
+    'type': 'custom',
+    'currency': 'USD',
   };
 
   group('GroupsRemoteDataSource', () {

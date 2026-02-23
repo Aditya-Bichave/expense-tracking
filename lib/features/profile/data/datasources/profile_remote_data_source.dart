@@ -1,4 +1,5 @@
 import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
+import 'package:expense_tracker/core/network/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cross_file/cross_file.dart';
 
@@ -16,7 +17,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<ProfileModel> getProfile(String userId) async {
     final response = await _client
-        .from('profiles')
+        .from(SupabaseConfig.profilesTable)
         .select()
         .eq('id', userId)
         .single();
@@ -26,7 +27,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<void> updateProfile(ProfileModel profile) async {
     await _client
-        .from('profiles')
+        .from(SupabaseConfig.profilesTable)
         .update({
           'full_name': profile.fullName,
           'email': profile.email,
@@ -48,13 +49,15 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     final bytes = await file.readAsBytes();
 
     await _client.storage
-        .from('avatars')
+        .from(SupabaseConfig.profileAvatarsBucket)
         .uploadBinary(
           fileName,
           bytes,
           fileOptions: const FileOptions(upsert: true),
         );
 
-    return _client.storage.from('avatars').getPublicUrl(fileName);
+    return _client.storage
+        .from(SupabaseConfig.profileAvatarsBucket)
+        .getPublicUrl(fileName);
   }
 }

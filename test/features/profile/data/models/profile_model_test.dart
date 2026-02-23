@@ -33,7 +33,7 @@ void main() {
       expect(result, equals(tProfileModel));
     });
 
-    test('fromJson should return a valid model', () {
+    test('fromJson should return a valid model using snake_case', () {
       final json = {
         'id': '1',
         'full_name': 'Test User',
@@ -44,40 +44,19 @@ void main() {
         'timezone': 'UTC',
       };
 
-      try {
-        final result = ProfileModel.fromJson(json);
-        // If generated code expects camelCase, this might have nulls or crash.
-        // But if it expects snake_case, it should be equal.
-        // If result.fullName is null, then it failed to map.
-        if (result.fullName == null) {
-          throw Exception('Failed to map snake_case');
-        }
-        expect(result, equals(tProfileModel));
-      } catch (e) {
-        final jsonCamel = {
-          'id': '1',
-          'fullName': 'Test User',
-          'email': 'test@example.com',
-          'phone': '1234567890',
-          'avatarUrl': 'https://example.com/avatar.jpg',
-          'currency': 'USD',
-          'timezone': 'UTC',
-        };
-        final result = ProfileModel.fromJson(jsonCamel);
-        expect(result, equals(tProfileModel));
-      }
+      final result = ProfileModel.fromJson(json);
+      expect(result, equals(tProfileModel));
     });
 
-    test('toJson should return a JSON map containing proper data', () {
-      final result = tProfileModel.toJson();
-      expect(result['id'], '1');
-      expect(result['email'], 'test@example.com');
-
-      if (result.containsKey('full_name')) {
+    test(
+      'toJson should return a JSON map containing proper data in snake_case',
+      () {
+        final result = tProfileModel.toJson();
+        expect(result['id'], '1');
+        expect(result['email'], 'test@example.com');
         expect(result['full_name'], 'Test User');
-      } else {
-        expect(result['fullName'], 'Test User');
-      }
-    });
+        expect(result['avatar_url'], 'https://example.com/avatar.jpg');
+      },
+    );
   });
 }
