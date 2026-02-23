@@ -38,43 +38,44 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(
-      AddExpenseParams(
-        Expense(
-          id: '',
-          title: '',
-          amount: 0,
-          date: DateTime.now(),
-          accountId: '',
-        ),
-      ),
-    );
-    registerFallbackValue(
-      AddIncomeParams(
-        Income(
-          id: '',
-          title: '',
-          amount: 0,
-          date: DateTime.now(),
-          accountId: '',
-        ),
-      ),
-    );
-    registerFallbackValue(
       RecurringRule(
-        id: '',
-        description: '',
-        amount: 0,
+        id: 'fallback',
+        description: 'fallback',
+        amount: 1,
         transactionType: TransactionType.expense,
-        accountId: '',
-        categoryId: '',
+        accountId: 'acc1',
+        categoryId: 'cat1',
         frequency: Frequency.monthly,
-        dayOfMonth: 1,
         interval: 1,
         startDate: DateTime.now(),
         endConditionType: EndConditionType.never,
         status: RuleStatus.active,
         nextOccurrenceDate: DateTime.now(),
         occurrencesGenerated: 0,
+      ),
+    );
+    registerFallbackValue(
+      AddExpenseParams(
+        Expense(
+          id: '1',
+          title: 'test',
+          amount: 1,
+          date: DateTime.now(),
+          accountId: '1',
+        ),
+      ),
+    );
+    registerFallbackValue(
+      AddIncomeParams(
+        Income(
+          id: '1',
+          title: 'test',
+          amount: 1,
+          date: DateTime.now(),
+          category: null,
+          accountId: '1',
+          notes: '',
+        ),
       ),
     );
   });
@@ -85,7 +86,7 @@ void main() {
     mockAddExpenseUseCase = MockAddExpenseUseCase();
     mockAddIncomeUseCase = MockAddIncomeUseCase();
     mockUuid = MockUuid();
-    when(() => mockUuid.v4()).thenReturn('new_id');
+
     usecase = GenerateTransactionsOnLaunch(
       recurringTransactionRepository: mockRecurringTransactionRepository,
       categoryRepository: mockCategoryRepository,
@@ -93,34 +94,35 @@ void main() {
       addIncome: mockAddIncomeUseCase,
       uuid: mockUuid,
     );
+    when(() => mockUuid.v4()).thenReturn('new_id'); // Match tExpense ID
   });
 
   final tRule = RecurringRule(
     id: '1',
-    description: 'Test Expense',
-    amount: 50,
+    description: 'Test Rule',
+    amount: 10,
     transactionType: TransactionType.expense,
     accountId: 'acc1',
     categoryId: 'cat1',
     frequency: Frequency.monthly,
-    dayOfMonth: 15,
     interval: 1,
-    startDate: DateTime(2023, 1, 15),
+    startDate: DateTime(2023, 1, 1),
     endConditionType: EndConditionType.never,
     status: RuleStatus.active,
-    nextOccurrenceDate: DateTime.now().subtract(const Duration(days: 1)),
-    occurrencesGenerated: 5,
+    nextOccurrenceDate: DateTime(2023, 1, 1), // Due
+    occurrencesGenerated: 0,
   );
 
-  const tCategory = Category(
+  final tCategory = Category(
     id: 'cat1',
     name: 'Test Category',
     iconName: 'icon',
-    colorHex: '#FFFFFF',
+    colorHex: '#000000',
     type: CategoryType.expense,
     isCustom: false,
   );
 
+  // Updated tExpense to match mockUuid.v4() return value 'new_id'
   final tExpense = Expense(
     id: 'new_id',
     title: tRule.description,
@@ -138,7 +140,7 @@ void main() {
     categoryId: 'cat2',
   );
 
-  final tIncomeCategory = const Category(
+  final tIncomeCategory = Category(
     id: 'cat2',
     name: 'Income Category',
     iconName: 'icon',
@@ -147,8 +149,19 @@ void main() {
     isCustom: false,
   );
 
+  // Updated tIncome to match mockUuid.v4() return value 'new_id'
+  final tIncome = Income(
+    id: 'new_id',
+    title: tIncomeRule.description,
+    amount: tIncomeRule.amount,
+    date: tIncomeRule.nextOccurrenceDate,
+    category: tIncomeCategory,
+    accountId: tIncomeRule.accountId,
+    notes: '',
+    isRecurring: true,
+  );
+
   test('should clamp next occurrence date for monthly rules', () async {
-    // Arrange a rule on January 31st to test February handling
     final janRule = tRule.copyWith(
       startDate: DateTime(2023, 1, 31),
       nextOccurrenceDate: DateTime(2023, 1, 31),
@@ -159,8 +172,8 @@ void main() {
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([janRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => const Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => Right(tExpense));
@@ -173,25 +186,19 @@ void main() {
       return const Right(null);
     });
 
-    // Act
     await usecase(const NoParams());
 
-    // Assert
     expect(capturedRule, isNotNull);
-    expect(
-      capturedRule!.nextOccurrenceDate,
-      equals(DateTime(2023, 2, 28)),
-    ); // February has 28 days in 2023
+    expect(capturedRule!.nextOccurrenceDate, equals(DateTime(2023, 2, 28)));
   });
 
   test('should generate a transaction for a due rule', () async {
-    // Arrange
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => const Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => Right(tExpense));
@@ -199,10 +206,9 @@ void main() {
       () => mockRecurringTransactionRepository.updateRecurringRule(any()),
     ).thenAnswer((_) async => const Right(null));
 
-    // Act
     await usecase(const NoParams());
 
-    // Assert
+    verify(() => mockCategoryRepository.getAllCategories()).called(1);
     verify(() => mockAddExpenseUseCase(any())).called(1);
     verify(
       () => mockRecurringTransactionRepository.updateRecurringRule(any()),
@@ -210,7 +216,6 @@ void main() {
   });
 
   test('should not generate a transaction for a future rule', () async {
-    // Arrange
     final futureRule = RecurringRule(
       id: '2',
       description: 'Future Expense',
@@ -231,11 +236,12 @@ void main() {
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([futureRule]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
 
-    // Act
     await usecase(const NoParams());
 
-    // Assert
     verifyNever(() => mockAddExpenseUseCase(any()));
     verifyNever(() => mockAddIncomeUseCase(any()));
     verifyNever(
@@ -244,22 +250,19 @@ void main() {
   });
 
   test('should return failure when addExpense fails', () async {
-    // Arrange
     const failure = ServerFailure('addExpense failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => const Left(failure));
 
-    // Act
     final result = await usecase(const NoParams());
 
-    // Assert
     expect(result, equals(const Left(failure)));
     verify(() => mockAddExpenseUseCase(any())).called(1);
     verifyNever(
@@ -268,22 +271,19 @@ void main() {
   });
 
   test('should return failure when addIncome fails', () async {
-    // Arrange
     const failure = ServerFailure('addIncome failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tIncomeRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => Right(tIncomeCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tIncomeCategory]));
     when(
       () => mockAddIncomeUseCase(any()),
     ).thenAnswer((_) async => const Left(failure));
 
-    // Act
     final result = await usecase(const NoParams());
 
-    // Assert
     expect(result, equals(const Left(failure)));
     verify(() => mockAddIncomeUseCase(any())).called(1);
     verifyNever(
@@ -292,14 +292,13 @@ void main() {
   });
 
   test('should return failure when updateRecurringRule fails', () async {
-    // Arrange
     const failure = ServerFailure('updateRecurringRule failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
-    ).thenAnswer((_) async => Right(tCategory));
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => Right(tExpense));
@@ -307,10 +306,8 @@ void main() {
       () => mockRecurringTransactionRepository.updateRecurringRule(any()),
     ).thenAnswer((_) async => const Left(failure));
 
-    // Act
     final result = await usecase(const NoParams());
 
-    // Assert
     expect(result, equals(const Left(failure)));
     verify(() => mockAddExpenseUseCase(any())).called(1);
     verify(
@@ -318,22 +315,19 @@ void main() {
     ).called(1);
   });
 
-  test('should return failure when category lookup fails', () async {
-    // Arrange
-    const failure = ServerFailure('getCategoryById failed');
+  test('should return failure when category fetch fails', () async {
+    const failure = ServerFailure('getAllCategories failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
     ).thenAnswer((_) async => Right([tRule]));
     when(
-      () => mockCategoryRepository.getCategoryById(any()),
+      () => mockCategoryRepository.getAllCategories(),
     ).thenAnswer((_) async => const Left(failure));
 
-    // Act
     final result = await usecase(const NoParams());
 
-    // Assert
     expect(result, equals(const Left(failure)));
-    verify(() => mockCategoryRepository.getCategoryById(any())).called(1);
+    verify(() => mockCategoryRepository.getAllCategories()).called(1);
     verifyNever(() => mockAddExpenseUseCase(any()));
     verifyNever(
       () => mockRecurringTransactionRepository.updateRecurringRule(any()),
@@ -343,7 +337,6 @@ void main() {
   test(
     'should handle monthly rule without dayOfMonth by defaulting to current day',
     () async {
-      // Arrange
       final ruleWithoutDayOfMonth = RecurringRule(
         id: '3',
         description: 'No dayOfMonth',
@@ -366,20 +359,19 @@ void main() {
         () => mockRecurringTransactionRepository.getRecurringRules(),
       ).thenAnswer((_) async => Right([ruleWithoutDayOfMonth]));
       when(
-        () => mockCategoryRepository.getCategoryById(any()),
-      ).thenAnswer((_) async => Right(tCategory));
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([tCategory]));
       when(
         () => mockAddExpenseUseCase(any()),
       ).thenAnswer((_) async => Right(tExpense));
       when(
         () => mockRecurringTransactionRepository.updateRecurringRule(any()),
       ).thenAnswer((_) async => const Right(null));
-      when(() => mockUuid.v4()).thenReturn('new_id');
 
-      // Act
+      // Removed repetitive mockUuid setup as it's in setUp()
+
       await usecase(const NoParams());
 
-      // Assert
       final captured =
           verify(
                 () => mockRecurringTransactionRepository.updateRecurringRule(
@@ -394,7 +386,6 @@ void main() {
   test(
     'should use original startDate day for monthly rule without dayOfMonth when previous month is shorter',
     () async {
-      // Arrange
       final ruleAfterShortMonth = RecurringRule(
         id: '4',
         description: 'After February',
@@ -417,20 +408,17 @@ void main() {
         () => mockRecurringTransactionRepository.getRecurringRules(),
       ).thenAnswer((_) async => Right([ruleAfterShortMonth]));
       when(
-        () => mockCategoryRepository.getCategoryById(any()),
-      ).thenAnswer((_) async => Right(tCategory));
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([tCategory]));
       when(
         () => mockAddExpenseUseCase(any()),
       ).thenAnswer((_) async => Right(tExpense));
       when(
         () => mockRecurringTransactionRepository.updateRecurringRule(any()),
       ).thenAnswer((_) async => const Right(null));
-      when(() => mockUuid.v4()).thenReturn('new_id');
 
-      // Act
       await usecase(const NoParams());
 
-      // Assert
       final captured =
           verify(
                 () => mockRecurringTransactionRepository.updateRecurringRule(
@@ -439,6 +427,173 @@ void main() {
               ).captured.single
               as RecurringRule;
       expect(captured.nextOccurrenceDate, expectedNextDate);
+    },
+  );
+
+  // --- New Tests ---
+
+  test('should process multiple due rules sequentially', () async {
+    final rule1 = tRule.copyWith(id: 'r1', description: 'Rule 1');
+    final rule2 = tRule.copyWith(id: 'r2', description: 'Rule 2');
+
+    when(
+      () => mockRecurringTransactionRepository.getRecurringRules(),
+    ).thenAnswer((_) async => Right([rule1, rule2]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
+    when(
+      () => mockAddExpenseUseCase(any()),
+    ).thenAnswer((_) async => Right(tExpense));
+    when(
+      () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
+
+    await usecase(const NoParams());
+
+    verify(() => mockAddExpenseUseCase(any())).called(2);
+    verify(
+      () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+    ).called(2);
+  });
+
+  test('should handle missing category gracefully', () async {
+    final ruleWithMissingCategory = tRule.copyWith(categoryId: 'missing_cat');
+
+    when(
+      () => mockRecurringTransactionRepository.getRecurringRules(),
+    ).thenAnswer((_) async => Right([ruleWithMissingCategory]));
+    when(() => mockCategoryRepository.getAllCategories()).thenAnswer(
+      (_) async => Right([tCategory]),
+    ); // Category missing_cat not in list
+    when(
+      () => mockAddExpenseUseCase(any()),
+    ).thenAnswer((_) async => Right(tExpense));
+    when(
+      () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
+
+    await usecase(const NoParams());
+
+    final capturedParams =
+        verify(() => mockAddExpenseUseCase(captureAny())).captured.single
+            as AddExpenseParams;
+    expect(capturedParams.expense.category, isNull); // Verify category is null
+    verify(
+      () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+    ).called(1);
+  });
+
+  test(
+    'should mark rule as completed when total occurrences reached',
+    () async {
+      final finishingRule = tRule.copyWith(
+        totalOccurrences: 5,
+        occurrencesGenerated: 4, // This will be the 5th
+        endConditionType: EndConditionType.afterOccurrences,
+      );
+
+      when(
+        () => mockRecurringTransactionRepository.getRecurringRules(),
+      ).thenAnswer((_) async => Right([finishingRule]));
+      when(
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([tCategory]));
+      when(
+        () => mockAddExpenseUseCase(any()),
+      ).thenAnswer((_) async => Right(tExpense));
+      when(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+      ).thenAnswer((_) async => const Right(null));
+
+      await usecase(const NoParams());
+
+      final capturedRule =
+          verify(
+                () => mockRecurringTransactionRepository.updateRecurringRule(
+                  captureAny(),
+                ),
+              ).captured.single
+              as RecurringRule;
+
+      expect(capturedRule.status, RuleStatus.completed);
+      expect(capturedRule.occurrencesGenerated, 5);
+    },
+  );
+
+  test('should mark rule as completed when end date exceeded', () async {
+    final finishingRule = tRule.copyWith(
+      endDate: DateTime(
+        2023,
+        1,
+        2,
+      ), // Next occurrence (calculated as feb) will be after this
+      endConditionType: EndConditionType.onDate,
+    );
+    // Note: tRule nextOccurrence is 2023-01-01. Calculated next will be 2023-02-01.
+
+    when(
+      () => mockRecurringTransactionRepository.getRecurringRules(),
+    ).thenAnswer((_) async => Right([finishingRule]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory]));
+    when(
+      () => mockAddExpenseUseCase(any()),
+    ).thenAnswer((_) async => Right(tExpense));
+    when(
+      () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+    ).thenAnswer((_) async => const Right(null));
+
+    await usecase(const NoParams());
+
+    final capturedRule =
+        verify(
+              () => mockRecurringTransactionRepository.updateRecurringRule(
+                captureAny(),
+              ),
+            ).captured.single
+            as RecurringRule;
+
+    expect(capturedRule.status, RuleStatus.completed);
+  });
+
+  // Verify Leap Year Handling
+  test(
+    'should clamp Feb 29 to Feb 28 in non-leap years for yearly rules',
+    () async {
+      final leapYearRule = tRule.copyWith(
+        frequency: Frequency.yearly,
+        interval: 1,
+        // Feb 29, 2024 is a leap year date
+        startDate: DateTime(2024, 2, 29),
+        nextOccurrenceDate: DateTime(2024, 2, 29),
+      );
+
+      when(
+        () => mockRecurringTransactionRepository.getRecurringRules(),
+      ).thenAnswer((_) async => Right([leapYearRule]));
+      when(
+        () => mockCategoryRepository.getAllCategories(),
+      ).thenAnswer((_) async => Right([tCategory]));
+      when(
+        () => mockAddExpenseUseCase(any()),
+      ).thenAnswer((_) async => Right(tExpense));
+
+      RecurringRule? capturedRule;
+      when(
+        () => mockRecurringTransactionRepository.updateRecurringRule(any()),
+      ).thenAnswer((invocation) async {
+        capturedRule = invocation.positionalArguments.first as RecurringRule;
+        return const Right(null);
+      });
+
+      await usecase(const NoParams());
+
+      expect(capturedRule, isNotNull);
+      // 2025 is NOT a leap year, so Feb 29 becomes Feb 28.
+      // Standard DateTime(2025, 2, 29) would normalize to Mar 1.
+      expect(capturedRule!.nextOccurrenceDate, equals(DateTime(2025, 2, 28)));
     },
   );
 }
