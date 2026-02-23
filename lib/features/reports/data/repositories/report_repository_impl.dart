@@ -833,6 +833,14 @@ class ReportRepositoryImpl implements ReportRepository {
       );
     final allExpensesInRange = expenseResult.getOrElse(() => []);
 
+    // Pre-group expenses by category for O(1) lookup optimization
+    final Map<String, List<ExpenseModel>> expensesByCategory = {};
+    for (final exp in allExpensesInRange) {
+      if (exp.categoryId != null) {
+        expensesByCategory.putIfAbsent(exp.categoryId!, () => []).add(exp);
+      }
+    }
+
     // Define colors (could move to theme constants)
     const thrivingColor = Colors.green;
     const nearingLimitColor = Colors.orange;
@@ -852,24 +860,26 @@ class ReportRepositoryImpl implements ReportRepository {
             ) // Use budget's dates if one-time
           : (startDate, endDate); // Use report range dates if recurring/overall
 
+      // Optimization: Select relevant expenses first to avoid full list iteration
+      Iterable<ExpenseModel> candidateExpenses;
+      if (budget.type == BudgetType.categorySpecific &&
+          budget.categoryIds != null) {
+        candidateExpenses = budget.categoryIds!.expand(
+          (catId) => expensesByCategory[catId] ?? const <ExpenseModel>[],
+        );
+      } else {
+        candidateExpenses = allExpensesInRange;
+      }
+
       // Filter expenses for *this* budget within the *effective* date range
-      final double spent = allExpensesInRange
+      final double spent = candidateExpenses
           .where((exp) {
             // Ensure expense date falls within the effective period for the budget
             final endDateInclusive = effEnd
                 .add(const Duration(days: 1))
                 .subtract(const Duration(microseconds: 1));
-            bool dateMatch =
-                !exp.date.isBefore(effStart) &&
+            return !exp.date.isBefore(effStart) &&
                 !exp.date.isAfter(endDateInclusive);
-            if (!dateMatch) return false;
-
-            // Check category match
-            if (budget.type == BudgetType.overall) return true;
-            if (budget.type == BudgetType.categorySpecific) {
-              return budget.categoryIds?.contains(exp.categoryId) ?? false;
-            }
-            return false; // Should not happen
           })
           .fold(0.0, (sum, exp) => sum + exp.amount);
 
