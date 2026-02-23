@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 
 class InviteGenerationSheet extends StatefulWidget {
-  final Function(String role, int expiry, int limit) onGenerate;
+  final void Function(String role, int expiry, int limit) onGenerate;
 
   const InviteGenerationSheet({super.key, required this.onGenerate});
 
@@ -31,7 +31,7 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
           Text('Invite Members', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 16),
           AppDropdownFormField<String>(
-            label: 'Role',
+            labelText: 'Role',
             value: _role,
             items: const [
               DropdownMenuItem(value: 'member', child: Text('Member')),
@@ -41,18 +41,18 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
           ),
           const SizedBox(height: 12),
           AppDropdownFormField<int>(
-            label: 'Expires In',
+            labelText: 'Expires In',
             value: _expiry,
             items: const [
               DropdownMenuItem(value: 1, child: Text('1 Day')),
               DropdownMenuItem(value: 7, child: Text('7 Days')),
-              DropdownMenuItem(value: 36500, child: Text('Never')),
+              DropdownMenuItem(value: 0, child: Text('Never')),
             ],
             onChanged: (val) => setState(() => _expiry = val!),
           ),
           const SizedBox(height: 12),
           AppDropdownFormField<int>(
-            label: 'Usage Limit',
+            labelText: 'Usage Limit',
             value: _limit,
             items: const [
               DropdownMenuItem(value: 0, child: Text('Unlimited')),

@@ -1,4 +1,5 @@
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart'; // Added
 import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/pages/add_group_expense_page.dart';

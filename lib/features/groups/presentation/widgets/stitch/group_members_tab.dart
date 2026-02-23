@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/group_members_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart'; // Added
 import 'package:expense_tracker/features/groups/domain/entities/group_role.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 

@@ -7,7 +7,9 @@ abstract class DeepLinkEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class DeepLinkStarted extends DeepLinkEvent {}
+class DeepLinkStarted extends DeepLinkEvent {
+  const DeepLinkStarted();
+}
 
 class DeepLinkReceived extends DeepLinkEvent {
   final Uri uri;
