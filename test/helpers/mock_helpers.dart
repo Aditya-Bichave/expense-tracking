@@ -1,21 +1,28 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/auth/domain/repositories/auth_repository.dart';
+import 'package:expense_tracker/features/budgets/data/datasources/budget_local_data_source.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
-import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
+import 'package:expense_tracker/features/budgets/domain/usecases/add_budget.dart';
+import 'package:expense_tracker/features/budgets/domain/usecases/update_budget.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/merchant_category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/user_history_repository.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
+import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
 import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
+import 'package:expense_tracker/features/profile/domain/repositories/profile_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
@@ -68,6 +75,23 @@ class MockSettingsRepository extends Mock implements SettingsRepository {}
 
 class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
     implements AccountListBloc {}
+
+class MockProfileRepository extends Mock implements ProfileRepository {}
+
+class MockAddBudgetUseCase extends Mock implements AddBudgetUseCase {}
+
+class MockUpdateBudgetUseCase extends Mock implements UpdateBudgetUseCase {}
+
+class MockDemoModeService extends Mock implements DemoModeService {}
+
+class MockHiveBudgetLocalDataSource extends Mock
+    implements HiveBudgetLocalDataSource {}
+
+class MockHiveGoalContributionLocalDataSource extends Mock
+    implements HiveContributionLocalDataSource {}
+
+class MockHiveGoalLocalDataSource extends Mock
+    implements HiveGoalLocalDataSource {}
 
 // --- Fakes for registerFallbackValue ---
 class _FakeBuildContext extends Fake implements BuildContext {}
