@@ -14,6 +14,11 @@ void main() {
       dataSource = AssetExpenseCategoryDataSource();
     });
 
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', null);
+    });
+
     test('getPredefinedCategories loads categories from asset', () async {
       // Corrected json keys to match CategoryModel
       const jsonContent =
@@ -39,6 +44,11 @@ void main() {
 
     setUp(() {
       dataSource = AssetIncomeCategoryDataSource();
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', null);
     });
 
     test('getPredefinedCategories loads categories from asset', () async {

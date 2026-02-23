@@ -13,6 +13,11 @@ void main() {
       dataSource = AssetMerchantCategoryDataSource();
     });
 
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', null);
+    });
+
     test('getDefaultCategoryId loads data and returns category ID', () async {
       const jsonContent = '{"uber": "transport-id", "starbucks": "coffee-id"}';
 

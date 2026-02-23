@@ -81,29 +81,30 @@ void main() {
 
   tearDown(() {
     authStateController.close();
-    sessionCubit.close();
+    // Only close if it was initialized
+    try {
+      sessionCubit.close();
+    } catch (_) {}
   });
 
   SessionCubit buildCubit() {
-    return SessionCubit(
+    sessionCubit = SessionCubit(
       authRepository,
       profileRepository,
       secureStorageService,
     );
+    return sessionCubit;
   }
 
   group('SessionCubit', () {
     test('initial state is SessionUnauthenticated', () {
-      sessionCubit = buildCubit();
+      buildCubit();
       expect(sessionCubit.state, SessionUnauthenticated());
     });
 
     blocTest<SessionCubit, SessionState>(
       'emits SessionUnauthenticated when signed out event is received',
-      build: () {
-        sessionCubit = buildCubit();
-        return sessionCubit;
-      },
+      build: buildCubit,
       act: (cubit) async {
         authStateController.add(AuthState(AuthChangeEvent.signedOut, null));
         await Future.delayed(Duration.zero);
