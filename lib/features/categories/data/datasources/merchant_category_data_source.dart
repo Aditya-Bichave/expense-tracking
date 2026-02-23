@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 
@@ -13,6 +13,10 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
   Future<Map<String, String>>?
   _loadingFuture; // Future to handle concurrent loads
   final String _assetPath = 'assets/data/merchant_categories.json';
+  final AssetBundle _bundle;
+
+  AssetMerchantCategoryDataSource({AssetBundle? bundle})
+    : _bundle = bundle ?? rootBundle;
 
   Future<Map<String, String>> _loadDb() async {
     // If already loaded, return cache
@@ -29,7 +33,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
   Future<Map<String, String>> _doLoad() async {
     log.info("Loading merchant category database from asset: $_assetPath");
     try {
-      final jsonString = await rootBundle.loadString(_assetPath);
+      final jsonString = await _bundle.loadString(_assetPath);
       // Expecting a Map<String, String> directly from JSON
       final Map<String, dynamic> jsonMap =
           jsonDecode(jsonString) as Map<String, dynamic>;

@@ -11,6 +11,8 @@ void main() {
 
     setUp(() {
       dataSource = AssetMerchantCategoryDataSource();
+      // Clear the cache for the asset path to prevent test pollution
+      rootBundle.evict('assets/data/merchant_categories.json');
     });
 
     tearDown(() {

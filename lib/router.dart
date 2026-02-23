@@ -146,7 +146,7 @@ class AppRouter {
       GoRoute(
         path: RouteNames.verifyOtp,
         builder: (context, state) =>
-            VerifyOtpPage(phone: state.extra as String),
+            VerifyOtpPage(phone: (state.extra as String?) ?? ''),
       ),
 
       GoRoute(
