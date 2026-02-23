@@ -75,7 +75,7 @@ void main() {
       // Arrange
       when(
         () => mockLocalDataSource.getBudgets(),
-      ).thenThrow(const CacheFailure('Hive Error'));
+      ).thenAnswer((_) async => throw const CacheFailure('Hive Error'));
 
       // Act
       final result = await repository.getBudgets();
