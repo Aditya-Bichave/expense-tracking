@@ -64,10 +64,10 @@ class ProfileModelAdapter extends TypeAdapter<ProfileModel> {
 
 ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
   id: json['id'] as String,
-  fullName: json['fullName'] as String?,
+  fullName: json['full_name'] as String?,
   email: json['email'] as String?,
   phone: json['phone'] as String?,
-  avatarUrl: json['avatarUrl'] as String?,
+  avatarUrl: json['avatar_url'] as String?,
   currency: json['currency'] as String,
   timezone: json['timezone'] as String,
 );
@@ -75,10 +75,10 @@ ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
 Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'fullName': instance.fullName,
+      'full_name': instance.fullName,
       'email': instance.email,
       'phone': instance.phone,
-      'avatarUrl': instance.avatarUrl,
+      'avatar_url': instance.avatarUrl,
       'currency': instance.currency,
       'timezone': instance.timezone,
     };

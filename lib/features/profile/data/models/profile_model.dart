@@ -6,7 +6,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'profile_model.g.dart';
 
 @HiveType(typeId: 20)
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class ProfileModel extends UserProfile {
   @override
   @HiveField(0)

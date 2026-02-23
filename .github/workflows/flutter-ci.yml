@@ -67,8 +67,20 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze
+      - name: Run Static Analysis
         run: flutter analyze
+
+      - name: Export Metadata
+        run: |
+          mkdir -p metadata
+          flutter --version > metadata/flutter-version.txt
+
+      - name: Upload Metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: metadata
+          path: metadata/
+          retention-days: 1
 
       - name: Policy Check (No Print/TODO)
         if: github.event_name == 'pull_request'
@@ -123,12 +135,13 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }} || true
-          diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80 > coverage/diff-coverage.txt || true
+          diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80 > coverage/diff-coverage.txt
           cat coverage/diff-coverage.txt
 
       - name: Enforce Total Coverage (50%)
+        if: always()
         run: |
-          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<50) { print "Coverage below 35%!"; exit 1 } }' coverage/lcov.info > coverage/total-coverage.txt || true
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<50) { print "Coverage below 50%!"; exit 1 } }' coverage/lcov.info | tee coverage/total-coverage.txt
           cat coverage/total-coverage.txt
 
       - name: Upload Coverage Artifact
@@ -239,6 +252,8 @@ jobs:
     needs: [static-checks, unit-tests, web-build, web-smoke]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
@@ -247,7 +262,7 @@ jobs:
 
       - name: Fetch Base Branch for Git Analysis
         if: github.event_name == 'pull_request'
-        run: git fetch origin ${{ github.base_ref }} --depth=1
+        run: git fetch origin ${{ github.base_ref }}
 
       - name: Generate Comment Body
         id: generate_body

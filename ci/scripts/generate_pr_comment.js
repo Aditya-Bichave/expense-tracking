@@ -31,6 +31,13 @@ function safeJson(filePath, fallback = {}) {
 }
 
 function getVersion(cmd) {
+  // Check if we have a version file in metadata artifact
+  const metaDir = path.join(ARTIFACTS_DIR, "metadata");
+  if (cmd.includes("flutter")) {
+    const flutterFile = path.join(metaDir, "flutter-version.txt");
+    if (fs.existsSync(flutterFile)) return fs.readFileSync(flutterFile, "utf8").trim();
+  }
+
   try {
     return execSync(cmd).toString().trim().split("\n")[0];
   } catch (e) {
@@ -42,6 +49,7 @@ function getGitImpact() {
   try {
     // Files changed, additions, deletions
     const stats = execSync(`git diff --shortstat origin/${BASE_REF}...HEAD`).toString().trim();
+    console.log(`[DEBUG] Git Shortstat: ${stats}`);
     const files = (stats.match(/(\d+) files? changed/) || [0, 0])[1];
     const adds = (stats.match(/(\d+) insertions?/) || [0, 0])[1];
     const dels = (stats.match(/(\d+) deletions?/) || [0, 0])[1];
@@ -67,6 +75,9 @@ function getCoverage() {
   const lcovPath = path.join(ARTIFACTS_DIR, "coverage", "lcov.info");
   const diffPath = path.join(ARTIFACTS_DIR, "coverage", "diff-coverage.txt");
 
+  console.log(`[DEBUG] Reading coverage from: ${lcovPath}`);
+  console.log(`[DEBUG] Reading diff from: ${diffPath}`);
+
   let totalPct = 0;
   let diffPct = 0;
 
@@ -79,6 +90,9 @@ function getCoverage() {
       if (line.startsWith("LH:")) lh += parseInt(line.split(":")[1]);
     });
     totalPct = lf ? (lh / lf) * 100 : 0;
+    console.log(`[DEBUG] Total Coverage: ${totalPct.toFixed(2)}% (LF: ${lf}, LH: ${lh})`);
+  } else {
+    console.log(`[DEBUG] LCOV file not found or empty at ${lcovPath}`);
   }
 
   // Diff Coverage
@@ -86,7 +100,14 @@ function getCoverage() {
   if (diffContent) {
     // Matches "Total: 85%", "Coverage: 85.0%", "Diff Coverage: 85%" etc.
     const match = diffContent.match(/(?:Total|Coverage|Diff Coverage):\s+(\d+(?:\.\d+)?)%/i);
-    if (match) diffPct = parseFloat(match[1]);
+    if (match) {
+      diffPct = parseFloat(match[1]);
+      console.log(`[DEBUG] Found Diff Coverage: ${diffPct}%`);
+    } else {
+      console.log(`[DEBUG] Regex failed to match diff coverage in: ${diffContent.substring(0, 50)}...`);
+    }
+  } else {
+    console.log(`[DEBUG] Diff coverage file not found at ${diffPath}`);
   }
 
   return {
@@ -185,6 +206,13 @@ function calculateQualityScore(cov, smoke, bundle, jobs) {
   return Math.round(score);
 }
 
+function computeOverallStatus(hasFailures, hasWarnings, score) {
+  if (hasFailures || score < 70) return "Failure";
+  if (hasWarnings) return "Warning";
+  if (score >= 90) return "Success";
+  return "Warning";
+}
+
 // --- DATA AGGREGATION ---
 
 const impact = getGitImpact();
@@ -198,19 +226,23 @@ const flutterVerRaw = getVersion("flutter --version");
 const flutterVer = flutterVerRaw.replace(/^Flutter\s+/i, '').split(' • ')[0];
 const nodeVer = getVersion("node -v");
 
-const hasFailures = jobs.static === "❌" || jobs.unit === "❌" || jobs.build === "❌" || jobs.smoke === "❌" || coverage.diff < 80 || !bundle.passed || !smoke.passed;
+const hasFailures = jobs.static === "❌" || jobs.unit === "❌" || jobs.build === "❌" || jobs.smoke === "❌";
+const hasWarnings = coverage.diff < 80 || (jobs.build === "✅" && !bundle.passed) || (jobs.smoke === "✅" && !smoke.passed);
 
-const overallStatus = !hasFailures && score >= 90 ? "Success" : (score >= 70 ? "Warning" : "Failure");
-const verdictEmoji = hasFailures ? "❌" : (score >= 90 ? "✅" : "⚠️");
-const statusEmoji = hasFailures ? "🔴" : (score >= 90 ? "🟢" : "🟡");
+const overallStatus = computeOverallStatus(hasFailures, hasWarnings, score);
+const statusLabel = overallStatus === 'Success' ? 'Passing' : (overallStatus === 'Warning' ? 'Attention Needed' : 'Issues Found');
+const verdictEmoji = hasFailures ? "❌" : (overallStatus === "Warning" ? "⚠️" : "✅");
+const statusEmoji = hasFailures ? "🔴" : (overallStatus === "Warning" ? "🟡" : "🟢");
 
 // --- WHAT NEEDS ATTENTION ---
 
 const topIssues = [];
 if (jobs.static === "❌") topIssues.push("🛡️ **Static Analysis Failed**: Please check lint rules.");
+if (jobs.unit === "❌") topIssues.push("🧪 **Unit Tests Failed**: Check test logs for specific failures.");
 if (smoke.routesFail > 0) topIssues.push(`💨 **Smoke Test Failures**: \`${smoke.failedRoutes[0]}\` and ${smoke.routesFail - 1} more routes.`);
 if (coverage.diff < 80) topIssues.push(`🧪 **Low Diff Coverage**: PR coverage is only **${coverage.diff}%** (target 80%).`);
 if (smoke.consoleErrors.length > 0) topIssues.push(`🚫 **Console Errors Detected**: ${smoke.consoleErrors.length} errors found during smoke tests.`);
+if (jobs.build === "✅" && !bundle.passed) topIssues.push("📦 **Bundle Size Exceeded**: Main JS bundle is over the 5MB threshold.");
 
 if (topIssues.length === 0) topIssues.push("✨ Everything looks stellar! No immediate action required.");
 
@@ -219,7 +251,7 @@ if (topIssues.length === 0) topIssues.push("✨ Everything looks stellar! No imm
 const body = `<!-- ci-summary-bot -->
 ## 🚀 CI Quality Report
 
-> **Status:** ${verdictEmoji} **${overallStatus === 'Success' ? 'Passing' : 'Issues Found'}**
+> **Status:** ${verdictEmoji} **${statusLabel}**
 > **Quality Score:** **${score}/100** ${score >= 90 ? '🏆' : (score >= 70 ? '⚖️' : '💔')}
 > [View Full Logs](${RUN_URL})
 >
