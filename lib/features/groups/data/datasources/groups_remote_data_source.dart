@@ -6,8 +6,15 @@ abstract class GroupsRemoteDataSource {
   Future<GroupModel> createGroup(GroupModel group);
   Future<List<GroupModel>> getGroups();
   Future<List<GroupMemberModel>> getGroupMembers(String groupId);
-  Future<String> createInvite(String groupId);
-  Future<void> acceptInvite(String token);
+  Future<String> createInvite(
+    String groupId, {
+    String role = 'member',
+    int expiryDays = 7,
+    int maxUses = 0,
+  });
+  Future<Map<String, dynamic>> acceptInvite(String token);
+  Future<void> updateMemberRole(String groupId, String userId, String role);
+  Future<void> removeMember(String groupId, String userId);
 }
 
 class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
@@ -41,23 +48,33 @@ class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
   }
 
   @override
-  Future<String> createInvite(String groupId) async {
+  Future<String> createInvite(
+    String groupId, {
+    String role = 'member',
+    int expiryDays = 7,
+    int maxUses = 0,
+  }) async {
     final response = await _client.functions.invoke(
       'create-invite',
-      body: {'group_id': groupId},
+      body: {
+        'group_id': groupId,
+        'role': role,
+        'expiry_days': expiryDays,
+        'max_uses': maxUses,
+      },
     );
     if (response.status != 200) {
       throw Exception(
         'Failed to create invite: ${response.status} ${response.data}',
       );
     }
-    return response.data['invite']['token'];
+    return response.data['invite_url'];
   }
 
   @override
-  Future<void> acceptInvite(String token) async {
+  Future<Map<String, dynamic>> acceptInvite(String token) async {
     final response = await _client.functions.invoke(
-      'accept-invite',
+      'join_group_via_invite',
       body: {'token': token},
     );
     if (response.status != 200) {
@@ -65,5 +82,28 @@ class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
         'Failed to accept invite: ${response.status} ${response.data}',
       );
     }
+    return response.data;
+  }
+
+  @override
+  Future<void> updateMemberRole(
+    String groupId,
+    String userId,
+    String role,
+  ) async {
+    await _client
+        .from('group_members')
+        .update({'role': role})
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
+  }
+
+  @override
+  Future<void> removeMember(String groupId, String userId) async {
+    await _client
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
   }
 }

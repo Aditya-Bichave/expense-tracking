@@ -98,19 +98,60 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   @override
-  Future<Either<Failure, String>> createInvite(String groupId) async {
+  Future<Either<Failure, String>> createInvite(
+    String groupId, {
+    String role = 'member',
+    int expiryDays = 7,
+    int maxUses = 0,
+  }) async {
     try {
-      final token = await _remoteDataSource.createInvite(groupId);
-      return Right(token);
+      final url = await _remoteDataSource.createInvite(
+        groupId,
+        role: role,
+        expiryDays: expiryDays,
+        maxUses: maxUses,
+      );
+      return Right(url);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, void>> acceptInvite(String token) async {
+  Future<Either<Failure, Map<String, dynamic>>> acceptInvite(
+    String token,
+  ) async {
     try {
-      await _remoteDataSource.acceptInvite(token);
+      final data = await _remoteDataSource.acceptInvite(token);
+      return Right(data);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateMemberRole(
+    String groupId,
+    String userId,
+    String role,
+  ) async {
+    try {
+      await _remoteDataSource.updateMemberRole(groupId, userId, role);
+      // Sync local members if possible or just rely on realtime
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeMember(
+    String groupId,
+    String userId,
+  ) async {
+    try {
+      await _remoteDataSource.removeMember(groupId, userId);
+      // Sync local members if possible or just rely on realtime
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

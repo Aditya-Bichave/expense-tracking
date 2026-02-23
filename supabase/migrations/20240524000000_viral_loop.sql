@@ -31,10 +31,6 @@ CREATE POLICY "Admins manage invites" ON group_invites
         )
     );
 
--- Enforce created_by is current user on INSERT
--- (Supabase might need explicit CHECK for this in policy or trigger, but POLICY WITH CHECK is good)
--- The above "ALL" policy covers INSERT WITH CHECK as well.
-
 -- Update group_members policies for Admin powers
 -- Admin can UPDATE roles
 CREATE POLICY "Admins can update member roles" ON group_members
@@ -61,16 +57,33 @@ CREATE POLICY "Admins can kick members" ON group_members
     );
 
 -- User can DELETE own membership (Leave)
--- Placeholder: In future check for balance=0
 CREATE POLICY "Users can leave group" ON group_members
     FOR DELETE
     USING (
         user_id = auth.uid()
     );
 
--- Function to handle new user profile creation if not exists
--- (Refining the existing one if needed, but 'handle_new_user' exists in previous migrations)
--- Ensuring it covers anonymous users too (auth.users inserts usually trigger it)
+-- Update handle_new_user to support anonymous users (null email/phone)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (user_id, phone, email, display_name)
+  VALUES (
+    new.id,
+    new.phone, -- Can be null
+    new.email, -- Can be null
+    COALESCE(new.raw_user_meta_data->>'display_name', 'Guest') -- Default to Guest
+  )
+  ON CONFLICT (user_id) DO NOTHING;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Re-attach trigger if needed (usually stays attached, but good to be safe)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- Create function to atomically increment invite uses
 CREATE OR REPLACE FUNCTION increment_invite_uses(invite_id UUID)
