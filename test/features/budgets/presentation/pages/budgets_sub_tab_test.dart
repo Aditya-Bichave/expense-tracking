@@ -88,7 +88,7 @@ void main() {
           errorMessage: 'Failed',
         ),
       );
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget()); await tester.pumpAndSettle();
       expect(find.text('Error loading budgets: Failed'), findsOneWidget);
     });
 
@@ -99,7 +99,7 @@ void main() {
           budgetsWithStatus: mockBudgets,
         ),
       );
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget()); await tester.pumpAndSettle();
       expect(find.byType(BudgetCard), findsOneWidget);
     });
 
