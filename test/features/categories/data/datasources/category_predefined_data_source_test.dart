@@ -16,14 +16,15 @@ void main() {
 
     test('getPredefinedCategories loads categories from asset', () async {
       // Corrected json keys to match CategoryModel
-      const jsonContent = '[{"id": "1", "name": "Food", "iconName": "food", "colorHex": "#FFFFFF", "typeIndex": 0, "isCustom": false}]';
+      const jsonContent =
+          '[{"id": "1", "name": "Food", "iconName": "food", "colorHex": "#FFFFFF", "typeIndex": 0, "isCustom": false}]';
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
-        'flutter/assets',
-        (message) async {
-           return ByteData.view(Uint8List.fromList(utf8.encode(jsonContent)).buffer);
-        },
-      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', (message) async {
+            return ByteData.view(
+              Uint8List.fromList(utf8.encode(jsonContent)).buffer,
+            );
+          });
 
       final result = await dataSource.getPredefinedCategories();
 
@@ -42,14 +43,15 @@ void main() {
 
     test('getPredefinedCategories loads categories from asset', () async {
       // Corrected json keys to match CategoryModel
-      const jsonContent = '[{"id": "2", "name": "Salary", "iconName": "money", "colorHex": "#000000", "typeIndex": 1, "isCustom": false}]';
+      const jsonContent =
+          '[{"id": "2", "name": "Salary", "iconName": "money", "colorHex": "#000000", "typeIndex": 1, "isCustom": false}]';
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
-        'flutter/assets',
-        (message) async {
-           return ByteData.view(Uint8List.fromList(utf8.encode(jsonContent)).buffer);
-        },
-      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', (message) async {
+            return ByteData.view(
+              Uint8List.fromList(utf8.encode(jsonContent)).buffer,
+            );
+          });
 
       final result = await dataSource.getPredefinedCategories();
 

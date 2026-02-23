@@ -34,8 +34,9 @@ void main() {
   group('getGoals', () {
     test('should call Hive data source when demo mode is inactive', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.getGoals())
-          .thenAnswer((_) async => [tGoal]);
+      when(
+        () => mockHiveDataSource.getGoals(),
+      ).thenAnswer((_) async => [tGoal]);
 
       final result = await dataSource.getGoals();
 
@@ -45,8 +46,9 @@ void main() {
 
     test('should call Demo service when demo mode is active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.getDemoGoals())
-          .thenAnswer((_) async => [tGoal]);
+      when(
+        () => mockDemoModeService.getDemoGoals(),
+      ).thenAnswer((_) async => [tGoal]);
 
       final result = await dataSource.getGoals();
 
@@ -58,8 +60,7 @@ void main() {
   group('saveGoal', () {
     test('should call Hive data source when demo mode is inactive', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.saveGoal(tGoal))
-          .thenAnswer((_) async {});
+      when(() => mockHiveDataSource.saveGoal(tGoal)).thenAnswer((_) async {});
 
       await dataSource.saveGoal(tGoal);
 
@@ -68,8 +69,9 @@ void main() {
 
     test('should call Demo service when demo mode is active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.saveDemoGoal(tGoal))
-          .thenAnswer((_) async {});
+      when(
+        () => mockDemoModeService.saveDemoGoal(tGoal),
+      ).thenAnswer((_) async {});
 
       await dataSource.saveGoal(tGoal);
 
@@ -80,8 +82,7 @@ void main() {
   group('deleteGoal', () {
     test('should call Hive data source when demo mode is inactive', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.deleteGoal('1'))
-          .thenAnswer((_) async {});
+      when(() => mockHiveDataSource.deleteGoal('1')).thenAnswer((_) async {});
 
       await dataSource.deleteGoal('1');
 
@@ -90,8 +91,9 @@ void main() {
 
     test('should call Demo service when demo mode is active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.deleteDemoGoal('1'))
-          .thenAnswer((_) async {});
+      when(
+        () => mockDemoModeService.deleteDemoGoal('1'),
+      ).thenAnswer((_) async {});
 
       await dataSource.deleteGoal('1');
 
@@ -102,8 +104,7 @@ void main() {
   group('clearAllGoals', () {
     test('should call Hive data source when demo mode is inactive', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.clearAllGoals())
-          .thenAnswer((_) async {});
+      when(() => mockHiveDataSource.clearAllGoals()).thenAnswer((_) async {});
 
       await dataSource.clearAllGoals();
 

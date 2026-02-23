@@ -16,12 +16,12 @@ void main() {
     test('getDefaultCategoryId loads data and returns category ID', () async {
       const jsonContent = '{"uber": "transport-id", "starbucks": "coffee-id"}';
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
-        'flutter/assets',
-        (message) async {
-             return ByteData.view(Uint8List.fromList(utf8.encode(jsonContent)).buffer);
-        },
-      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', (message) async {
+            return ByteData.view(
+              Uint8List.fromList(utf8.encode(jsonContent)).buffer,
+            );
+          });
 
       final result = await dataSource.getDefaultCategoryId('Uber');
 
@@ -31,12 +31,12 @@ void main() {
     test('getDefaultCategoryId is case insensitive', () async {
       const jsonContent = '{"uber": "transport-id", "starbucks": "coffee-id"}';
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
-        'flutter/assets',
-        (message) async {
-             return ByteData.view(Uint8List.fromList(utf8.encode(jsonContent)).buffer);
-        },
-      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', (message) async {
+            return ByteData.view(
+              Uint8List.fromList(utf8.encode(jsonContent)).buffer,
+            );
+          });
 
       final result = await dataSource.getDefaultCategoryId('STARBUCKS');
 
@@ -46,12 +46,12 @@ void main() {
     test('getDefaultCategoryId returns null for unknown merchant', () async {
       const jsonContent = '{"uber": "transport-id"}';
 
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMessageHandler(
-        'flutter/assets',
-        (message) async {
-             return ByteData.view(Uint8List.fromList(utf8.encode(jsonContent)).buffer);
-        },
-      );
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', (message) async {
+            return ByteData.view(
+              Uint8List.fromList(utf8.encode(jsonContent)).buffer,
+            );
+          });
 
       final result = await dataSource.getDefaultCategoryId('Unknown');
 
