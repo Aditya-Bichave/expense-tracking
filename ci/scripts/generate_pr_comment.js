@@ -31,6 +31,7 @@ function safeJson(filePath, fallback = {}) {
 }
 
 function getVersion(cmd) {
+
   // Check if we have a version file in metadata artifact
   const metaDir = path.join(ARTIFACTS_DIR, "metadata");
   if (cmd.includes("flutter")) {
@@ -75,9 +76,9 @@ function getCoverage() {
   const lcovPath = path.join(ARTIFACTS_DIR, "coverage", "lcov.info");
   const diffPath = path.join(ARTIFACTS_DIR, "coverage", "diff-coverage.txt");
 
+
   console.log(`[DEBUG] Reading coverage from: ${lcovPath}`);
   console.log(`[DEBUG] Reading diff from: ${diffPath}`);
-
   let totalPct = 0;
   let diffPct = 0;
 
@@ -90,6 +91,7 @@ function getCoverage() {
       if (line.startsWith("LH:")) lh += parseInt(line.split(":")[1]);
     });
     totalPct = lf ? (lh / lf) * 100 : 0;
+
     console.log(`[DEBUG] Total Coverage: ${totalPct.toFixed(2)}% (LF: ${lf}, LH: ${lh})`);
   } else {
     console.log(`[DEBUG] LCOV file not found or empty at ${lcovPath}`);
@@ -100,6 +102,7 @@ function getCoverage() {
   if (diffContent) {
     // Matches "Total: 85%", "Coverage: 85.0%", "Diff Coverage: 85%" etc.
     const match = diffContent.match(/(?:Total|Coverage|Diff Coverage):\s+(\d+(?:\.\d+)?)%/i);
+
     if (match) {
       diffPct = parseFloat(match[1]);
       console.log(`[DEBUG] Found Diff Coverage: ${diffPct}%`);
@@ -108,6 +111,7 @@ function getCoverage() {
     }
   } else {
     console.log(`[DEBUG] Diff coverage file not found at ${diffPath}`);
+
   }
 
   return {
@@ -140,6 +144,7 @@ function getSmokeTest() {
 
   if (!data.routes) {
     return { status: "⚪️", passed: false, routesPass: 0, routesFail: 0, startup: "N/A", errors: [], flakiness: 0 };
+
   }
 
   const routesPass = data.routes.filter(r => r.passed === true).length;
@@ -152,7 +157,6 @@ function getSmokeTest() {
   if (data.routes) {
     data.routes.forEach(r => { if (r.retry) retries += r.retry; });
   }
-
   return {
     status: data.passed ? "✅" : "❌",
     passed: data.passed,
@@ -164,6 +168,7 @@ function getSmokeTest() {
     failedRoutes: data.failedRoutes || [],
     flakiness: retries
   };
+
 }
 
 function getJobBreakdown() {
@@ -205,7 +210,6 @@ function calculateQualityScore(cov, smoke, bundle, jobs) {
 
   return Math.round(score);
 }
-
 // --- DATA AGGREGATION ---
 
 const impact = getGitImpact();
@@ -219,6 +223,7 @@ const flutterVerRaw = getVersion("flutter --version");
 const flutterVer = flutterVerRaw.replace(/^Flutter\s+/i, '').split(' • ')[0];
 const nodeVer = getVersion("node -v");
 
+
 const hasFailures = jobs.static === "❌" || jobs.unit === "❌" || jobs.build === "❌" || jobs.smoke === "❌";
 const hasWarnings = coverage.diff < 80 || (jobs.build === "✅" && !bundle.passed) || (jobs.smoke === "✅" && !smoke.passed);
 
@@ -231,6 +236,7 @@ const statusEmoji = hasFailures ? "🔴" : (overallStatus === "Warning" ? "🟡"
 
 const topIssues = [];
 if (jobs.static === "❌") topIssues.push("🛡️ **Static Analysis Failed**: Please check lint rules.");
+
 if (jobs.unit === "❌") topIssues.push("🧪 **Unit Tests Failed**: Check test logs for specific failures.");
 if (smoke.routesFail > 0) topIssues.push(`💨 **Smoke Test Failures**: \`${smoke.failedRoutes[0]}\` and ${smoke.routesFail - 1} more routes.`);
 if (coverage.diff < 80) topIssues.push(`🧪 **Low Diff Coverage**: PR coverage is only **${coverage.diff}%** (target 80%).`);
