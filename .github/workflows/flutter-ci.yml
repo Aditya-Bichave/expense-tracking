@@ -67,8 +67,20 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze
+      - name: Run Static Analysis
         run: flutter analyze
+
+      - name: Export Metadata
+        run: |
+          mkdir -p metadata
+          flutter --version > metadata/flutter-version.txt
+
+      - name: Upload Metadata
+        uses: actions/upload-artifact@v4
+        with:
+          name: metadata
+          path: metadata/
+          retention-days: 1
 
       - name: Policy Check (No Print/TODO)
         if: github.event_name == 'pull_request'
@@ -239,6 +251,8 @@ jobs:
     needs: [static-checks, unit-tests, web-build, web-smoke]
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
