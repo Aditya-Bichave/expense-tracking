@@ -1,6 +1,8 @@
 // lib/core/di/service_configurations/recurring_transactions_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/datasources/recurring_transaction_local_data_source.dart';
+import 'package:expense_tracker/features/recurring_transactions/data/datasources/recurring_transaction_local_data_source_proxy.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/repositories/recurring_transaction_repository_impl.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/services/transaction_generation_service.dart';
@@ -20,10 +22,14 @@ import 'package:uuid/uuid.dart';
 class RecurringTransactionsDependencies {
   static void register() {
     // Data sources
+    // Register the PROXY instead of the direct implementation
     sl.registerLazySingleton<RecurringTransactionLocalDataSource>(
-      () => RecurringTransactionLocalDataSourceImpl(
-        recurringRuleBox: sl(),
-        recurringRuleAuditLogBox: sl(),
+      () => DemoAwareRecurringTransactionDataSource(
+        hiveDataSource: RecurringTransactionLocalDataSourceImpl(
+          recurringRuleBox: sl(),
+          recurringRuleAuditLogBox: sl(),
+        ),
+        demoModeService: sl<DemoModeService>(),
       ),
     );
 

@@ -1,5 +1,6 @@
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_event.dart';
@@ -8,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/data/countries.dart';
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -20,7 +22,25 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   GroupType _selectedType = GroupType.trip;
-  String _selectedCurrency = 'USD';
+  String _selectedCurrency = 'USD'; // Default fallback
+  bool _isInitialized = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isInitialized) {
+      // Initialize currency from SettingsBloc
+      try {
+        final settingsState = context.read<SettingsBloc>().state;
+        final countryCode = settingsState.selectedCountryCode;
+        _selectedCurrency = AppCountries.getCurrencyCodeForCountry(countryCode);
+      } catch (e) {
+        // Fallback to USD if SettingsBloc is not found or error
+        _selectedCurrency = 'USD';
+      }
+      _isInitialized = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,12 +111,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       labelText: 'Currency',
                       border: OutlineInputBorder(),
                     ),
-                    items: ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'].map((
-                      currency,
-                    ) {
+                    items: AppCountries.availableCountries.map((country) {
                       return DropdownMenuItem(
-                        value: currency,
-                        child: Text(currency),
+                        value: country.currencyCode,
+                        child: Text(
+                          '${country.currencyCode} (${country.currencySymbol})',
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -127,6 +147,16 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                           type: _selectedType,
                                           currency: _selectedCurrency,
                                           userId: authState.user.id,
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'You must be logged in to create a group.',
+                                          ),
                                         ),
                                       );
                                     }
