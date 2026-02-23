@@ -118,7 +118,7 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
             final pin = _pinController.text;
             if (pin.length == 4 && int.tryParse(pin) != null) {
               await _storage.savePin(pin);
-              if (mounted) Navigator.pop(context, true);
+              if (context.mounted) Navigator.pop(context, true);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('PIN must be 4 digits')),

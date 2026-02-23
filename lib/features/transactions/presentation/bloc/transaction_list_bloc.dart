@@ -286,7 +286,9 @@ class TransactionListBloc
     emit(
       state.copyWith(
         searchTerm: event.searchTerm,
-        clearSearchTerm: event.searchTerm == null || event.searchTerm!.isEmpty,
+        clearSearchTerm:
+            event.searchTerm == null ||
+            (event.searchTerm != null && event.searchTerm!.isEmpty),
         isInBatchEditMode: false,
         selectedTransactionIds: {},
         clearErrorMessage: true,

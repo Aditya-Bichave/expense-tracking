@@ -95,7 +95,7 @@ class SessionCubit extends Cubit<SessionState> {
   }
 
   void _validateAndEmit(User user, UserProfile profile) {
-    if (profile.fullName == null || profile.fullName!.isEmpty) {
+    if (profile.fullName == null || (profile.fullName?.isEmpty ?? true)) {
       emit(SessionNeedsProfileSetup(user));
     } else {
       emit(SessionAuthenticated(profile));
