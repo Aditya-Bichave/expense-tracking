@@ -1,4 +1,3 @@
-// lib/core/widgets/app_text_form_field.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -65,6 +64,19 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   }
 
   @override
+  void didUpdateWidget(AppTextFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.readOnly != oldWidget.readOnly) {
+      final shouldShow = widget.controller.text.isNotEmpty && !widget.readOnly;
+      if (_showClearButton != shouldShow) {
+        setState(() {
+          _showClearButton = shouldShow;
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     widget.controller.removeListener(_handleTextChange);
     super.dispose();
@@ -106,7 +118,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
           )
         : null;
 
-    return TextFormField(
+    final textFormField = TextFormField(
       controller: widget.controller,
       decoration: InputDecoration(
         labelText: widget.isRequired ? null : widget.labelText,
@@ -144,11 +156,19 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
       textCapitalization: widget.textCapitalization,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
       onChanged: widget.onChanged,
-      // --- ADDED ---
       textInputAction: widget.textInputAction,
       onFieldSubmitted: widget.onFieldSubmitted,
       autofillHints: widget.autofillHints,
-      // --- END ADDED ---
     );
+
+    if (widget.isRequired) {
+      return Semantics(
+        textField: true,
+        // isRequired: true, // Only available in newer Flutter versions, check SDK constraint
+        child: textFormField,
+      );
+    }
+
+    return textFormField;
   }
 }

@@ -13,7 +13,7 @@ class TransactionFilterDialog extends StatefulWidget {
   final String? initialAccountId;
   final String? initialCategoryId;
   final List<Category> availableCategories;
-  final Function(
+  final void Function(
     DateTime? startDate,
     DateTime? endDate,
     TransactionType? type,
@@ -56,7 +56,12 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
     _selectedEndDate = widget.initialEndDate;
     _selectedTransactionType = widget.initialTransactionType;
     _selectedAccountId = widget.initialAccountId;
-    _selectedCategoryId = widget.initialCategoryId;
+
+    final isValidCategory = widget.availableCategories.any(
+      (c) =>
+          c.id == widget.initialCategoryId && c.id != Category.uncategorized.id,
+    );
+    _selectedCategoryId = isValidCategory ? widget.initialCategoryId : null;
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {

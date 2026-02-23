@@ -122,6 +122,7 @@ class _LockScreenState extends State<LockScreen> {
             const SizedBox(height: 32),
             Semantics(
               label: '${enteredPin.length} of 4 digits entered',
+              excludeSemantics: true,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(4, (index) {

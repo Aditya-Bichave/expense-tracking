@@ -98,6 +98,7 @@ class TransactionListItem extends StatelessWidget {
       ),
       trailing: Semantics(
         label: '${isExpense ? 'Expense' : 'Income'} of $formattedAmount',
+        excludeSemantics: true,
         child: Text(
           '${isExpense ? '-' : '+'} $formattedAmount',
           style: theme.textTheme.bodyLarge?.copyWith(

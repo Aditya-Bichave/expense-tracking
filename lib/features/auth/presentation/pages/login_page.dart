@@ -2,6 +2,7 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:country_code_picker/country_code_picker.dart';
@@ -32,6 +33,28 @@ class _LoginPageState extends State<LoginPage>
     _phoneController.dispose();
     _emailController.dispose();
     super.dispose();
+  }
+
+  void _submitPhone() {
+    final state = context.read<AuthBloc>().state;
+    if (state is AuthLoading) return;
+
+    final phone = _phoneController.text.trim();
+    if (phone.isNotEmpty) {
+      context.read<AuthBloc>().add(AuthLoginRequested('$_countryCode$phone'));
+      TextInput.finishAutofillContext(shouldSave: true);
+    }
+  }
+
+  void _submitEmailLogin() {
+    final state = context.read<AuthBloc>().state;
+    if (state is AuthLoading) return;
+
+    final email = _emailController.text.trim();
+    if (email.isNotEmpty) {
+      context.read<AuthBloc>().add(AuthLoginWithMagicLinkRequested(email));
+      TextInput.finishAutofillContext(shouldSave: true);
+    }
   }
 
   @override
@@ -98,23 +121,18 @@ class _LoginPageState extends State<LoginPage>
               alignLeft: false,
             ),
             Expanded(
-              child: TextField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  hintText: '1234567890',
+              child: AutofillGroup(
+                child: TextField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    hintText: '1234567890',
+                  ),
+                  keyboardType: TextInputType.phone,
+                  autofillHints: const [AutofillHints.telephoneNumber],
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _submitPhone(),
                 ),
-                keyboardType: TextInputType.phone,
-                autofillHints: const [AutofillHints.telephoneNumber],
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) {
-                  final phone = _phoneController.text.trim();
-                  if (phone.isNotEmpty) {
-                    context.read<AuthBloc>().add(
-                      AuthLoginRequested('$_countryCode$phone'),
-                    );
-                  }
-                },
               ),
             ),
           ],
@@ -124,21 +142,15 @@ class _LoginPageState extends State<LoginPage>
           builder: (context, state) {
             final isLoading = state is AuthLoading;
             return ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () {
-                      final phone = _phoneController.text.trim();
-                      if (phone.isNotEmpty) {
-                        context.read<AuthBloc>().add(
-                          AuthLoginRequested('$_countryCode$phone'),
-                        );
-                      }
-                    },
+              onPressed: isLoading ? null : _submitPhone,
               child: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     )
                   : const Text('Send OTP'),
             );
@@ -152,44 +164,33 @@ class _LoginPageState extends State<LoginPage>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        TextField(
-          controller: _emailController,
-          decoration: const InputDecoration(
-            labelText: 'Email Address',
-            hintText: 'you@example.com',
+        AutofillGroup(
+          child: TextField(
+            controller: _emailController,
+            decoration: const InputDecoration(
+              labelText: 'Email Address',
+              hintText: 'you@example.com',
+            ),
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _submitEmailLogin(),
           ),
-          keyboardType: TextInputType.emailAddress,
-          autofillHints: const [AutofillHints.email],
-          textInputAction: TextInputAction.done,
-          onSubmitted: (_) {
-            final email = _emailController.text.trim();
-            if (email.isNotEmpty) {
-              context.read<AuthBloc>().add(
-                AuthLoginWithMagicLinkRequested(email),
-              );
-            }
-          },
         ),
         const SizedBox(height: 16),
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             final isLoading = state is AuthLoading;
             return ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () {
-                      final email = _emailController.text.trim();
-                      if (email.isNotEmpty) {
-                        context.read<AuthBloc>().add(
-                          AuthLoginWithMagicLinkRequested(email),
-                        );
-                      }
-                    },
+              onPressed: isLoading ? null : _submitEmailLogin,
               child: isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     )
                   : const Text('Send Magic Link'),
             );
