@@ -378,8 +378,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
                 }
                 final selectedTransactions =
                     (_showCalendarView && _selectedDay != null)
-                        ? _getEventsForDay(_selectedDay!)
-                        : <TransactionEntity>[];
+                    ? _getEventsForDay(_selectedDay!)
+                    : <TransactionEntity>[];
 
                 return RefreshIndicator(
                   onRefresh: () async {
