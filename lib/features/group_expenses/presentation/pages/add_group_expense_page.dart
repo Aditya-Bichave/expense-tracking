@@ -29,10 +29,12 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
         child: Column(
           children: [
             TextField(
+              key: const Key('group_expense_title_field'),
               controller: _titleController,
               decoration: const InputDecoration(labelText: 'Title'),
             ),
             TextField(
+              key: const Key('group_expense_amount_field'),
               controller: _amountController,
               decoration: const InputDecoration(labelText: 'Amount'),
               keyboardType: const TextInputType.numberWithOptions(

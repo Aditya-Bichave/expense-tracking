@@ -1,140 +1,73 @@
-import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/goal_summary_widget.dart';
+import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../../../helpers/pump_app.dart';
+class MockSettingsBloc extends Mock implements SettingsBloc {}
 
 void main() {
-  late MockGoRouter mockGoRouter;
-
-  final mockGoals = [
-    Goal(
-      id: '1',
-      name: 'New Car',
-      targetAmount: 20000,
-      totalSaved: 5000,
-      createdAt: DateTime(2023),
-      status: GoalStatus.active,
-    ),
-    Goal(
-      id: '2',
-      name: 'Vacation',
-      targetAmount: 3000,
-      totalSaved: 1500,
-      createdAt: DateTime(2023),
-      status: GoalStatus.active,
-    ),
-    Goal(
-      id: '3',
-      name: 'Laptop',
-      targetAmount: 1500,
-      totalSaved: 750,
-      createdAt: DateTime(2023),
-      status: GoalStatus.active,
-    ),
-  ];
+  late MockSettingsBloc mockSettingsBloc;
 
   setUp(() {
-    mockGoRouter = MockGoRouter();
+    mockSettingsBloc = MockSettingsBloc();
+    when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
+    when(() => mockSettingsBloc.stream).thenAnswer((_) => const Stream.empty());
   });
 
-  group('GoalSummaryWidget', () {
-    testWidgets('renders empty state when goals list is empty', (tester) async {
-      when(
-        () => mockGoRouter.pushNamed(RouteNames.addGoal),
-      ).thenAnswer((_) async => {});
+  Widget createWidgetUnderTest(List<Goal> goals) {
+    return MaterialApp(
+      home: BlocProvider<SettingsBloc>.value(
+        value: mockSettingsBloc,
+        child: Scaffold(
+          body: GoalSummaryWidget(
+            goals: goals,
+            recentContributionData: [
+              TimeSeriesDataPoint(
+                date: DateTime(2023),
+                amount: const ComparisonValue(currentValue: 10),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-      await pumpWidgetWithProviders(
-        tester: tester,
-        router: mockGoRouter,
-        widget: const GoalSummaryWidget(goals: [], recentContributionData: []),
-      );
+  testWidgets(
+    'GoalSummaryWidget renders empty state when goals list is empty',
+    (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest([]));
+      await tester.pumpAndSettle();
 
+      expect(find.text('GOAL PROGRESS'), findsOneWidget);
       expect(find.text('No savings goals set yet.'), findsOneWidget);
-      final createButton = find.byKey(
-        const ValueKey('button_goalSummary_create'),
-      );
-      expect(createButton, findsOneWidget);
+      expect(find.text('Create Goal'), findsOneWidget);
+    },
+  );
 
-      await tester.tap(createButton);
-      verify(() => mockGoRouter.pushNamed(RouteNames.addGoal)).called(1);
-    });
+  testWidgets('GoalSummaryWidget renders list of goals', (tester) async {
+    final goals = [
+      Goal(
+        id: '1',
+        name: 'Vacation',
+        targetAmount: 1000,
+        totalSaved: 500,
+        status: GoalStatus.active,
+        createdAt: DateTime.now(),
+        targetDate: DateTime.now().add(const Duration(days: 30)),
+      ),
+    ];
 
-    testWidgets('renders a list of goals', (tester) async {
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: GoalSummaryWidget(
-          goals: [mockGoals.first],
-          recentContributionData: [],
-        ),
-      );
+    await tester.pumpWidget(createWidgetUnderTest(goals));
+    await tester.pumpAndSettle();
 
-      expect(find.byType(Card), findsOneWidget);
-      expect(find.text('New Car'), findsOneWidget);
-      expect(find.textContaining('Saved:'), findsOneWidget);
-    });
-
-    testWidgets('tapping a goal card navigates to detail page', (tester) async {
-      when(
-        () => mockGoRouter.pushNamed(
-          RouteNames.goalDetail,
-          pathParameters: {'id': '1'},
-          extra: any(named: 'extra'),
-        ),
-      ).thenAnswer((_) async => {});
-
-      await pumpWidgetWithProviders(
-        tester: tester,
-        router: mockGoRouter,
-        widget: GoalSummaryWidget(
-          goals: [mockGoals.first],
-          recentContributionData: [],
-        ),
-      );
-
-      await tester.tap(find.byType(InkWell));
-
-      verify(
-        () => mockGoRouter.pushNamed(
-          RouteNames.goalDetail,
-          pathParameters: {'id': '1'},
-          extra: mockGoals.first,
-        ),
-      ).called(1);
-    });
-
-    testWidgets('shows "View All" button when there are 3 or more goals', (
-      tester,
-    ) async {
-      when(
-        () => mockGoRouter.go(
-          RouteNames.budgetsAndCats,
-          extra: any(named: 'extra'),
-        ),
-      ).thenAnswer((_) {});
-
-      await pumpWidgetWithProviders(
-        tester: tester,
-        router: mockGoRouter,
-        widget: GoalSummaryWidget(goals: mockGoals, recentContributionData: []),
-      );
-
-      final viewAllButton = find.byKey(
-        const ValueKey('button_goalSummary_viewAll'),
-      );
-      expect(viewAllButton, findsOneWidget);
-
-      await tester.tap(viewAllButton);
-      verify(
-        () => mockGoRouter.go(
-          RouteNames.budgetsAndCats,
-          extra: {'initialTabIndex': 1},
-        ),
-      ).called(1);
-    });
-  }, skip: true);
+    expect(find.text('GOAL PROGRESS (1)'), findsOneWidget);
+    expect(find.text('Vacation'), findsOneWidget);
+    expect(find.textContaining('500.00'), findsOneWidget);
+  });
 }

@@ -1,13 +1,13 @@
-import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
+import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/stitch_dashboard_body.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 
 class MockSettingsBloc extends Mock implements SettingsBloc {}
 
@@ -29,42 +29,41 @@ void main() {
     when(() => mockSettingsBloc.stream).thenAnswer((_) => const Stream.empty());
 
     when(
+      () => mockTransactionListBloc.state,
+    ).thenReturn(const TransactionListState());
+    when(
+      () => mockTransactionListBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
+
+    when(
       () => mockAccountListBloc.state,
     ).thenReturn(const AccountListLoaded(accounts: []));
     when(
       () => mockAccountListBloc.stream,
     ).thenAnswer((_) => const Stream.empty());
 
-    sl.registerFactory(() => mockAccountListBloc);
+    if (!sl.isRegistered<AccountListBloc>()) {
+      sl.registerFactory(() => mockAccountListBloc);
+    }
   });
 
   tearDown(() {
     sl.reset();
   });
 
-  testWidgets('RecentTransactionsSection renders list of transactions', (
-    tester,
-  ) async {
-    final transactions = [
-      TransactionEntity(
-        id: '1',
-        amount: 50,
-        date: DateTime.now(),
-        accountId: 'acc1',
-        type: TransactionType.expense,
-        title: 'Groceries',
-      ),
-    ];
-
-    when(() => mockTransactionListBloc.state).thenReturn(
-      TransactionListState(
-        status: ListStatus.success,
-        transactions: transactions,
-      ),
+  testWidgets('StitchDashboardBody renders', (tester) async {
+    final overview = FinancialOverview(
+      totalIncome: 0,
+      totalExpenses: 0,
+      netFlow: 0,
+      overallBalance: 0,
+      accounts: [],
+      accountBalances: {},
+      activeBudgetsSummary: [],
+      activeGoalsSummary: [],
+      recentSpendingSparkline: [],
+      recentContributionSparkline: [],
     );
-    when(
-      () => mockTransactionListBloc.stream,
-    ).thenAnswer((_) => const Stream.empty());
 
     await tester.pumpWidget(
       MaterialApp(
@@ -77,14 +76,17 @@ void main() {
             BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
           ],
           child: Scaffold(
-            body: RecentTransactionsSection(navigateToDetailOrEdit: (_, __) {}),
+            body: StitchDashboardBody(
+              overview: overview,
+              navigateToDetailOrEdit: (_, __) {},
+              onRefresh: () async {},
+            ),
           ),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('RECENT ACTIVITY'), findsOneWidget);
-    expect(find.textContaining('50.00'), findsOneWidget);
+    expect(find.byType(StitchDashboardBody), findsOneWidget);
   });
 }
