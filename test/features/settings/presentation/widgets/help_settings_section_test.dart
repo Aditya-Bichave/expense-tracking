@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/settings/presentation/widgets/help_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
+import 'package:expense_tracker/core/widgets/settings_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/pump_app.dart';

@@ -33,7 +33,12 @@ class BudgetPerformanceReportBloc
       final bool compare = state is BudgetPerformanceReportLoaded
           ? (state as BudgetPerformanceReportLoaded).showComparison
           : false;
-      add(LoadBudgetPerformanceReport(compareToPrevious: compare));
+      add(
+        LoadBudgetPerformanceReport(
+          compareToPrevious: compare,
+          forceReload: true,
+        ),
+      );
     });
 
     log.info("[BudgetPerformanceReportBloc] Initialized.");
@@ -51,7 +56,12 @@ class BudgetPerformanceReportBloc
     final bool compare = state is BudgetPerformanceReportLoaded
         ? (state as BudgetPerformanceReportLoaded).showComparison
         : false;
-    add(LoadBudgetPerformanceReport(compareToPrevious: compare));
+    add(
+      LoadBudgetPerformanceReport(
+        compareToPrevious: compare,
+        forceReload: true,
+      ),
+    );
   }
 
   void _onToggleComparison(
@@ -72,8 +82,9 @@ class BudgetPerformanceReportBloc
     LoadBudgetPerformanceReport event,
     Emitter<BudgetPerformanceReportState> emit,
   ) async {
-    // Avoid duplicate loads for the same comparison state
-    if (state is BudgetPerformanceReportLoading &&
+    // Avoid duplicate loads for the same comparison state unless forced
+    if (!event.forceReload &&
+        state is BudgetPerformanceReportLoading &&
         (state as BudgetPerformanceReportLoading).compareToPrevious ==
             event.compareToPrevious) {
       log.fine(

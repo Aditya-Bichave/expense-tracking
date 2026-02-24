@@ -27,7 +27,8 @@ class AddBudgetUseCase implements UseCase<Budget, AddBudgetParams> {
       return const Left(ValidationFailure("Target amount must be positive."));
     }
     if (params.type == BudgetType.categorySpecific &&
-        (params.categoryIds == null || params.categoryIds!.isEmpty)) {
+        (params.categoryIds == null ||
+            (params.categoryIds != null && params.categoryIds!.isEmpty))) {
       return const Left(
         ValidationFailure(
           "Please select at least one category for a category-specific budget.",

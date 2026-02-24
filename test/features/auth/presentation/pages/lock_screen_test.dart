@@ -29,17 +29,18 @@ void main() {
     }
     getIt.registerSingleton<SecureStorageService>(mockSecureStorageService);
 
-    // Mock local_auth method channel to avoid MissingPluginException
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.flutter.io/local_auth'),
           (MethodCall methodCall) async {
-            if (methodCall.method == 'isDeviceSupported' ||
-                methodCall.method == 'getAvailableBiometrics') {
+            if (methodCall.method == 'isDeviceSupported') {
+              return false;
+            }
+            if (methodCall.method == 'getAvailableBiometrics') {
               return <String>[];
             }
             if (methodCall.method == 'authenticate') {
-              return false; // Fail authentication by default to test PIN
+              return false;
             }
             return null;
           },
@@ -73,7 +74,7 @@ void main() {
     ).thenAnswer((_) async => '1234');
 
     await tester.pumpWidget(createWidget());
-    await tester.pumpAndSettle(); // Allow initState async calls to complete
+    await tester.pumpAndSettle();
 
     expect(find.text('App Locked'), findsOneWidget);
     expect(find.byIcon(Icons.lock), findsOneWidget);
@@ -94,11 +95,11 @@ void main() {
     when(
       () => mockSecureStorageService.getPin(),
     ).thenAnswer((_) async => '1234');
+    when(() => mockSessionCubit.unlock()).thenAnswer((_) async {});
 
     await tester.pumpWidget(createWidget());
     await tester.pumpAndSettle();
 
-    // Tap 1, 2, 3, 4
     await tester.tap(find.text('1'));
     await tester.pump();
     await tester.tap(find.text('2'));
@@ -126,7 +127,6 @@ void main() {
     await tester.pumpWidget(createWidget());
     await tester.pumpAndSettle();
 
-    // Tap 1, 1, 1, 1
     await tester.tap(find.text('1'));
     await tester.pump();
     await tester.tap(find.text('1'));
@@ -153,18 +153,11 @@ void main() {
     await tester.pumpWidget(createWidget());
     await tester.pumpAndSettle();
 
-    // Tap 1
     await tester.tap(find.text('1'));
     await tester.pump();
 
-    // Tap Backspace
     await tester.tap(find.byIcon(Icons.backspace_outlined));
     await tester.pump();
-
-    // How to verify? State is internal.
-    // We can verify that entering 3 more digits (total 4) does NOT trigger verify if backspace worked.
-    // 1 -> Back -> empty.
-    // Enter 2, 3, 4 -> Total 3 digits. No verify.
 
     await tester.tap(find.text('2'));
     await tester.pump();
@@ -174,7 +167,6 @@ void main() {
     await tester.pump();
 
     verifyNever(() => mockSessionCubit.unlock());
-    // Also no error snackbar
     expect(find.text('Incorrect PIN'), findsNothing);
   });
 }

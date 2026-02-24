@@ -13,27 +13,45 @@ class SecureLocalStorage extends LocalStorage {
 
   @override
   Future<bool> hasAccessToken() async {
-    return await storage.containsKey(
-      key: SupabaseConfig.supabasePersistSessionKey,
-    );
+    try {
+      return await storage.containsKey(
+        key: SupabaseConfig.supabasePersistSessionKey,
+      );
+    } catch (e) {
+      log.warning('SecureLocalStorage: Error checking access token: $e');
+      return false;
+    }
   }
 
   @override
   Future<String?> accessToken() async {
-    return await storage.read(key: SupabaseConfig.supabasePersistSessionKey);
+    try {
+      return await storage.read(key: SupabaseConfig.supabasePersistSessionKey);
+    } catch (e) {
+      log.warning('SecureLocalStorage: Error reading access token: $e');
+      return null;
+    }
   }
 
   @override
   Future<void> removePersistedSession() async {
-    await storage.delete(key: SupabaseConfig.supabasePersistSessionKey);
+    try {
+      await storage.delete(key: SupabaseConfig.supabasePersistSessionKey);
+    } catch (e) {
+      log.warning('SecureLocalStorage: Error deleting session: $e');
+    }
   }
 
   @override
   Future<void> persistSession(String persistSessionString) async {
-    await storage.write(
-      key: SupabaseConfig.supabasePersistSessionKey,
-      value: persistSessionString,
-    );
+    try {
+      await storage.write(
+        key: SupabaseConfig.supabasePersistSessionKey,
+        value: persistSessionString,
+      );
+    } catch (e) {
+      log.warning('SecureLocalStorage: Error persisting session: $e');
+    }
   }
 }
 
@@ -44,11 +62,7 @@ class SupabaseClientProvider {
         log.warning(
           'Supabase configuration is invalid. Initializing with placeholder values to prevent crashes.',
         );
-        await Supabase.initialize(
-          url: 'https://placeholder.supabase.co',
-          anonKey: 'placeholder',
-          debug: false,
-        );
+        await _initPlaceholder();
         return;
       }
 
@@ -64,12 +78,31 @@ class SupabaseClientProvider {
       log.info('Supabase initialized successfully.');
     } catch (e) {
       log.severe('Failed to initialize Supabase: $e');
+      // Attempt fallback to prevent app crash on client access
+      try {
+        await _initPlaceholder();
+      } catch (_) {}
+    }
+  }
+
+  static Future<void> _initPlaceholder() async {
+    if (!Supabase.instance.isInitialized) {
+      await Supabase.initialize(
+        url: 'https://placeholder.supabase.co',
+        anonKey: 'placeholder',
+        debug: false,
+      );
     }
   }
 
   static SupabaseClient get client {
     if (!Supabase.instance.isInitialized) {
-      throw Exception('Supabase not initialized');
+      // Return a temporary client or re-throw.
+      // Re-throwing is better than returning null if type is non-nullable.
+      // But we can try to init synchronously? No.
+      throw Exception(
+        'Supabase not initialized. Check logs for startup errors.',
+      );
     }
     return Supabase.instance.client;
   }

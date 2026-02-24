@@ -15,6 +15,11 @@ void main() {
       expect(GroupType.fromValue(''), GroupType.custom);
     });
 
+    test('fromValue should be case sensitive', () {
+      expect(GroupType.fromValue('Trip'), GroupType.custom);
+      expect(GroupType.fromValue('COUPLE'), GroupType.custom);
+    });
+
     test('value getter should return correct string', () {
       expect(GroupType.trip.value, 'trip');
       expect(GroupType.couple.value, 'couple');

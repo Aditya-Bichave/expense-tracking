@@ -1,30 +1,10 @@
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart'; // Re-use account selector
+import 'package:expense_tracker/features/accounts/presentation/widgets/account_selector_dropdown.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-extension MaybeReadBuildContext on BuildContext {
-  T? maybeRead<T>() {
-    try {
-      return read<T>();
-    } catch (_) {
-      return null;
-    }
-  }
-}
-
-// Callback type for applying filters
-typedef ApplyFiltersCallback =
-    void Function(
-      DateTime? startDate,
-      DateTime? endDate,
-      TransactionType? transactionType,
-      String? accountId,
-      String? categoryId,
-    );
 
 class TransactionFilterDialog extends StatefulWidget {
   final DateTime? initialStartDate;
@@ -32,15 +12,17 @@ class TransactionFilterDialog extends StatefulWidget {
   final TransactionType? initialTransactionType;
   final String? initialAccountId;
   final String? initialCategoryId;
-  final ApplyFiltersCallback onApplyFilter;
+  final List<Category> availableCategories;
+  final void Function(
+    DateTime? startDate,
+    DateTime? endDate,
+    TransactionType? type,
+    String? accountId,
+    String? categoryId,
+  )
+  onApplyFilter;
   final VoidCallback onClearFilter;
-  final List<Category> availableCategories; // Pass categories from BLoC/UseCase
-  final VoidCallback? onLoadAccounts;
-  final Widget Function(
-    String? selectedAccountId,
-    ValueChanged<String?> onChanged,
-  )?
-  accountSelectorBuilder;
+  final Widget Function(String?, ValueChanged<String?>)? accountSelectorBuilder;
 
   const TransactionFilterDialog({
     super.key,
@@ -49,10 +31,9 @@ class TransactionFilterDialog extends StatefulWidget {
     this.initialTransactionType,
     this.initialAccountId,
     this.initialCategoryId,
+    required this.availableCategories,
     required this.onApplyFilter,
     required this.onClearFilter,
-    required this.availableCategories,
-    this.onLoadAccounts,
     this.accountSelectorBuilder,
   });
 
@@ -62,11 +43,11 @@ class TransactionFilterDialog extends StatefulWidget {
 }
 
 class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
-  late DateTime? _selectedStartDate;
-  late DateTime? _selectedEndDate;
-  late TransactionType? _selectedTransactionType;
-  late String? _selectedAccountId;
-  late String? _selectedCategoryId;
+  DateTime? _selectedStartDate;
+  DateTime? _selectedEndDate;
+  TransactionType? _selectedTransactionType;
+  String? _selectedAccountId;
+  String? _selectedCategoryId;
 
   @override
   void initState() {
@@ -75,15 +56,12 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
     _selectedEndDate = widget.initialEndDate;
     _selectedTransactionType = widget.initialTransactionType;
     _selectedAccountId = widget.initialAccountId;
-    _selectedCategoryId = widget.initialCategoryId;
-    // Ensure AccountListBloc is loaded if AccountSelectorDropdown needs it
-    // This assumes AccountListBloc is provided higher up via MultiBlocProvider
-    final bloc = context.maybeRead<AccountListBloc>();
-    if (bloc != null) {
-      bloc.add(const LoadAccounts());
-    } else {
-      widget.onLoadAccounts?.call();
-    }
+
+    final isValidCategory = widget.availableCategories.any(
+      (c) =>
+          c.id == widget.initialCategoryId && c.id != Category.uncategorized.id,
+    );
+    _selectedCategoryId = isValidCategory ? widget.initialCategoryId : null;
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
@@ -105,6 +83,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           ); // Store date only
           // Adjust end date if necessary
           if (_selectedEndDate != null &&
+              _selectedStartDate != null &&
               _selectedEndDate!.isBefore(_selectedStartDate!)) {
             _selectedEndDate = _selectedStartDate;
           }
@@ -119,11 +98,21 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           ); // End of day
           // Adjust start date if necessary
           if (_selectedStartDate != null &&
+              _selectedEndDate != null &&
               _selectedStartDate!.isAfter(_selectedEndDate!)) {
             _selectedStartDate = _selectedEndDate;
           }
         }
       });
+    }
+  }
+
+  bool _hasProvider(BuildContext context) {
+    try {
+      context.read<AccountListBloc>();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -194,7 +183,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                             onPressed: () =>
                                 setState(() => _selectedStartDate = null),
                             tooltip: "Clear Start Date",
-                            visualDensity: VisualDensity.compact,
+                            // --- REMOVED visualDensity ---
                           )
                         : null,
                     onTap: () => _selectDate(context, true),
@@ -224,7 +213,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                             onPressed: () =>
                                 setState(() => _selectedEndDate = null),
                             tooltip: "Clear End Date",
-                            visualDensity: VisualDensity.compact,
+                            // --- REMOVED visualDensity ---
                           )
                         : null,
                     onTap: () => _selectDate(context, false),
@@ -280,7 +269,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
             // --- Account Selector ---
             Builder(
               builder: (context) {
-                if (context.maybeRead<AccountListBloc>() != null) {
+                if (_hasProvider(context)) {
                   return AccountSelectorDropdown(
                     // Reuse existing widget
                     selectedAccountId: _selectedAccountId,

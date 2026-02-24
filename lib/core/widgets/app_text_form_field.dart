@@ -1,4 +1,3 @@
-// lib/core/widgets/app_text_form_field.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,9 +6,7 @@ class AppTextFormField extends StatefulWidget {
   final TextEditingController controller;
   final String labelText;
   final String? hintText;
-  // --- MODIFIED: Accept Widget? instead of IconData? ---
   final Widget? prefixIcon;
-  // --- END MODIFIED ---
   final String? prefixText;
   final TextInputType keyboardType;
   final List<TextInputFormatter>? inputFormatters;
@@ -19,17 +16,21 @@ class AppTextFormField extends StatefulWidget {
   final VoidCallback? onTap;
   final TextCapitalization textCapitalization;
   final int? maxLines;
-  final ValueChanged<String>? onChanged; // Added onChanged callback
-  final bool isRequired; // Added isRequired flag
+  final ValueChanged<String>? onChanged;
+  final bool isRequired;
+
+  // --- ADDED: Accessibility & Action Props ---
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onFieldSubmitted;
+  final Iterable<String>? autofillHints;
+  // --- END ADDED ---
 
   const AppTextFormField({
     super.key,
     required this.controller,
     required this.labelText,
     this.hintText,
-    // --- MODIFIED ---
     this.prefixIcon,
-    // --- END MODIFIED ---
     this.prefixText,
     this.keyboardType = TextInputType.text,
     this.inputFormatters,
@@ -39,8 +40,13 @@ class AppTextFormField extends StatefulWidget {
     this.onTap,
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
-    this.onChanged, // Added onChanged
-    this.isRequired = false, // Default to false
+    this.onChanged,
+    this.isRequired = false,
+    // --- ADDED ---
+    this.textInputAction,
+    this.onFieldSubmitted,
+    this.autofillHints,
+    // --- END ADDED ---
   });
 
   @override
@@ -53,10 +59,21 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   @override
   void initState() {
     super.initState();
-    _showClearButton =
-        widget.controller.text.isNotEmpty &&
-        !widget.readOnly; // Also check readOnly
+    _showClearButton = widget.controller.text.isNotEmpty && !widget.readOnly;
     widget.controller.addListener(_handleTextChange);
+  }
+
+  @override
+  void didUpdateWidget(AppTextFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.readOnly != oldWidget.readOnly) {
+      final shouldShow = widget.controller.text.isNotEmpty && !widget.readOnly;
+      if (_showClearButton != shouldShow) {
+        setState(() {
+          _showClearButton = shouldShow;
+        });
+      }
+    }
   }
 
   @override
@@ -67,9 +84,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
 
   void _handleTextChange() {
     if (mounted) {
-      final shouldShow =
-          widget.controller.text.isNotEmpty &&
-          !widget.readOnly; // Check readOnly
+      final shouldShow = widget.controller.text.isNotEmpty && !widget.readOnly;
       if (_showClearButton != shouldShow) {
         setState(() {
           _showClearButton = shouldShow;
@@ -89,7 +104,6 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
     final inputTheme = theme.inputDecorationTheme;
     final modeTheme = context.modeTheme;
 
-    // Construct label with asterisk if required
     final Widget? labelWidget = widget.isRequired
         ? Text.rich(
             TextSpan(
@@ -104,7 +118,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
           )
         : null;
 
-    return TextFormField(
+    final textFormField = TextFormField(
       controller: widget.controller,
       decoration: InputDecoration(
         labelText: widget.isRequired ? null : widget.labelText,
@@ -123,9 +137,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
         isDense: inputTheme.isDense,
         floatingLabelBehavior: inputTheme.floatingLabelBehavior,
         floatingLabelStyle: inputTheme.floatingLabelStyle,
-        // --- MODIFIED: Use prefixIcon widget directly ---
         prefixIcon: widget.prefixIcon,
-        // --- END MODIFIED ---
         prefixText: widget.prefixText,
         suffixIcon: _showClearButton
             ? IconButton(
@@ -143,7 +155,20 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
       onTap: widget.onTap,
       textCapitalization: widget.textCapitalization,
       maxLines: widget.obscureText ? 1 : widget.maxLines,
-      onChanged: widget.onChanged, // Pass onChanged to TextFormField
+      onChanged: widget.onChanged,
+      textInputAction: widget.textInputAction,
+      onFieldSubmitted: widget.onFieldSubmitted,
+      autofillHints: widget.autofillHints,
     );
+
+    if (widget.isRequired) {
+      return Semantics(
+        textField: true,
+        // isRequired: true, // Only available in newer Flutter versions, check SDK constraint
+        child: textFormField,
+      );
+    }
+
+    return textFormField;
   }
 }

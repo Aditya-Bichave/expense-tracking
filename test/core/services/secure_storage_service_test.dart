@@ -57,7 +57,7 @@ void main() {
       test('regenerates key if corrupted', () async {
         when(
           () => mockStorage.read(key: hiveKeyKey),
-        ).thenAnswer((_) async => 'invalid_base64');
+        ).thenAnswer((_) async => '!!corrupt!!');
         when(
           () => mockStorage.write(
             key: hiveKeyKey,

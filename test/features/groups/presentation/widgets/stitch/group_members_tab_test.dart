@@ -31,6 +31,7 @@ void main() {
     mockUser = MockUser();
 
     when(() => mockUser.id).thenReturn('user1');
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(mockUser));
   });
 
   Widget createWidget() {
@@ -54,8 +55,6 @@ void main() {
   testWidgets('GroupMembersTab shows members list when loaded', (
     WidgetTester tester,
   ) async {
-    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(mockUser));
-
     final members = [
       GroupMember(
         id: 'm1',
@@ -82,6 +81,11 @@ void main() {
     await tester.pumpWidget(createWidget());
 
     expect(find.text('admin (You)'), findsOneWidget);
+    // Finds 'member ' or 'member' depending on exact text logic.
+    // The code says: Text('${member.role.name} ${isMe ? '(You)' : ''}')
+    // So 'member ' if isMe is false and 'member' is role name.
+    // Wait: member.role.name is 'member'. isMe false -> ''. So 'member '.
+    // Actually, string interpolation: 'member ' + ''.
     expect(find.text('member '), findsOneWidget);
     expect(find.byType(ListTile), findsNWidgets(2));
   });

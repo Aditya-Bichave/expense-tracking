@@ -1,14 +1,13 @@
-// lib/features/settings/presentation/widgets/general_settings_section.dart
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
+import 'package:expense_tracker/core/widgets/settings_list_tile.dart'; // Changed import
 import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class GeneralSettingsSection extends StatelessWidget {
   final SettingsState state;
@@ -26,28 +25,25 @@ class GeneralSettingsSection extends StatelessWidget {
     final AppCountry? currentCountry = AppCountries.findCountryByCode(
       state.selectedCountryCode,
     );
-    // --- Check Demo Mode ---
-    final bool isEnabled = !isLoading && !state.isInDemoMode;
-    // --- End Check ---
+    final bool isInDemoMode = state.isInDemoMode;
+    final bool isEnabled = !isLoading && !isInDemoMode;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(title: 'General'),
         SettingsListTile(
-          enabled: isEnabled, // Use combined state
+          enabled: isEnabled,
           leadingIcon: Icons.category_outlined,
           title: 'Manage Categories',
           subtitle: 'Add, edit, or delete custom categories',
           trailing: Icon(
             Icons.chevron_right,
-            color:
-                !isEnabled // Use combined state
+            color: !isEnabled
                 ? theme.disabledColor
                 : theme.colorScheme.onSurfaceVariant,
           ),
-          onTap:
-              !isEnabled // Use combined state
+          onTap: !isEnabled
               ? null
               : () {
                   log.info("[SettingsPage] Navigating to Category Management.");
@@ -86,8 +82,7 @@ class GeneralSettingsSection extends StatelessWidget {
               labelText: 'Country / Currency',
               prefixIcon: Icon(
                 Icons.public_outlined,
-                color:
-                    !isEnabled // Use combined state
+                color: !isEnabled
                     ? theme.disabledColor
                     : theme.inputDecorationTheme.prefixIconColor,
               ),
@@ -96,7 +91,7 @@ class GeneralSettingsSection extends StatelessWidget {
                 horizontal: 12,
                 vertical: 16,
               ),
-              enabled: isEnabled, // Use combined state
+              enabled: isEnabled,
             ),
             hint: const Text('Select Country'),
             isExpanded: true,
@@ -108,8 +103,7 @@ class GeneralSettingsSection extends StatelessWidget {
                   ),
                 )
                 .toList(),
-            onChanged:
-                !isEnabled // Use combined state
+            onChanged: !isEnabled
                 ? null
                 : (String? newValue) {
                     if (newValue != null) {

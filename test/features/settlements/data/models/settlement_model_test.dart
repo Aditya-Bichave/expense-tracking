@@ -23,26 +23,15 @@ void main() {
     createdAt: DateTime(2023, 10, 1),
   );
 
-  test('should be a subclass of Settlement entity', () async {
-    // It's not a subclass but it converts to one.
-    // Wait, the model code I read does NOT extend Settlement. It extends HiveObject.
-    expect(tSettlementModel.toEntity(), isA<Settlement>());
-  });
-
-  group('toEntity', () {
-    test('should return a valid Settlement entity', () async {
-      final result = tSettlementModel.toEntity();
-      expect(result, equals(tSettlement));
-    });
+  test('should convert to Settlement entity', () {
+    final result = tSettlementModel.toEntity();
+    expect(result, isA<Settlement>());
+    expect(result, equals(tSettlement));
   });
 
   group('fromEntity', () {
-    test('should return a valid SettlementModel from entity', () async {
+    test('should return a valid SettlementModel from entity', () {
       final result = SettlementModel.fromEntity(tSettlement);
-      // Since SettlementModel doesn't implement Equatable or override ==,
-      // we check fields individually or rely on identical instances (which won't work here).
-      // Or we check if converting back to entity equals.
-      expect(result.toEntity(), equals(tSettlement));
       expect(result.id, tSettlement.id);
       expect(result.groupId, tSettlement.groupId);
       expect(result.fromUserId, tSettlement.fromUserId);
@@ -54,7 +43,7 @@ void main() {
   });
 
   group('fromJson', () {
-    test('should return a valid model from JSON', () async {
+    test('should return a valid model from JSON', () {
       final Map<String, dynamic> jsonMap = {
         'id': '1',
         'groupId': 'group1',
@@ -70,7 +59,7 @@ void main() {
   });
 
   group('toJson', () {
-    test('should return a JSON map containing the proper data', () async {
+    test('should return a JSON map containing the proper data', () {
       final result = tSettlementModel.toJson();
       final expectedMap = {
         'id': '1',

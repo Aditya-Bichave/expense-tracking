@@ -1,3 +1,4 @@
+import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/settlements/domain/entities/settlement.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,11 +13,11 @@ void main() {
     createdAt: DateTime(2023, 10, 1),
   );
 
-  test('should be a subclass of Equatable', () async {
-    expect(tSettlement, isA<Settlement>());
+  test('should be a subclass of Equatable', () {
+    expect(tSettlement, isA<Equatable>());
   });
 
-  test('should support value equality', () async {
+  test('should support value equality', () {
     final tSettlement2 = Settlement(
       id: '1',
       groupId: 'group1',
@@ -29,7 +30,7 @@ void main() {
     expect(tSettlement, equals(tSettlement2));
   });
 
-  test('props should contain all fields', () async {
+  test('props should contain all fields', () {
     expect(tSettlement.props, [
       '1',
       'group1',

@@ -15,12 +15,15 @@ class SectionHeader extends StatelessWidget {
     final theme = Theme.of(context);
     return Padding(
       padding: padding,
-      child: Text(
-        title.toUpperCase(),
-        style: theme.textTheme.labelMedium?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.8,
+      child: Semantics(
+        header: true,
+        child: Text(
+          title.toUpperCase(),
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.8,
+          ),
         ),
       ),
     );

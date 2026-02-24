@@ -20,22 +20,28 @@ class MockSessionCubit extends MockCubit<SessionState>
 
 class FakeProfileEvent extends Fake implements ProfileEvent {}
 
-class FakeUpdateProfile extends Fake implements UpdateProfile {}
-
 void main() {
   late MockProfileBloc mockProfileBloc;
   late MockSessionCubit mockSessionCubit;
 
   setUpAll(() {
     registerFallbackValue(FakeProfileEvent());
-    registerFallbackValue(FakeUpdateProfile());
+    registerFallbackValue(
+      UpdateProfile(
+        UserProfile(
+          id: 'dummy',
+          email: 'dummy',
+          currency: 'USD',
+          timezone: 'UTC',
+        ),
+      ),
+    );
   });
 
   setUp(() {
     mockProfileBloc = MockProfileBloc();
     mockSessionCubit = MockSessionCubit();
 
-    // Mock timezone channel
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(const MethodChannel('flutter_timezone'), (
           MethodCall methodCall,
@@ -71,13 +77,11 @@ void main() {
     when(() => mockProfileBloc.state).thenReturn(ProfileInitial());
 
     await tester.pumpWidget(createWidget());
-    await tester.pumpAndSettle(); // Allow async timezone init
+    await tester.pumpAndSettle();
 
     expect(find.text('Setup Profile'), findsOneWidget);
     expect(find.text('Full Name'), findsOneWidget);
     expect(find.text('Currency'), findsOneWidget);
-    // Timezone might fail depending on platform channels, check if we found it or default
-    // expect(find.text('Timezone: UTC'), findsOneWidget);
     expect(find.text('Complete Setup'), findsOneWidget);
   });
 
@@ -97,7 +101,6 @@ void main() {
       timezone: 'UTC',
     );
 
-    // Start with Initial, then emit Loaded to trigger listener
     whenListen(
       mockProfileBloc,
       Stream.fromIterable([ProfileInitial(), ProfileLoaded(profile)]),
@@ -105,17 +108,25 @@ void main() {
     );
 
     await tester.pumpWidget(createWidget());
-    await tester.pumpAndSettle(); // Process listener and rebuild
+    await tester.pumpAndSettle();
 
     final textField = tester.widget<TextField>(
       find.widgetWithText(TextField, 'Full Name'),
     );
-    expect(textField.controller?.text, 'John Doe');
+    expect(
+      textField.controller,
+      isNotNull,
+      reason: 'TextField controller should not be null',
+    );
+    expect(textField.controller!.text, 'John Doe');
   });
 
   testWidgets('Submit with valid name triggers update', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(800, 2000);
+    addTearDown(tester.view.resetPhysicalSize);
+
     final profile = UserProfile(
       id: '1',
       email: 'test@example.com',
@@ -126,7 +137,7 @@ void main() {
     when(() => mockProfileBloc.state).thenReturn(ProfileLoaded(profile));
 
     await tester.pumpWidget(createWidget());
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.enterText(
       find.widgetWithText(TextField, 'Full Name'),
@@ -134,8 +145,6 @@ void main() {
     );
     await tester.pump();
 
-    // Tap button directly without ensureVisible, as SingleChildScrollView should be there but maybe not needed for test context
-    await tester.ensureVisible(find.byType(ElevatedButton));
     await tester.tap(find.text('Complete Setup'));
     await tester.pump();
 
@@ -145,28 +154,21 @@ void main() {
     verify(() => mockSessionCubit.profileSetupCompleted()).called(1);
   });
 
-  // testWidgets('Submit with empty name shows error', (WidgetTester tester) async {
-  //   when(() => mockProfileBloc.state).thenReturn(ProfileInitial());
+  testWidgets('Submit with empty name shows error', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2000);
+    addTearDown(tester.view.resetPhysicalSize);
 
-  //   await tester.pumpWidget(createWidget());
-  //   await tester.pumpAndSettle(); // Need to wait for initial async calls (timezone) to finish rendering
+    when(() => mockProfileBloc.state).thenReturn(ProfileInitial());
 
-  //   // Ensure the widget tree is settled
-  //   await tester.pumpAndSettle();
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
 
-  //   // Tap button directly - the view size should be enough or it should work if it's in the tree
-  //   // If not, we might need to increase screen size
-  //   tester.view.physicalSize = const Size(800, 1600);
-  //   tester.view.devicePixelRatio = 1.0;
-  //   addTearDown(tester.view.resetPhysicalSize);
-  //   addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.tap(find.text('Complete Setup'));
+    await tester.pumpAndSettle(); // Wait for SnackBar animation
 
-  //   await tester.pumpAndSettle();
-
-  //   await tester.tap(find.text('Complete Setup'));
-  //   await tester.pump();
-
-  //   expect(find.text('Name is required'), findsOneWidget);
-  //   verifyNever(() => mockProfileBloc.add(any(that: isA<UpdateProfile>())));
-  // });
+    expect(find.text('Name is required'), findsOneWidget);
+    verifyNever(() => mockProfileBloc.add(any(that: isA<UpdateProfile>())));
+  });
 }

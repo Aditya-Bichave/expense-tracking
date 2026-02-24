@@ -140,6 +140,7 @@ class _StrongConfirmationDialogState extends State<_StrongConfirmationDialog> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _controller,
+              autofocus: true, // --- ADDED ---
               decoration: InputDecoration(
                 hintText: widget.confirmationPhrase,
                 border: const OutlineInputBorder(),

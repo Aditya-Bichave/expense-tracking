@@ -1,33 +1,18 @@
-// lib/features/transactions/presentation/widgets/transaction_form.dart
-// ignore_for_file: deprecated_member_use
-
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
-import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
+import 'package:expense_tracker/core/utils/currency_parser.dart';
+import 'package:expense_tracker/core/widgets/common_form_fields.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
-import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/currency_parser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-typedef TransactionSubmitCallback =
-    void Function(
-      TransactionType type,
-      String title,
-      double amount,
-      DateTime date,
-      Category category,
-      String accountId,
-      String? notes,
-    );
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class TransactionForm extends StatefulWidget {
   final TransactionEntity? initialTransaction;
-  final TransactionSubmitCallback onSubmit;
   final TransactionType initialType;
   final Category? initialCategory;
   final String? initialTitle;
@@ -35,18 +20,28 @@ class TransactionForm extends StatefulWidget {
   final DateTime? initialDate;
   final String? initialAccountId;
   final String? initialNotes;
+  final Function(
+    TransactionType type,
+    String title,
+    double amount,
+    DateTime date,
+    Category category,
+    String accountId,
+    String? notes,
+  )
+  onSubmit;
 
   const TransactionForm({
     super.key,
-    required this.onSubmit,
     this.initialTransaction,
-    this.initialType = TransactionType.expense,
+    required this.initialType,
     this.initialCategory,
     this.initialTitle,
     this.initialAmount,
     this.initialDate,
     this.initialAccountId,
     this.initialNotes,
+    required this.onSubmit,
   });
 
   @override
@@ -58,34 +53,32 @@ class TransactionFormState extends State<TransactionForm> {
   late TextEditingController _titleController;
   late TextEditingController _amountController;
   late TextEditingController _notesController;
-  late DateTime _selectedDate;
-  Category? _selectedCategory;
-  String? _selectedAccountId;
   late TransactionType _transactionType;
+  Category? _selectedCategory;
+  late DateTime _selectedDate;
+  String? _selectedAccountId;
 
+  // --- Public Getters for Parent Access ---
   String get currentTitle => _titleController.text;
   String get currentAmountRaw => _amountController.text;
   DateTime get currentDate => _selectedDate;
   String? get currentAccountId => _selectedAccountId;
   String get currentNotes => _notesController.text;
-  Category? get selectedCategory => _selectedCategory;
-
-  // Removed _categoryFormFieldKey
+  // --- End Public Getters ---
 
   @override
   void initState() {
     super.initState();
     final initial = widget.initialTransaction;
-    _transactionType = initial?.type ?? widget.initialType;
-    log.info(
-      "[TransactionForm] initState. Initial Txn: ${initial != null}, Type: ${_transactionType.name}",
-    );
+    _transactionType = widget.initialType;
 
     _titleController = TextEditingController(
       text: widget.initialTitle ?? initial?.title ?? '',
     );
     _amountController = TextEditingController(
-      text: (widget.initialAmount ?? initial?.amount)?.toStringAsFixed(2) ?? '',
+      text: widget.initialAmount != null
+          ? widget.initialAmount!.toStringAsFixed(2)
+          : (initial != null ? initial.amount.toStringAsFixed(2) : ''),
     );
     _notesController = TextEditingController(
       text: widget.initialNotes ?? initial?.notes ?? '',
@@ -159,12 +152,12 @@ class TransactionFormState extends State<TransactionForm> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (pickedDate != null && mounted) {
+    if (pickedDate != null && context.mounted) {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(_selectedDate),
       );
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _selectedDate = DateTime(
             pickedDate.year,
@@ -249,8 +242,6 @@ class TransactionFormState extends State<TransactionForm> {
     }
   }
 
-  // Removed _getPrefixIcon
-
   @override
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
@@ -316,6 +307,7 @@ class TransactionFormState extends State<TransactionForm> {
                 : Icons.source_outlined,
             textCapitalization: TextCapitalization.sentences,
             isRequired: true,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
 
@@ -326,6 +318,7 @@ class TransactionFormState extends State<TransactionForm> {
             labelText: 'Amount',
             currencySymbol: currencySymbol,
             isRequired: true,
+            textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 16),
 
@@ -369,6 +362,8 @@ class TransactionFormState extends State<TransactionForm> {
           CommonFormFields.buildNotesField(
             context: context,
             controller: _notesController,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (_) => _submitForm(),
           ),
           const SizedBox(height: 32),
 
