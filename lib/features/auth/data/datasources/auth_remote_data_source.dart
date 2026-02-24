@@ -28,8 +28,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> signInWithMagicLink({required String email}) async {
     await _client.auth.signInWithOtp(
       email: email,
-      emailRedirectTo:
-          kIsWeb ? null : 'io.supabase.expensetracker://login-callback',
+      emailRedirectTo: kIsWeb
+          ? null
+          : 'io.supabase.expensetracker://login-callback',
     );
   }
 

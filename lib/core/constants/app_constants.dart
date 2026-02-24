@@ -1,7 +1,7 @@
 // lib/core/constants/app_constants.dart
 
 abstract class AppConstants {
-  static const String appName = "Spend Savvy"; // Centralized app name
+  static const String appName = "Financial OS"; // Centralized app name
 
   // Default values moved from SettingsState (can be used across app)
   // Note: ThemeMode itself doesn't fit well here, keep default in SettingsState

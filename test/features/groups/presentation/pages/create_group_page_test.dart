@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart' as app_auth_state;
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart'
+    as app_auth_state;
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart'; // Import AuthEvent
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_event.dart';
@@ -8,6 +9,7 @@ import 'package:expense_tracker/features/groups/presentation/bloc/create_group/c
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart'; // Import GroupType
 import 'package:expense_tracker/features/groups/presentation/pages/create_group_page.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -19,7 +21,8 @@ import 'package:supabase_flutter/supabase_flutter.dart'; // For User
 class MockCreateGroupBloc extends MockBloc<CreateGroupEvent, CreateGroupState>
     implements CreateGroupBloc {}
 
-class MockAuthBloc extends MockBloc<AuthEvent, app_auth_state.AuthState> implements AuthBloc {}
+class MockAuthBloc extends MockBloc<AuthEvent, app_auth_state.AuthState>
+    implements AuthBloc {}
 
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
@@ -35,7 +38,14 @@ void main() {
   late MockSettingsBloc mockSettingsBloc;
 
   setUpAll(() {
-    registerFallbackValue(CreateGroupSubmitted(name: 'dummy', userId: 'dummy', type: GroupType.trip, currency: 'USD'));
+    registerFallbackValue(
+      CreateGroupSubmitted(
+        name: 'dummy',
+        userId: 'dummy',
+        type: GroupType.trip,
+        currency: 'USD',
+      ),
+    );
   });
 
   setUp(() {
@@ -43,8 +53,8 @@ void main() {
     mockAuthBloc = MockAuthBloc();
     mockSettingsBloc = MockSettingsBloc();
 
-    final sl = GetIt.instance;
-    sl.reset();
+    // Ensure CreateGroupBloc is registered
+    sl.allowReassignment = true;
     sl.registerFactory<CreateGroupBloc>(() => mockCreateGroupBloc);
   });
 
@@ -60,8 +70,9 @@ void main() {
 
   testWidgets('renders correctly', (tester) async {
     when(() => mockCreateGroupBloc.state).thenReturn(CreateGroupInitial());
-    when(() => mockAuthBloc.state)
-        .thenReturn(app_auth_state.AuthAuthenticated(MockUser())); // Authenticated
+    when(
+      () => mockAuthBloc.state,
+    ).thenReturn(app_auth_state.AuthAuthenticated(MockUser())); // Authenticated
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
 
     await tester.pumpWidget(createWidgetUnderTest());
@@ -75,10 +86,12 @@ void main() {
 
   testWidgets('initializes currency from settings', (tester) async {
     when(() => mockCreateGroupBloc.state).thenReturn(CreateGroupInitial());
-    when(() => mockAuthBloc.state).thenReturn(app_auth_state.AuthAuthenticated(MockUser()));
-    when(() => mockSettingsBloc.state).thenReturn(
-      const SettingsState(selectedCountryCode: 'GB'),
-    ); // UK -> GBP
+    when(
+      () => mockAuthBloc.state,
+    ).thenReturn(app_auth_state.AuthAuthenticated(MockUser()));
+    when(
+      () => mockSettingsBloc.state,
+    ).thenReturn(const SettingsState(selectedCountryCode: 'GB')); // UK -> GBP
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
@@ -93,7 +106,9 @@ void main() {
 
   testWidgets('shows error snackbar when not authenticated', (tester) async {
     when(() => mockCreateGroupBloc.state).thenReturn(CreateGroupInitial());
-    when(() => mockAuthBloc.state).thenReturn(app_auth_state.AuthUnauthenticated());
+    when(
+      () => mockAuthBloc.state,
+    ).thenReturn(app_auth_state.AuthUnauthenticated());
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
 
     await tester.pumpWidget(createWidgetUnderTest());
@@ -113,7 +128,9 @@ void main() {
     tester,
   ) async {
     when(() => mockCreateGroupBloc.state).thenReturn(CreateGroupInitial());
-    when(() => mockAuthBloc.state).thenReturn(app_auth_state.AuthAuthenticated(MockUser()));
+    when(
+      () => mockAuthBloc.state,
+    ).thenReturn(app_auth_state.AuthAuthenticated(MockUser()));
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
 
     await tester.pumpWidget(createWidgetUnderTest());
@@ -131,15 +148,17 @@ void main() {
     await tester.pump();
 
     // Capture the argument
-    final captured = verify(() => mockCreateGroupBloc.add(captureAny())).captured;
+    final captured = verify(
+      () => mockCreateGroupBloc.add(captureAny()),
+    ).captured;
 
     // Manual assertions on the captured event
     expect(captured.length, 1);
     final event = captured.first;
     expect(event, isA<CreateGroupSubmitted>());
     if (event is CreateGroupSubmitted) {
-        expect(event.name, 'Test Group');
-        expect(event.userId, 'test-user-id');
+      expect(event.name, 'Test Group');
+      expect(event.userId, 'test-user-id');
     }
   });
 }

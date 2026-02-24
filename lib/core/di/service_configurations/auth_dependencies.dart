@@ -9,6 +9,8 @@ import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dar
 import 'package:expense_tracker/features/auth/domain/usecases/verify_otp_usecase.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
+import 'package:app_links/app_links.dart';
+import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
 
 class AuthDependencies {
   static void register() {
@@ -27,5 +29,10 @@ class AuthDependencies {
     sl.registerFactory(() => AuthBloc(sl(), sl(), sl(), sl(), sl()));
 
     sl.registerLazySingleton(() => SessionCubit(sl(), sl(), sl()));
+
+    sl.registerLazySingleton<AppLinks>(() => AppLinks());
+    sl.registerLazySingleton(
+      () => DeepLinkBloc(sl<AppLinks>(), sl(), sl<AuthRepository>()),
+    );
   }
 }

@@ -37,196 +37,268 @@ void main() {
   });
 
   group('addRecurringRule', () {
-    test('should delegate to DemoModeService when demo mode is active', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.addDemoRecurringRule(any()))
-          .thenAnswer((_) async {});
-      final rule = MockRecurringRuleModel();
+    test(
+      'should delegate to DemoModeService when demo mode is active',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        when(
+          () => mockDemoModeService.addDemoRecurringRule(any()),
+        ).thenAnswer((_) async {});
+        final rule = MockRecurringRuleModel();
 
-      await proxy.addRecurringRule(rule);
+        await proxy.addRecurringRule(rule);
 
-      verify(() => mockDemoModeService.addDemoRecurringRule(rule)).called(1);
-      verifyZeroInteractions(mockHiveDataSource);
-    });
+        verify(() => mockDemoModeService.addDemoRecurringRule(rule)).called(1);
+        verifyZeroInteractions(mockHiveDataSource);
+      },
+    );
 
-    test('should delegate to HiveDataSource when demo mode is inactive', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.addRecurringRule(any()))
-          .thenAnswer((_) async {});
-      final rule = MockRecurringRuleModel();
+    test(
+      'should delegate to HiveDataSource when demo mode is inactive',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+        when(
+          () => mockHiveDataSource.addRecurringRule(any()),
+        ).thenAnswer((_) async {});
+        final rule = MockRecurringRuleModel();
 
-      await proxy.addRecurringRule(rule);
+        await proxy.addRecurringRule(rule);
 
-      verify(() => mockHiveDataSource.addRecurringRule(rule)).called(1);
-      verifyNever(() => mockDemoModeService.addDemoRecurringRule(any()));
-    });
+        verify(() => mockHiveDataSource.addRecurringRule(rule)).called(1);
+        verifyNever(() => mockDemoModeService.addDemoRecurringRule(any()));
+      },
+    );
   });
 
   group('getRecurringRules', () {
-    test('should delegate to DemoModeService when demo mode is active', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      final rules = [MockRecurringRuleModel()];
-      when(() => mockDemoModeService.getDemoRecurringRules())
-          .thenAnswer((_) async => rules);
+    test(
+      'should delegate to DemoModeService when demo mode is active',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        final rules = [MockRecurringRuleModel()];
+        when(
+          () => mockDemoModeService.getDemoRecurringRules(),
+        ).thenAnswer((_) async => rules);
 
-      final result = await proxy.getRecurringRules();
+        final result = await proxy.getRecurringRules();
 
-      expect(result, rules);
-      verify(() => mockDemoModeService.getDemoRecurringRules()).called(1);
-      verifyZeroInteractions(mockHiveDataSource);
-    });
+        expect(result, rules);
+        verify(() => mockDemoModeService.getDemoRecurringRules()).called(1);
+        verifyZeroInteractions(mockHiveDataSource);
+      },
+    );
 
-    test('should delegate to HiveDataSource when demo mode is inactive', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      final rules = [MockRecurringRuleModel()];
-      when(() => mockHiveDataSource.getRecurringRules())
-          .thenAnswer((_) async => rules);
+    test(
+      'should delegate to HiveDataSource when demo mode is inactive',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+        final rules = [MockRecurringRuleModel()];
+        when(
+          () => mockHiveDataSource.getRecurringRules(),
+        ).thenAnswer((_) async => rules);
 
-      final result = await proxy.getRecurringRules();
+        final result = await proxy.getRecurringRules();
 
-      expect(result, rules);
-      verify(() => mockHiveDataSource.getRecurringRules()).called(1);
-      verifyNever(() => mockDemoModeService.getDemoRecurringRules());
-    });
+        expect(result, rules);
+        verify(() => mockHiveDataSource.getRecurringRules()).called(1);
+        verifyNever(() => mockDemoModeService.getDemoRecurringRules());
+      },
+    );
   });
 
   group('getRecurringRuleById', () {
-    test('should delegate to DemoModeService when demo mode is active', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      final rule = MockRecurringRuleModel();
-      when(() => mockDemoModeService.getDemoRecurringRuleById(any()))
-          .thenAnswer((_) async => rule);
+    test(
+      'should delegate to DemoModeService when demo mode is active',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        final rule = MockRecurringRuleModel();
+        when(
+          () => mockDemoModeService.getDemoRecurringRuleById(any()),
+        ).thenAnswer((_) async => rule);
 
-      final result = await proxy.getRecurringRuleById('id');
+        final result = await proxy.getRecurringRuleById('id');
 
-      expect(result, rule);
-      verify(() => mockDemoModeService.getDemoRecurringRuleById('id')).called(1);
-      verifyZeroInteractions(mockHiveDataSource);
-    });
+        expect(result, rule);
+        verify(
+          () => mockDemoModeService.getDemoRecurringRuleById('id'),
+        ).called(1);
+        verifyZeroInteractions(mockHiveDataSource);
+      },
+    );
 
-    test('should throw Exception when demo mode is active and rule not found', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.getDemoRecurringRuleById(any()))
-          .thenAnswer((_) async => null);
+    test(
+      'should throw Exception when demo mode is active and rule not found',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        when(
+          () => mockDemoModeService.getDemoRecurringRuleById(any()),
+        ).thenAnswer((_) async => null);
 
-      expect(() => proxy.getRecurringRuleById('id'), throwsException);
-    });
+        expect(() => proxy.getRecurringRuleById('id'), throwsException);
+      },
+    );
 
-    test('should delegate to HiveDataSource when demo mode is inactive', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      final rule = MockRecurringRuleModel();
-      when(() => mockHiveDataSource.getRecurringRuleById(any()))
-          .thenAnswer((_) async => rule);
+    test(
+      'should delegate to HiveDataSource when demo mode is inactive',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+        final rule = MockRecurringRuleModel();
+        when(
+          () => mockHiveDataSource.getRecurringRuleById(any()),
+        ).thenAnswer((_) async => rule);
 
-      final result = await proxy.getRecurringRuleById('id');
+        final result = await proxy.getRecurringRuleById('id');
 
-      expect(result, rule);
-      verify(() => mockHiveDataSource.getRecurringRuleById('id')).called(1);
-      verifyNever(() => mockDemoModeService.getDemoRecurringRuleById(any()));
-    });
+        expect(result, rule);
+        verify(() => mockHiveDataSource.getRecurringRuleById('id')).called(1);
+        verifyNever(() => mockDemoModeService.getDemoRecurringRuleById(any()));
+      },
+    );
   });
 
   group('updateRecurringRule', () {
-    test('should delegate to DemoModeService when demo mode is active', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.updateDemoRecurringRule(any()))
-          .thenAnswer((_) async {});
-      final rule = MockRecurringRuleModel();
+    test(
+      'should delegate to DemoModeService when demo mode is active',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        when(
+          () => mockDemoModeService.updateDemoRecurringRule(any()),
+        ).thenAnswer((_) async {});
+        final rule = MockRecurringRuleModel();
 
-      await proxy.updateRecurringRule(rule);
+        await proxy.updateRecurringRule(rule);
 
-      verify(() => mockDemoModeService.updateDemoRecurringRule(rule)).called(1);
-      verifyZeroInteractions(mockHiveDataSource);
-    });
+        verify(
+          () => mockDemoModeService.updateDemoRecurringRule(rule),
+        ).called(1);
+        verifyZeroInteractions(mockHiveDataSource);
+      },
+    );
 
-    test('should delegate to HiveDataSource when demo mode is inactive', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.updateRecurringRule(any()))
-          .thenAnswer((_) async {});
-      final rule = MockRecurringRuleModel();
+    test(
+      'should delegate to HiveDataSource when demo mode is inactive',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+        when(
+          () => mockHiveDataSource.updateRecurringRule(any()),
+        ).thenAnswer((_) async {});
+        final rule = MockRecurringRuleModel();
 
-      await proxy.updateRecurringRule(rule);
+        await proxy.updateRecurringRule(rule);
 
-      verify(() => mockHiveDataSource.updateRecurringRule(rule)).called(1);
-      verifyNever(() => mockDemoModeService.updateDemoRecurringRule(any()));
-    });
+        verify(() => mockHiveDataSource.updateRecurringRule(rule)).called(1);
+        verifyNever(() => mockDemoModeService.updateDemoRecurringRule(any()));
+      },
+    );
   });
 
   group('deleteRecurringRule', () {
-    test('should delegate to DemoModeService when demo mode is active', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.deleteDemoRecurringRule(any()))
-          .thenAnswer((_) async {});
+    test(
+      'should delegate to DemoModeService when demo mode is active',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        when(
+          () => mockDemoModeService.deleteDemoRecurringRule(any()),
+        ).thenAnswer((_) async {});
 
-      await proxy.deleteRecurringRule('id');
+        await proxy.deleteRecurringRule('id');
 
-      verify(() => mockDemoModeService.deleteDemoRecurringRule('id')).called(1);
-      verifyZeroInteractions(mockHiveDataSource);
-    });
+        verify(
+          () => mockDemoModeService.deleteDemoRecurringRule('id'),
+        ).called(1);
+        verifyZeroInteractions(mockHiveDataSource);
+      },
+    );
 
-    test('should delegate to HiveDataSource when demo mode is inactive', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.deleteRecurringRule(any()))
-          .thenAnswer((_) async {});
+    test(
+      'should delegate to HiveDataSource when demo mode is inactive',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+        when(
+          () => mockHiveDataSource.deleteRecurringRule(any()),
+        ).thenAnswer((_) async {});
 
-      await proxy.deleteRecurringRule('id');
+        await proxy.deleteRecurringRule('id');
 
-      verify(() => mockHiveDataSource.deleteRecurringRule('id')).called(1);
-      verifyNever(() => mockDemoModeService.deleteDemoRecurringRule(any()));
-    });
+        verify(() => mockHiveDataSource.deleteRecurringRule('id')).called(1);
+        verifyNever(() => mockDemoModeService.deleteDemoRecurringRule(any()));
+      },
+    );
   });
 
   group('addAuditLog', () {
-    test('should delegate to DemoModeService when demo mode is active', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.addDemoRecurringAuditLog(any()))
-          .thenAnswer((_) async {});
-      final log = MockRecurringRuleAuditLogModel();
+    test(
+      'should delegate to DemoModeService when demo mode is active',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        when(
+          () => mockDemoModeService.addDemoRecurringAuditLog(any()),
+        ).thenAnswer((_) async {});
+        final log = MockRecurringRuleAuditLogModel();
 
-      await proxy.addAuditLog(log);
+        await proxy.addAuditLog(log);
 
-      verify(() => mockDemoModeService.addDemoRecurringAuditLog(log)).called(1);
-      verifyZeroInteractions(mockHiveDataSource);
-    });
+        verify(
+          () => mockDemoModeService.addDemoRecurringAuditLog(log),
+        ).called(1);
+        verifyZeroInteractions(mockHiveDataSource);
+      },
+    );
 
-    test('should delegate to HiveDataSource when demo mode is inactive', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.addAuditLog(any())).thenAnswer((_) async {});
-      final log = MockRecurringRuleAuditLogModel();
+    test(
+      'should delegate to HiveDataSource when demo mode is inactive',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+        when(
+          () => mockHiveDataSource.addAuditLog(any()),
+        ).thenAnswer((_) async {});
+        final log = MockRecurringRuleAuditLogModel();
 
-      await proxy.addAuditLog(log);
+        await proxy.addAuditLog(log);
 
-      verify(() => mockHiveDataSource.addAuditLog(log)).called(1);
-      verifyNever(() => mockDemoModeService.addDemoRecurringAuditLog(any()));
-    });
+        verify(() => mockHiveDataSource.addAuditLog(log)).called(1);
+        verifyNever(() => mockDemoModeService.addDemoRecurringAuditLog(any()));
+      },
+    );
   });
 
   group('getAuditLogsForRule', () {
-    test('should delegate to DemoModeService when demo mode is active', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      final logs = [MockRecurringRuleAuditLogModel()];
-      when(() => mockDemoModeService.getDemoRecurringAuditLogsForRule(any()))
-          .thenAnswer((_) async => logs);
+    test(
+      'should delegate to DemoModeService when demo mode is active',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(true);
+        final logs = [MockRecurringRuleAuditLogModel()];
+        when(
+          () => mockDemoModeService.getDemoRecurringAuditLogsForRule(any()),
+        ).thenAnswer((_) async => logs);
 
-      final result = await proxy.getAuditLogsForRule('id');
+        final result = await proxy.getAuditLogsForRule('id');
 
-      expect(result, logs);
-      verify(() => mockDemoModeService.getDemoRecurringAuditLogsForRule('id'))
-          .called(1);
-      verifyZeroInteractions(mockHiveDataSource);
-    });
+        expect(result, logs);
+        verify(
+          () => mockDemoModeService.getDemoRecurringAuditLogsForRule('id'),
+        ).called(1);
+        verifyZeroInteractions(mockHiveDataSource);
+      },
+    );
 
-    test('should delegate to HiveDataSource when demo mode is inactive', () async {
-      when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      final logs = [MockRecurringRuleAuditLogModel()];
-      when(() => mockHiveDataSource.getAuditLogsForRule(any()))
-          .thenAnswer((_) async => logs);
+    test(
+      'should delegate to HiveDataSource when demo mode is inactive',
+      () async {
+        when(() => mockDemoModeService.isDemoActive).thenReturn(false);
+        final logs = [MockRecurringRuleAuditLogModel()];
+        when(
+          () => mockHiveDataSource.getAuditLogsForRule(any()),
+        ).thenAnswer((_) async => logs);
 
-      final result = await proxy.getAuditLogsForRule('id');
+        final result = await proxy.getAuditLogsForRule('id');
 
-      expect(result, logs);
-      verify(() => mockHiveDataSource.getAuditLogsForRule('id')).called(1);
-      verifyNever(() => mockDemoModeService.getDemoRecurringAuditLogsForRule(any()));
-    });
+        expect(result, logs);
+        verify(() => mockHiveDataSource.getAuditLogsForRule('id')).called(1);
+        verifyNever(
+          () => mockDemoModeService.getDemoRecurringAuditLogsForRule(any()),
+        );
+      },
+    );
   });
 }

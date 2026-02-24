@@ -1,6 +1,7 @@
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'dart:async';
-import 'dart:io';
+import 'package:expense_tracker/core/platform/platform_init.dart';
+import 'package:expense_tracker/core/platform/logger_init.dart';
 
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/constants/hive_constants.dart';
@@ -29,6 +30,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/data_managem
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/router.dart';
+import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
@@ -53,25 +55,6 @@ import 'package:expense_tracker/features/profile/data/models/profile_model.dart'
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-File? _startupLogFile;
-
-Future<void> _initFileLogger() async {
-  try {
-    final dir = await getApplicationDocumentsDirectory();
-    _startupLogFile = File('${dir.path}/startup.log');
-  } catch (_) {}
-}
-
-Future<void> _writeStartupLog(String message) async {
-  try {
-    final file = _startupLogFile;
-    if (file != null) {
-      final timestamp = DateTime.now().toIso8601String();
-      await file.writeAsString('$timestamp $message\n', mode: FileMode.append);
-    }
-  } catch (_) {}
-}
-
 Future<void> _runMigrations(int fromVersion) async {
   log.info(
     'Running Hive migrations from v$fromVersion to '
@@ -79,15 +62,17 @@ Future<void> _runMigrations(int fromVersion) async {
   );
 }
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
-  await _initFileLogger();
+
+  await initPlatform(args);
+  await initFileLogger();
   final locale = WidgetsBinding.instance.platformDispatcher.locale;
   Intl.defaultLocale = locale.toLanguageTag();
 
   log.setLevel(Level.INFO, includeCallerInfo: false);
   log.info("==========================================");
-  log.info(" Spend Savvy Application Starting...");
+  log.info(" Financial OS Application Starting...");
   log.info("==========================================");
 
   try {
@@ -222,7 +207,7 @@ Future<void> main() async {
     log.severe("!!! CRITICAL INITIALIZATION FAILURE !!!");
     log.severe("Error: $e");
     log.severe("Stack Trace: $s");
-    await _writeStartupLog('Initialization failure: $e\n$s');
+    await writeStartupLog('Initialization failure: $e\n$s');
     log.severe("!!! APPLICATION CANNOT CONTINUE !!!");
     runApp(InitializationErrorApp(error: e));
     return;
@@ -279,6 +264,11 @@ Future<void> main() async {
         ),
         BlocProvider<GroupsBloc>(
           create: (context) => sl<GroupsBloc>()..add(LoadGroups()),
+          lazy: false,
+        ),
+        BlocProvider<DeepLinkBloc>(
+          create: (context) =>
+              sl<DeepLinkBloc>()..add(DeepLinkStarted(args: args)),
           lazy: false,
         ),
       ],

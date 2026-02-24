@@ -139,44 +139,46 @@ class _LoginPageState extends State<LoginPage>
         ),
         const SizedBox(height: 16),
         BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            final isLoading = state is AuthLoading;
-            return ElevatedButton(
-              onPressed: () {
-                final input = _phoneController.text.trim();
-                if (input.isNotEmpty) {
-                  String cleanInput = input.replaceAll(RegExp(r'\D'), '');
-                  String finalPhone;
+          builder: (context, state) => ElevatedButton(
+            onPressed: state is AuthLoading
+                ? null
+                : () {
+                    final input = _phoneController.text.trim();
+                    if (input.isNotEmpty) {
+                      String cleanInput = input.replaceAll(RegExp(r'\D'), '');
+                      String finalPhone;
 
-                  if (input.startsWith('+')) {
-                    finalPhone = '+$cleanInput';
-                  } else {
-                    String countryDigits =
-                        _countryCode.replaceAll(RegExp(r'\D'), '');
-                    String localDigits =
-                        cleanInput.replaceFirst(RegExp(r'^0+'), '');
-                    finalPhone = '+$countryDigits$localDigits';
-                  }
+                      if (input.startsWith('+')) {
+                        finalPhone = '+$cleanInput';
+                      } else {
+                        String countryDigits = _countryCode.replaceAll(
+                          RegExp(r'\D'),
+                          '',
+                        );
+                        String localDigits = cleanInput.replaceFirst(
+                          RegExp(r'^0+'),
+                          '',
+                        );
+                        finalPhone = '+$countryDigits$localDigits';
+                      }
 
-                  context.read<AuthBloc>().add(
-                    AuthLoginRequested(finalPhone),
-                  );
-                }
-              },
-              child: const Text('Send OTP'),
-              onPressed: isLoading ? null : _submitPhone,
-              child: isLoading
-                  ? SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    )
-                  : const Text('Send OTP'),
-            );
-          },
+                      context.read<AuthBloc>().add(
+                        AuthLoginRequested(finalPhone),
+                      );
+                      TextInput.finishAutofillContext(shouldSave: true);
+                    }
+                  },
+            child: state is AuthLoading
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  )
+                : const Text('Send OTP'),
+          ),
         ),
       ],
     );
