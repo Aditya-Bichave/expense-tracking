@@ -1,15 +1,14 @@
-// lib/features/settings/presentation/widgets/data_management_settings_section.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
-import 'package:expense_tracker/features/settings/presentation/widgets/settings_list_tile.dart';
+import 'package:expense_tracker/core/widgets/settings_list_tile.dart'; // Changed import
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // Import context.watch
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class DataManagementSettingsSection extends StatelessWidget {
   final bool isDataManagementLoading;
-  final bool isSettingsLoading; // Use this combined loading state
+  final bool isSettingsLoading;
   final VoidCallback onBackup;
   final VoidCallback onRestore;
   final VoidCallback onClearData;
@@ -17,7 +16,7 @@ class DataManagementSettingsSection extends StatelessWidget {
   const DataManagementSettingsSection({
     super.key,
     required this.isDataManagementLoading,
-    required this.isSettingsLoading, // Receive this from parent
+    required this.isSettingsLoading,
     required this.onBackup,
     required this.onRestore,
     required this.onClearData,
@@ -26,83 +25,63 @@ class DataManagementSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // --- Get Demo Mode status ---
     final bool isInDemoMode = context.watch<SettingsBloc>().state.isInDemoMode;
-    // --- End Get ---
-
-    // --- Use the passed-in combined loading state ---
     final bool isOverallLoading = isDataManagementLoading || isSettingsLoading;
-    // --- End Use ---
-
-    // --- Determine if actions should be enabled ---
     final bool isEnabled = !isOverallLoading && !isInDemoMode;
-    // --- End Determine ---
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeader(title: 'Data Management'),
         SettingsListTile(
-          // --- Use combined enabled state ---
           enabled: isEnabled,
-          // --- End Use ---
           leadingIcon: Icons.backup_outlined,
           title: 'Backup Data',
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
-              : 'Save all data to a file', // Demo message
+              : 'Save all data to a file',
           trailing: Icon(
             Icons.chevron_right,
-            color:
-                !isEnabled // Use combined state
+            color: !isEnabled
                 ? theme.disabledColor
                 : theme.colorScheme.onSurfaceVariant,
           ),
-          onTap: !isEnabled ? null : onBackup, // Use combined state
+          onTap: !isEnabled ? null : onBackup,
         ),
         SettingsListTile(
-          // --- Use combined enabled state ---
           enabled: isEnabled,
-          // --- End Use ---
           leadingIcon: Icons.restore_page_outlined,
           title: 'Restore Data',
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
-              : 'Load data from a backup file', // Demo message
+              : 'Load data from a backup file',
           trailing: Icon(
             Icons.chevron_right,
-            color:
-                !isEnabled // Use combined state
+            color: !isEnabled
                 ? theme.disabledColor
                 : theme.colorScheme.onSurfaceVariant,
           ),
-          onTap: !isEnabled ? null : onRestore, // Use combined state
+          onTap: !isEnabled ? null : onRestore,
         ),
         SettingsListTile(
-          enabled: !isEnabled, // Export is separate, disable in demo/loading
+          enabled: !isEnabled,
           leadingIcon: Icons.upload_file_outlined,
           title: 'Export Data',
           subtitle: isInDemoMode
               ? 'Disabled in Demo Mode'
-              : 'Export data to CSV/JSON (Coming Soon)', // Demo message
+              : 'Export data to CSV/JSON (Coming Soon)',
           trailing: Icon(
             Icons.chevron_right,
-            color:
-                !isEnabled // Use combined state
+            color: !isEnabled
                 ? theme.disabledColor
                 : theme.colorScheme.onSurfaceVariant,
           ),
-          onTap:
-              !isEnabled // Use combined state
+          onTap: !isEnabled
               ? null
-              : () => context.pushNamed(
-                  RouteNames.settingsExport,
-                ), // Keep nav for now
+              : () => context.pushNamed(RouteNames.settingsExport),
         ),
         SettingsListTile(
-          // --- Use combined enabled state, but specifically allow clear when NOT loading data ops ---
           enabled: !isDataManagementLoading && !isInDemoMode,
-          // --- End Use ---
           leadingIcon: Icons.delete_sweep_outlined,
           title: 'Clear All Data',
           subtitle: isInDemoMode
@@ -110,20 +89,14 @@ class DataManagementSettingsSection extends StatelessWidget {
               : 'Permanently delete all accounts & transactions',
           trailing: Icon(
             Icons.chevron_right,
-            color:
-                isDataManagementLoading ||
-                    isInDemoMode // Check both
+            color: isDataManagementLoading || isInDemoMode
                 ? theme.disabledColor
                 : theme.colorScheme.error,
           ),
-          onTap:
-              isDataManagementLoading ||
-                  isInDemoMode // Check both
-              ? null
-              : onClearData, // Use callback
+          onTap: isDataManagementLoading || isInDemoMode ? null : onClearData,
         ),
         SettingsListTile(
-          enabled: !isOverallLoading && !isInDemoMode, // Check both
+          enabled: !isOverallLoading && !isInDemoMode,
           leadingIcon: Icons.restore_from_trash_outlined,
           title: 'Trash Bin',
           subtitle: isInDemoMode
@@ -138,7 +111,7 @@ class DataManagementSettingsSection extends StatelessWidget {
           onTap: !isEnabled
               ? null
               : () {
-                  /* TODO: Navigate to Trash Bin Screen */
+                  // TODO: Navigate to Trash Bin Screen
                 },
         ),
       ],

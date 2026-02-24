@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/widgets/section_header.dart';
+import 'package:expense_tracker/core/widgets/settings_list_tile.dart'; // Changed import
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/widgets/settings_list_tile.dart';
+import 'package:flutter/material.dart';
 
 class SecuritySettingsSection extends StatefulWidget {
   const SecuritySettingsSection({super.key});
@@ -52,20 +53,25 @@ class _SecuritySettingsSectionState extends State<SecuritySettingsSection> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine enabled state if loading? Assuming logic here is independent.
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const SectionHeader(title: 'Security'), // Add header
         SwitchListTile(
           title: const Text('App Lock'),
           subtitle: const Text('Require authentication to open app'),
           value: _biometricEnabled,
           onChanged: _toggleBiometric,
+          secondary: const Icon(Icons.lock_outlined), // Match style
         ),
         if (_biometricEnabled)
-          ListTile(
-            title: const Text('Change PIN'),
-            leading: const Icon(Icons.lock_outline),
+          SettingsListTile(
+            title: 'Change PIN',
+            leadingIcon: Icons.lock_reset, // Distinct icon
             onTap: _changePin,
+            trailing: const Icon(Icons.chevron_right),
           ),
       ],
     );
@@ -99,6 +105,7 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
         keyboardType: TextInputType.number,
         maxLength: 4,
         obscureText: true,
+        autofocus: true, // Smart focus
         decoration: const InputDecoration(hintText: 'Enter 4-digit PIN'),
       ),
       actions: [

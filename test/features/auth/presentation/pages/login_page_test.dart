@@ -50,12 +50,11 @@ void main() {
     verify(
       () => mockAuthBloc.add(
         any(
-          that:
-              isA<AuthLoginRequested>().having(
-                (e) => e.phone,
-                'phone',
-                contains('1234567890'),
-              ),
+          that: isA<AuthLoginRequested>().having(
+            (e) => e.phone,
+            'phone',
+            contains('1234567890'),
+          ),
         ),
       ),
     ).called(1);
@@ -74,12 +73,11 @@ void main() {
     verify(
       () => mockAuthBloc.add(
         any(
-          that:
-              isA<AuthLoginWithMagicLinkRequested>().having(
-                (e) => e.email,
-                'email',
-                'test@example.com',
-              ),
+          that: isA<AuthLoginWithMagicLinkRequested>().having(
+            (e) => e.email,
+            'email',
+            'test@example.com',
+          ),
         ),
       ),
     ).called(1);
@@ -93,6 +91,9 @@ void main() {
     await tester.pump(); // Allow StreamBuilder/BlocBuilder to emit
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    expect(find.text('Send OTP'), findsNothing); // Button text replaced by spinner
+    expect(
+      find.text('Send OTP'),
+      findsNothing,
+    ); // Button text replaced by spinner
   });
 }
