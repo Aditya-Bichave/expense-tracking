@@ -126,4 +126,17 @@ class ResetState extends TransactionListEvent {
   const ResetState();
 }
 
+// Fetch a single transaction by ID (for deep linking)
+class FetchTransactionById extends TransactionListEvent {
+  final String transactionId;
+  const FetchTransactionById(this.transactionId);
+  @override
+  List<Object> get props => [transactionId];
+}
+
+// Clear the selected transaction (when leaving detail page)
+class ClearSelectedTransaction extends TransactionListEvent {
+  const ClearSelectedTransaction();
+}
+
 // --- END ADDED ---

@@ -31,11 +31,16 @@ class BudgetWithStatus extends Equatable {
     required Color overLimitColor,
   }) {
     final target = budget.targetAmount;
-    final remaining = (target - amountSpent).clamp(
-      double.negativeInfinity,
-      target,
-    ); // Can't remain more than target
-    final percentage = target > 0 ? (amountSpent / target) : 0.0;
+    final remaining = (target - amountSpent); // Negative means overspent
+
+    double percentage;
+    if (target > 0) {
+      percentage = amountSpent / target;
+    } else {
+      // If target is 0, any positive spending is effectively infinite percentage (over limit)
+      // If spending is 0 or negative, it's 0%
+      percentage = amountSpent > 0 ? double.infinity : 0.0;
+    }
 
     BudgetHealth health;
     Color color;
@@ -55,7 +60,7 @@ class BudgetWithStatus extends Equatable {
       budget: budget,
       amountSpent: amountSpent,
       amountRemaining: remaining,
-      percentageUsed: percentage,
+      percentageUsed: percentage.isFinite ? percentage : 1.0, // Clamp for UI
       health: health,
       statusColor: color,
     );

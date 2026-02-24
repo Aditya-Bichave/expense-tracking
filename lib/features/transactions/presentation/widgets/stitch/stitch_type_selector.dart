@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/features/transactions/presentation/widgets/stitch/stitch_tab.dart';
 
 class StitchTypeSelector extends StatefulWidget {
-  final ValueChanged<int> onTypeChanged;
+  final ValueChanged<StitchTab> onTypeChanged;
 
   const StitchTypeSelector({super.key, required this.onTypeChanged});
 
@@ -10,8 +11,7 @@ class StitchTypeSelector extends StatefulWidget {
 }
 
 class _StitchTypeSelectorState extends State<StitchTypeSelector> {
-  int _selectedIndex = 0;
-  final List<String> _options = ['Personal', 'Group', 'Income', 'Settlement'];
+  StitchTab _selectedTab = StitchTab.personal;
 
   @override
   Widget build(BuildContext context) {
@@ -24,13 +24,13 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
-        children: List.generate(_options.length, (index) {
-          final isSelected = _selectedIndex == index;
+        children: StitchTab.values.map((tab) {
+          final isSelected = _selectedTab == tab;
           return Expanded(
             child: GestureDetector(
               onTap: () {
-                setState(() => _selectedIndex = index);
-                widget.onTypeChanged(index);
+                setState(() => _selectedTab = tab);
+                widget.onTypeChanged(tab);
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -43,7 +43,7 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  _options[index],
+                  tab.label,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: isSelected
                         ? theme.colorScheme.onPrimary
@@ -54,7 +54,7 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
               ),
             ),
           );
-        }),
+        }).toList(),
       ),
     );
   }

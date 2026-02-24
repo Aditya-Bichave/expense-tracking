@@ -24,6 +24,7 @@ class TransactionListState extends Equatable {
   final String? errorMessage;
   // Transient error specifically for delete failures
   final String? deleteError;
+  final TransactionEntity? selectedTransaction;
 
   const TransactionListState({
     this.status = ListStatus.initial,
@@ -40,6 +41,7 @@ class TransactionListState extends Equatable {
     this.selectedTransactionIds = const {},
     this.errorMessage,
     this.deleteError,
+    this.selectedTransaction,
   });
 
   // Helper to check if filters are applied (excluding search)
@@ -65,6 +67,7 @@ class TransactionListState extends Equatable {
     Set<String>? selectedTransactionIds,
     String? errorMessage,
     String? deleteError,
+    TransactionEntity? selectedTransaction,
     // Flags to clear nullable fields
     bool clearStartDate = false,
     bool clearEndDate = false,
@@ -74,6 +77,7 @@ class TransactionListState extends Equatable {
     bool clearSearchTerm = false,
     bool clearErrorMessage = false,
     bool clearDeleteError = false,
+    bool clearSelectedTransaction = false,
   }) {
     return TransactionListState(
       status: status ?? this.status,
@@ -95,6 +99,9 @@ class TransactionListState extends Equatable {
           ? null
           : (errorMessage ?? this.errorMessage),
       deleteError: clearDeleteError ? null : (deleteError ?? this.deleteError),
+      selectedTransaction: clearSelectedTransaction
+          ? null
+          : (selectedTransaction ?? this.selectedTransaction),
     );
   }
 
@@ -114,5 +121,6 @@ class TransactionListState extends Equatable {
     selectedTransactionIds,
     errorMessage,
     deleteError,
+    selectedTransaction,
   ];
 }

@@ -509,10 +509,8 @@ class AppRouter {
         "[AppRouter] Txn Detail route received 'extra' of unexpected type or null. Extra: ${state.extra?.runtimeType}",
       );
     }
-    if (id == null || transaction == null) {
-      log.severe(
-        "[AppRouter] Txn Detail route missing ID or valid transaction data!",
-      );
+    if (id == null) {
+      log.severe("[AppRouter] Txn Detail route missing ID!");
       return Scaffold(
         appBar: AppBar(),
         body: const Center(
@@ -520,7 +518,13 @@ class AppRouter {
         ),
       );
     }
-    return TransactionDetailPage(transaction: transaction);
+    if (transaction != null && transaction.id != id) {
+      log.warning(
+        "[AppRouter] Txn Detail route ID mismatch (Path: $id, Extra: ${transaction.id}). Ignoring extra.",
+      );
+      transaction = null;
+    }
+    return TransactionDetailPage(transactionId: id, transaction: transaction);
   }
 
   static Widget _buildEditTransactionPage(
@@ -538,6 +542,22 @@ class AppRouter {
       );
       initialData = null;
     }
+    // Validate ID if initialData has one
+    String? extraId;
+    if (initialData is TransactionEntity)
+      extraId = initialData.id;
+    else if (initialData is Expense)
+      extraId = initialData.id;
+    else if (initialData is Income)
+      extraId = initialData.id;
+
+    if (transactionId != null && extraId != null && transactionId != extraId) {
+      log.warning(
+        "[AppRouter] Edit Txn route ID mismatch (Path: $transactionId, Extra: $extraId). Ignoring extra.",
+      );
+      initialData = null;
+    }
+
     if (transactionId == null && initialData == null) {
       log.severe(
         "[AppRouter] Edit Txn route called without transaction ID or initial data!",
@@ -555,7 +575,7 @@ class AppRouter {
     GoRouterState state,
   ) {
     final categoryId = state.pathParameters[RouteNames.paramId];
-    final Category? category = state.extra is Category
+    Category? category = state.extra is Category
         ? state.extra as Category
         : null;
     final Map<String, dynamic>? extraMap = state.extra is Map<String, dynamic>
@@ -570,6 +590,12 @@ class AppRouter {
         body: Center(child: Text("Error: Missing Category ID")),
       );
     }
+    if (category != null && category.id != categoryId) {
+      log.warning(
+        "[AppRouter] Edit Category route ID mismatch (Path: $categoryId, Extra: ${category.id}). Ignoring extra.",
+      );
+      category = null;
+    }
     return AddEditCategoryScreen(
       initialCategory: category,
       initialType: initialType,
@@ -581,7 +607,7 @@ class AppRouter {
     GoRouterState state,
   ) {
     final accountId = state.pathParameters[RouteNames.paramAccountId];
-    final AssetAccount? account = state.extra is AssetAccount
+    AssetAccount? account = state.extra is AssetAccount
         ? state.extra as AssetAccount
         : null;
     if (accountId == null) {
@@ -591,6 +617,12 @@ class AppRouter {
         body: Center(child: Text("Error: Missing Account ID")),
       );
     }
+    if (account != null && account.id != accountId) {
+      log.warning(
+        "[AppRouter] Edit Account route ID mismatch (Path: $accountId, Extra: ${account.id}). Ignoring extra.",
+      );
+      account = null;
+    }
     return AddEditAccountPage(accountId: accountId, account: account);
   }
 
@@ -599,13 +631,19 @@ class AppRouter {
     GoRouterState state,
   ) {
     final budgetId = state.pathParameters[RouteNames.paramId];
-    final Budget? budget = state.extra is Budget ? state.extra as Budget : null;
+    Budget? budget = state.extra is Budget ? state.extra as Budget : null;
     if (budgetId == null) {
       log.severe("[AppRouter] Edit Budget route called without ID!");
       return const Scaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Budget ID")),
       );
+    }
+    if (budget != null && budget.id != budgetId) {
+      log.warning(
+        "[AppRouter] Edit Budget route ID mismatch (Path: $budgetId, Extra: ${budget.id}). Ignoring extra.",
+      );
+      budget = null;
     }
     return AddEditBudgetPage(initialBudget: budget);
   }
@@ -627,13 +665,19 @@ class AppRouter {
 
   static Widget _buildEditGoalPage(BuildContext context, GoRouterState state) {
     final goalId = state.pathParameters[RouteNames.paramId];
-    final Goal? goal = state.extra is Goal ? state.extra as Goal : null;
+    Goal? goal = state.extra is Goal ? state.extra as Goal : null;
     if (goalId == null) {
       log.severe("[AppRouter] Edit Goal route called without ID!");
       return const Scaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Goal ID")),
       );
+    }
+    if (goal != null && goal.id != goalId) {
+      log.warning(
+        "[AppRouter] Edit Goal route ID mismatch (Path: $goalId, Extra: ${goal.id}). Ignoring extra.",
+      );
+      goal = null;
     }
     return AddEditGoalPage(initialGoal: goal);
   }
@@ -643,13 +687,19 @@ class AppRouter {
     GoRouterState state,
   ) {
     final goalId = state.pathParameters[RouteNames.paramId];
-    final Goal? goal = state.extra is Goal ? state.extra as Goal : null;
+    Goal? goal = state.extra is Goal ? state.extra as Goal : null;
     if (goalId == null) {
       log.severe("[AppRouter] Goal Detail route called without ID!");
       return const Scaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Goal ID")),
       );
+    }
+    if (goal != null && goal.id != goalId) {
+      log.warning(
+        "[AppRouter] Goal Detail route ID mismatch (Path: $goalId, Extra: ${goal.id}). Ignoring extra.",
+      );
+      goal = null;
     }
     return GoalDetailPage(goalId: goalId, initialGoal: goal);
   }
@@ -660,11 +710,11 @@ class GoRouterObserver extends NavigatorObserver {
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     final String pushedRoute =
         route.settings.name ??
-        route.settings.arguments?.toString() ??
+        _sanitizeArgs(route.settings.arguments) ??
         route.toString();
     final String? previousRouteName =
         previousRoute?.settings.name ??
-        previousRoute?.settings.arguments?.toString();
+        _sanitizeArgs(previousRoute?.settings.arguments);
     log.fine('GoRouter Pushed: ${previousRouteName ?? 'null'} -> $pushedRoute');
   }
 
@@ -672,11 +722,11 @@ class GoRouterObserver extends NavigatorObserver {
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     final String poppedRoute =
         route.settings.name ??
-        route.settings.arguments?.toString() ??
+        _sanitizeArgs(route.settings.arguments) ??
         route.toString();
     final String? previousRouteName =
         previousRoute?.settings.name ??
-        previousRoute?.settings.arguments?.toString();
+        _sanitizeArgs(previousRoute?.settings.arguments);
     log.fine(
       'GoRouter Popped: $poppedRoute -> Returning to ${previousRouteName ?? 'null'}',
     );
@@ -686,11 +736,11 @@ class GoRouterObserver extends NavigatorObserver {
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
     final String removedRoute =
         route.settings.name ??
-        route.settings.arguments?.toString() ??
+        _sanitizeArgs(route.settings.arguments) ??
         route.toString();
     final String? previousRouteName =
         previousRoute?.settings.name ??
-        previousRoute?.settings.arguments?.toString();
+        _sanitizeArgs(previousRoute?.settings.arguments);
     log.fine(
       'GoRouter Removed: $removedRoute (Previous was: ${previousRouteName ?? 'null'})',
     );
@@ -700,12 +750,21 @@ class GoRouterObserver extends NavigatorObserver {
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     final String oldRouteName =
         oldRoute?.settings.name ??
-        oldRoute?.settings.arguments?.toString() ??
+        _sanitizeArgs(oldRoute?.settings.arguments) ??
         'null';
     final String newRouteName =
         newRoute?.settings.name ??
-        newRoute?.settings.arguments?.toString() ??
+        _sanitizeArgs(newRoute?.settings.arguments) ??
         'null';
     log.fine('GoRouter Replaced: $oldRouteName with $newRouteName');
+  }
+
+  String? _sanitizeArgs(Object? args) {
+    if (args == null) return null;
+    if (args is String || args is num || args is bool) {
+      return args.toString();
+    }
+    // For complex objects, only log the type to prevent PII leakage
+    return '<${args.runtimeType}>';
   }
 }

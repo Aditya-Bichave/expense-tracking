@@ -26,9 +26,14 @@ class SecureStorageService {
             ? keyString.substring(0, 4)
             : keyString;
         log.severe(
-          'Hive encryption key corrupted. Regenerating. Key snippet: $snippet\nError: $e\n$s',
+          'Hive encryption key corrupted. Key snippet: $snippet\nError: $e\n$s',
         );
-        return _generateAndSaveKey();
+        // CRITICAL: Do NOT regenerate the key automatically.
+        // Doing so would render all existing encrypted data unreadable.
+        // We throw an error so the app can handle it (e.g. prompt for restore/reset).
+        throw HiveKeyCorruptionException(
+          'Hive encryption key is corrupted and cannot be decoded.',
+        );
       }
     }
   }
@@ -63,4 +68,11 @@ class SecureStorageService {
   Future<void> clearAll() async {
     await _storage.deleteAll();
   }
+}
+
+class HiveKeyCorruptionException implements Exception {
+  final String message;
+  HiveKeyCorruptionException(this.message);
+  @override
+  String toString() => 'HiveKeyCorruptionException: $message';
 }

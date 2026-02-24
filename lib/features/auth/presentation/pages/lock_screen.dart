@@ -6,6 +6,8 @@ import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -85,12 +87,29 @@ class _LockScreenState extends State<LockScreen> {
     if (savedPin == null) {
       log.severe('PIN verification attempted but saved PIN is null.');
       setState(() => enteredPin = '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Security Error: PIN configuration missing.'),
+
+      // If PIN is missing, the security state is invalid.
+      // We must allow the user to reset/logout to regain access.
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Security Configuration Error'),
+          content: const Text(
+            'Your security PIN is missing or corrupted. You need to log out and set it up again.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.read<AuthBloc>().add(AuthLogoutRequested());
+                // SessionCubit will listen to AuthBloc/Repository and redirect
+              },
+              child: const Text('Logout & Reset'),
+            ),
+          ],
         ),
       );
-      // Optionally logout or similar
       return;
     }
 

@@ -6,7 +6,7 @@ import 'package:expense_tracker/core/services/downloader_service.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/core/utils/encryption_helper.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:expense_tracker/core/services/file_picker_service.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -17,11 +17,13 @@ import 'package:expense_tracker/core/constants/app_constants.dart';
 class BackupDataUseCase implements UseCase<String?, BackupParams> {
   final DataManagementRepository dataManagementRepository;
   final DownloaderService downloaderService;
+  final FilePickerService _filePickerService;
 
   BackupDataUseCase({
     required this.dataManagementRepository,
     required this.downloaderService,
-  });
+    FilePickerService? filePickerService,
+  }) : _filePickerService = filePickerService ?? FilePickerService();
 
   @override
   Future<Either<Failure, String?>> call(BackupParams params) async {
@@ -98,7 +100,7 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
           "[BackupUseCase] Platform is Non-Web. Prompting user for save file location...",
         );
         try {
-          final String? outputFile = await FilePicker.platform.saveFile(
+          final String? outputFile = await _filePickerService.saveFile(
             dialogTitle: 'Save Backup File',
             fileName: backupFilename,
             allowedExtensions: ['json'],

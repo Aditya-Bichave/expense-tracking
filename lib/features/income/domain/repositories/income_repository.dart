@@ -14,6 +14,8 @@ abstract class IncomeRepository {
     String? categoryId,
     String? accountId,
   });
+
+  Future<Either<Failure, Income?>> getIncomeById(String id);
   // --- END MODIFIED ---
 
   // Keep Add/Update returning Entity for now
