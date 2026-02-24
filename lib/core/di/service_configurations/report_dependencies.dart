@@ -1,4 +1,3 @@
-// lib/core/di/service_configurations/report_dependencies.dart
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/reports/data/repositories/report_repository_impl.dart';
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
@@ -31,7 +30,6 @@ class ReportDependencies {
         expenseRepository: sl(),
         incomeRepository: sl(),
         categoryRepository: sl(),
-        accountRepository: sl(),
         budgetRepository: sl(),
         goalRepository: sl(),
         goalContributionRepository: sl(),

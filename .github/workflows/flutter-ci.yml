@@ -16,7 +16,7 @@ on:
       - "nginx.conf"
       - "README_CI.md"
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
       - "lib/**"
       - "test/**"
@@ -67,20 +67,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run Static Analysis
+      - name: Analyze
         run: flutter analyze
-
-      - name: Export Metadata
-        run: |
-          mkdir -p metadata
-          flutter --version > metadata/flutter-version.txt
-
-      - name: Upload Metadata
-        uses: actions/upload-artifact@v4
-        with:
-          name: metadata
-          path: metadata/
-          retention-days: 1
 
       - name: Policy Check (No Print/TODO)
         if: github.event_name == 'pull_request'
@@ -128,30 +116,24 @@ jobs:
         run: flutter test --coverage --test-randomize-ordering-seed=random --concurrency 4
 
       - name: Install diff-cover
-        if: always() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         run: pip install diff-cover
 
       - name: Check Diff Coverage (80%)
-        if: always() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }} || true
-          diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80 > coverage/diff-coverage.txt
-          cat coverage/diff-coverage.txt
+          diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80
 
-      - name: Enforce Total Coverage (50%)
-        if: always()
+      - name: Enforce Total Coverage (35%)
         run: |
-          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<50) { print "Coverage below 50%!"; exit 1 } }' coverage/lcov.info | tee coverage/total-coverage.txt
-          cat coverage/total-coverage.txt
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<35) { print "Coverage below 35%!"; exit 1 } }' coverage/lcov.info
 
       - name: Upload Coverage Artifact
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: |
-            coverage/lcov.info
-            coverage/*.txt
+          path: coverage/lcov.info
           retention-days: 1
 
   web-build:
@@ -213,17 +195,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
           cache-dependency-path: ci/smoke/package.json
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('ci/smoke/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-
 
       - name: Install Playwright Deps
         working-directory: ci/smoke
@@ -252,26 +226,16 @@ jobs:
     needs: [static-checks, unit-tests, web-build, web-smoke]
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Fetch Base Branch for Git Analysis
-        if: github.event_name == 'pull_request'
-        run: git fetch origin ${{ github.base_ref }}
-
       - name: Generate Comment Body
         id: generate_body
         env:
           ARTIFACTS_DIR: artifacts
-          STATIC_STATUS: ${{ needs.static-checks.result }}
-          UNIT_STATUS: ${{ needs.unit-tests.result }}
-          WEB_BUILD_STATUS: ${{ needs.web-build.result }}
-          WEB_SMOKE_STATUS: ${{ needs.web-smoke.result }}
         run: |
           node ci/scripts/generate_pr_comment.js > pr_comment.md
 

@@ -5,11 +5,6 @@ import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
-import 'package:expense_tracker/features/groups/domain/usecases/create_group.dart';
-import 'package:expense_tracker/features/groups/domain/usecases/join_group.dart';
-import 'package:expense_tracker/features/groups/domain/usecases/sync_groups.dart';
-import 'package:expense_tracker/features/groups/domain/usecases/watch_groups.dart';
-import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:hive_ce/hive.dart';
 
@@ -35,17 +30,6 @@ class GroupsDependencies {
       ),
     );
 
-    // Usecases
-    sl.registerLazySingleton(() => WatchGroups(sl()));
-    sl.registerLazySingleton(() => CreateGroup(sl()));
-    sl.registerLazySingleton(() => SyncGroups(sl()));
-    sl.registerLazySingleton(() => JoinGroup(sl()));
-
-    // Blocs
-    sl.registerFactory(
-      () => GroupsBloc(watchGroups: sl(), syncGroups: sl(), joinGroup: sl()),
-    );
-
-    sl.registerFactory(() => CreateGroupBloc(createGroup: sl(), uuid: sl()));
+    sl.registerFactory(() => GroupsBloc(sl()));
   }
 }

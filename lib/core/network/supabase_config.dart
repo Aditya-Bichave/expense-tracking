@@ -14,9 +14,6 @@ class SupabaseConfig {
   static const String supabasePersistSessionKey =
       'SUPABASE_PERSIST_SESSION_KEY';
 
-  static const String profileAvatarsBucket = 'avatars';
-  static const String profilesTable = 'profiles';
-
   static bool get isValid =>
       supabaseUrl.isNotEmpty &&
       supabaseAnonKey.isNotEmpty &&

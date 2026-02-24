@@ -1,7 +1,5 @@
-// lib/features/budgets/domain/entities/budget_status.dart
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
-import 'package:flutter/material.dart';
 
 enum BudgetHealth { thriving, nearingLimit, overLimit, unknown }
 
@@ -11,7 +9,6 @@ class BudgetWithStatus extends Equatable {
   final double amountRemaining;
   final double percentageUsed;
   final BudgetHealth health;
-  final Color statusColor;
 
   const BudgetWithStatus({
     required this.budget,
@@ -19,49 +16,27 @@ class BudgetWithStatus extends Equatable {
     required this.amountRemaining,
     required this.percentageUsed,
     required this.health,
-    required this.statusColor,
   });
 
-  // Getters for compatibility/readability
-  double get spentAmount => amountSpent;
   bool get isOverLimit => health == BudgetHealth.overLimit;
   bool get isNearingLimit => health == BudgetHealth.nearingLimit;
-  String get statusMessage {
-    switch (health) {
-      case BudgetHealth.thriving:
-        return 'On Track';
-      case BudgetHealth.nearingLimit:
-        return 'Nearing Limit';
-      case BudgetHealth.overLimit:
-        return 'Over Limit';
-      case BudgetHealth.unknown:
-        return 'Unknown';
-    }
-  }
 
   factory BudgetWithStatus.calculate({
     required Budget budget,
     required double amountSpent,
-    required Color thrivingColor,
-    required Color nearingLimitColor,
-    required Color overLimitColor,
   }) {
     final target = budget.targetAmount;
-    final remaining = (target - amountSpent); // Negative if over
+    final remaining = (target - amountSpent);
     final percentage = target > 0 ? (amountSpent / target) : 0.0;
 
     BudgetHealth health;
-    Color color;
 
     if (percentage <= 0.75) {
       health = BudgetHealth.thriving;
-      color = thrivingColor;
     } else if (percentage <= 1.0) {
       health = BudgetHealth.nearingLimit;
-      color = nearingLimitColor;
     } else {
       health = BudgetHealth.overLimit;
-      color = overLimitColor;
     }
 
     return BudgetWithStatus(
@@ -70,7 +45,6 @@ class BudgetWithStatus extends Equatable {
       amountRemaining: remaining,
       percentageUsed: percentage,
       health: health,
-      statusColor: color,
     );
   }
 
@@ -81,6 +55,5 @@ class BudgetWithStatus extends Equatable {
     amountRemaining,
     percentageUsed,
     health,
-    statusColor,
   ];
 }

@@ -133,9 +133,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             if (_selectedView == AccountViewType.assets)
               ..._buildAssetSlivers(context, theme, modeTheme)
             else
-              SliverToBoxAdapter(
-                child: _buildLiabilityPlaceholder(context, theme),
-              ),
+              SliverToBoxAdapter(child: _buildLiabilityPlaceholder(context, theme)),
 
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
@@ -195,9 +193,9 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             final accounts = (state is AccountListLoaded)
                 ? state.items
                 : (context.read<AccountListBloc>().state is AccountListLoaded)
-                ? (context.read<AccountListBloc>().state as AccountListLoaded)
-                      .items
-                : <AssetAccount>[];
+                    ? (context.read<AccountListBloc>().state as AccountListLoaded)
+                        .items
+                    : <AssetAccount>[];
             final double totalAssets = accounts.fold(
               0.0,
               (sum, acc) => sum + acc.currentBalance,
@@ -206,113 +204,114 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             final currencySymbol = settingsState.currencySymbol;
 
             return SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                // Index 0: Total Assets Row
-                if (index == 0) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 4.0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Total Assets:',
-                          style: theme.textTheme.titleMedium,
-                        ),
-                        Text(
-                          CurrencyFormatter.format(totalAssets, currencySymbol),
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // Index 1: Accounts or Empty Message
-                if (accounts.isEmpty) {
-                  // If empty, this is index 1
-                  if (index == 1) {
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  // Index 0: Total Assets Row
+                  if (index == 0) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16.0,
-                        vertical: 24.0,
+                        vertical: 4.0,
                       ),
-                      child: Center(
-                        child: Text(
-                          'No asset accounts added yet.\nTap the "+" button below to add one.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total Assets:',
+                            style: theme.textTheme.titleMedium,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
+                          Text(
+                            CurrencyFormatter.format(totalAssets, currencySymbol),
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   }
-                  // Index 2: Add Button (for empty state)
-                  if (index == 2) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 12.0,
-                      ),
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: const Text('Add Asset Account'),
-                        onPressed: () =>
-                            context.pushNamed(RouteNames.addAccount),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          textStyle: theme.textTheme.labelLarge,
-                          side: BorderSide(
-                            color: theme.colorScheme.outlineVariant,
-                          ),
-                          minimumSize: const Size.fromHeight(45),
+
+                  // Index 1: Accounts or Empty Message
+                  if (accounts.isEmpty) {
+                    // If empty, this is index 1
+                    if (index == 1) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 24.0,
                         ),
-                      ),
-                    );
+                        child: Center(
+                          child: Text(
+                            'No asset accounts added yet.\nTap the "+" button below to add one.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      );
+                    }
+                    // Index 2: Add Button (for empty state)
+                    if (index == 2) {
+                       return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 12.0,
+                        ),
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.add_circle_outline),
+                          label: const Text('Add Asset Account'),
+                          onPressed: () => context.pushNamed(RouteNames.addAccount),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            textStyle: theme.textTheme.labelLarge,
+                            side: BorderSide(
+                              color: theme.colorScheme.outlineVariant,
+                            ),
+                            minimumSize: const Size.fromHeight(45),
+                          ),
+                        ),
+                      );
+                    }
+                    return null;
+                  } else {
+                    // Accounts exist
+                    // Index 1 to accounts.length: Account Cards
+                    if (index >= 1 && index <= accounts.length) {
+                      final account = accounts[index - 1];
+                      return AccountCard(
+                        account: account,
+                        onTap: () => _navigateToAccountDetail(context, account),
+                      );
+                    }
+                    // Index accounts.length + 1: Add Button
+                    if (index == accounts.length + 1) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 12.0,
+                        ),
+                        child: OutlinedButton.icon(
+                          icon: const Icon(Icons.add_circle_outline),
+                          label: const Text('Add Asset Account'),
+                          onPressed: () => context.pushNamed(RouteNames.addAccount),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            textStyle: theme.textTheme.labelLarge,
+                            side: BorderSide(
+                              color: theme.colorScheme.outlineVariant,
+                            ),
+                            minimumSize: const Size.fromHeight(45),
+                          ),
+                        ),
+                      );
+                    }
                   }
                   return null;
-                } else {
-                  // Accounts exist
-                  // Index 1 to accounts.length: Account Cards
-                  if (index >= 1 && index <= accounts.length) {
-                    final account = accounts[index - 1];
-                    return AccountCard(
-                      account: account,
-                      onTap: () => _navigateToAccountDetail(context, account),
-                    );
-                  }
-                  // Index accounts.length + 1: Add Button
-                  if (index == accounts.length + 1) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 12.0,
-                      ),
-                      child: OutlinedButton.icon(
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: const Text('Add Asset Account'),
-                        onPressed: () =>
-                            context.pushNamed(RouteNames.addAccount),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          textStyle: theme.textTheme.labelLarge,
-                          side: BorderSide(
-                            color: theme.colorScheme.outlineVariant,
-                          ),
-                          minimumSize: const Size.fromHeight(45),
-                        ),
-                      ),
-                    );
-                  }
-                }
-                return null;
-              }, childCount: accounts.isEmpty ? 3 : accounts.length + 2),
+                },
+                childCount: accounts.isEmpty ? 3 : accounts.length + 2,
+              ),
             );
           }
           // Fallback

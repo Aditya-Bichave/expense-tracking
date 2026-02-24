@@ -23,9 +23,6 @@ void main() {
   });
 
   test('sendToServer sends POST request with correct data', () async {
-    // Avoid throttling from previous tests
-    await Future.delayed(const Duration(milliseconds: 150));
-
     final mockClient = MockHttpClient();
     debugLogClient = mockClient;
 

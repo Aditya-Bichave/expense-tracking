@@ -83,16 +83,16 @@ const server = http.createServer((req, res) => {
       // Fallback to index.html for SPA routing (if file not found)
       // But only if it's not a static asset (heuristic: no extension)
       if (path.extname(filePath) === '') {
-        const index = path.join(BUILD_DIR, 'index.html');
-        fs.readFile(index, (err, data) => {
-          if (err) {
-            res.writeHead(404);
-            res.end('Not Found');
-          } else {
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(data);
-          }
-        });
+         const index = path.join(BUILD_DIR, 'index.html');
+         fs.readFile(index, (err, data) => {
+            if (err) {
+                res.writeHead(404);
+                res.end('Not Found');
+            } else {
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end(data);
+            }
+         });
       } else {
         res.writeHead(404);
         res.end('Not Found');
@@ -178,11 +178,8 @@ async function run() {
         console.error(`  Console Error: ${text}`);
 
         // Ignore 405 errors if they sneak through (though server should handle it now)
-        // Ignore ERR_NAME_NOT_RESOLVED or ERR_CONNECTION_REFUSED caused by placeholder Supabase URLs in CI
-        if (!text.includes('status of 405') &&
-          !text.includes('ERR_NAME_NOT_RESOLVED') &&
-          !text.includes('ERR_CONNECTION_REFUSED')) {
-          results.consoleErrors.push(text);
+        if (!text.includes('status of 405')) {
+            results.consoleErrors.push(text);
         }
       }
     });
@@ -262,7 +259,7 @@ async function run() {
 
       for (let attempt = 1; attempt <= RETRIES + 1; attempt++) {
         try {
-          const targetUrl = `http://localhost:${PORT}${route}`;
+          const targetUrl = `http://localhost:${PORT}/#${route}`;
           await page.goto(targetUrl, { waitUntil: 'networkidle', timeout: TIMEOUT });
           routeResult.passed = true;
           break; // Success
@@ -270,8 +267,8 @@ async function run() {
           console.error(`    Attempt ${attempt} failed: ${e.message}`);
           routeResult.error = e.message;
           if (attempt > RETRIES) {
-            routeResult.screenshot = await takeScreenshot(page, `fail_${route}`);
-            results.failedRoutes.push(route);
+             routeResult.screenshot = await takeScreenshot(page, `fail_${route}`);
+             results.failedRoutes.push(route);
           }
         }
       }
@@ -285,7 +282,7 @@ async function run() {
     if (results.pageErrors.length > 0) results.passed = false;
 
     if (!results.passed) {
-      await saveTrace(context, 'smoke_test_failure');
+        await saveTrace(context, 'smoke_test_failure');
     }
 
     fs.writeFileSync(REPORT_FILE, JSON.stringify(results, null, 2));

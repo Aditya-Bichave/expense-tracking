@@ -5,9 +5,6 @@ import 'package:expense_tracker/features/accounts/data/datasources/asset_account
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 
-import 'package:expense_tracker/core/utils/logger.dart';
-import 'package:simple_logger/simple_logger.dart';
-
 class MockBox extends Mock implements Box<AssetAccountModel> {}
 
 class FakeAssetAccountModel extends Fake implements AssetAccountModel {}
@@ -18,7 +15,6 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeAssetAccountModel());
-    log.setLevel(Level.OFF);
   });
 
   setUp(() {

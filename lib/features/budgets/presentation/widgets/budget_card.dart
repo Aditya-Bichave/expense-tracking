@@ -1,4 +1,3 @@
-// lib/features/budgets/presentation/widgets/budget_card.dart
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
@@ -6,7 +5,6 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-// For TransactionType
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -14,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:collection/collection.dart'; // For firstWhereOrNull
+import 'package:collection/collection.dart';
 
 class BudgetCard extends StatelessWidget {
   final BudgetWithStatus budgetStatus;
@@ -22,7 +20,20 @@ class BudgetCard extends StatelessWidget {
 
   const BudgetCard({super.key, required this.budgetStatus, this.onTap});
 
-  // Helper to get category icons for display
+  // Presentation logic for status color
+  Color _getStatusColor(BudgetHealth health, ThemeData theme) {
+    switch (health) {
+      case BudgetHealth.thriving:
+        return Colors.green; // Default thriving color or from theme extension if available
+      case BudgetHealth.nearingLimit:
+        return Colors.orange;
+      case BudgetHealth.overLimit:
+        return theme.colorScheme.error;
+      case BudgetHealth.unknown:
+        return theme.disabledColor;
+    }
+  }
+
   List<Widget> _getCategoryIconWidgets(BuildContext context, Budget budget) {
     if (budget.type != BudgetType.categorySpecific ||
         budget.categoryIds == null ||
@@ -36,14 +47,12 @@ class BudgetCard extends StatelessWidget {
     if (categoryState.status == CategoryManagementStatus.loaded) {
       final allCategories = [
         ...categoryState.allExpenseCategories,
-        ...categoryState
-            .allIncomeCategories, // Include income just in case for lookup, though budget uses expense
+        ...categoryState.allIncomeCategories,
       ];
       int count = 0;
       for (String id in budget.categoryIds!) {
-        if (count >= 3) break; // Limit to 3 icons
+        if (count >= 3) break;
         final category = allCategories.firstWhereOrNull((c) => c.id == id);
-        // Use the uncategorized helper method with the correct type
         if (category != null && category.id != Category.uncategorized.id) {
           final iconColor = category.displayColor;
           Widget iconWidget;
@@ -92,7 +101,6 @@ class BudgetCard extends StatelessWidget {
     return iconWidgets;
   }
 
-  // Helper for Progress Bar based on UI Mode
   Widget _buildProgressBar(
     BuildContext context,
     AppModeTheme? modeTheme,
@@ -100,11 +108,11 @@ class BudgetCard extends StatelessWidget {
   ) {
     final theme = Theme.of(context);
     final percentage = budgetStatus.percentageUsed.clamp(0.0, 1.0);
-    final color = budgetStatus.statusColor;
+    // Use local color calculation
+    final color = _getStatusColor(budgetStatus.health, theme);
     final bool isQuantum = uiMode == UIMode.quantum;
 
     if (isQuantum) {
-      // Quantum: Minimalist bar, no text inside
       return LinearPercentIndicator(
         padding: EdgeInsets.zero,
         lineHeight: 6.0,
@@ -117,7 +125,6 @@ class BudgetCard extends StatelessWidget {
         animation: false,
       );
     } else {
-      // Elemental / Aether (Default Style)
       return LinearPercentIndicator(
         animation: true,
         animationDuration: 600,
@@ -149,6 +156,7 @@ class BudgetCard extends StatelessWidget {
     final modeTheme = context.modeTheme;
     final budget = budgetStatus.budget;
     final categoryIcons = _getCategoryIconWidgets(context, budget);
+    final statusColor = _getStatusColor(budgetStatus.health, theme);
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
@@ -163,7 +171,6 @@ class BudgetCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Name and Period
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -207,7 +214,6 @@ class BudgetCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Progress Bar & Amounts
           _buildProgressBar(context, modeTheme, uiMode),
           const SizedBox(height: 8),
           Row(
@@ -216,7 +222,7 @@ class BudgetCard extends StatelessWidget {
               Text(
                 'Spent: ${CurrencyFormatter.format(budgetStatus.amountSpent, currency)}',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: budgetStatus.statusColor,
+                  color: statusColor,
                 ),
               ),
               Text(
@@ -238,7 +244,7 @@ class BudgetCard extends StatelessWidget {
                   fontWeight: FontWeight.w500,
                   color: budgetStatus.amountRemaining >= 0
                       ? theme.colorScheme.primary
-                      : budgetStatus.statusColor,
+                      : statusColor,
                 ),
               ),
             ],

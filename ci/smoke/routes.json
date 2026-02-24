@@ -7,8 +7,6 @@
   "/dashboard/income_expense",
   "/dashboard/spending_category",
   "/dashboard/spending_time",
-  "/groups",
-  "/login",
   "/plan",
   "/plan/add_budget",
   "/plan/add_goal",
@@ -16,9 +14,9 @@
   "/plan/manage_categories/add_category",
   "/recurring",
   "/recurring/add_recurring",
+  "/reports",
   "/settings",
   "/setup",
   "/transactions",
-  "/transactions/add",
-  "/verify-otp"
+  "/transactions/add"
 ]

@@ -32,6 +32,33 @@ class BudgetSummaryWidget extends StatelessWidget {
     }).toList();
   }
 
+  // Moved UI logic here
+  String _getStatusMessage(BudgetHealth health) {
+    switch (health) {
+      case BudgetHealth.thriving:
+        return 'On Track';
+      case BudgetHealth.nearingLimit:
+        return 'Nearing Limit';
+      case BudgetHealth.overLimit:
+        return 'Over Limit';
+      case BudgetHealth.unknown:
+        return 'Unknown';
+    }
+  }
+
+  Color _getStatusColor(BudgetHealth health, ThemeData theme) {
+    switch (health) {
+      case BudgetHealth.thriving:
+        return Colors.green;
+      case BudgetHealth.nearingLimit:
+        return Colors.orange;
+      case BudgetHealth.overLimit:
+        return theme.colorScheme.error;
+      case BudgetHealth.unknown:
+        return theme.disabledColor;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -64,8 +91,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                       ),
                       TextButton(
                         key: const ValueKey('button_budgetSummary_create'),
-                        onPressed: () =>
-                            context.pushNamed(RouteNames.addBudget),
+                        onPressed: () => context.pushNamed(RouteNames.addBudget),
                         child: const Text('Create Budget'),
                       ),
                     ],
@@ -82,22 +108,14 @@ class BudgetSummaryWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: 'Budget Status (${budgets.length})'),
-        // OPTIMIZATION: Replaced ListView.builder(shrinkWrap: true) with Column + map
         ...budgets.map((status) {
           final budget = status.budget;
-          final spent = status.spentAmount;
+          final spent = status.amountSpent; // Updated from spentAmount
           final total = budget.targetAmount;
           final percent = (total > 0) ? (spent / total).clamp(0.0, 1.0) : 0.0;
 
-          // Determine color based on status
-          Color progressColor;
-          if (status.isOverLimit) {
-            progressColor = theme.colorScheme.error;
-          } else if (status.isNearingLimit) {
-            progressColor = Colors.orange;
-          } else {
-            progressColor = Colors.green;
-          }
+          final progressColor = _getStatusColor(status.health, theme);
+          final statusMsg = _getStatusMessage(status.health);
 
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -126,8 +144,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
-                                status
-                                    .statusMessage, // "On Track", "Over Limit", etc.
+                                statusMsg,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: progressColor,
                                   fontWeight: FontWeight.bold,
@@ -144,8 +161,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                             child: LineChart(
                               ChartUtils.sparklineChartData(
                                 sparklineSpots,
-                                progressColor, // Color sparkline by budget health? Or generic?
-                                // Let's use the health color for visual feedback
+                                progressColor,
                               ),
                               duration: Duration.zero,
                             ),
@@ -197,7 +213,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                 onPressed: () => context.go(
                   RouteNames.budgetsAndCats,
                   extra: {
-                    'initialTabIndex': 0, // Navigate to Budgets tab
+                    'initialTabIndex': 0,
                   },
                 ),
                 style: TextButton.styleFrom(

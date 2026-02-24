@@ -91,7 +91,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       _error = null;
     });
 
-    // Find Budget entity
     final budgetListState = context.read<BudgetListBloc>().state;
     Budget? budgetEntity;
     if (budgetListState.status == BudgetListStatus.success) {
@@ -112,7 +111,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       return;
     }
 
-    // Find Transactions
     List<TransactionEntity> foundTransactions = [];
     final budget = budgetEntity;
     final (periodStart, periodEnd) = budget.getPeriodDatesFor(_selectedMonth);
@@ -147,15 +145,10 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       0.0,
       (sum, txn) => sum + txn.amount,
     );
-    const thrivingColor = Colors.green;
-    const nearingLimitColor = Colors.orange;
-    const overLimitColor = Colors.red;
+    // Removed color params from calculate
     final calculatedStatus = BudgetWithStatus.calculate(
       budget: budgetEntity,
       amountSpent: amountSpent,
-      thrivingColor: thrivingColor,
-      nearingLimitColor: nearingLimitColor,
-      overLimitColor: overLimitColor,
     );
 
     if (mounted) {
@@ -180,7 +173,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
   void _navigateToEdit(BuildContext context) {
     if (_budgetWithStatus == null) return;
-    // Navigate using the new route
     context.pushNamed(
       RouteNames.editBudget,
       pathParameters: {'id': _budgetWithStatus!.budget.id},
@@ -220,18 +212,12 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     log.info(
       "[BudgetDetail] _navigateToTransactionDetail called for ${transaction.type.name} ID: ${transaction.id}",
     );
-    const String routeName =
-        RouteNames.editTransaction; // Use edit route for now
+    const String routeName = RouteNames.editTransaction;
     final Map<String, String> params = {
       RouteNames.paramTransactionId: transaction.id,
     };
-    log.info("[BudgetDetail] Attempting navigation via pushNamed:");
-    log.info("  Route Name: $routeName");
-    log.info("  Path Params: $params");
-    log.info("  Extra Data Type: ${transaction.runtimeType}");
     try {
       context.pushNamed(routeName, pathParameters: params, extra: transaction);
-      log.info("[BudgetDetail] pushNamed executed.");
     } catch (e, s) {
       log.severe("[BudgetDetail] Error executing pushNamed: $e\n$s");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -243,7 +229,20 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
   }
 
-  // Helper for Progress Bar (REMOVED AETHER TBD)
+  // Local helper to determine color
+  Color _getStatusColor(BudgetHealth health, ThemeData theme) {
+    switch (health) {
+      case BudgetHealth.thriving:
+        return Colors.green;
+      case BudgetHealth.nearingLimit:
+        return Colors.orange;
+      case BudgetHealth.overLimit:
+        return theme.colorScheme.error;
+      case BudgetHealth.unknown:
+        return theme.disabledColor;
+    }
+  }
+
   Widget _buildProgressBarWidget(
     BuildContext context,
     AppModeTheme? modeTheme,
@@ -253,9 +252,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     if (_budgetWithStatus == null) return const SizedBox(height: 20);
     final status = _budgetWithStatus!;
     final percentage = status.percentageUsed.clamp(0.0, 1.0);
-    final color = status.statusColor;
+    // Use local helper
+    final color = _getStatusColor(status.health, theme);
     final bool isQuantum = uiMode == UIMode.quantum;
-    // final bool isAether = uiMode == UIMode.aether; // No longer needed for branching here
 
     if (isQuantum) {
       return LinearPercentIndicator(
@@ -270,7 +269,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         animation: false,
       );
     } else {
-      // Default for Elemental & Aether
       return LinearPercentIndicator(
         animation: true,
         animationDuration: 600,
@@ -293,7 +291,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
   }
 
-  // Helper for Transaction List
   Widget _buildTransactionListWidget(
     BuildContext context,
     AppModeTheme? modeTheme,
@@ -306,7 +303,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         uiMode == UIMode.quantum && modeTheme?.preferDataTableForLists == true;
 
     if (_isLoading) {
-      // Check main loading flag here
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 20.0),
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
@@ -322,7 +318,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
 
     if (useTable) {
-      // Quantum DataTable
       return SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
@@ -363,7 +358,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         ),
       );
     } else {
-      // Elemental / Aether ListView
       final bool isAether = uiMode == UIMode.aether;
       final Duration itemDelay = isAether
           ? (modeTheme?.listAnimationDelay ?? 80.ms)
@@ -394,7 +388,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             );
           }
           return Padding(
-            // Add padding between items
             padding: const EdgeInsets.only(bottom: 4.0),
             child: item,
           );
@@ -403,7 +396,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
   }
 
-  // Helper for Category Chips
   Widget _buildCategoryChips(BuildContext context, List<String> categoryIds) {
     final categoryState = context.watch<CategoryManagementBloc>().state;
     final theme = Theme.of(context);
@@ -418,7 +410,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         .map((id) {
           final category = allCategories.firstWhereOrNull((c) => c.id == id);
           if (category == null) return null;
-          // Use themed icon getter (optional)
           Widget avatarIcon;
           final modeTheme = context.modeTheme;
           IconData fallbackIcon =
@@ -516,6 +507,8 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final budget = _budgetWithStatus!.budget;
     final status = _budgetWithStatus!;
     final currency = settings.currencySymbol;
+    // Use local helper
+    final statusColor = _getStatusColor(status.health, theme);
     final isAether = uiMode == UIMode.aether;
     final String? bgPath = isAether
         ? (Theme.of(context).brightness == Brightness.dark
@@ -535,7 +528,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           ) ??
           const EdgeInsets.all(16.0).copyWith(bottom: 80),
       children: [
-        // Budget Status Header Card
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,7 +549,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                   Text(
                     'Spent: ${CurrencyFormatter.format(status.amountSpent, currency)}',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: status.statusColor,
+                      color: statusColor, // Updated
                     ),
                   ),
                   Text(
@@ -579,7 +571,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                       fontWeight: FontWeight.w500,
                       color: status.amountRemaining >= 0
                           ? theme.colorScheme.primary
-                          : status.statusColor,
+                          : statusColor, // Updated
                     ),
                   ),
                 ],
@@ -593,7 +585,6 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           ),
         ),
         const SizedBox(height: 20),
-        // Transactions Section
         SectionHeader(
           title: "Transactions in Period (${_relevantTransactions.length})",
         ),

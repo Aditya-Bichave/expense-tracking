@@ -1,4 +1,3 @@
-// lib/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -35,10 +34,9 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     on<LoadBudgets>(_onLoadBudgets);
     on<_BudgetsDataChanged>(_onDataChanged);
     on<DeleteBudget>(_onDeleteBudget);
-    on<ResetState>(_onResetState); // Add handler
+    on<ResetState>(_onResetState);
 
     _dataChangeSubscription = dataChangeStream.listen((event) {
-      // --- MODIFIED Listener ---
       if (event.type == DataChangeType.system &&
           event.reason == DataChangeReason.reset) {
         log.info(
@@ -52,25 +50,20 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
         );
         add(const _BudgetsDataChanged());
       }
-      // --- END MODIFIED ---
     });
     log.info("[BudgetListBloc] Initialized.");
   }
 
-  // --- ADDED: Reset State Handler ---
   void _onResetState(ResetState event, Emitter<BudgetListState> emit) {
     log.info("[BudgetListBloc] Resetting state to initial.");
     emit(const BudgetListState());
-    add(const LoadBudgets()); // Trigger initial load after reset
+    add(const LoadBudgets());
   }
-  // --- END ADDED ---
 
-  // ... (rest of handlers remain the same) ...
   Future<void> _onDataChanged(
     _BudgetsDataChanged event,
     Emitter<BudgetListState> emit,
   ) async {
-    // Avoid triggering reload if already loading/reloading
     if (state.status != BudgetListStatus.loading) {
       log.fine("[BudgetListBloc] Handling _DataChanged event.");
       add(const LoadBudgets(forceReload: true));
@@ -85,7 +78,6 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     LoadBudgets event,
     Emitter<BudgetListState> emit,
   ) async {
-    // Prevent duplicate loading unless forced
     if (state.status == BudgetListStatus.loading && !event.forceReload) {
       log.fine("[BudgetListBloc] LoadBudgets ignored, already loading.");
       return;
@@ -118,12 +110,6 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
         bool calculationErrorOccurred = false;
         String? firstCalcErrorMsg;
 
-        // Define colors (could be moved to theme later)
-        const thrivingColor = Colors.green; // Example
-        const nearingLimitColor = Colors.orange; // Example
-        const overLimitColor = Colors.red; // Example
-
-        // Calculate status for each budget sequentially
         for (final budget in budgets) {
           final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
           final spentResult = await _budgetRepository.calculateAmountSpent(
@@ -143,18 +129,15 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
               );
             },
             (amountSpent) {
+              // Removed named arguments thrivingColor etc.
               budgetsWithStatusList.add(
                 BudgetWithStatus.calculate(
                   budget: budget,
                   amountSpent: amountSpent,
-                  thrivingColor: thrivingColor,
-                  nearingLimitColor: nearingLimitColor,
-                  overLimitColor: overLimitColor,
                 ),
               );
             },
           );
-          // Optional: Stop processing if a critical calculation error occurred
           if (calculationErrorOccurred &&
               firstCalcErrorMsg != null &&
               !firstCalcErrorMsg!.contains("Validation")) {
@@ -163,11 +146,10 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
         }
 
         if (calculationErrorOccurred) {
-          // Emit error if any calculation failed, but still show successfully calculated budgets
           emit(
             state.copyWith(
               status: BudgetListStatus.error,
-              budgetsWithStatus: budgetsWithStatusList, // Show what we have
+              budgetsWithStatus: budgetsWithStatusList,
               errorMessage:
                   firstCalcErrorMsg ?? "An unknown calculation error occurred.",
             ),
@@ -196,18 +178,16 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
       "[BudgetListBloc] DeleteBudget triggered for ID: ${event.budgetId}",
     );
 
-    // Optimistic UI update - remove the item from the current list
     final optimisticList = state.budgetsWithStatus
         .where((bws) => bws.budget.id != event.budgetId)
         .toList();
-    // Keep the current status unless it was error, then set to success optimistically
     final optimisticStatus = state.status == BudgetListStatus.error
         ? BudgetListStatus.success
         : state.status;
     emit(
       state.copyWith(
         budgetsWithStatus: optimisticList,
-        status: optimisticStatus, // Assume success during operation
+        status: optimisticStatus,
         clearError: true,
       ),
     );
@@ -219,7 +199,6 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
     result.fold(
       (failure) {
         log.warning("[BudgetListBloc] Delete failed: ${failure.message}");
-        // Revert UI implicitly by forcing a reload which will show the error state
         emit(
           state.copyWith(
             status: BudgetListStatus.error,
@@ -230,16 +209,14 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
         );
         add(
           const LoadBudgets(forceReload: true),
-        ); // Force reload to show error and potentially revert list if needed
+        );
       },
       (_) {
         log.info("[BudgetListBloc] Delete successful for ${event.budgetId}.");
-        // Publish event - list will reload reactively via _onDataChanged
         publishDataChangedEvent(
           type: DataChangeType.budget,
           reason: DataChangeReason.deleted,
         );
-        // No need to emit success state here, reactive reload handles it
       },
     );
   }

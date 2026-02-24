@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 
@@ -10,30 +10,23 @@ abstract class MerchantCategoryDataSource {
 
 class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
   Map<String, String>? _cachedDb; // Cache the loaded JSON map
-  Future<Map<String, String>>?
-  _loadingFuture; // Future to handle concurrent loads
   final String _assetPath = 'assets/data/merchant_categories.json';
-  final AssetBundle _bundle;
-
-  AssetMerchantCategoryDataSource({AssetBundle? bundle})
-    : _bundle = bundle ?? rootBundle;
+  bool _isLoading = false; // Prevent concurrent loading
 
   Future<Map<String, String>> _loadDb() async {
-    // If already loaded, return cache
     if (_cachedDb != null) return _cachedDb!;
+    if (_isLoading) {
+      // Avoid race conditions if called multiple times before completion
+      await Future.delayed(
+        const Duration(milliseconds: 100),
+      ); // Small delay and retry
+      return _loadDb();
+    }
 
-    // If currently loading, return the ongoing future
-    if (_loadingFuture != null) return _loadingFuture!;
-
-    // Start loading
-    _loadingFuture = _doLoad();
-    return _loadingFuture!;
-  }
-
-  Future<Map<String, String>> _doLoad() async {
+    _isLoading = true;
     log.info("Loading merchant category database from asset: $_assetPath");
     try {
-      final jsonString = await _bundle.loadString(_assetPath);
+      final jsonString = await rootBundle.loadString(_assetPath);
       // Expecting a Map<String, String> directly from JSON
       final Map<String, dynamic> jsonMap =
           jsonDecode(jsonString) as Map<String, dynamic>;
@@ -62,9 +55,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
       _cachedDb = {}; // Set empty cache on error
       throw CacheFailure('Could not load merchant categories: ${e.toString()}');
     } finally {
-      // Clear the future so subsequent calls (if any failed) might try again
-      // or if we want to allow reloading (though _cachedDb prevents that for success case)
-      _loadingFuture = null;
+      _isLoading = false;
     }
   }
 

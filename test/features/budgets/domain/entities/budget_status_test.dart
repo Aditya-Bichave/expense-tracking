@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
@@ -14,18 +13,11 @@ void main() {
     createdAt: DateTime(2023, 1, 1),
   );
 
-  const tThrivingColor = Colors.green;
-  const tNearingLimitColor = Colors.orange;
-  const tOverLimitColor = Colors.red;
-
   group('BudgetWithStatus', () {
     test('calculate should return correct status for thriving (<= 75%)', () {
       final status = BudgetWithStatus.calculate(
         budget: tBudget,
         amountSpent: 50.0, // 50%
-        thrivingColor: tThrivingColor,
-        nearingLimitColor: tNearingLimitColor,
-        overLimitColor: tOverLimitColor,
       );
 
       expect(status.budget, tBudget);
@@ -33,7 +25,6 @@ void main() {
       expect(status.amountRemaining, 50.0);
       expect(status.percentageUsed, 0.5);
       expect(status.health, BudgetHealth.thriving);
-      expect(status.statusColor, tThrivingColor);
     });
 
     test(
@@ -42,13 +33,9 @@ void main() {
         final status = BudgetWithStatus.calculate(
           budget: tBudget,
           amountSpent: 80.0, // 80%
-          thrivingColor: tThrivingColor,
-          nearingLimitColor: tNearingLimitColor,
-          overLimitColor: tOverLimitColor,
         );
 
         expect(status.health, BudgetHealth.nearingLimit);
-        expect(status.statusColor, tNearingLimitColor);
         expect(status.percentageUsed, 0.8);
         expect(status.amountRemaining, 20.0);
       },
@@ -58,13 +45,9 @@ void main() {
       final status = BudgetWithStatus.calculate(
         budget: tBudget,
         amountSpent: 110.0, // 110%
-        thrivingColor: tThrivingColor,
-        nearingLimitColor: tNearingLimitColor,
-        overLimitColor: tOverLimitColor,
       );
 
       expect(status.health, BudgetHealth.overLimit);
-      expect(status.statusColor, tOverLimitColor);
       expect(status.percentageUsed, 1.1);
       expect(status.amountRemaining, -10.0);
     });
@@ -74,9 +57,6 @@ void main() {
       final status = BudgetWithStatus.calculate(
         budget: zeroBudget,
         amountSpent: 0.0,
-        thrivingColor: tThrivingColor,
-        nearingLimitColor: tNearingLimitColor,
-        overLimitColor: tOverLimitColor,
       );
 
       expect(status.percentageUsed, 0.0);

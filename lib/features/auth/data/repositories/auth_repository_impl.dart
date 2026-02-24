@@ -33,16 +33,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AuthResponse>> signInAnonymously() async {
-    try {
-      final response = await _remoteDataSource.signInAnonymously();
-      return Right(response);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
-  }
-
-  @override
   Future<Either<Failure, AuthResponse>> verifyOtp({
     required String phone,
     required String token,

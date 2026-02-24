@@ -22,17 +22,13 @@ class GroupModelAdapter extends TypeAdapter<GroupModel> {
       createdBy: fields[2] as String,
       createdAt: fields[3] as DateTime,
       updatedAt: fields[4] as DateTime,
-      typeValue: fields[5] == null ? 'custom' : fields[5] as String,
-      currency: fields[6] == null ? 'USD' : fields[6] as String,
-      photoUrl: fields[7] as String?,
-      isArchived: fields[8] == null ? false : fields[8] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, GroupModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -42,15 +38,7 @@ class GroupModelAdapter extends TypeAdapter<GroupModel> {
       ..writeByte(3)
       ..write(obj.createdAt)
       ..writeByte(4)
-      ..write(obj.updatedAt)
-      ..writeByte(5)
-      ..write(obj.typeValue)
-      ..writeByte(6)
-      ..write(obj.currency)
-      ..writeByte(7)
-      ..write(obj.photoUrl)
-      ..writeByte(8)
-      ..write(obj.isArchived);
+      ..write(obj.updatedAt);
   }
 
   @override
@@ -71,24 +59,16 @@ class GroupModelAdapter extends TypeAdapter<GroupModel> {
 GroupModel _$GroupModelFromJson(Map<String, dynamic> json) => GroupModel(
   id: json['id'] as String,
   name: json['name'] as String,
-  createdBy: json['created_by'] as String,
-  createdAt: DateTime.parse(json['created_at'] as String),
-  updatedAt: DateTime.parse(json['updated_at'] as String),
-  typeValue: json['type'] as String? ?? 'custom',
-  currency: json['currency'] as String? ?? 'USD',
-  photoUrl: json['photoUrl'] as String?,
-  isArchived: json['isArchived'] as bool? ?? false,
+  createdBy: json['createdBy'] as String,
+  createdAt: DateTime.parse(json['createdAt'] as String),
+  updatedAt: DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$GroupModelToJson(GroupModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'created_by': instance.createdBy,
-      'created_at': instance.createdAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
-      'type': instance.typeValue,
-      'currency': instance.currency,
-      'photoUrl': instance.photoUrl,
-      'isArchived': instance.isArchived,
+      'createdBy': instance.createdBy,
+      'createdAt': instance.createdAt.toIso8601String(),
+      'updatedAt': instance.updatedAt.toIso8601String(),
     };

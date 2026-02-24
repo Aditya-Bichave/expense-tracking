@@ -82,16 +82,14 @@ class _DashboardPageState extends State<DashboardPage> {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverPadding(
-            padding:
-                modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+            padding: modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
                 const EdgeInsets.only(top: 8.0, bottom: 80.0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 DashboardHeader(overview: overview),
                 const SizedBox(height: 8),
                 AssetDistributionSection(
-                  accountBalances: overview.accountBalances,
-                ),
+                    accountBalances: overview.accountBalances),
                 const SizedBox(height: 16),
                 BudgetSummaryWidget(
                   budgets: overview.activeBudgetsSummary,
@@ -141,17 +139,14 @@ class _DashboardPageState extends State<DashboardPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverPadding(
-                padding:
-                    modeTheme?.pagePadding.copyWith(
-                      top:
-                          kToolbarHeight +
+                padding: modeTheme?.pagePadding.copyWith(
+                      top: kToolbarHeight +
                           MediaQuery.of(context).padding.top +
                           8,
                       bottom: 80,
                     ) ??
                     EdgeInsets.only(
-                      top:
-                          kToolbarHeight +
+                      top: kToolbarHeight +
                           MediaQuery.of(context).padding.top +
                           8.0,
                       bottom: 80.0,
@@ -306,21 +301,22 @@ class _DashboardPageState extends State<DashboardPage> {
           );
           Widget bodyContent;
 
-          if (state is DashboardLoading && !state.isReloading) {
+          // SAFE CAST LOGIC:
+          FinancialOverview? overview;
+          if (state is DashboardLoaded) {
+            overview = state.overview;
+          } else {
+            // Attempt to get previous state safely if reloading
+            final currentState = context.read<DashboardBloc>().state;
+            if (currentState is DashboardLoaded) {
+              overview = currentState.overview;
+            }
+          }
+
+          if (state is DashboardLoading && !state.isReloading && overview == null) {
             bodyContent = const Center(child: CircularProgressIndicator());
-          } else if (state is DashboardLoaded ||
-              (state is DashboardLoading && state.isReloading)) {
-            final overview = (state is DashboardLoaded)
-                ? state.overview
-                : (context.read<DashboardBloc>().state as DashboardLoaded?)
-                      ?.overview;
-            if (overview == null && state is DashboardLoading) {
-              bodyContent = const Center(child: CircularProgressIndicator());
-            } else if (overview == null) {
-              bodyContent = const Center(
-                child: Text("Failed to load overview data."),
-              );
-            } else {
+          } else if (overview != null) {
+             // We have data (either current loaded or cached during reload)
               switch (uiMode) {
                 case UIMode.aether:
                   bodyContent = _buildAetherDashboardBody(
@@ -345,7 +341,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   );
                   break;
               }
-            }
           } else if (state is DashboardError) {
             bodyContent = Center(
               child: Padding(
@@ -370,6 +365,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ),
             );
           } else {
+            // Initial state or other fallback
             bodyContent = const Center(child: CircularProgressIndicator());
           }
 

@@ -184,7 +184,9 @@ class GoalSummaryWidget extends StatelessWidget {
                 key: const ValueKey('button_goalSummary_viewAll'),
                 onPressed: () => context.go(
                   RouteNames.budgetsAndCats,
-                  extra: {'initialTabIndex': 1},
+                  extra: {
+                    'initialTabIndex': 1,
+                  },
                 ),
                 style: TextButton.styleFrom(
                   visualDensity: VisualDensity.compact,

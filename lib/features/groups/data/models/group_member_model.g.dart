@@ -22,14 +22,13 @@ class GroupMemberModelAdapter extends TypeAdapter<GroupMemberModel> {
       userId: fields[2] as String,
       roleValue: fields[3] as String,
       joinedAt: fields[4] as DateTime,
-      updatedAt: fields[5] as DateTime,
     );
   }
 
   @override
   void write(BinaryWriter writer, GroupMemberModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -39,9 +38,7 @@ class GroupMemberModelAdapter extends TypeAdapter<GroupMemberModel> {
       ..writeByte(3)
       ..write(obj.roleValue)
       ..writeByte(4)
-      ..write(obj.joinedAt)
-      ..writeByte(5)
-      ..write(obj.updatedAt);
+      ..write(obj.joinedAt);
   }
 
   @override
@@ -62,19 +59,17 @@ class GroupMemberModelAdapter extends TypeAdapter<GroupMemberModel> {
 GroupMemberModel _$GroupMemberModelFromJson(Map<String, dynamic> json) =>
     GroupMemberModel(
       id: json['id'] as String,
-      groupId: json['group_id'] as String,
-      userId: json['user_id'] as String,
-      roleValue: json['role'] as String,
-      joinedAt: DateTime.parse(json['joined_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      groupId: json['groupId'] as String,
+      userId: json['userId'] as String,
+      roleValue: json['roleValue'] as String,
+      joinedAt: DateTime.parse(json['joinedAt'] as String),
     );
 
 Map<String, dynamic> _$GroupMemberModelToJson(GroupMemberModel instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'group_id': instance.groupId,
-      'user_id': instance.userId,
-      'role': instance.roleValue,
-      'joined_at': instance.joinedAt.toIso8601String(),
-      'updated_at': instance.updatedAt.toIso8601String(),
+      'groupId': instance.groupId,
+      'userId': instance.userId,
+      'roleValue': instance.roleValue,
+      'joinedAt': instance.joinedAt.toIso8601String(),
     };

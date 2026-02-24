@@ -1,4 +1,3 @@
-import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -42,7 +41,7 @@ import 'package:expense_tracker/core/utils/logger.dart';
 export 'package:expense_tracker/core/utils/logger.dart';
 
 import 'package:expense_tracker/core/network/supabase_client_provider.dart';
-import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
@@ -123,10 +122,10 @@ Future<void> main() async {
     Hive.registerAdapter(RecurringRuleModelAdapter());
     Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
 
-    Hive.registerAdapter(SyncMutationModelAdapter());
-    Hive.registerAdapter(SyncStatusAdapter());
+    Hive.registerAdapter(OutboxItemAdapter());
+    Hive.registerAdapter(OutboxStatusAdapter());
     Hive.registerAdapter(OpTypeAdapter());
-
+    Hive.registerAdapter(EntityTypeAdapter());
     Hive.registerAdapter(GroupModelAdapter());
     Hive.registerAdapter(GroupMemberModelAdapter());
     Hive.registerAdapter(GroupExpenseModelAdapter());
@@ -168,7 +167,7 @@ Future<void> main() async {
           HiveConstants.recurringRuleAuditLogBoxName,
         );
 
-    final outboxBoxFuture = Hive.openBox<SyncMutationModel>(
+    final outboxBoxFuture = Hive.openBox<OutboxItem>(
       HiveConstants.outboxBoxName,
     );
     final groupBoxFuture = Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
@@ -275,10 +274,6 @@ Future<void> main() async {
         ),
         BlocProvider<AuthBloc>(
           create: (context) => sl<AuthBloc>()..add(AuthCheckStatus()),
-          lazy: false,
-        ),
-        BlocProvider<GroupsBloc>(
-          create: (context) => sl<GroupsBloc>()..add(LoadGroups()),
           lazy: false,
         ),
       ],

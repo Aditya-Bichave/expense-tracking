@@ -108,7 +108,10 @@ class TransactionListView extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 0, bottom: 80),
+      padding: const EdgeInsets.only(
+        top: 0,
+        bottom: 80,
+      ),
       itemCount: state.transactions.length,
       itemBuilder: (ctx, index) {
         final transaction = state.transactions[index];
@@ -123,14 +126,17 @@ class TransactionListView extends StatelessWidget {
             expense: transaction.expense!,
             accountName: accountName,
             currencySymbol: currencySymbol,
-            transaction: transaction, // OPTIMIZATION: Pass entity
+            transaction: transaction,
             onCardTap: (exp) {
               if (state.isInBatchEditMode) {
                 context.read<TransactionListBloc>().add(
                   SelectTransaction(exp.id),
                 );
               } else {
-                navigateToDetailOrEdit(context, transaction);
+                navigateToDetailOrEdit(
+                  context,
+                  transaction,
+                );
               }
             },
             onChangeCategoryRequest: (exp) =>
@@ -155,14 +161,17 @@ class TransactionListView extends StatelessWidget {
             income: transaction.income!,
             accountName: accountName,
             currencySymbol: currencySymbol,
-            transaction: transaction, // OPTIMIZATION: Pass entity
+            transaction: transaction,
             onCardTap: (inc) {
               if (state.isInBatchEditMode) {
                 context.read<TransactionListBloc>().add(
                   SelectTransaction(inc.id),
                 );
               } else {
-                navigateToDetailOrEdit(context, transaction);
+                navigateToDetailOrEdit(
+                  context,
+                  transaction,
+                );
               }
             },
             onChangeCategoryRequest: (inc) =>
@@ -205,7 +214,12 @@ class TransactionListView extends StatelessWidget {
           ),
           confirmDismiss: (_) async =>
               await confirmDeletion(context, transaction),
-          onDismissed: (direction) {},
+          onDismissed: (direction) {
+            // Updated to dispatch deletion to Bloc
+            context.read<TransactionListBloc>().add(
+              DeleteTransaction(transaction)
+            );
+          },
           child: Container(
             color: isSelected
                 ? theme.colorScheme.primaryContainer.withOpacity(0.3)

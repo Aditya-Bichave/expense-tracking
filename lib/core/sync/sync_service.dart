@@ -1,187 +1,40 @@
-import 'dart:async';
-import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'dart:convert';
+import 'dart:math';
+import 'package:expense_tracker/core/sync/models/outbox_item.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
-import 'package:expense_tracker/features/groups/data/models/group_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
-import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-
-enum SyncServiceStatus { synced, syncing, offline, error }
 
 class SyncService {
   final SupabaseClient _client;
   final OutboxRepository _outboxRepository;
-  final Connectivity _connectivity;
-  final Box<GroupModel> _groupBox;
-  final Box<GroupMemberModel> _groupMemberBox;
-
-  final _statusController = StreamController<SyncServiceStatus>.broadcast();
-  Stream<SyncServiceStatus> get statusStream => _statusController.stream;
-
-  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
-  RealtimeChannel? _groupsChannel;
-  RealtimeChannel? _groupMembersChannel;
-
   bool _isSyncing = false;
   static const int _maxRetries = 5;
 
-  SyncService(
-    this._client,
-    this._outboxRepository,
-    this._connectivity,
-    this._groupBox,
-    this._groupMemberBox,
-  ) {
-    _statusController.add(SyncServiceStatus.synced);
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((
-      result,
-    ) {
-      if (result.contains(ConnectivityResult.none)) {
-        _statusController.add(SyncServiceStatus.offline);
-      } else {
-        // Online: Do not emit 'synced' here to avoid flicker.
-        // processOutbox will emit 'syncing' then 'synced'/'error'.
-        processOutbox();
-      }
-    });
-  }
-
-  Future<void> initializeRealtime() async {
-    try {
-      if (_groupsChannel == null) {
-        _groupsChannel = _client.channel('public:groups');
-        _groupsChannel!
-            .onPostgresChanges(
-              event: PostgresChangeEvent.all,
-              schema: 'public',
-              table: 'groups',
-              callback: (payload) {
-                log.info('Realtime update for groups: ${payload.eventType}');
-                _handleGroupChange(payload);
-              },
-            )
-            .subscribe();
-      }
-
-      if (_groupMembersChannel == null) {
-        _groupMembersChannel = _client.channel('public:group_members');
-        _groupMembersChannel!
-            .onPostgresChanges(
-              event: PostgresChangeEvent.all,
-              schema: 'public',
-              table: 'group_members',
-              callback: (payload) {
-                log.info(
-                  'Realtime update for group_members: ${payload.eventType}',
-                );
-                _handleGroupMemberChange(payload);
-              },
-            )
-            .subscribe();
-      }
-    } catch (e) {
-      log.severe('Failed to initialize realtime: $e');
-    }
-  }
-
-  void dispose() {
-    _connectivitySubscription?.cancel();
-    _statusController.close();
-    if (_groupsChannel != null) {
-      _client.removeChannel(_groupsChannel!);
-      _groupsChannel = null;
-    }
-    if (_groupMembersChannel != null) {
-      _client.removeChannel(_groupMembersChannel!);
-      _groupMembersChannel = null;
-    }
-  }
-
-  void _handleGroupChange(PostgresChangePayload payload) {
-    try {
-      if (payload.eventType == PostgresChangeEvent.delete) {
-        final id = payload.oldRecord['id'];
-        if (id == null || id is! String || id.isEmpty) {
-          log.warning('Received delete event with invalid ID: $id');
-          return;
-        }
-        _groupBox.delete(id);
-        return;
-      }
-
-      final newRecord = payload.newRecord;
-      if (newRecord.isEmpty) return;
-
-      final serverGroup = GroupModel.fromJson(newRecord);
-      final localGroup = _groupBox.get(serverGroup.id);
-
-      if (localGroup == null) {
-        _groupBox.put(serverGroup.id, serverGroup);
-      } else {
-        if (serverGroup.updatedAt.isAfter(localGroup.updatedAt)) {
-          _groupBox.put(serverGroup.id, serverGroup);
-        }
-      }
-    } catch (e) {
-      log.severe('Error handling group realtime payload: $e');
-    }
-  }
-
-  void _handleGroupMemberChange(PostgresChangePayload payload) {
-    try {
-      if (payload.eventType == PostgresChangeEvent.delete) {
-        final id = payload.oldRecord['id'];
-        if (id == null || id is! String || id.isEmpty) {
-          log.warning('Received delete event with invalid ID: $id');
-          return;
-        }
-        _groupMemberBox.delete(id);
-        return;
-      }
-
-      final newRecord = payload.newRecord;
-      if (newRecord.isEmpty) return;
-
-      final serverMember = GroupMemberModel.fromJson(newRecord);
-      final localMember = _groupMemberBox.get(serverMember.id);
-
-      if (localMember == null) {
-        _groupMemberBox.put(serverMember.id, serverMember);
-      } else {
-        // Last-Write-Wins check for member
-        if (serverMember.updatedAt.isAfter(localMember.updatedAt)) {
-          _groupMemberBox.put(serverMember.id, serverMember);
-        } else {
-          log.info('Ignoring stale update for group member ${serverMember.id}');
-        }
-      }
-    } catch (e) {
-      log.severe('Error handling group member realtime payload: $e');
-    }
-  }
+  SyncService(this._client, this._outboxRepository);
 
   Future<void> processOutbox() async {
     if (_isSyncing) return;
     _isSyncing = true;
-    _statusController.add(SyncServiceStatus.syncing);
-    bool hadError = false;
 
     try {
       final pendingItems = _outboxRepository.getPendingItems();
-      if (pendingItems.isEmpty) {
-        _statusController.add(SyncServiceStatus.synced);
-        return;
-      }
+      if (pendingItems.isEmpty) return;
 
       log.info('Syncing ${pendingItems.length} items...');
 
       for (final item in pendingItems) {
+        // Check for max retries
         if (item.retryCount >= _maxRetries) {
-          await _outboxRepository.markAsFailed(item, 'Max retries exceeded.');
-          // Treated as processed (failed permanently), so effectively "synced" regarding queue blocking,
-          // but arguably an error state. For now, following established pattern of continuing.
+          log.severe(
+            'Item ${item.id} exceeded max retries. Mark as permanently failed.',
+          );
+          // Set nextRetryAt to distant future to prevent re-fetching
+          await _outboxRepository.markAsFailed(
+            item,
+            'Max retries exceeded. Last error: ${item.lastError}',
+            nextRetryAt: DateTime(9999),
+          );
           continue;
         }
 
@@ -190,37 +43,32 @@ class SyncService {
           await _outboxRepository.markAsSent(item);
         } catch (e) {
           log.warning('Failed to sync item ${item.id}: $e');
-          await _outboxRepository.markAsFailed(item, e.toString());
-          hadError = true;
-        }
-      }
 
-      // Check queue status logic
-      if (hadError) {
-        _statusController.add(SyncServiceStatus.error);
-      } else {
-        // Double check if anything remains pending
-        if (_outboxRepository
-            .getPendingItems()
-            .where((i) => i.status == SyncStatus.pending)
-            .isEmpty) {
-          _statusController.add(SyncServiceStatus.synced);
+          // Exponential backoff: 2^retryCount seconds
+          final backoffSeconds = pow(2, item.retryCount).toInt();
+          final nextRetryAt = DateTime.now().add(
+            Duration(seconds: backoffSeconds),
+          );
+
+          await _outboxRepository.markAsFailed(
+            item,
+            e.toString(),
+            nextRetryAt: nextRetryAt,
+          );
         }
       }
-    } catch (e) {
-      _statusController.add(SyncServiceStatus.error);
     } finally {
       _isSyncing = false;
     }
   }
 
-  Future<void> _processItem(SyncMutationModel item) async {
-    final table = item.table;
-    final payload = item.payload;
+  Future<void> _processItem(OutboxItem item) async {
+    final table = _getTableName(item.entityType);
+    final payload = jsonDecode(item.payloadJson) as Map<String, dynamic>;
 
-    switch (item.operation) {
+    switch (item.opType) {
       case OpType.create:
-        await _client.from(table).upsert(payload);
+        await _client.from(table).insert(payload);
         break;
       case OpType.update:
         await _client.from(table).update(payload).eq('id', item.id);
@@ -228,6 +76,21 @@ class SyncService {
       case OpType.delete:
         await _client.from(table).delete().eq('id', item.id);
         break;
+    }
+  }
+
+  String _getTableName(EntityType type) {
+    switch (type) {
+      case EntityType.group:
+        return 'groups';
+      case EntityType.groupMember:
+        return 'group_members';
+      case EntityType.groupExpense:
+        return 'expenses';
+      case EntityType.settlement:
+        return 'settlements';
+      case EntityType.invite:
+        return 'invites';
     }
   }
 }

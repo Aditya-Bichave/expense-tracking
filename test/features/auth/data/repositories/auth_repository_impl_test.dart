@@ -5,8 +5,6 @@ import 'package:expense_tracker/features/auth/data/repositories/auth_repository_
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:expense_tracker/core/services/secure_storage_service.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 
 class MockAuthRemoteDataSource extends Mock implements AuthRemoteDataSource {}
 
@@ -14,19 +12,9 @@ class MockUser extends Mock implements User {}
 
 class MockAuthResponse extends Mock implements AuthResponse {}
 
-class MockSecureStorageService extends Mock implements SecureStorageService {}
-
 void main() {
   late AuthRepositoryImpl repository;
   late MockAuthRemoteDataSource mockRemoteDataSource;
-
-  setUpAll(() {
-    // Register fallback if needed or mock sl if necessary for signOut
-    // signOut uses sl<SecureStorageService>() which might crash if sl not setup
-    // But repository implementation uses try-catch, so it might be fine, or we need to setup sl.
-    // The existing test for signOut passed, so maybe it catches the error or sl is ignored.
-    // Let's check signOut implementation again. It has try catch for sl.
-  });
 
   setUp(() {
     mockRemoteDataSource = MockAuthRemoteDataSource();
@@ -65,32 +53,6 @@ void main() {
         (failure) => expect(failure, isA<ServerFailure>()),
         (_) => fail('Should have failed'),
       );
-    });
-  });
-
-  group('signInAnonymously', () {
-    final tAuthResponse = MockAuthResponse();
-
-    test('should return Right(AuthResponse) when successful', () async {
-      when(
-        () => mockRemoteDataSource.signInAnonymously(),
-      ).thenAnswer((_) async => tAuthResponse);
-
-      final result = await repository.signInAnonymously();
-
-      expect(result, Right(tAuthResponse));
-      verify(() => mockRemoteDataSource.signInAnonymously()).called(1);
-    });
-
-    test('should return ServerFailure when call fails', () async {
-      when(
-        () => mockRemoteDataSource.signInAnonymously(),
-      ).thenThrow(Exception('Error'));
-
-      final result = await repository.signInAnonymously();
-
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
   });
 

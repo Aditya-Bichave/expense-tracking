@@ -9,8 +9,11 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
 
+class TestMockGoRouter extends Mock implements GoRouter {}
+
 void main() {
-  late MockGoRouter mockGoRouter;
+  late TestMockGoRouter mockGoRouter;
+  final createdAt = DateTime(2023);
 
   final mockBudgets = [
     BudgetWithStatus(
@@ -20,13 +23,12 @@ void main() {
         targetAmount: 500,
         type: BudgetType.overall,
         period: BudgetPeriodType.recurringMonthly,
-        createdAt: DateTime(2023),
+        createdAt: createdAt,
       ),
       amountSpent: 250,
       amountRemaining: 250,
       percentageUsed: 0.5,
       health: BudgetHealth.thriving,
-      statusColor: Colors.green,
     ),
     BudgetWithStatus(
       budget: Budget(
@@ -35,13 +37,12 @@ void main() {
         targetAmount: 200,
         type: BudgetType.overall,
         period: BudgetPeriodType.recurringMonthly,
-        createdAt: DateTime(2023),
+        createdAt: createdAt,
       ),
       amountSpent: 100,
       amountRemaining: 100,
       percentageUsed: 0.5,
       health: BudgetHealth.thriving,
-      statusColor: Colors.green,
     ),
     BudgetWithStatus(
       budget: Budget(
@@ -50,24 +51,41 @@ void main() {
         targetAmount: 150,
         type: BudgetType.overall,
         period: BudgetPeriodType.recurringMonthly,
-        createdAt: DateTime(2023),
+        createdAt: createdAt,
       ),
       amountSpent: 75,
       amountRemaining: 75,
       percentageUsed: 0.5,
       health: BudgetHealth.thriving,
-      statusColor: Colors.green,
     ),
   ];
 
   setUp(() {
-    mockGoRouter = MockGoRouter();
+    mockGoRouter = TestMockGoRouter();
   });
+
+  void stubRouterToRender(Widget widget) {
+    final config = GoRouter(
+      routes: [GoRoute(path: '/', builder: (_, __) => widget)],
+    );
+    when(
+      () => mockGoRouter.routeInformationParser,
+    ).thenReturn(config.routeInformationParser);
+    when(() => mockGoRouter.routerDelegate).thenReturn(config.routerDelegate);
+    when(
+      () => mockGoRouter.routeInformationProvider,
+    ).thenReturn(config.routeInformationProvider);
+    when(
+      () => mockGoRouter.backButtonDispatcher,
+    ).thenReturn(config.backButtonDispatcher);
+  }
 
   group('BudgetSummaryWidget', () {
     testWidgets('renders empty state when budgets list is empty', (
       tester,
     ) async {
+      const widget = BudgetSummaryWidget(budgets: [], recentSpendingData: []);
+      stubRouterToRender(widget);
       when(
         () => mockGoRouter.pushNamed(RouteNames.addBudget),
       ).thenAnswer((_) async => {});
@@ -75,10 +93,11 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         router: mockGoRouter,
-        widget: const BudgetSummaryWidget(budgets: [], recentSpendingData: []),
+        widget: widget,
       );
 
-      expect(find.text('No active budgets found.'), findsOneWidget);
+      // UPDATE: Matches the actual text in the widget
+      expect(find.text('No active budgets.'), findsOneWidget);
       final createButton = find.byKey(
         const ValueKey('button_budgetSummary_create'),
       );
@@ -105,6 +124,11 @@ void main() {
     testWidgets('tapping a budget card navigates to detail page', (
       tester,
     ) async {
+      final widget = BudgetSummaryWidget(
+        budgets: [mockBudgets.first],
+        recentSpendingData: [],
+      );
+      stubRouterToRender(widget);
       when(
         () => mockGoRouter.pushNamed(
           RouteNames.budgetDetail,
@@ -116,13 +140,10 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         router: mockGoRouter,
-        widget: BudgetSummaryWidget(
-          budgets: [mockBudgets.first],
-          recentSpendingData: [],
-        ),
+        widget: widget,
       );
 
-      await tester.tap(find.byType(InkWell));
+      await tester.tap(find.text('Groceries'));
 
       verify(
         () => mockGoRouter.pushNamed(
@@ -136,6 +157,11 @@ void main() {
     testWidgets('shows "View All" button when there are 3 or more budgets', (
       tester,
     ) async {
+      final widget = BudgetSummaryWidget(
+        budgets: mockBudgets,
+        recentSpendingData: [],
+      );
+      stubRouterToRender(widget);
       when(
         () => mockGoRouter.go(
           RouteNames.budgetsAndCats,
@@ -146,10 +172,7 @@ void main() {
       await pumpWidgetWithProviders(
         tester: tester,
         router: mockGoRouter,
-        widget: BudgetSummaryWidget(
-          budgets: mockBudgets,
-          recentSpendingData: [],
-        ),
+        widget: widget,
       );
 
       final viewAllButton = find.byKey(
@@ -182,5 +205,5 @@ void main() {
         findsNothing,
       );
     });
-  }, skip: true);
+  });
 }

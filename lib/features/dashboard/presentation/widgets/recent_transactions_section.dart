@@ -30,7 +30,9 @@ class RecentTransactionsSection extends StatelessWidget {
 
     if (transactionState.status == ListStatus.success ||
         transactionState.status == ListStatus.reloading) {
-      recentItems = transactionState.transactions.take(5).toList();
+      recentItems = transactionState.transactions
+          .take(5)
+          .toList();
     }
 
     return Column(

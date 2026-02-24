@@ -1,3 +1,4 @@
+// lib/core/utils/app_dialogs.dart
 import 'package:flutter/material.dart';
 
 class AppDialogs {
@@ -57,28 +58,6 @@ class AppDialogs {
         confirmText: confirmText,
         confirmationPhrase: confirmationPhrase,
         confirmColor: confirmColor,
-      ),
-    );
-  }
-
-  static void showSuccessSnackbar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
-  }
-
-  static void showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
       ),
     );
   }
