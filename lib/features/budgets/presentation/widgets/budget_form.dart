@@ -102,7 +102,7 @@ class _BudgetFormState extends State<BudgetForm> {
         if (isStartDate) {
           _selectedStartDate = DateTime(picked.year, picked.month, picked.day);
           if (_selectedEndDate != null &&
-                      _selectedStartDate != null &&
+              _selectedStartDate != null &&
               _selectedEndDate!.isBefore(_selectedStartDate!)) {
             _selectedEndDate = _selectedStartDate;
           }
@@ -116,7 +116,7 @@ class _BudgetFormState extends State<BudgetForm> {
             59,
           );
           if (_selectedStartDate != null &&
-                      _selectedEndDate != null &&
+              _selectedEndDate != null &&
               _selectedStartDate!.isAfter(_selectedEndDate!)) {
             _selectedStartDate = _selectedEndDate;
           }
