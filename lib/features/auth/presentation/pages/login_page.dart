@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      appBar: AppBar(title: const Text('Login / Sign Up')),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthOtpSent) {
@@ -142,6 +142,28 @@ class _LoginPageState extends State<LoginPage>
           builder: (context, state) {
             final isLoading = state is AuthLoading;
             return ElevatedButton(
+              onPressed: () {
+                final input = _phoneController.text.trim();
+                if (input.isNotEmpty) {
+                  String cleanInput = input.replaceAll(RegExp(r'\D'), '');
+                  String finalPhone;
+
+                  if (input.startsWith('+')) {
+                    finalPhone = '+$cleanInput';
+                  } else {
+                    String countryDigits =
+                        _countryCode.replaceAll(RegExp(r'\D'), '');
+                    String localDigits =
+                        cleanInput.replaceFirst(RegExp(r'^0+'), '');
+                    finalPhone = '+$countryDigits$localDigits';
+                  }
+
+                  context.read<AuthBloc>().add(
+                    AuthLoginRequested(finalPhone),
+                  );
+                }
+              },
+              child: const Text('Send OTP'),
               onPressed: isLoading ? null : _submitPhone,
               child: isLoading
                   ? SizedBox(
