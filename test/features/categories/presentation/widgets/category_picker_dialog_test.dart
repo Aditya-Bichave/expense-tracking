@@ -4,8 +4,6 @@ import 'package:expense_tracker/features/categories/presentation/widgets/categor
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../../../helpers/pump_app.dart';
-
 void main() {
   final mockCategories = [
     const Category(
@@ -60,6 +58,25 @@ void main() {
 
       expect(find.text('Food'), findsNothing);
       expect(find.text('Shopping'), findsOneWidget);
+    });
+
+    testWidgets('shows empty state when search finds nothing', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CategoryPickerDialogContent(
+              categoryType: CategoryTypeFilter.expense,
+              categories: mockCategories,
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField), 'xyz');
+      await tester.pump();
+
+      expect(find.text('No matching categories found.'), findsOneWidget);
+      expect(find.byIcon(Icons.search_off), findsOneWidget);
     });
 
     testWidgets('tapping a category pops with the selected category', (

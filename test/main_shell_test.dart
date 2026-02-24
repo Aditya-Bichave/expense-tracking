@@ -69,7 +69,7 @@ void main() {
     final fab = tester.widget<FloatingActionButton>(
       find.byType(FloatingActionButton),
     );
-    expect(fab.tooltip, 'Add');
+    expect(fab.tooltip, 'Add Transaction');
     expect(
       find.descendant(
         of: find.byType(FloatingActionButton),
