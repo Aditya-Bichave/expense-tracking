@@ -40,16 +40,12 @@ class ExpenseCard extends StatelessWidget {
     try {
       fallbackIcon = _getElementalCategoryIcon(category.name);
     } catch (_) {}
-    log.info(
-      "[ExpenseCard] Building icon for category '${category.name}' (IconName: ${category.iconName})",
-    );
     if (modeTheme != null) {
       String svgPath = modeTheme.assets.getCategoryIcon(
         category.iconName,
         defaultPath: '',
       );
       if (svgPath.isNotEmpty) {
-        log.info("[ExpenseCard] Using SVG: $svgPath");
         return SvgPicture.asset(
           svgPath,
           width: 22,
@@ -58,7 +54,6 @@ class ExpenseCard extends StatelessWidget {
         );
       }
     }
-    log.info("[ExpenseCard] Falling back to IconData: $fallbackIcon");
     return Icon(fallbackIcon, size: 22, color: category.displayColor);
   }
 

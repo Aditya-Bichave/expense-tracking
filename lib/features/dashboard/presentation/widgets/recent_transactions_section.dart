@@ -77,19 +77,15 @@ class RecentTransactionsSection extends StatelessWidget {
             ),
           )
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: recentItems.length,
-            itemBuilder: (ctx, index) {
-              final item = recentItems[index];
+          Column(
+            children: recentItems.map((item) {
               return TransactionListItem(
                 // Use the moved widget
                 transaction: item,
                 currencySymbol: currencySymbol,
                 onTap: () => navigateToDetailOrEdit(context, item),
               );
-            },
+            }).toList(),
           ),
         // "View All" Button
         Padding(

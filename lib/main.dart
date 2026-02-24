@@ -241,7 +241,6 @@ Future<void> main() async {
         ),
         BlocProvider<AccountListBloc>(
           create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
-          lazy: false,
         ),
         BlocProvider<TransactionListBloc>(
           create: (context) =>
@@ -255,11 +254,9 @@ Future<void> main() async {
         ),
         BlocProvider<BudgetListBloc>(
           create: (context) => sl<BudgetListBloc>()..add(const LoadBudgets()),
-          lazy: false,
         ),
         BlocProvider<GoalListBloc>(
           create: (context) => sl<GoalListBloc>()..add(const LoadGoals()),
-          lazy: false,
         ),
         BlocProvider<DashboardBloc>(
           create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
@@ -279,7 +276,6 @@ Future<void> main() async {
         ),
         BlocProvider<GroupsBloc>(
           create: (context) => sl<GroupsBloc>()..add(LoadGroups()),
-          lazy: false,
         ),
       ],
       child: const MyApp(),

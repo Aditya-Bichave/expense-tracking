@@ -67,7 +67,9 @@ void main() {
     registerFallbackValue(const LoadGoals());
     registerFallbackValue(const LoadSettings());
     registerFallbackValue(const LoadCategories());
-    registerFallbackValue(const TransactionTypeChanged(TransactionType.expense));
+    registerFallbackValue(
+      const TransactionTypeChanged(TransactionType.expense),
+    );
   });
 
   setUp(() {

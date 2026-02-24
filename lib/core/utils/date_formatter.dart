@@ -23,16 +23,20 @@ class DateFormatter {
   }
 
   static DateFormat _getDateTimeFormatter(String? locale) {
-    if (!_dateTimeFormatters.containsKey(locale)) {
-      _dateTimeFormatters[locale] = DateFormat.yMMMd(locale).add_jm();
+    var format = _dateTimeFormatters[locale];
+    if (format == null) {
+      format = DateFormat.yMMMd(locale).add_jm();
+      _dateTimeFormatters[locale] = format;
     }
-    return _dateTimeFormatters[locale]!;
+    return format;
   }
 
   static DateFormat _getDateFormatter(String? locale) {
-    if (!_dateFormatters.containsKey(locale)) {
-      _dateFormatters[locale] = DateFormat.yMd(locale);
+    var format = _dateFormatters[locale];
+    if (format == null) {
+      format = DateFormat.yMd(locale);
+      _dateFormatters[locale] = format;
     }
-    return _dateFormatters[locale]!;
+    return format;
   }
 }
