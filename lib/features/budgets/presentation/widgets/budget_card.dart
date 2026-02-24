@@ -26,7 +26,7 @@ class BudgetCard extends StatelessWidget {
   List<Widget> _getCategoryIconWidgets(BuildContext context, Budget budget) {
     if (budget.type != BudgetType.categorySpecific ||
         budget.categoryIds == null ||
-        budget.categoryIds!.isEmpty) {
+        (budget.categoryIds != null && budget.categoryIds!.isEmpty)) {
       return [];
     }
     final categoryState = context.read<CategoryManagementBloc>().state;

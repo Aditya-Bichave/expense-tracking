@@ -386,11 +386,19 @@ class _TransactionListPageState extends State<TransactionListPage> {
                     context.read<TransactionListBloc>().add(
                       const LoadTransactions(forceReload: true),
                     );
-                    await context.read<TransactionListBloc>().stream.firstWhere(
-                      (s) =>
-                          s.status != ListStatus.loading &&
-                          s.status != ListStatus.reloading,
-                    );
+                    try {
+                      await context
+                          .read<TransactionListBloc>()
+                          .stream
+                          .firstWhere(
+                            (s) =>
+                                s.status != ListStatus.loading &&
+                                s.status != ListStatus.reloading,
+                          )
+                          .timeout(const Duration(seconds: 3));
+                    } catch (_) {
+                      // Prevent hanging if state update is missed
+                    }
                   },
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),

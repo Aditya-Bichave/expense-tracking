@@ -9,9 +9,13 @@ abstract class BudgetPerformanceReportEvent extends Equatable {
 
 class LoadBudgetPerformanceReport extends BudgetPerformanceReportEvent {
   final bool compareToPrevious; // Flag to control comparison data loading
-  const LoadBudgetPerformanceReport({this.compareToPrevious = false});
+  final bool forceReload;
+  const LoadBudgetPerformanceReport({
+    this.compareToPrevious = false,
+    this.forceReload = false,
+  });
   @override
-  List<Object?> get props => [compareToPrevious];
+  List<Object?> get props => [compareToPrevious, forceReload];
 }
 
 class ToggleBudgetComparison extends BudgetPerformanceReportEvent {

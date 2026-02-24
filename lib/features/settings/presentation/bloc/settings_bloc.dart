@@ -290,7 +290,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}",
     );
     final result = await _settingsRepository.saveUIMode(event.newMode);
-    result.fold(
+    await result.fold(
       (failure) {
         log.warning(
           "[SettingsBloc] Failed to save UI mode: ${failure.message}",
@@ -303,7 +303,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           ),
         );
       },
-      (_) {
+      (_) async {
         log.info("[SettingsBloc] UI mode saved. Determining default palette.");
         String defaultPalette;
         switch (event.newMode) {
@@ -321,9 +321,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
             break;
         }
         log.info("[SettingsBloc] Saving default palette: $defaultPalette");
-        _settingsRepository.savePaletteIdentifier(
-          defaultPalette,
-        ); // Fire and forget is ok here
+        await _settingsRepository.savePaletteIdentifier(defaultPalette);
 
         emit(
           state.copyWith(
