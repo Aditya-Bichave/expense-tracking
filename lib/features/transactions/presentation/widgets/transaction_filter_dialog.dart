@@ -83,6 +83,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           ); // Store date only
           // Adjust end date if necessary
           if (_selectedEndDate != null &&
+              _selectedStartDate != null &&
               _selectedEndDate!.isBefore(_selectedStartDate!)) {
             _selectedEndDate = _selectedStartDate;
           }
@@ -97,6 +98,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           ); // End of day
           // Adjust start date if necessary
           if (_selectedStartDate != null &&
+              _selectedEndDate != null &&
               _selectedStartDate!.isAfter(_selectedEndDate!)) {
             _selectedStartDate = _selectedEndDate;
           }

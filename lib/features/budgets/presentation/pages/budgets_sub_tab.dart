@@ -105,9 +105,13 @@ class BudgetsSubTab extends StatelessWidget {
               context.read<BudgetListBloc>().add(
                 const LoadBudgets(forceReload: true),
               );
-              await context.read<BudgetListBloc>().stream.firstWhere(
-                (s) => s.status != BudgetListStatus.loading,
-              );
+              try {
+                await context
+                    .read<BudgetListBloc>()
+                    .stream
+                    .firstWhere((s) => s.status != BudgetListStatus.loading)
+                    .timeout(const Duration(seconds: 3));
+              } catch (_) {}
             },
             child: content,
           );

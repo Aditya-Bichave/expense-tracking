@@ -209,6 +209,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         filter,
                         list,
                       );
+                      if (!context.mounted) return;
                       if (category != null) {
                         context.read<AddEditRecurringRuleBloc>().add(
                           CategoryChanged(category),
@@ -256,6 +257,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                           context: context,
                           initialTime: state.startTime ?? TimeOfDay.now(),
                         );
+                        if (!context.mounted) return;
                         if (time != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
                             TimeChanged(time),
@@ -338,6 +340,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                           firstDate: DateTime.now(),
                           lastDate: DateTime(2100),
                         );
+                        if (!context.mounted) return;
                         if (date != null) {
                           context.read<AddEditRecurringRuleBloc>().add(
                             EndDateChanged(date),
