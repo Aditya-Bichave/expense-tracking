@@ -76,7 +76,8 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
     }
 
     // 2. Check if it is a join link
-    if (event.uri.path.contains('/join')) {
+    // Support both https://spendos.app/join and spendos://join
+    if (event.uri.path.contains('/join') || event.uri.host == 'join') {
       final token = event.uri.queryParameters['token'];
       if (token != null) {
         await _handleJoin(token, emit);

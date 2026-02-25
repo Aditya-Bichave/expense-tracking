@@ -9,6 +9,10 @@ abstract class GroupsRepository {
   Stream<Either<Failure, List<GroupEntity>>> watchGroups();
   Future<Either<Failure, List<GroupMember>>> getGroupMembers(String groupId);
   Future<Either<Failure, void>> syncGroups();
+
+  /// Fetches groups AND members from server and updates local cache.
+  Future<Either<Failure, void>> refreshGroupsFromServer();
+
   Future<Either<Failure, String>> createInvite(
     String groupId, {
     String role = 'member',

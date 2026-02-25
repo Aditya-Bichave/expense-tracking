@@ -100,6 +100,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
 
   @override
   Future<Either<Failure, void>> syncGroups() async {
+    return refreshGroupsFromServer();
+  }
+
+  @override
+  Future<Either<Failure, void>> refreshGroupsFromServer() async {
     try {
       final connectivityResult = await _connectivity.checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.none)) {
@@ -108,6 +113,38 @@ class GroupsRepositoryImpl implements GroupsRepository {
 
       final remoteGroups = await _remoteDataSource.getGroups();
       await _localDataSource.saveGroups(remoteGroups);
+
+      // Cleanup stale groups
+      final remoteGroupIds = remoteGroups.map((g) => g.id).toSet();
+      final localGroups = _localDataSource.getGroups();
+      for (final lg in localGroups) {
+        if (!remoteGroupIds.contains(lg.id)) {
+          await _localDataSource.deleteGroup(lg.id);
+        }
+      }
+
+      // Fetch members for each group in parallel
+      await Future.wait(
+        remoteGroups.map((group) async {
+          try {
+            final remoteMembers = await _remoteDataSource.getGroupMembers(
+              group.id,
+            );
+            await _localDataSource.saveGroupMembers(remoteMembers);
+
+            // Cleanup stale members
+            final remoteMemberIds = remoteMembers.map((m) => m.id).toSet();
+            final localMembers = _localDataSource.getGroupMembers(group.id);
+            for (final lm in localMembers) {
+              if (!remoteMemberIds.contains(lm.id)) {
+                await _localDataSource.deleteMember(lm.id);
+              }
+            }
+          } catch (e) {
+            // Log error or ignore partial failure
+          }
+        }),
+      );
 
       return const Right(null);
     } catch (e) {
@@ -155,7 +192,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       await _remoteDataSource.updateMemberRole(groupId, userId, role);
-      // Sync local members if possible or just rely on realtime
+      // Refresh members for this group to keep UI in sync
+      final members = await _remoteDataSource.getGroupMembers(groupId);
+      await _localDataSource.saveGroupMembers(members);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -169,7 +208,21 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       await _remoteDataSource.removeMember(groupId, userId);
-      // Sync local members if possible or just rely on realtime
+      // Refresh members for this group to keep UI in sync
+      // Since removeMember removes from DB, getGroupMembers won't return it.
+      // We need to cleanup local cache.
+      final members = await _remoteDataSource.getGroupMembers(groupId);
+      await _localDataSource.saveGroupMembers(members);
+
+      // Cleanup stale members
+      final remoteMemberIds = members.map((m) => m.id).toSet();
+      final localMembers = _localDataSource.getGroupMembers(groupId);
+      for (final lm in localMembers) {
+        if (!remoteMemberIds.contains(lm.id)) {
+          await _localDataSource.deleteMember(lm.id);
+        }
+      }
+
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));

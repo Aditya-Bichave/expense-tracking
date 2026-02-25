@@ -6,11 +6,11 @@ import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
+import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
-import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -25,9 +25,9 @@ class MockSyncService extends Mock implements SyncService {}
 
 class MockConnectivity extends Mock implements Connectivity {}
 
-class FakeGroupModel extends Fake implements GroupModel {}
-
 class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
+
+class FakeGroupModel extends Fake implements GroupModel {}
 
 void main() {
   late GroupsRepositoryImpl repository;
@@ -38,8 +38,10 @@ void main() {
   late MockConnectivity mockConnectivity;
 
   setUpAll(() {
-    registerFallbackValue(FakeGroupModel());
     registerFallbackValue(FakeSyncMutationModel());
+    registerFallbackValue(FakeGroupModel());
+    registerFallbackValue(<GroupModel>[]);
+    registerFallbackValue(<GroupMemberModel>[]);
   });
 
   setUp(() {
@@ -48,7 +50,6 @@ void main() {
     mockOutboxRepository = MockOutboxRepository();
     mockSyncService = MockSyncService();
     mockConnectivity = MockConnectivity();
-
     repository = GroupsRepositoryImpl(
       localDataSource: mockLocalDataSource,
       remoteDataSource: mockRemoteDataSource,
@@ -233,6 +234,18 @@ void main() {
       when(
         () => mockLocalDataSource.saveGroups(any()),
       ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.getGroups(),
+      ).thenReturn([tGroupModel]);
+      when(
+        () => mockRemoteDataSource.getGroupMembers(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.getGroupMembers(any()),
+      ).thenReturn([]);
 
       // Act
       final result = await repository.syncGroups();
@@ -241,6 +254,7 @@ void main() {
       expect(result.isRight(), true);
       verify(() => mockRemoteDataSource.getGroups()).called(1);
       verify(() => mockLocalDataSource.saveGroups([tGroupModel])).called(1);
+      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
     });
 
     test(
@@ -342,10 +356,19 @@ void main() {
   });
 
   group('updateMemberRole', () {
-    test('should call remoteDataSource.updateMemberRole', () async {
+    test('should call remoteDataSource.updateMemberRole and refresh members', () async {
       when(
         () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
       ).thenAnswer((_) async {});
+      when(
+        () => mockRemoteDataSource.getGroupMembers(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.getGroupMembers(any()),
+      ).thenReturn([]);
 
       final result = await repository.updateMemberRole('1', 'u1', 'admin');
 
@@ -353,6 +376,7 @@ void main() {
       verify(
         () => mockRemoteDataSource.updateMemberRole('1', 'u1', 'admin'),
       ).called(1);
+      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
     });
 
     test('should return ServerFailure on exception', () async {
@@ -368,15 +392,25 @@ void main() {
   });
 
   group('removeMember', () {
-    test('should call remoteDataSource.removeMember', () async {
+    test('should call remoteDataSource.removeMember and cleanup', () async {
       when(
         () => mockRemoteDataSource.removeMember(any(), any()),
       ).thenAnswer((_) async {});
+      when(
+        () => mockRemoteDataSource.getGroupMembers(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.getGroupMembers(any()),
+      ).thenReturn([]);
 
       final result = await repository.removeMember('1', 'u1');
 
       expect(result.isRight(), true);
       verify(() => mockRemoteDataSource.removeMember('1', 'u1')).called(1);
+      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
     });
 
     test('should return ServerFailure on exception', () async {

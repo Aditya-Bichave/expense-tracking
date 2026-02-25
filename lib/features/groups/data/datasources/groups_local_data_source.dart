@@ -10,6 +10,8 @@ abstract class GroupsLocalDataSource {
   Stream<List<GroupModel>> watchGroups();
   Future<void> saveGroupMembers(List<GroupMemberModel> members);
   List<GroupMemberModel> getGroupMembers(String groupId);
+  Future<void> deleteGroup(String groupId);
+  Future<void> deleteMember(String memberId);
 }
 
 class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
@@ -53,5 +55,15 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
   @override
   List<GroupMemberModel> getGroupMembers(String groupId) {
     return _memberBox.values.where((m) => m.groupId == groupId).toList();
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId) async {
+    await _groupBox.delete(groupId);
+  }
+
+  @override
+  Future<void> deleteMember(String memberId) async {
+    await _memberBox.delete(memberId);
   }
 }
