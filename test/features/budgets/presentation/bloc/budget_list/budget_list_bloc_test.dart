@@ -112,7 +112,7 @@ void main() {
         const BudgetListState(status: BudgetListStatus.loading),
         isA<BudgetListState>()
             .having((s) => s.status, 'status', BudgetListStatus.success)
-            .having((s) => s.budgetsWithStatus.length, 'budgetsCount', 1)
+            .having((s) => s.budgetsWithStatus.length, 'budgetsCount', 1),
         // Spent will be 0 because date 2022 is likely not current month (unless time travel).
         // Let's relax check or update expectations.
         // .having((s) => s.budgetsWithStatus.first.amountSpent, 'spent', 100),

@@ -63,32 +63,34 @@ void main() {
     ).called(1);
   });
 
-  test('should rollback if income reassignment fails', () async {
-    // Arrange
-    when(
-      () => mockExpenseRepository.reassignExpensesCategory(any(), any()),
-    ).thenAnswer((_) async => const Right(5));
-    when(
-      () => mockIncomeRepository.reassignIncomesCategory(any(), any()),
-    ).thenAnswer((_) async => const Left(CacheFailure("Fail")));
-    when(
-      () => mockExpenseRepository.reassignExpensesCategory(
-        any(),
-        any(),
-      ), // Rollback call
-    ).thenAnswer((_) async => const Right(5));
+  test(
+    'should fail gracefully if income reassignment fails (no rollback)',
+    () async {
+      // Arrange
+      when(
+        () => mockExpenseRepository.reassignExpensesCategory(any(), any()),
+      ).thenAnswer((_) async => const Right(5));
+      when(
+        () => mockIncomeRepository.reassignIncomesCategory(any(), any()),
+      ).thenAnswer((_) async => const Left(CacheFailure("Fail")));
 
-    // Act
-    final result = await useCase(tParams);
+      // Act
+      final result = await useCase(tParams);
 
-    // Assert
-    expect(result, const Left(CacheFailure("Fail")));
-    // Verify rollback called with swapped IDs
-    verify(
-      () => mockExpenseRepository.reassignExpensesCategory('default', 'cat1'),
-    ).called(1);
-    verifyNever(
-      () => mockCategoryRepository.deleteCustomCategory(any(), any()),
-    );
-  });
+      // Assert
+      expect(result, const Left(CacheFailure("Fail")));
+      // Verify expense reassignment happened once
+      verify(
+        () => mockExpenseRepository.reassignExpensesCategory('cat1', 'default'),
+      ).called(1);
+      // Verify NO rollback called (swapped IDs)
+      verifyNever(
+        () => mockExpenseRepository.reassignExpensesCategory('default', 'cat1'),
+      );
+      // Verify deletion didn't happen
+      verifyNever(
+        () => mockCategoryRepository.deleteCustomCategory(any(), any()),
+      );
+    },
+  );
 }
