@@ -14,6 +14,7 @@ import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class AccountListPage extends StatelessWidget {
   const AccountListPage({super.key});

@@ -27,6 +27,7 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class GoalDetailPage extends StatefulWidget {
   final String goalId;

@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.da
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart'; // Needed for calculation
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class BudgetRepositoryImpl implements BudgetRepository {
   final BudgetLocalDataSource localDataSource;

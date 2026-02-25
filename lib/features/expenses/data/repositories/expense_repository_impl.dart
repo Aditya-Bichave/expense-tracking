@@ -12,6 +12,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:collection/collection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/features/expenses/domain/utils/split_engine.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseLocalDataSource localDataSource;

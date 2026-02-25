@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class UpdateBudgetUseCase implements UseCase<Budget, UpdateBudgetParams> {
   final BudgetRepository repository;

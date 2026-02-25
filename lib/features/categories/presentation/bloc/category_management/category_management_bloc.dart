@@ -13,6 +13,7 @@ import 'package:expense_tracker/features/categories/domain/usecases/delete_custo
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/main.dart'; // logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'category_management_event.dart';
 part 'category_management_state.dart';

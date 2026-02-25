@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class ArchiveGoalUseCase implements UseCase<void, ArchiveGoalParams> {
   final GoalRepository repository;

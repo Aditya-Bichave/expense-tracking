@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class AddAuditLog implements UseCase<void, RecurringRuleAuditLog> {
   final RecurringTransactionRepository repository;

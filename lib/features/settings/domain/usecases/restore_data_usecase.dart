@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 
 // Import constants
 import 'package:expense_tracker/core/constants/app_constants.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class RestoreDataUseCase implements UseCase<void, RestoreParams> {
   final DataManagementRepository dataManagementRepository;

@@ -10,6 +10,7 @@ import 'package:expense_tracker/features/settings/domain/usecases/restore_data_u
 import 'package:expense_tracker/features/settings/domain/usecases/clear_all_data_usecase.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
+import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'data_management_event.dart';
 part 'data_management_state.dart';

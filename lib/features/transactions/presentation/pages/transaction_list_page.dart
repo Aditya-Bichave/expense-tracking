@@ -25,6 +25,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:collection/collection.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class TransactionListPage extends StatefulWidget {
   // --- ADDED: Accept optional initial filters ---

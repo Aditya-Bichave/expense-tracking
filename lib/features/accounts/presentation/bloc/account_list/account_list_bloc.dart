@@ -12,6 +12,7 @@ import 'package:expense_tracker/features/accounts/domain/usecases/delete_asset_a
 import 'package:expense_tracker/features/accounts/domain/usecases/get_asset_accounts.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl helper
 import 'package:expense_tracker/core/events/data_change_event.dart'; // Import event
+import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'account_list_event.dart';
 part 'account_list_state.dart';

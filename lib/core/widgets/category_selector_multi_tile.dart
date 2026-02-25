@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/categories/presentation/widgets/icon_pi
 import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:collection/collection.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class CategorySelectorMultiTile extends StatelessWidget {
   final List<String> selectedCategoryIds;

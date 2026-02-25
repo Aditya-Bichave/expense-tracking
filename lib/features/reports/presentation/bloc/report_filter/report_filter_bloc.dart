@@ -15,6 +15,7 @@ import 'package:expense_tracker/features/goals/domain/usecases/get_goals.dart'; 
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Added
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/foundation.dart' hide Category; // Added for ValueGetter
+import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'report_filter_event.dart';
 part 'report_filter_state.dart';

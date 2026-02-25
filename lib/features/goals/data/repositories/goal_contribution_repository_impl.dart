@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class GoalContributionRepositoryImpl implements GoalContributionRepository {
   final GoalContributionLocalDataSource contributionDataSource;

@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 abstract class BudgetLocalDataSource {
   Future<List<BudgetModel>> getBudgets();

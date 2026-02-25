@@ -2,6 +2,7 @@ import 'package:expense_tracker/features/categories/data/models/category_model.d
 import 'package:hive_ce/hive.dart'; // Needed by implementation
 import 'package:expense_tracker/core/error/failure.dart'; // Needed by implementation
 import 'package:expense_tracker/main.dart'; // Needed by implementation (logger)
+import 'package:expense_tracker/core/utils/logger.dart';
 // --- END MOVED IMPORTS ---
 
 abstract class CategoryLocalDataSource {

@@ -20,6 +20,9 @@ class SyncService {
   final _statusController = StreamController<SyncServiceStatus>.broadcast();
   Stream<SyncServiceStatus> get statusStream => _statusController.stream;
 
+  final _errorController = StreamController<String>.broadcast();
+  Stream<String> get errorStream => _errorController.stream;
+
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   RealtimeChannel? _groupsChannel;
   RealtimeChannel? _groupMembersChannel;
@@ -43,7 +46,11 @@ class SyncService {
       } else {
         // Online: Do not emit 'synced' here to avoid flicker.
         // processOutbox will emit 'syncing' then 'synced'/'error'.
-        unawaited(processOutbox());
+        unawaited(
+          processOutbox().catchError((e) {
+            log.severe("Background sync failed: $e");
+          }),
+        );
       }
     });
   }
@@ -89,6 +96,7 @@ class SyncService {
   void dispose() {
     _connectivitySubscription?.cancel();
     _statusController.close();
+    _errorController.close();
     if (_groupsChannel != null) {
       _client.removeChannel(_groupsChannel!);
       _groupsChannel = null;
@@ -149,7 +157,11 @@ class SyncService {
 
       if (localMember == null) {
         _groupMemberBox.put(serverMember.id, serverMember);
-        unawaited(_ensureGroupExists(serverMember.groupId));
+        unawaited(
+          _ensureGroupExists(serverMember.groupId).catchError((e) {
+            log.warning('Failed to ensure group exists via realtime: $e');
+          }),
+        );
       } else {
         // Last-Write-Wins check for member
         if (serverMember.updatedAt.isAfter(localMember.updatedAt)) {
@@ -198,9 +210,15 @@ class SyncService {
 
       for (final item in pendingItems) {
         if (item.retryCount >= _maxRetries) {
+          final errorMsg =
+              'Max retries exceeded for item ${item.id}. Last error: ${item.lastError}';
           await _outboxRepository.markAsFailed(item, 'Max retries exceeded.');
-          // Treated as processed (failed permanently), so effectively "synced" regarding queue blocking,
-          // but arguably an error state. For now, following established pattern of continuing.
+
+          if (!_errorController.isClosed) {
+            _errorController.add(errorMsg);
+          }
+          log.severe(errorMsg);
+          // Treated as processed (failed permanently), so effectively "synced" regarding queue blocking
           continue;
         }
 
@@ -227,6 +245,7 @@ class SyncService {
         }
       }
     } catch (e) {
+      log.severe("ProcessOutbox critical error: $e");
       _safeAddStatus(SyncServiceStatus.error);
     } finally {
       _isSyncing = false;

@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helpe
 import 'package:expense_tracker/features/reports/presentation/widgets/report_filter_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart'; // Logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class ReportPageWrapper extends StatelessWidget {
   final String title;

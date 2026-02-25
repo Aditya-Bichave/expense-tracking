@@ -9,6 +9,7 @@ import 'package:expense_tracker/main.dart';
 // Import constants
 import 'package:expense_tracker/core/constants/pref_keys.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 // REMOVED Keys (moved to core/constants/pref_keys.dart)
 

@@ -18,6 +18,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/usecases/
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/add_edit_recurring_rule/add_edit_recurring_rule_bloc.dart';
 import 'package:expense_tracker/features/recurring_transactions/presentation/bloc/recurring_list/recurring_list_bloc.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class RecurringTransactionsDependencies {
   static void register() {

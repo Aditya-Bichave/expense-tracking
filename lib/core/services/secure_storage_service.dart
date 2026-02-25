@@ -13,7 +13,16 @@ class SecureStorageService {
   static const _appPinKey = 'app_pin';
   static const _biometricEnabledKey = 'biometric_enabled';
 
-  SecureStorageService(this._storage);
+  // Enforce secure options by default
+  SecureStorageService({FlutterSecureStorage? storage})
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(encryptedSharedPreferences: true),
+            iOptions: IOSOptions(
+              accessibility: KeychainAccessibility.first_unlock,
+            ),
+          );
 
   Future<List<int>> getHiveKey() async {
     String? keyString;

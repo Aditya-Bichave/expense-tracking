@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/categories/data/datasources/merchant_category_data_source.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/merchant_category_repository.dart';
 import 'package:expense_tracker/main.dart'; // logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class MerchantCategoryRepositoryImpl implements MerchantCategoryRepository {
   final MerchantCategoryDataSource dataSource;

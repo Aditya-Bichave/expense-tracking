@@ -11,6 +11,7 @@ import 'package:expense_tracker/features/goals/domain/usecases/archive_goal.dart
 import 'package:expense_tracker/features/goals/domain/usecases/delete_goal.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'goal_list_event.dart';
 part 'goal_list_state.dart';

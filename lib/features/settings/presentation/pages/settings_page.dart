@@ -17,6 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});

@@ -19,6 +19,7 @@ import 'package:expense_tracker/features/categories/presentation/pages/add_edit_
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class AddEditTransactionPage extends StatefulWidget {
   final dynamic initialTransactionData;

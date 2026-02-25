@@ -11,6 +11,7 @@ import 'package:simple_logger/simple_logger.dart'; // Import Level for log.log
 
 // *** Import the new AppCountries helper ***
 import 'package:expense_tracker/core/data/countries.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   final SettingsLocalDataSource localDataSource;

@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class HiveGoalLocalDataSource implements GoalLocalDataSource {
   final Box<GoalModel> goalBox;

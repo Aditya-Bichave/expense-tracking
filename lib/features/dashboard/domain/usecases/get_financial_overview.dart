@@ -16,6 +16,7 @@ import 'package:expense_tracker/features/reports/domain/repositories/report_repo
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart'; // For Colors in BudgetStatus calc
 import 'package:expense_tracker/core/di/service_locator.dart'; // For sl
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class GetFinancialOverviewUseCase
     implements UseCase<FinancialOverview, GetFinancialOverviewParams> {

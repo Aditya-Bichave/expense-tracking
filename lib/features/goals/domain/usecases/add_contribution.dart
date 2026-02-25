@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/goals/domain/repositories/goal_contribu
 import 'package:expense_tracker/main.dart';
 import 'package:uuid/uuid.dart';
 import 'package:expense_tracker/core/services/clock.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class AddContributionUseCase
     implements UseCase<GoalContribution, AddContributionParams> {

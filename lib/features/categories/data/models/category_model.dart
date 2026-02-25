@@ -3,6 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart'; // Import enum
 import 'package:expense_tracker/main.dart'; // Logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'category_model.g.dart';
 

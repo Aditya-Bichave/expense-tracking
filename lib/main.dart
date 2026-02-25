@@ -1,60 +1,39 @@
-import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'dart:async';
-import 'package:expense_tracker/core/platform/platform_init.dart';
-import 'package:expense_tracker/core/platform/logger_init.dart';
-
-import 'package:expense_tracker/core/constants/app_constants.dart';
-import 'package:expense_tracker/core/constants/hive_constants.dart';
+import 'dart:ui';
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/core/services/demo_mode_service.dart';
-import 'package:expense_tracker/core/theme/app_theme.dart';
-import 'package:expense_tracker/core/utils/bloc_observer.dart';
-import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
-import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
-import 'package:expense_tracker/features/categories/data/models/category_model.dart';
-import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
-import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
-import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
-import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
-import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
-import 'package:expense_tracker/features/income/data/models/income_model.dart';
-import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
-import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
-// import package:expense_tracker/features/reports/presentation/bloc/summary/summary_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
+import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:expense_tracker/core/utils/app_initializer.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:expense_tracker/core/constants/hive_constants.dart';
+import 'package:expense_tracker/core/platform/logger_init.dart';
+import 'package:expense_tracker/core/platform/platform_init.dart';
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/router.dart';
-import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
-import 'package:local_auth/local_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:simple_logger/simple_logger.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:simple_logger/simple_logger.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
+import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
+import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'package:expense_tracker/core/auth/session_cubit.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
-export 'package:expense_tracker/core/utils/logger.dart';
-
-import 'package:expense_tracker/core/network/supabase_client_provider.dart';
-import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
-import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
-import 'package:expense_tracker/core/auth/session_cubit.dart';
-import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
-import 'package:expense_tracker/core/services/secure_storage_service.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:expense_tracker/core/utils/app_initializer.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
+import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
 
 Future<void> _runMigrations(int fromVersion) async {
   log.info(
@@ -65,6 +44,17 @@ Future<void> _runMigrations(int fromVersion) async {
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Global Error Handling
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    log.severe('Flutter Error: ${details.exception}\nStack: ${details.stack}');
+  };
+
+  PlatformDispatcher.instance.onError = (error, stack) {
+    log.severe('Platform Error: $error\nStack: $stack');
+    return true;
+  };
 
   await initPlatform(args);
   await initFileLogger();
@@ -93,8 +83,8 @@ Future<void> main(List<String> args) async {
     await SupabaseClientProvider.initialize();
 
     log.info("Initializing Secure Storage & Encryption...");
-    const secureStorage = FlutterSecureStorage();
-    final secureStorageService = SecureStorageService(secureStorage);
+    // Use default secure options defined in SecureStorageService
+    final secureStorageService = SecureStorageService();
     final hiveKey = await secureStorageService.getHiveKey();
 
     final boxes = await AppInitializer.initHiveBoxes(hiveKey);
@@ -123,8 +113,7 @@ Future<void> main(List<String> args) async {
     log.info("Hive, SharedPreferences, and Service Locator initialized.");
   } catch (e, s) {
     log.severe("!!! CRITICAL INITIALIZATION FAILURE !!!");
-    log.severe("Error: $e");
-    log.severe("Stack Trace: $s");
+    log.severe("Error: $e\nStack: $s");
     await writeStartupLog('Initialization failure: $e\n$s');
     log.severe("!!! APPLICATION CANNOT CONTINUE !!!");
     runApp(InitializationErrorApp(error: e));
@@ -136,7 +125,7 @@ Future<void> main(List<String> args) async {
       providers: [
         BlocProvider<SettingsBloc>(
           create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
-          lazy: false,
+          // lazy: false, // Changed to lazy: true (default) for performance
         ),
         BlocProvider<DataManagementBloc>(
           create: (context) => sl<DataManagementBloc>(),
@@ -148,7 +137,7 @@ Future<void> main(List<String> args) async {
         BlocProvider<TransactionListBloc>(
           create: (context) =>
               sl<TransactionListBloc>()..add(const LoadTransactions()),
-          lazy: false,
+          // lazy: false, // Changed to lazy: true (default) for performance
         ),
         BlocProvider<CategoryManagementBloc>(
           create: (context) =>
@@ -163,7 +152,7 @@ Future<void> main(List<String> args) async {
         ),
         BlocProvider<DashboardBloc>(
           create: (context) => sl<DashboardBloc>()..add(const LoadDashboard()),
-          lazy: false,
+          // lazy: false, // Changed to lazy: true (default) for performance
         ),
         // BlocProvider<SummaryBloc>(
         // create: (context) => sl<SummaryBloc>()..add(const LoadSummary()),
@@ -171,11 +160,12 @@ Future<void> main(List<String> args) async {
         //        ),
         BlocProvider<SessionCubit>(
           create: (context) => sl<SessionCubit>(),
+          // lazy: false, // Eager load session for security
           lazy: false,
         ),
         BlocProvider<AuthBloc>(
           create: (context) => sl<AuthBloc>()..add(AuthCheckStatus()),
-          lazy: false,
+          lazy: false, // Eager load auth for redirects
         ),
         BlocProvider<GroupsBloc>(
           create: (context) => sl<GroupsBloc>()..add(LoadGroups()),
@@ -183,7 +173,7 @@ Future<void> main(List<String> args) async {
         BlocProvider<DeepLinkBloc>(
           create: (context) =>
               sl<DeepLinkBloc>()..add(DeepLinkStarted(args: args)),
-          lazy: false,
+          lazy: false, // Eager load deep links
         ),
       ],
       child: const MyApp(),
@@ -197,6 +187,13 @@ class InitializationErrorApp extends StatelessWidget {
 
   Future<void> _resetApp(BuildContext context) async {
     try {
+      // safely close Hive first
+      try {
+        await Hive.close();
+      } catch (e) {
+        log.warning('Failed to close Hive during reset: $e');
+      }
+
       // Clear Secure Storage
       const secureStorage = FlutterSecureStorage();
       await secureStorage.deleteAll();
@@ -207,8 +204,12 @@ class InitializationErrorApp extends StatelessWidget {
       for (var file in files) {
         if (file.path.endsWith('.hive') || file.path.endsWith('.lock')) {
           try {
+            // Attempt delete
             file.deleteSync();
-          } catch (_) {}
+          } catch (e) {
+            log.warning('Failed to delete file ${file.path}: $e');
+            // Consider retrying or ignoring if locked
+          }
         }
       }
 
@@ -233,16 +234,16 @@ class InitializationErrorApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultThemePair = AppTheme.buildTheme(
-      SettingsState.defaultUIMode,
-      SettingsState.defaultPaletteIdentifier,
+    // Basic fallback theme
+    final theme = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
     );
+
     final isCorruption = error is HiveKeyCorruptionException;
 
     return MaterialApp(
-      theme: defaultThemePair.light,
-      darkTheme: defaultThemePair.dark,
-      themeMode: SettingsState.defaultThemeMode,
+      theme: theme,
       home: Scaffold(
         body: Builder(
           builder: (context) {
@@ -310,11 +311,30 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   DateTime? _pausedTime;
+  static const String _lastActiveKey = 'last_active_time';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkLastActiveTime();
+  }
+
+  Future<void> _checkLastActiveTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastActiveStr = prefs.getString(_lastActiveKey);
+    if (lastActiveStr != null) {
+      final lastActive = DateTime.tryParse(lastActiveStr);
+      if (lastActive != null) {
+        final diff = DateTime.now().difference(lastActive);
+        // If we were inactive for more than 60 seconds (even across restarts), lock.
+        if (diff.inSeconds >= 60) {
+          if (mounted) {
+            context.read<SessionCubit>().checkSession();
+          }
+        }
+      }
+    }
   }
 
   @override
@@ -327,6 +347,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       _pausedTime = DateTime.now();
+      _saveLastActiveTime();
     } else if (state == AppLifecycleState.resumed) {
       if (_pausedTime != null) {
         final diff = DateTime.now().difference(_pausedTime!);
@@ -335,7 +356,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         }
       }
       _pausedTime = null;
+      _clearLastActiveTime();
     }
+  }
+
+  Future<void> _saveLastActiveTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastActiveKey, DateTime.now().toIso8601String());
+  }
+
+  Future<void> _clearLastActiveTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_lastActiveKey);
   }
 
   @override

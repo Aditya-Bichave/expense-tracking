@@ -11,6 +11,7 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // Keep for potential future use
 import 'package:collection/collection.dart'; // Import for firstWhereOrNull
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class CategoryRepositoryImpl implements CategoryRepository {
   final CategoryLocalDataSource localDataSource;

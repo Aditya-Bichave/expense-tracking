@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:flutter_bloc/flutter_bloc.dart'; // Import bloc
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;

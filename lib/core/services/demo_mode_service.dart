@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/main.dart'; // logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 /// Manages the demo mode state and in-memory demo data.
 class DemoModeService {

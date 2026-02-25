@@ -14,6 +14,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
 import '../../utils/weekday_names.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class AddEditRecurringRulePage extends StatelessWidget {
   final RecurringRule? initialRule;

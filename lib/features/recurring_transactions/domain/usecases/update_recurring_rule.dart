@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/recurring_transactions/domain/repositor
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/add_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/get_recurring_rule_by_id.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class UpdateRecurringRule implements UseCase<void, RecurringRule> {
   final RecurringTransactionRepository repository;

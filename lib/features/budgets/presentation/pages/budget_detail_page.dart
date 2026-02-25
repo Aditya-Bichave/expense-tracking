@@ -29,6 +29,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class BudgetDetailPage extends StatefulWidget {
   final String budgetId;

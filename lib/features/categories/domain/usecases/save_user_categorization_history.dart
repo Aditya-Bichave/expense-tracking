@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/categories/domain/entities/user_history
 import 'package:expense_tracker/features/categories/domain/repositories/user_history_repository.dart';
 import 'package:expense_tracker/main.dart'; // logger
 import 'package:uuid/uuid.dart'; // For generating ID
+import 'package:expense_tracker/core/utils/logger.dart';
 
 // Define input data structure needed - Transaction details relevant for matching
 class TransactionMatchData extends Equatable {

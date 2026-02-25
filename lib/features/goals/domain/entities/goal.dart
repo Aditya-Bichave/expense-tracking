@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // Use same icons for now
 import 'package:flutter/material.dart'; // For IconData
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class Goal extends Equatable {
   final String id;

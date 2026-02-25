@@ -24,6 +24,7 @@ import 'package:expense_tracker/features/income/domain/repositories/income_repos
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:collection/collection.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'transaction_list_event.dart';
 part 'transaction_list_state.dart';

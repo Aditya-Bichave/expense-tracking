@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/income/domain/repositories/income_repos
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 // --- END Import ---
 import 'package:expense_tracker/main.dart'; // logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 // --- REMOVE the local enum definition ---
 // enum TransactionType { expense, income }

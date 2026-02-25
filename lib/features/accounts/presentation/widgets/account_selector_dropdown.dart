@@ -3,6 +3,7 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class AccountSelectorDropdown extends StatelessWidget {
   final String? selectedAccountId;

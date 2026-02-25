@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class CategoryListItemWidget extends StatelessWidget {
   final Category category;

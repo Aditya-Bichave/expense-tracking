@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 abstract class RecurringTransactionRepository {
   Future<Either<Failure, void>> addRecurringRule(RecurringRule rule);
