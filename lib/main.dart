@@ -199,7 +199,8 @@ class InitializationErrorApp extends StatelessWidget {
     try {
       // Clear Secure Storage
       // Using default secure options
-      final secureStorageService = SecureStorageService(); await secureStorageService.clearAll();
+      final secureStorageService = SecureStorageService();
+      await secureStorageService.clearAll();
 
       // Clear Hive Boxes (Delete files)
       final dir = await getApplicationDocumentsDirectory();
