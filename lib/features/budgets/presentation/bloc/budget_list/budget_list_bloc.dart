@@ -10,6 +10,8 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget_status.d
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/features/budgets/domain/usecases/get_budgets.dart';
 import 'package:expense_tracker/features/budgets/domain/usecases/delete_budget.dart';
+import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
@@ -19,18 +21,18 @@ part 'budget_list_state.dart';
 
 class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
   final GetBudgetsUseCase _getBudgetsUseCase;
-  final BudgetRepository _budgetRepository;
   final DeleteBudgetUseCase _deleteBudgetUseCase;
+  final ExpenseRepository _expenseRepository;
   late final StreamSubscription<DataChangedEvent> _dataChangeSubscription;
 
   BudgetListBloc({
     required GetBudgetsUseCase getBudgetsUseCase,
-    required BudgetRepository budgetRepository,
     required DeleteBudgetUseCase deleteBudgetUseCase,
+    required ExpenseRepository expenseRepository,
     required Stream<DataChangedEvent> dataChangeStream,
   }) : _getBudgetsUseCase = getBudgetsUseCase,
-       _budgetRepository = budgetRepository,
        _deleteBudgetUseCase = deleteBudgetUseCase,
+       _expenseRepository = expenseRepository,
        super(const BudgetListState()) {
     on<LoadBudgets>(_onLoadBudgets);
     on<_BudgetsDataChanged>(_onDataChanged);
@@ -123,43 +125,84 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
         const nearingLimitColor = Colors.orange; // Example
         const overLimitColor = Colors.red; // Example
 
-        // Calculate status for each budget sequentially
-        for (final budget in budgets) {
-          final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
-          final spentResult = await _budgetRepository.calculateAmountSpent(
-            budget: budget,
-            periodStart: periodStart,
-            periodEnd: periodEnd,
+        // Optimization: Fetch expenses once for the entire range needed
+        if (budgets.isNotEmpty) {
+          DateTime? minStart;
+          DateTime? maxEnd;
+
+          for (final budget in budgets) {
+            final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
+            if (minStart == null || periodStart.isBefore(minStart)) {
+              minStart = periodStart;
+            }
+            if (maxEnd == null || periodEnd.isAfter(maxEnd)) {
+              maxEnd = periodEnd;
+            }
+          }
+
+          log.info(
+            "[BudgetListBloc] Fetching expenses for optimized calculation from $minStart to $maxEnd",
           );
 
-          spentResult.fold(
-            (failure) {
+          final expensesResult = await _expenseRepository.getExpenses(
+            startDate: minStart,
+            endDate: maxEnd,
+          );
+
+          await expensesResult.fold(
+            (failure) async {
               log.warning(
-                "[BudgetListBloc] Failed to calculate spent for '${budget.name}': ${failure.message}",
+                "[BudgetListBloc] Failed to fetch expenses: ${failure.message}",
               );
               calculationErrorOccurred = true;
-              firstCalcErrorMsg ??= failure.toDisplayMessage(
-                context: "Failed to calculate status for '${budget.name}'",
-              );
+              firstCalcErrorMsg = failure.toDisplayMessage();
             },
-            (amountSpent) {
-              budgetsWithStatusList.add(
-                BudgetWithStatus.calculate(
-                  budget: budget,
-                  amountSpent: amountSpent,
-                  thrivingColor: thrivingColor,
-                  nearingLimitColor: nearingLimitColor,
-                  overLimitColor: overLimitColor,
-                ),
-              );
+            (allExpenses) async {
+              for (final budget in budgets) {
+                final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
+
+                // Filter in memory
+                double spent = 0;
+                for (final expense in allExpenses) {
+                  // Check date
+                  if (expense.date.isBefore(periodStart) ||
+                      expense.date.isAfter(
+                        periodEnd
+                            .add(const Duration(days: 1))
+                            .subtract(const Duration(microseconds: 1)),
+                      )) {
+                    continue;
+                  }
+
+                  // Check category
+                  bool categoryMatch = false;
+                  if (budget.type == BudgetType.overall) {
+                    categoryMatch = true;
+                  } else if (budget.type == BudgetType.categorySpecific &&
+                      budget.categoryIds != null &&
+                      budget.categoryIds!.isNotEmpty) {
+                    categoryMatch = budget.categoryIds!.contains(
+                      expense.categoryId,
+                    );
+                  }
+
+                  if (categoryMatch) {
+                    spent += expense.amount;
+                  }
+                }
+
+                budgetsWithStatusList.add(
+                  BudgetWithStatus.calculate(
+                    budget: budget,
+                    amountSpent: spent,
+                    thrivingColor: thrivingColor,
+                    nearingLimitColor: nearingLimitColor,
+                    overLimitColor: overLimitColor,
+                  ),
+                );
+              }
             },
           );
-          // Optional: Stop processing if a critical calculation error occurred
-          if (calculationErrorOccurred &&
-              firstCalcErrorMsg != null &&
-              !firstCalcErrorMsg!.contains("Validation")) {
-            break;
-          }
         }
 
         if (calculationErrorOccurred) {

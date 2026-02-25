@@ -239,17 +239,7 @@ class CategoryManagementBloc
       ),
     );
 
-    // --- FIX: Call the uncategorized method ---
-    // Determine fallback type based on the category being deleted (important!)
-    state.allExpenseCategories.firstWhere(
-      (c) => c.id == event.categoryId,
-      orElse: () => state.allIncomeCategories.firstWhere(
-        (c) => c.id == event.categoryId,
-        orElse: () => Category.uncategorized,
-      ),
-    );
     final fallbackId = Category.uncategorized.id;
-    // --- END FIX ---
 
     final params = DeleteCustomCategoryParams(
       categoryId: event.categoryId,

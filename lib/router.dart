@@ -761,10 +761,11 @@ class GoRouterObserver extends NavigatorObserver {
 
   String? _sanitizeArgs(Object? args) {
     if (args == null) return null;
-    if (args is String || args is num || args is bool) {
+    // Allow numbers and booleans (usually IDs or flags)
+    if (args is num || args is bool) {
       return args.toString();
     }
-    // For complex objects, only log the type to prevent PII leakage
+    // Mask Strings (could be PII like phone numbers) and complex objects
     return '<${args.runtimeType}>';
   }
 }

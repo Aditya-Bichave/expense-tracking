@@ -3,9 +3,9 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/auth/data/datasources/auth_remote_data_source.dart';
 import 'package:expense_tracker/features/auth/domain/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
@@ -64,9 +64,11 @@ class AuthRepositoryImpl implements AuthRepository {
       await _remoteDataSource.signOut();
 
       try {
-        await Hive.deleteFromDisk();
+        // Use DataManagementRepository to clear all Hive boxes safely
+        final dataRepo = sl<DataManagementRepository>();
+        await dataRepo.clearAllData();
       } catch (_) {
-        // Ignore if already deleted or error
+        // Ignore errors during local data clearing to ensure logout proceeds
       }
 
       try {

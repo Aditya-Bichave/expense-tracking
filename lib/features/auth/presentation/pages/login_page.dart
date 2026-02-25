@@ -35,13 +35,32 @@ class _LoginPageState extends State<LoginPage>
     super.dispose();
   }
 
+  String? _getFormattedPhone() {
+    final input = _phoneController.text.trim();
+    if (input.isEmpty) return null;
+
+    String cleanInput = input.replaceAll(RegExp(r'\D'), '');
+    String finalPhone;
+
+    // If user typed +, assume they entered full international number
+    if (input.startsWith('+')) {
+      finalPhone = '+$cleanInput';
+    } else {
+      // Combine selected country code with local number (stripping leading zeros)
+      String countryDigits = _countryCode.replaceAll(RegExp(r'\D'), '');
+      String localDigits = cleanInput.replaceFirst(RegExp(r'^0+'), '');
+      finalPhone = '+$countryDigits$localDigits';
+    }
+    return finalPhone;
+  }
+
   void _submitPhone() {
     final state = context.read<AuthBloc>().state;
     if (state is AuthLoading) return;
 
-    final phone = _phoneController.text.trim();
-    if (phone.isNotEmpty) {
-      context.read<AuthBloc>().add(AuthLoginRequested('$_countryCode$phone'));
+    final phone = _getFormattedPhone();
+    if (phone != null) {
+      context.read<AuthBloc>().add(AuthLoginRequested(phone));
       TextInput.finishAutofillContext(shouldSave: true);
     }
   }
@@ -140,34 +159,7 @@ class _LoginPageState extends State<LoginPage>
         const SizedBox(height: 16),
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) => ElevatedButton(
-            onPressed: state is AuthLoading
-                ? null
-                : () {
-                    final input = _phoneController.text.trim();
-                    if (input.isNotEmpty) {
-                      String cleanInput = input.replaceAll(RegExp(r'\D'), '');
-                      String finalPhone;
-
-                      if (input.startsWith('+')) {
-                        finalPhone = '+$cleanInput';
-                      } else {
-                        String countryDigits = _countryCode.replaceAll(
-                          RegExp(r'\D'),
-                          '',
-                        );
-                        String localDigits = cleanInput.replaceFirst(
-                          RegExp(r'^0+'),
-                          '',
-                        );
-                        finalPhone = '+$countryDigits$localDigits';
-                      }
-
-                      context.read<AuthBloc>().add(
-                        AuthLoginRequested(finalPhone),
-                      );
-                      TextInput.finishAutofillContext(shouldSave: true);
-                    }
-                  },
+            onPressed: state is AuthLoading ? null : _submitPhone,
             child: state is AuthLoading
                 ? SizedBox(
                     height: 20,

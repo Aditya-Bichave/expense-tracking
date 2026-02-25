@@ -448,17 +448,14 @@ class TransactionListBloc
     final currentTransactions = state.transactions;
 
     for (final id in state.selectedTransactionIds) {
-      final txn = currentTransactions.firstWhere(
-        (t) => t.id == id,
-        orElse: () {
-          log.severe(
-            "[TransactionListBloc] CRITICAL: Selected ID $id not found in current transaction state during batch apply!",
-          );
-          throw Exception(
-            "Selected ID $id not found in state during batch apply",
-          );
-        },
-      );
+      final txn = currentTransactions.firstWhereOrNull((t) => t.id == id);
+      if (txn == null) {
+        log.warning(
+          "[TransactionListBloc] Selected ID $id not found in current transactions. Skipping.",
+        );
+        continue;
+      }
+
       if (txn.type == TransactionType.expense) {
         expenseIds.add(id);
       } else if (txn.type == TransactionType.income) {

@@ -54,13 +54,11 @@ class DeleteCustomCategoryUseCase
         return await incomeReassignResult.fold<Future<Either<Failure, void>>>(
           (failure) async {
             log.warning(
-              "[DeleteCustomCategoryUseCase] Failed to reassign income: ${failure.message}. Rolling back expense reassignment.",
+              "[DeleteCustomCategoryUseCase] Failed to reassign income: ${failure.message}. NOT rolling back expenses to prevent data corruption.",
             );
-            // Rollback previous expense reassignment
-            await expenseRepository.reassignExpensesCategory(
-              params.fallbackCategoryId,
-              params.categoryId,
-            );
+            // Do NOT rollback expenses. Moving everything from fallback back to deleted category
+            // would incorrectly move transactions that were already in the fallback category.
+            // We accept partial reassignment state as safer than corruption.
             return Left(failure);
           },
           (_) async {

@@ -48,8 +48,8 @@ class BudgetDependencies {
       sl.registerFactory(
         () => BudgetListBloc(
           getBudgetsUseCase: sl(),
-          budgetRepository: sl(),
           deleteBudgetUseCase: sl(),
+          expenseRepository: sl<ExpenseRepository>(), // Injected dependency
           dataChangeStream: sl<Stream<DataChangedEvent>>(),
         ),
       );
