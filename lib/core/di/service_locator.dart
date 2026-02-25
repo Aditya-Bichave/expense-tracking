@@ -32,6 +32,7 @@ import 'package:expense_tracker/core/di/service_configurations/auth_dependencies
 import 'package:expense_tracker/core/di/service_configurations/profile_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/groups_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/group_expenses_dependencies.dart';
+import 'package:expense_tracker/core/di/service_configurations/add_expense_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/sync_dependencies.dart';
 import 'package:expense_tracker/core/network/supabase_client_provider.dart';
 import 'package:expense_tracker/core/sync/sync_coordinator.dart';
@@ -204,6 +205,7 @@ Future<void> initLocator({
     SyncDependencies.register();
     GroupsDependencies.register();
     GroupExpensesDependencies.register();
+    AddExpenseDependencies.register();
   }
 
   if (sl.isRegistered<SyncCoordinator>()) {
