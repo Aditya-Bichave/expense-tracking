@@ -201,6 +201,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           lastDate: DateTime.now().add(const Duration(days: 1)),
                         );
                         if (date != null) {
+                          if (!context.mounted) return;
                           context.read<AddExpenseWizardBloc>().add(
                             DateChanged(date),
                           );
@@ -268,7 +269,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
               title: const Text('Camera'),
               onTap: () async {
                 Navigator.pop(context);
-                if (parentContext.mounted) await _pickReceipt(parentContext, ImageSource.camera);
+                if (parentContext.mounted)
+                  await _pickReceipt(parentContext, ImageSource.camera);
               },
             ),
             ListTile(
@@ -276,7 +278,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
               title: const Text('Gallery'),
               onTap: () async {
                 Navigator.pop(context);
-                if (parentContext.mounted) await _pickReceipt(parentContext, ImageSource.gallery);
+                if (parentContext.mounted)
+                  await _pickReceipt(parentContext, ImageSource.gallery);
               },
             ),
           ],
@@ -289,6 +292,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: source);
     if (picked != null) {
+      if (!context.mounted) return;
       context.read<AddExpenseWizardBloc>().add(ReceiptSelected(picked.path));
     }
   }
