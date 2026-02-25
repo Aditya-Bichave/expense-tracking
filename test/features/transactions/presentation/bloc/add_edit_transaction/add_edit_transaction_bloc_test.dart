@@ -302,23 +302,7 @@ void main() {
               'Missing required fields.',
             ),
       ],
-      // Skip 1 to bypass loading
-      // For validations, it seems 'loading' (or 'saving') state is emitted before error.
-      // So skipping 1 is correct for [saving, error].
-      // Wait, in previous runs it was [loading, saving, error] in some cases but validation aborts early.
-      // Logs: "_performSave called ... Invalid data ... Aborting."
-      // So it goes: loading -> saving -> error.
-      // Emitted: [loading (from _onSaveTransactionRequested), error (from _performSave abort)].
-      // Wait, _onSaveTransactionRequested emits loading. Then calls _performSave.
-      // _performSave emits saving. Then aborts and emits error.
-      // So expected sequence: loading, saving, error.
-      // Actual log shows: [saving, error]. Where did loading go?
-      // "Which: at location [0] is ... saving".
-      // This means skip 1 removed 'loading'.
-      // So we have 'saving' at index 0.
-      // We expect 'error' at index 0 (because we only listed one item in expect).
-      // So we should expect [saving, error] or skip 2.
-      // Let's skip 2.
+      // Skip 2 to align with [loading, saving, error] sequence minus 2 -> [error]
       skip: 2,
     );
 
@@ -355,7 +339,7 @@ void main() {
               contains('Database Error'),
             ),
       ],
-      // Skip 2 to bypass loading/saving which leaves only the error state
+      // Skip 2 to bypass loading/saving
       skip: 2,
     );
   });
