@@ -58,7 +58,7 @@ class SplitScreen extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'Total: ${CurrencyFormatter.format(state.amountTotal, currency: state.currency)}',
+                      'Total: ${CurrencyFormatter.format(state.amountTotal, state.currency)}',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 8),
@@ -291,7 +291,7 @@ class _SplitRowState extends State<_SplitRow> {
           ],
 
           Text(
-            CurrencyFormatter.format(widget.split.computedAmount, currency: widget.currency),
+            CurrencyFormatter.format(widget.split.computedAmount, widget.currency),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],

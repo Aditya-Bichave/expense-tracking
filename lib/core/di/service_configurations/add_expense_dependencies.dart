@@ -24,7 +24,6 @@ class AddExpenseDependencies {
         () => OutboxAddExpenseRepository(
           outbox: sl(),
           uuid: sl(),
-          profileBox: sl(),
         ),
       );
     }
@@ -34,7 +33,7 @@ class AddExpenseDependencies {
         repository: sl(),
         groupsRepository: sl(),
         currentUserId: (sl<SessionCubit>().state is SessionAuthenticated)
-            ? (sl<SessionCubit>().state as SessionAuthenticated).userId
+            ? (sl<SessionCubit>().state as SessionAuthenticated).profile.id
             : '',
         splitEngine: sl(),
         imageCompressionService: sl(),
