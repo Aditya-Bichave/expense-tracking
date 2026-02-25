@@ -66,6 +66,15 @@ class ExpenseModel extends HiveObject {
   @JsonKey(includeIfNull: false)
   final String? notes;
 
+  // Audit Fixes
+  @HiveField(14)
+  @JsonKey(includeIfNull: false)
+  final String? receiptUrl;
+
+  @HiveField(15)
+  @JsonKey(includeIfNull: false)
+  final String? clientGeneratedId;
+
   // Not storing lists in Hive/JSON by default to avoid complexity without generator
   @JsonKey(includeFromJson: false, includeToJson: false)
   final List<ExpensePayer> payers;
@@ -94,6 +103,8 @@ class ExpenseModel extends HiveObject {
     this.notes,
     this.payers = const [],
     this.splits = const [],
+    this.receiptUrl,
+    this.clientGeneratedId,
   });
 
   factory ExpenseModel.fromEntity(Expense entity) {
@@ -114,6 +125,8 @@ class ExpenseModel extends HiveObject {
       notes: entity.notes,
       payers: entity.payers,
       splits: entity.splits,
+      receiptUrl: entity.receiptUrl,
+      clientGeneratedId: entity.clientGeneratedId,
     );
   }
 
@@ -137,6 +150,8 @@ class ExpenseModel extends HiveObject {
       notes: notes,
       payers: payers,
       splits: splits,
+      receiptUrl: receiptUrl,
+      clientGeneratedId: clientGeneratedId,
     );
   }
 
@@ -152,10 +167,12 @@ class ExpenseModel extends HiveObject {
       'p_created_by': createdBy,
       'p_amount_total': amount,
       'p_currency': currency,
-      'p_description': title, // Map title to description
+      'p_description': title,
       'p_category_id': categoryId,
       'p_expense_date': date.toIso8601String(),
       'p_notes': notes,
+      'p_receipt_url': receiptUrl, // Pass receipt URL
+      'p_client_generated_id': clientGeneratedId, // Pass idempotency key
       'p_payers': payers
           .map((p) => {'user_id': p.userId, 'amount_paid': p.amountPaid})
           .toList(),
@@ -163,7 +180,7 @@ class ExpenseModel extends HiveObject {
           .map(
             (s) => {
               'user_id': s.userId,
-              'share_type': s.shareType.value, // e.g. 'PERCENT'
+              'share_type': s.shareType.value,
               'share_value': s.shareValue,
               'computed_amount': s.computedAmount,
             },

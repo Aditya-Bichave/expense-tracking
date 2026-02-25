@@ -113,8 +113,8 @@ class AddExpenseWizardState extends Equatable {
     return {
       'p_group_id': groupId, // Null if personal
       'p_created_by': currentUserId, // Must be set
-      'p_transaction_id':
-          transactionId, // Optional but good for consistency if allowed
+      'p_client_generated_id':
+          transactionId, // Updated from p_transaction_id to match RPC
       'p_amount_total': amountTotal,
       'p_currency': currency,
       'p_description': description,
