@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'dart:math';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
@@ -15,7 +16,21 @@ class SecureStorageService {
   SecureStorageService(this._storage);
 
   Future<List<int>> getHiveKey() async {
-    final keyString = await _storage.read(key: _hiveKeyKey);
+    String? keyString;
+    try {
+      keyString = await _storage.read(key: _hiveKeyKey);
+    } on PlatformException catch (e, s) {
+      log.severe("Failed to read Hive key from secure storage: $e\n$s");
+      // If we can't read the key due to platform error (e.g. keystore corrupted),
+      // we treat it as corruption so the app can prompt for reset.
+      throw HiveKeyCorruptionException(
+        "Secure Storage Error: ${e.message} (Code: ${e.code})",
+      );
+    } catch (e, s) {
+      log.severe("Unexpected error reading Hive key: $e\n$s");
+      throw HiveKeyCorruptionException("Unexpected Storage Error: $e");
+    }
+
     if (keyString == null) {
       return _generateAndSaveKey();
     } else {

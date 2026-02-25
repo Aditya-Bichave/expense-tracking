@@ -5,6 +5,7 @@ import 'package:expense_tracker/core/services/file_picker_service.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
+import 'package:expense_tracker/features/categories/data/models/category_model.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
 import 'package:expense_tracker/features/settings/domain/usecases/backup_data_usecase.dart';
 import 'package:flutter/services.dart';
@@ -74,6 +75,7 @@ void main() {
       accounts: <AssetAccountModel>[],
       expenses: <ExpenseModel>[],
       incomes: <IncomeModel>[],
+      categories: <CategoryModel>[],
     );
     when(
       () => mockDataManagementRepository.getAllDataForBackup(),
@@ -117,6 +119,7 @@ void main() {
       accounts: <AssetAccountModel>[],
       expenses: <ExpenseModel>[],
       incomes: <IncomeModel>[],
+      categories: <CategoryModel>[],
     );
     when(
       () => mockDataManagementRepository.getAllDataForBackup(),

@@ -41,7 +41,9 @@ void main() {
   late FakeFilePickerPlatform fakePicker;
 
   setUpAll(() {
-    registerFallbackValue(AllData(accounts: [], expenses: [], incomes: []));
+    registerFallbackValue(
+      AllData(accounts: [], expenses: [], incomes: [], categories: []),
+    );
   });
 
   setUp(() {

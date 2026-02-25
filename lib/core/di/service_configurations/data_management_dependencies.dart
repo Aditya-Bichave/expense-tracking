@@ -15,6 +15,17 @@ class DataManagementDependencies {
         accountBox: sl(), // These boxes are registered in main locator
         expenseBox: sl(),
         incomeBox: sl(),
+        categoryBox: sl(),
+        userHistoryBox: sl(),
+        budgetBox: sl(),
+        goalBox: sl(),
+        contributionBox: sl(),
+        recurringRuleBox: sl(),
+        recurringRuleAuditLogBox: sl(),
+        outboxBox: sl(),
+        groupBox: sl(),
+        groupMemberBox: sl(),
+        groupExpenseBox: sl(),
       ),
     );
     // Use Cases
