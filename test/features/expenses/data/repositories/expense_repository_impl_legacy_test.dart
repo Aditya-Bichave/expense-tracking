@@ -6,23 +6,29 @@ import 'package:expense_tracker/features/expenses/data/repositories/expense_repo
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockExpenseLocalDataSource extends Mock
     implements ExpenseLocalDataSource {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
+class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 void main() {
   late MockExpenseLocalDataSource mockDataSource;
   late MockCategoryRepository mockCategoryRepository;
+  late MockSupabaseClient mockSupabaseClient;
   late ExpenseRepositoryImpl repository;
 
   setUp(() {
     mockDataSource = MockExpenseLocalDataSource();
     mockCategoryRepository = MockCategoryRepository();
+    mockSupabaseClient = MockSupabaseClient();
     repository = ExpenseRepositoryImpl(
       localDataSource: mockDataSource,
       categoryRepository: mockCategoryRepository,
+      supabaseClient: mockSupabaseClient,
     );
   });
 
