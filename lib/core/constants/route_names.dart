@@ -40,4 +40,5 @@ abstract class RouteNames {
   static const String paramTransactionId = 'transactionId';
   static const String paramBudgetId = 'budgetId';
   static const String paramGoalId = 'goalId';
+  static const String addExpenseWizard = '/add-expense-wizard';
 }

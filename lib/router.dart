@@ -53,6 +53,7 @@ import 'package:expense_tracker/features/groups/presentation/pages/group_list_pa
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
 import 'package:expense_tracker/features/profile/presentation/pages/profile_setup_page.dart';
 import 'package:expense_tracker/features/auth/presentation/pages/lock_screen.dart';
+import 'package:expense_tracker/features/add_expense/presentation/pages/add_expense_wizard_page.dart';
 import 'package:expense_tracker/core/auth/session_state.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
 
@@ -153,6 +154,12 @@ class AppRouter {
         path: RouteNames.initialSetup,
         name: RouteNames.initialSetup,
         builder: (context, state) => const InitialSetupScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.addExpenseWizard,
+        name: RouteNames.addExpenseWizard,
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const AddExpenseWizardPage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {

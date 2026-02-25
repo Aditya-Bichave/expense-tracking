@@ -145,7 +145,12 @@ class MainShell extends StatelessWidget {
               onPressed: () {
                 // --- Adjusted FAB navigation based on tab ---
                 switch (currentTabIndex) {
-                  case 0: // Dashboard -> Add Transaction
+                  case 0: // Dashboard -> Add Expense Wizard
+                    log.info(
+                      "[MainShell FAB] Navigating to Add Expense Wizard from Dashboard.",
+                    );
+                    context.push(RouteNames.addExpenseWizard);
+                    break;
                   case 1: // Transactions -> Add Transaction
                     log.info(
                       "[MainShell FAB] Navigating to Add Transaction from tab $currentTabIndex.",
