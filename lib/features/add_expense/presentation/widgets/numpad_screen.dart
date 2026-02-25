@@ -74,7 +74,7 @@ class _NumpadScreenState extends State<NumpadScreen> {
               child: Text(
                 // Simply display what we typed, formatted lightly?
                 // Or stick to _amountStr for raw feedback
-                '$_amountStr',
+                _amountStr,
                 style: theme.textTheme.displayLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,

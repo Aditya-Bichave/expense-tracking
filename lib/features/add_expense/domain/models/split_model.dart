@@ -1,9 +1,13 @@
 import 'package:equatable/equatable.dart';
 
 enum SplitType {
+  // ignore: constant_identifier_names
   PERCENT,
+  // ignore: constant_identifier_names
   EQUAL,
+  // ignore: constant_identifier_names
   EXACT,
+  // ignore: constant_identifier_names
   SHARE;
 
   String toJson() => name;

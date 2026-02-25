@@ -266,17 +266,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text('Camera'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                _pickReceipt(parentContext, ImageSource.camera);
+                if (parentContext.mounted) await _pickReceipt(parentContext, ImageSource.camera);
               },
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
               title: const Text('Gallery'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                _pickReceipt(parentContext, ImageSource.gallery);
+                if (parentContext.mounted) await _pickReceipt(parentContext, ImageSource.gallery);
               },
             ),
           ],
@@ -310,7 +310,7 @@ class _GroupSelectorSheet extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Personal Expense'),
-            onTap: () {
+            onTap: () async {
               context.read<AddExpenseWizardBloc>().add(
                 const GroupSelected(null),
               );
@@ -335,7 +335,7 @@ class _GroupSelectorSheet extends StatelessWidget {
                         return ListTile(
                           leading: const Icon(Icons.group),
                           title: Text(group.name),
-                          onTap: () {
+                          onTap: () async {
                             context.read<AddExpenseWizardBloc>().add(
                               GroupSelected(group),
                             );
