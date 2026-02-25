@@ -93,8 +93,8 @@ Future<void> main(List<String> args) async {
     await SupabaseClientProvider.initialize();
 
     log.info("Initializing Secure Storage & Encryption...");
-    const secureStorage = FlutterSecureStorage();
-    final secureStorageService = SecureStorageService(secureStorage);
+    // Using default secure options
+    final secureStorageService = SecureStorageService();
     final hiveKey = await secureStorageService.getHiveKey();
 
     final boxes = await AppInitializer.initHiveBoxes(hiveKey);
@@ -198,8 +198,9 @@ class InitializationErrorApp extends StatelessWidget {
   Future<void> _resetApp(BuildContext context) async {
     try {
       // Clear Secure Storage
-      const secureStorage = FlutterSecureStorage();
-      await secureStorage.deleteAll();
+      // Using default secure options
+      final secureStorageService = SecureStorageService();
+      await secureStorageService.clearAll();
 
       // Clear Hive Boxes (Delete files)
       final dir = await getApplicationDocumentsDirectory();

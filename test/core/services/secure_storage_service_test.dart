@@ -13,7 +13,7 @@ void main() {
 
   setUp(() {
     mockStorage = MockFlutterSecureStorage();
-    service = SecureStorageService(mockStorage);
+    service = SecureStorageService(storage: mockStorage);
   });
 
   group('getHiveKey', () {
