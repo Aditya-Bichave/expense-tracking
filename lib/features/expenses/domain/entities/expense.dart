@@ -1,51 +1,74 @@
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // Use the new Category entity
-import 'package:flutter/material.dart'; // Import CategorizationStatus
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense_payer.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense_split.dart';
+import 'package:flutter/material.dart';
 
 class Expense extends Equatable {
   final String id;
   final String title;
   final double amount;
   final DateTime date;
-  final Category?
-  category; // CHANGED: Now holds the full Category object, nullable initially
+  final Category? category;
   final String accountId;
-  final CategorizationStatus status; // ADDED
-  final double? confidenceScore; // ADDED
-  final String? merchantId; // ADDED
-
+  final CategorizationStatus status;
+  final double? confidenceScore;
+  final String? merchantId;
   final bool isRecurring;
+
+  // New Fields for Split Brain / Group Expenses
+  final String? groupId;
+  final String? createdBy;
+  final String currency;
+  final String? notes;
+  final List<ExpensePayer> payers;
+  final List<ExpenseSplit> splits;
 
   const Expense({
     required this.id,
     required this.title,
     required this.amount,
     required this.date,
-    this.category, // Make category nullable
+    this.category,
     required this.accountId,
-    this.status =
-        CategorizationStatus.uncategorized, // ADDED: Default to uncategorized
-    this.confidenceScore, // ADDED
-    this.merchantId, // ADDED
+    this.status = CategorizationStatus.uncategorized,
+    this.confidenceScore,
+    this.merchantId,
     this.isRecurring = false,
+
+    // Defaults for backward compatibility
+    this.groupId,
+    this.createdBy,
+    this.currency = 'USD', // Default currency
+    this.notes,
+    this.payers = const [],
+    this.splits = const [],
   });
 
-  // Optional: CopyWith method for easier updates
   Expense copyWith({
     String? id,
     String? title,
     double? amount,
     DateTime? date,
-    Category? category, // Allow updating category object
-    ValueGetter<Category?>? categoryOrNull, // Allow setting to null explicitly
+    Category? category,
+    ValueGetter<Category?>? categoryOrNull,
     String? accountId,
     CategorizationStatus? status,
     double? confidenceScore,
-    ValueGetter<double?>? confidenceScoreOrNull, // Allow setting to null
+    ValueGetter<double?>? confidenceScoreOrNull,
     String? merchantId,
-    ValueGetter<String?>? merchantIdOrNull, // Allow setting to null
+    ValueGetter<String?>? merchantIdOrNull,
     bool? isRecurring,
+
+    String? groupId,
+    ValueGetter<String?>? groupIdOrNull,
+    String? createdBy,
+    String? currency,
+    String? notes,
+    ValueGetter<String?>? notesOrNull,
+    List<ExpensePayer>? payers,
+    List<ExpenseSplit>? splits,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -64,6 +87,15 @@ class Expense extends Equatable {
           ? merchantIdOrNull()
           : (merchantId ?? this.merchantId),
       isRecurring: isRecurring ?? this.isRecurring,
+
+      groupId: groupIdOrNull != null
+          ? groupIdOrNull()
+          : (groupId ?? this.groupId),
+      createdBy: createdBy ?? this.createdBy,
+      currency: currency ?? this.currency,
+      notes: notesOrNull != null ? notesOrNull() : (notes ?? this.notes),
+      payers: payers ?? this.payers,
+      splits: splits ?? this.splits,
     );
   }
 
@@ -73,11 +105,17 @@ class Expense extends Equatable {
     title,
     amount,
     date,
-    category, // Updated
+    category,
     accountId,
-    status, // Added
-    confidenceScore, // Added
-    merchantId, // Added
+    status,
+    confidenceScore,
+    merchantId,
     isRecurring,
+    groupId,
+    createdBy,
+    currency,
+    notes,
+    payers,
+    splits,
   ];
 }

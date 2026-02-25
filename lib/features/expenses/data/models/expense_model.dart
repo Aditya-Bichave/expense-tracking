@@ -1,16 +1,14 @@
-// lib/features/expenses/data/models/expense_model.dart
-// MODIFIED FILE
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
-// REMOVED: import 'package:expense_tracker/features/expenses/domain/entities/category.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense_payer.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense_split.dart';
 import 'package:json_annotation/json_annotation.dart';
-// Import CategorizationStatus
 
 part 'expense_model.g.dart';
 
 @JsonSerializable()
-@HiveType(typeId: 0) // Keep existing typeId
+@HiveType(typeId: 0)
 class ExpenseModel extends HiveObject {
   @HiveField(0)
   final String id;
@@ -24,40 +22,57 @@ class ExpenseModel extends HiveObject {
   @HiveField(3)
   final DateTime date;
 
-  // REMOVED old category fields
-  // @HiveField(4)
-  // final String categoryName;
-  // @HiveField(5)
-  // final String? subCategoryName;
+  @HiveField(4)
+  @JsonKey(includeIfNull: false)
+  final String? categoryId;
 
-  @HiveField(4) // Reuse index 4
-  @JsonKey(includeIfNull: false) // Don't include if null
-  final String? categoryId; // NEW: Link to CategoryModel.id
-
-  @HiveField(5) // Reuse index 5
+  @HiveField(5)
   @JsonKey(
-    defaultValue: 'uncategorized', // Default value for JSON parsing
+    defaultValue: 'uncategorized',
     toJson: _categorizationStatusToJson,
     fromJson: _categorizationStatusFromJson,
   )
-  final String categorizationStatusValue; // NEW: Store enum value string
+  final String categorizationStatusValue;
 
   @HiveField(6)
-  final String accountId; // Keep index 6
+  final String accountId;
 
-  @HiveField(7) // NEW index
+  @HiveField(7)
   @JsonKey(includeIfNull: false)
-  final double? confidenceScoreValue; // NEW: Store confidence score
+  final double? confidenceScoreValue;
 
-  @HiveField(8) // NEW index
+  @HiveField(8)
   @JsonKey(defaultValue: false)
   final bool isRecurring;
 
-  @HiveField(9) // NEW index
+  @HiveField(9)
   @JsonKey(includeIfNull: false)
-  final String? merchantId; // NEW: Merchant ID
+  final String? merchantId;
 
-  // Helper functions for JSON serialization of enum
+  // New Fields for Split Brain / Group Expenses
+  @HiveField(10)
+  @JsonKey(includeIfNull: false)
+  final String? groupId;
+
+  @HiveField(11)
+  @JsonKey(includeIfNull: false)
+  final String? createdBy;
+
+  @HiveField(12)
+  @JsonKey(defaultValue: 'USD')
+  final String currency;
+
+  @HiveField(13)
+  @JsonKey(includeIfNull: false)
+  final String? notes;
+
+  // Not storing lists in Hive/JSON by default to avoid complexity without generator
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final List<ExpensePayer> payers;
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  final List<ExpenseSplit> splits;
+
   static String _categorizationStatusToJson(String statusValue) => statusValue;
   static String _categorizationStatusFromJson(String? value) =>
       value ?? CategorizationStatus.uncategorized.value;
@@ -67,13 +82,18 @@ class ExpenseModel extends HiveObject {
     required this.title,
     required this.amount,
     required this.date,
-    // categoryName, subCategoryName REMOVED from constructor
-    this.categoryId, // Added
-    this.categorizationStatusValue = 'uncategorized', // Added with default
+    this.categoryId,
+    this.categorizationStatusValue = 'uncategorized',
     required this.accountId,
-    this.confidenceScoreValue, // Added
+    this.confidenceScoreValue,
     this.isRecurring = false,
-    this.merchantId, // Added
+    this.merchantId,
+    this.groupId,
+    this.createdBy,
+    this.currency = 'USD',
+    this.notes,
+    this.payers = const [],
+    this.splits = const [],
   });
 
   factory ExpenseModel.fromEntity(Expense entity) {
@@ -82,33 +102,41 @@ class ExpenseModel extends HiveObject {
       title: entity.title,
       amount: entity.amount,
       date: entity.date,
-      categoryId:
-          entity.category?.id, // Get ID from Category entity if available
-      categorizationStatusValue: entity.status.value, // Get string value
+      categoryId: entity.category?.id,
+      categorizationStatusValue: entity.status.value,
       accountId: entity.accountId,
       confidenceScoreValue: entity.confidenceScore,
       isRecurring: entity.isRecurring,
       merchantId: entity.merchantId,
+      groupId: entity.groupId,
+      createdBy: entity.createdBy,
+      currency: entity.currency,
+      notes: entity.notes,
+      payers: entity.payers,
+      splits: entity.splits,
     );
   }
 
-  // toEntity now requires Category to be looked up elsewhere based on categoryId
   Expense toEntity() {
     return Expense(
       id: id,
       title: title,
       amount: amount,
       date: date,
-      // Category object is NOT constructed here anymore.
-      // It will be fetched separately using categoryId by the repository/use care.
-      category: null, // Set to null initially
+      category: null,
       accountId: accountId,
       status: CategorizationStatusExtension.fromValue(
         categorizationStatusValue,
-      ), // Convert string back to enum
+      ),
       confidenceScore: confidenceScoreValue,
       isRecurring: isRecurring,
       merchantId: merchantId,
+      groupId: groupId,
+      createdBy: createdBy,
+      currency: currency,
+      notes: notes,
+      payers: payers,
+      splits: splits,
     );
   }
 
@@ -116,4 +144,31 @@ class ExpenseModel extends HiveObject {
       _$ExpenseModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$ExpenseModelToJson(this);
+
+  /// Converts the model to the JSON payload required by the 'create_expense_transaction' RPC.
+  Map<String, dynamic> toRpcJson() {
+    return {
+      'p_group_id': groupId,
+      'p_created_by': createdBy,
+      'p_amount_total': amount,
+      'p_currency': currency,
+      'p_description': title, // Map title to description
+      'p_category_id': categoryId,
+      'p_expense_date': date.toIso8601String(),
+      'p_notes': notes,
+      'p_payers': payers
+          .map((p) => {'user_id': p.userId, 'amount_paid': p.amountPaid})
+          .toList(),
+      'p_splits': splits
+          .map(
+            (s) => {
+              'user_id': s.userId,
+              'share_type': s.shareType.value, // e.g. 'PERCENT'
+              'share_value': s.shareValue,
+              'computed_amount': s.computedAmount,
+            },
+          )
+          .toList(),
+    };
+  }
 }

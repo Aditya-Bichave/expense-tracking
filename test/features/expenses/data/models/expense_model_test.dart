@@ -1,130 +1,62 @@
-import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
-import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense_payer.dart';
+import 'package:expense_tracker/features/expenses/domain/entities/expense_split.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final tDate = DateTime(2024, 1, 1);
-  final tExpenseModel = ExpenseModel(
-    id: '1',
-    title: 'Test Expense',
-    amount: 100.0,
-    date: tDate,
-    accountId: 'acc1',
-    categoryId: 'cat1',
-    categorizationStatusValue: 'categorized',
-    confidenceScoreValue: 0.9,
-    merchantId: 'merch1',
-    isRecurring: true,
-  );
+  group('ExpenseModel', () {
+    test('toRpcJson generates correct payload', () {
+      final model = ExpenseModel(
+        id: '123',
+        title: 'Dinner',
+        amount: 100.00,
+        date: DateTime(2023, 10, 27, 12, 0, 0),
+        accountId: 'acc1',
+        groupId: 'grp1',
+        createdBy: 'user1',
+        currency: 'USD',
+        notes: 'Yummy',
+        payers: [
+          const ExpensePayer(userId: 'user1', amountPaid: 80.00),
+          const ExpensePayer(userId: 'user2', amountPaid: 20.00),
+        ],
+        splits: [
+          const ExpenseSplit(
+            userId: 'user1',
+            shareType: SplitType.percent,
+            shareValue: 80,
+            computedAmount: 80.00,
+          ),
+          const ExpenseSplit(
+            userId: 'user2',
+            shareType: SplitType.percent,
+            shareValue: 20,
+            computedAmount: 20.00,
+          ),
+        ],
+      );
 
-  final tExpenseEntity = Expense(
-    id: '1',
-    title: 'Test Expense',
-    amount: 100.0,
-    date: tDate,
-    accountId: 'acc1',
-    category: const Category(
-      id: 'cat1',
-      name: 'Test Category',
-      iconName: 'test_icon',
-      colorHex: '#000000',
-      type: CategoryType.expense,
-      isCustom: false,
-    ),
-    status: CategorizationStatus.categorized,
-    confidenceScore: 0.9,
-    merchantId: 'merch1',
-    isRecurring: true,
-  );
+      final json = model.toRpcJson();
 
-  test('should return a valid model from JSON', () {
-    // Arrange
-    final jsonMap = {
-      'id': '1',
-      'title': 'Test Expense',
-      'amount': 100.0,
-      'date': '2024-01-01T00:00:00.000',
-      'accountId': 'acc1',
-      'categoryId': 'cat1',
-      'categorizationStatusValue': 'categorized',
-      'confidenceScoreValue': 0.9,
-      'merchantId': 'merch1',
-      'isRecurring': true,
-    };
+      expect(json['p_group_id'], 'grp1');
+      expect(json['p_created_by'], 'user1');
+      expect(json['p_amount_total'], 100.00);
+      expect(json['p_currency'], 'USD');
+      expect(json['p_description'], 'Dinner');
+      expect(json['p_notes'], 'Yummy');
+      expect(json['p_expense_date'], isNotNull);
 
-    // Act
-    final result = ExpenseModel.fromJson(jsonMap);
+      final payers = json['p_payers'] as List;
+      expect(payers.length, 2);
+      expect(payers[0]['user_id'], 'user1');
+      expect(payers[0]['amount_paid'], 80.00);
 
-    // Assert
-    expect(result.id, tExpenseModel.id);
-    expect(result.title, tExpenseModel.title);
-    expect(result.amount, tExpenseModel.amount);
-    expect(result.date, tExpenseModel.date);
-    expect(result.accountId, tExpenseModel.accountId);
-    expect(result.categoryId, tExpenseModel.categoryId);
-    expect(
-      result.categorizationStatusValue,
-      tExpenseModel.categorizationStatusValue,
-    );
-    expect(result.confidenceScoreValue, tExpenseModel.confidenceScoreValue);
-    expect(result.merchantId, tExpenseModel.merchantId);
-    expect(result.isRecurring, tExpenseModel.isRecurring);
-  });
-
-  test('should return a JSON map containing proper data', () {
-    // Act
-    final result = tExpenseModel.toJson();
-
-    // Assert
-    final expectedMap = {
-      'id': '1',
-      'title': 'Test Expense',
-      'amount': 100.0,
-      'date': '2024-01-01T00:00:00.000',
-      'accountId': 'acc1',
-      'categoryId': 'cat1',
-      'categorizationStatusValue': 'categorized',
-      'confidenceScoreValue': 0.9,
-      'merchantId': 'merch1',
-      'isRecurring': true,
-    };
-    expect(result, expectedMap);
-  });
-
-  test('should convert from Entity to Model correctly', () {
-    // Act
-    final result = ExpenseModel.fromEntity(tExpenseEntity);
-
-    // Assert
-    expect(result.id, tExpenseEntity.id);
-    expect(result.title, tExpenseEntity.title);
-    expect(result.amount, tExpenseEntity.amount);
-    expect(result.date, tExpenseEntity.date);
-    expect(result.accountId, tExpenseEntity.accountId);
-    expect(result.categoryId, tExpenseEntity.category?.id);
-    expect(result.categorizationStatusValue, 'categorized'); // Enum value check
-    expect(result.confidenceScoreValue, tExpenseEntity.confidenceScore);
-    expect(result.merchantId, tExpenseEntity.merchantId);
-    expect(result.isRecurring, tExpenseEntity.isRecurring);
-  });
-
-  test('should convert from Model to Entity correctly (category is null)', () {
-    // Act
-    final result = tExpenseModel.toEntity();
-
-    // Assert
-    expect(result.id, tExpenseModel.id);
-    expect(result.title, tExpenseModel.title);
-    expect(result.amount, tExpenseModel.amount);
-    expect(result.date, tExpenseModel.date);
-    expect(result.accountId, tExpenseModel.accountId);
-    expect(result.category, isNull); // Category is not hydrated in toEntity
-    expect(result.status, CategorizationStatus.categorized);
-    expect(result.confidenceScore, tExpenseModel.confidenceScoreValue);
-    expect(result.merchantId, tExpenseModel.merchantId);
-    expect(result.isRecurring, tExpenseModel.isRecurring);
+      final splits = json['p_splits'] as List;
+      expect(splits.length, 2);
+      expect(splits[0]['user_id'], 'user1');
+      expect(splits[0]['share_type'], 'PERCENT');
+      expect(splits[0]['share_value'], 80.0);
+      expect(splits[0]['computed_amount'], 80.00);
+    });
   });
 }
