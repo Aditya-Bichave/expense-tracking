@@ -195,7 +195,7 @@ void main() {
       act: (bloc) async {
         bloc.add(const DeepLinkStarted());
         // Wait for bloc to subscribe
-        await Future.delayed(Duration.zero);
+        await Future.delayed(const Duration(milliseconds: 100));
         uriStreamController.add(
           Uri.parse('https://spendos.app/join?token=stream'),
         );
@@ -226,7 +226,7 @@ void main() {
       act: (bloc) async {
         bloc.add(const DeepLinkStarted());
         // Wait for bloc to subscribe
-        await Future.delayed(Duration.zero);
+        await Future.delayed(const Duration(milliseconds: 100));
         uriStreamController.add(Uri.parse('spendos://join?token=custom'));
       },
       expect: () => [
