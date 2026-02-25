@@ -25,14 +25,12 @@ class AllData {
 
   // Convert to JSON structure expected by backup
   Map<String, dynamic> toJson() => {
-        // Use constants for keys
-        AppConstants.backupAccountsKey:
-            accounts.map((a) => a.toJson()).toList(),
-        AppConstants.backupExpensesKey:
-            expenses.map((e) => e.toJson()).toList(),
-        AppConstants.backupIncomesKey: incomes.map((i) => i.toJson()).toList(),
-        'categories': categories.map((c) => c.toJson()).toList(),
-      };
+    // Use constants for keys
+    AppConstants.backupAccountsKey: accounts.map((a) => a.toJson()).toList(),
+    AppConstants.backupExpensesKey: expenses.map((e) => e.toJson()).toList(),
+    AppConstants.backupIncomesKey: incomes.map((i) => i.toJson()).toList(),
+    'categories': categories.map((c) => c.toJson()).toList(),
+  };
 
   // Create from JSON structure during restore
   factory AllData.fromJson(Map<String, dynamic> json) {

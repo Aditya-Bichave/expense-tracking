@@ -99,13 +99,7 @@ void main() {
               id: 'e1',
               title: 'Test',
               amount: 100,
-              date:
-                  DateTime(2022, 1, 1), // Date needs to match "current period"
-              // Wait, Budget period logic uses DateTime.now().
-              // We should probably mock the Budget to return fixed dates or rely on "Overall" budget spanning forever?
-              // Budget entity `getCurrentPeriodDates()` implementation:
-              // For recurring, it returns (start of month, end of month).
-              // We need an expense in this month.
+              date: DateTime(2022, 1, 1),
               accountId: 'a1',
               categoryId: 'c1',
             ),
@@ -118,10 +112,10 @@ void main() {
         const BudgetListState(status: BudgetListStatus.loading),
         isA<BudgetListState>()
             .having((s) => s.status, 'status', BudgetListStatus.success)
-            .having((s) => s.budgetsWithStatus.length, 'budgetsCount', 1)
-            // Spent will be 0 because date 2022 is likely not current month (unless time travel).
-            // Let's relax check or update expectations.
-            // .having((s) => s.budgetsWithStatus.first.amountSpent, 'spent', 100),
+            .having((s) => s.budgetsWithStatus.length, 'budgetsCount', 1),
+        // Spent will be 0 because date 2022 is likely not current month (unless time travel).
+        // Let's relax check or update expectations.
+        // .having((s) => s.budgetsWithStatus.first.amountSpent, 'spent', 100),
       ],
     );
 
