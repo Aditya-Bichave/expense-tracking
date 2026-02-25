@@ -212,15 +212,19 @@ class TransactionListView extends StatelessWidget {
             : cardItem;
 
         return Dismissible(
-          key: Key("${transaction.id}_dismissible"), // More specific key
+          key: ValueKey("${transaction.id}_dismissible"),
           direction: DismissDirection.endToStart,
-          background: Container(
+          background: ColoredBox(
             color: theme.colorScheme.errorContainer,
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Icon(
-              Icons.delete_sweep_outlined,
-              color: theme.colorScheme.onErrorContainer,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Icon(
+                  Icons.delete_sweep_outlined,
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+              ),
             ),
           ),
           confirmDismiss: (_) async =>
@@ -229,12 +233,12 @@ class TransactionListView extends StatelessWidget {
             // BLoC event is dispatched by confirmDismiss callback now
             // context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
           },
-          child: Container(
-            color: isSelected
-                ? theme.colorScheme.primaryContainer.withOpacity(0.3)
-                : Colors.transparent,
-            child: animatedCard, // Use the determined ExpenseCard or IncomeCard
-          ),
+          child: isSelected
+              ? ColoredBox(
+                  color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                  child: animatedCard,
+                )
+              : animatedCard,
         );
       },
     );

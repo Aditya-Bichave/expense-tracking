@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 // --- Populate this map extensively! ---
-Map<String, IconData> availableIcons = {
+const Map<String, IconData> availableIcons = {
   'default_category_icon': Icons.category_outlined,
   'category': Icons.category_outlined, // Alias
   'label': Icons.label_outline, // Alias

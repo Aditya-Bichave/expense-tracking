@@ -40,16 +40,12 @@ class IncomeCard extends StatelessWidget {
     try {
       fallbackIcon = _getElementalIncomeCategoryIcon(category.name);
     } catch (_) {}
-    log.info(
-      "[IncomeCard] Building icon for category '${category.name}' (IconName: ${category.iconName})",
-    );
     if (modeTheme != null) {
       String svgPath = modeTheme.assets.getCategoryIcon(
         category.iconName,
         defaultPath: '',
       );
       if (svgPath.isNotEmpty) {
-        log.info("[IncomeCard] Using SVG: $svgPath");
         return SvgPicture.asset(
           svgPath,
           width: 22,
@@ -58,7 +54,6 @@ class IncomeCard extends StatelessWidget {
         );
       }
     }
-    log.info("[IncomeCard] Falling back to IconData: $fallbackIcon");
     return Icon(fallbackIcon, size: 22, color: category.displayColor);
   }
 

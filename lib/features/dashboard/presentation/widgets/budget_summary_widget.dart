@@ -81,12 +81,8 @@ class BudgetSummaryWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: 'Budget Status (${budgets.length})'),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: budgets.length,
-          itemBuilder: (context, index) {
-            final budgetWithStatus = budgets[index];
+        Column(
+          children: budgets.map((budgetWithStatus) {
             final budget = budgetWithStatus.budget;
             final progress = budgetWithStatus.percentageUsed.clamp(0.0, 1.0);
             final progressColor =
@@ -186,7 +182,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                 ),
               ),
             );
-          },
+          }).toList(),
         ),
         if (budgets.length >= 3)
           Padding(

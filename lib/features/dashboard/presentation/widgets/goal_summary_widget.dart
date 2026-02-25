@@ -80,12 +80,8 @@ class GoalSummaryWidget extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: 'Goal Progress (${goals.length})'),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: goals.length,
-          itemBuilder: (context, index) {
-            final goal = goals[index];
+        Column(
+          children: goals.map((goal) {
             final progress = goal.percentageComplete;
             final progressColor = goal.isAchieved
                 ? Colors.green.shade600
@@ -179,7 +175,7 @@ class GoalSummaryWidget extends StatelessWidget {
                 ),
               ),
             );
-          },
+          }).toList(),
         ),
         if (goals.length >= 3)
           Padding(
