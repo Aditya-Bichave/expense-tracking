@@ -35,6 +35,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           'avatar_url': profile.avatarUrl,
           'currency': profile.currency,
           'timezone': profile.timezone,
+          'upi_id': profile.upiId,
         })
         .eq('id', profile.id);
   }

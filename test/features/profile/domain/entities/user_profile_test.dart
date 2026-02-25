@@ -10,6 +10,7 @@ void main() {
       avatarUrl: 'https://example.com/avatar.png',
       currency: 'USD',
       timezone: 'UTC',
+      upiId: 'test@upi',
     );
 
     test('supports value comparisons', () {
@@ -22,8 +23,22 @@ void main() {
           avatarUrl: 'https://example.com/avatar.png',
           currency: 'USD',
           timezone: 'UTC',
+          upiId: 'test@upi',
         ),
       );
+    });
+
+    test('props includes upiId', () {
+      expect(tUserProfile.props, [
+        '1',
+        'Test User',
+        'test@example.com',
+        null, // phone
+        'https://example.com/avatar.png',
+        'USD',
+        'UTC',
+        'test@upi',
+      ]);
     });
   });
 }

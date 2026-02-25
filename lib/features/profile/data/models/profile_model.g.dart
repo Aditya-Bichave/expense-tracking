@@ -24,13 +24,14 @@ class ProfileModelAdapter extends TypeAdapter<ProfileModel> {
       avatarUrl: fields[4] as String?,
       currency: fields[5] as String,
       timezone: fields[6] as String,
+      upiId: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProfileModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class ProfileModelAdapter extends TypeAdapter<ProfileModel> {
       ..writeByte(5)
       ..write(obj.currency)
       ..writeByte(6)
-      ..write(obj.timezone);
+      ..write(obj.timezone)
+      ..writeByte(7)
+      ..write(obj.upiId);
   }
 
   @override
@@ -70,6 +73,7 @@ ProfileModel _$ProfileModelFromJson(Map<String, dynamic> json) => ProfileModel(
   avatarUrl: json['avatar_url'] as String?,
   currency: json['currency'] as String,
   timezone: json['timezone'] as String,
+  upiId: json['upi_id'] as String?,
 );
 
 Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
@@ -81,4 +85,5 @@ Map<String, dynamic> _$ProfileModelToJson(ProfileModel instance) =>
       'avatar_url': instance.avatarUrl,
       'currency': instance.currency,
       'timezone': instance.timezone,
+      'upi_id': instance.upiId,
     };

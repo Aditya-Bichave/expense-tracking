@@ -11,6 +11,7 @@ void main() {
     avatarUrl: 'https://example.com/avatar.jpg',
     currency: 'USD',
     timezone: 'UTC',
+    upiId: 'test@upi',
   );
 
   const tUserProfile = UserProfile(
@@ -21,6 +22,7 @@ void main() {
     avatarUrl: 'https://example.com/avatar.jpg',
     currency: 'USD',
     timezone: 'UTC',
+    upiId: 'test@upi',
   );
 
   group('ProfileModel', () {
@@ -42,6 +44,7 @@ void main() {
         'avatar_url': 'https://example.com/avatar.jpg',
         'currency': 'USD',
         'timezone': 'UTC',
+        'upi_id': 'test@upi',
       };
 
       final result = ProfileModel.fromJson(json);
@@ -56,6 +59,7 @@ void main() {
         expect(result['email'], 'test@example.com');
         expect(result['full_name'], 'Test User');
         expect(result['avatar_url'], 'https://example.com/avatar.jpg');
+        expect(result['upi_id'], 'test@upi');
       },
     );
   });

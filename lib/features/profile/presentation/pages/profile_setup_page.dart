@@ -18,6 +18,7 @@ class ProfileSetupPage extends StatefulWidget {
 
 class _ProfileSetupPageState extends State<ProfileSetupPage> {
   final _nameController = TextEditingController();
+  final _upiIdController = TextEditingController();
   String _currency = 'INR';
   String _timezone = 'Asia/Kolkata';
   File? _avatarFile;
@@ -84,6 +85,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         avatarUrl: currentProfile.avatarUrl,
         currency: _currency,
         timezone: _timezone,
+        upiId: _upiIdController.text.trim().isNotEmpty
+            ? _upiIdController.text.trim()
+            : null,
       );
 
       context.read<ProfileBloc>().add(UpdateProfile(updated));
@@ -101,6 +105,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
             if (_nameController.text.isEmpty &&
                 state.profile.fullName != null) {
               _nameController.text = state.profile.fullName!;
+            }
+            if (_upiIdController.text.isEmpty && state.profile.upiId != null) {
+              _upiIdController.text = state.profile.upiId!;
             }
           }
           if (state is ProfileError) {
@@ -142,6 +149,14 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   decoration: const InputDecoration(labelText: 'Full Name'),
                 ),
                 const SizedBox(height: 16),
+                TextField(
+                  controller: _upiIdController,
+                  decoration: const InputDecoration(
+                    labelText: 'UPI ID (VPA)',
+                    hintText: 'e.g. username@okicici',
+                  ),
+                ),
+                const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   value: _currency,
                   items: _currencies.map((c) {
@@ -153,7 +168,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   decoration: const InputDecoration(labelText: 'Currency'),
                 ),
                 const SizedBox(height: 16),
-                Text('Timezone: $_timezone'),
+                Text('Timezone: '),
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: _submit,

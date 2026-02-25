@@ -86,6 +86,8 @@ dev_dependencies:
   bloc_test: ^10.0.0 # For testing Blocs
   mocktail: ^1.0.1 # Mocking library
   faker: ^2.1.0 # For generating mock data
+  plugin_platform_interface: ^2.1.8
+  url_launcher_platform_interface: ^2.3.2
 
 flutter:
   generate: true
