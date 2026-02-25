@@ -97,6 +97,7 @@ void main() {
     fullName: 'Test User',
     currency: 'USD',
     timezone: 'UTC',
+    upiId: 'test@upi',
   );
 
   final tProfileJson = {
@@ -104,6 +105,7 @@ void main() {
     'full_name': 'Test User',
     'currency': 'USD',
     'timezone': 'UTC',
+    'upi_id': 'test@upi',
   };
 
   group('ProfileRemoteDataSource', () {
@@ -121,14 +123,24 @@ void main() {
       verify(() => mockQueryBuilder.select()).called(1);
     });
 
-    test('updateProfile should call update', () async {
+    test('updateProfile should call update with upi_id', () async {
       final fakeBuilder = FakePostgrestFilterBuilderDynamic();
       when(() => mockQueryBuilder.update(any())).thenAnswer((_) => fakeBuilder);
 
       await dataSource.updateProfile(tProfileModel);
 
       verify(() => mockClient.from(SupabaseConfig.profilesTable)).called(1);
-      verify(() => mockQueryBuilder.update(any())).called(1);
+      verify(
+        () => mockQueryBuilder.update({
+          'full_name': 'Test User',
+          'email': null,
+          'phone': null,
+          'avatar_url': null,
+          'currency': 'USD',
+          'timezone': 'UTC',
+          'upi_id': 'test@upi',
+        }),
+      ).called(1);
     });
 
     test('uploadAvatar should upload file and return url', () async {
