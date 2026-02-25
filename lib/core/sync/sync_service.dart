@@ -149,6 +149,7 @@ class SyncService {
 
       if (localMember == null) {
         _groupMemberBox.put(serverMember.id, serverMember);
+        unawaited(_ensureGroupExists(serverMember.groupId));
       } else {
         // Last-Write-Wins check for member
         if (serverMember.updatedAt.isAfter(localMember.updatedAt)) {
@@ -159,6 +160,23 @@ class SyncService {
       }
     } catch (e) {
       log.severe('Error handling group member realtime payload: $e');
+    }
+  }
+
+  Future<void> _ensureGroupExists(String groupId) async {
+    if (!_groupBox.containsKey(groupId)) {
+      try {
+        log.info('Fetching missing group $groupId for new member...');
+        final groupData = await _client
+            .from('groups')
+            .select()
+            .eq('id', groupId)
+            .single();
+        final group = GroupModel.fromJson(groupData);
+        await _groupBox.put(group.id, group);
+      } catch (e) {
+        log.warning('Failed to fetch missing group $groupId: $e');
+      }
     }
   }
 

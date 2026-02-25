@@ -6,11 +6,11 @@ import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
+import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
-import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -25,9 +25,9 @@ class MockSyncService extends Mock implements SyncService {}
 
 class MockConnectivity extends Mock implements Connectivity {}
 
-class FakeGroupModel extends Fake implements GroupModel {}
-
 class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
+
+class FakeGroupModel extends Fake implements GroupModel {}
 
 void main() {
   late GroupsRepositoryImpl repository;
@@ -38,8 +38,10 @@ void main() {
   late MockConnectivity mockConnectivity;
 
   setUpAll(() {
-    registerFallbackValue(FakeGroupModel());
     registerFallbackValue(FakeSyncMutationModel());
+    registerFallbackValue(FakeGroupModel());
+    registerFallbackValue(<GroupModel>[]);
+    registerFallbackValue(<GroupMemberModel>[]);
   });
 
   setUp(() {
@@ -48,7 +50,6 @@ void main() {
     mockOutboxRepository = MockOutboxRepository();
     mockSyncService = MockSyncService();
     mockConnectivity = MockConnectivity();
-
     repository = GroupsRepositoryImpl(
       localDataSource: mockLocalDataSource,
       remoteDataSource: mockRemoteDataSource,
@@ -210,7 +211,7 @@ void main() {
     });
   });
 
-  group('syncGroups', () {
+  group('syncGroups (and refreshGroupsFromServer)', () {
     final tGroupModel = GroupModel(
       id: '1',
       name: 'Test Group',
@@ -233,6 +234,14 @@ void main() {
       when(
         () => mockLocalDataSource.saveGroups(any()),
       ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.getGroups()).thenReturn([tGroupModel]);
+      when(
+        () => mockRemoteDataSource.getGroupMembers(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
 
       // Act
       final result = await repository.syncGroups();
@@ -241,6 +250,137 @@ void main() {
       expect(result.isRight(), true);
       verify(() => mockRemoteDataSource.getGroups()).called(1);
       verify(() => mockLocalDataSource.saveGroups([tGroupModel])).called(1);
+      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
+    });
+
+    test('should delete stale groups locally', () async {
+      // Arrange
+      final remoteGroup = GroupModel(
+        id: '1',
+        name: 'Remote',
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        typeValue: 'trip',
+        currency: 'USD',
+      );
+      final localGroup1 = GroupModel(
+        id: '1',
+        name: 'Remote',
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        typeValue: 'trip',
+        currency: 'USD',
+      );
+      final localGroup2 = GroupModel(
+        id: '2',
+        name: 'Stale',
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        typeValue: 'trip',
+        currency: 'USD',
+      );
+
+      when(
+        () => mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(
+        () => mockRemoteDataSource.getGroups(),
+      ).thenAnswer((_) async => [remoteGroup]);
+      when(
+        () => mockLocalDataSource.saveGroups(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.getGroups(),
+      ).thenReturn([localGroup1, localGroup2]);
+      when(
+        () => mockLocalDataSource.deleteGroup(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockRemoteDataSource.getGroupMembers(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
+
+      // Act
+      await repository.syncGroups();
+
+      // Assert
+      verify(() => mockLocalDataSource.deleteGroup('2')).called(1);
+      verifyNever(() => mockLocalDataSource.deleteGroup('1'));
+    });
+
+    test('should delete stale members locally', () async {
+      // Arrange
+      final remoteMember = GroupMemberModel(
+        id: 'm1',
+        groupId: 'g1',
+        userId: 'u1',
+        roleValue: 'admin',
+        joinedAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final localMember1 = GroupMemberModel(
+        id: 'm1',
+        groupId: 'g1',
+        userId: 'u1',
+        roleValue: 'admin',
+        joinedAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      final localMember2 = GroupMemberModel(
+        id: 'm2',
+        groupId: 'g1',
+        userId: 'u2',
+        roleValue: 'member',
+        joinedAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      final group = GroupModel(
+        id: 'g1',
+        name: 'Group',
+        createdBy: 'u1',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        typeValue: 'trip',
+        currency: 'USD',
+      );
+
+      when(
+        () => mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(
+        () => mockRemoteDataSource.getGroups(),
+      ).thenAnswer((_) async => [group]);
+      when(
+        () => mockLocalDataSource.saveGroups(any()),
+      ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.getGroups()).thenReturn([group]);
+
+      when(
+        () => mockRemoteDataSource.getGroupMembers('g1'),
+      ).thenAnswer((_) async => [remoteMember]);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockLocalDataSource.getGroupMembers('g1'),
+      ).thenReturn([localMember1, localMember2]);
+      when(
+        () => mockLocalDataSource.deleteMember(any()),
+      ).thenAnswer((_) async {});
+
+      // Act
+      await repository.syncGroups();
+
+      // Assert
+      verify(() => mockLocalDataSource.deleteMember('m2')).called(1);
+      verifyNever(() => mockLocalDataSource.deleteMember('m1'));
     });
 
     test(
@@ -342,18 +482,29 @@ void main() {
   });
 
   group('updateMemberRole', () {
-    test('should call remoteDataSource.updateMemberRole', () async {
-      when(
-        () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
-      ).thenAnswer((_) async {});
+    test(
+      'should call remoteDataSource.updateMemberRole and refresh members',
+      () async {
+        when(
+          () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRemoteDataSource.getGroupMembers(any()),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockLocalDataSource.saveGroupMembers(any()),
+        ).thenAnswer((_) async {});
+        when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
 
-      final result = await repository.updateMemberRole('1', 'u1', 'admin');
+        final result = await repository.updateMemberRole('1', 'u1', 'admin');
 
-      expect(result.isRight(), true);
-      verify(
-        () => mockRemoteDataSource.updateMemberRole('1', 'u1', 'admin'),
-      ).called(1);
-    });
+        expect(result.isRight(), true);
+        verify(
+          () => mockRemoteDataSource.updateMemberRole('1', 'u1', 'admin'),
+        ).called(1);
+        verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
+      },
+    );
 
     test('should return ServerFailure on exception', () async {
       when(
@@ -368,15 +519,26 @@ void main() {
   });
 
   group('removeMember', () {
-    test('should call remoteDataSource.removeMember', () async {
+    test('should call remoteDataSource.removeMember and cleanup', () async {
       when(
         () => mockRemoteDataSource.removeMember(any(), any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockRemoteDataSource.getGroupMembers(any()),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
+      when(
+        () => mockLocalDataSource.deleteMember(any()),
       ).thenAnswer((_) async {});
 
       final result = await repository.removeMember('1', 'u1');
 
       expect(result.isRight(), true);
       verify(() => mockRemoteDataSource.removeMember('1', 'u1')).called(1);
+      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
     });
 
     test('should return ServerFailure on exception', () async {
