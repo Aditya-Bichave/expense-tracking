@@ -6,7 +6,6 @@ import 'package:expense_tracker/features/recurring_transactions/data/models/recu
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_audit_log.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/repositories/recurring_transaction_repository.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class RecurringTransactionRepositoryImpl
     implements RecurringTransactionRepository {

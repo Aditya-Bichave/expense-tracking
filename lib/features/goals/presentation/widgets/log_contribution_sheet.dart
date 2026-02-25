@@ -12,7 +12,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // For getting bloc instance
 import 'package:flutter_svg/flutter_svg.dart'; // For themed icons
 import 'package:expense_tracker/l10n/app_localizations.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 // Function to show the sheet
 Future<bool> showLogContributionSheet(

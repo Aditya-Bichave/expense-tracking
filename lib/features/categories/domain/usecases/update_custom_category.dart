@@ -5,7 +5,6 @@ import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/main.dart'; // logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class UpdateCustomCategoryUseCase
     implements UseCase<void, UpdateCustomCategoryParams> {

@@ -10,7 +10,6 @@ import 'package:uuid/uuid.dart';
 import 'package:expense_tracker/core/di/service_locator.dart'; // Import sl helper & publish
 import 'package:expense_tracker/core/events/data_change_event.dart'; // Import event
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'add_edit_account_event.dart';
 part 'add_edit_account_state.dart';

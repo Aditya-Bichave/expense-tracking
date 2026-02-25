@@ -3,7 +3,6 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:hive_ce/hive.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 abstract class RecurringTransactionLocalDataSource {
   Future<void> addRecurringRule(RecurringRuleModel rule);

@@ -7,7 +7,6 @@ import 'package:expense_tracker/features/reports/domain/entities/report_data.dar
 import 'package:expense_tracker/features/reports/domain/usecases/get_spending_category_report.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'spending_category_report_event.dart';
 part 'spending_category_report_state.dart';

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:flutter_bloc/flutter_bloc.dart'; // To read settings
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class AssetDistributionPieChart extends StatefulWidget {
   final Map<String, double> accountBalances; // Map<AccountName, Balance>

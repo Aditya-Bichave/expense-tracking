@@ -14,7 +14,6 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // Import Category Entity
 // Import CategorizationStatus
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 // Keep Sort Options and Params as they are
 enum TransactionSortBy { date, amount, category, title } // Added title

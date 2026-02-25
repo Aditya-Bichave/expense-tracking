@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/core/services/upi_service.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class SettlementDialog extends StatelessWidget {
   final String receiverName;

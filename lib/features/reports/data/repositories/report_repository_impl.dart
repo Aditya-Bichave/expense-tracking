@@ -22,7 +22,6 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart'; // For Color
 import 'package:expense_tracker/core/di/service_locator.dart'; // For sl
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class ReportRepositoryImpl implements ReportRepository {
   final ExpenseRepository expenseRepository;

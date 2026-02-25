@@ -5,7 +5,6 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 // logger
 
 // Common widget to display either an Expense or Income in a ListTile format

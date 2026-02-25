@@ -13,7 +13,6 @@ import 'package:expense_tracker/features/categories/domain/repositories/user_his
 import 'package:expense_tracker/features/categories/domain/repositories/merchant_category_repository.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/services.dart' show rootBundle; // For loading assets
-import 'package:expense_tracker/core/utils/logger.dart';
 
 // Input parameters remain the same
 class CategorizeTransactionParams extends Equatable {

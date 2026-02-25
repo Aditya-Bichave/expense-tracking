@@ -3,7 +3,6 @@ import 'package:expense_tracker/core/utils/color_utils.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class CategoryAppearanceFormSection extends StatelessWidget {
   final String selectedIconName;

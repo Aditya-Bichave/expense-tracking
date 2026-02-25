@@ -4,7 +4,6 @@ import 'package:expense_tracker/features/goals/data/datasources/goal_contributio
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/main.dart'; // logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 /// A proxy DataSource that either interacts with the real Hive source
 /// or the in-memory demo data source based on the DemoModeService.

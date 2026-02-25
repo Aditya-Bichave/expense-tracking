@@ -4,7 +4,6 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class DeleteIncomeUseCase implements UseCase<void, DeleteIncomeParams> {
   final IncomeRepository repository;

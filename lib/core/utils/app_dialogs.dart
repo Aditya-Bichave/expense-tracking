@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class AppDialogs {
   // --- CORRECTED: context is the first positional argument ---

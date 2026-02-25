@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:rxdart/rxdart.dart';
 
 class AuthSessionService {
   final SupabaseClient _client;
-  final BehaviorSubject<User?> _userController;
+  final StreamController<User?> _userController =
+      StreamController<User?>.broadcast();
 
-  AuthSessionService(this._client)
-    : _userController = BehaviorSubject<User?>.seeded(
-        _client.auth.currentUser,
-      ) {
+  AuthSessionService(this._client) {
     _client.auth.onAuthStateChange.listen((data) {
       _userController.add(data.session?.user);
     });
@@ -23,9 +20,5 @@ class AuthSessionService {
 
   Future<void> signOut() async {
     await _client.auth.signOut();
-  }
-
-  void dispose() {
-    _userController.close();
   }
 }

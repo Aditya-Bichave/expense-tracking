@@ -3,7 +3,6 @@ import 'package:expense_tracker/core/widgets/settings_list_tile.dart'; // Change
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class SecuritySettingsSection extends StatefulWidget {
   const SecuritySettingsSection({super.key});

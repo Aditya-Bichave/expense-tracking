@@ -13,7 +13,6 @@ import 'package:expense_tracker/core/utils/color_utils.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:uuid/uuid.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 // Keep for common builder
 
 class AddEditCategoryScreen extends StatelessWidget {

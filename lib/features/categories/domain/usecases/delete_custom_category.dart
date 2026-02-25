@@ -8,7 +8,6 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/main.dart'; // logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class DeleteCustomCategoryUseCase
     implements UseCase<void, DeleteCustomCategoryParams> {

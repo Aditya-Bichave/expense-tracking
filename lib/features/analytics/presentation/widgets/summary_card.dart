@@ -4,7 +4,6 @@ import 'package:expense_tracker/features/analytics/presentation/bloc/summary_blo
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class SummaryCard extends StatelessWidget {
   const SummaryCard({super.key});

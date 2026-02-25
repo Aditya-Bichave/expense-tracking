@@ -25,7 +25,6 @@ import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart'; // Only needed for ValueGetter potentially
 import 'package:uuid/uuid.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'add_edit_transaction_event.dart';
 part 'add_edit_transaction_state.dart';

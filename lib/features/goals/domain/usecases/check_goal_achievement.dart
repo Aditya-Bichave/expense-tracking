@@ -6,7 +6,6 @@ import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class CheckGoalAchievementUseCase implements UseCase<bool, CheckGoalParams> {
   final GoalRepository repository;

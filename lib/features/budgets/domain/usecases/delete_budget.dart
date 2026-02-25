@@ -5,7 +5,6 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class DeleteBudgetUseCase implements UseCase<void, DeleteBudgetParams> {
   final BudgetRepository repository;

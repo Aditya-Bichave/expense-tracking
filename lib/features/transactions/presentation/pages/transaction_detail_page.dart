@@ -12,7 +12,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:collection/collection.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class TransactionDetailPage extends StatefulWidget {
   final String transactionId;

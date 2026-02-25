@@ -5,7 +5,6 @@ import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class GetBudgetsUseCase implements UseCase<List<Budget>, NoParams> {
   final BudgetRepository repository;

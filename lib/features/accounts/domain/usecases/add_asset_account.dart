@@ -5,7 +5,6 @@ import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class AddAssetAccountUseCase
     implements UseCase<AssetAccount, AddAssetAccountParams> {

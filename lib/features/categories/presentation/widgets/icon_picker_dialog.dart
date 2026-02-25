@@ -1,6 +1,5 @@
 // lib/features/categories/presentation/widgets/icon_picker_dialog.dart
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 // --- Populate this map extensively! ---
 const Map<String, IconData> availableIcons = {

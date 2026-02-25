@@ -7,7 +7,6 @@ import 'package:expense_tracker/features/reports/domain/entities/report_data.dar
 import 'package:expense_tracker/features/reports/domain/repositories/report_repository.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class GetSpendingCategoryReportUseCase
     implements

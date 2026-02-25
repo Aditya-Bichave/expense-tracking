@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/core/widgets/settings_list_tile.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class HelpSettingsSection extends StatelessWidget {
   final bool isLoading;

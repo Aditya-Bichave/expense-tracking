@@ -5,7 +5,6 @@ import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class AddIncomeUseCase implements UseCase<Income, AddIncomeParams> {
   final IncomeRepository repository;

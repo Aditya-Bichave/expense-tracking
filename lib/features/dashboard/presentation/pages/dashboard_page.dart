@@ -21,7 +21,6 @@ import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});

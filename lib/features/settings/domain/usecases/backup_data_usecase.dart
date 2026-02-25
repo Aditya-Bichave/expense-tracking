@@ -13,7 +13,6 @@ import 'package:flutter/foundation.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/services.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class BackupDataUseCase implements UseCase<String?, BackupParams> {
   final DataManagementRepository dataManagementRepository;

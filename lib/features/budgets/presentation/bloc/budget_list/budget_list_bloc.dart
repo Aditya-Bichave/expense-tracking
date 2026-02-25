@@ -15,7 +15,6 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.da
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 part 'budget_list_event.dart';
 part 'budget_list_state.dart';

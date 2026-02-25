@@ -13,7 +13,6 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 typedef BudgetSubmitCallback =
     Function(

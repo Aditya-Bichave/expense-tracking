@@ -1,7 +1,6 @@
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/recurring_transactions/domain/usecases/generate_transactions_on_launch.dart';
 import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class TransactionGenerationService {
   final GenerateTransactionsOnLaunch _generateTransactionsOnLaunch;

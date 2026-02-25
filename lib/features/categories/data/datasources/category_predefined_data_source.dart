@@ -3,7 +3,6 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/features/categories/data/models/category_model.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 // Interface remains generic for now, implementations handle specifics
 abstract class CategoryPredefinedDataSource {
