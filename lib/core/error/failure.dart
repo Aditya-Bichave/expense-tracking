@@ -10,54 +10,51 @@ abstract class Failure extends Equatable {
 
 // General failures
 class ServerFailure extends Failure {
-  const ServerFailure([String message = "A server error occurred."])
-    : super(message);
+  const ServerFailure([super.message = "A server error occurred."]);
 }
 
 class CacheFailure extends Failure {
-  const CacheFailure([String message = "A local data storage error occurred."])
-    : super(message);
+  const CacheFailure([super.message = "A local data storage error occurred."]);
 }
 
 class ValidationFailure extends Failure {
-  const ValidationFailure(String message) : super(message);
+  const ValidationFailure(super.message);
 }
 
 class NetworkFailure extends Failure {
   const NetworkFailure([
-    String message = "Please check your network connection.",
-  ]) : super(message);
+    super.message = "Please check your network connection.",
+  ]);
 }
 
 class SettingsFailure extends Failure {
-  const SettingsFailure(String message) : super(message);
+  const SettingsFailure(super.message);
 }
 
 class BackupFailure extends Failure {
-  const BackupFailure(String message) : super(message);
+  const BackupFailure(super.message);
 }
 
 class RestoreFailure extends Failure {
-  const RestoreFailure(String message) : super(message);
+  const RestoreFailure(super.message);
 }
 
 class ClearDataFailure extends Failure {
-  const ClearDataFailure(String message) : super(message);
+  const ClearDataFailure(super.message);
 }
 
 class FileSystemFailure extends Failure {
-  const FileSystemFailure(String message) : super(message);
+  const FileSystemFailure(super.message);
 }
 
 class AuthenticationFailure extends Failure {
-  const AuthenticationFailure(String message) : super(message);
+  const AuthenticationFailure(super.message);
 }
 
 class UnexpectedFailure extends Failure {
-  const UnexpectedFailure([String message = "An unexpected error occurred."])
-    : super(message);
+  const UnexpectedFailure([super.message = "An unexpected error occurred."]);
 }
 
 class NotFoundFailure extends Failure {
-  const NotFoundFailure(String message) : super(message);
+  const NotFoundFailure(super.message);
 }

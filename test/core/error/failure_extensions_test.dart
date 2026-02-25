@@ -31,5 +31,5 @@ void main() {
 }
 
 class _FailureStub extends Failure {
-  const _FailureStub(String message) : super(message);
+  const _FailureStub(super.message);
 }

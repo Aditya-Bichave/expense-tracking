@@ -299,9 +299,9 @@ class CategoryManagementBloc
       "[CategoryManagementBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
     switch (failure.runtimeType) {
-      case ValidationFailure:
+      case ValidationFailure _:
         return failure.message;
-      case CacheFailure:
+      case CacheFailure _:
         return 'Database Error: ${failure.message}';
       default:
         return 'An unexpected error occurred managing categories.';

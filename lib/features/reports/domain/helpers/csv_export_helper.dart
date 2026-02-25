@@ -414,5 +414,5 @@ class CsvExportHelper {
 }
 
 class ExportFailure extends Failure {
-  const ExportFailure(String message) : super(message);
+  const ExportFailure(super.message);
 }
