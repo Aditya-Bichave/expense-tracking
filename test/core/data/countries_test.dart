@@ -5,23 +5,30 @@ void main() {
   group('AppCountries', () {
     test('defaultCountry is US', () {
       expect(AppCountries.defaultCountry.code, 'US');
-      expect(AppCountries.defaultCountry.currencySymbol, '\$');
+      expect(AppCountries.defaultCountry.currencySymbol, r'$');
     });
 
     test('getCurrencyForCountry returns correct symbol', () {
-      expect(AppCountries.getCurrencyForCountry('US'), '\$');
+      expect(AppCountries.getCurrencyForCountry('US'), r'$');
       expect(AppCountries.getCurrencyForCountry('GB'), '£');
       expect(AppCountries.getCurrencyForCountry('EU'), '€');
       expect(AppCountries.getCurrencyForCountry('IN'), '₹');
       expect(AppCountries.getCurrencyForCountry('JP'), '¥');
     });
 
+    test('getCurrencyCodeForCountry returns correct code', () {
+      expect(AppCountries.getCurrencyCodeForCountry('US'), 'USD');
+      expect(AppCountries.getCurrencyCodeForCountry('GB'), 'GBP');
+      expect(AppCountries.getCurrencyCodeForCountry('EU'), 'EUR');
+      expect(AppCountries.getCurrencyCodeForCountry('IN'), 'INR');
+    });
+
     test('getCurrencyForCountry returns default for null', () {
-      expect(AppCountries.getCurrencyForCountry(null), '\$');
+      expect(AppCountries.getCurrencyForCountry(null), r'$');
     });
 
     test('getCurrencyForCountry returns default for unknown code', () {
-      expect(AppCountries.getCurrencyForCountry('XX'), '\$');
+      expect(AppCountries.getCurrencyForCountry('XX'), r'$');
     });
 
     test('findCountryByCode returns correct country', () {
@@ -46,17 +53,20 @@ void main() {
       const country1 = AppCountry(
         code: 'US',
         name: 'United States',
-        currencySymbol: '\$',
+        currencySymbol: r'$',
+        currencyCode: 'USD',
       );
       const country2 = AppCountry(
         code: 'US',
         name: 'United States',
-        currencySymbol: '\$',
+        currencySymbol: r'$',
+        currencyCode: 'USD',
       );
       const country3 = AppCountry(
         code: 'GB',
         name: 'United Kingdom',
         currencySymbol: '£',
+        currencyCode: 'GBP',
       );
 
       expect(country1, equals(country2));
@@ -67,12 +77,14 @@ void main() {
       const country1 = AppCountry(
         code: 'US',
         name: 'United States',
-        currencySymbol: '\$',
+        currencySymbol: r'$',
+        currencyCode: 'USD',
       );
       const country2 = AppCountry(
         code: 'US',
         name: 'United States',
-        currencySymbol: '\$',
+        currencySymbol: r'$',
+        currencyCode: 'USD',
       );
 
       expect(country1.hashCode, equals(country2.hashCode));

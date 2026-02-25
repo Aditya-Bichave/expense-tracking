@@ -1,5 +1,5 @@
 name: expense_tracker
-description: A basic expense tracking application.
+description: Financial OS - Advanced Expense Tracking & Financial Management
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
@@ -71,6 +71,7 @@ dependencies:
   image_picker: ^1.2.1
   country_code_picker: ^3.4.1
   rxdart: ^0.28.0
+  windows_single_instance: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,138 +1,116 @@
-// lib/features/settings/presentation/bloc/settings_bloc.dart
-import 'dart:async';
-import 'package:bloc/bloc.dart';
-import 'package:dartz/dartz.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:expense_tracker/features/settings/domain/usecases/toggle_app_lock.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/core/data/countries.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
+import 'package:expense_tracker/core/di/service_locator.dart'; // For publishDataChangedEvent
+import 'package:expense_tracker/core/events/data_change_event.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
 
+// Type alias for ValueGetter if not imported
+typedef ValueGetter<T> = T Function();
+
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   final SettingsRepository _settingsRepository;
-  final DemoModeService _demoModeService;
   final ToggleAppLockUseCase _toggleAppLockUseCase;
+  final DemoModeService _demoModeService;
 
   SettingsBloc({
     required SettingsRepository settingsRepository,
-    required DemoModeService demoModeService,
     required ToggleAppLockUseCase toggleAppLockUseCase,
+    required DemoModeService demoModeService,
   }) : _settingsRepository = settingsRepository,
-       _demoModeService = demoModeService,
        _toggleAppLockUseCase = toggleAppLockUseCase,
-       super(
-         SettingsState(
-           isInDemoMode: demoModeService.isDemoActive,
-           setupSkipped: false, // Ensure skip starts false
-         ),
-       ) {
+       _demoModeService = demoModeService,
+       super(const SettingsState()) {
     on<LoadSettings>(_onLoadSettings);
     on<UpdateTheme>(_onUpdateTheme);
     on<UpdatePaletteIdentifier>(_onUpdatePaletteIdentifier);
     on<UpdateUIMode>(_onUpdateUIMode);
     on<UpdateCountry>(_onUpdateCountry);
     on<UpdateAppLock>(_onUpdateAppLock);
+    on<ClearSettingsMessage>(_onClearMessage);
     on<EnterDemoMode>(_onEnterDemoMode);
     on<ExitDemoMode>(_onExitDemoMode);
-    on<SkipSetup>(_onSkipSetup); // ADDED Handler
-    on<ResetSkipSetupFlag>(_onResetSkipSetupFlag); // ADDED Handler
-    on<ClearSettingsMessage>(_onClearMessage);
-
-    log.info("[SettingsBloc] Initialized.");
+    on<SkipSetup>(_onSkipSetup);
   }
 
-  // --- Skip Setup Handlers --- ADDED
   void _onSkipSetup(SkipSetup event, Emitter<SettingsState> emit) {
-    log.info("[SettingsBloc] Setup skipped flag set.");
+    log.info("[SettingsBloc] Skipping setup (marking as completed).");
     emit(state.copyWith(setupSkipped: true));
   }
-
-  void _onResetSkipSetupFlag(
-    ResetSkipSetupFlag event,
-    Emitter<SettingsState> emit,
-  ) {
-    if (state.setupSkipped) {
-      log.info("[SettingsBloc] Resetting setup skipped flag.");
-      emit(state.copyWith(setupSkipped: false));
-    }
-  }
-  // --- END ADDED ---
 
   Future<void> _onLoadSettings(
     LoadSettings event,
     Emitter<SettingsState> emit,
   ) async {
-    log.info("[SettingsBloc] Received LoadSettings event.");
     emit(
       state.copyWith(
         status: SettingsStatus.loading,
         packageInfoStatus: PackageInfoStatus.loading,
         clearAllMessages: true,
-        // Ensure flags are reset on a full load (e.g., app start)
-        isInDemoMode: false,
-        setupSkipped: false,
       ),
     );
-    // ... (rest of loading logic unchanged) ...
-    PackageInfo? packageInfo;
-    String? packageInfoLoadError;
     try {
-      packageInfo = await PackageInfo.fromPlatform();
-    } catch (e, s) {
-      packageInfoLoadError = 'Failed to load app version.';
-      log.severe("[SettingsBloc] Failed to load PackageInfo$e$s");
-    }
+      log.info("[SettingsBloc] Loading settings and package info...");
 
-    ThemeMode loadedThemeMode = SettingsState.defaultThemeMode;
-    String loadedPaletteIdentifier = SettingsState.defaultPaletteIdentifier;
-    UIMode loadedUIMode = SettingsState.defaultUIMode;
-    String loadedCountryCode = SettingsState.defaultCountryCode;
-    bool loadedLock = SettingsState.defaultAppLockEnabled;
-    String? settingsLoadError;
+      // Load Package Info
+      PackageInfo? packageInfo;
+      String? packageInfoLoadError;
+      try {
+        packageInfo = await PackageInfo.fromPlatform();
+      } catch (e) {
+        log.warning("[SettingsBloc] Failed to load package info: $e");
+        packageInfoLoadError = "Failed to load app version";
+      }
 
-    try {
-      final results = await Future.wait([
-        _settingsRepository.getThemeMode(),
-        _settingsRepository.getPaletteIdentifier(),
-        _settingsRepository.getUIMode(),
-        _settingsRepository.getSelectedCountryCode(),
-        _settingsRepository.getAppLockEnabled(),
-      ]);
+      // Load Settings individually
+      ThemeMode loadedThemeMode = SettingsState.defaultThemeMode;
+      String loadedPaletteIdentifier = SettingsState.defaultPaletteIdentifier;
+      UIMode loadedUIMode = SettingsState.defaultUIMode;
+      String loadedCountryCode = SettingsState.defaultCountryCode;
+      bool loadedLock = SettingsState.defaultAppLockEnabled;
+      String? settingsLoadError;
 
-      final themeModeResult = results[0] as Either<Failure, ThemeMode>;
-      final paletteIdResult = results[1] as Either<Failure, String>;
-      final uiModeResult = results[2] as Either<Failure, UIMode>;
-      final countryResult = results[3] as Either<Failure, String?>;
-      final appLockResult = results[4] as Either<Failure, bool>;
-
-      themeModeResult.fold(
+      // Theme
+      final themeResult = await _settingsRepository.getThemeMode();
+      themeResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
         (mode) => loadedThemeMode = mode,
       );
-      paletteIdResult.fold(
+
+      // Palette
+      final paletteResult = await _settingsRepository.getPaletteIdentifier();
+      paletteResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
         (id) => loadedPaletteIdentifier = id,
       );
-      uiModeResult.fold(
+
+      // UI Mode
+      final uiResult = await _settingsRepository.getUIMode();
+      uiResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
         (mode) => loadedUIMode = mode,
       );
+
+      // Country
+      final countryResult = await _settingsRepository.getSelectedCountryCode();
       countryResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
         (code) => loadedCountryCode = code ?? SettingsState.defaultCountryCode,
       );
-      appLockResult.fold(
+
+      // App Lock
+      final lockResult = await _settingsRepository.getAppLockEnabled();
+      lockResult.fold(
         (f) => settingsLoadError = _appendError(settingsLoadError, f.message),
         (enabled) => loadedLock = enabled,
       );
@@ -155,9 +133,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           appVersion: () => packageInfo != null
               ? '${packageInfo.version}+${packageInfo.buildNumber}'
               : null,
-          // Ensure isInDemoMode stays false after loading real settings
           isInDemoMode: false,
-          setupSkipped: false, // Ensure skip flag is reset on full load
+          setupSkipped: false,
         ),
       );
       log.info("[SettingsBloc] Emitted final loaded/error state.");
@@ -175,8 +152,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
               state.packageInfoStatus == PackageInfoStatus.loading
               ? 'Failed due to main settings error'
               : state.packageInfoError,
-          isInDemoMode: false, // Ensure demo mode is off on error too
-          setupSkipped: false, // Ensure skip flag is reset on error too
+          isInDemoMode: false,
+          setupSkipped: false,
         ),
       );
     }
@@ -188,7 +165,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         : '$currentError\n$newMessage';
   }
 
-  // --- Other Event Handlers (Unchanged but added demo checks) ---
   Future<void> _onUpdateTheme(
     UpdateTheme event,
     Emitter<SettingsState> emit,
@@ -197,7 +173,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       log.warning("[SettingsBloc] Ignoring UpdateTheme in Demo Mode.");
       return;
     }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdateTheme event: ${event.newMode.name}",
     );
@@ -238,7 +213,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       );
       return;
     }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdatePaletteIdentifier event: ${event.newIdentifier}",
     );
@@ -285,7 +259,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       log.warning("[SettingsBloc] Ignoring UpdateUIMode in Demo Mode.");
       return;
     }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdateUIMode event: ${event.newMode.name}",
     );
@@ -321,12 +294,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
             break;
         }
         log.info("[SettingsBloc] Saving default palette: $defaultPalette");
-        await _settingsRepository.savePaletteIdentifier(defaultPalette);
+        _settingsRepository.savePaletteIdentifier(defaultPalette);
 
         emit(
           state.copyWith(
             uiMode: event.newMode,
-            paletteIdentifier: defaultPalette, // Update palette in state too
+            paletteIdentifier: defaultPalette,
             status: SettingsStatus.loaded,
             clearAllMessages: true,
           ),
@@ -343,12 +316,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     UpdateCountry event,
     Emitter<SettingsState> emit,
   ) async {
-    // Currency *can* be changed before entering demo
-    // if (_demoModeService.isDemoActive) {
-    //   log.warning("[SettingsBloc] Ignoring UpdateCountry in Demo Mode.");
-    //   return;
-    // }
-    // ... rest of handler
     log.info(
       "[SettingsBloc] Received UpdateCountry event: ${event.newCountryCode}",
     );
@@ -424,25 +391,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     );
   }
 
-  // --- Demo Mode Handlers ---
   void _onEnterDemoMode(EnterDemoMode event, Emitter<SettingsState> emit) {
     log.info("[SettingsBloc] Entering Demo Mode.");
     _demoModeService.enterDemoMode();
-    emit(
-      state.copyWith(isInDemoMode: true, setupSkipped: false),
-    ); // Entering demo clears skip flag
+    emit(state.copyWith(isInDemoMode: true, setupSkipped: false));
     publishDataChangedEvent(
       type: DataChangeType.system,
-      reason: DataChangeReason.updated,
+      reason: DataChangeReason.reset,
     );
   }
 
   void _onExitDemoMode(ExitDemoMode event, Emitter<SettingsState> emit) {
     log.info("[SettingsBloc] Exiting Demo Mode.");
     _demoModeService.exitDemoMode();
-    emit(
-      state.copyWith(isInDemoMode: false, setupSkipped: false),
-    ); // Exiting demo clears skip flag
+    emit(state.copyWith(isInDemoMode: false, setupSkipped: false));
     publishDataChangedEvent(
       type: DataChangeType.system,
       reason: DataChangeReason.reset,

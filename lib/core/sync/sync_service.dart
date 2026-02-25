@@ -34,12 +34,12 @@ class SyncService {
     this._groupBox,
     this._groupMemberBox,
   ) {
-    _statusController.add(SyncServiceStatus.synced);
+    _safeAddStatus(SyncServiceStatus.synced);
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen((
       result,
     ) {
       if (result.contains(ConnectivityResult.none)) {
-        _statusController.add(SyncServiceStatus.offline);
+        _safeAddStatus(SyncServiceStatus.offline);
       } else {
         // Online: Do not emit 'synced' here to avoid flicker.
         // processOutbox will emit 'syncing' then 'synced'/'error'.
@@ -164,14 +164,15 @@ class SyncService {
 
   Future<void> processOutbox() async {
     if (_isSyncing) return;
+    if (_statusController.isClosed) return;
     _isSyncing = true;
-    _statusController.add(SyncServiceStatus.syncing);
+    _safeAddStatus(SyncServiceStatus.syncing);
     bool hadError = false;
 
     try {
       final pendingItems = _outboxRepository.getPendingItems();
       if (pendingItems.isEmpty) {
-        _statusController.add(SyncServiceStatus.synced);
+        _safeAddStatus(SyncServiceStatus.synced);
         return;
       }
 
@@ -197,20 +198,26 @@ class SyncService {
 
       // Check queue status logic
       if (hadError) {
-        _statusController.add(SyncServiceStatus.error);
+        _safeAddStatus(SyncServiceStatus.error);
       } else {
         // Double check if anything remains pending
         if (_outboxRepository
             .getPendingItems()
             .where((i) => i.status == SyncStatus.pending)
             .isEmpty) {
-          _statusController.add(SyncServiceStatus.synced);
+          _safeAddStatus(SyncServiceStatus.synced);
         }
       }
     } catch (e) {
-      _statusController.add(SyncServiceStatus.error);
+      _safeAddStatus(SyncServiceStatus.error);
     } finally {
       _isSyncing = false;
+    }
+  }
+
+  void _safeAddStatus(SyncServiceStatus status) {
+    if (!_statusController.isClosed) {
+      _statusController.add(status);
     }
   }
 

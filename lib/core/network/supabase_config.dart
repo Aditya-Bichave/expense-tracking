@@ -1,14 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 class SupabaseConfig {
-  static const String supabaseUrl = String.fromEnvironment(
-    'SUPABASE_URL',
-    defaultValue: 'https://nzjqjsrdmbrojukbebzi.supabase.co',
-  );
+  static const String supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'INSERT_ANON_KEY_HERE',
   );
 
   static const String supabasePersistSessionKey =
@@ -20,5 +16,7 @@ class SupabaseConfig {
   static bool get isValid =>
       supabaseUrl.isNotEmpty &&
       supabaseAnonKey.isNotEmpty &&
+      supabaseUrl !=
+          'https://placeholder.supabase.co' && // Ensure real values are used
       supabaseAnonKey != 'INSERT_ANON_KEY_HERE';
 }

@@ -3,6 +3,8 @@ import 'package:app_links/app_links.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/auth/domain/repositories/auth_repository.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 
 part 'deep_link_event.dart';
@@ -25,14 +27,28 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
     DeepLinkStarted event,
     Emitter<DeepLinkState> emit,
   ) async {
-    // Handle initial link
-    final initialUri = await _appLinks.getInitialLink();
-    if (initialUri != null) {
-      add(DeepLinkReceived(initialUri));
+    // 1. Handle Windows launch arguments
+    if (event.args.isNotEmpty) {
+      for (final arg in event.args) {
+        if (arg.contains('io.supabase.expensetracker://')) {
+          add(DeepLinkReceived(Uri.parse(arg)));
+          break;
+        }
+      }
     }
 
-    // Handle stream
-    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+    // 2. Handle initial link from app_links
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        add(DeepLinkReceived(initialUri));
+      }
+    } catch (e) {
+      log.warning("Failed to get initial link: $e");
+    }
+
+    // 3. Handle stream for runtime links
+    _linkSubscription ??= _appLinks.uriLinkStream.listen((uri) {
       add(DeepLinkReceived(uri));
     });
   }
@@ -41,8 +57,25 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
     DeepLinkReceived event,
     Emitter<DeepLinkState> emit,
   ) async {
-    // Check if it is a join link
-    // https://spendos.app/join?token=... or spendos://join?token=...
+    log.info("Deep link received: ${event.uri}");
+
+    // 1. Handle Supabase Auth callback
+    // io.supabase.expensetracker://login-callback#access_token=...
+    if (event.uri.host == 'login-callback' ||
+        event.uri.fragment.contains('access_token=')) {
+      try {
+        await Supabase.instance.client.auth.getSessionFromUrl(event.uri);
+        log.info("Supabase session obtained from URL");
+        // No need to emit a state here, as AuthBloc/SessionCubit should listen to Supabase auth changes
+        return;
+      } catch (e) {
+        log.severe("Failed to get Supabase session from URL: $e");
+        emit(DeepLinkError("Authentication failed: $e"));
+        return;
+      }
+    }
+
+    // 2. Check if it is a join link
     if (event.uri.path.contains('/join')) {
       final token = event.uri.queryParameters['token'];
       if (token != null) {

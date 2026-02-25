@@ -5,6 +5,8 @@ import 'package:expense_tracker/features/expenses/data/models/expense_model.dart
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
+import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
+import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/main.dart'; // logger
 
 /// Manages the demo mode state and in-memory demo data.
@@ -18,6 +20,8 @@ class DemoModeService {
   List<BudgetModel> _demoBudgets = [];
   List<GoalModel> _demoGoals = [];
   List<GoalContributionModel> _demoContributions = [];
+  List<RecurringRuleModel> _demoRecurringRules = [];
+  List<RecurringRuleAuditLogModel> _demoAuditLogs = [];
 
   // Singleton pattern
   static final DemoModeService _instance = DemoModeService._internal();
@@ -35,6 +39,7 @@ class DemoModeService {
     _demoBudgets = List.from(DemoData.sampleBudgets);
     _demoGoals = List.from(DemoData.sampleGoals);
     _demoContributions = List.from(DemoData.sampleContributions);
+    _demoRecurringRules = List.from(DemoData.sampleRecurringRules);
     log.info("[DemoModeService] Sample data loaded into memory caches.");
   }
 
@@ -48,6 +53,8 @@ class DemoModeService {
     _demoBudgets = [];
     _demoGoals = [];
     _demoContributions = [];
+    _demoRecurringRules = [];
+    _demoAuditLogs = [];
   }
 
   // --- Expense Operations ---
@@ -174,4 +181,33 @@ class DemoModeService {
   Future<void> deleteDemoContributions(List<String> ids) async {
     _demoContributions.removeWhere((c) => ids.contains(c.id));
   }
+
+  // --- Recurring Rule Operations ---
+  Future<List<RecurringRuleModel>> getDemoRecurringRules() async =>
+      _demoRecurringRules;
+  Future<RecurringRuleModel?> getDemoRecurringRuleById(String id) async =>
+      _demoRecurringRules.where((r) => r.id == id).firstOrNull;
+  Future<void> addDemoRecurringRule(RecurringRuleModel rule) async {
+    _demoRecurringRules.add(rule);
+  }
+
+  Future<void> updateDemoRecurringRule(RecurringRuleModel rule) async {
+    final index = _demoRecurringRules.indexWhere((r) => r.id == rule.id);
+    if (index != -1) {
+      _demoRecurringRules[index] = rule;
+    }
+  }
+
+  Future<void> deleteDemoRecurringRule(String id) async {
+    _demoRecurringRules.removeWhere((r) => r.id == id);
+  }
+
+  // --- Audit Logs ---
+  Future<void> addDemoRecurringAuditLog(RecurringRuleAuditLogModel log) async {
+    _demoAuditLogs.add(log);
+  }
+
+  Future<List<RecurringRuleAuditLogModel>> getDemoRecurringAuditLogsForRule(
+    String ruleId,
+  ) async => _demoAuditLogs.where((l) => l.ruleId == ruleId).toList();
 }

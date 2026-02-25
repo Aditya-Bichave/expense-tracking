@@ -1,3 +1,6 @@
+import "package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart";
+import "package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart";
+import "package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart";
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
@@ -367,6 +370,66 @@ class DemoData {
       date: DateTime.now().subtract(const Duration(days: 10)),
       note: 'Sold old device',
       createdAt: DateTime.now().subtract(const Duration(days: 10)),
+    ),
+  ];
+
+  // --- Sample Recurring Rules ---
+  static final List<RecurringRuleModel> sampleRecurringRules = [
+    RecurringRuleModel(
+      id: _uuid.v4(),
+      amount: 14.99,
+      description: 'Netflix Subscription',
+      categoryId: catSubscriptionsId,
+      accountId: checkingAccount.id,
+      transactionTypeIndex: TransactionType.expense.index,
+      frequencyIndex: Frequency.monthly.index,
+      interval: 1,
+      startDate: DateTime.now().subtract(const Duration(days: 45)),
+      dayOfMonth: DateTime.now().subtract(const Duration(days: 45)).day,
+      endConditionTypeIndex: EndConditionType.never.index,
+      statusIndex: RuleStatus.active.index,
+      nextOccurrenceDate: DateTime.now().add(const Duration(days: 15)),
+      occurrencesGenerated: 2,
+    ),
+    RecurringRuleModel(
+      id: _uuid.v4(),
+      amount: 850.00,
+      description: 'Rent',
+      categoryId: catRentId,
+      accountId: checkingAccount.id,
+      transactionTypeIndex: TransactionType.expense.index,
+      frequencyIndex: Frequency.monthly.index,
+      interval: 1,
+      startDate: DateTime.now().subtract(const Duration(days: 60)),
+      dayOfMonth: 1,
+      endConditionTypeIndex: EndConditionType.never.index,
+      statusIndex: RuleStatus.active.index,
+      nextOccurrenceDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month + 1,
+        1,
+      ),
+      occurrencesGenerated: 2,
+    ),
+    RecurringRuleModel(
+      id: _uuid.v4(),
+      amount: 2500.00,
+      description: 'Salary',
+      categoryId: catSalaryId,
+      accountId: checkingAccount.id,
+      transactionTypeIndex: TransactionType.income.index,
+      frequencyIndex: Frequency.monthly.index,
+      interval: 1,
+      startDate: DateTime.now().subtract(const Duration(days: 60)),
+      dayOfMonth: 15,
+      endConditionTypeIndex: EndConditionType.never.index,
+      statusIndex: RuleStatus.active.index,
+      nextOccurrenceDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month + 1,
+        15,
+      ),
+      occurrencesGenerated: 2,
     ),
   ];
 }

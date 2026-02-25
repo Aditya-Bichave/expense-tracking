@@ -5,11 +5,13 @@ class AppCountry {
   final String code; // e.g., 'US', 'GB', 'IN'
   final String name; // e.g., 'United States', 'United Kingdom', 'India'
   final String currencySymbol; // e.g., '$', '£', '₹'
+  final String currencyCode; // e.g., 'USD', 'GBP', 'INR'
 
   const AppCountry({
     required this.code,
     required this.name,
     required this.currencySymbol,
+    required this.currencyCode,
   });
 
   @override
@@ -27,14 +29,54 @@ abstract class AppCountries {
   static const String defaultCountryCode = 'US';
 
   static const List<AppCountry> availableCountries = [
-    AppCountry(code: 'US', name: 'United States', currencySymbol: '\$'),
-    AppCountry(code: 'GB', name: 'United Kingdom', currencySymbol: '£'),
-    AppCountry(code: 'EU', name: 'Eurozone', currencySymbol: '€'),
-    AppCountry(code: 'IN', name: 'India', currencySymbol: '₹'),
-    AppCountry(code: 'CA', name: 'Canada', currencySymbol: '\$'), // CAD
-    AppCountry(code: 'AU', name: 'Australia', currencySymbol: '\$'), // AUD
-    AppCountry(code: 'JP', name: 'Japan', currencySymbol: '¥'),
-    AppCountry(code: 'CH', name: 'Switzerland', currencySymbol: 'CHF'),
+    AppCountry(
+      code: 'US',
+      name: 'United States',
+      currencySymbol: r'$',
+      currencyCode: 'USD',
+    ),
+    AppCountry(
+      code: 'GB',
+      name: 'United Kingdom',
+      currencySymbol: '£',
+      currencyCode: 'GBP',
+    ),
+    AppCountry(
+      code: 'EU',
+      name: 'Eurozone',
+      currencySymbol: '€',
+      currencyCode: 'EUR',
+    ),
+    AppCountry(
+      code: 'IN',
+      name: 'India',
+      currencySymbol: '₹',
+      currencyCode: 'INR',
+    ),
+    AppCountry(
+      code: 'CA',
+      name: 'Canada',
+      currencySymbol: r'$',
+      currencyCode: 'CAD',
+    ),
+    AppCountry(
+      code: 'AU',
+      name: 'Australia',
+      currencySymbol: r'$',
+      currencyCode: 'AUD',
+    ),
+    AppCountry(
+      code: 'JP',
+      name: 'Japan',
+      currencySymbol: '¥',
+      currencyCode: 'JPY',
+    ),
+    AppCountry(
+      code: 'CH',
+      name: 'Switzerland',
+      currencySymbol: 'CHF',
+      currencyCode: 'CHF',
+    ),
     // Add more countries as needed
   ];
 
@@ -48,6 +90,13 @@ abstract class AppCountries {
     return availableCountries
         .firstWhere((c) => c.code == codeToUse, orElse: () => defaultCountry)
         .currencySymbol;
+  }
+
+  static String getCurrencyCodeForCountry(String? countryCode) {
+    final codeToUse = countryCode ?? defaultCountryCode;
+    return availableCountries
+        .firstWhere((c) => c.code == codeToUse, orElse: () => defaultCountry)
+        .currencyCode;
   }
 
   static AppCountry? findCountryByCode(String? code) {
