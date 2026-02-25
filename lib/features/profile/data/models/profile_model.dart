@@ -29,6 +29,9 @@ class ProfileModel extends UserProfile {
   @override
   @HiveField(6)
   final String timezone;
+  @override
+  @HiveField(7)
+  final String? upiId;
 
   const ProfileModel({
     required this.id,
@@ -38,6 +41,7 @@ class ProfileModel extends UserProfile {
     this.avatarUrl,
     required this.currency,
     required this.timezone,
+    this.upiId,
   }) : super(
          id: id,
          fullName: fullName,
@@ -46,6 +50,7 @@ class ProfileModel extends UserProfile {
          avatarUrl: avatarUrl,
          currency: currency,
          timezone: timezone,
+         upiId: upiId,
        );
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) =>
@@ -61,6 +66,7 @@ class ProfileModel extends UserProfile {
       avatarUrl: user.avatarUrl,
       currency: user.currency,
       timezone: user.timezone,
+      upiId: user.upiId,
     );
   }
 }

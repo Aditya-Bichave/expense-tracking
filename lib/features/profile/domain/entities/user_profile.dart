@@ -8,6 +8,7 @@ class UserProfile extends Equatable {
   final String? avatarUrl;
   final String currency;
   final String timezone;
+  final String? upiId;
 
   const UserProfile({
     required this.id,
@@ -17,6 +18,7 @@ class UserProfile extends Equatable {
     this.avatarUrl,
     required this.currency,
     required this.timezone,
+    this.upiId,
   });
 
   @override
@@ -28,5 +30,6 @@ class UserProfile extends Equatable {
     avatarUrl,
     currency,
     timezone,
+    upiId,
   ];
 }
