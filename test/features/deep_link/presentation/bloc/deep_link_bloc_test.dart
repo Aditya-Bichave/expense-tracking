@@ -37,7 +37,8 @@ void main() {
     mockAuthRepository = MockAuthRepository();
     mockUser = MockUser();
     mockAuthResponse = MockAuthResponse();
-    uriStreamController = StreamController<Uri>();
+    // Use broadcast to allow multiple listeners and easier closing
+    uriStreamController = StreamController<Uri>.broadcast();
 
     when(
       () => mockAppLinks.uriLinkStream,
@@ -47,10 +48,22 @@ void main() {
     bloc = DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository);
   });
 
-  tearDown(() {
-    uriStreamController.close();
-    bloc.close();
+  tearDown(() async {
+    await bloc.close();
+    await uriStreamController.close();
   });
+
+  Future<void> waitForListener() async {
+    // Poll until the stream has a listener, with a timeout
+    int retries = 0;
+    while (!uriStreamController.hasListener && retries < 100) {
+      await Future.delayed(const Duration(milliseconds: 10));
+      retries++;
+    }
+    if (!uriStreamController.hasListener) {
+      throw TimeoutException('DeepLinkBloc never subscribed to uriLinkStream');
+    }
+  }
 
   group('DeepLinkBloc', () {
     test('initial state is DeepLinkInitial', () {
@@ -194,8 +207,7 @@ void main() {
           DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
       act: (bloc) async {
         bloc.add(const DeepLinkStarted());
-        // Wait for bloc to subscribe
-        await Future.delayed(const Duration(milliseconds: 100));
+        await waitForListener();
         uriStreamController.add(
           Uri.parse('https://spendos.app/join?token=stream'),
         );
@@ -226,8 +238,7 @@ void main() {
           DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
       act: (bloc) async {
         bloc.add(const DeepLinkStarted());
-        // Wait for bloc to subscribe
-        await Future.delayed(const Duration(milliseconds: 100));
+        await waitForListener();
         uriStreamController.add(Uri.parse('spendos://join?token=custom'));
       },
       wait: const Duration(milliseconds: 500),

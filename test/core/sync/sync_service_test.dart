@@ -1,20 +1,21 @@
 import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
-import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
+import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class MockOutboxRepository extends Mock implements OutboxRepository {}
-
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
-class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
+class MockRealtimeChannel extends Mock implements RealtimeChannel {}
+
+class MockOutboxRepository extends Mock implements OutboxRepository {}
 
 class MockConnectivity extends Mock implements Connectivity {}
 
@@ -22,48 +23,41 @@ class MockGroupBox extends Mock implements Box<GroupModel> {}
 
 class MockGroupMemberBox extends Mock implements Box<GroupMemberModel> {}
 
-class MockRealtimeChannel extends Mock implements RealtimeChannel {}
+class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
-class FakePostgrestFilterBuilder extends Fake
-    implements PostgrestFilterBuilder {
-  final Object? error;
-  FakePostgrestFilterBuilder({this.error});
+// Typed mocks for Supabase chain
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {}
 
-  @override
-  PostgrestFilterBuilder eq(String column, Object value) => this;
+// Fake that can be awaited to return Map<String, dynamic>
+class FakePostgrestTransformBuilder extends Fake
+    implements PostgrestTransformBuilder<Map<String, dynamic>> {
+  final Map<String, dynamic> result;
+
+  FakePostgrestTransformBuilder(this.result);
 
   @override
   Future<S> then<S>(
-    FutureOr<S> Function(dynamic) onValue, {
+    FutureOr<S> Function(Map<String, dynamic>) onValue, {
     Function? onError,
   }) {
-    if (error != null) {
-      return Future.error(
-        error!,
-        StackTrace.current,
-      ).then((_) => onValue(null), onError: onError);
-    }
-    return Future.value([]).then((val) => onValue(val));
+    return Future.value(result).then(onValue, onError: onError);
   }
 }
 
-class FakePostgrestTransformBuilder extends Fake
-    implements PostgrestTransformBuilder {
-  final Object? error;
-  FakePostgrestTransformBuilder({this.error});
-
+class FakePostgrestFilterBuilder extends Fake
+    implements PostgrestFilterBuilder<dynamic> {
   @override
   Future<S> then<S>(
     FutureOr<S> Function(dynamic) onValue, {
     Function? onError,
   }) {
-    if (error != null) {
-      return Future.error(
-        error!,
-        StackTrace.current,
-      ).then((_) => onValue(null), onError: onError);
-    }
-    return Future.value([]).then((val) => onValue(val));
+    return Future.value([]).then(onValue, onError: onError);
+  }
+
+  @override
+  PostgrestFilterBuilder<dynamic> eq(String column, Object value) {
+    return this;
   }
 }
 
@@ -77,6 +71,7 @@ void main() {
   late MockGroupMemberBox mockGroupMemberBox;
   late StreamController<List<ConnectivityResult>> connectivityController;
   late MockRealtimeChannel mockChannel;
+  late MockPostgrestFilterBuilder mockFilterBuilder;
 
   void Function(PostgresChangePayload)? groupCallback;
   void Function(PostgresChangePayload)? memberCallback;
@@ -114,12 +109,16 @@ void main() {
     );
     registerFallbackValue(PostgresChangeEvent.all);
     registerFallbackValue(MockRealtimeChannel());
+
+    // Register fallbacks for Supabase types if needed
+    registerFallbackValue(MockPostgrestFilterBuilder());
   });
 
   setUp(() {
     mockOutboxRepository = MockOutboxRepository();
     mockSupabaseClient = MockSupabaseClient();
     mockQueryBuilder = MockSupabaseQueryBuilder();
+    mockFilterBuilder = MockPostgrestFilterBuilder();
     mockConnectivity = MockConnectivity();
     mockGroupBox = MockGroupBox();
     mockGroupMemberBox = MockGroupMemberBox();
@@ -161,6 +160,9 @@ void main() {
       () => mockOutboxRepository.markAsFailed(any(), any()),
     ).thenAnswer((_) async {});
     when(() => mockOutboxRepository.markAsSent(any())).thenAnswer((_) async {});
+
+    // Default mock behavior for containsKey
+    when(() => mockGroupBox.containsKey(any())).thenReturn(true);
 
     syncService = SyncService(
       mockSupabaseClient,
@@ -237,6 +239,7 @@ void main() {
         return [];
       });
 
+      // Use thenAnswer for all builders
       when(
         () => mockSupabaseClient.from(any()),
       ).thenAnswer((_) => mockQueryBuilder);
@@ -342,6 +345,7 @@ void main() {
       final now = DateTime.now();
       when(() => mockGroupMemberBox.get(any())).thenReturn(null);
       when(() => mockGroupMemberBox.put(any(), any())).thenAnswer((_) async {});
+      when(() => mockGroupBox.containsKey('g1')).thenReturn(true);
 
       final payload = PostgresChangePayload(
         commitTimestamp: now,
@@ -362,6 +366,74 @@ void main() {
 
       memberCallback!(payload);
       verify(() => mockGroupMemberBox.put('m1', any())).called(1);
+      // containsKey called to check if group needs fetching
+      verify(() => mockGroupBox.containsKey('g1')).called(1);
+    });
+
+    test('group_members realtime - inserts missing group', () async {
+      await syncService.initializeRealtime();
+      expect(memberCallback, isNotNull);
+
+      final now = DateTime.now();
+      when(() => mockGroupMemberBox.get(any())).thenReturn(null);
+      when(() => mockGroupMemberBox.put(any(), any())).thenAnswer((_) async {});
+
+      // Simulate group missing locally
+      when(() => mockGroupBox.containsKey('g1')).thenReturn(false);
+
+      // Mock fetching group from Supabase
+      // Use thenAnswer for Future-implementing builders
+      when(
+        () => mockSupabaseClient.from('groups'),
+      ).thenAnswer((_) => mockQueryBuilder);
+      when(
+        () => mockQueryBuilder.select(),
+      ).thenAnswer((_) => mockFilterBuilder);
+      when(
+        () => mockFilterBuilder.eq('id', 'g1'),
+      ).thenAnswer((_) => mockFilterBuilder);
+
+      // Use thenAnswer with synchronous closure returning Future-like Fake
+      when(() => mockFilterBuilder.single()).thenAnswer(
+        (_) => FakePostgrestTransformBuilder({
+          'id': 'g1',
+          'name': 'G1',
+          'type': 'trip',
+          'currency': 'USD',
+          'created_by': 'u1',
+          'created_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        }),
+      );
+
+      when(() => mockGroupBox.put('g1', any())).thenAnswer((_) async {});
+
+      final payload = PostgresChangePayload(
+        commitTimestamp: now,
+        eventType: PostgresChangeEvent.insert,
+        newRecord: {
+          'id': 'm1',
+          'group_id': 'g1',
+          'user_id': 'u1',
+          'role': 'admin',
+          'joined_at': now.toIso8601String(),
+          'updated_at': now.toIso8601String(),
+        },
+        oldRecord: {},
+        table: 'group_members',
+        schema: 'public',
+        errors: [],
+      );
+
+      memberCallback!(payload);
+
+      // Wait for async fetch
+      await Future.delayed(const Duration(milliseconds: 10));
+
+      verify(() => mockGroupMemberBox.put('m1', any())).called(1);
+      verify(() => mockGroupBox.containsKey('g1')).called(1);
+      verify(() => mockSupabaseClient.from('groups')).called(1);
+      verify(() => mockGroupBox.put('g1', any())).called(1);
     });
 
     test('group_members realtime - delete', () async {
