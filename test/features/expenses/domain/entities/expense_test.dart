@@ -10,8 +10,20 @@ void main() {
   group('Expense', () {
     final tDate = DateTime(2023, 10, 27);
     const tPayer = ExpensePayer(userId: 'user1', amountPaid: 100.00);
-    const tSplit = ExpenseSplit(userId: 'user1', shareType: SplitType.equal, shareValue: 1, computedAmount: 100.00);
-    const tCategory = Category(id: 'cat1', name: 'Food', iconName: 'food', colorHex: '0xFFFFFF', type: CategoryType.expense, isCustom: false);
+    const tSplit = ExpenseSplit(
+      userId: 'user1',
+      shareType: SplitType.equal,
+      shareValue: 1,
+      computedAmount: 100.00,
+    );
+    const tCategory = Category(
+      id: 'cat1',
+      name: 'Food',
+      iconName: 'food',
+      colorHex: '0xFFFFFF',
+      type: CategoryType.expense,
+      isCustom: false,
+    );
 
     final tExpense = Expense(
       id: '1',

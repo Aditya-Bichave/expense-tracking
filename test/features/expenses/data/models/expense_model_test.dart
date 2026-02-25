@@ -12,7 +12,12 @@ void main() {
   group('ExpenseModel', () {
     final tDate = DateTime(2023, 10, 27, 12, 0, 0);
     const tPayer = ExpensePayer(userId: 'user1', amountPaid: 100.00);
-    const tSplit = ExpenseSplit(userId: 'user1', shareType: SplitType.equal, shareValue: 1, computedAmount: 100.00);
+    const tSplit = ExpenseSplit(
+      userId: 'user1',
+      shareType: SplitType.equal,
+      shareValue: 1,
+      computedAmount: 100.00,
+    );
 
     final tExpenseModel = ExpenseModel(
       id: '123',
@@ -43,7 +48,14 @@ void main() {
       // Wait, fromEntity takes Expense (Entity). Does Entity contain Category?
       // Yes. ExpenseModel.fromEntity reads entity.category?.id.
       // So here we pass an entity WITH category.
-      category: const Category(id: 'cat1', name: 'Food', iconName: 'food', colorHex: '0xFFFFFF', type: CategoryType.expense, isCustom: false),
+      category: const Category(
+        id: 'cat1',
+        name: 'Food',
+        iconName: 'food',
+        colorHex: '0xFFFFFF',
+        type: CategoryType.expense,
+        isCustom: false,
+      ),
       status: CategorizationStatus.categorized,
       confidenceScore: 0.9,
       isRecurring: true,
@@ -89,7 +101,10 @@ void main() {
       expect(result.date, tExpenseModel.date);
       expect(result.accountId, tExpenseModel.accountId);
       expect(result.categoryId, tExpenseModel.categoryId);
-      expect(result.categorizationStatusValue, tExpenseModel.categorizationStatusValue);
+      expect(
+        result.categorizationStatusValue,
+        tExpenseModel.categorizationStatusValue,
+      );
       expect(result.confidenceScoreValue, tExpenseModel.confidenceScoreValue);
       expect(result.isRecurring, tExpenseModel.isRecurring);
       expect(result.merchantId, tExpenseModel.merchantId);
