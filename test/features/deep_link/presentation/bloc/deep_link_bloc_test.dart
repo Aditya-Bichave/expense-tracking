@@ -28,6 +28,8 @@ void main() {
   late MockAuthRepository mockAuthRepository;
   late MockUser mockUser;
   late MockAuthResponse mockAuthResponse;
+  // Use StreamControllers to control event timing in tests
+  late StreamController<Uri> uriStreamController;
 
   setUp(() {
     mockAppLinks = MockAppLinks();
@@ -35,16 +37,18 @@ void main() {
     mockAuthRepository = MockAuthRepository();
     mockUser = MockUser();
     mockAuthResponse = MockAuthResponse();
+    uriStreamController = StreamController<Uri>();
 
     when(
       () => mockAppLinks.uriLinkStream,
-    ).thenAnswer((_) => const Stream.empty());
+    ).thenAnswer((_) => uriStreamController.stream);
     when(() => mockAppLinks.getInitialLink()).thenAnswer((_) async => null);
 
     bloc = DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository);
   });
 
   tearDown(() {
+    uriStreamController.close();
     bloc.close();
   });
 
@@ -175,11 +179,6 @@ void main() {
     blocTest<DeepLinkBloc, DeepLinkState>(
       'emits success when link received from stream',
       setUp: () {
-        when(() => mockAppLinks.uriLinkStream).thenAnswer(
-          (_) => Stream.fromIterable([
-            Uri.parse('https://spendos.app/join?token=stream'),
-          ]),
-        );
         when(
           () => mockAuthRepository.getCurrentUser(),
         ).thenReturn(Right(mockUser));
@@ -193,7 +192,14 @@ void main() {
       },
       build: () =>
           DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
-      act: (bloc) => bloc.add(const DeepLinkStarted()),
+      act: (bloc) async {
+        bloc.add(const DeepLinkStarted());
+        // Wait for bloc to subscribe
+        await Future.delayed(Duration.zero);
+        uriStreamController.add(
+          Uri.parse('https://spendos.app/join?token=stream'),
+        );
+      },
       expect: () => [
         DeepLinkProcessing(),
         const DeepLinkSuccess(groupId: '456', groupName: 'Stream Group'),
@@ -204,10 +210,6 @@ void main() {
     blocTest<DeepLinkBloc, DeepLinkState>(
       'emits success when custom scheme link received',
       setUp: () {
-        when(() => mockAppLinks.uriLinkStream).thenAnswer(
-          (_) =>
-              Stream.fromIterable([Uri.parse('spendos://join?token=custom')]),
-        );
         when(
           () => mockAuthRepository.getCurrentUser(),
         ).thenReturn(Right(mockUser));
@@ -221,7 +223,12 @@ void main() {
       },
       build: () =>
           DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
-      act: (bloc) => bloc.add(const DeepLinkStarted()),
+      act: (bloc) async {
+        bloc.add(const DeepLinkStarted());
+        // Wait for bloc to subscribe
+        await Future.delayed(Duration.zero);
+        uriStreamController.add(Uri.parse('spendos://join?token=custom'));
+      },
       expect: () => [
         DeepLinkProcessing(),
         const DeepLinkSuccess(groupId: '789', groupName: 'Custom Group'),

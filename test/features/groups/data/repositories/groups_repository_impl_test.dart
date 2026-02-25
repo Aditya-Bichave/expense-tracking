@@ -234,18 +234,14 @@ void main() {
       when(
         () => mockLocalDataSource.saveGroups(any()),
       ).thenAnswer((_) async {});
-      when(
-        () => mockLocalDataSource.getGroups(),
-      ).thenReturn([tGroupModel]);
+      when(() => mockLocalDataSource.getGroups()).thenReturn([tGroupModel]);
       when(
         () => mockRemoteDataSource.getGroupMembers(any()),
       ).thenAnswer((_) async => []);
       when(
         () => mockLocalDataSource.saveGroupMembers(any()),
       ).thenAnswer((_) async {});
-      when(
-        () => mockLocalDataSource.getGroupMembers(any()),
-      ).thenReturn([]);
+      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
 
       // Act
       final result = await repository.syncGroups();
@@ -356,28 +352,29 @@ void main() {
   });
 
   group('updateMemberRole', () {
-    test('should call remoteDataSource.updateMemberRole and refresh members', () async {
-      when(
-        () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockRemoteDataSource.getGroupMembers(any()),
-      ).thenAnswer((_) async => []);
-      when(
-        () => mockLocalDataSource.saveGroupMembers(any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockLocalDataSource.getGroupMembers(any()),
-      ).thenReturn([]);
+    test(
+      'should call remoteDataSource.updateMemberRole and refresh members',
+      () async {
+        when(
+          () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRemoteDataSource.getGroupMembers(any()),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockLocalDataSource.saveGroupMembers(any()),
+        ).thenAnswer((_) async {});
+        when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
 
-      final result = await repository.updateMemberRole('1', 'u1', 'admin');
+        final result = await repository.updateMemberRole('1', 'u1', 'admin');
 
-      expect(result.isRight(), true);
-      verify(
-        () => mockRemoteDataSource.updateMemberRole('1', 'u1', 'admin'),
-      ).called(1);
-      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
-    });
+        expect(result.isRight(), true);
+        verify(
+          () => mockRemoteDataSource.updateMemberRole('1', 'u1', 'admin'),
+        ).called(1);
+        verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
+      },
+    );
 
     test('should return ServerFailure on exception', () async {
       when(
@@ -402,9 +399,7 @@ void main() {
       when(
         () => mockLocalDataSource.saveGroupMembers(any()),
       ).thenAnswer((_) async {});
-      when(
-        () => mockLocalDataSource.getGroupMembers(any()),
-      ).thenReturn([]);
+      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
 
       final result = await repository.removeMember('1', 'u1');
 
