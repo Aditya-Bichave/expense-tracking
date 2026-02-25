@@ -98,4 +98,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Error: Test Error'), findsOneWidget);
   });
+
+  testWidgets('renders loaded report data with sliver list', (tester) async {
+    final reportData = SpendingTimeReportData(
+      granularity: TimeSeriesGranularity.daily,
+      spendingData: [
+        TimeSeriesDataPoint(
+          date: DateTime(2023, 5, 1),
+          amount: const ComparisonValue(
+            currentValue: 100.0,
+            previousValue: 80.0,
+          ),
+        ),
+        TimeSeriesDataPoint(
+          date: DateTime(2023, 5, 2),
+          amount: const ComparisonValue(
+            currentValue: 150.0,
+            previousValue: 120.0,
+          ),
+        ),
+      ],
+    );
+
+    when(
+      () => mockSpendingBloc.state,
+    ).thenReturn(SpendingTimeReportLoaded(reportData, showComparison: false));
+
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+
+    // Check if CustomScrollView is present
+    expect(find.byType(CustomScrollView), findsOneWidget);
+
+    // Check if list items are rendered (implying SliverList is working)
+    expect(find.byType(ListTile), findsNWidgets(2));
+
+    // Verify specific data rendering if possible (dates/amounts might be formatted)
+    // We can just check that we have list tiles
+  });
 }

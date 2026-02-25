@@ -77,18 +77,19 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
 
     // OPTIMIZATION: Use CustomScrollView with Slivers to enable lazy loading for account list.
     // Replaces the previous nested ListView structure that required shrinkWrap: true.
-    final pagePadding = modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
+    final pagePadding =
+        modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
         const EdgeInsets.only(top: 8.0, bottom: 80.0);
 
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
           context.read<AccountListBloc>().add(
-                const LoadAccounts(forceReload: true),
-              );
+            const LoadAccounts(forceReload: true),
+          );
           await context.read<AccountListBloc>().stream.firstWhere(
-                (state) => state is! AccountListLoading || !state.isReloading,
-              );
+            (state) => state is! AccountListLoading || !state.isReloading,
+          );
         },
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -110,14 +111,13 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                           cornerRadius: 20.0,
                           activeBgColors: [
                             assetGradientList,
-                            liabilityGradientList
+                            liabilityGradientList,
                           ],
                           activeBgColor:
                               null, // Must be null when using activeBgColors
-                          activeFgColor:
-                              _selectedView == AccountViewType.assets
-                                  ? theme.colorScheme.onPrimaryContainer
-                                  : theme.colorScheme.onErrorContainer,
+                          activeFgColor: _selectedView == AccountViewType.assets
+                              ? theme.colorScheme.onPrimaryContainer
+                              : theme.colorScheme.onErrorContainer,
                           inactiveBgColor:
                               theme.colorScheme.surfaceContainerHighest,
                           inactiveFgColor: theme.colorScheme.onSurfaceVariant,
@@ -214,13 +214,12 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         }
         if (state is AccountListLoaded ||
             (state is AccountListLoading && state.isReloading)) {
-          final accounts =
-              (state is AccountListLoaded)
-                  ? state.items
-                  : (context.read<AccountListBloc>().state is AccountListLoaded)
-                  ? (context.read<AccountListBloc>().state as AccountListLoaded)
-                      .items
-                  : <AssetAccount>[];
+          final accounts = (state is AccountListLoaded)
+              ? state.items
+              : (context.read<AccountListBloc>().state is AccountListLoaded)
+              ? (context.read<AccountListBloc>().state as AccountListLoaded)
+                    .items
+              : <AssetAccount>[];
           final double totalAssets = accounts.fold(
             0.0,
             (sum, acc) => sum + acc.currentBalance,
@@ -240,10 +239,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Total Assets:',
-                        style: theme.textTheme.titleMedium,
-                      ),
+                      Text('Total Assets:', style: theme.textTheme.titleMedium),
                       Text(
                         CurrencyFormatter.format(totalAssets, currencySymbol),
                         style: theme.textTheme.titleLarge?.copyWith(

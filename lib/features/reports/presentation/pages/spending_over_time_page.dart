@@ -36,25 +36,24 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     setState(() => _showComparison = newComparisonState);
     // Get current granularity from state
     final currentGranularity =
-        context.read<SpendingTimeReportBloc>().state
-                is SpendingTimeReportLoaded
-            ? (context.read<SpendingTimeReportBloc>().state
-                    as SpendingTimeReportLoaded)
-                .reportData
-                .granularity
-            : (context.read<SpendingTimeReportBloc>().state
-                    is SpendingTimeReportLoading)
-                ? (context.read<SpendingTimeReportBloc>().state
-                        as SpendingTimeReportLoading)
-                    .granularity
-                : TimeSeriesGranularity.daily; // Default
+        context.read<SpendingTimeReportBloc>().state is SpendingTimeReportLoaded
+        ? (context.read<SpendingTimeReportBloc>().state
+                  as SpendingTimeReportLoaded)
+              .reportData
+              .granularity
+        : (context.read<SpendingTimeReportBloc>().state
+              is SpendingTimeReportLoading)
+        ? (context.read<SpendingTimeReportBloc>().state
+                  as SpendingTimeReportLoading)
+              .granularity
+        : TimeSeriesGranularity.daily; // Default
 
     context.read<SpendingTimeReportBloc>().add(
-          LoadSpendingTimeReport(
-            compareToPrevious: newComparisonState, // Pass new comparison state
-            granularity: currentGranularity,
-          ),
-        );
+      LoadSpendingTimeReport(
+        compareToPrevious: newComparisonState, // Pass new comparison state
+        granularity: currentGranularity,
+      ),
+    );
     log.info(
       "[SpendingOverTimePage] Toggled comparison to: $newComparisonState",
     );
@@ -131,46 +130,40 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                 ? Icons.compare_arrows_rounded
                 : Icons.compare_arrows_outlined,
           ),
-          tooltip:
-              _showComparison
-                  ? AppLocalizations.of(context)!.hideComparison
-                  : AppLocalizations.of(context)!.comparePeriod,
+          tooltip: _showComparison
+              ? AppLocalizations.of(context)!.hideComparison
+              : AppLocalizations.of(context)!.comparePeriod,
           color: _showComparison ? theme.colorScheme.primary : null,
           onPressed: _toggleComparison,
         ),
         BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
           builder: (context, state) {
-            final currentGranularity =
-                (state is SpendingTimeReportLoaded)
-                    ? state.reportData.granularity
-                    : (state is SpendingTimeReportLoading)
-                    ? state.granularity
-                    : TimeSeriesGranularity.daily;
+            final currentGranularity = (state is SpendingTimeReportLoaded)
+                ? state.reportData.granularity
+                : (state is SpendingTimeReportLoading)
+                ? state.granularity
+                : TimeSeriesGranularity.daily;
             return PopupMenuButton<TimeSeriesGranularity>(
               initialValue: currentGranularity,
               onSelected: (g) {
                 // When granularity changes, also pass current comparison state
                 context.read<SpendingTimeReportBloc>().add(
-                      LoadSpendingTimeReport(
-                        granularity: g,
-                        compareToPrevious: _showComparison,
-                      ),
-                    );
+                  LoadSpendingTimeReport(
+                    granularity: g,
+                    compareToPrevious: _showComparison,
+                  ),
+                );
               },
               icon: const Icon(Icons.timeline_outlined),
               tooltip: AppLocalizations.of(context)!.changeGranularity,
-              itemBuilder:
-                  (_) =>
-                      TimeSeriesGranularity.values
-                          .map(
-                            (g) => PopupMenuItem<TimeSeriesGranularity>(
-                              value: g,
-                              child: Text(
-                                toBeginningOfSentenceCase(g.name) ?? g.name,
-                              ),
-                            ),
-                          )
-                          .toList(),
+              itemBuilder: (_) => TimeSeriesGranularity.values
+                  .map(
+                    (g) => PopupMenuItem<TimeSeriesGranularity>(
+                      value: g,
+                      child: Text(toBeginningOfSentenceCase(g.name) ?? g.name),
+                    ),
+                  )
+                  .toList(),
             );
           },
         ),
@@ -214,12 +207,11 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               data: reportData.spendingData,
               granularity: reportData.granularity,
               showComparison: _showComparison,
-              onTapSpot:
-                  (index) => _navigateToFilteredTransactions(
-                    context,
-                    reportData.spendingData[index],
-                    reportData.granularity,
-                  ),
+              onTapSpot: (index) => _navigateToFilteredTransactions(
+                context,
+                reportData.spendingData[index],
+                reportData.granularity,
+              ),
             );
 
             final bool showTable =
@@ -298,17 +290,15 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
           if (changePercent.isInfinite) {
             changeText = changePercent.isNegative ? '-∞' : '+∞';
             // Spending increase is bad (red)
-            changeColor =
-                changePercent.isNegative
-                    ? Colors.green.shade700
-                    : theme.colorScheme.error;
+            changeColor = changePercent.isNegative
+                ? Colors.green.shade700
+                : theme.colorScheme.error;
           } else if (!changePercent.isNaN) {
             changeText =
                 '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
-            changeColor =
-                changePercent > 0
-                    ? theme.colorScheme.error
-                    : Colors.green.shade700;
+            changeColor = changePercent > 0
+                ? theme.colorScheme.error
+                : Colors.green.shade700;
           }
         }
 
@@ -332,12 +322,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               ),
             ],
           ),
-          onTap:
-              () => _navigateToFilteredTransactions(
-                context,
-                item,
-                data.granularity,
-              ),
+          onTap: () =>
+              _navigateToFilteredTransactions(context, item, data.granularity),
         );
       },
       separatorBuilder: (_, __) => const Divider(height: 0.5),
@@ -373,71 +359,63 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         dataRowMinHeight: 36,
         dataRowMaxHeight: 42,
         columns: columns,
-        rows:
-            data.spendingData.map((item) {
-              double? changePercent = item.amount.percentageChange;
-              Color changeColor = theme.disabledColor;
-              String changeText = "N/A";
+        rows: data.spendingData.map((item) {
+          double? changePercent = item.amount.percentageChange;
+          Color changeColor = theme.disabledColor;
+          String changeText = "N/A";
 
-              if (showComparison && changePercent != null) {
-                if (changePercent.isInfinite) {
-                  changeText = changePercent.isNegative ? '-∞' : '+∞';
-                  changeColor =
-                      changePercent.isNegative
-                          ? Colors.green.shade700
-                          : theme.colorScheme.error;
-                } else if (!changePercent.isNaN) {
-                  changeText =
-                      '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
-                  changeColor =
-                      changePercent > 0
-                          ? theme.colorScheme.error
-                          : Colors.green.shade700;
-                }
+          if (showComparison && changePercent != null) {
+            if (changePercent.isInfinite) {
+              changeText = changePercent.isNegative ? '-∞' : '+∞';
+              changeColor = changePercent.isNegative
+                  ? Colors.green.shade700
+                  : theme.colorScheme.error;
+            } else if (!changePercent.isNaN) {
+              changeText =
+                  '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
+              changeColor = changePercent > 0
+                  ? theme.colorScheme.error
+                  : Colors.green.shade700;
+            }
+          }
+
+          return DataRow(
+            cells: [
+              DataCell(Text(_formatDateHeader(item.date, data.granularity))),
+              DataCell(
+                Text(
+                  CurrencyFormatter.format(item.currentAmount, currencySymbol),
+                ),
+              ),
+              // Conditionally add comparison cells
+              if (showComparison)
+                DataCell(
+                  Text(
+                    item.amount.previousValue != null
+                        ? CurrencyFormatter.format(
+                            item.amount.previousValue!,
+                            currencySymbol,
+                          )
+                        : 'N/A',
+                  ),
+                ),
+              if (showComparison)
+                DataCell(
+                  Text(changeText, style: TextStyle(color: changeColor)),
+                ),
+            ],
+            onSelectChanged: (selected) {
+              if (selected == true) {
+                SystemSound.play(SystemSoundType.click);
+                _navigateToFilteredTransactions(
+                  context,
+                  item,
+                  data.granularity,
+                );
               }
-
-              return DataRow(
-                cells: [
-                  DataCell(
-                    Text(_formatDateHeader(item.date, data.granularity)),
-                  ),
-                  DataCell(
-                    Text(
-                      CurrencyFormatter.format(
-                        item.currentAmount,
-                        currencySymbol,
-                      ),
-                    ),
-                  ),
-                  // Conditionally add comparison cells
-                  if (showComparison)
-                    DataCell(
-                      Text(
-                        item.amount.previousValue != null
-                            ? CurrencyFormatter.format(
-                              item.amount.previousValue!,
-                              currencySymbol,
-                            )
-                            : 'N/A',
-                      ),
-                    ),
-                  if (showComparison)
-                    DataCell(
-                      Text(changeText, style: TextStyle(color: changeColor)),
-                    ),
-                ],
-                onSelectChanged: (selected) {
-                  if (selected == true) {
-                    SystemSound.play(SystemSoundType.click);
-                    _navigateToFilteredTransactions(
-                      context,
-                      item,
-                      data.granularity,
-                    );
-                  }
-                },
-              );
-            }).toList(),
+            },
+          );
+        }).toList(),
       ),
     );
   }
