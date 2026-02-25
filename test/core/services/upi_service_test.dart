@@ -33,6 +33,18 @@ class MockFailingUrlLauncher extends Fake
   }
 }
 
+class MockThrowingUrlLauncher extends Fake
+    with MockPlatformInterfaceMixin
+    implements UrlLauncherPlatform {
+  @override
+  Future<bool> canLaunch(String url) async => true;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    throw Exception('Launch failed');
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late MockUrlLauncher mockLauncher;
@@ -73,14 +85,16 @@ void main() {
     expect(launchedUri.queryParameters['am'], '100.50');
     expect(launchedUri.queryParameters['cu'], 'INR');
     expect(launchedUri.queryParameters['tn'], 'Test Note');
-    // Using simple int comparison or type check if enum usage is complex
+    // Verify external application mode
     expect(
       mockLauncher.launchOptions?.mode,
       PreferredLaunchMode.externalApplication,
     );
   });
 
-  testWidgets('UpiService shows snackbar when launch fails', (tester) async {
+  testWidgets('UpiService shows snackbar when launch fails (returns false)', (
+    tester,
+  ) async {
     // Override to return false
     UrlLauncherPlatform.instance = MockFailingUrlLauncher();
 
@@ -114,5 +128,37 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('UPI ID copied to clipboard'), findsOneWidget);
+  });
+
+  testWidgets('UpiService shows snackbar when launch throws exception', (
+    tester,
+  ) async {
+    // Override to throw exception
+    UrlLauncherPlatform.instance = MockThrowingUrlLauncher();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => UpiService.launchUpiPayment(
+                context: context,
+                upiId: 'test@upi',
+                payeeName: 'Test Payee',
+                amount: 100.50,
+                transactionNote: 'Test Note',
+              ),
+              child: const Text('Pay'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Pay'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text('No UPI app found. VPA: test@upi'), findsOneWidget);
   });
 }

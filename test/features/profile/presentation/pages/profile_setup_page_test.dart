@@ -45,7 +45,6 @@ void main() {
   testWidgets('ProfileSetupPage renders all fields including UPI ID', (
     tester,
   ) async {
-    // Start with loading, then emit loaded to trigger listener
     whenListen(
       mockProfileBloc,
       Stream.fromIterable([
@@ -74,9 +73,16 @@ void main() {
     expect(find.text('UPI ID (VPA)'), findsOneWidget);
     expect(find.text('Currency'), findsOneWidget);
 
-    // Verify initial values exist in the widget tree
-    expect(find.text('Test User'), findsOneWidget);
-    expect(find.text('test@upi'), findsOneWidget);
+    // Verify initial values in Controllers by accessing the TextField widgets
+    final nameField = tester.widget<TextField>(
+      find.widgetWithText(TextField, 'Full Name'),
+    );
+    expect(nameField.controller?.text, 'Test User');
+
+    final upiField = tester.widget<TextField>(
+      find.widgetWithText(TextField, 'UPI ID (VPA)'),
+    );
+    expect(upiField.controller?.text, 'test@upi');
   });
 
   testWidgets(
@@ -127,4 +133,28 @@ void main() {
       verify(() => mockSessionCubit.profileSetupCompleted()).called(1);
     },
   );
+
+  testWidgets('Validates required name field', (tester) async {
+    final initialProfile = const UserProfile(
+      id: '1',
+      fullName: null,
+      email: 'test@test.com',
+      currency: 'USD',
+      timezone: 'UTC',
+    );
+
+    when(() => mockProfileBloc.state).thenReturn(ProfileLoaded(initialProfile));
+
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+
+    // Tap Complete without entering name
+    await tester.tap(find.text('Complete Setup'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Name is required'), findsOneWidget);
+
+    // Verify UpdateProfile was NOT called. FetchProfile IS called in initState.
+    verifyNever(() => mockProfileBloc.add(any(that: isA<UpdateProfile>())));
+  });
 }
