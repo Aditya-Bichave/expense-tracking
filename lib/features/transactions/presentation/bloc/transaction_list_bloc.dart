@@ -23,6 +23,7 @@ import 'package:expense_tracker/features/expenses/domain/repositories/expense_re
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
+import 'package:collection/collection.dart';
 
 part 'transaction_list_event.dart';
 part 'transaction_list_state.dart';
@@ -67,7 +68,9 @@ class TransactionListBloc
     on<DeleteTransaction>(_onDeleteTransaction);
     on<UserCategorizedTransaction>(_onUserCategorizedTransaction);
     on<_DataChanged>(_onDataChanged);
-    on<ResetState>(_onResetState); // Add Reset Handler
+    on<ResetState>(_onResetState);
+    on<FetchTransactionById>(_onFetchTransactionById);
+    on<ClearSelectedTransaction>(_onClearSelectedTransaction);
 
     // Subscribe to Data Change Stream
     _dataChangeSubscription = dataChangeStream.listen(
@@ -108,6 +111,92 @@ class TransactionListBloc
     emit(const TransactionListState()); // Emit the initial state
     // Optionally, trigger an initial load after resetting
     // add(const LoadTransactions());
+  }
+
+  Future<void> _onFetchTransactionById(
+    FetchTransactionById event,
+    Emitter<TransactionListState> emit,
+  ) async {
+    log.info(
+      "[TransactionListBloc] Fetching transaction by ID: ${event.transactionId}",
+    );
+
+    // Check if already in list
+    final existing = state.transactions.firstWhereOrNull(
+      (t) => t.id == event.transactionId,
+    );
+    if (existing != null) {
+      log.info(
+        "[TransactionListBloc] Found transaction ${event.transactionId} in current list.",
+      );
+      emit(state.copyWith(selectedTransaction: existing));
+      return;
+    }
+
+    // Not in list, fetch from Repos
+    // Try Expense first
+    log.info(
+      "[TransactionListBloc] Checking Expense Repository for ${event.transactionId}",
+    );
+    final expenseResult = await _expenseRepository.getExpenseById(
+      event.transactionId,
+    );
+    TransactionEntity? foundTransaction;
+
+    expenseResult.fold(
+      (failure) => log.warning(
+        "[TransactionListBloc] Expense fetch failed: ${failure.message}",
+      ),
+      (expense) {
+        if (expense != null) {
+          foundTransaction = TransactionEntity.fromExpense(expense);
+        }
+      },
+    );
+
+    if (foundTransaction != null) {
+      log.info("[TransactionListBloc] Found Expense.");
+      emit(state.copyWith(selectedTransaction: foundTransaction));
+      return;
+    }
+
+    // Try Income
+    log.info(
+      "[TransactionListBloc] Checking Income Repository for ${event.transactionId}",
+    );
+    final incomeResult = await _incomeRepository.getIncomeById(
+      event.transactionId,
+    );
+
+    incomeResult.fold(
+      (failure) => log.warning(
+        "[TransactionListBloc] Income fetch failed: ${failure.message}",
+      ),
+      (income) {
+        if (income != null) {
+          foundTransaction = TransactionEntity.fromIncome(income);
+        }
+      },
+    );
+
+    if (foundTransaction != null) {
+      log.info("[TransactionListBloc] Found Income.");
+      emit(state.copyWith(selectedTransaction: foundTransaction));
+      return;
+    }
+
+    log.warning(
+      "[TransactionListBloc] Transaction ID ${event.transactionId} not found in repositories.",
+    );
+    emit(state.copyWith(errorMessage: "Transaction not found"));
+  }
+
+  void _onClearSelectedTransaction(
+    ClearSelectedTransaction event,
+    Emitter<TransactionListState> emit,
+  ) {
+    log.info("[TransactionListBloc] Clearing selected transaction.");
+    emit(state.copyWith(clearSelectedTransaction: true));
   }
   // --- End Reset Handler ---
 

@@ -54,6 +54,7 @@ import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:expense_tracker/core/utils/app_initializer.dart';
 
 Future<void> _runMigrations(int fromVersion) async {
   log.info(
@@ -96,111 +97,28 @@ Future<void> main(List<String> args) async {
     final secureStorageService = SecureStorageService(secureStorage);
     final hiveKey = await secureStorageService.getHiveKey();
 
-    Hive.registerAdapter(ProfileModelAdapter());
-    Hive.registerAdapter(ExpenseModelAdapter());
-    Hive.registerAdapter(AssetAccountModelAdapter());
-    Hive.registerAdapter(IncomeModelAdapter());
-    Hive.registerAdapter(CategoryModelAdapter());
-    Hive.registerAdapter(UserHistoryRuleModelAdapter());
-    Hive.registerAdapter(BudgetModelAdapter());
-    Hive.registerAdapter(GoalModelAdapter());
-    Hive.registerAdapter(GoalContributionModelAdapter());
-    Hive.registerAdapter(RecurringRuleModelAdapter());
-    Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
+    final boxes = await AppInitializer.initHiveBoxes(hiveKey);
 
-    Hive.registerAdapter(SyncMutationModelAdapter());
-    Hive.registerAdapter(SyncStatusAdapter());
-    Hive.registerAdapter(OpTypeAdapter());
-
-    Hive.registerAdapter(GroupModelAdapter());
-    Hive.registerAdapter(GroupMemberModelAdapter());
-    Hive.registerAdapter(GroupExpenseModelAdapter());
-    Hive.registerAdapter(ExpensePayerModelAdapter());
-    Hive.registerAdapter(ExpenseSplitModelAdapter());
-
-    log.info("Opening Hive boxes...");
-    final profileBoxFuture = Hive.openBox<ProfileModel>(
-      'profile_box',
-      encryptionCipher: HiveAesCipher(hiveKey),
-    );
-    final expenseBoxFuture = Hive.openBox<ExpenseModel>(
-      HiveConstants.expenseBoxName,
-    );
-    final accountBoxFuture = Hive.openBox<AssetAccountModel>(
-      HiveConstants.accountBoxName,
-    );
-    final incomeBoxFuture = Hive.openBox<IncomeModel>(
-      HiveConstants.incomeBoxName,
-    );
-    final categoryBoxFuture = Hive.openBox<CategoryModel>(
-      HiveConstants.categoryBoxName,
-    );
-    final userHistoryBoxFuture = Hive.openBox<UserHistoryRuleModel>(
-      HiveConstants.userHistoryRuleBoxName,
-    );
-    final budgetBoxFuture = Hive.openBox<BudgetModel>(
-      HiveConstants.budgetBoxName,
-    );
-    final goalBoxFuture = Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
-    final contributionBoxFuture = Hive.openBox<GoalContributionModel>(
-      HiveConstants.goalContributionBoxName,
-    );
-    final recurringRuleBoxFuture = Hive.openBox<RecurringRuleModel>(
-      HiveConstants.recurringRuleBoxName,
-    );
-    final recurringRuleAuditLogBoxFuture =
-        Hive.openBox<RecurringRuleAuditLogModel>(
-          HiveConstants.recurringRuleAuditLogBoxName,
-        );
-
-    final outboxBoxFuture = Hive.openBox<SyncMutationModel>(
-      HiveConstants.outboxBoxName,
-    );
-    final groupBoxFuture = Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
-    final groupMemberBoxFuture = Hive.openBox<GroupMemberModel>(
-      HiveConstants.groupMemberBoxName,
-    );
-    final groupExpenseBoxFuture = Hive.openBox<GroupExpenseModel>(
-      HiveConstants.groupExpenseBoxName,
-    );
-
-    final profileBox = await profileBoxFuture;
-    final expenseBox = await expenseBoxFuture;
-    final accountBox = await accountBoxFuture;
-    final incomeBox = await incomeBoxFuture;
-    final categoryBox = await categoryBoxFuture;
-    final userHistoryBox = await userHistoryBoxFuture;
-    final budgetBox = await budgetBoxFuture;
-    final goalBox = await goalBoxFuture;
-    final contributionBox = await contributionBoxFuture;
-    final recurringRuleBox = await recurringRuleBoxFuture;
-    final recurringRuleAuditLogBox = await recurringRuleAuditLogBoxFuture;
-    final outboxBox = await outboxBoxFuture;
-    final groupBox = await groupBoxFuture;
-    final groupMemberBox = await groupMemberBoxFuture;
-    final groupExpenseBox = await groupExpenseBoxFuture;
-
-    log.info("All Hive boxes opened.");
     log.info("SharedPreferences instance obtained.");
 
     await initLocator(
       secureStorageService: secureStorageService,
-      profileBox: profileBox,
+      profileBox: boxes.profileBox,
       prefs: prefs,
-      expenseBox: expenseBox,
-      accountBox: accountBox,
-      incomeBox: incomeBox,
-      categoryBox: categoryBox,
-      userHistoryBox: userHistoryBox,
-      budgetBox: budgetBox,
-      goalBox: goalBox,
-      contributionBox: contributionBox,
-      recurringRuleBox: recurringRuleBox,
-      recurringRuleAuditLogBox: recurringRuleAuditLogBox,
-      outboxBox: outboxBox,
-      groupBox: groupBox,
-      groupMemberBox: groupMemberBox,
-      groupExpenseBox: groupExpenseBox,
+      expenseBox: boxes.expenseBox,
+      accountBox: boxes.accountBox,
+      incomeBox: boxes.incomeBox,
+      categoryBox: boxes.categoryBox,
+      userHistoryBox: boxes.userHistoryBox,
+      budgetBox: boxes.budgetBox,
+      goalBox: boxes.goalBox,
+      contributionBox: boxes.contributionBox,
+      recurringRuleBox: boxes.recurringRuleBox,
+      recurringRuleAuditLogBox: boxes.recurringRuleAuditLogBox,
+      outboxBox: boxes.outboxBox,
+      groupBox: boxes.groupBox,
+      groupMemberBox: boxes.groupMemberBox,
+      groupExpenseBox: boxes.groupExpenseBox,
     );
     log.info("Hive, SharedPreferences, and Service Locator initialized.");
   } catch (e, s) {
@@ -277,44 +195,106 @@ class InitializationErrorApp extends StatelessWidget {
   final Object error;
   const InitializationErrorApp({super.key, required this.error});
 
+  Future<void> _resetApp(BuildContext context) async {
+    try {
+      // Clear Secure Storage
+      const secureStorage = FlutterSecureStorage();
+      await secureStorage.deleteAll();
+
+      // Clear Hive Boxes (Delete files)
+      final dir = await getApplicationDocumentsDirectory();
+      final files = dir.listSync();
+      for (var file in files) {
+        if (file.path.endsWith('.hive') || file.path.endsWith('.lock')) {
+          try {
+            file.deleteSync();
+          } catch (_) {}
+        }
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Data reset successfully. Please restart the app manually.",
+            ),
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Reset failed: $e")));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final defaultThemePair = AppTheme.buildTheme(
       SettingsState.defaultUIMode,
       SettingsState.defaultPaletteIdentifier,
     );
+    final isCorruption = error is HiveKeyCorruptionException;
 
     return MaterialApp(
       theme: defaultThemePair.light,
       darkTheme: defaultThemePair.dark,
       themeMode: SettingsState.defaultThemeMode,
       home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, color: Colors.red.shade700, size: 60),
-                const SizedBox(height: 16),
-                Text(
-                  "Application Initialization Failed",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red.shade900,
-                  ),
-                  textAlign: TextAlign.center,
+        body: Builder(
+          builder: (context) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade700,
+                      size: 60,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Application Initialization Failed",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red.shade900,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "A critical error occurred during startup:\n\n${error.toString()}\n\nPlease restart the app. If the problem persists, contact support or check logs.",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    if (isCorruption) ...[
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Your encryption key appears to be corrupted. You can reset the app data to recover, but all local data will be lost.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => _resetApp(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text("Reset App Data"),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  "A critical error occurred during startup:\n\n${error.toString()}\n\nPlease restart the app. If the problem persists, contact support or check logs.",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

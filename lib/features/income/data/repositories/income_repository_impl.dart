@@ -86,6 +86,19 @@ class IncomeRepositoryImpl implements IncomeRepository {
   }
 
   @override
+  Future<Either<Failure, Income?>> getIncomeById(String id) async {
+    try {
+      final model = await localDataSource.getIncomeById(id);
+      if (model == null) return const Right(null);
+      final hydrated = await _hydrateSingleModel(model);
+      return hydrated.map((e) => e);
+    } catch (e) {
+      log.severe("Error getting income by ID $id: $e");
+      return Left(CacheFailure("Error getting income: $e"));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<IncomeModel>>> getIncomes({
     DateTime? startDate,
     DateTime? endDate,

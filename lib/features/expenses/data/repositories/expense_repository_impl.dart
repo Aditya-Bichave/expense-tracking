@@ -90,6 +90,19 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   }
 
   @override
+  Future<Either<Failure, Expense?>> getExpenseById(String id) async {
+    try {
+      final model = await localDataSource.getExpenseById(id);
+      if (model == null) return const Right(null);
+      final hydrated = await _hydrateSingleModel(model);
+      return hydrated.map((e) => e);
+    } catch (e) {
+      log.severe("Error getting expense by ID $id: $e");
+      return Left(CacheFailure("Error getting expense: $e"));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<ExpenseModel>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,

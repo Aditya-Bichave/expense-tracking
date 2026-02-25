@@ -61,25 +61,36 @@ void main() {
     currentBalance: 1000,
   );
 
-  Widget buildTestWidget() {
+  Widget buildTestWidget({TransactionEntity? transaction}) {
     return MultiBlocProvider(
       providers: [
         BlocProvider<TransactionListBloc>.value(value: mockTransactionListBloc),
         BlocProvider<AccountListBloc>.value(value: mockAccountListBloc),
       ],
-      child: TransactionDetailPage(transaction: mockTransaction),
+      child: TransactionDetailPage(
+        transactionId: '1',
+        transaction: transaction,
+      ),
     );
   }
 
   group('TransactionDetailPage', () {
-    testWidgets('renders all transaction details correctly', (tester) async {
+    testWidgets('renders all transaction details correctly when provided', (
+      tester,
+    ) async {
       // ARRANGE
       when(
         () => mockAccountListBloc.state,
       ).thenReturn(AccountListLoaded(accounts: [mockAccount]));
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
 
       // ACT
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: buildTestWidget(transaction: mockTransaction),
+      );
 
       // ASSERT
       expect(find.text('Coffee'), findsOneWidget);
@@ -90,14 +101,94 @@ void main() {
       expect(find.text('Morning coffee'), findsOneWidget);
     });
 
+    testWidgets(
+      'fetches transaction from Bloc when not provided (deep link scenario)',
+      (tester) async {
+        // ARRANGE
+        when(
+          () => mockAccountListBloc.state,
+        ).thenReturn(AccountListLoaded(accounts: [mockAccount]));
+
+        // Simulate state with transaction loaded
+        when(() => mockTransactionListBloc.state).thenReturn(
+          TransactionListState(
+            status: ListStatus.success,
+            transactions: [mockTransaction],
+          ),
+        );
+
+        // ACT - Pass null transaction
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: buildTestWidget(transaction: null),
+        );
+
+        // ASSERT - Should find details because it looked up ID '1' in the Bloc state
+        expect(find.text('Coffee'), findsOneWidget);
+        expect(find.text('- \$4.50'), findsOneWidget);
+      },
+    );
+
+    testWidgets('shows Not Found when transaction is missing in Bloc', (
+      tester,
+    ) async {
+      // ARRANGE
+      when(
+        () => mockAccountListBloc.state,
+      ).thenReturn(const AccountListInitial());
+      when(() => mockTransactionListBloc.state).thenReturn(
+        const TransactionListState(
+          status: ListStatus.success,
+          transactions: [],
+        ),
+      );
+
+      // ACT
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: buildTestWidget(transaction: null),
+      );
+
+      // ASSERT
+      expect(find.text('Not Found'), findsOneWidget);
+      expect(find.text('Transaction not found or deleted.'), findsOneWidget);
+    });
+
+    testWidgets('shows Loading when Bloc is loading', (tester) async {
+      // ARRANGE
+      when(
+        () => mockAccountListBloc.state,
+      ).thenReturn(const AccountListInitial());
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState(status: ListStatus.loading));
+
+      // ACT
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: buildTestWidget(transaction: null),
+        settle: false,
+      );
+      await tester.pump();
+
+      // ASSERT
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+
     testWidgets('tapping Edit button does not throw', (tester) async {
       when(
         () => mockAccountListBloc.state,
       ).thenReturn(const AccountListInitial());
+      when(
+        () => mockTransactionListBloc.state,
+      ).thenReturn(const TransactionListState());
 
       final router = GoRouter(
         routes: [
-          GoRoute(path: '/', builder: (_, __) => buildTestWidget()),
+          GoRoute(
+            path: '/',
+            builder: (_, __) => buildTestWidget(transaction: mockTransaction),
+          ),
           GoRoute(
             path: '/edit/:transactionId',
             name: RouteNames.editTransaction,
@@ -132,7 +223,10 @@ void main() {
       ).thenReturn(const TransactionListState());
 
       // ACT
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: buildTestWidget(transaction: mockTransaction),
+      );
       await tester.tap(
         find.byKey(const ValueKey('button_transactionDetail_delete')),
       );

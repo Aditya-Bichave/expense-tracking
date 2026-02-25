@@ -15,6 +15,8 @@ abstract class ExpenseRepository {
     String? categoryId,
     String? accountId,
   });
+
+  Future<Either<Failure, Expense?>> getExpenseById(String id);
   // --- END MODIFIED ---
 
   // Add/Update still take Entity, but might return Model or hydrated Entity?

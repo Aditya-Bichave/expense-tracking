@@ -2,8 +2,8 @@ import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart'; // To potentially get account name
-import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For icon lookup
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
@@ -13,68 +13,158 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:collection/collection.dart';
 
-class TransactionDetailPage extends StatelessWidget {
-  final TransactionEntity transaction; // Passed via GoRouter 'extra'
+class TransactionDetailPage extends StatefulWidget {
+  final String transactionId;
+  final TransactionEntity? transaction;
 
-  const TransactionDetailPage({super.key, required this.transaction});
+  const TransactionDetailPage({
+    super.key,
+    required this.transactionId,
+    this.transaction,
+  });
 
-  // Handle Delete Action
+  @override
+  State<TransactionDetailPage> createState() => _TransactionDetailPageState();
+}
+
+class _TransactionDetailPageState extends State<TransactionDetailPage> {
+  TransactionEntity? _transaction;
+
+  @override
+  void initState() {
+    super.initState();
+    _transaction = widget.transaction;
+    if (_transaction == null) {
+      context.read<TransactionListBloc>().add(
+        FetchTransactionById(widget.transactionId),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    // Clear selection to avoid stale data next time
+    // We can't access context here easily if unmounted, but typically safe in dispose.
+    // However, checking mounted is safer.
+    // context.read<TransactionListBloc>().add(const ClearSelectedTransaction());
+    super.dispose();
+  }
+
   void _handleDelete(BuildContext context) async {
-    log.info("[TxnDetailPage] Delete requested for TXN ID: ${transaction.id}");
+    if (_transaction == null) return;
+    log.info(
+      "[TxnDetailPage] Delete requested for TXN ID: ${_transaction!.id}",
+    );
     final confirmed = await AppDialogs.showConfirmation(
       context,
       title: "Confirm Deletion",
       content:
-          'Are you sure you want to permanently delete this ${transaction.type.name}:\n"${transaction.title}"?',
+          'Are you sure you want to permanently delete this ${_transaction!.type.name}:\n"${_transaction!.title}"?',
       confirmText: "Delete",
       confirmColor: Theme.of(context).colorScheme.error,
     );
     if (confirmed == true && context.mounted) {
       log.info("[TxnDetailPage] Delete confirmed.");
-      // Dispatch delete event to the list BLoC
-      context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
-      // Pop back to the list screen after deletion is requested
+      context.read<TransactionListBloc>().add(DeleteTransaction(_transaction!));
       if (context.canPop()) {
         context.pop();
       } else {
-        context.go(RouteNames.transactionsList); // Fallback navigation
+        context.go(RouteNames.transactionsList);
       }
     } else {
       log.info("[TxnDetailPage] Delete cancelled.");
     }
   }
 
-  // Navigate to the unified Edit page
   void _navigateToEdit(BuildContext context) {
+    if (_transaction == null) return;
     log.info(
-      "[TxnDetailPage] Navigate to Edit requested for TXN ID: ${transaction.id}",
+      "[TxnDetailPage] Navigate to Edit requested for TXN ID: ${_transaction!.id}",
     );
-    // Use the unified edit route name
     const String routeName = RouteNames.editTransaction;
     final Map<String, String> params = {
-      RouteNames.paramTransactionId: transaction.id,
+      RouteNames.paramTransactionId: _transaction!.id,
     };
     log.info("[TxnDetailPage] Navigating via pushNamed:");
     log.info("  Route Name: $routeName");
     log.info("  Path Params: $params");
-    log.info("  Extra Data Type: ${transaction.runtimeType}");
+    log.info("  Extra Data Type: ${_transaction.runtimeType}");
 
-    context.pushNamed(routeName, pathParameters: params, extra: transaction);
+    context.pushNamed(routeName, pathParameters: params, extra: _transaction);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Attempt to find transaction from Bloc if not provided or if we want updates
+    final txnState = context.watch<TransactionListBloc>().state;
+    TransactionEntity? currentTransaction;
+
+    // Check selectedTransaction from Bloc (from deep link fetch)
+    if (txnState.selectedTransaction?.id == widget.transactionId) {
+      currentTransaction = txnState.selectedTransaction;
+      _transaction = currentTransaction;
+    } else if (_transaction != null) {
+      currentTransaction = _transaction;
+      // Try to find updated version in state list
+      final found = txnState.transactions.firstWhereOrNull(
+        (t) => t.id == widget.transactionId,
+      );
+      if (found != null) {
+        currentTransaction = found;
+        _transaction = found; // Update local reference
+      }
+    } else {
+      // Not provided and not in selected, search in state list
+      currentTransaction = txnState.transactions.firstWhereOrNull(
+        (t) => t.id == widget.transactionId,
+      );
+      if (currentTransaction != null) {
+        _transaction = currentTransaction;
+      }
+    }
+
+    if (currentTransaction == null) {
+      // If still loading, show loader. If loaded and not found, show error.
+      if (txnState.status == ListStatus.loading ||
+          txnState.status == ListStatus.initial) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Loading...')),
+          body: const Center(child: CircularProgressIndicator()),
+        );
+      } else {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Not Found')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                const SizedBox(height: 16),
+                const Text('Transaction not found or deleted.'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.go(RouteNames.dashboard),
+                  child: const Text('Go to Dashboard'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    final transaction = currentTransaction;
     final settings = context.watch<SettingsBloc>().state;
     final currencySymbol = settings.currencySymbol;
     final isExpense = transaction.type == TransactionType.expense;
     final amountColor = isExpense
         ? theme.colorScheme.error
-        : Colors.green.shade700; // Use consistent green for income amount
+        : Colors.green.shade700;
 
-    // Attempt to get account name
     final accountState = context.watch<AccountListBloc>().state;
-    String accountName = 'Loading...'; // Default
+    String accountName = 'Loading...';
     if (accountState is AccountListLoaded) {
       accountName =
           accountState.items
@@ -104,7 +194,6 @@ class TransactionDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Amount Card
           Card(
             elevation: 1,
             child: Padding(
@@ -126,8 +215,6 @@ class TransactionDetailPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Details Section
           _buildDetailRow(
             context,
             icon: Icons.calendar_today_outlined,
@@ -139,12 +226,11 @@ class TransactionDetailPage extends StatelessWidget {
               context,
               icon:
                   availableIcons[transaction.category!.iconName] ??
-                  Icons.category_outlined, // Use actual icon
+                  Icons.category_outlined,
               label: 'Category',
               value: transaction.category!.name,
               valueColor: transaction.category!.displayColor,
-              iconColor:
-                  transaction.category!.displayColor, // Color the icon too
+              iconColor: transaction.category!.displayColor,
             )
           else
             _buildDetailRow(
@@ -158,7 +244,7 @@ class TransactionDetailPage extends StatelessWidget {
             context,
             icon: Icons.account_balance_wallet_outlined,
             label: 'Account',
-            value: accountName, // Show fetched name
+            value: accountName,
           ),
           if (transaction.notes != null && transaction.notes!.isNotEmpty)
             _buildDetailRow(
@@ -173,14 +259,13 @@ class TransactionDetailPage extends StatelessWidget {
     );
   }
 
-  // Helper for consistent detail rows
   Widget _buildDetailRow(
     BuildContext context, {
     required IconData icon,
     required String label,
     required String value,
     Color? valueColor,
-    Color? iconColor, // Optional color for the icon
+    Color? iconColor,
     bool isMultiline = false,
   }) {
     final theme = Theme.of(context);
@@ -191,11 +276,7 @@ class TransactionDetailPage extends StatelessWidget {
             ? CrossAxisAlignment.start
             : CrossAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: iconColor ?? theme.colorScheme.secondary,
-          ), // Use iconColor or default
+          Icon(icon, size: 20, color: iconColor ?? theme.colorScheme.secondary),
           const SizedBox(width: 16),
           Text('$label:', style: theme.textTheme.bodyLarge),
           const SizedBox(width: 8),

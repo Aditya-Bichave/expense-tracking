@@ -4,6 +4,8 @@ import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';
 import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
 import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:simple_logger/simple_logger.dart';
 
 class MockBox extends Mock implements Box<GoalContributionModel> {}
 
@@ -23,6 +25,14 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeGoalContributionModel());
+    log.setLevel(
+      Level.OFF,
+      includeCallerInfo: false,
+    ); // Silence expected errors
+  });
+
+  tearDownAll(() {
+    log.setLevel(Level.INFO);
   });
 
   setUp(() {
