@@ -200,6 +200,7 @@ void main() {
           Uri.parse('https://spendos.app/join?token=stream'),
         );
       },
+      wait: const Duration(milliseconds: 500),
       expect: () => [
         DeepLinkProcessing(),
         const DeepLinkSuccess(groupId: '456', groupName: 'Stream Group'),
@@ -229,6 +230,7 @@ void main() {
         await Future.delayed(const Duration(milliseconds: 100));
         uriStreamController.add(Uri.parse('spendos://join?token=custom'));
       },
+      wait: const Duration(milliseconds: 500),
       expect: () => [
         DeepLinkProcessing(),
         const DeepLinkSuccess(groupId: '789', groupName: 'Custom Group'),
