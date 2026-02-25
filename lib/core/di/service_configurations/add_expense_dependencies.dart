@@ -21,10 +21,7 @@ class AddExpenseDependencies {
 
     if (!sl.isRegistered<AddExpenseRepository>()) {
       sl.registerLazySingleton<AddExpenseRepository>(
-        () => OutboxAddExpenseRepository(
-          outbox: sl(),
-          uuid: sl(),
-        ),
+        () => OutboxAddExpenseRepository(outbox: sl(), uuid: sl()),
       );
     }
 

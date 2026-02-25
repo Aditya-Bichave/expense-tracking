@@ -9,7 +9,10 @@ import 'package:path/path.dart' as p;
 class ImageCompressionService {
   Future<XFile?> compressImage(String sourcePath) async {
     final tempDir = await getTemporaryDirectory();
-    final targetPath = p.join(tempDir.path, 'compressed_${DateTime.now().millisecondsSinceEpoch}.jpg');
+    final targetPath = p.join(
+      tempDir.path,
+      'compressed_${DateTime.now().millisecondsSinceEpoch}.jpg',
+    );
 
     // Capture the token to allow platform channel access in the background isolate
     final token = RootIsolateToken.instance;

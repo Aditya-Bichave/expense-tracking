@@ -25,7 +25,7 @@ class SplitScreen extends StatelessWidget {
           );
           Navigator.of(context).pop();
         } else if (state.status == FormStatus.error) {
-           ScaffoldMessenger.of(context).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? 'Error adding expense'),
               backgroundColor: Theme.of(context).colorScheme.error,
@@ -36,15 +36,29 @@ class SplitScreen extends StatelessWidget {
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            leading: IconButton(onPressed: onBack, icon: const Icon(Icons.arrow_back)),
+            leading: IconButton(
+              onPressed: onBack,
+              icon: const Icon(Icons.arrow_back),
+            ),
             title: const Text('Split Expense'),
             actions: [
               if (state.status == FormStatus.processing)
-                const Center(child: Padding(padding: EdgeInsets.only(right: 16), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))))
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 16),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
               else
                 TextButton(
                   onPressed: state.isSplitValid
-                      ? () => context.read<AddExpenseWizardBloc>().add(const SubmitExpense())
+                      ? () => context.read<AddExpenseWizardBloc>().add(
+                          const SubmitExpense(),
+                        )
                       : null,
                   child: const Text('SAVE'),
                 ),
@@ -77,7 +91,10 @@ class SplitScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Icon(Icons.arrow_drop_down, color: Theme.of(context).primaryColor),
+                            Icon(
+                              Icons.arrow_drop_down,
+                              color: Theme.of(context).primaryColor,
+                            ),
                           ],
                         ),
                       ),
@@ -99,7 +116,10 @@ class SplitScreen extends StatelessWidget {
                         label: Text(mode.displayName),
                         selected: isSelected,
                         onSelected: (val) {
-                          if (val) context.read<AddExpenseWizardBloc>().add(SplitModeChanged(mode));
+                          if (val)
+                            context.read<AddExpenseWizardBloc>().add(
+                              SplitModeChanged(mode),
+                            );
                         },
                       ),
                     );
@@ -117,7 +137,14 @@ class SplitScreen extends StatelessWidget {
                     final split = state.splits[index];
                     final member = state.groupMembers.firstWhere(
                       (m) => m.userId == split.userId,
-                      orElse: () => GroupMember(id: '', groupId: '', userId: split.userId, role: GroupRole.member, joinedAt: DateTime.now(), updatedAt: DateTime.now()),
+                      orElse: () => GroupMember(
+                        id: '',
+                        groupId: '',
+                        userId: split.userId,
+                        role: GroupRole.member,
+                        joinedAt: DateTime.now(),
+                        updatedAt: DateTime.now(),
+                      ),
                     );
 
                     return _SplitRow(
@@ -126,7 +153,9 @@ class SplitScreen extends StatelessWidget {
                       mode: state.splitMode,
                       currency: state.currency,
                       onValueChanged: (val) {
-                         context.read<AddExpenseWizardBloc>().add(SplitValueChanged(member.userId, val));
+                        context.read<AddExpenseWizardBloc>().add(
+                          SplitValueChanged(member.userId, val),
+                        );
                       },
                     );
                   },
@@ -138,7 +167,9 @@ class SplitScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
                     _getValidationError(state),
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
             ],
@@ -155,14 +186,23 @@ class SplitScreen extends StatelessWidget {
     if (payerId == state.currentUserId) return 'You';
     final member = state.groupMembers.firstWhere(
       (m) => m.userId == payerId,
-      orElse: () => GroupMember(id: '', groupId: '', userId: payerId, role: GroupRole.member, joinedAt: DateTime.now(), updatedAt: DateTime.now()),
+      orElse: () => GroupMember(
+        id: '',
+        groupId: '',
+        userId: payerId,
+        role: GroupRole.member,
+        joinedAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
     );
     return member.userId; // Ideally Name
   }
 
   String _getValidationError(AddExpenseWizardState state) {
-    if (state.splitMode == SplitMode.percent) return "Total percentage must be 100%";
-    if (state.splitMode == SplitMode.exact) return "Total amount must equal expense total";
+    if (state.splitMode == SplitMode.percent)
+      return "Total percentage must be 100%";
+    if (state.splitMode == SplitMode.exact)
+      return "Total amount must equal expense total";
     return "Invalid splits";
   }
 
@@ -175,7 +215,10 @@ class SplitScreen extends StatelessWidget {
           children: [
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text('Who Paid?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text(
+                'Who Paid?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
             Expanded(
               child: ListView.builder(
@@ -184,10 +227,14 @@ class SplitScreen extends StatelessWidget {
                   final member = state.groupMembers[index];
                   final isYou = member.userId == state.currentUserId;
                   return ListTile(
-                    leading: CircleAvatar(child: Text(member.userId.substring(0, 1).toUpperCase())),
+                    leading: CircleAvatar(
+                      child: Text(member.userId.substring(0, 1).toUpperCase()),
+                    ),
                     title: Text(isYou ? 'You' : member.userId),
                     onTap: () {
-                      context.read<AddExpenseWizardBloc>().add(SinglePayerSelected(member.userId));
+                      context.read<AddExpenseWizardBloc>().add(
+                        SinglePayerSelected(member.userId),
+                      );
                       Navigator.pop(ctx);
                     },
                   );
@@ -233,12 +280,12 @@ class _SplitRowState extends State<_SplitRow> {
   void didUpdateWidget(_SplitRow oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.mode != widget.mode) {
-       _controller.text = _getInitialValue();
+      _controller.text = _getInitialValue();
     } else if (oldWidget.split.shareValue != widget.split.shareValue) {
-       if (double.tryParse(_controller.text) != widget.split.shareValue) {
-          // Update only if text doesn't match value (external update)
-          _controller.text = _getInitialValue();
-       }
+      if (double.tryParse(_controller.text) != widget.split.shareValue) {
+        // Update only if text doesn't match value (external update)
+        _controller.text = _getInitialValue();
+      }
     }
   }
 
@@ -250,10 +297,12 @@ class _SplitRowState extends State<_SplitRow> {
 
   String _getInitialValue() {
     if (widget.mode == SplitMode.percent || widget.mode == SplitMode.shares) {
-       return widget.split.shareValue.toStringAsFixed(widget.mode == SplitMode.shares ? 0 : 1);
+      return widget.split.shareValue.toStringAsFixed(
+        widget.mode == SplitMode.shares ? 0 : 1,
+      );
     }
     if (widget.mode == SplitMode.exact) {
-       return widget.split.shareValue.toStringAsFixed(2);
+      return widget.split.shareValue.toStringAsFixed(2);
     }
     return '';
   }
@@ -266,24 +315,39 @@ class _SplitRowState extends State<_SplitRow> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          CircleAvatar(child: Text(widget.member.userId.isNotEmpty ? widget.member.userId.substring(0, 1).toUpperCase() : '?')),
+          CircleAvatar(
+            child: Text(
+              widget.member.userId.isNotEmpty
+                  ? widget.member.userId.substring(0, 1).toUpperCase()
+                  : '?',
+            ),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: Text(widget.member.userId, overflow: TextOverflow.ellipsis)),
+          Expanded(
+            child: Text(widget.member.userId, overflow: TextOverflow.ellipsis),
+          ),
 
           if (isEditable) ...[
             SizedBox(
               width: 80,
               child: TextField(
                 controller: _controller,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  suffixText: widget.mode == SplitMode.percent ? '%' : (widget.mode == SplitMode.shares ? 'x' : ''),
+                  suffixText: widget.mode == SplitMode.percent
+                      ? '%'
+                      : (widget.mode == SplitMode.shares ? 'x' : ''),
                   isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 4,
+                  ),
                 ),
                 onChanged: (val) {
-                   final d = double.tryParse(val);
-                   if (d != null) widget.onValueChanged(d);
+                  final d = double.tryParse(val);
+                  if (d != null) widget.onValueChanged(d);
                 },
               ),
             ),
@@ -291,7 +355,10 @@ class _SplitRowState extends State<_SplitRow> {
           ],
 
           Text(
-            CurrencyFormatter.format(widget.split.computedAmount, widget.currency),
+            CurrencyFormatter.format(
+              widget.split.computedAmount,
+              widget.currency,
+            ),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
