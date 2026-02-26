@@ -12,9 +12,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGetCategoriesUseCase extends Mock implements GetCategoriesUseCase {}
-class MockAddCustomCategoryUseCase extends Mock implements AddCustomCategoryUseCase {}
-class MockUpdateCustomCategoryUseCase extends Mock implements UpdateCustomCategoryUseCase {}
-class MockDeleteCustomCategoryUseCase extends Mock implements DeleteCustomCategoryUseCase {}
+
+class MockAddCustomCategoryUseCase extends Mock
+    implements AddCustomCategoryUseCase {}
+
+class MockUpdateCustomCategoryUseCase extends Mock
+    implements UpdateCustomCategoryUseCase {}
+
+class MockDeleteCustomCategoryUseCase extends Mock
+    implements DeleteCustomCategoryUseCase {}
 
 void main() {
   late MockGetCategoriesUseCase mockGetCategoriesUseCase;
@@ -28,10 +34,12 @@ void main() {
     mockUpdateCustomCategoryUseCase = MockUpdateCustomCategoryUseCase();
     mockDeleteCustomCategoryUseCase = MockDeleteCustomCategoryUseCase();
 
-    registerFallbackValue(const DeleteCustomCategoryParams(
-      categoryId: 'id',
-      fallbackExpenseCategoryId: 'fb',
-    ));
+    registerFallbackValue(
+      const DeleteCustomCategoryParams(
+        categoryId: 'id',
+        fallbackExpenseCategoryId: 'fb',
+      ),
+    );
     registerFallbackValue(const NoParams());
   });
 
@@ -48,10 +56,12 @@ void main() {
     blocTest<CategoryManagementBloc, CategoryManagementState>(
       'DeleteCategory uses correct fallback IDs for expense and income',
       build: () {
-        when(() => mockDeleteCustomCategoryUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
-        when(() => mockGetCategoriesUseCase(any()))
-            .thenAnswer((_) async => Right([])); // For subsequent load
+        when(
+          () => mockDeleteCustomCategoryUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGetCategoriesUseCase(any()),
+        ).thenAnswer((_) async => Right([])); // For subsequent load
 
         return CategoryManagementBloc(
           getCategoriesUseCase: mockGetCategoriesUseCase,
@@ -62,18 +72,23 @@ void main() {
       },
       seed: () => CategoryManagementState(
         status: CategoryManagementStatus.loaded,
-        predefinedIncomeCategories: [tIncomeCategory], // Seed with one income category
+        predefinedIncomeCategories: [
+          tIncomeCategory,
+        ], // Seed with one income category
       ),
-      act: (bloc) => bloc.add(const DeleteCategory(categoryId: 'cat_to_delete')),
+      act: (bloc) =>
+          bloc.add(const DeleteCategory(categoryId: 'cat_to_delete')),
       verify: (_) {
-        verify(() => mockDeleteCustomCategoryUseCase(
-          DeleteCustomCategoryParams(
-            categoryId: 'cat_to_delete',
-            fallbackExpenseCategoryId: 'uncategorized', // Default hardcoded
-            fallbackIncomeCategoryId: 'inc1', // Derived from state
+        verify(
+          () => mockDeleteCustomCategoryUseCase(
+            DeleteCustomCategoryParams(
+              categoryId: 'cat_to_delete',
+              fallbackExpenseCategoryId: 'uncategorized', // Default hardcoded
+              fallbackIncomeCategoryId: 'inc1', // Derived from state
+            ),
           ),
-        )).called(1);
-      }
+        ).called(1);
+      },
     );
   });
 }

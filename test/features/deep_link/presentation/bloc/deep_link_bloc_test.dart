@@ -10,7 +10,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAppLinks extends Mock implements AppLinks {}
+
 class MockGroupsRepository extends Mock implements GroupsRepository {}
+
 class MockAuthRepository extends Mock implements AuthRepository {}
 
 void main() {
@@ -26,40 +28,60 @@ void main() {
     // Mock initial link
     when(() => mockAppLinks.getInitialLink()).thenAnswer((_) async => null);
     // Mock stream
-    when(() => mockAppLinks.uriLinkStream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockAppLinks.uriLinkStream,
+    ).thenAnswer((_) => const Stream.empty());
   });
 
   group('DeepLinkBloc', () {
     test('initial state is DeepLinkInitial', () {
-      final bloc = DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository);
+      final bloc = DeepLinkBloc(
+        mockAppLinks,
+        mockGroupsRepository,
+        mockAuthRepository,
+      );
       expect(bloc.state, isA<DeepLinkInitial>());
     });
 
     blocTest<DeepLinkBloc, DeepLinkState>(
       'ignores invalid URI in arguments',
-      build: () => DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
-      act: (bloc) => bloc.add(const DeepLinkStarted(args: [
-        'io.supabase.expensetracker://host:abc'
-      ])),
-      expect: () => [], // No state emitted because DeepLinkReceived is not added
+      build: () =>
+          DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository),
+      act: (bloc) => bloc.add(
+        const DeepLinkStarted(args: ['io.supabase.expensetracker://host:abc']),
+      ),
+      expect: () =>
+          [], // No state emitted because DeepLinkReceived is not added
     );
 
     blocTest<DeepLinkBloc, DeepLinkState>(
       'requires login for join links instead of auto-creating anonymous account',
       build: () {
-        when(() => mockAuthRepository.getCurrentUser()).thenReturn(const Right(null)); // Not logged in
-        return DeepLinkBloc(mockAppLinks, mockGroupsRepository, mockAuthRepository);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(const Right(null)); // Not logged in
+        return DeepLinkBloc(
+          mockAppLinks,
+          mockGroupsRepository,
+          mockAuthRepository,
+        );
       },
-      act: (bloc) => bloc.add(const DeepLinkStarted(args: [
-        'io.supabase.expensetracker://join?token=123'
-      ])),
+      act: (bloc) => bloc.add(
+        const DeepLinkStarted(
+          args: ['io.supabase.expensetracker://join?token=123'],
+        ),
+      ),
       expect: () => [
         isA<DeepLinkProcessing>(),
-        isA<DeepLinkError>().having((e) => e.message, 'message', contains('Please log in')),
+        isA<DeepLinkError>().having(
+          (e) => e.message,
+          'message',
+          contains('Please log in'),
+        ),
       ],
       verify: (_) {
         verifyNever(() => mockAuthRepository.signInAnonymously());
-      }
+      },
     );
   });
 }

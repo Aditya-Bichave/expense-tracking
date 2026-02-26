@@ -195,11 +195,7 @@ class InitializationErrorApp extends StatefulWidget {
   final Object error;
   final ThemeData? theme; // Allow injecting theme for testing
 
-  const InitializationErrorApp({
-    super.key,
-    required this.error,
-    this.theme,
-  });
+  const InitializationErrorApp({super.key, required this.error, this.theme});
 
   @override
   State<InitializationErrorApp> createState() => _InitializationErrorAppState();
