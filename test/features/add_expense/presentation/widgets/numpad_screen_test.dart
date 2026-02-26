@@ -24,10 +24,12 @@ void main() {
 
   setUp(() {
     mockBloc = MockAddExpenseWizardBloc();
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-    ));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+      ),
+    );
   });
 
   Widget createWidgetUnderTest() {

@@ -38,14 +38,18 @@ void main() {
     mockGroupsRepository = MockGroupsRepository();
     mockCategoryRepository = MockCategoryRepository();
 
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-    ));
-    when(() => mockGroupsRepository.getGroups())
-        .thenAnswer((_) async => const Right(<GroupEntity>[]));
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => const Right(<Category>[]));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+      ),
+    );
+    when(
+      () => mockGroupsRepository.getGroups(),
+    ).thenAnswer((_) async => const Right(<GroupEntity>[]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => const Right(<Category>[]));
 
     sl.registerSingleton<GroupsRepository>(mockGroupsRepository);
     sl.registerSingleton<CategoryRepository>(mockCategoryRepository);
@@ -77,7 +81,9 @@ void main() {
     expect(find.text('Notes (Optional)'), findsOneWidget);
   });
 
-  testWidgets('DetailsScreen entering description updates bloc', (tester) async {
+  testWidgets('DetailsScreen entering description updates bloc', (
+    tester,
+  ) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
@@ -95,7 +101,8 @@ void main() {
     await tester.enterText(textFieldFinder, 'Test Expense');
     await tester.pump();
 
-    verify(() => mockBloc.add(const DescriptionChanged('Test Expense')))
-        .called(1);
+    verify(
+      () => mockBloc.add(const DescriptionChanged('Test Expense')),
+    ).called(1);
   });
 }

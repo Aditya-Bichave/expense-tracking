@@ -77,9 +77,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   variant: UiVariant.ghost,
                   size: AppButtonSize.small,
                   onPressed: state.groupId == null
-                      ? () => context
-                          .read<AddExpenseWizardBloc>()
-                          .add(const SubmitExpense())
+                      ? () => context.read<AddExpenseWizardBloc>().add(
+                          const SubmitExpense(),
+                        )
                       : () => widget.onNext(true),
                   label: state.groupId == null ? 'SAVE' : 'NEXT',
                 ),
@@ -113,16 +113,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 label: 'Description',
                 hint: 'What is this for?',
                 onChanged: (val) => context.read<AddExpenseWizardBloc>().add(
-                      DescriptionChanged(val),
-                    ),
+                  DescriptionChanged(val),
+                ),
               ),
               kit.spacing.gapLg,
 
               // Categories Grid
               Text(
                 'Category',
-                style: kit.typography.labelMedium
-                    .copyWith(fontWeight: FontWeight.bold),
+                style: kit.typography.labelMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               kit.spacing.gapSm,
               SizedBox(
@@ -137,8 +138,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                     return result.fold(
                       (failure) => Text(
                         'Error loading categories',
-                        style: kit.typography.caption
-                            .copyWith(color: kit.colors.error),
+                        style: kit.typography.caption.copyWith(
+                          color: kit.colors.error,
+                        ),
                       ),
                       (List<Category> categories) {
                         final topCategories = categories.take(10).toList();
@@ -153,14 +155,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
                               label: cat.name,
                               isSelected: isSelected,
                               onSelected: () {
-                                context
-                                    .read<AddExpenseWizardBloc>()
-                                    .add(CategorySelected(cat));
+                                context.read<AddExpenseWizardBloc>().add(
+                                  CategorySelected(cat),
+                                );
                                 if (_descController.text.isEmpty) {
                                   _descController.text = cat.name;
-                                  context
-                                      .read<AddExpenseWizardBloc>()
-                                      .add(DescriptionChanged(cat.name));
+                                  context.read<AddExpenseWizardBloc>().add(
+                                    DescriptionChanged(cat.name),
+                                  );
                                 }
                               },
                             );
@@ -224,8 +226,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         if (date != null) {
                           if (!context.mounted) return;
                           context.read<AddExpenseWizardBloc>().add(
-                                DateChanged(date),
-                              );
+                            DateChanged(date),
+                          );
                         }
                       },
                       child: Row(
@@ -238,8 +240,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           ),
                           kit.spacing.wSm,
                           Text(
-                            DateFormat('MMM dd, yyyy')
-                                .format(state.expenseDate),
+                            DateFormat(
+                              'MMM dd, yyyy',
+                            ).format(state.expenseDate),
                             style: kit.typography.bodySmall,
                           ),
                         ],
@@ -352,8 +355,8 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
             title: const Text('Personal Expense'),
             onTap: () async {
               context.read<AddExpenseWizardBloc>().add(
-                    const GroupSelected(null),
-                  );
+                const GroupSelected(null),
+              );
               Navigator.pop(context);
             },
           ),
@@ -381,8 +384,8 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
                           title: Text(group.name),
                           onTap: () async {
                             context.read<AddExpenseWizardBloc>().add(
-                                  GroupSelected(group),
-                                );
+                              GroupSelected(group),
+                            );
                             Navigator.pop(context);
                           },
                         );

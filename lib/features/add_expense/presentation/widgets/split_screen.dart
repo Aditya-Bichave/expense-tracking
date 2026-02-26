@@ -65,8 +65,9 @@ class SplitScreen extends StatelessWidget {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(kit.colors.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          kit.colors.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -79,8 +80,8 @@ class SplitScreen extends StatelessWidget {
                     size: AppButtonSize.small,
                     onPressed: state.isSplitValid
                         ? () => context.read<AddExpenseWizardBloc>().add(
-                              const SubmitExpense(),
-                            )
+                            const SubmitExpense(),
+                          )
                         : null,
                     label: 'SAVE',
                     disabled: !state.isSplitValid,
@@ -133,9 +134,9 @@ class SplitScreen extends StatelessWidget {
                   groupValue: state.splitMode,
                   onValueChanged: (mode) {
                     if (mode != null) {
-                      context
-                          .read<AddExpenseWizardBloc>()
-                          .add(SplitModeChanged(mode));
+                      context.read<AddExpenseWizardBloc>().add(
+                        SplitModeChanged(mode),
+                      );
                     }
                   },
                   children: {
@@ -179,8 +180,8 @@ class SplitScreen extends StatelessWidget {
                       currency: state.currency,
                       onValueChanged: (val) {
                         context.read<AddExpenseWizardBloc>().add(
-                              SplitValueChanged(member.userId, val),
-                            );
+                          SplitValueChanged(member.userId, val),
+                        );
                       },
                     );
                   },
@@ -254,8 +255,8 @@ class SplitScreen extends StatelessWidget {
                 title: Text(isYou ? 'You' : member.userId),
                 onTap: () {
                   context.read<AddExpenseWizardBloc>().add(
-                        SinglePayerSelected(member.userId),
-                      );
+                    SinglePayerSelected(member.userId),
+                  );
                   Navigator.pop(ctx);
                 },
               );
@@ -363,20 +364,14 @@ class _SplitRowState extends State<_SplitRow> {
                 suffixIcon: widget.mode == SplitMode.percent
                     ? Padding(
                         padding: kit.spacing.allSm,
-                        child: Text(
-                          '%',
-                          style: kit.typography.bodySmall,
-                        ),
+                        child: Text('%', style: kit.typography.bodySmall),
                       )
                     : (widget.mode == SplitMode.shares
-                        ? Padding(
-                            padding: kit.spacing.allSm,
-                            child: Text(
-                              'x',
-                              style: kit.typography.bodySmall,
-                            ),
-                          )
-                        : null),
+                          ? Padding(
+                              padding: kit.spacing.allSm,
+                              child: Text('x', style: kit.typography.bodySmall),
+                            )
+                          : null),
                 onChanged: (val) {
                   final d = double.tryParse(val);
                   if (d != null) widget.onValueChanged(d);
