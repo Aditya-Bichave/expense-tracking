@@ -11,6 +11,7 @@ import 'package:expense_tracker/ui_kit/tokens/app_motion.dart';
 import 'package:expense_tracker/ui_kit/tokens/app_radii.dart';
 import 'package:expense_tracker/ui_kit/tokens/app_spacing.dart';
 import 'package:expense_tracker/ui_kit/tokens/app_typography.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_shadows.dart';
 
 // Import AppConstants
 
@@ -454,6 +455,9 @@ class AppTheme {
             xl: 24.0,
           ),
           motion: const AppMotion(),
+          shadows: AppShadows(
+            isDark: colorScheme.brightness == Brightness.dark,
+          ),
         ),
       ],
     );

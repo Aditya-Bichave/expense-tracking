@@ -1,102 +1,50 @@
 # UI Kit Guide
 
-This repository now includes a centralized UI Kit in `lib/ui_kit/`.
-The goal is to standardize UI patterns and tokens to facilitate easier theming and maintenance.
+This UI Kit (Design System) is the new standard for building UI in the Financial OS app. It isolates design decisions (colors, spacing, typography) from implementation details, allowing for centralized theming and future redesigns (e.g., iOS-cozy premium look).
 
 ## Golden Rules
-1. **Do NOT use `Colors.red` or `Color(0xFF...)` directly.** Use `context.kit.colors.error` or semantic tokens.
-2. **Do NOT use `TextStyle(fontSize: 16)` directly.** Use `context.kit.typography.bodyLarge`.
-3. **Do NOT hardcode paddings like `EdgeInsets.all(16)`.** Use `context.kit.spacing.allMd`.
-4. **Prefer `App*` components over standard Flutter widgets.**
-   - `AppCard` instead of `Card` or `Container` with decoration.
-   - `AppButton` instead of `ElevatedButton` / `OutlinedButton`.
-   - `AppTextField` instead of `TextFormField`.
-   - `AppListTile` instead of `ListTile`.
 
-## Accessing Tokens
-The UI Kit exposes a `kit` extension on `BuildContext`:
+1.  **No `Colors.*` in Feature UI**: Never use raw colors like `Colors.blue` or `Color(0xFF...)`. Use `context.kit.colors.primary` or semantic tokens like `context.kit.colors.success`.
+2.  **No `TextStyle(...)` in Feature UI**: Do not manually construct TextStyles. Use `AppText` with a style enum, or `context.kit.typography.body`.
+3.  **No `EdgeInsets(...)` Magic Numbers**: Use `context.kit.spacing.allMd`, `hMd`, or `AppGap`.
+4.  **Use Components First**: Before building a custom widget, check `UI_KIT_CATALOG.md`. Use `AppCard`, `AppButton`, `AppTextField`, etc.
+5.  **Theme Extension**: Access all tokens via `context.kit`.
+
+## Migration Strategy
+
+Do **NOT** refactor existing features all at once. Migrate screen-by-screen or component-by-component.
+
+1.  **Identify a Screen**: Pick a screen to migrate (e.g., Settings).
+2.  **Replace Scaffold**: Use `AppScaffold`.
+3.  **Replace Layouts**: Use `AppSection`, `AppGap`.
+4.  **Replace Primitives**: Swap `Card` for `AppCard`, `Text` for `AppText`, `ElevatedButton` for `AppButton`.
+5.  **Verify**: Check Light and Dark mode.
+
+## Do's and Don'ts
+
+**DO:**
 ```dart
-final kit = context.kit;
-
-Color bg = kit.colors.background;
-EdgeInsets padding = kit.spacing.allMd;
-TextStyle style = kit.typography.titleLarge;
-```
-
-## Component Migration Examples
-
-### Buttons
-**Old:**
-```dart
-ElevatedButton(
-  onPressed: () {},
-  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
-  child: Text("Save"),
-)
-```
-
-**New:**
-```dart
-AppButton(
-  label: "Save",
-  onPressed: () {},
-  variant: AppButtonVariant.primary,
-)
-```
-
-### Text Fields
-**Old:**
-```dart
-TextFormField(
-  decoration: InputDecoration(
-    labelText: "Name",
-    border: OutlineInputBorder(),
+AppCard(
+  child: Column(
+    children: [
+      AppText('Hello', style: AppTextStyle.title),
+      context.kit.spacing.gapMd,
+      AppButton(label: 'Click Me', onPressed: () {}),
+    ],
   ),
 )
 ```
 
-**New:**
-```dart
-AppTextField(
-  label: "Name",
-)
-```
-
-### Cards
-**Old:**
+**DON'T:**
 ```dart
 Card(
-  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-  child: Padding(padding: EdgeInsets.all(16), child: ...),
+  color: Colors.white,
+  child: Column(
+    children: [
+      Text('Hello', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      SizedBox(height: 16),
+      ElevatedButton(child: Text('Click Me'), onPressed: () {}),
+    ],
+  ),
 )
 ```
-
-**New:**
-```dart
-AppCard(
-  child: ...,
-)
-```
-
-## Migration Plan
-
-### Wave 1 (Done)
-- UI Kit structure created.
-- Tokens defined.
-- Core components (`AppButton`, `AppCard`, `AppTextField`, `AppListTile`) created.
-- Migrated: `TransactionListItem` and `LogContributionSheet`.
-
-### Wave 2 (Next Steps)
-- Migrate `AddExpenseWizard` screens (high complexity).
-- Migrate `GoalDetailPage` and `BudgetDetailPage`.
-- Replace all `ElevatedButton` usages in `lib/features/`.
-
-### Wave 3
-- Migrate Settings screens.
-- Migrate Dashboard charts styling to use tokens.
-- Deprecate `lib/core/widgets/` where redundant.
-
-## Structure
-- `lib/ui_kit/tokens/`: Atomic values (colors, spacing, typography).
-- `lib/ui_kit/theme/`: Theme extensions and configuration.
-- `lib/ui_kit/components/`: Reusable widgets.

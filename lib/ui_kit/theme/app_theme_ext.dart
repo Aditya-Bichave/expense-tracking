@@ -4,6 +4,7 @@ import 'package:expense_tracker/ui_kit/tokens/app_motion.dart';
 import 'package:expense_tracker/ui_kit/tokens/app_radii.dart';
 import 'package:expense_tracker/ui_kit/tokens/app_spacing.dart';
 import 'package:expense_tracker/ui_kit/tokens/app_typography.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_shadows.dart';
 
 @immutable
 class AppKitTheme extends ThemeExtension<AppKitTheme> {
@@ -12,6 +13,7 @@ class AppKitTheme extends ThemeExtension<AppKitTheme> {
   final AppSpacing spacing;
   final AppRadii radii;
   final AppMotion motion;
+  final AppShadows shadows;
 
   const AppKitTheme({
     required this.colors,
@@ -19,6 +21,7 @@ class AppKitTheme extends ThemeExtension<AppKitTheme> {
     required this.spacing,
     required this.radii,
     required this.motion,
+    required this.shadows,
   });
 
   @override
@@ -28,6 +31,7 @@ class AppKitTheme extends ThemeExtension<AppKitTheme> {
     AppSpacing? spacing,
     AppRadii? radii,
     AppMotion? motion,
+    AppShadows? shadows,
   }) {
     return AppKitTheme(
       colors: colors ?? this.colors,
@@ -35,6 +39,7 @@ class AppKitTheme extends ThemeExtension<AppKitTheme> {
       spacing: spacing ?? this.spacing,
       radii: radii ?? this.radii,
       motion: motion ?? this.motion,
+      shadows: shadows ?? this.shadows,
     );
   }
 
@@ -43,13 +48,8 @@ class AppKitTheme extends ThemeExtension<AppKitTheme> {
     if (other is! AppKitTheme) {
       return this;
     }
-    // Note: Most tokens are not lerpable or don't need to be (like spacing constants).
-    // Colors and Typography are implicitly handled by Theme.of(context) usually,
-    // but here we are wrapping them. Since they wrap the *active* scheme,
-    // they should be updated by the theme engine.
-    // However, if we change modes, we might want to lerp some values.
-    // For now, we return 'other' if t > 0.5 to switch effectively.
-    // A proper implementation would lerp individual properties if they were dynamic.
+    // Most tokens are constants or wrappers around scheme, so simple switching is safer/cleaner.
+    // If dynamic lerping is needed, implement individually.
     return t < 0.5 ? this : other;
   }
 }
@@ -59,15 +59,17 @@ extension AppKitThemeContextExtension on BuildContext {
     final theme = Theme.of(this).extension<AppKitTheme>();
     if (theme == null) {
       // Fallback if extension is missing (should not happen if set up correctly)
-      // This allows 'hot' usages even if theme isn't fully rebuilt yet during dev
       final colorScheme = Theme.of(this).colorScheme;
       final textTheme = Theme.of(this).textTheme;
+      final isDark = Theme.of(this).brightness == Brightness.dark;
+
       return AppKitTheme(
         colors: AppColors(colorScheme),
         typography: AppTypography(textTheme),
         spacing: const AppSpacing(),
         radii: const AppRadii(),
         motion: const AppMotion(),
+        shadows: AppShadows(isDark: isDark),
       );
     }
     return theme;

@@ -3,7 +3,7 @@ import 'package:expense_tracker/features/categories/presentation/widgets/icon_pi
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/ui_kit/components/app_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:flutter/material.dart';
 

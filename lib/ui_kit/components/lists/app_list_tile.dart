@@ -9,6 +9,7 @@ class AppListTile extends StatelessWidget {
   final VoidCallback? onTap;
   final bool dense;
   final EdgeInsetsGeometry? contentPadding;
+  final bool selected;
 
   const AppListTile({
     super.key,
@@ -19,6 +20,7 @@ class AppListTile extends StatelessWidget {
     this.onTap,
     this.dense = false,
     this.contentPadding,
+    this.selected = false,
   });
 
   @override
@@ -27,13 +29,13 @@ class AppListTile extends StatelessWidget {
 
     return ListTile(
       title: DefaultTextStyle(
-        style: kit.typography.bodyLarge.copyWith(fontWeight: FontWeight.w500),
+        style: kit.typography.body.copyWith(fontWeight: FontWeight.w500),
         child: title,
       ),
       subtitle: subtitle != null
           ? DefaultTextStyle(
-              style: kit.typography.bodyMedium.copyWith(
-                color: kit.colors.onSurfaceVariant,
+              style: kit.typography.caption.copyWith(
+                color: kit.colors.textSecondary,
               ),
               child: subtitle!,
             )
@@ -43,8 +45,9 @@ class AppListTile extends StatelessWidget {
       onTap: onTap,
       dense: dense,
       contentPadding: contentPadding ?? kit.spacing.hMd,
+      selected: selected,
+      selectedTileColor: kit.colors.primaryContainer.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: kit.radii.small),
-      // ListTileThemeData usually handles colors, but we can enforce if needed
     );
   }
 }
