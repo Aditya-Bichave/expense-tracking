@@ -715,7 +715,7 @@ class TransactionListBloc
     log.warning(
       "[TransactionListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
+    switch (failure) {
       case CacheFailure _:
         return '$context: Database Error: ${failure.message}';
       case ValidationFailure _:

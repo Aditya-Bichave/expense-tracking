@@ -148,7 +148,7 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
     log.warning(
       "[SummaryBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
+    switch (failure) {
       case CacheFailure _:
         return 'Could not load summary from local data. ${failure.message}';
       case UnexpectedFailure _:

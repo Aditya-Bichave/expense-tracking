@@ -173,7 +173,7 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
     log.warning(
       "[AddEditBudgetBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
+    switch (failure) {
       case ValidationFailure _:
         return failure.message;
       case CacheFailure _:

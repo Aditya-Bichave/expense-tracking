@@ -3,7 +3,7 @@ import 'failure.dart';
 extension FailureMessage on Failure {
   String toDisplayMessage({String? context}) {
     String specificMessage;
-    switch (runtimeType) {
+    switch (this) {
       case CacheFailure _:
       case SettingsFailure _:
         specificMessage = 'Database Error: $message';

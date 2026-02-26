@@ -211,7 +211,7 @@ class GoalListBloc extends Bloc<GoalListEvent, GoalListState> {
     log.warning(
       "[GoalListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
+    switch (failure) {
       case ValidationFailure _:
         return failure.message;
       case CacheFailure _:

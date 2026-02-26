@@ -108,8 +108,12 @@ class Expense extends Equatable {
       payers: payers ?? this.payers,
       splits: splits ?? this.splits,
 
-      receiptUrl: receiptUrlOrNull != null ? receiptUrlOrNull() : (receiptUrl ?? this.receiptUrl),
-      clientGeneratedId: clientGeneratedIdOrNull != null ? clientGeneratedIdOrNull() : (clientGeneratedId ?? this.clientGeneratedId),
+      receiptUrl: receiptUrlOrNull != null
+          ? receiptUrlOrNull()
+          : (receiptUrl ?? this.receiptUrl),
+      clientGeneratedId: clientGeneratedIdOrNull != null
+          ? clientGeneratedIdOrNull()
+          : (clientGeneratedId ?? this.clientGeneratedId),
     );
   }
 

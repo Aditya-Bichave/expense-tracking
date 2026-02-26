@@ -241,7 +241,7 @@ class LogContributionBloc
     log.warning(
       "[LogContributionBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
+    switch (failure) {
       case ValidationFailure _:
         return failure.message;
       case CacheFailure _:
