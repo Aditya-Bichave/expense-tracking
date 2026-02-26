@@ -123,8 +123,7 @@ class MainShell extends StatelessWidget {
         onTap: (index) => _onTap(context, index),
         type: navTheme.type ?? BottomNavigationBarType.fixed,
         backgroundColor: kit.colors.surface, // Use token
-        selectedItemColor:
-            navTheme.selectedItemColor ?? kit.colors.primary,
+        selectedItemColor: navTheme.selectedItemColor ?? kit.colors.primary,
         unselectedItemColor:
             navTheme.unselectedItemColor ?? kit.colors.textSecondary,
         selectedLabelStyle: navTheme.selectedLabelStyle,

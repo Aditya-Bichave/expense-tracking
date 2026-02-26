@@ -23,7 +23,10 @@ class StitchGoalsList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg, vertical: kit.spacing.sm),
+          padding: EdgeInsets.symmetric(
+            horizontal: kit.spacing.lg,
+            vertical: kit.spacing.sm,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -62,10 +65,10 @@ class StitchGoalsList extends StatelessWidget {
   Widget _buildGoalCard(BuildContext context, Goal goal) {
     final kit = context.kit;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
-    final progress = goal.targetAmount > 0
-        ? (goal.totalSaved / goal.targetAmount)
-        : 0.0;
-    final percent = (progress * 100).toInt();
+    final progress =
+        (goal.targetAmount > 0 ? (goal.totalSaved / goal.targetAmount) : 0.0)
+            .clamp(0.0, 1.0);
+    final percent = (progress * 100).toInt().clamp(0, 100);
 
     return SizedBox(
       width: 140,

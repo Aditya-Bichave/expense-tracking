@@ -33,13 +33,18 @@ class StitchNetBalanceCard extends StatelessWidget {
     // Heavily customized card, keeping structure but using tokens
     return Container(
       // Fixed: Removed .horizontal accessor on double
-      margin: kit.spacing.vSm.copyWith(left: kit.spacing.lg, right: kit.spacing.lg),
+      margin: kit.spacing.vSm.copyWith(
+        left: kit.spacing.lg,
+        right: kit.spacing.lg,
+      ),
       height: 220,
       decoration: BoxDecoration(
         color: kit.colors.surface,
         borderRadius: kit.radii.card, // Using card radius from token
         border: Border.all(color: kit.colors.primary.withOpacity(0.1)),
-        boxShadow: kit.shadows.lg, // Using large shadow token if available, or approximated
+        boxShadow: kit
+            .shadows
+            .lg, // Using large shadow token if available, or approximated
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -93,8 +98,8 @@ class StitchNetBalanceCard extends StatelessWidget {
                           BridgeText(
                             'MONTHLY INCOME',
                             style: kit.typography.overline.copyWith(
-                                color: kit.colors.textSecondary,
-                                fontSize: 10,
+                              color: kit.colors.textSecondary,
+                              fontSize: 10,
                             ),
                           ),
                           kit.spacing.gapXs,

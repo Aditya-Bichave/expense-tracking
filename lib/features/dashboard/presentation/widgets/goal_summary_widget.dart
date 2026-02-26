@@ -87,7 +87,7 @@ class GoalSummaryWidget extends StatelessWidget {
           children: goals.map((goal) {
             final progress = goal.percentageComplete;
             final progressColor = goal.isAchieved
-                ? Colors.green.shade600
+                ? kit.colors.success
                 : kit.colors.primary;
             return AppCard(
               margin: kit.spacing.vXs,
@@ -119,7 +119,9 @@ class GoalSummaryWidget extends StatelessWidget {
                             Flexible(
                               child: BridgeText(
                                 goal.name,
-                                style: kit.typography.title.copyWith(fontSize: 16),
+                                style: kit.typography.title.copyWith(
+                                  fontSize: 16,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -147,8 +149,7 @@ class GoalSummaryWidget extends StatelessWidget {
                     lineHeight: 8.0,
                     percent: progress.clamp(0.0, 1.0),
                     barRadius: const Radius.circular(4),
-                    backgroundColor:
-                        kit.colors.surfaceContainer,
+                    backgroundColor: kit.colors.surfaceContainer,
                     progressColor: progressColor,
                     animation: true,
                     animationDuration: 600,

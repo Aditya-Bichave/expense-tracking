@@ -53,7 +53,11 @@ class StitchQuickActions extends StatelessWidget {
                   Icons.group_add,
                   'Group',
                   false,
-                  () {},
+                  () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Coming soon')),
+                    );
+                  },
                 ),
               ), // No route for Add Group yet?
             ],

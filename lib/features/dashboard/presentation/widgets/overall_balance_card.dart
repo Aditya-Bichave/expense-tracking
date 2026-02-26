@@ -21,7 +21,9 @@ class OverallBalanceCard extends StatelessWidget {
 
     // Determine color based on balance
     final balanceColor = overview.overallBalance >= 0
-        ? kit.colors.primary // Use primary color for positive balance
+        ? kit
+              .colors
+              .primary // Use primary color for positive balance
         : kit.colors.error; // Use error color for negative balance
 
     return AppCard(
@@ -45,7 +47,8 @@ class OverallBalanceCard extends StatelessWidget {
               // Make balance stand out
               fontWeight: FontWeight.bold,
               color: balanceColor,
-              fontSize: 32, // Manually keeping size closer to headlineMedium for now, or use displaySmall
+              fontSize:
+                  32, // Manually keeping size closer to headlineMedium for now, or use displaySmall
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

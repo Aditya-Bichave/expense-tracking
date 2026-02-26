@@ -19,7 +19,10 @@ class StitchHeader extends StatelessWidget {
     final kit = context.kit;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg, vertical: kit.spacing.md),
+      padding: EdgeInsets.symmetric(
+        horizontal: kit.spacing.lg,
+        vertical: kit.spacing.md,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -96,10 +99,7 @@ class StitchHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: kit.colors.primary,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: kit.colors.surface,
-                      width: 2,
-                    ),
+                    border: Border.all(color: kit.colors.surface, width: 2),
                   ),
                 ),
               ),

@@ -185,7 +185,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildReportNavigationButtons(BuildContext context) {
     // ... (implementation unchanged) ...
-    final theme = Theme.of(context); // Maintaining Theme.of for legacy chips for now, can migrate to Bridge later
+    final theme = Theme.of(
+      context,
+    ); // Maintaining Theme.of for legacy chips for now, can migrate to Bridge later
     final kit = context.kit;
 
     return Padding(
@@ -308,121 +310,126 @@ class _DashboardPageState extends State<DashboardPage> {
       // If I can't touch AppScaffold, and it forces SafeArea, Aether might look clipped.
       // Let's stick to the plan: "Replace Scaffold with UiScaffold (if available) OR preserve existing but replace internal widgets".
       // I'll use AppScaffold for Quantum/Elemental/Stitch. Aether is "heavily customized", so "Replace only the styling parts. Preserve structure." applies.
-
       body: isAether
-        ? Scaffold(
-            extendBodyBehindAppBar: true,
-            appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
-            body: _buildBody(context, uiMode, settingsState),
-          )
-        : AppScaffold(
-            appBar: AppBar(title: Text("Dashboard", style: kit.typography.title)),
-            body: _buildBody(context, uiMode, settingsState),
-            safeAreaTop: true, // Default
-          ),
+          ? Scaffold(
+              extendBodyBehindAppBar: true,
+              appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+              body: _buildBody(context, uiMode, settingsState),
+            )
+          : AppScaffold(
+              appBar: AppBar(
+                title: Text("Dashboard", style: kit.typography.title),
+              ),
+              body: _buildBody(context, uiMode, settingsState),
+              safeAreaTop: true, // Default
+            ),
     );
   }
 
-  Widget _buildBody(BuildContext context, UIMode uiMode, SettingsState settingsState) {
+  Widget _buildBody(
+    BuildContext context,
+    UIMode uiMode,
+    SettingsState settingsState,
+  ) {
     final theme = Theme.of(context);
 
     return BlocConsumer<DashboardBloc, DashboardState>(
-        listener: (context, state) {
-          if (state is DashboardError) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text("Dashboard Error: ${state.message}"),
-                  backgroundColor: theme.colorScheme.error,
-                ),
-              );
-          }
-        },
-        builder: (context, state) {
-          log.fine(
-            "[DashboardPage] BlocBuilder building for state: ${state.runtimeType}",
-          );
-          Widget bodyContent;
-
-          if (state is DashboardLoading && !state.isReloading) {
-            bodyContent = const Center(child: CircularProgressIndicator());
-          } else if (state is DashboardLoaded ||
-              (state is DashboardLoading && state.isReloading)) {
-            final overview = (state is DashboardLoaded)
-                ? state.overview
-                : (context.read<DashboardBloc>().state as DashboardLoaded?)
-                      ?.overview; // Use previous data if reloading
-            if (overview == null && state is DashboardLoading) {
-              bodyContent = const Center(
-                child: CircularProgressIndicator(),
-              ); // Still loading initial data
-            } else if (overview == null) {
-              bodyContent = const Center(
-                child: Text("Failed to load overview data."),
-              ); // Error case if overview somehow null after loading
-            } else {
-              switch (uiMode) {
-                case UIMode.aether:
-                  bodyContent = _buildAetherDashboardBody(
-                    context,
-                    overview,
-                    settingsState,
-                  );
-                  break;
-                case UIMode.stitch:
-                  bodyContent = StitchDashboardBody(
-                    overview: overview,
-                    navigateToDetailOrEdit: _navigateToDetailOrEdit,
-                    onRefresh: _refreshDashboard,
-                  );
-                  break;
-                case UIMode.quantum:
-                case UIMode.elemental:
-                  bodyContent = _buildElementalQuantumDashboard(
-                    context,
-                    overview,
-                    settingsState,
-                  );
-                  break;
-              }
-            }
-          } else if (state is DashboardError) {
-            bodyContent = Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Error loading dashboard: ${state.message}',
-                      style: TextStyle(color: theme.colorScheme.error),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      key: const ValueKey('button_dashboard_retry'),
-                      onPressed: _refreshDashboard,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text("Retry"),
-                    ),
-                  ],
-                ),
+      listener: (context, state) {
+        if (state is DashboardError) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text("Dashboard Error: ${state.message}"),
+                backgroundColor: theme.colorScheme.error,
               ),
             );
-          } else {
-            // Initial state
-            bodyContent = const Center(child: CircularProgressIndicator());
-          }
+        }
+      },
+      builder: (context, state) {
+        log.fine(
+          "[DashboardPage] BlocBuilder building for state: ${state.runtimeType}",
+        );
+        Widget bodyContent;
 
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: KeyedSubtree(
-              key: ValueKey(state.runtimeType.toString() + uiMode.toString()),
-              child: bodyContent,
+        if (state is DashboardLoading && !state.isReloading) {
+          bodyContent = const Center(child: CircularProgressIndicator());
+        } else if (state is DashboardLoaded ||
+            (state is DashboardLoading && state.isReloading)) {
+          final overview = (state is DashboardLoaded)
+              ? state.overview
+              : (context.read<DashboardBloc>().state as DashboardLoaded?)
+                    ?.overview; // Use previous data if reloading
+          if (overview == null && state is DashboardLoading) {
+            bodyContent = const Center(
+              child: CircularProgressIndicator(),
+            ); // Still loading initial data
+          } else if (overview == null) {
+            bodyContent = const Center(
+              child: Text("Failed to load overview data."),
+            ); // Error case if overview somehow null after loading
+          } else {
+            switch (uiMode) {
+              case UIMode.aether:
+                bodyContent = _buildAetherDashboardBody(
+                  context,
+                  overview,
+                  settingsState,
+                );
+                break;
+              case UIMode.stitch:
+                bodyContent = StitchDashboardBody(
+                  overview: overview,
+                  navigateToDetailOrEdit: _navigateToDetailOrEdit,
+                  onRefresh: _refreshDashboard,
+                );
+                break;
+              case UIMode.quantum:
+              case UIMode.elemental:
+                bodyContent = _buildElementalQuantumDashboard(
+                  context,
+                  overview,
+                  settingsState,
+                );
+                break;
+            }
+          }
+        } else if (state is DashboardError) {
+          bodyContent = Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Error loading dashboard: ${state.message}',
+                    style: TextStyle(color: theme.colorScheme.error),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    key: const ValueKey('button_dashboard_retry'),
+                    onPressed: _refreshDashboard,
+                    icon: const Icon(Icons.refresh),
+                    label: const Text("Retry"),
+                  ),
+                ],
+              ),
             ),
           );
-        },
-      );
+        } else {
+          // Initial state
+          bodyContent = const Center(child: CircularProgressIndicator());
+        }
+
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: KeyedSubtree(
+            key: ValueKey(state.runtimeType.toString() + uiMode.toString()),
+            child: bodyContent,
+          ),
+        );
+      },
+    );
   }
 }

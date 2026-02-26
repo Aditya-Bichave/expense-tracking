@@ -42,7 +42,6 @@ class AssetDistributionSection extends StatelessWidget {
     Map<String, double> accountBalances,
     SettingsState settings,
   ) {
-    final theme = Theme.of(context);
     final kit = context.kit;
     final currencySymbol = settings.currencySymbol;
     final rows = accountBalances.entries.map((entry) {
@@ -91,9 +90,24 @@ class AssetDistributionSection extends StatelessWidget {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Account')),
-                DataColumn(label: Text('Balance'), numeric: true),
+              columns: [
+                DataColumn(
+                  label: BridgeText(
+                    'Account',
+                    style: kit.typography.body.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: BridgeText(
+                    'Balance',
+                    style: kit.typography.body.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  numeric: true,
+                ),
               ],
               rows: rows,
             ),

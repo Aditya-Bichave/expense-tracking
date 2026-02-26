@@ -1,5 +1,5 @@
 // lib/features/dashboard/presentation/widgets/budget_summary_widget.dart
-import 'dart:io';
+import 'package:flutter/foundation.dart'; // Import for kIsWeb
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
@@ -20,11 +20,13 @@ import 'package:expense_tracker/ui_bridge/bridge_button.dart';
 class BudgetSummaryWidget extends StatelessWidget {
   final List<BudgetWithStatus> budgets;
   final List<TimeSeriesDataPoint> recentSpendingData;
+  final bool disableAnimations;
 
   const BudgetSummaryWidget({
     super.key,
     required this.budgets,
     required this.recentSpendingData,
+    this.disableAnimations = false,
   });
 
   List<FlSpot> _getSparklineSpots(List<TimeSeriesDataPoint> data) {
@@ -43,6 +45,13 @@ class BudgetSummaryWidget extends StatelessWidget {
     final settings = context.watch<SettingsBloc>().state;
     final currency = settings.currencySymbol;
     final sparklineSpots = _getSparklineSpots(recentSpendingData);
+
+    // Use injected flag, or fallback to environment check if not provided,
+    // but prefer standard kIsWeb or test binding in real apps.
+    // Here we support disableAnimations param for testability.
+    // Also checking if environment contains FLUTTER_TEST is removed to support web.
+    // We can rely on disableAnimations being passed in tests if needed, or just let animations run (pumpAndSettle handles them).
+    final shouldAnimate = !disableAnimations;
 
     if (budgets.isEmpty) {
       return Padding(
@@ -68,8 +77,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                     ),
                     BridgeButton.ghost(
                       key: const ValueKey('button_budgetSummary_create'),
-                      onPressed: () =>
-                          context.pushNamed(RouteNames.addBudget),
+                      onPressed: () => context.pushNamed(RouteNames.addBudget),
                       label: 'Create Budget',
                     ),
                   ],
@@ -91,7 +99,9 @@ class BudgetSummaryWidget extends StatelessWidget {
             final progress = budgetWithStatus.percentageUsed.clamp(0.0, 1.0);
             final progressColor =
                 budgetWithStatus.health == BudgetHealth.overLimit
-                ? kit.colors.error // Use theme error color
+                ? kit
+                      .colors
+                      .error // Use theme error color
                 : kit.colors.primary;
 
             return AppCard(
@@ -124,7 +134,9 @@ class BudgetSummaryWidget extends StatelessWidget {
                             Flexible(
                               child: BridgeText(
                                 budget.name,
-                                style: kit.typography.title.copyWith(fontSize: 16),
+                                style: kit.typography.title.copyWith(
+                                  fontSize: 16,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -153,12 +165,9 @@ class BudgetSummaryWidget extends StatelessWidget {
                     lineHeight: 8.0,
                     percent: progress,
                     barRadius: const Radius.circular(4),
-                    backgroundColor:
-                        kit.colors.surfaceContainer,
+                    backgroundColor: kit.colors.surfaceContainer,
                     progressColor: progressColor,
-                    animation: !Platform.environment.containsKey(
-                      'FLUTTER_TEST',
-                    ),
+                    animation: shouldAnimate,
                     animationDuration: 600,
                   ),
                   kit.spacing.gapXs,

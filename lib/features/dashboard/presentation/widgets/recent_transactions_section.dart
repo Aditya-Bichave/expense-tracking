@@ -44,13 +44,18 @@ class RecentTransactionsSection extends StatelessWidget {
       children: [
         SectionHeader(
           title: 'Recent Activity',
-          padding: EdgeInsets.fromLTRB(kit.spacing.lg, kit.spacing.xxl, kit.spacing.lg, kit.spacing.sm),
+          padding: EdgeInsets.fromLTRB(
+            kit.spacing.lg,
+            kit.spacing.xxl,
+            kit.spacing.lg,
+            kit.spacing.sm,
+          ),
         ),
         if (isLoading && recentItems.isEmpty)
           Center(
             child: Padding(
               padding: kit.spacing.vXl,
-              child: const CircularProgressIndicator(strokeWidth: 2), // Should replace with AppLoadingIndicator if available
+              child: const AppLoadingIndicator(),
             ),
           )
         else if (errorMsg != null && recentItems.isEmpty)
@@ -90,7 +95,10 @@ class RecentTransactionsSection extends StatelessWidget {
           ),
         // "View All" Button
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg, vertical: kit.spacing.md),
+          padding: EdgeInsets.symmetric(
+            horizontal: kit.spacing.lg,
+            vertical: kit.spacing.md,
+          ),
           child: Center(
             child: BridgeButton.ghost(
               key: const ValueKey('button_recentTransactions_viewAll'),

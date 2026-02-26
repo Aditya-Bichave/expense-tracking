@@ -155,9 +155,8 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
                       log.info(
                         "[PieChart] Touched section index: ${pieTouchResponse.touchedSection!.touchedSectionIndex}",
                       );
-                      touchedIndex = pieTouchResponse
-                          .touchedSection!
-                          .touchedSectionIndex;
+                      touchedIndex =
+                          pieTouchResponse.touchedSection!.touchedSectionIndex;
                     });
                   },
                 ),
