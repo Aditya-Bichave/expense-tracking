@@ -40,6 +40,8 @@ import 'package:expense_tracker/core/services/deep_link_service.dart';
 import 'package:expense_tracker/core/bloc/deep_link_bloc.dart';
 import 'package:expense_tracker/core/bloc/deep_link_event.dart';
 
+export 'package:expense_tracker/core/utils/logger.dart';
+
 void main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
