@@ -71,7 +71,12 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                 (g) => g.id == widget.groupId,
               );
               groupName = group.name;
-            } catch (_) {}
+            } on StateError {
+                // Group not found in loaded list, fallback to default name
+            } catch (e) {
+                // Log unexpected error if needed
+                debugPrint('Error finding group: $e');
+            }
           }
 
           return BlocListener<GroupMembersBloc, GroupMembersState>(

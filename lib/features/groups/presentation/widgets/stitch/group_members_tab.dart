@@ -23,13 +23,24 @@ class GroupMembersTab extends StatelessWidget {
         if (state is GroupMembersLoading) {
           return const AppLoadingIndicator();
         } else if (state is GroupMembersLoaded) {
+          if (state.members.isEmpty) {
+            return Center(
+              child: Text(
+                'No members loaded',
+                style: kit.typography.body,
+              ),
+            );
+          }
+
           final currentUser =
               (context.read<AuthBloc>().state as AuthAuthenticated).user;
-          final currentMember = state.members.firstWhere(
+          // Use safe lookup or null if not found
+          final currentMember = state.members.cast<dynamic>().firstWhere(
             (m) => m.userId == currentUser.id,
-            orElse: () => state.members.first, // Fallback
+            orElse: () => null,
           );
-          final isAdmin = currentMember.role == GroupRole.admin;
+
+          final isAdmin = currentMember != null && currentMember.role == GroupRole.admin;
 
           return ListView.builder(
             itemCount: state.members.length,
