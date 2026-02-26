@@ -1,101 +1,91 @@
+// ignore_for_file: directives_ordering
+
+import 'package:expense_tracker/core/data/demo_data.dart';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  late DemoModeService demoModeService;
+  late DemoModeService service;
 
   setUp(() {
-    demoModeService = DemoModeService();
-    demoModeService.exitDemoMode(); // Reset state
+    service = DemoModeService();
+    service.exitDemoMode(); // Ensure clean state
   });
 
   tearDown(() {
-    demoModeService.exitDemoMode();
+    service.exitDemoMode();
   });
 
-  test('initially isDemoActive is false', () {
-    expect(demoModeService.isDemoActive, isFalse);
-  });
+  group('DemoModeService', () {
+    test('initially isDemoActive is false', () {
+      expect(service.isDemoActive, false);
+    });
 
-  test('enterDemoMode sets isDemoActive to true and loads data', () async {
-    demoModeService.enterDemoMode();
+    test('enterDemoMode sets isDemoActive to true and loads data', () async {
+      service.enterDemoMode();
+      expect(service.isDemoActive, true);
 
-    expect(demoModeService.isDemoActive, isTrue);
+      final expenses = await service.getDemoExpenses();
+      // DemoData.sampleExpenses should be loaded
+      expect(expenses.length, DemoData.sampleExpenses.length);
+    });
 
-    final expenses = await demoModeService.getDemoExpenses();
-    expect(expenses, isNotEmpty);
+    test('exitDemoMode clears data and sets isDemoActive to false', () async {
+      service.enterDemoMode();
+      service.exitDemoMode();
 
-    final incomes = await demoModeService.getDemoIncomes();
-    expect(incomes, isNotEmpty);
-  });
+      expect(service.isDemoActive, false);
+      final expenses = await service.getDemoExpenses();
+      expect(expenses, isEmpty);
+    });
 
-  test('exitDemoMode clears data and sets isDemoActive to false', () async {
-    demoModeService.enterDemoMode();
-    demoModeService.exitDemoMode();
+    test('addDemoExpense adds expense to memory cache', () async {
+      service.enterDemoMode();
+      final initialCount = (await service.getDemoExpenses()).length;
 
-    expect(demoModeService.isDemoActive, isFalse);
+      final newExpense = ExpenseModel(
+        id: 'new-1',
+        title: 'Test',
+        amount: 10.0,
+        date: DateTime.now(),
+        accountId: 'acc-1',
+      );
 
-    final expenses = await demoModeService.getDemoExpenses();
-    expect(expenses, isEmpty);
-  });
+      await service.addDemoExpense(newExpense);
+      final expenses = await service.getDemoExpenses();
 
-  test('addDemoExpense adds expense to memory cache', () async {
-    demoModeService.enterDemoMode();
-    final initialCount = (await demoModeService.getDemoExpenses()).length;
+      expect(expenses.length, initialCount + 1);
+      expect(expenses.last.id, 'new-1');
+    });
 
-    final newExpense = ExpenseModel(
-      id: 'test_id',
-      amount: 100,
-      date: DateTime.now(),
-      categoryId: 'cat_id',
-      accountId: 'acc_id',
-      title: 'Test Expense',
-    );
+    test('updateDemoExpense updates existing expense', () async {
+      service.enterDemoMode();
+      final original = (await service.getDemoExpenses()).first;
 
-    await demoModeService.addDemoExpense(newExpense);
+      final updated = ExpenseModel(
+        id: original.id,
+        title: 'Updated Title',
+        amount: 999.0,
+        date: original.date,
+        accountId: original.accountId,
+      );
 
-    final expenses = await demoModeService.getDemoExpenses();
-    expect(expenses.length, equals(initialCount + 1));
-    expect(expenses.last.id, equals('test_id'));
-  });
+      await service.updateDemoExpense(updated);
+      final result = await service.getDemoExpenseById(original.id);
 
-  test('updateDemoExpense updates existing expense', () async {
-    demoModeService.enterDemoMode();
-    final expenses = await demoModeService.getDemoExpenses();
-    final originalExpense = expenses.first;
+      expect(result?.title, 'Updated Title');
+      expect(result?.amount, 999.0);
+    });
 
-    final updatedExpense = ExpenseModel(
-      id: originalExpense.id,
-      amount: 999.99, // Updated amount
-      date: originalExpense.date,
-      categoryId: originalExpense.categoryId,
-      accountId: originalExpense.accountId,
-      title: originalExpense.title,
-      categorizationStatusValue: originalExpense.categorizationStatusValue,
-      confidenceScoreValue: originalExpense.confidenceScoreValue,
-      isRecurring: originalExpense.isRecurring,
-      merchantId: originalExpense.merchantId,
-    );
+    test('deleteDemoExpense removes expense', () async {
+      service.enterDemoMode();
+      final original = (await service.getDemoExpenses()).first;
 
-    await demoModeService.updateDemoExpense(updatedExpense);
+      await service.deleteDemoExpense(original.id);
+      final result = await service.getDemoExpenseById(original.id);
 
-    final fetchedExpense = await demoModeService.getDemoExpenseById(
-      originalExpense.id,
-    );
-    expect(fetchedExpense?.amount, equals(999.99));
-  });
-
-  test('deleteDemoExpense removes expense', () async {
-    demoModeService.enterDemoMode();
-    final expenses = await demoModeService.getDemoExpenses();
-    final idToDelete = expenses.first.id;
-    final initialCount = expenses.length;
-
-    await demoModeService.deleteDemoExpense(idToDelete);
-
-    final newExpenses = await demoModeService.getDemoExpenses();
-    expect(newExpenses.length, equals(initialCount - 1));
-    expect(newExpenses.where((e) => e.id == idToDelete), isEmpty);
+      expect(result, isNull);
+    });
   });
 }

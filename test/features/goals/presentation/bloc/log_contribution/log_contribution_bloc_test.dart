@@ -1,5 +1,8 @@
+// ignore_for_file: directives_ordering
+
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/add_contribution.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/check_goal_achievement.dart';
@@ -7,10 +10,10 @@ import 'package:expense_tracker/features/goals/domain/usecases/delete_contributi
 import 'package:expense_tracker/features/goals/domain/usecases/update_contribution.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:uuid/uuid.dart';
 
+// Mocks
 class MockAddContributionUseCase extends Mock
     implements AddContributionUseCase {}
 
@@ -23,17 +26,32 @@ class MockDeleteContributionUseCase extends Mock
 class MockCheckGoalAchievementUseCase extends Mock
     implements CheckGoalAchievementUseCase {}
 
+class MockUuid extends Mock implements Uuid {}
+
+// Fakes
+class FakeAddContributionParams extends Fake implements AddContributionParams {}
+
+class FakeUpdateContributionParams extends Fake
+    implements UpdateContributionParams {}
+
+class FakeDeleteContributionParams extends Fake
+    implements DeleteContributionParams {}
+
+class FakeCheckGoalParams extends Fake implements CheckGoalParams {}
+
 void main() {
+  late LogContributionBloc bloc;
   late MockAddContributionUseCase mockAddContributionUseCase;
   late MockUpdateContributionUseCase mockUpdateContributionUseCase;
   late MockDeleteContributionUseCase mockDeleteContributionUseCase;
   late MockCheckGoalAchievementUseCase mockCheckGoalAchievementUseCase;
+  late MockUuid mockUuid;
 
   setUpAll(() {
-    registerFallbackValue(
-      AddContributionParams(goalId: 'g1', amount: 10, date: DateTime.now()),
-    );
-    registerFallbackValue(CheckGoalParams(goalId: 'g1'));
+    registerFallbackValue(FakeAddContributionParams());
+    registerFallbackValue(FakeUpdateContributionParams());
+    registerFallbackValue(FakeDeleteContributionParams());
+    registerFallbackValue(FakeCheckGoalParams());
   });
 
   setUp(() {
@@ -41,50 +59,72 @@ void main() {
     mockUpdateContributionUseCase = MockUpdateContributionUseCase();
     mockDeleteContributionUseCase = MockDeleteContributionUseCase();
     mockCheckGoalAchievementUseCase = MockCheckGoalAchievementUseCase();
+    mockUuid = MockUuid();
 
-    final getIt = GetIt.instance;
-    // Ensure we start with a clean slate or check registration
-    if (getIt.isRegistered<Uuid>()) {
-      getIt.unregister<Uuid>();
-    }
-    getIt.registerSingleton<Uuid>(const Uuid());
+    when(() => mockUuid.v4()).thenReturn('new-id');
+
+    // Default mock behavior for check achievement
+    when(
+      () => mockCheckGoalAchievementUseCase(any()),
+    ).thenAnswer((_) async => const Right(false));
+
+    bloc = LogContributionBloc(
+      addContributionUseCase: mockAddContributionUseCase,
+      updateContributionUseCase: mockUpdateContributionUseCase,
+      deleteContributionUseCase: mockDeleteContributionUseCase,
+      checkGoalAchievementUseCase: mockCheckGoalAchievementUseCase,
+      uuid: mockUuid,
+    );
   });
 
   tearDown(() {
-    GetIt.instance.reset();
+    bloc.close();
   });
 
+  final tContribution = GoalContribution(
+    id: 'c1',
+    goalId: 'g1',
+    amount: 100.0,
+    date: DateTime(2023, 1, 1),
+    note: 'Note',
+    createdAt: DateTime(2023, 1, 1),
+  );
+
   group('LogContributionBloc', () {
+    test('initial state is correct', () {
+      expect(bloc.state.status, LogContributionStatus.initial);
+      expect(bloc.state.goalId, '');
+    });
+
     blocTest<LogContributionBloc, LogContributionState>(
-      'emits success when SaveContribution is added',
-      build: () {
-        when(() => mockAddContributionUseCase(any())).thenAnswer(
-          (_) async => Right(
-            GoalContribution(
-              id: 'c1',
-              goalId: 'g1',
-              amount: 100,
-              date: DateTime.now(),
-              createdAt: DateTime.now(),
-            ),
-          ),
-        );
+      'InitializeContribution sets state correctly',
+      build: () => bloc,
+      act: (bloc) => bloc.add(const InitializeContribution(goalId: 'g1')),
+      expect: () => [
+        isA<LogContributionState>()
+            .having((s) => s.goalId, 'goalId', 'g1')
+            .having((s) => s.status, 'status', LogContributionStatus.initial),
+      ],
+    );
+
+    blocTest<LogContributionBloc, LogContributionState>(
+      'SaveContribution (Add) emits [loading, success] on success',
+      setUp: () {
         when(
-          () => mockCheckGoalAchievementUseCase(any()),
-        ).thenAnswer((_) async => const Right(false));
-        return LogContributionBloc(
-          addContributionUseCase: mockAddContributionUseCase,
-          updateContributionUseCase: mockUpdateContributionUseCase,
-          deleteContributionUseCase: mockDeleteContributionUseCase,
-          checkGoalAchievementUseCase: mockCheckGoalAchievementUseCase,
-        );
+          () => mockAddContributionUseCase(any()),
+        ).thenAnswer((_) async => Right(tContribution));
       },
+      build: () => bloc,
       seed: () => LogContributionState(
         goalId: 'g1',
         status: LogContributionStatus.initial,
       ),
       act: (bloc) => bloc.add(
-        SaveContribution(amount: 100, date: DateTime.now(), note: 'Test'),
+        SaveContribution(
+          amount: 100.0,
+          date: DateTime(2023, 1, 1),
+          note: 'Note',
+        ),
       ),
       expect: () => [
         isA<LogContributionState>().having(
@@ -97,6 +137,89 @@ void main() {
           'status',
           LogContributionStatus.success,
         ),
+      ],
+      verify: (_) {
+        verify(() => mockAddContributionUseCase(any())).called(1);
+        verify(() => mockCheckGoalAchievementUseCase(any())).called(1);
+      },
+    );
+
+    blocTest<LogContributionBloc, LogContributionState>(
+      'SaveContribution (Edit) emits [loading, success] on success',
+      setUp: () {
+        when(
+          () => mockUpdateContributionUseCase(any()),
+        ).thenAnswer((_) async => Right(tContribution));
+      },
+      build: () => bloc,
+      seed: () => LogContributionState(
+        goalId: 'g1',
+        initialContribution: tContribution,
+        status: LogContributionStatus.initial,
+      ),
+      act: (bloc) =>
+          bloc.add(SaveContribution(amount: 200.0, date: DateTime(2023, 1, 1))),
+      expect: () => [
+        isA<LogContributionState>().having(
+          (s) => s.status,
+          'status',
+          LogContributionStatus.loading,
+        ),
+        isA<LogContributionState>().having(
+          (s) => s.status,
+          'status',
+          LogContributionStatus.success,
+        ),
+      ],
+      verify: (_) {
+        verify(() => mockUpdateContributionUseCase(any())).called(1);
+      },
+    );
+
+    blocTest<LogContributionBloc, LogContributionState>(
+      'DeleteContribution emits [loading, success] on success',
+      setUp: () {
+        when(
+          () => mockDeleteContributionUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
+      },
+      build: () => bloc,
+      seed: () => LogContributionState(
+        goalId: 'g1',
+        initialContribution: tContribution,
+        status: LogContributionStatus.initial,
+      ),
+      act: (bloc) => bloc.add(const DeleteContribution()),
+      expect: () => [
+        isA<LogContributionState>().having(
+          (s) => s.status,
+          'status',
+          LogContributionStatus.loading,
+        ),
+        isA<LogContributionState>().having(
+          (s) => s.status,
+          'status',
+          LogContributionStatus.success,
+        ),
+      ],
+    );
+
+    blocTest<LogContributionBloc, LogContributionState>(
+      'DeleteContribution emits error if not editing',
+      build: () => bloc,
+      seed: () => LogContributionState(
+        goalId: 'g1',
+        status: LogContributionStatus.initial,
+      ),
+      act: (bloc) => bloc.add(const DeleteContribution()),
+      expect: () => [
+        isA<LogContributionState>()
+            .having((s) => s.status, 'status', LogContributionStatus.error)
+            .having(
+              (s) => s.errorMessage,
+              'message',
+              contains('Cannot delete'),
+            ),
       ],
     );
   });

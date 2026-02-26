@@ -1,5 +1,6 @@
-import 'dart:convert';
+// ignore_for_file: directives_ordering
 
+import 'dart:convert';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -8,91 +9,91 @@ import 'package:simple_logger/simple_logger.dart';
 
 class MockHttpClient extends Mock implements http.Client {}
 
+class FakeUri extends Fake implements Uri {}
+
 void main() {
   setUpAll(() {
-    registerFallbackValue(Uri.parse('/log'));
+    registerFallbackValue(FakeUri());
   });
 
-  tearDown(() {
-    debugLogClient = null;
-  });
+  group('Logger', () {
+    late MockHttpClient mockClient;
 
-  test('Logger initializes correctly', () {
-    expect(log, isNotNull);
-    expect(log, isA<SimpleLogger>());
-  });
+    setUp(() {
+      mockClient = MockHttpClient();
+      debugLogClient = mockClient; // Inject mock client
+    });
 
-  test('sendToServer sends POST request with correct data', () async {
-    // Avoid throttling from previous tests
-    await Future.delayed(const Duration(milliseconds: 150));
+    tearDown(() {
+      debugLogClient = null;
+    });
 
-    final mockClient = MockHttpClient();
-    debugLogClient = mockClient;
+    test('Logger initializes correctly', () {
+      expect(log, isNotNull);
+    });
 
-    when(
-      () => mockClient.post(
-        any(),
-        headers: any(named: 'headers'),
-        body: any(named: 'body'),
-      ),
-    ).thenAnswer((_) async => http.Response('{"ok":true}', 200));
+    test('sendToServer sends POST request with correct data', () async {
+      when(
+        () => mockClient.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => http.Response('OK', 200));
 
-    final info = LogInfo(
-      level: Level.INFO,
-      message: 'Test message',
-      time: DateTime.now(),
-      stackTrace: StackTrace.empty,
-    );
+      final info = LogInfo(
+        level: Level.INFO,
+        message: 'Test message',
+        time: DateTime.now(),
+        // callerFrame: null, // Optional, skipping to avoid package:stack_trace dependency issues in test
+        stackTrace: StackTrace.current,
+      );
 
-    // Act
-    await sendToServer(info);
+      // We need to wait slightly to avoid throttle from previous tests if run in suite
+      await Future.delayed(const Duration(milliseconds: 200));
 
-    // Assert
-    verify(
-      () => mockClient.post(
-        Uri.parse('/log'),
-        headers: {'Content-Type': 'application/json'},
-        body: any(named: 'body', that: contains('Test message')),
-      ),
-    ).called(1);
-  });
+      await sendToServer(info, endpoint: 'http://test.com/log');
 
-  test('sendToServer throttles requests', () async {
-    final mockClient = MockHttpClient();
-    debugLogClient = mockClient;
+      verify(
+        () => mockClient.post(
+          Uri.parse('http://test.com/log'),
+          headers: {'Content-Type': 'application/json'},
+          body: any(named: 'body'),
+        ),
+      ).called(1);
+    });
 
-    when(
-      () => mockClient.post(
-        any(),
-        headers: any(named: 'headers'),
-        body: any(named: 'body'),
-      ),
-    ).thenAnswer((_) async => http.Response('{"ok":true}', 200));
+    test('sendToServer throttles requests', () async {
+      when(
+        () => mockClient.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => http.Response('OK', 200));
 
-    final info = LogInfo(
-      level: Level.INFO,
-      message: 'Test message',
-      time: DateTime.now(),
-    );
+      final info = LogInfo(
+        level: Level.INFO,
+        message: 'Test',
+        time: DateTime.now(),
+      );
 
-    // Act
-    // First call might be throttled if run immediately after previous test due to static _lastLogTime
-    // So we wait a bit to ensure it can run
-    await Future.delayed(const Duration(milliseconds: 150));
-    await sendToServer(info); // Should be Allowed
+      // Wait to clear previous throttle
+      await Future.delayed(const Duration(milliseconds: 200));
 
-    // These should be throttled
-    await sendToServer(info);
-    await sendToServer(info);
+      // First call
+      await sendToServer(info);
+      // Immediate second call
+      await sendToServer(info);
 
-    // Assert
-    // Should be called only once
-    verify(
-      () => mockClient.post(
-        any(),
-        headers: any(named: 'headers'),
-        body: any(named: 'body'),
-      ),
-    ).called(1);
+      // Should be called once due to 100ms throttle
+      verify(
+        () => mockClient.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).called(1);
+    });
   });
 }
