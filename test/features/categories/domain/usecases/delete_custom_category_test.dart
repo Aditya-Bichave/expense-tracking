@@ -32,7 +32,8 @@ void main() {
 
   const tParams = DeleteCustomCategoryParams(
     categoryId: 'cat1',
-    fallbackCategoryId: 'default',
+    fallbackExpenseCategoryId: 'default_expense',
+    fallbackIncomeCategoryId: 'default_income',
   );
 
   test('should delete category and reassign transactions', () async {
@@ -53,13 +54,22 @@ void main() {
     // Assert
     expect(result, const Right(null));
     verify(
-      () => mockExpenseRepository.reassignExpensesCategory('cat1', 'default'),
+      () => mockExpenseRepository.reassignExpensesCategory(
+        'cat1',
+        'default_expense',
+      ),
     ).called(1);
     verify(
-      () => mockIncomeRepository.reassignIncomesCategory('cat1', 'default'),
+      () => mockIncomeRepository.reassignIncomesCategory(
+        'cat1',
+        'default_income',
+      ),
     ).called(1);
     verify(
-      () => mockCategoryRepository.deleteCustomCategory('cat1', 'default'),
+      () => mockCategoryRepository.deleteCustomCategory(
+        'cat1',
+        'default_expense',
+      ),
     ).called(1);
   });
 
@@ -81,11 +91,17 @@ void main() {
       expect(result, const Left(CacheFailure("Fail")));
       // Verify expense reassignment happened once
       verify(
-        () => mockExpenseRepository.reassignExpensesCategory('cat1', 'default'),
+        () => mockExpenseRepository.reassignExpensesCategory(
+          'cat1',
+          'default_expense',
+        ),
       ).called(1);
       // Verify NO rollback called (swapped IDs)
       verifyNever(
-        () => mockExpenseRepository.reassignExpensesCategory('default', 'cat1'),
+        () => mockExpenseRepository.reassignExpensesCategory(
+          'default_expense',
+          'cat1',
+        ),
       );
       // Verify deletion didn't happen
       verifyNever(

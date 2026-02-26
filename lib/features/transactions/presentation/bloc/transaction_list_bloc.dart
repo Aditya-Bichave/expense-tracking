@@ -497,25 +497,13 @@ class TransactionListBloc
       );
       emit(
         state.copyWith(
-          status: ListStatus.error,
+          status: ListStatus.success, // Keep list visible, but show error
           errorMessage: _mapFailureToMessage(
             batchFailure!,
             context: "Failed batch category update",
           ),
         ),
       );
-      // Keep batch mode active, but reset status after showing error
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (state.status == ListStatus.error) {
-          emit(
-            state.copyWith(
-              status: ListStatus.success,
-              clearErrorMessage: true,
-              clearDeleteError: true,
-            ),
-          );
-        }
-      });
     } else {
       log.info(
         "[TransactionListBloc] ApplyBatchCategory successful. Refreshing transactions from source.",
@@ -568,15 +556,19 @@ class TransactionListBloc
         log.warning(
           "[TransactionListBloc] DeleteTransaction failed for ${txn.id}: ${failure.message}",
         );
+        // Do not restore previousState as it might be stale.
+        // Instead, emit error and reload to get the correct state.
         emit(
-          previousState.copyWith(
+          state.copyWith(
             deleteError: _mapFailureToMessage(
               failure,
               context: "Failed to delete",
             ),
             clearErrorMessage: true,
+            status: ListStatus.reloading,
           ),
         );
+        add(const LoadTransactions(forceReload: true));
       },
       (_) {
         log.info(
