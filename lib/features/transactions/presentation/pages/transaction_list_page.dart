@@ -1,5 +1,4 @@
 // lib/features/transactions/presentation/pages/transaction_list_page.dart
-import 'dart:async'; // For Timer (debounce)
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
@@ -39,7 +38,6 @@ class TransactionListPage extends StatefulWidget {
 class _TransactionListPageState extends State<TransactionListPage> {
   final TextEditingController _searchController = TextEditingController();
   bool _showCalendarView = false;
-  Timer? _debounce;
 
   // Calendar state
   CalendarFormat _calendarFormat = CalendarFormat.month;
@@ -83,7 +81,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
-    _debounce?.cancel();
     super.dispose();
   }
 
@@ -96,16 +93,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   // --- Interaction Handlers (Keep as is) ---
   void _onSearchChanged() {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        final searchTerm = _searchController.text.trim();
-        log.fine("[TxnListPage] Search term changed: '$searchTerm'");
-        context.read<TransactionListBloc>().add(
-          SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
-        );
-      }
-    });
+    final searchTerm = _searchController.text.trim();
+    // Debounce is handled in the Bloc
+    context.read<TransactionListBloc>().add(
+      SearchChanged(searchTerm: searchTerm.isEmpty ? null : searchTerm),
+    );
   }
 
   void _clearSearch() {

@@ -1,5 +1,6 @@
 // lib/features/reports/presentation/widgets/charts/income_expense_bar_chart.dart
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/chart_utils.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -266,9 +267,9 @@ class IncomeExpenseBarChart extends StatelessWidget {
   ) {
     switch (periodType) {
       case IncomeExpensePeriodType.monthly:
-        return DateFormat('MMM yyyy').format(date);
+        return DateFormatter.format(date, 'MMM yyyy');
       case IncomeExpensePeriodType.yearly:
-        return DateFormat('yyyy').format(date);
+        return DateFormatter.format(date, 'yyyy');
     }
   }
 
@@ -291,16 +292,16 @@ class IncomeExpenseBarChart extends StatelessWidget {
     String text;
     switch (periodType) {
       case IncomeExpensePeriodType.monthly:
-        text = DateFormat('MMM').format(date);
+        text = DateFormatter.format(date, 'MMM');
         // Add year label conditionally to avoid clutter
         if (date.month == 1 ||
             index == 0 ||
             (index > 0 && data[index - 1].periodStart.year != date.year)) {
-          text = '${DateFormat('yy').format(date)}\n$text';
+          text = '${DateFormatter.format(date, 'yy')}\n$text';
         }
         break;
       case IncomeExpensePeriodType.yearly:
-        text = DateFormat('yyyy').format(date);
+        text = DateFormatter.format(date, 'yyyy');
         break;
     }
 

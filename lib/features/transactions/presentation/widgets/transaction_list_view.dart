@@ -207,7 +207,7 @@ class TransactionListView extends StatelessWidget {
         final animatedCard = enableAnimations
             ? cardItem
                   .animate()
-                  .fadeIn(delay: (20 * index).ms)
+                  .fadeIn(delay: (20 * (index % 10)).ms) // Cap delay
                   .slideY(begin: 0.1)
             : cardItem;
 

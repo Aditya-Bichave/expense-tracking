@@ -28,5 +28,15 @@ void main() {
         isNot(expected),
       );
     });
+
+    test('format should format the date using custom pattern and cache it', () {
+      final dateTime = DateTime(2023, 1, 15);
+      const pattern = 'yyyy-MM-dd';
+      const expected = '2023-01-15';
+      expect(DateFormatter.format(dateTime, pattern, locale: 'en'), expected);
+
+      // Call again to verify cache (though tricky to verify cache hit, at least verify output)
+      expect(DateFormatter.format(dateTime, pattern, locale: 'en'), expected);
+    });
   });
 }

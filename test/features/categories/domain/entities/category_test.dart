@@ -23,5 +23,23 @@ void main() {
       );
       expect(c1, equals(c2));
     });
+
+    test('cachedDisplayColor returns correct Color and caches it', () {
+      const c1 = Category(
+        id: '1',
+        name: 'A',
+        iconName: 'i',
+        colorHex: '#FF0000',
+        type: CategoryType.expense,
+        isCustom: false,
+      );
+
+      final color1 = c1.cachedDisplayColor;
+      expect(color1.value, 0xFFFF0000); // ARGB
+
+      // Second call should return same result
+      final color2 = c1.cachedDisplayColor;
+      expect(color2, equals(color1));
+    });
   });
 }

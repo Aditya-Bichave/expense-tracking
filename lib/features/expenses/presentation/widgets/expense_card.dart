@@ -50,41 +50,32 @@ class ExpenseCard extends StatelessWidget {
           svgPath,
           width: 22,
           height: 22,
-          colorFilter: ColorFilter.mode(category.displayColor, BlendMode.srcIn),
+          colorFilter: ColorFilter.mode(
+            category.cachedDisplayColor,
+            BlendMode.srcIn,
+          ),
         );
       }
     }
-    return Icon(fallbackIcon, size: 22, color: category.displayColor);
+    return Icon(fallbackIcon, size: 22, color: category.cachedDisplayColor);
   }
 
+  static const Map<String, IconData> _categoryIcons = {
+    'food': Icons.restaurant,
+    'transport': Icons.directions_bus,
+    'utilities': Icons.lightbulb_outline,
+    'entertainment': Icons.local_movies,
+    'housing': Icons.home_outlined,
+    'health': Icons.local_hospital_outlined,
+    'shopping': Icons.shopping_bag_outlined,
+    'groceries': Icons.shopping_cart_outlined,
+    'subscriptions': Icons.subscriptions_outlined,
+    'medical': Icons.medical_services_outlined,
+    'uncategorized': Icons.help_outline,
+  };
+
   IconData _getElementalCategoryIcon(String categoryName) {
-    /* ... Same as before ... */
-    switch (categoryName.toLowerCase()) {
-      case 'food':
-        return Icons.restaurant;
-      case 'transport':
-        return Icons.directions_bus;
-      case 'utilities':
-        return Icons.lightbulb_outline;
-      case 'entertainment':
-        return Icons.local_movies;
-      case 'housing':
-        return Icons.home_outlined;
-      case 'health':
-        return Icons.local_hospital_outlined;
-      case 'shopping':
-        return Icons.shopping_bag_outlined;
-      case 'groceries':
-        return Icons.shopping_cart_outlined;
-      case 'subscriptions':
-        return Icons.subscriptions_outlined;
-      case 'medical':
-        return Icons.medical_services_outlined;
-      case 'uncategorized':
-        return Icons.help_outline;
-      default:
-        return Icons.label_outline;
-    }
+    return _categoryIcons[categoryName.toLowerCase()] ?? Icons.label_outline;
   }
 
   // Removed _buildStatusUI, replaced by CategorizationStatusWidget
@@ -101,7 +92,7 @@ class ExpenseCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundColor: category.displayColor.withOpacity(0.15),
+            backgroundColor: category.cachedDisplayColor.withOpacity(0.15),
             child: _buildIcon(context, modeTheme),
           ),
           SizedBox(width: modeTheme?.listItemPadding.left ?? 16),
