@@ -130,6 +130,7 @@ class GoalDependencies {
         (initialGoal, _) => AddEditGoalBloc(
           addGoalUseCase: sl<AddGoalUseCase>(),
           updateGoalUseCase: sl<UpdateGoalUseCase>(),
+          uuid: sl<Uuid>(),
           initialGoal: initialGoal,
         ),
       );
@@ -141,6 +142,7 @@ class GoalDependencies {
           updateContributionUseCase: sl<UpdateContributionUseCase>(),
           deleteContributionUseCase: sl<DeleteContributionUseCase>(),
           checkGoalAchievementUseCase: sl<CheckGoalAchievementUseCase>(),
+          uuid: sl<Uuid>(),
         ),
       );
     }

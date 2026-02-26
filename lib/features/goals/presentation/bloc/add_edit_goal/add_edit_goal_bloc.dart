@@ -18,13 +18,16 @@ part 'add_edit_goal_state.dart';
 class AddEditGoalBloc extends Bloc<AddEditGoalEvent, AddEditGoalState> {
   final AddGoalUseCase _addGoalUseCase;
   final UpdateGoalUseCase _updateGoalUseCase; // ADDED
+  final Uuid _uuid;
 
   AddEditGoalBloc({
     required AddGoalUseCase addGoalUseCase,
     required UpdateGoalUseCase updateGoalUseCase, // ADDED
+    Uuid? uuid,
     Goal? initialGoal,
   }) : _addGoalUseCase = addGoalUseCase,
        _updateGoalUseCase = updateGoalUseCase, // ADDED
+       _uuid = uuid ?? const Uuid(),
        super(AddEditGoalState(initialGoal: initialGoal)) {
     on<SaveGoal>(_onSaveGoal);
     on<ClearGoalFormMessage>(_onClearMessage);
@@ -45,7 +48,7 @@ class AddEditGoalBloc extends Bloc<AddEditGoalEvent, AddEditGoalState> {
     final goalData = Goal(
       id:
           state.initialGoal?.id ??
-          sl<Uuid>().v4(), // Use existing ID or generate new
+          _uuid.v4(), // Use existing ID or generate new
       name: event.name.trim(),
       targetAmount: event.targetAmount,
       targetDate: event.targetDate,
