@@ -25,10 +25,7 @@ class GroupMembersTab extends StatelessWidget {
         } else if (state is GroupMembersLoaded) {
           if (state.members.isEmpty) {
             return Center(
-              child: Text(
-                'No members loaded',
-                style: kit.typography.body,
-              ),
+              child: Text('No members loaded', style: kit.typography.body),
             );
           }
 
@@ -40,7 +37,8 @@ class GroupMembersTab extends StatelessWidget {
             orElse: () => null,
           );
 
-          final isAdmin = currentMember != null && currentMember.role == GroupRole.admin;
+          final isAdmin =
+              currentMember != null && currentMember.role == GroupRole.admin;
 
           return ListView.builder(
             itemCount: state.members.length,

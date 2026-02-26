@@ -72,10 +72,10 @@ class _GroupDetailPageState extends State<GroupDetailPage>
               );
               groupName = group.name;
             } on StateError {
-                // Group not found in loaded list, fallback to default name
+              // Group not found in loaded list, fallback to default name
             } catch (e) {
-                // Log unexpected error if needed
-                debugPrint('Error finding group: $e');
+              // Log unexpected error if needed
+              debugPrint('Error finding group: $e');
             }
           }
 
@@ -194,7 +194,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                                         trailing: Text(
                                           '${expense.amount} ${expense.currency}',
                                           style: kit.typography.bodyStrong
-                                              .copyWith(color: kit.colors.textPrimary),
+                                              .copyWith(
+                                                color: kit.colors.textPrimary,
+                                              ),
                                         ),
                                         subtitle: Text(
                                           'Paid by ${expense.createdBy}',
@@ -205,7 +207,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                                                   context,
                                                 ).showSnackBar(
                                                   const SnackBar(
-                                                    content: Text('Edit Expense'),
+                                                    content: Text(
+                                                      'Edit Expense',
+                                                    ),
                                                   ),
                                                 );
                                               }

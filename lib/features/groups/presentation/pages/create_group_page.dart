@@ -133,33 +133,33 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       return AppButton(
                         isFullWidth: true,
                         isLoading: state is CreateGroupLoading,
-                        onPressed:
-                            state is CreateGroupLoading
-                                ? null
-                                : () {
-                                  if (_formKey.currentState!.validate()) {
-                                    final authState =
-                                        context.read<AuthBloc>().state;
-                                    if (authState is AuthAuthenticated) {
-                                      context.read<CreateGroupBloc>().add(
-                                        CreateGroupSubmitted(
-                                          name: _nameController.text.trim(),
-                                          type: _selectedType,
-                                          currency: _selectedCurrency,
-                                          userId: authState.user.id,
+                        onPressed: state is CreateGroupLoading
+                            ? null
+                            : () {
+                                if (_formKey.currentState!.validate()) {
+                                  final authState = context
+                                      .read<AuthBloc>()
+                                      .state;
+                                  if (authState is AuthAuthenticated) {
+                                    context.read<CreateGroupBloc>().add(
+                                      CreateGroupSubmitted(
+                                        name: _nameController.text.trim(),
+                                        type: _selectedType,
+                                        currency: _selectedCurrency,
+                                        userId: authState.user.id,
+                                      ),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'You must be logged in to create a group.',
                                         ),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'You must be logged in to create a group.',
-                                          ),
-                                        ),
-                                      );
-                                    }
+                                      ),
+                                    );
                                   }
-                                },
+                                }
+                              },
                         label: 'Create Group',
                       );
                     },
