@@ -8,8 +8,8 @@ import 'package:expense_tracker/features/goals/presentation/bloc/log_contributio
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
-import 'package:expense_tracker/ui_kit/components/app_button.dart';
-import 'package:expense_tracker/ui_kit/components/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

@@ -7,6 +7,9 @@ class AppScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final Widget? bottomNavigationBar;
   final Color? backgroundColor;
+  final bool safeAreaTop;
+  final bool safeAreaBottom;
+  final bool resizeToAvoidBottomInset;
 
   const AppScaffold({
     super.key,
@@ -15,6 +18,9 @@ class AppScaffold extends StatelessWidget {
     this.floatingActionButton,
     this.bottomNavigationBar,
     this.backgroundColor,
+    this.safeAreaTop = true,
+    this.safeAreaBottom = true,
+    this.resizeToAvoidBottomInset = true,
   });
 
   @override
@@ -22,11 +28,16 @@ class AppScaffold extends StatelessWidget {
     final kit = context.kit;
 
     return Scaffold(
-      backgroundColor: backgroundColor ?? kit.colors.background,
+      backgroundColor: backgroundColor ?? kit.colors.bg, // Updated token
       appBar: appBar,
-      body: SafeArea(child: body),
+      body: SafeArea(
+        top: safeAreaTop,
+        bottom: safeAreaBottom,
+        child: body,
+      ),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
+      resizeToAvoidBottomInset: resizeToAvoidBottomInset,
     );
   }
 }
