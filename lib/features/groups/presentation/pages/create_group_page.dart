@@ -10,6 +10,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/data/countries.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_dropdown.dart';
+import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 
 class CreateGroupPage extends StatefulWidget {
   const CreateGroupPage({super.key});
@@ -44,6 +51,8 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final kit = context.kit;
+
     return BlocProvider(
       create: (context) => sl<CreateGroupBloc>(),
       child: BlocListener<CreateGroupBloc, CreateGroupState>(
@@ -56,20 +65,17 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
             ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Create New Group')),
+        child: AppScaffold(
+          appBar: AppNavBar(title: 'Create New Group'),
           body: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: kit.spacing.allMd,
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
-                  TextFormField(
+                  AppTextField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Group Name',
-                      border: OutlineInputBorder(),
-                    ),
+                    label: 'Group Name',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a name';
@@ -77,20 +83,17 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<GroupType>(
+                  kit.spacing.gapLg,
+                  AppDropdownFormField<GroupType>(
                     value: _selectedType,
-                    decoration: const InputDecoration(
-                      labelText: 'Group Type',
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Group Type',
                     items: GroupType.values.map((type) {
                       return DropdownMenuItem(
                         value: type,
                         child: Row(
                           children: [
                             Icon(_getIconForType(type)),
-                            const SizedBox(width: 8),
+                            kit.spacing.gapSm,
                             Text(type.value.toUpperCase()),
                           ],
                         ),
@@ -104,13 +107,10 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       }
                     },
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
+                  kit.spacing.gapLg,
+                  AppDropdownFormField<String>(
                     value: _selectedCurrency,
-                    decoration: const InputDecoration(
-                      labelText: 'Currency',
-                      border: OutlineInputBorder(),
-                    ),
+                    labelText: 'Currency',
                     items: AppCountries.availableCountries.map((country) {
                       return DropdownMenuItem(
                         value: country.currencyCode,
@@ -127,19 +127,19 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                       }
                     },
                   ),
-                  const SizedBox(height: 24),
+                  kit.spacing.gapXl,
                   BlocBuilder<CreateGroupBloc, CreateGroupState>(
                     builder: (context, state) {
-                      return SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: state is CreateGroupLoading
-                              ? null
-                              : () {
+                      return AppButton(
+                        isFullWidth: true,
+                        isLoading: state is CreateGroupLoading,
+                        onPressed:
+                            state is CreateGroupLoading
+                                ? null
+                                : () {
                                   if (_formKey.currentState!.validate()) {
-                                    final authState = context
-                                        .read<AuthBloc>()
-                                        .state;
+                                    final authState =
+                                        context.read<AuthBloc>().state;
                                     if (authState is AuthAuthenticated) {
                                       context.read<CreateGroupBloc>().add(
                                         CreateGroupSubmitted(
@@ -150,9 +150,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                         ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
+                                      ScaffoldMessenger.of(context).showSnackBar(
                                         const SnackBar(
                                           content: Text(
                                             'You must be logged in to create a group.',
@@ -162,10 +160,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                     }
                                   }
                                 },
-                          child: state is CreateGroupLoading
-                              ? const CircularProgressIndicator()
-                              : const Text('Create Group'),
-                        ),
+                        label: 'Create Group',
                       );
                     },
                   ),
