@@ -35,6 +35,22 @@ class _GroupListPageState extends State<GroupListPage> {
     _syncStatusStream = sl<SyncService>().statusStream;
   }
 
+  void _navigateToCreateGroup(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CreateGroupPage()));
+  }
+
+  String _getInitialsForGroup(String name) {
+    if (name.isEmpty) return 'G';
+    final words = name.trim().split(' ');
+    if (words.length == 1) {
+      return words[0].substring(0, 1).toUpperCase();
+    }
+    return '${words[0].substring(0, 1)}${words[1].substring(0, 1)}'
+        .toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     final kit = context.kit;
@@ -77,11 +93,7 @@ class _GroupListPageState extends State<GroupListPage> {
         ],
       ),
       floatingActionButton: AppFAB(
-        onPressed: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const CreateGroupPage()));
-        },
+        onPressed: () => _navigateToCreateGroup(context),
         icon: const Icon(Icons.add),
       ),
       body: BlocBuilder<GroupsBloc, GroupsState>(
@@ -102,13 +114,7 @@ class _GroupListPageState extends State<GroupListPage> {
                     kit.spacing.gapLg,
                     Text('No groups yet.', style: kit.typography.body),
                     AppButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const CreateGroupPage(),
-                          ),
-                        );
-                      },
+                      onPressed: () => _navigateToCreateGroup(context),
                       label: 'Create one',
                       variant: AppButtonVariant.ghost,
                     ),
@@ -122,7 +128,7 @@ class _GroupListPageState extends State<GroupListPage> {
                 final group = state.groups[index];
                 return AppListTile(
                   leading: AppAvatar(
-                    initials: _getIconForType(group.type).toString(),
+                    initials: _getInitialsForGroup(group.name),
                     backgroundColor: kit.colors.primaryContainer,
                     foregroundColor: kit.colors.onPrimaryContainer,
                   ),
@@ -150,18 +156,5 @@ class _GroupListPageState extends State<GroupListPage> {
         },
       ),
     );
-  }
-
-  IconData _getIconForType(GroupType type) {
-    switch (type) {
-      case GroupType.trip:
-        return Icons.flight;
-      case GroupType.couple:
-        return Icons.favorite;
-      case GroupType.home:
-        return Icons.home;
-      case GroupType.custom:
-        return Icons.layers;
-    }
   }
 }
