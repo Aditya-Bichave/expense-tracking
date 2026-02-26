@@ -35,10 +35,12 @@ dart format .
 flutter analyze
 ```
 
-### 2. Testing
+### 2. Testing & Coverage
+To check if your changes meet the 80% diff coverage requirement:
 ```bash
-flutter test
+./ci/check_coverage.sh
 ```
+*Note: Requires `pip install diff-cover`.*
 
 ### 3. Policy Checks
 ```bash

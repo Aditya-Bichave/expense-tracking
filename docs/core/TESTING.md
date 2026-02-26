@@ -13,6 +13,17 @@ This project uses a layered testing approach to ensure reliability and performan
 *   Test for both success and failure states.
 *   Verify side effects (e.g., logging, navigation).
 
+### Running Coverage
+Before pushing, ensure your changes meet the coverage requirements:
+1.  **Diff Coverage**: 80% (Lines changed in your PR).
+2.  **Total Coverage**: 35% (Entire project).
+
+Run the local check script:
+```bash
+./ci/check_coverage.sh
+```
+*Requires `pip install diff-cover`.*
+
 ## 2. Widget Tests (`test/widgets/`)
 *   **Purpose**: Verify UI rendering and user interactions.
 *   **Coverage**: Critical paths (Login, Transaction Creation, Dashboard).

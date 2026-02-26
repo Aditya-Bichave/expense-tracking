@@ -26,6 +26,7 @@ Run these commands to verify the environment before starting work.
 | **Codegen** | `flutter pub run build_runner build --delete-conflicting-outputs` | Hive, JSON, etc. |
 | **Format** | `dart format .` | **MANDATORY** before commit |
 | **Lint** | `flutter analyze` | **MANDATORY** before commit |
+| **Coverage**| `./ci/check_coverage.sh` | **MANDATORY** Diff Coverage >= 80% |
 | **Test** | `flutter test` | **MANDATORY** before commit |
 | **Web Build**| `flutter build web --release` | Verification for Web |
 
