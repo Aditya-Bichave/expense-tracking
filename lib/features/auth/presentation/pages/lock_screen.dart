@@ -9,6 +9,17 @@ import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_gap.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_safe_area.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
+
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
 
@@ -88,27 +99,17 @@ class _LockScreenState extends State<LockScreen> {
       log.severe('PIN verification attempted but saved PIN is null.');
       setState(() => enteredPin = '');
 
-      // If PIN is missing, the security state is invalid.
-      // We must allow the user to reset/logout to regain access.
-      showDialog(
+      AppDialog.show(
         context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text('Security Configuration Error'),
-          content: const Text(
+        title: 'Security Configuration Error',
+        content:
             'Your security PIN is missing or corrupted. You need to log out and set it up again.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.read<AuthBloc>().add(AuthLogoutRequested());
-                // SessionCubit will listen to AuthBloc/Repository and redirect
-              },
-              child: const Text('Logout & Reset'),
-            ),
-          ],
-        ),
+        confirmLabel: 'Logout & Reset',
+        onConfirm: () {
+          Navigator.of(context).pop();
+          context.read<AuthBloc>().add(AuthLogoutRequested());
+        },
+        isDestructive: true,
       );
       return;
     }
@@ -119,26 +120,23 @@ class _LockScreenState extends State<LockScreen> {
       setState(() {
         enteredPin = '';
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Incorrect PIN')));
+      AppToast.show(context, 'Incorrect PIN', type: AppToastType.error);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
+    final kit = context.kit;
+
+    return AppScaffold(
+      body: AppSafeArea(
         child: Column(
           children: [
             const Spacer(),
-            const Icon(Icons.lock, size: 64),
-            const SizedBox(height: 24),
-            const Text(
-              'App Locked',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 32),
+            Icon(Icons.lock, size: 64, color: kit.colors.primary),
+            AppGap.md(context),
+            const AppText('App Locked', style: AppTextStyle.headline),
+            AppGap.lg(context),
             Semantics(
               label: '${enteredPin.length} of 4 digits entered',
               excludeSemantics: true,
@@ -152,41 +150,44 @@ class _LockScreenState extends State<LockScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: index < enteredPin.length
-                          ? Theme.of(context).primaryColor
-                          : Colors.grey.shade300,
+                          ? kit.colors.primary
+                          : kit.colors.surfaceContainer,
+                      border: Border.all(color: kit.colors.borderSubtle),
                     ),
                   );
                 }),
               ),
             ),
             const Spacer(),
-            if (_canCheckBiometrics)
-              TextButton.icon(
+            if (_canCheckBiometrics) ...[
+              AppButton(
                 onPressed: _authenticate,
-                icon: const Icon(Icons.fingerprint, size: 32),
-                label: const Text('Use Biometrics'),
+                label: 'Use Biometrics',
+                icon: const Icon(Icons.fingerprint),
+                variant: UiVariant.secondary,
               ),
-            const SizedBox(height: 24),
-            _buildKeypad(),
-            const SizedBox(height: 24),
+              AppGap.md(context),
+            ],
+            _buildKeypad(kit),
+            AppGap.md(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildKeypad() {
+  Widget _buildKeypad(dynamic kit) {
     return Column(
       children: [
-        _buildRow(['1', '2', '3']),
-        _buildRow(['4', '5', '6']),
-        _buildRow(['7', '8', '9']),
-        _buildRow([null, '0', 'back']),
+        _buildRow(kit, ['1', '2', '3']),
+        _buildRow(kit, ['4', '5', '6']),
+        _buildRow(kit, ['7', '8', '9']),
+        _buildRow(kit, [null, '0', 'back']),
       ],
     );
   }
 
-  Widget _buildRow(List<dynamic> items) {
+  Widget _buildRow(dynamic kit, List<dynamic> items) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: items.map((item) {
@@ -199,9 +200,10 @@ class _LockScreenState extends State<LockScreen> {
             height: 80,
             child: Semantics(
               label: 'Delete digit',
-              child: IconButton(
+              child: AppIconButton(
                 onPressed: _onDeleteDigit,
                 icon: const Icon(Icons.backspace_outlined),
+                // variant and size removed as per AppIconButton definition
               ),
             ),
           );
@@ -213,13 +215,11 @@ class _LockScreenState extends State<LockScreen> {
           child: TextButton(
             style: TextButton.styleFrom(
               shape: const CircleBorder(),
-              backgroundColor: Colors.grey.shade200,
+              backgroundColor: kit.colors.surfaceContainer,
+              foregroundColor: kit.colors.textPrimary,
             ),
             onPressed: () => _onPinDigit(item),
-            child: Text(
-              item,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
+            child: Text(item, style: kit.typography.headline),
           ),
         );
       }).toList(),

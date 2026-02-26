@@ -1,138 +1,76 @@
-import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'dart:async';
-import 'package:expense_tracker/core/platform/platform_init.dart';
-import 'package:expense_tracker/core/platform/logger_init.dart';
-
-import 'package:expense_tracker/core/constants/app_constants.dart';
-import 'package:expense_tracker/core/constants/hive_constants.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/core/services/demo_mode_service.dart';
-import 'package:expense_tracker/core/theme/app_theme.dart';
-import 'package:expense_tracker/core/utils/bloc_observer.dart';
-import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
-import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
-import 'package:expense_tracker/features/categories/data/models/category_model.dart';
-import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
-import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
-import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
-import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
-import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
-import 'package:expense_tracker/features/income/data/models/income_model.dart';
-import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
-import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
-// import package:expense_tracker/features/reports/presentation/bloc/summary/summary_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-import 'package:expense_tracker/router.dart';
-import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_ce_flutter/hive_flutter.dart';
-import 'package:local_auth/local_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:simple_logger/simple_logger.dart';
+import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:intl/intl.dart';
-import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/constants/app_constants.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_event.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_state.dart';
+import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_event.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management_event.dart';
+import 'package:expense_tracker/features/budget/presentation/bloc/budget_list_bloc.dart';
+import 'package:expense_tracker/features/budget/presentation/bloc/budget_list_event.dart';
+import 'package:expense_tracker/features/goals/presentation/bloc/goal_list_bloc.dart';
+import 'package:expense_tracker/features/goals/presentation/bloc/goal_list_event.dart';
+import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_event.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list_bloc.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list_event.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:expense_tracker/router.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
-export 'package:expense_tracker/core/utils/logger.dart';
-
-import 'package:expense_tracker/core/network/supabase_client_provider.dart';
-import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
-import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
+import 'package:expense_tracker/core/utils/bloc_observer.dart';
+import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
-import 'package:expense_tracker/core/auth/session_cubit.dart';
-import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/groups_event.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:expense_tracker/core/utils/app_initializer.dart';
+import 'package:expense_tracker/core/services/deep_link_service.dart';
+import 'package:expense_tracker/core/bloc/deep_link_bloc.dart';
+import 'package:expense_tracker/core/bloc/deep_link_event.dart';
 
-Future<void> _runMigrations(int fromVersion) async {
-  log.info(
-    'Running Hive migrations from v$fromVersion to '
-    '${HiveConstants.dataVersion}',
-  );
+void main() async {
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+
+    try {
+      await AppInitializer.init();
+      final args = await DeepLinkService.getInitialLink();
+      runApp(App(args: args));
+    } catch (e, stack) {
+      log.severe('Initialization failed', e, stack);
+      runApp(InitializationErrorApp(error: e));
+    }
+  }, (error, stack) {
+    log.severe('Unhandled error caught by zone', error, stack);
+  });
 }
 
-Future<void> main(List<String> args) async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await initPlatform(args);
-  await initFileLogger();
-  final locale = WidgetsBinding.instance.platformDispatcher.locale;
-  Intl.defaultLocale = locale.toLanguageTag();
-
-  log.setLevel(Level.INFO, includeCallerInfo: false);
-  log.info("==========================================");
-  log.info(" Financial OS Application Starting...");
-  log.info("==========================================");
-
-  try {
-    await Hive.initFlutter();
-    final prefs = await SharedPreferences.getInstance();
-    final storedVersion =
-        prefs.getInt(HiveConstants.dataVersionKey) ?? HiveConstants.dataVersion;
-    if (storedVersion < HiveConstants.dataVersion) {
-      await _runMigrations(storedVersion);
-      await prefs.setInt(
-        HiveConstants.dataVersionKey,
-        HiveConstants.dataVersion,
-      );
-    }
-
-    log.info("Initializing Supabase...");
-    await SupabaseClientProvider.initialize();
-
-    log.info("Initializing Secure Storage & Encryption...");
-    // Using default secure options
-    final secureStorageService = SecureStorageService();
-    final hiveKey = await secureStorageService.getHiveKey();
-
-    final boxes = await AppInitializer.initHiveBoxes(hiveKey);
-
-    log.info("SharedPreferences instance obtained.");
-
-    await initLocator(
-      secureStorageService: secureStorageService,
-      profileBox: boxes.profileBox,
-      prefs: prefs,
-      expenseBox: boxes.expenseBox,
-      accountBox: boxes.accountBox,
-      incomeBox: boxes.incomeBox,
-      categoryBox: boxes.categoryBox,
-      userHistoryBox: boxes.userHistoryBox,
-      budgetBox: boxes.budgetBox,
-      goalBox: boxes.goalBox,
-      contributionBox: boxes.contributionBox,
-      recurringRuleBox: boxes.recurringRuleBox,
-      recurringRuleAuditLogBox: boxes.recurringRuleAuditLogBox,
-      outboxBox: boxes.outboxBox,
-      groupBox: boxes.groupBox,
-      groupMemberBox: boxes.groupMemberBox,
-      groupExpenseBox: boxes.groupExpenseBox,
-    );
-    log.info("Hive, SharedPreferences, and Service Locator initialized.");
-  } catch (e, s) {
-    log.severe("!!! CRITICAL INITIALIZATION FAILURE !!!");
-    log.severe("Error: $e");
-    log.severe("Stack Trace: $s");
-    await writeStartupLog('Initialization failure: $e\n$s');
-    log.severe("!!! APPLICATION CANNOT CONTINUE !!!");
-    runApp(InitializationErrorApp(error: e));
-    return;
+class AppInitializer {
+  static Future<void> init() async {
+    Bloc.observer = AppBlocObserver();
+    await initDependencies();
   }
+}
 
-  runApp(
-    MultiBlocProvider(
+class App extends StatelessWidget {
+  final DeepLinkArgs? args;
+  const App({super.key, this.args});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiBlocProvider(
       providers: [
         BlocProvider<SettingsBloc>(
           create: (context) => sl<SettingsBloc>()..add(const LoadSettings()),
@@ -140,10 +78,10 @@ Future<void> main(List<String> args) async {
         ),
         BlocProvider<DataManagementBloc>(
           create: (context) => sl<DataManagementBloc>(),
-          // lazy: true,
         ),
         BlocProvider<AccountListBloc>(
-          create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
+          create: (context) =>
+              sl<AccountListBloc>()..add(const LoadAccounts()),
         ),
         BlocProvider<TransactionListBloc>(
           create: (context) =>
