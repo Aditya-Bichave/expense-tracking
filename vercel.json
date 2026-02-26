@@ -1,4 +1,5 @@
 {
+    "outputDirectory": "server/public",
     "cleanUrls": true,
     "rewrites": [
         {
