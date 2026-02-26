@@ -4,28 +4,28 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart'; // Using hive_ce instead of hive
 import 'package:path_provider/path_provider.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_event.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_state.dart';
+// import 'package:expense_tracker/features/settings/presentation/bloc/settings_event.dart';
+// import 'package:expense_tracker/features/settings/presentation/bloc/settings_state.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
-import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_event.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management_bloc.dart';
-import 'package:expense_tracker/features/categories/presentation/bloc/category_management_event.dart';
-import 'package:expense_tracker/features/budget/presentation/bloc/budget_list_bloc.dart';
-import 'package:expense_tracker/features/budget/presentation/bloc/budget_list_event.dart';
-import 'package:expense_tracker/features/goals/presentation/bloc/goal_list_bloc.dart';
-import 'package:expense_tracker/features/goals/presentation/bloc/goal_list_event.dart';
+// import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_event.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+// import 'package:expense_tracker/features/categories/presentation/bloc/category_management_event.dart';
+import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
+// import 'package:expense_tracker/features/budget/presentation/bloc/budget_list_event.dart';
+import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
+// import 'package:expense_tracker/features/goals/presentation/bloc/goal_list_event.dart';
 import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_event.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list_event.dart';
+// import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_event.dart';
+import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
+// import 'package:expense_tracker/features/accounts/presentation/bloc/account_list_event.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:expense_tracker/router.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
@@ -36,19 +36,20 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart'
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_event.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
-import 'package:expense_tracker/core/services/deep_link_service.dart';
-import 'package:expense_tracker/core/bloc/deep_link_bloc.dart';
-import 'package:expense_tracker/core/bloc/deep_link_event.dart';
+// import 'package:expense_tracker/core/services/deep_link_service.dart'; // Removed as it doesn't exist
+import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart'; // Corrected path
+// import 'package:expense_tracker/core/bloc/deep_link_event.dart'; // Likely part of the bloc file
 
+// RE-ADDING THE EXPORT AS REQUESTED TO FIX LOGGER VISIBILITY
 export 'package:expense_tracker/core/utils/logger.dart';
 
-void main() async {
+void main(List<String> args) async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
 
     try {
       await AppInitializer.init();
-      final args = await DeepLinkService.getInitialLink();
+      // final args = await DeepLinkService.getInitialLink(); // Removed
       runApp(App(args: args));
     } catch (e, stack) {
       log.severe('Initialization failed', e, stack);
@@ -67,8 +68,8 @@ class AppInitializer {
 }
 
 class App extends StatelessWidget {
-  final DeepLinkArgs? args;
-  const App({super.key, this.args});
+  final List<String> args;
+  const App({super.key, this.args = const []});
 
   @override
   Widget build(BuildContext context) {
@@ -127,13 +128,13 @@ class App extends StatelessWidget {
         ),
       ],
       child: const MyApp(),
-    ),
-  );
+    );
+  }
 }
 
 class InitializationErrorApp extends StatefulWidget {
   final Object error;
-  final ThemeData? theme; // Allow injecting theme for testing
+  final ThemeData? theme;
 
   const InitializationErrorApp({super.key, required this.error, this.theme});
 
