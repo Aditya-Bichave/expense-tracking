@@ -248,7 +248,20 @@ class SyncService {
         await _client.from(table).upsert(payload);
         break;
       case OpType.update:
-        await _client.from(table).update(payload).eq('id', item.id);
+        final response = await _client
+            .from(table)
+            .update(payload)
+            .eq('id', item.id)
+            .select();
+        // Check if any rows were actually updated
+        if (response.isEmpty) {
+          // If no rows updated, it might mean the record was deleted on server or doesn't exist yet.
+          // Try upsert as fallback to ensure consistency.
+          log.info(
+            'Update for $table:${item.id} affected 0 rows. Attempting upsert fallback.',
+          );
+          await _client.from(table).upsert(payload);
+        }
         break;
       case OpType.delete:
         await _client.from(table).delete().eq('id', item.id);

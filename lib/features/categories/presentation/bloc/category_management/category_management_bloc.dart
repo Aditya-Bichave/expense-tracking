@@ -239,11 +239,16 @@ class CategoryManagementBloc
       ),
     );
 
-    final fallbackId = Category.uncategorized.id;
+    final fallbackExpenseId = Category.uncategorized.id;
+    // Try to find a suitable income fallback (e.g. first predefined income category)
+    // If none found, fallback to the expense uncategorized ID (legacy behavior)
+    final fallbackIncomeId =
+        state.predefinedIncomeCategories.firstOrNull?.id ?? fallbackExpenseId;
 
     final params = DeleteCustomCategoryParams(
       categoryId: event.categoryId,
-      fallbackCategoryId: fallbackId,
+      fallbackExpenseCategoryId: fallbackExpenseId,
+      fallbackIncomeCategoryId: fallbackIncomeId,
     );
     final result = await _deleteCustomCategoryUseCase(params);
 

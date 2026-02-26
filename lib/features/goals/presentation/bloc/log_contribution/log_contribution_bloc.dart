@@ -22,16 +22,19 @@ class LogContributionBloc
   final UpdateContributionUseCase _updateContributionUseCase; // Added
   final DeleteContributionUseCase _deleteContributionUseCase; // Added
   final CheckGoalAchievementUseCase _checkGoalAchievementUseCase; // Added
+  final Uuid _uuid;
 
   LogContributionBloc({
     required AddContributionUseCase addContributionUseCase,
     required UpdateContributionUseCase updateContributionUseCase, // Added
     required DeleteContributionUseCase deleteContributionUseCase, // Added
     required CheckGoalAchievementUseCase checkGoalAchievementUseCase, // Added
+    Uuid? uuid,
   }) : _addContributionUseCase = addContributionUseCase,
        _updateContributionUseCase = updateContributionUseCase, // Added
        _deleteContributionUseCase = deleteContributionUseCase, // Added
        _checkGoalAchievementUseCase = checkGoalAchievementUseCase, // Added
+       _uuid = uuid ?? const Uuid(),
        super(LogContributionState.initial('')) {
     // Initial state needs a dummy goalId
     on<InitializeContribution>(_onInitializeContribution);
@@ -75,9 +78,7 @@ class LogContributionBloc
 
     // Construct the contribution object
     final contributionData = GoalContribution(
-      id:
-          state.initialContribution?.id ??
-          sl<Uuid>().v4(), // Use existing or new ID
+      id: state.initialContribution?.id ?? _uuid.v4(), // Use existing or new ID
       goalId: goalId, // Use captured goalId
       amount: event.amount,
       date: event.date,

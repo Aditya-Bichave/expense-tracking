@@ -16,8 +16,15 @@ double parseCurrency(String value, String locale) {
       return number.toDouble();
     } catch (_) {
       // Last resort: attempt a basic parse after removing non-numeric chars
-      final sanitized = value.replaceAll(RegExp('[^0-9-.,]'), '');
-      return double.tryParse(sanitized) ?? double.nan;
+      // We assume standard format if intl fails: remove commas (common grouping), keep dot
+      // This is a naive fallback but better than nothing for simple inputs
+      final sanitized = value.replaceAll(',', '');
+      // If it still has characters like currency symbols, strip them?
+      // The previous regex `[^0-9-.,]` kept dots and commas.
+      // Now we stripped commas.
+      // Use regex to strip everything except digits, dots, minus.
+      final clean = sanitized.replaceAll(RegExp('[^0-9-.]'), '');
+      return double.tryParse(clean) ?? double.nan;
     }
   }
 }

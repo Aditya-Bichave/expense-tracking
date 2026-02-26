@@ -59,14 +59,18 @@ class SupabaseClientProvider {
   static Future<void> initialize() async {
     try {
       if (!SupabaseConfig.isValid) {
-        log.warning(
-          'Supabase configuration is invalid. Initializing with placeholder values to prevent crashes.',
+        // SECURITY FIX: Do not initialize with placeholders in production.
+        // It's better to crash/fail initialization than to leak confusing "placeholder" states
+        // or risk connecting to unsecured endpoints.
+        throw Exception(
+          'Supabase configuration is invalid. Please check your build configuration.',
         );
-        await _initPlaceholder();
-        return;
       }
 
-      const secureStorage = FlutterSecureStorage();
+      const secureStorage = FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+        iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+      );
       await Supabase.initialize(
         url: SupabaseConfig.supabaseUrl,
         anonKey: SupabaseConfig.supabaseAnonKey,
@@ -78,20 +82,8 @@ class SupabaseClientProvider {
       log.info('Supabase initialized successfully.');
     } catch (e) {
       log.severe('Failed to initialize Supabase: $e');
-      // Attempt fallback to prevent app crash on client access
-      try {
-        await _initPlaceholder();
-      } catch (_) {}
-    }
-  }
-
-  static Future<void> _initPlaceholder() async {
-    if (!Supabase.instance.isInitialized) {
-      await Supabase.initialize(
-        url: 'https://placeholder.supabase.co',
-        anonKey: 'placeholder',
-        debug: false,
-      );
+      // Rethrow to ensure main.dart catches it and shows InitializationErrorApp
+      rethrow;
     }
   }
 

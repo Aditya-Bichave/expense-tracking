@@ -1,17 +1,18 @@
-// lib/features/goals/presentation/bloc/add_edit_goal/add_edit_goal_state.dart
 part of 'add_edit_goal_bloc.dart';
 
 enum AddEditGoalStatus { initial, loading, success, error }
 
 class AddEditGoalState extends Equatable {
   final AddEditGoalStatus status;
-  final Goal? initialGoal; // Goal being edited
+  final Goal? initialGoal;
   final String? errorMessage;
+  final bool clearError;
 
   const AddEditGoalState({
     this.status = AddEditGoalStatus.initial,
     this.initialGoal,
     this.errorMessage,
+    this.clearError = false,
   });
 
   bool get isEditing => initialGoal != null;
@@ -19,19 +20,17 @@ class AddEditGoalState extends Equatable {
   AddEditGoalState copyWith({
     AddEditGoalStatus? status,
     Goal? initialGoal,
-    ValueGetter<Goal?>? initialGoalOrNull,
     String? errorMessage,
     bool clearError = false,
   }) {
     return AddEditGoalState(
       status: status ?? this.status,
-      initialGoal: initialGoalOrNull != null
-          ? initialGoalOrNull()
-          : (initialGoal ?? this.initialGoal),
-      errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
+      initialGoal: initialGoal ?? this.initialGoal,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      clearError: clearError,
     );
   }
 
   @override
-  List<Object?> get props => [status, initialGoal, errorMessage];
+  List<Object?> get props => [status, initialGoal, errorMessage, clearError];
 }

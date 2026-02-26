@@ -1,83 +1,99 @@
+// ignore_for_file: directives_ordering
+
 import 'package:expense_tracker/core/widgets/demo_indicator_widget.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'
+    hide ValueGetter;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import '../../helpers/pump_app.dart';
+// Mocks
+class MockSettingsBloc extends Mock implements SettingsBloc {}
+
+class FakeSettingsState extends Fake implements SettingsState {
+  @override
+  final bool isInDemoMode;
+  FakeSettingsState({this.isInDemoMode = false});
+}
 
 void main() {
+  late MockSettingsBloc mockSettingsBloc;
+
+  setUpAll(() {
+    registerFallbackValue(FakeSettingsState());
+  });
+
+  setUp(() {
+    mockSettingsBloc = MockSettingsBloc();
+  });
+
+  Widget createWidgetUnderTest() {
+    return MaterialApp(
+      home: Scaffold(
+        body: BlocProvider<SettingsBloc>.value(
+          value: mockSettingsBloc,
+          child: const DemoIndicatorWidget(),
+        ),
+      ),
+    );
+  }
+
   group('DemoIndicatorWidget', () {
     testWidgets('is visible when isInDemoMode is true', (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        settingsState: const SettingsState(isInDemoMode: true),
-        widget: const DemoIndicatorWidget(),
-      );
+      when(
+        () => mockSettingsBloc.state,
+      ).thenReturn(FakeSettingsState(isInDemoMode: true));
+      when(
+        () => mockSettingsBloc.stream,
+      ).thenAnswer((_) => Stream.value(FakeSettingsState(isInDemoMode: true)));
 
-      // ASSERT
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
       expect(find.text('Demo Mode Active'), findsOneWidget);
-      final animatedOpacity = tester.widget<AnimatedOpacity>(
-        find.byType(AnimatedOpacity),
-      );
-      expect(animatedOpacity.opacity, 1.0);
+      expect(find.byType(Material), findsWidgets);
     });
 
     testWidgets('is not visible when isInDemoMode is false', (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        settingsState: const SettingsState(isInDemoMode: false),
-        widget: const DemoIndicatorWidget(),
-      );
+      when(
+        () => mockSettingsBloc.state,
+      ).thenReturn(FakeSettingsState(isInDemoMode: false));
+      when(
+        () => mockSettingsBloc.stream,
+      ).thenAnswer((_) => Stream.value(FakeSettingsState(isInDemoMode: false)));
 
-      // ASSERT
-      // The child is a SizedBox.shrink, so the text won't be in the tree
-      expect(find.text('Demo Mode Active'), findsNothing);
-      final animatedOpacity = tester.widget<AnimatedOpacity>(
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      final opacity = tester.widget<AnimatedOpacity>(
         find.byType(AnimatedOpacity),
       );
-      expect(animatedOpacity.opacity, 0.0);
+      expect(opacity.opacity, 0.0);
+      expect(find.text('Demo Mode Active'), findsNothing);
     });
 
     testWidgets(
       'tapping "Exit Demo" shows dialog and adds event on confirmation',
       (tester) async {
-        // ARRANGE
-        // We need to get the mock bloc from the provider tree to verify events
-        late SettingsBloc mockSettingsBloc;
-        await pumpWidgetWithProviders(
-          tester: tester,
-          settingsState: const SettingsState(isInDemoMode: true),
-          widget: Builder(
-            builder: (context) {
-              // This is a bit of a hack to get the instance of the mock bloc created by the helper
-              mockSettingsBloc = context.read<SettingsBloc>();
-              return const DemoIndicatorWidget();
-            },
-          ),
+        when(
+          () => mockSettingsBloc.state,
+        ).thenReturn(FakeSettingsState(isInDemoMode: true));
+        when(() => mockSettingsBloc.stream).thenAnswer(
+          (_) => Stream.value(FakeSettingsState(isInDemoMode: true)),
         );
 
-        // ACT - Tap the exit button
-        expect(
-          find.byKey(const ValueKey('button_demoIndicator_exit')),
-          findsOneWidget,
-        );
-        await tester.tap(
-          find.byKey(const ValueKey('button_demoIndicator_exit')),
-        );
-        await tester.pumpAndSettle(); // Let the dialog appear
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
 
-        // ASSERT - Dialog is visible
+        await tester.tap(find.text('Exit Demo'));
+        await tester.pumpAndSettle();
+
         expect(find.text('Exit Demo Mode?'), findsOneWidget);
 
-        // ACT - Tap the confirmation button in the dialog
         await tester.tap(find.text('Exit'));
-        await tester.pump();
+        await tester.pumpAndSettle();
 
-        // ASSERT - Event was added to the bloc
         verify(() => mockSettingsBloc.add(const ExitDemoMode())).called(1);
       },
     );

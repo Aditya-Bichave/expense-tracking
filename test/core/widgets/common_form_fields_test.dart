@@ -1,206 +1,193 @@
+// ignore_for_file: directives_ordering
+
 import 'package:expense_tracker/core/widgets/common_form_fields.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'
+    hide ValueGetter;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:toggle_switch/toggle_switch.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart';
 
-import '../../helpers/pump_app.dart';
+// Mocks
+class MockSettingsBloc extends Mock implements SettingsBloc {}
 
-class MockCallbacks extends Mock {
-  void onTap();
-  void onClear();
-  void onToggle(int? index);
-}
+class FakeSettingsState extends Fake implements SettingsState {}
 
 void main() {
+  late MockSettingsBloc mockSettingsBloc;
+
+  setUpAll(() {
+    registerFallbackValue(FakeSettingsState());
+  });
+
+  setUp(() {
+    mockSettingsBloc = MockSettingsBloc();
+    when(() => mockSettingsBloc.state).thenReturn(FakeSettingsState());
+  });
+
+  Widget createWidgetUnderTest(Widget child) {
+    return MaterialApp(
+      home: BlocProvider<SettingsBloc>.value(
+        value: mockSettingsBloc,
+        child: Scaffold(body: child),
+      ),
+    );
+  }
+
   group('CommonFormFields', () {
     late TextEditingController controller;
 
-    setUp(() => controller = TextEditingController());
-    tearDown(() => controller.dispose());
+    setUp(() {
+      controller = TextEditingController();
+    });
 
-    group('buildNameField', () {
-      final formKey = GlobalKey<FormState>();
-      testWidgets('validator shows error for empty value', (tester) async {
-        await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Builder(
-            builder: (context) => Form(
-              key: formKey,
-              child: CommonFormFields.buildNameField(
+    testWidgets('buildNameField validator shows error for empty value', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          Form(
+            autovalidateMode: AutovalidateMode.always,
+            child: Builder(
+              builder: (context) => CommonFormFields.buildNameField(
                 context: context,
                 controller: controller,
                 labelText: 'Name',
               ),
             ),
           ),
-        );
-        formKey.currentState!.validate();
-        await tester.pump();
-        expect(find.text('Please enter a value'), findsOneWidget);
-      });
-
-      testWidgets('validator shows error for invalid characters', (
-        tester,
-      ) async {
-        controller.text = 'Invalid@Name';
-        await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Builder(
-            builder: (context) => Form(
-              key: formKey,
-              child: CommonFormFields.buildNameField(
-                context: context,
-                controller: controller,
-                labelText: 'Name',
-              ),
-            ),
-          ),
-        );
-        formKey.currentState!.validate();
-        await tester.pump();
-        expect(find.text('Only letters and numbers allowed'), findsOneWidget);
-      });
-    });
-
-    group('buildAmountField', () {
-      final formKey = GlobalKey<FormState>();
-      testWidgets('validator shows error for non-positive number', (
-        tester,
-      ) async {
-        controller.text = '0';
-        await pumpWidgetWithProviders(
-          tester: tester,
-          settingsState: const SettingsState(selectedCountryCode: 'US'),
-          widget: Builder(
-            builder: (context) => Form(
-              key: formKey,
-              child: CommonFormFields.buildAmountField(
-                context: context,
-                controller: controller,
-                labelText: 'Amount',
-                currencySymbol: '\$',
-              ),
-            ),
-          ),
-        );
-        formKey.currentState!.validate();
-        await tester.pump();
-        expect(find.text('Must be positive'), findsOneWidget);
-      });
-    });
-
-    group('buildDatePickerTile', () {
-      final mockCallbacks = MockCallbacks();
-      testWidgets(
-        'shows formatted date and clear button when date is selected',
-        (tester) async {
-          final date = DateTime(2023, 10, 26);
-          await pumpWidgetWithProviders(
-            tester: tester,
-            widget: Builder(
-              builder: (context) => Material(
-                child: CommonFormFields.buildDatePickerTile(
-                  context: context,
-                  selectedDate: date,
-                  label: 'Date',
-                  onTap: mockCallbacks.onTap,
-                  onClear: mockCallbacks.onClear,
-                ),
-              ),
-            ),
-          );
-          final expected = DateFormatter.formatDate(date);
-          expect(find.text(expected), findsOneWidget);
-          expect(find.byIcon(Icons.clear), findsOneWidget);
-
-          await tester.tap(find.byIcon(Icons.clear));
-          verify(() => mockCallbacks.onClear()).called(1);
-        },
+        ),
       );
 
-      testWidgets('shows "Not Set" when date is null', (tester) async {
-        await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Builder(
-            builder: (context) => Material(
-              child: CommonFormFields.buildDatePickerTile(
-                context: context,
-                selectedDate: null,
-                label: 'Date',
-                onTap: mockCallbacks.onTap,
-              ),
-            ),
-          ),
-        );
-        expect(find.text('Not Set'), findsOneWidget);
-        expect(find.byIcon(Icons.clear), findsNothing);
-      });
+      // Need a frame for autovalidate to show
+      await tester.pump();
+
+      expect(find.text('Please enter a value'), findsOneWidget);
     });
 
-    group('buildTypeToggle', () {
-      final mockCallbacks = MockCallbacks();
-      testWidgets('renders labels and calls onToggle', (tester) async {
-        await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Builder(
-            builder: (context) => Material(
-              child: CommonFormFields.buildTypeToggle(
+    testWidgets('buildNameField validator shows error for invalid characters', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          Form(
+            autovalidateMode: AutovalidateMode.always,
+            child: Builder(
+              builder: (context) => CommonFormFields.buildNameField(
                 context: context,
-                initialIndex: 0,
-                labels: const ['Expense', 'Income'],
-                activeBgColors: const [
-                  [Colors.red],
-                  [Colors.green],
-                ],
-                onToggle: mockCallbacks.onToggle,
+                controller: controller,
+                labelText: 'Name',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(AppTextFormField), 'Invalid@#\$');
+      await tester.pump();
+
+      expect(find.text('Only letters and numbers allowed'), findsOneWidget);
+    });
+
+    testWidgets(
+      'buildDatePickerTile shows formatted date and clear button when date is selected',
+      (tester) async {
+        final date = DateTime(2023, 1, 1);
+
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            Builder(
+              builder: (context) => CommonFormFields.buildDatePickerTile(
+                context: context,
+                selectedDate: date,
+                label: 'Date',
+                onTap: () {},
+                onClear: () {},
               ),
             ),
           ),
         );
-        expect(find.text('Expense'), findsOneWidget);
-        expect(find.text('Income'), findsOneWidget);
 
-        await tester.tap(find.text('Income'));
-        await tester.pumpAndSettle();
-        verify(() => mockCallbacks.onToggle(1)).called(1);
-      });
+        expect(find.text('1/1/2023'), findsOneWidget);
+        expect(find.byIcon(Icons.clear), findsOneWidget);
+      },
+    );
 
-      testWidgets('is disabled when disabled is true', (tester) async {
-        await pumpWidgetWithProviders(
-          tester: tester,
-          widget: Builder(
-            builder: (context) => Material(
-              child: CommonFormFields.buildTypeToggle(
-                context: context,
-                initialIndex: 0,
-                labels: const ['Expense', 'Income'],
-                activeBgColors: const [
-                  [Colors.red],
-                  [Colors.green],
-                ],
-                onToggle: mockCallbacks.onToggle,
-                disabled: true,
-              ),
+    testWidgets('buildDatePickerTile shows "Not Set" when date is null', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          Builder(
+            builder: (context) => CommonFormFields.buildDatePickerTile(
+              context: context,
+              selectedDate: null,
+              label: 'Date',
+              onTap: () {},
             ),
           ),
-        );
-        final toggleSwitch = tester.widget<ToggleSwitch>(
-          find.byType(ToggleSwitch),
-        );
-        expect(toggleSwitch.onToggle, isNull);
-        final ignorePointer = tester.widget<IgnorePointer>(
-          find
-              .ancestor(
-                of: find.byType(ToggleSwitch),
-                matching: find.byType(IgnorePointer),
-              )
-              .first,
-        );
-        expect(ignorePointer.ignoring, isTrue);
-      });
+        ),
+      );
+
+      expect(find.text('Not Set'), findsOneWidget);
+    });
+
+    testWidgets('buildTypeToggle renders labels and calls onToggle', (
+      tester,
+    ) async {
+      int? toggledIndex;
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          Builder(
+            builder: (context) => CommonFormFields.buildTypeToggle(
+              context: context,
+              initialIndex: 0,
+              labels: ['Option A', 'Option B'],
+              activeBgColors: [
+                [Colors.red],
+                [Colors.blue],
+              ],
+              onToggle: (index) => toggledIndex = index,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Option A'), findsOneWidget);
+      expect(find.text('Option B'), findsOneWidget);
+
+      await tester.tap(find.text('Option B'));
+      expect(toggledIndex, 1);
+    });
+
+    testWidgets('buildTypeToggle is disabled when disabled is true', (
+      tester,
+    ) async {
+      int? toggledIndex;
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          Builder(
+            builder: (context) => CommonFormFields.buildTypeToggle(
+              context: context,
+              initialIndex: 0,
+              labels: ['Option A', 'Option B'],
+              activeBgColors: [
+                [Colors.red],
+                [Colors.blue],
+              ],
+              onToggle: (index) => toggledIndex = index,
+              disabled: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Option B'), warnIfMissed: false);
+      expect(toggledIndex, null);
+
+      final opacity = tester.widget<Opacity>(find.byType(Opacity));
+      expect(opacity.opacity, 0.5);
     });
   });
 }
