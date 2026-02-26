@@ -1,7 +1,7 @@
-// lib/features/reports/presentation/widgets/charts/spending_pie_chart.dart
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class SpendingPieChart extends StatefulWidget {
   final List<CategorySpendingData> data;
@@ -18,8 +18,12 @@ class _SpendingPieChartState extends State<SpendingPieChart> {
 
   @override
   Widget build(BuildContext context) {
+    final kit = context.kit;
+
     if (widget.data.isEmpty) {
-      return const Center(child: Text("No data to display"));
+      return Center(
+        child: Text("No data to display", style: kit.typography.body),
+      );
     }
 
     return PieChart(
@@ -28,19 +32,26 @@ class _SpendingPieChartState extends State<SpendingPieChart> {
           touchCallback: (FlTouchEvent event, pieTouchResponse) {
             setState(() {
               int previousTouchedIndex = touchedIndex; // Store previous index
-              touchedIndex = -1; // Reset first
 
-              if (event.isInterestedForInteractions &&
-                  pieTouchResponse != null &&
-                  pieTouchResponse.touchedSection != null) {
-                touchedIndex =
-                    pieTouchResponse.touchedSection!.touchedSectionIndex;
+              if (!event.isInterestedForInteractions ||
+                  pieTouchResponse == null ||
+                  pieTouchResponse.touchedSection == null) {
+                touchedIndex = -1;
+                return;
+              }
+
+              final newIndex =
+                  pieTouchResponse.touchedSection!.touchedSectionIndex;
+
+              if (newIndex != -1) {
+                touchedIndex = newIndex;
                 // Trigger callback on tap up
                 if (event is FlTapUpEvent &&
-                    touchedIndex != -1 &&
                     previousTouchedIndex == touchedIndex) {
                   widget.onTapSlice?.call(touchedIndex);
                 }
+              } else {
+                touchedIndex = -1;
               }
             });
           },
@@ -48,38 +59,38 @@ class _SpendingPieChartState extends State<SpendingPieChart> {
         borderData: FlBorderData(show: false),
         sectionsSpace: 2,
         centerSpaceRadius: 50,
-        sections: showingSections(),
+        sections: showingSections(context),
       ),
     );
   }
 
-  List<PieChartSectionData> showingSections() {
-    final theme = Theme.of(context);
+  List<PieChartSectionData> showingSections(BuildContext context) {
+    final kit = context.kit;
     return List.generate(widget.data.length, (i) {
       final isTouched = i == touchedIndex;
       final fontSize = isTouched ? 16.0 : 12.0;
       final radius = isTouched ? 70.0 : 60.0;
       final item = widget.data[i];
       final percentage = item.percentage * 100;
+
+      // Determine text color based on slice brightness
       final titleColor = item.categoryColor.computeLuminance() > 0.5
-          ? Colors.black87
-          : Colors.white;
+          ? kit.colors.textPrimary
+          : kit.colors.onPrimary;
 
       return PieChartSectionData(
         color: item.categoryColor,
-        // --- FIXED: Use currentTotalAmount ---
         value: item.currentTotalAmount,
-        // --- END FIX ---
         title: '${percentage.toStringAsFixed(0)}%',
         radius: radius,
         titleStyle: TextStyle(
           fontSize: fontSize,
           fontWeight: FontWeight.bold,
           color: titleColor,
-          shadows: const [Shadow(color: Colors.black26, blurRadius: 2)],
+          shadows: [Shadow(color: kit.colors.shadow, blurRadius: 2)],
         ),
         borderSide: isTouched
-            ? BorderSide(color: theme.colorScheme.surface, width: 2)
+            ? BorderSide(color: kit.colors.surface, width: 2)
             : BorderSide(color: item.categoryColor.withOpacity(0)),
       );
     });
