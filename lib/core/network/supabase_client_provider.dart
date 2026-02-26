@@ -82,7 +82,8 @@ class SupabaseClientProvider {
       log.info('Supabase initialized successfully.');
     } catch (e) {
       log.severe('Failed to initialize Supabase: $e');
-      // Do not attempt fallback. Let the app handle the uninitialized state via Error Widgets or Logs.
+      // Rethrow to ensure main.dart catches it and shows InitializationErrorApp
+      rethrow;
     }
   }
 

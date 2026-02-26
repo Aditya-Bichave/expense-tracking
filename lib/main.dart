@@ -193,7 +193,13 @@ Future<void> main(List<String> args) async {
 
 class InitializationErrorApp extends StatefulWidget {
   final Object error;
-  const InitializationErrorApp({super.key, required this.error});
+  final ThemeData? theme; // Allow injecting theme for testing
+
+  const InitializationErrorApp({
+    super.key,
+    required this.error,
+    this.theme,
+  });
 
   @override
   State<InitializationErrorApp> createState() => _InitializationErrorAppState();
@@ -254,15 +260,19 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
 
   @override
   Widget build(BuildContext context) {
-    final defaultThemePair = AppTheme.buildTheme(
-      SettingsState.defaultUIMode,
-      SettingsState.defaultPaletteIdentifier,
-    );
+    // Only build default theme if no test theme is provided to avoid font loading issues in tests
+    final defaultThemePair = widget.theme == null
+        ? AppTheme.buildTheme(
+            SettingsState.defaultUIMode,
+            SettingsState.defaultPaletteIdentifier,
+          )
+        : null;
+
     final isCorruption = widget.error is HiveKeyCorruptionException;
 
     return MaterialApp(
-      theme: defaultThemePair.light,
-      darkTheme: defaultThemePair.dark,
+      theme: widget.theme ?? defaultThemePair!.light,
+      darkTheme: widget.theme ?? defaultThemePair!.dark,
       themeMode: SettingsState.defaultThemeMode,
       home: Scaffold(
         body: Builder(
