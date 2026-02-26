@@ -32,7 +32,7 @@ class StitchNetBalanceCard extends StatelessWidget {
 
     // Heavily customized card, keeping structure but using tokens
     return Container(
-      // Correctly using EdgeInsets properties
+      // Fixed: Removed .horizontal accessor on double
       margin: kit.spacing.vSm.copyWith(left: kit.spacing.lg, right: kit.spacing.lg),
       height: 220,
       decoration: BoxDecoration(
