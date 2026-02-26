@@ -26,26 +26,24 @@ void main() {
 
   setUp(() {
     mockBloc = MockAddExpenseWizardBloc();
-    when(() => mockBloc.state).thenReturn(
-      AddExpenseWizardState(
-        amountTotal: 100.0,
-        currency: '\$',
-        expenseDate: DateTime.now(),
-        transactionId: 'test-tx-id',
-        currentUserId: 'user1',
-        groupMembers: [
-          GroupMember(
-            id: '1',
-            groupId: 'g1',
-            userId: 'user1',
-            role: GroupRole.member,
-            joinedAt: DateTime.now(),
-            updatedAt: DateTime.now(),
-          ),
-        ],
-        payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
-      ),
-    );
+    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
+      amountTotal: 100.0,
+      currency: '\$',
+      expenseDate: DateTime.now(),
+      transactionId: 'test-tx-id',
+      currentUserId: 'user1',
+      groupMembers: [
+        GroupMember(
+          id: '1',
+          groupId: 'g1',
+          userId: 'user1',
+          role: GroupRole.member,
+          joinedAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      ],
+      payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
+    ));
   });
 
   Widget createWidgetUnderTest() {
@@ -58,6 +56,12 @@ void main() {
   }
 
   testWidgets('SplitScreen renders correctly', (tester) async {
+    // Set a wide enough screen to prevent truncation of segmented control text
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
@@ -69,6 +73,12 @@ void main() {
   });
 
   testWidgets('SplitScreen changing split mode updates bloc', (tester) async {
+    // Set a wide enough screen
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
@@ -76,8 +86,7 @@ void main() {
     await tester.tap(find.text('Exact Amounts'));
     await tester.pump();
 
-    verify(
-      () => mockBloc.add(const SplitModeChanged(SplitMode.exact)),
-    ).called(1);
+    verify(() => mockBloc.add(const SplitModeChanged(SplitMode.exact)))
+        .called(1);
   });
 }
