@@ -1,9 +1,13 @@
+// lib/features/dashboard/presentation/widgets/asset_distribution_pie_chart.dart
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:flutter_bloc/flutter_bloc.dart'; // To read settings
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 
 class AssetDistributionPieChart extends StatefulWidget {
   final Map<String, double> accountBalances; // Map<AccountName, Balance>
@@ -69,7 +73,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final settingsState = context.watch<SettingsBloc>().state;
     final uiMode = settingsState.uiMode;
 
@@ -96,15 +100,12 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
 
     if (positiveBalances.isEmpty) {
       log.info("[PieChart] No positive balances to display.");
-      return Card(
-        // Use Card theme
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Center(
-            child: Text(
-              'No positive asset balances to chart.',
-              style: theme.textTheme.bodyMedium,
-            ),
+      return AppCard(
+        padding: kit.spacing.allXl,
+        child: Center(
+          child: BridgeText(
+            'No positive asset balances to chart.',
+            style: kit.typography.body,
           ),
         ),
       );
@@ -123,78 +124,75 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         .map((name) => _colorCache[name]!)
         .toList();
 
-    return Card(
-      // Use Card theme
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Asset Distribution',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: theme.colorScheme.secondary,
-              ),
+    return AppCard(
+      padding: kit.spacing.allLg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          BridgeText(
+            'Asset Distribution',
+            style: kit.typography.headline.copyWith(
+              color: kit.colors.textSecondary,
             ),
-            const SizedBox(height: 20),
-            AspectRatio(
-              aspectRatio: 1.4, // Adjust aspect ratio as needed
-              child: PieChart(
-                PieChartData(
-                  pieTouchData: PieTouchData(
-                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                      setState(() {
-                        if (!event.isInterestedForInteractions ||
-                            pieTouchResponse == null ||
-                            pieTouchResponse.touchedSection == null) {
-                          if (touchedIndex != -1) {
-                            log.info("[PieChart] Touch ended or invalid.");
-                            touchedIndex = -1; // Reset on touch end/invalid
-                          }
-                          return;
+          ),
+          kit.spacing.gapLg,
+          AspectRatio(
+            aspectRatio: 1.4, // Adjust aspect ratio as needed
+            child: PieChart(
+              PieChartData(
+                pieTouchData: PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions ||
+                          pieTouchResponse == null ||
+                          pieTouchResponse.touchedSection == null) {
+                        if (touchedIndex != -1) {
+                          log.info("[PieChart] Touch ended or invalid.");
+                          touchedIndex = -1; // Reset on touch end/invalid
                         }
-                        log.info(
-                          "[PieChart] Touched section index: ${pieTouchResponse.touchedSection!.touchedSectionIndex}",
-                        );
-                        touchedIndex = pieTouchResponse
-                            .touchedSection!
-                            .touchedSectionIndex;
-                      });
-                    },
-                  ),
-                  borderData: FlBorderData(show: false),
-                  sectionsSpace: 2,
-                  centerSpaceRadius: 50, // Make center hole larger
-                  sections: showingSections(
-                    positiveBalances,
-                    sectionColors,
-                    totalPositiveBalance,
-                    theme,
-                  ),
+                        return;
+                      }
+                      log.info(
+                        "[PieChart] Touched section index: ${pieTouchResponse.touchedSection!.touchedSectionIndex}",
+                      );
+                      touchedIndex = pieTouchResponse
+                          .touchedSection!
+                          .touchedSectionIndex;
+                    });
+                  },
+                ),
+                borderData: FlBorderData(show: false),
+                sectionsSpace: 2,
+                centerSpaceRadius: 50, // Make center hole larger
+                sections: showingSections(
+                  positiveBalances,
+                  sectionColors,
+                  totalPositiveBalance,
+                  kit,
                 ),
               ),
             ),
-            const SizedBox(height: 18),
-            // Legends
-            Wrap(
-              spacing: 12.0,
-              runSpacing: 8.0,
-              alignment: WrapAlignment.center,
-              children: List.generate(accountNames.length, (index) {
-                return _buildLegend(
-                  accountNames[index],
-                  sectionColors[index],
-                  theme,
-                );
-              }),
-            ),
-          ],
-        ),
+          ),
+          kit.spacing.gapLg,
+          // Legends
+          Wrap(
+            spacing: kit.spacing.md,
+            runSpacing: kit.spacing.sm,
+            alignment: WrapAlignment.center,
+            children: List.generate(accountNames.length, (index) {
+              return _buildLegend(
+                accountNames[index],
+                sectionColors[index],
+                kit,
+              );
+            }),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLegend(String name, Color color, ThemeData theme) {
+  Widget _buildLegend(String name, Color color, AppKitTheme kit) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -203,8 +201,8 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
           height: 14,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 6),
-        Text(name, style: theme.textTheme.bodySmall),
+        kit.spacing.gapXs,
+        BridgeText(name, style: kit.typography.caption),
       ],
     );
   }
@@ -213,7 +211,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     Map<String, double> data,
     List<Color> colors,
     double totalValue,
-    ThemeData theme,
+    AppKitTheme kit,
   ) {
     // Reduce/remove animations in Quantum mode (handled by main check now)
     // bool isQuantum = context.read<SettingsBloc>().state.uiMode == UIMode.quantum;
@@ -240,7 +238,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
           shadows: const [Shadow(color: Colors.black26, blurRadius: 2)],
         ),
         borderSide: isTouched
-            ? BorderSide(color: theme.colorScheme.surface, width: 2)
+            ? BorderSide(color: kit.colors.surface, width: 2)
             : BorderSide(color: colors[i].withOpacity(0)),
       );
     });

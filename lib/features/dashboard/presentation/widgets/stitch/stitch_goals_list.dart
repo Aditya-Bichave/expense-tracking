@@ -1,10 +1,13 @@
+// lib/features/dashboard/presentation/widgets/stitch/stitch_goals_list.dart
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
-import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 
 class StitchGoalsList extends StatelessWidget {
   final List<Goal> goals;
@@ -14,29 +17,28 @@ class StitchGoalsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (goals.isEmpty) return const SizedBox.shrink();
+    final kit = context.kit;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg, vertical: kit.spacing.sm),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              BridgeText(
                 'SAVINGS GOALS',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                style: kit.typography.overline.copyWith(
+                  color: kit.colors.textSecondary,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              Text(
+              BridgeText(
                 'View All',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
+                style: kit.typography.caption.copyWith(
+                  color: kit.colors.primary,
                   fontWeight: FontWeight.bold,
-                  fontSize: 12,
                 ),
               ),
             ],
@@ -45,10 +47,10 @@ class StitchGoalsList extends StatelessWidget {
         SizedBox(
           height: 140,
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg),
             scrollDirection: Axis.horizontal,
             itemCount: goals.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, __) => kit.spacing.gapMd,
             itemBuilder: (context, index) =>
                 _buildGoalCard(context, goals[index]),
           ),
@@ -58,7 +60,7 @@ class StitchGoalsList extends StatelessWidget {
   }
 
   Widget _buildGoalCard(BuildContext context, Goal goal) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
     final progress = goal.targetAmount > 0
         ? (goal.totalSaved / goal.targetAmount)
@@ -69,7 +71,7 @@ class StitchGoalsList extends StatelessWidget {
       width: 140,
       child: AppCard(
         margin: EdgeInsets.zero,
-        padding: const EdgeInsets.all(12),
+        padding: kit.spacing.allMd,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -77,45 +79,44 @@ class StitchGoalsList extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.flag, color: theme.colorScheme.primary),
-                Text(
+                Icon(Icons.flag, color: kit.colors.primary, size: 20),
+                BridgeText(
                   '$percent%',
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
+                  style: kit.typography.caption.copyWith(
+                    color: kit.colors.primary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            kit.spacing.gapSm,
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                BridgeText(
                   goal.name,
-                  style: theme.textTheme.labelMedium?.copyWith(
+                  style: kit.typography.labelMedium.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
+                BridgeText(
                   '${CurrencyFormatter.format(goal.totalSaved, currencySymbol)} / ${CurrencyFormatter.format(goal.targetAmount, currencySymbol)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  style: kit.typography.caption.copyWith(
                     fontSize: 10,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: kit.colors.textSecondary,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            kit.spacing.gapSm,
             ClipRRect(
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: kit.radii.small,
               child: LinearProgressIndicator(
                 value: progress,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                color: theme.colorScheme.primary,
+                backgroundColor: kit.colors.surfaceContainer,
+                color: kit.colors.primary,
                 minHeight: 4,
               ),
             ),

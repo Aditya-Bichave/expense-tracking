@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:flutter_bloc/flutter_bloc.dart'; // Import bloc
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import SettingsBloc
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class MainShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -86,6 +88,7 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final kit = context.kit;
     final navTheme = theme.bottomNavigationBarTheme;
     final currentTabIndex = navigationShell.currentIndex;
     // --- Check Demo Mode State ---
@@ -99,7 +102,7 @@ class MainShell extends StatelessWidget {
         currentTabIndex == 4 || // Accounts
         currentTabIndex == 5); // Recurring
 
-    return Scaffold(
+    return AppScaffold(
       // --- Wrap body with DemoIndicatorWidget ---
       body: Stack(
         children: [
@@ -119,11 +122,11 @@ class MainShell extends StatelessWidget {
         currentIndex: currentTabIndex,
         onTap: (index) => _onTap(context, index),
         type: navTheme.type ?? BottomNavigationBarType.fixed,
-        backgroundColor: navTheme.backgroundColor,
+        backgroundColor: kit.colors.surface, // Use token
         selectedItemColor:
-            navTheme.selectedItemColor ?? theme.colorScheme.primary,
+            navTheme.selectedItemColor ?? kit.colors.primary,
         unselectedItemColor:
-            navTheme.unselectedItemColor ?? theme.colorScheme.onSurfaceVariant,
+            navTheme.unselectedItemColor ?? kit.colors.textSecondary,
         selectedLabelStyle: navTheme.selectedLabelStyle,
         unselectedLabelStyle: navTheme.unselectedLabelStyle,
         selectedIconTheme: navTheme.selectedIconTheme,
@@ -183,7 +186,7 @@ class MainShell extends StatelessWidget {
               child: const Icon(Icons.add),
             )
           : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // AppScaffold default
     );
   }
 }

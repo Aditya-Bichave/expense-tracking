@@ -8,6 +8,10 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_bridge/bridge_button.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart'; // Assuming this exists or using standard Circular
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 
 class RecentTransactionsSection extends StatelessWidget {
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
@@ -19,7 +23,7 @@ class RecentTransactionsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final settings = context.watch<SettingsBloc>().state;
     final currencySymbol = settings.currencySymbol;
     final transactionState = context.watch<TransactionListBloc>().state;
@@ -38,41 +42,38 @@ class RecentTransactionsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(
+        SectionHeader(
           title: 'Recent Activity',
-          padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: EdgeInsets.fromLTRB(kit.spacing.lg, kit.spacing.xxl, kit.spacing.lg, kit.spacing.sm),
         ),
         if (isLoading && recentItems.isEmpty)
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 24.0),
-              child: CircularProgressIndicator(strokeWidth: 2),
+              padding: kit.spacing.vXl,
+              child: const CircularProgressIndicator(strokeWidth: 2), // Should replace with AppLoadingIndicator if available
             ),
           )
         else if (errorMsg != null && recentItems.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 16.0,
-            ),
+            padding: kit.spacing.allLg,
             child: Center(
-              child: Text(
+              child: BridgeText(
                 "Error loading recent: $errorMsg",
-                style: TextStyle(color: theme.colorScheme.error),
+                style: kit.typography.body.copyWith(color: kit.colors.error),
                 textAlign: TextAlign.center,
               ),
             ),
           )
         else if (recentItems.isEmpty)
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 24.0,
+            padding: EdgeInsets.symmetric(
+              horizontal: kit.spacing.lg,
+              vertical: kit.spacing.xxl,
             ),
             child: Center(
-              child: Text(
+              child: BridgeText(
                 "No transactions recorded yet.",
-                style: theme.textTheme.bodyMedium,
+                style: kit.typography.body,
               ),
             ),
           )
@@ -89,17 +90,13 @@ class RecentTransactionsSection extends StatelessWidget {
           ),
         // "View All" Button
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg, vertical: kit.spacing.md),
           child: Center(
-            child: TextButton.icon(
+            child: BridgeButton.ghost(
               key: const ValueKey('button_recentTransactions_viewAll'),
               icon: const Icon(Icons.arrow_forward, size: 18),
-              label: const Text('View All Transactions'),
+              label: 'View All Transactions',
               onPressed: () => context.go(RouteNames.transactionsList),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.secondary,
-                textStyle: theme.textTheme.labelLarge,
-              ),
             ),
           ),
         ),

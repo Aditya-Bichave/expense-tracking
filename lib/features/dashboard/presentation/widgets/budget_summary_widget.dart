@@ -1,3 +1,4 @@
+// lib/features/dashboard/presentation/widgets/budget_summary_widget.dart
 import 'dart:io';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
@@ -11,6 +12,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart'; // For TimeSeriesDataPoint
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_button.dart';
 
 class BudgetSummaryWidget extends StatelessWidget {
   final List<BudgetWithStatus> budgets;
@@ -34,42 +39,40 @@ class BudgetSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final settings = context.watch<SettingsBloc>().state;
     final currency = settings.currencySymbol;
     final sparklineSpots = _getSparklineSpots(recentSpendingData);
 
     if (budgets.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: kit.spacing.vSm,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SectionHeader(title: 'Budget Status'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.account_balance_wallet_outlined,
-                        size: 32,
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "No active budgets found.",
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      TextButton(
-                        key: const ValueKey('button_budgetSummary_create'),
-                        onPressed: () =>
-                            context.pushNamed(RouteNames.addBudget),
-                        child: const Text('Create Budget'),
-                      ),
-                    ],
-                  ),
+            AppCard(
+              padding: kit.spacing.allLg,
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 32,
+                      color: kit.colors.textSecondary,
+                    ),
+                    kit.spacing.gapSm,
+                    BridgeText(
+                      "No active budgets found.",
+                      style: kit.typography.body,
+                    ),
+                    BridgeButton.ghost(
+                      key: const ValueKey('button_budgetSummary_create'),
+                      onPressed: () =>
+                          context.pushNamed(RouteNames.addBudget),
+                      label: 'Create Budget',
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -88,110 +91,104 @@ class BudgetSummaryWidget extends StatelessWidget {
             final progress = budgetWithStatus.percentageUsed.clamp(0.0, 1.0);
             final progressColor =
                 budgetWithStatus.health == BudgetHealth.overLimit
-                ? theme
-                      .colorScheme
-                      .error // Use theme error color
-                : theme.colorScheme.primary;
+                ? kit.colors.error // Use theme error color
+                : kit.colors.primary;
 
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              child: InkWell(
-                onTap: () => context.pushNamed(
-                  RouteNames.budgetDetail,
-                  pathParameters: {'id': budget.id},
-                  extra: budget,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
+            return AppCard(
+              margin: kit.spacing.vXs,
+              onTap: () => context.pushNamed(
+                RouteNames.budgetDetail,
+                pathParameters: {'id': budget.id},
+                extra: budget,
+              ),
+              padding: kit.spacing.allMd,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Wrap the inner Row with Flexible to constrain width
-                          Flexible(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min, // Important
-                              children: [
-                                Icon(
-                                  Icons.account_balance_wallet_outlined,
-                                  color: progressColor,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                // Use Flexible instead of Expanded inside Row
-                                Flexible(
-                                  child: Text(
-                                    budget.name,
-                                    style: theme.textTheme.titleSmall,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
+                      // Wrap the inner Row with Flexible to constrain width
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // Important
+                          children: [
+                            Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: progressColor,
+                              size: 20,
                             ),
-                          ),
-                          // Keep SizedBox for sparkline if it exists
-                          if (sparklineSpots.isNotEmpty &&
-                              sparklineSpots.length > 1)
-                            SizedBox(
-                              height: 20,
-                              width: 50, // Ensure sparkline has width
-                              child: LineChart(
-                                ChartUtils.sparklineChartData(
-                                  sparklineSpots,
-                                  progressColor,
-                                ),
-                                duration: Duration.zero,
+                            kit.spacing.gapSm,
+                            // Use Flexible instead of Expanded inside Row
+                            Flexible(
+                              child: BridgeText(
+                                budget.name,
+                                style: kit.typography.title.copyWith(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      LinearPercentIndicator(
-                        padding: EdgeInsets.zero,
-                        lineHeight: 8.0,
-                        percent: progress,
-                        barRadius: const Radius.circular(4),
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                        progressColor: progressColor,
-                        animation: !Platform.environment.containsKey(
-                          'FLUTTER_TEST',
+                          ],
                         ),
-                        animationDuration: 600,
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Spent: ${CurrencyFormatter.format(budgetWithStatus.amountSpent, currency)} / ${CurrencyFormatter.format(budget.targetAmount, currency)}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: progressColor,
+                      // Keep SizedBox for sparkline if it exists
+                      if (sparklineSpots.isNotEmpty &&
+                          sparklineSpots.length > 1)
+                        SizedBox(
+                          height: 20,
+                          width: 50, // Ensure sparkline has width
+                          child: LineChart(
+                            ChartUtils.sparklineChartData(
+                              sparklineSpots,
+                              progressColor,
                             ),
+                            duration: Duration.zero,
                           ),
-                          Text(
-                            '${(progress * 100).toStringAsFixed(0)}%',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                        ),
+                    ],
+                  ),
+                  kit.spacing.gapSm,
+                  LinearPercentIndicator(
+                    padding: EdgeInsets.zero,
+                    lineHeight: 8.0,
+                    percent: progress,
+                    barRadius: const Radius.circular(4),
+                    backgroundColor:
+                        kit.colors.surfaceContainer,
+                    progressColor: progressColor,
+                    animation: !Platform.environment.containsKey(
+                      'FLUTTER_TEST',
+                    ),
+                    animationDuration: 600,
+                  ),
+                  kit.spacing.gapXs,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      BridgeText(
+                        'Spent: ${CurrencyFormatter.format(budgetWithStatus.amountSpent, currency)} / ${CurrencyFormatter.format(budget.targetAmount, currency)}',
+                        style: kit.typography.caption.copyWith(
+                          color: progressColor,
+                        ),
+                      ),
+                      BridgeText(
+                        '${(progress * 100).toStringAsFixed(0)}%',
+                        style: kit.typography.caption.copyWith(
+                          color: kit.colors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             );
           }).toList(),
         ),
         if (budgets.length >= 3)
           Padding(
-            padding: const EdgeInsets.only(top: 4.0),
+            padding: EdgeInsets.only(top: kit.spacing.xs),
             child: Center(
-              child: TextButton(
+              child: BridgeButton.ghost(
                 key: const ValueKey('button_budgetSummary_viewAll'),
                 onPressed: () => context.go(
                   RouteNames.budgetsAndCats,
@@ -199,10 +196,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                     'initialTabIndex': 0, // Navigate to Budgets tab
                   },
                 ),
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
-                child: const Text('View All Budgets'),
+                label: 'View All Budgets',
               ),
             ),
           ),
