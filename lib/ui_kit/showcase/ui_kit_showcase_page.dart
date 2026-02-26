@@ -27,6 +27,7 @@ import 'package:expense_tracker/ui_kit/components/inputs/app_date_picker_field.d
 
 // Buttons
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // Import for UiVariant
 import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_fab.dart';
 
@@ -106,17 +107,17 @@ class _UiKitShowcasePageState extends State<UiKitShowcasePage> {
                     AppButton(label: 'Primary', onPressed: () {}),
                     AppButton(
                       label: 'Secondary',
-                      variant: AppButtonVariant.secondary,
+                      variant: UiVariant.secondary,
                       onPressed: () {},
                     ),
                     AppButton(
                       label: 'Ghost',
-                      variant: AppButtonVariant.ghost,
+                      variant: UiVariant.ghost,
                       onPressed: () {},
                     ),
                     AppButton(
                       label: 'Destructive',
-                      variant: AppButtonVariant.destructive,
+                      variant: UiVariant.destructive,
                       onPressed: () {},
                     ),
                     AppButton(

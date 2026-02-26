@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-enum AppButtonVariant {
-  primary,
-  secondary,
-  ghost,
-  destructive,
-  secondaryDestructive,
-}
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
+
+// Backward compatibility alias until migration is complete
+typedef AppButtonVariant = UiVariant;
+// typedef AppButtonSize = UiSize; // Can't alias closely if names differ slightly, mapping manually or keeping local for now if needed.
+// But we should try to use UiSize.
 
 enum AppButtonSize { small, medium, large }
 
 class AppButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
-  final AppButtonVariant variant;
+  final UiVariant variant;
   final AppButtonSize size;
   final Widget? icon;
   final bool isLoading;
@@ -25,7 +24,7 @@ class AppButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
-    this.variant = AppButtonVariant.primary,
+    this.variant = UiVariant.primary,
     this.size = AppButtonSize.medium,
     this.icon,
     this.isLoading = false,
@@ -72,7 +71,7 @@ class AppButton extends StatelessWidget {
     final Color? borderColor;
 
     switch (variant) {
-      case AppButtonVariant.primary:
+      case UiVariant.primary:
         backgroundColor = disabled
             ? kit.colors.surfaceContainer
             : kit.colors.primary;
@@ -81,27 +80,33 @@ class AppButton extends StatelessWidget {
             : kit.colors.onPrimary;
         borderColor = null;
         break;
-      case AppButtonVariant.secondary:
+      case UiVariant.secondary:
         backgroundColor = Colors.transparent;
         foregroundColor = disabled ? kit.colors.textMuted : kit.colors.primary;
         borderColor = disabled ? kit.colors.borderSubtle : kit.colors.border;
         break;
-      case AppButtonVariant.ghost:
+      case UiVariant.ghost:
         backgroundColor = Colors.transparent;
         foregroundColor = disabled ? kit.colors.textMuted : kit.colors.primary;
         borderColor = null;
         break;
-      case AppButtonVariant.destructive:
+      case UiVariant.destructive:
         backgroundColor = disabled
             ? kit.colors.surfaceContainer
             : kit.colors.error;
         foregroundColor = disabled ? kit.colors.textMuted : kit.colors.onError;
         borderColor = null;
         break;
-      case AppButtonVariant.secondaryDestructive:
+      case UiVariant.destructiveSecondary:
         backgroundColor = Colors.transparent;
         foregroundColor = disabled ? kit.colors.textMuted : kit.colors.error;
         borderColor = disabled ? kit.colors.borderSubtle : kit.colors.error;
+        break;
+      default:
+        // Fallback for other variants not supported by button yet
+        backgroundColor = kit.colors.surfaceContainer;
+        foregroundColor = kit.colors.textMuted;
+        borderColor = null;
         break;
     }
 
