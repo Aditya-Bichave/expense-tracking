@@ -14,10 +14,15 @@ import 'package:uuid/uuid.dart';
 
 // Mocks
 class MockAddGoalUseCase extends Mock implements AddGoalUseCase {}
+
 class MockUpdateGoalUseCase extends Mock implements UpdateGoalUseCase {}
+
 class MockUuid extends Mock implements Uuid {}
+
 class FakeAddGoalParams extends Fake implements AddGoalParams {}
+
 class FakeUpdateGoalParams extends Fake implements UpdateGoalParams {}
+
 class FakeGoal extends Fake implements Goal {}
 
 void main() {
@@ -72,22 +77,31 @@ void main() {
     blocTest<AddEditGoalBloc, AddEditGoalState>(
       'emits [loading, success] when SaveGoal succeeds (Add Mode)',
       setUp: () {
-        when(() => mockAddGoalUseCase(any()))
-            .thenAnswer((_) async => Right(tGoal));
+        when(
+          () => mockAddGoalUseCase(any()),
+        ).thenAnswer((_) async => Right(tGoal));
       },
       build: () => bloc,
-      act: (bloc) => bloc.add(const SaveGoal(
-        name: 'New Car',
-        targetAmount: 20000.0,
-        targetDate: null,
-        iconName: 'car',
-        description: 'Saving for a car',
-      )),
+      act: (bloc) => bloc.add(
+        const SaveGoal(
+          name: 'New Car',
+          targetAmount: 20000.0,
+          targetDate: null,
+          iconName: 'car',
+          description: 'Saving for a car',
+        ),
+      ),
       expect: () => [
-        isA<AddEditGoalState>()
-            .having((s) => s.status, 'status', AddEditGoalStatus.loading),
-        isA<AddEditGoalState>()
-            .having((s) => s.status, 'status', AddEditGoalStatus.success),
+        isA<AddEditGoalState>().having(
+          (s) => s.status,
+          'status',
+          AddEditGoalStatus.loading,
+        ),
+        isA<AddEditGoalState>().having(
+          (s) => s.status,
+          'status',
+          AddEditGoalStatus.success,
+        ),
       ],
       verify: (_) {
         verify(() => mockAddGoalUseCase(any())).called(1);
@@ -98,50 +112,76 @@ void main() {
     blocTest<AddEditGoalBloc, AddEditGoalState>(
       'emits [loading, error, initial] when SaveGoal fails (Add Mode)',
       setUp: () {
-        when(() => mockAddGoalUseCase(any()))
-            .thenAnswer((_) async => const Left(CacheFailure('DB Error')));
+        when(
+          () => mockAddGoalUseCase(any()),
+        ).thenAnswer((_) async => const Left(CacheFailure('DB Error')));
       },
       build: () => bloc,
-      act: (bloc) => bloc.add(const SaveGoal(
-        name: 'New Car',
-        targetAmount: 20000.0,
-      )),
+      act: (bloc) =>
+          bloc.add(const SaveGoal(name: 'New Car', targetAmount: 20000.0)),
       expect: () => [
-         isA<AddEditGoalState>()
-            .having((s) => s.status, 'status', AddEditGoalStatus.loading),
-         isA<AddEditGoalState>()
+        isA<AddEditGoalState>().having(
+          (s) => s.status,
+          'status',
+          AddEditGoalStatus.loading,
+        ),
+        isA<AddEditGoalState>()
             .having((s) => s.status, 'status', AddEditGoalStatus.error)
             .having((s) => s.errorMessage, 'error', contains('Database Error')),
-         isA<AddEditGoalState>()
-            .having((s) => s.status, 'status', AddEditGoalStatus.initial),
+        isA<AddEditGoalState>().having(
+          (s) => s.status,
+          'status',
+          AddEditGoalStatus.initial,
+        ),
       ],
     );
 
     blocTest<AddEditGoalBloc, AddEditGoalState>(
       'emits [loading, success] when SaveGoal succeeds (Edit Mode)',
       setUp: () {
-         when(() => mockUpdateGoalUseCase(any()))
-            .thenAnswer((_) async => Right(tGoal));
+        when(
+          () => mockUpdateGoalUseCase(any()),
+        ).thenAnswer((_) async => Right(tGoal));
       },
       build: () => AddEditGoalBloc(
         addGoalUseCase: mockAddGoalUseCase,
         updateGoalUseCase: mockUpdateGoalUseCase,
         initialGoal: tGoal,
       ),
-      act: (bloc) => bloc.add(const SaveGoal(
-        name: 'Updated Name',
-        targetAmount: 25000.0,
-      )),
+      act: (bloc) =>
+          bloc.add(const SaveGoal(name: 'Updated Name', targetAmount: 25000.0)),
       expect: () => [
-        isA<AddEditGoalState>()
-            .having((s) => s.status, 'status', AddEditGoalStatus.loading),
-        isA<AddEditGoalState>()
-            .having((s) => s.status, 'status', AddEditGoalStatus.success),
+        isA<AddEditGoalState>().having(
+          (s) => s.status,
+          'status',
+          AddEditGoalStatus.loading,
+        ),
+        isA<AddEditGoalState>().having(
+          (s) => s.status,
+          'status',
+          AddEditGoalStatus.success,
+        ),
       ],
       verify: (_) {
         verify(() => mockUpdateGoalUseCase(any())).called(1);
         verifyNever(() => mockAddGoalUseCase(any()));
       },
+    );
+
+    blocTest<AddEditGoalBloc, AddEditGoalState>(
+      'clears error message when ClearGoalFormMessage is added',
+      build: () => bloc,
+      seed: () => const AddEditGoalState(
+        status: AddEditGoalStatus.error,
+        errorMessage: 'Some error',
+      ),
+      act: (bloc) => bloc.add(const ClearGoalFormMessage()),
+      expect: () => [
+        isA<AddEditGoalState>()
+            .having((s) => s.status, 'status', AddEditGoalStatus.initial)
+            .having((s) => s.errorMessage, 'error', isNull)
+            .having((s) => s.clearError, 'clearError', true),
+      ],
     );
   });
 }

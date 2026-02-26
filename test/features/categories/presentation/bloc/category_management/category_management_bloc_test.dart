@@ -16,15 +16,27 @@ import 'package:mocktail/mocktail.dart';
 
 // Mocks
 class MockGetCategoriesUseCase extends Mock implements GetCategoriesUseCase {}
-class MockAddCustomCategoryUseCase extends Mock implements AddCustomCategoryUseCase {}
-class MockUpdateCustomCategoryUseCase extends Mock implements UpdateCustomCategoryUseCase {}
-class MockDeleteCustomCategoryUseCase extends Mock implements DeleteCustomCategoryUseCase {}
+
+class MockAddCustomCategoryUseCase extends Mock
+    implements AddCustomCategoryUseCase {}
+
+class MockUpdateCustomCategoryUseCase extends Mock
+    implements UpdateCustomCategoryUseCase {}
+
+class MockDeleteCustomCategoryUseCase extends Mock
+    implements DeleteCustomCategoryUseCase {}
 
 // Fakes
 class FakeNoParams extends Fake implements NoParams {}
-class FakeAddCustomCategoryParams extends Fake implements AddCustomCategoryParams {}
-class FakeUpdateCustomCategoryParams extends Fake implements UpdateCustomCategoryParams {}
-class FakeDeleteCustomCategoryParams extends Fake implements DeleteCustomCategoryParams {}
+
+class FakeAddCustomCategoryParams extends Fake
+    implements AddCustomCategoryParams {}
+
+class FakeUpdateCustomCategoryParams extends Fake
+    implements UpdateCustomCategoryParams {}
+
+class FakeDeleteCustomCategoryParams extends Fake
+    implements DeleteCustomCategoryParams {}
 
 void main() {
   late CategoryManagementBloc bloc;
@@ -84,42 +96,64 @@ void main() {
     blocTest<CategoryManagementBloc, CategoryManagementState>(
       'LoadCategories emits [loading, loaded] with sorted categories on success',
       setUp: () {
-        when(() => mockGetCategoriesUseCase(any()))
-            .thenAnswer((_) async => Right([tCategoryExpense, tCategoryIncome]));
+        when(
+          () => mockGetCategoriesUseCase(any()),
+        ).thenAnswer((_) async => Right([tCategoryExpense, tCategoryIncome]));
       },
       build: () => bloc,
       act: (bloc) => bloc.add(const LoadCategories(forceReload: true)),
       expect: () => [
-        isA<CategoryManagementState>()
-            .having((s) => s.status, 'status', CategoryManagementStatus.loading),
+        isA<CategoryManagementState>().having(
+          (s) => s.status,
+          'status',
+          CategoryManagementStatus.loading,
+        ),
         isA<CategoryManagementState>()
             .having((s) => s.status, 'status', CategoryManagementStatus.loaded)
-            .having((s) => s.customExpenseCategories.length, 'custom expense count', 1)
-            .having((s) => s.predefinedIncomeCategories.length, 'predefined income count', 1),
+            .having(
+              (s) => s.customExpenseCategories.length,
+              'custom expense count',
+              1,
+            )
+            .having(
+              (s) => s.predefinedIncomeCategories.length,
+              'predefined income count',
+              1,
+            ),
       ],
     );
 
     blocTest<CategoryManagementBloc, CategoryManagementState>(
       'AddCategory emits [loading] then triggers reload on success',
       setUp: () {
-        when(() => mockAddCustomCategoryUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
-        when(() => mockGetCategoriesUseCase(any()))
-            .thenAnswer((_) async => const Right([]));
+        when(
+          () => mockAddCustomCategoryUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGetCategoriesUseCase(any()),
+        ).thenAnswer((_) async => const Right([]));
       },
       build: () => bloc,
-      act: (bloc) => bloc.add(const AddCategory(
-        name: 'New Cat',
-        iconName: 'icon',
-        colorHex: '000000',
-        type: CategoryType.expense,
-      )),
+      act: (bloc) => bloc.add(
+        const AddCategory(
+          name: 'New Cat',
+          iconName: 'icon',
+          colorHex: '000000',
+          type: CategoryType.expense,
+        ),
+      ),
       expect: () => [
-        isA<CategoryManagementState>()
-            .having((s) => s.status, 'status', CategoryManagementStatus.loading),
+        isA<CategoryManagementState>().having(
+          (s) => s.status,
+          'status',
+          CategoryManagementStatus.loading,
+        ),
         // The intermediate Loading from LoadCategories is filtered out by Equatable because state didn't change (Loading -> Loading)
-        isA<CategoryManagementState>()
-             .having((s) => s.status, 'status', CategoryManagementStatus.loaded),
+        isA<CategoryManagementState>().having(
+          (s) => s.status,
+          'status',
+          CategoryManagementStatus.loaded,
+        ),
       ],
       verify: (_) {
         verify(() => mockAddCustomCategoryUseCase(any())).called(1);
@@ -130,32 +164,52 @@ void main() {
     blocTest<CategoryManagementBloc, CategoryManagementState>(
       'UpdateCategory emits [loading] then reload on success',
       setUp: () {
-        when(() => mockUpdateCustomCategoryUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
-        when(() => mockGetCategoriesUseCase(any()))
-            .thenAnswer((_) async => const Right([]));
+        when(
+          () => mockUpdateCustomCategoryUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGetCategoriesUseCase(any()),
+        ).thenAnswer((_) async => const Right([]));
       },
       build: () => bloc,
       act: (bloc) => bloc.add(UpdateCategory(category: tCategoryExpense)),
       expect: () => [
-        isA<CategoryManagementState>().having((s) => s.status, 'status', CategoryManagementStatus.loading),
-        isA<CategoryManagementState>().having((s) => s.status, 'status', CategoryManagementStatus.loaded),
+        isA<CategoryManagementState>().having(
+          (s) => s.status,
+          'status',
+          CategoryManagementStatus.loading,
+        ),
+        isA<CategoryManagementState>().having(
+          (s) => s.status,
+          'status',
+          CategoryManagementStatus.loaded,
+        ),
       ],
     );
 
     blocTest<CategoryManagementBloc, CategoryManagementState>(
       'DeleteCategory emits [loading] then reload on success',
       setUp: () {
-        when(() => mockDeleteCustomCategoryUseCase(any()))
-            .thenAnswer((_) async => const Right(null));
-         when(() => mockGetCategoriesUseCase(any()))
-            .thenAnswer((_) async => const Right([]));
+        when(
+          () => mockDeleteCustomCategoryUseCase(any()),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockGetCategoriesUseCase(any()),
+        ).thenAnswer((_) async => const Right([]));
       },
       build: () => bloc,
       act: (bloc) => bloc.add(const DeleteCategory(categoryId: 'cat-id')),
       expect: () => [
-        isA<CategoryManagementState>().having((s) => s.status, 'status', CategoryManagementStatus.loading),
-        isA<CategoryManagementState>().having((s) => s.status, 'status', CategoryManagementStatus.loaded),
+        isA<CategoryManagementState>().having(
+          (s) => s.status,
+          'status',
+          CategoryManagementStatus.loading,
+        ),
+        isA<CategoryManagementState>().having(
+          (s) => s.status,
+          'status',
+          CategoryManagementStatus.loaded,
+        ),
       ],
     );
   });

@@ -78,9 +78,7 @@ class LogContributionBloc
 
     // Construct the contribution object
     final contributionData = GoalContribution(
-      id:
-          state.initialContribution?.id ??
-          _uuid.v4(), // Use existing or new ID
+      id: state.initialContribution?.id ?? _uuid.v4(), // Use existing or new ID
       goalId: goalId, // Use captured goalId
       amount: event.amount,
       date: event.date,

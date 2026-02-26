@@ -21,13 +21,13 @@ class AddEditGoalState extends Equatable {
     AddEditGoalStatus? status,
     Goal? initialGoal,
     String? errorMessage,
-    bool? clearError,
+    bool clearError = false,
   }) {
     return AddEditGoalState(
       status: status ?? this.status,
       initialGoal: initialGoal ?? this.initialGoal,
-      errorMessage: errorMessage ?? this.errorMessage,
-      clearError: clearError ?? this.clearError,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      clearError: clearError,
     );
   }
 
