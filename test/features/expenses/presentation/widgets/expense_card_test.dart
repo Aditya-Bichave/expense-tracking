@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
@@ -72,7 +73,10 @@ void main() {
       type: CategoryType.expense,
       isCustom: false,
     );
-    final expenseWithCategory = tExpense.copyWith(category: category);
+    final expenseWithCategory = tExpense.copyWith(
+      category: category,
+      status: CategorizationStatus.categorized,
+    );
 
     await pumpWidgetWithProviders(
       tester: tester,

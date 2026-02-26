@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
@@ -156,7 +157,9 @@ class BudgetSummaryWidget extends StatelessWidget {
                         backgroundColor:
                             theme.colorScheme.surfaceContainerHighest,
                         progressColor: progressColor,
-                        animation: true,
+                        animation: !Platform.environment.containsKey(
+                          'FLUTTER_TEST',
+                        ),
                         animationDuration: 600,
                       ),
                       const SizedBox(height: 4),
