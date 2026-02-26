@@ -1,0 +1,127 @@
+# UI Kit Audit Report
+
+## Summary
+Total Violations Found: 3742
+
+### Breakdown by Category
+- SPACING: 2526
+- TYPOGRAPHY: 546
+- COLORS: 304
+- COMPONENTS: 113
+- MOTION: 112
+- RADII: 103
+- SHADOWS: 38
+
+### Top 10 Files with Violations
+- lib/core/theme/app_theme.dart: 101
+- lib/features/accounts/presentation/pages/accounts_tab_page.dart: 92
+- lib/features/goals/presentation/pages/goal_detail_page.dart: 91
+- lib/features/budgets/presentation/pages/budget_detail_page.dart: 86
+- lib/features/dashboard/presentation/pages/dashboard_page.dart: 79
+- lib/features/dashboard/presentation/widgets/stitch/stitch_net_balance_card.dart: 73
+- lib/features/reports/presentation/widgets/report_filter_controls.dart: 67
+- lib/features/add_expense/presentation/widgets/details_screen.dart: 67
+- lib/features/add_expense/presentation/widgets/split_screen.dart: 66
+- lib/features/budgets/presentation/widgets/budget_form.dart: 63
+
+## Detailed Violations (First 100)
+- **SPACING** in `lib/main_shell.dart:36`: `case 4: // Accounts`
+- **SPACING** in `lib/main_shell.dart:42`: `case 6: // Settings`
+- **SPACING** in `lib/main_shell.dart:60`: `case 4:`
+- **SPACING** in `lib/main_shell.dart:64`: `case 6:`
+- **SPACING** in `lib/main_shell.dart:77`: `case 4: // Accounts`
+- **SPACING** in `lib/main_shell.dart:99`: `currentTabIndex == 4 || // Accounts`
+- **SPACING** in `lib/main_shell.dart:133`: `elevation: navTheme.elevation ?? 8.0,`
+- **SPACING** in `lib/main_shell.dart:133`: `elevation: navTheme.elevation ?? 8.0,`
+- **SHADOWS** in `lib/main_shell.dart:133`: `elevation: navTheme.elevation ?? 8.0,`
+- **SPACING** in `lib/main_shell.dart:162`: `case 4: // Accounts -> Add Account`
+- **MOTION** in `lib/main.dart:222`: `duration: Duration(seconds: 5),`
+- **SPACING** in `lib/main.dart:251`: `child: Padding(`
+- **SPACING** in `lib/main.dart:252`: `padding: const EdgeInsets.all(24.0),`
+- **SPACING** in `lib/main.dart:252`: `padding: const EdgeInsets.all(24.0),`
+- **SPACING** in `lib/main.dart:252`: `padding: const EdgeInsets.all(24.0),`
+- **SPACING** in `lib/main.dart:252`: `padding: const EdgeInsets.all(24.0),`
+- **COLORS** in `lib/main.dart:258`: `color: Colors.red.shade700,`
+- **TYPOGRAPHY** in `lib/main.dart:261`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/main.dart:261`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/main.dart:261`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/main.dart:261`: `const SizedBox(height: 16),`
+- **TYPOGRAPHY** in `lib/main.dart:264`: `style: TextStyle(`
+- **TYPOGRAPHY** in `lib/main.dart:265`: `fontSize: 18,`
+- **TYPOGRAPHY** in `lib/main.dart:266`: `fontWeight: FontWeight.bold,`
+- **COLORS** in `lib/main.dart:267`: `color: Colors.red.shade900,`
+- **TYPOGRAPHY** in `lib/main.dart:271`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/main.dart:271`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/main.dart:271`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/main.dart:271`: `const SizedBox(height: 12),`
+- **TYPOGRAPHY** in `lib/main.dart:275`: `style: const TextStyle(fontSize: 14),`
+- **TYPOGRAPHY** in `lib/main.dart:275`: `style: const TextStyle(fontSize: 14),`
+- **SPACING** in `lib/main.dart:275`: `style: const TextStyle(fontSize: 14),`
+- **TYPOGRAPHY** in `lib/main.dart:278`: `const SizedBox(height: 24),`
+- **SPACING** in `lib/main.dart:278`: `const SizedBox(height: 24),`
+- **SPACING** in `lib/main.dart:278`: `const SizedBox(height: 24),`
+- **SPACING** in `lib/main.dart:278`: `const SizedBox(height: 24),`
+- **COLORS** in `lib/main.dart:282`: `style: TextStyle(color: Colors.red),`
+- **TYPOGRAPHY** in `lib/main.dart:282`: `style: TextStyle(color: Colors.red),`
+- **TYPOGRAPHY** in `lib/main.dart:284`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/main.dart:284`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/main.dart:284`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/main.dart:284`: `const SizedBox(height: 16),`
+- **COMPONENTS** in `lib/main.dart:285`: `ElevatedButton(`
+- **COLORS** in `lib/main.dart:288`: `backgroundColor: Colors.red,`
+- **COLORS** in `lib/main.dart:289`: `foregroundColor: Colors.white,`
+- **SPACING** in `lib/features/groups/data/models/group_member_model.dart:9`: `@HiveType(typeId: 14)`
+- **SPACING** in `lib/features/groups/data/models/group_member_model.dart:26`: `@HiveField(4)`
+- **SPACING** in `lib/features/groups/data/models/group_model.dart:25`: `@HiveField(4)`
+- **SPACING** in `lib/features/groups/data/models/group_model.dart:33`: `@HiveField(6, defaultValue: 'USD')`
+- **SPACING** in `lib/features/groups/data/models/group_model.dart:40`: `@HiveField(8, defaultValue: false)`
+- **COMPONENTS** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:67`: `showModalBottomSheet(`
+- **COLORS** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:83`: `leading: const Icon(Icons.person_remove, color: Colors.red),`
+- **COLORS** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:86`: `style: TextStyle(color: Colors.red),`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:86`: `style: TextStyle(color: Colors.red),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:125`: `if (role == currentRole) const Icon(Icons.check, size: 16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:126`: `const SizedBox(width: 8),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:126`: `const SizedBox(width: 8),`
+- **COMPONENTS** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:147`: `TextButton(`
+- **COMPONENTS** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:151`: `TextButton(`
+- **COLORS** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:158`: `child: const Text('Remove', style: TextStyle(color: Colors.red)),`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/group_members_tab.dart:158`: `child: const Text('Remove', style: TextStyle(color: Colors.red)),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:20`: `return Padding(`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:21`: `padding: EdgeInsets.only(`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:21`: `padding: EdgeInsets.only(`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:23`: `left: 16,`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:24`: `right: 16,`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:25`: `top: 16,`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:32`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:32`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:32`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:32`: `const SizedBox(height: 16),`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:44`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:44`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:44`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:44`: `const SizedBox(height: 12),`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:57`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:57`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:57`: `const SizedBox(height: 12),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:57`: `const SizedBox(height: 12),`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:69`: `const SizedBox(height: 24),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:69`: `const SizedBox(height: 24),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:69`: `const SizedBox(height: 24),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:69`: `const SizedBox(height: 24),`
+- **COMPONENTS** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:70`: `ElevatedButton(`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:77`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:77`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:77`: `const SizedBox(height: 16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart:77`: `const SizedBox(height: 16),`
+- **COMPONENTS** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:14`: `const GroupCard({`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:48`: `margin: const EdgeInsets.symmetric(vertical: 4),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:48`: `margin: const EdgeInsets.symmetric(vertical: 4),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:48`: `margin: const EdgeInsets.symmetric(vertical: 4),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:49`: `padding: const EdgeInsets.all(16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:49`: `padding: const EdgeInsets.all(16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:49`: `padding: const EdgeInsets.all(16),`
+- **SPACING** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:52`: `borderRadius: BorderRadius.circular(16),`
+- **RADII** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:52`: `borderRadius: BorderRadius.circular(16),`
+- **COLORS** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:54`: `color: theme.colorScheme.outlineVariant.withOpacity(0.2),`
+- **TYPOGRAPHY** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:61`: `height: 56,`
+- **COLORS** in `lib/features/groups/presentation/widgets/stitch/group_card.dart:63`: `color: iconColor.withOpacity(0.2),`
