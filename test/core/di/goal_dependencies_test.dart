@@ -30,22 +30,47 @@ import 'package:uuid/uuid.dart';
 
 // Mocks
 class MockGoalLocalDataSource extends Mock implements GoalLocalDataSource {}
-class MockGoalContributionLocalDataSource extends Mock implements GoalContributionLocalDataSource {}
+
+class MockGoalContributionLocalDataSource extends Mock
+    implements GoalContributionLocalDataSource {}
+
 class MockDemoModeService extends Mock implements DemoModeService {}
+
 class MockGoalRepository extends Mock implements GoalRepository {}
-class MockGoalContributionRepository extends Mock implements GoalContributionRepository {}
+
+class MockGoalContributionRepository extends Mock
+    implements GoalContributionRepository {}
+
 class MockAddGoalUseCase extends Mock implements AddGoalUseCase {}
+
 class MockGetGoalsUseCase extends Mock implements GetGoalsUseCase {}
+
 class MockUpdateGoalUseCase extends Mock implements UpdateGoalUseCase {}
+
 class MockArchiveGoalUseCase extends Mock implements ArchiveGoalUseCase {}
+
 class MockDeleteGoalUseCase extends Mock implements DeleteGoalUseCase {}
-class MockAddContributionUseCase extends Mock implements AddContributionUseCase {}
-class MockGetContributionsForGoalUseCase extends Mock implements GetContributionsForGoalUseCase {}
-class MockUpdateContributionUseCase extends Mock implements UpdateContributionUseCase {}
-class MockDeleteContributionUseCase extends Mock implements DeleteContributionUseCase {}
-class MockCheckGoalAchievementUseCase extends Mock implements CheckGoalAchievementUseCase {}
-class MockAuditGoalTotalsUseCase extends Mock implements AuditGoalTotalsUseCase {}
+
+class MockAddContributionUseCase extends Mock
+    implements AddContributionUseCase {}
+
+class MockGetContributionsForGoalUseCase extends Mock
+    implements GetContributionsForGoalUseCase {}
+
+class MockUpdateContributionUseCase extends Mock
+    implements UpdateContributionUseCase {}
+
+class MockDeleteContributionUseCase extends Mock
+    implements DeleteContributionUseCase {}
+
+class MockCheckGoalAchievementUseCase extends Mock
+    implements CheckGoalAchievementUseCase {}
+
+class MockAuditGoalTotalsUseCase extends Mock
+    implements AuditGoalTotalsUseCase {}
+
 class MockUuid extends Mock implements Uuid {}
+
 class MockClock extends Mock implements Clock {}
 
 final sl = GetIt.instance;
@@ -74,14 +99,24 @@ void main() {
 
     sl.registerLazySingleton<AddGoalUseCase>(() => MockAddGoalUseCase());
     sl.registerLazySingleton<UpdateGoalUseCase>(() => MockUpdateGoalUseCase());
-    sl.registerLazySingleton<AddContributionUseCase>(() => MockAddContributionUseCase());
-    sl.registerLazySingleton<UpdateContributionUseCase>(() => MockUpdateContributionUseCase());
-    sl.registerLazySingleton<DeleteContributionUseCase>(() => MockDeleteContributionUseCase());
-    sl.registerLazySingleton<CheckGoalAchievementUseCase>(() => MockCheckGoalAchievementUseCase());
+    sl.registerLazySingleton<AddContributionUseCase>(
+      () => MockAddContributionUseCase(),
+    );
+    sl.registerLazySingleton<UpdateContributionUseCase>(
+      () => MockUpdateContributionUseCase(),
+    );
+    sl.registerLazySingleton<DeleteContributionUseCase>(
+      () => MockDeleteContributionUseCase(),
+    );
+    sl.registerLazySingleton<CheckGoalAchievementUseCase>(
+      () => MockCheckGoalAchievementUseCase(),
+    );
 
     // Required for other Blocs/UseCases if we triggered them
     sl.registerLazySingleton<GetGoalsUseCase>(() => MockGetGoalsUseCase());
-    sl.registerLazySingleton<ArchiveGoalUseCase>(() => MockArchiveGoalUseCase());
+    sl.registerLazySingleton<ArchiveGoalUseCase>(
+      () => MockArchiveGoalUseCase(),
+    );
     sl.registerLazySingleton<DeleteGoalUseCase>(() => MockDeleteGoalUseCase());
 
     // Required for Uuid injection
