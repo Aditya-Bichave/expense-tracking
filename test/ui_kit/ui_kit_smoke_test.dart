@@ -8,11 +8,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
 
-    await tester.pumpWidget(
-      const MaterialApp(
-        home: UiKitShowcasePage(),
-      ),
-    );
+    await tester.pumpWidget(const MaterialApp(home: UiKitShowcasePage()));
 
     // Use pump instead of pumpAndSettle because of infinite animations (e.g. Skeleton)
     await tester.pump();
