@@ -7,7 +7,6 @@ import 'package:expense_tracker/features/add_expense/presentation/widgets/detail
 import 'package:expense_tracker/features/add_expense/presentation/widgets/split_screen.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
-import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddExpenseWizardPage extends StatelessWidget {
   const AddExpenseWizardPage({super.key});

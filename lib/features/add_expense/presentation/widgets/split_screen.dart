@@ -18,8 +18,7 @@ import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
-import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
-import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // Added import
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 
 class SplitScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -225,10 +224,12 @@ class SplitScreen extends StatelessWidget {
   }
 
   String _getValidationError(AddExpenseWizardState state) {
-    if (state.splitMode == SplitMode.percent)
+    if (state.splitMode == SplitMode.percent) {
       return "Total percentage must be 100%";
-    if (state.splitMode == SplitMode.exact)
+    }
+    if (state.splitMode == SplitMode.exact) {
       return "Total amount must equal expense total";
+    }
     return "Invalid splits";
   }
 
@@ -331,8 +332,10 @@ class _SplitRowState extends State<_SplitRow> {
     final bool isEditable = widget.mode != SplitMode.equal;
 
     return Padding(
-      padding: kit.spacing.vSm.copyWith(
-          left: kit.spacing.md, right: kit.spacing.md), // Replaced hMd + vSm
+      padding: EdgeInsets.symmetric(
+        vertical: kit.spacing.sm, // vSm is sm
+        horizontal: kit.spacing.md,
+      ),
       child: Row(
         children: [
           AppAvatar(

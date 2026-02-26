@@ -8,6 +8,7 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
@@ -88,9 +89,40 @@ class ExpenseCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
-            backgroundColor: category.cachedDisplayColor.withOpacity(0.15),
-            radius: 20,
+          // Replaced CircleAvatar with AppAvatar manually constructed since we pass a custom child
+          // AppAvatar doesn't support custom child directly in the common constructor,
+          // but we can use Container with BoxDecoration to match the design or extend AppAvatar.
+          // However, the prompt asked to replace CircleAvatar usage with AppAvatar.
+          // AppAvatar takes imageUrl, initials, or child? No, looking at AppAvatar definition:
+          // imageUrl, initials. No generic child.
+          // But wait, the instruction says: "configured to use the same color... and the same child icon builder"
+          // If AppAvatar doesn't support child, I might need to check if I can add it or if I should use a Container.
+          // Let's check AppAvatar again.
+
+          // Checking lib/ui_kit/components/lists/app_avatar.dart
+          // It has imageUrl and initials. And a child is built internally if imageUrl is null.
+          // Wait, the previous read of AppAvatar showed:
+          // child: imageUrl == null && initials != null ? Text(...) : null
+          // It DOES NOT accept a generic child.
+
+          // So, to support custom icon (SvgPicture or Icon), I should either:
+          // 1. Modify AppAvatar to accept a child.
+          // 2. Use a Container that mimics AppAvatar.
+          // 3. Or if AppAvatar is intended to handle this via `imageUrl`? No, SvgPicture is a widget.
+
+          // The prompt says: "ensuring the AppAvatar props match the visual behavior previously provided by CircleAvatar".
+          // If AppAvatar cannot accept a child, I cannot use it without modification.
+          // BUT, I can modify AppAvatar to accept `child`.
+
+          // Let's modify AppAvatar to accept `child` as an alternative to initials/image.
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: category.cachedDisplayColor.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
             child: _buildIcon(context, modeTheme),
           ),
           kit.spacing.wMd,

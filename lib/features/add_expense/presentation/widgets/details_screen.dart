@@ -18,6 +18,7 @@ import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
 import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // Added import
+import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -34,6 +35,7 @@ class DetailsScreen extends StatefulWidget {
 class _DetailsScreenState extends State<DetailsScreen> {
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
+  late Future<dynamic> _categoriesFuture;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
     final state = context.read<AddExpenseWizardBloc>().state;
     _descController.text = state.description;
     _notesController.text = state.notes;
+    _categoriesFuture = sl<CategoryRepository>().getAllCategories();
   }
 
   @override
@@ -125,7 +128,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               SizedBox(
                 height: 40, // Height for chips
                 child: FutureBuilder<dynamic>(
-                  future: sl<CategoryRepository>().getAllCategories(),
+                  future: _categoriesFuture,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
@@ -322,8 +325,21 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 }
 
-class _GroupSelectorContent extends StatelessWidget {
+class _GroupSelectorContent extends StatefulWidget {
   const _GroupSelectorContent();
+
+  @override
+  State<_GroupSelectorContent> createState() => _GroupSelectorContentState();
+}
+
+class _GroupSelectorContentState extends State<_GroupSelectorContent> {
+  late Future<dynamic> _groupsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _groupsFuture = sl<GroupsRepository>().getGroups();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -341,10 +357,10 @@ class _GroupSelectorContent extends StatelessWidget {
               Navigator.pop(context);
             },
           ),
-          const Divider(),
+          const AppDivider(),
           Expanded(
             child: FutureBuilder<dynamic>(
-              future: sl<GroupsRepository>().getGroups(),
+              future: _groupsFuture,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
