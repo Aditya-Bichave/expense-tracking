@@ -31,7 +31,12 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
     if (event.args.isNotEmpty) {
       for (final arg in event.args) {
         if (arg.contains('io.supabase.expensetracker://')) {
-          add(DeepLinkReceived(Uri.parse(arg)));
+          final uri = Uri.tryParse(arg);
+          if (uri != null) {
+            add(DeepLinkReceived(uri));
+          } else {
+            log.warning("Invalid deep link argument: $arg");
+          }
           break;
         }
       }
@@ -57,7 +62,11 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
     DeepLinkReceived event,
     Emitter<DeepLinkState> emit,
   ) async {
-    log.info("Deep link received: ${event.uri}");
+    // SECURITY: Sanitize URI for logging to prevent leaking access tokens
+    final sanitisedUri = event.uri
+        .replace(queryParameters: {}, fragment: '')
+        .toString();
+    log.info("Deep link received: $sanitisedUri");
 
     // 1. Handle Supabase Auth callback
     // io.supabase.expensetracker://login-callback#access_token=...
@@ -102,12 +111,10 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
         (user) => user,
       );
       if (currentUser == null) {
-        // Log in anonymously
-        final authResult = await _authRepository.signInAnonymously();
-        if (authResult.isLeft()) {
-          emit(const DeepLinkError("Failed to sign in anonymously"));
-          return;
-        }
+        // Security Fix: Do not auto-create anonymous accounts.
+        // Prompt user to log in instead.
+        emit(const DeepLinkError("Please log in to join the group."));
+        return;
       }
 
       // 2. Call Edge Function

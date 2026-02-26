@@ -191,11 +191,22 @@ Future<void> main(List<String> args) async {
   );
 }
 
-class InitializationErrorApp extends StatelessWidget {
+class InitializationErrorApp extends StatefulWidget {
   final Object error;
   const InitializationErrorApp({super.key, required this.error});
 
+  @override
+  State<InitializationErrorApp> createState() => _InitializationErrorAppState();
+}
+
+class _InitializationErrorAppState extends State<InitializationErrorApp> {
+  bool _isResetting = false;
+
   Future<void> _resetApp(BuildContext context) async {
+    setState(() {
+      _isResetting = true;
+    });
+
     try {
       // Clear Secure Storage
       // Using default secure options
@@ -204,14 +215,17 @@ class InitializationErrorApp extends StatelessWidget {
 
       // Clear Hive Boxes (Delete files)
       final dir = await getApplicationDocumentsDirectory();
-      final files = dir.listSync();
-      for (var file in files) {
-        if (file.path.endsWith('.hive') || file.path.endsWith('.lock')) {
-          try {
-            file.deleteSync();
-          } catch (_) {}
-        }
-      }
+      // Use async list to avoid blocking UI
+      final files = await dir.list().toList();
+      await Future.wait(
+        files.map((file) async {
+          if (file.path.endsWith('.hive') || file.path.endsWith('.lock')) {
+            try {
+              await file.delete();
+            } catch (_) {}
+          }
+        }),
+      );
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -229,6 +243,12 @@ class InitializationErrorApp extends StatelessWidget {
           context,
         ).showSnackBar(SnackBar(content: Text("Reset failed: $e")));
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isResetting = false;
+        });
+      }
     }
   }
 
@@ -238,7 +258,7 @@ class InitializationErrorApp extends StatelessWidget {
       SettingsState.defaultUIMode,
       SettingsState.defaultPaletteIdentifier,
     );
-    final isCorruption = error is HiveKeyCorruptionException;
+    final isCorruption = widget.error is HiveKeyCorruptionException;
 
     return MaterialApp(
       theme: defaultThemePair.light,
@@ -270,7 +290,7 @@ class InitializationErrorApp extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "A critical error occurred during startup:\n\n${error.toString()}\n\nPlease restart the app. If the problem persists, contact support or check logs.",
+                      "A critical error occurred during startup:\n\n${widget.error.toString()}\n\nPlease restart the app. If the problem persists, contact support or check logs.",
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 14),
                     ),
@@ -282,14 +302,17 @@ class InitializationErrorApp extends StatelessWidget {
                         style: TextStyle(color: Colors.red),
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => _resetApp(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
+                      if (_isResetting)
+                        const CircularProgressIndicator()
+                      else
+                        ElevatedButton(
+                          onPressed: () => _resetApp(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text("Reset App Data"),
                         ),
-                        child: const Text("Reset App Data"),
-                      ),
                     ],
                   ],
                 ),
