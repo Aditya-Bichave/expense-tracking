@@ -2,7 +2,7 @@
 import 'package:dartz/dartz.dart' show Right;
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart' as df; // Alias
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';

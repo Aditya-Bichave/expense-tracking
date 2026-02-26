@@ -1,5 +1,5 @@
 // lib/core/widgets/app_dropdown_form_field.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 
 class AppDropdownFormField<T> extends StatelessWidget {

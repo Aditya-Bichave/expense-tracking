@@ -1,68 +1,31 @@
-// lib/features/goals/presentation/widgets/log_contribution_sheet.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
+
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/components/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker/core/di/service_locator.dart'; // For getting bloc instance
-import 'package:flutter_svg/flutter_svg.dart'; // For themed icons
-import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-// Function to show the sheet
-Future<bool> showLogContributionSheet(
-  BuildContext context,
-  String goalId, {
-  GoalContribution? initialContribution,
-}) async {
-  return await showModalBottomSheet<bool>(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (builderContext) {
-          return BlocProvider(
-            // Provide a NEW instance each time the sheet is shown
-            // This requires LogContributionBloc to be registered as a Factory in DI
-            create: (_) => sl<LogContributionBloc>()
-              ..add(
-                InitializeContribution(
-                  goalId: goalId,
-                  initialContribution: initialContribution,
-                ),
-              ),
-            child: Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(builderContext).viewInsets.bottom,
-              ),
-              child: LogContributionSheetContent(
-                initialContribution: initialContribution,
-              ),
-            ),
-          );
-        },
-      ) ??
-      false;
-}
-
-// Content of the sheet
-class LogContributionSheetContent extends StatefulWidget {
+class LogContributionSheet extends StatefulWidget {
   final GoalContribution? initialContribution;
 
-  const LogContributionSheetContent({super.key, this.initialContribution});
+  const LogContributionSheet({super.key, this.initialContribution});
 
   @override
-  State<LogContributionSheetContent> createState() =>
-      _LogContributionSheetContentState();
+  State<LogContributionSheet> createState() => _LogContributionSheetState();
 }
 
-class _LogContributionSheetContentState
-    extends State<LogContributionSheetContent> {
+class _LogContributionSheetState extends State<LogContributionSheet> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _amountController;
   late TextEditingController _noteController;
@@ -90,8 +53,7 @@ class _LogContributionSheetContentState
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime initial =
-        _selectedDate; // Always use current selected as initial
+    final DateTime initial = _selectedDate;
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -126,7 +88,6 @@ class _LogContributionSheetContentState
     }
   }
 
-  // Helper to get themed prefix icon or null (same as in BudgetForm)
   Widget? _getPrefixIcon(
     BuildContext context,
     String iconKey,
@@ -165,9 +126,7 @@ class _LogContributionSheetContentState
       listener: (context, state) {
         if (state.status == LogContributionStatus.success) {
           log.info("[LogContribSheet] Save successful. Popping sheet.");
-          Navigator.of(context).pop(true); // Pop sheet and return true
-          // Snackbar shown by caller potentially, or rely on list update
-          // ScaffoldMessenger.of(context)...
+          Navigator.of(context).pop(true);
         } else if (state.status == LogContributionStatus.error &&
             state.errorMessage != null) {
           log.warning("[LogContribSheet] Save error: ${state.errorMessage}");
@@ -185,7 +144,6 @@ class _LogContributionSheetContentState
         }
       },
       child: Padding(
-        // --- PHASE 5: Apply themed padding (or default) ---
         padding:
             modeTheme?.pagePadding.copyWith(
               left: 20,
@@ -200,8 +158,6 @@ class _LogContributionSheetContentState
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Drag Handle & Title
-              const Row(/* ... Drag Handle ... */),
               Text(
                 _isEditing ? 'Edit Contribution' : 'Log Contribution',
                 style: theme.textTheme.titleLarge,
@@ -209,17 +165,15 @@ class _LogContributionSheetContentState
               ),
               const SizedBox(height: 20),
 
-              // Amount
-              AppTextFormField(
+              AppTextField(
                 controller: _amountController,
-                labelText: 'Amount Contributed',
+                label: 'Amount Contributed',
                 prefixText: '$currencySymbol ',
-                // --- PHASE 5: Use helper for potentially themed icon ---
                 prefixIcon: _getPrefixIcon(
                   context,
                   'savings',
                   Icons.savings_outlined,
-                ), // Example key 'savings'
+                ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -229,18 +183,16 @@ class _LogContributionSheetContentState
                   ),
                 ],
                 validator: (value) {
-                  return null; /* ... validation ... */
+                  return null;
                 },
               ),
               const SizedBox(height: 16),
 
-              // Date
               ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 0),
                 shape:
                     theme.inputDecorationTheme.enabledBorder ??
                     const OutlineInputBorder(),
-                // --- PHASE 5: Use helper for potentially themed icon ---
                 leading: Padding(
                   padding: const EdgeInsetsDirectional.only(start: 12.0),
                   child: _getPrefixIcon(
@@ -259,11 +211,9 @@ class _LogContributionSheetContentState
               ),
               const SizedBox(height: 16),
 
-              // Note
-              AppTextFormField(
+              AppTextField(
                 controller: _noteController,
-                labelText: 'Note (Optional)',
-                // --- PHASE 5: Use helper for potentially themed icon ---
+                label: 'Note (Optional)',
                 prefixIcon: _getPrefixIcon(
                   context,
                   'notes',
@@ -274,22 +224,18 @@ class _LogContributionSheetContentState
               ),
               const SizedBox(height: 24),
 
-              // Save/Delete Buttons
               Row(
                 children: [
                   if (_isEditing)
-                    OutlinedButton.icon(
+                    AppButton(
+                      variant: AppButtonVariant.secondaryDestructive,
                       icon: const Icon(Icons.delete_outline),
-                      label: const Text("Delete"),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: theme.colorScheme.error,
-                      ),
+                      label: "Delete",
                       onPressed:
                           context.watch<LogContributionBloc>().state.status ==
                               LogContributionStatus.loading
                           ? null
                           : () async {
-                              // Confirmation is handled in GoalDetailPage before calling delete use case
                               context.read<LogContributionBloc>().add(
                                 const DeleteContribution(),
                               );
@@ -300,46 +246,45 @@ class _LogContributionSheetContentState
                     child:
                         BlocBuilder<LogContributionBloc, LogContributionState>(
                           builder: (context, state) {
-                            return ElevatedButton.icon(
+                            final isLoading =
+                                state.status == LogContributionStatus.loading;
+                            return AppButton(
                               key: const ValueKey('button_submit_contribution'),
-                              icon:
-                                  state.status == LogContributionStatus.loading
-                                  ? Container(
-                                      width: 20,
-                                      height: 20,
-                                      padding: const EdgeInsets.all(2),
-                                      child: const CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: Colors.white,
-                                      ),
-                                    )
+                              variant: AppButtonVariant.primary,
+                              isLoading: isLoading,
+                              icon: isLoading
+                                  ? null
                                   : Icon(
                                       _isEditing
                                           ? Icons.save_outlined
                                           : Icons.add_task_outlined,
                                     ),
-                              label: Text(_isEditing ? 'Update' : 'Add'),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                textStyle: theme.textTheme.titleMedium,
-                              ),
-                              onPressed:
-                                  state.status == LogContributionStatus.loading
-                                  ? null
-                                  : _submitForm,
+                              label: _isEditing ? 'Update' : 'Add',
+                              onPressed: isLoading ? null : _submitForm,
                             );
                           },
                         ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8), // Bottom padding
+              const SizedBox(height: 8),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+Future<bool?> showLogContributionSheet(
+  BuildContext context,
+  String goalId, {
+  GoalContribution? initialContribution,
+}) {
+  return showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) =>
+        LogContributionSheet(initialContribution: initialContribution),
+  );
 }

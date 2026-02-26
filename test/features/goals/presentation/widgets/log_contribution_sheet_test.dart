@@ -26,7 +26,7 @@ void main() {
     mockSettingsBloc = MockSettingsBloc();
   });
 
-  testWidgets('LogContributionSheetContent renders', (tester) async {
+  testWidgets('LogContributionSheet renders', (tester) async {
     when(() => mockLogBloc.state).thenReturn(LogContributionState.initial('1'));
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
 
@@ -39,7 +39,7 @@ void main() {
             BlocProvider<LogContributionBloc>.value(value: mockLogBloc),
             BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
           ],
-          child: Scaffold(body: const LogContributionSheetContent()),
+          child: Scaffold(body: const LogContributionSheet()),
         ),
       ),
     );

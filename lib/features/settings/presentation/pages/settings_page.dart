@@ -2,7 +2,7 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart'
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/appearance_settings_section.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/general_settings_section.dart';

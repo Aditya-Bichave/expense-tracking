@@ -1,6 +1,6 @@
 // lib/features/budgets/presentation/pages/budgets_sub_tab.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
 import 'package:expense_tracker/features/budgets/presentation/widgets/budget_card.dart';
 import 'package:flutter/material.dart';

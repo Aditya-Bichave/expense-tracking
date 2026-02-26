@@ -1,104 +1,16 @@
-// lib/core/theme/app_mode_theme.dart
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui; // Import dart:ui for lerpDouble
-// Import asset keys
+import 'dart:ui' as ui;
 
 // --- Enums ---
 enum LayoutDensity { compact, comfortable, spacious }
 
 enum CardStyle { flat, elevated, floating, glass }
 
-enum ListEntranceAnimation {
-  none,
-  fadeSlide,
-  shimmerSweep,
-} // Keep for potential future use
-
-// --- Asset Keys ---
-class AssetKeys {
-  // Common Icons
-  static const String iconAdd = 'add';
-  static const String iconSettings = 'settings';
-  static const String iconBack = 'back';
-  static const String iconCalendar = 'calendar';
-  static const String iconCategory = 'category';
-  static const String iconChart = 'chart';
-  static const String iconDelete = 'delete';
-  static const String iconMenu = 'menu';
-  static const String iconNotes = 'notes';
-  static const String iconTheme = 'theme';
-  static const String iconWallet = 'wallet';
-  static const String iconExpense = 'expense';
-  static const String iconIncome = 'income';
-  static const String iconUndo = 'undo';
-  static const String iconSync = 'sync';
-  static const String iconPrivacy = 'privacy';
-  static const String iconBooks = 'books';
-  static const String iconRestaurant = 'restaurant';
-  static const String iconSalary = 'salary'; // Added common salary
-
-  // Illustrations
-  static const String illuEmptyTransactions = 'empty_transactions';
-  static const String illuEmptyAddFirst = 'empty_add_first';
-  static const String illuEmptyWallet = 'empty_wallet';
-  static const String illuEmptyCalendar = 'empty_calendar';
-  static const String illuEmptyFilter = 'empty_filter';
-  static const String illuPlanetIsland = 'planet_island';
-  static const String illuEmptyStarscape = 'empty_starscape';
-
-  // Charts
-  static const String chartBalanceIndicator = 'balance_indicator';
-  static const String chartWeeklySparkline = 'weekly_sparkline';
-  static const String chartTopCatIncome = 'top_cat_income';
-  // Add other generic chart keys as needed
-  static const String chartBarSpending = 'bar_spending';
-  static const String chartChipExpense = 'chip_expense';
-  static const String chartChipIncome = 'chip_income';
-  static const String chartCircleBudget = 'circle_budget_usage';
-  static const String chartHorizontalBar = 'horizontal_bar_indicator';
-  static const String chartStatCardFrame = 'stat_card_frame'; // Elemental
-  static const String chartBarTemplate = 'bar_generic'; // Quantum
-  static const String chartProgressExpense = 'progress_expense'; // Quantum
-  static const String chartProgressIncome = 'progress_income'; // Quantum
-  static const String chartPieCategory = 'pie_category'; // Quantum
-  static const String chartStatWidgetFrame = 'stat_widget_frame'; // Quantum
-  static const String chartTopCatBills =
-      'top_category_bills'; // Aether specific
-  static const String chartTopCatEntertainment =
-      'top_category_entertainment'; // Aether specific
-  static const String chartTopCatFood = 'top_category_food'; // Aether specific
-
-  // Category Icons (Use lowercase names as keys)
-  static const String catFood = 'food';
-  static const String catGroceries = 'groceries';
-  static const String catTransport = 'transport';
-  static const String catEntertainment = 'entertainment';
-  static const String catMedical = 'medical';
-  static const String catSalary = 'salary'; // Income cat
-  static const String catSubscription = 'subscription';
-  static const String catUtilities = 'utilities';
-  static const String catRent = 'rent';
-  static const String catFreelance = 'freelance'; // Income cat
-  static const String catHousing = 'housing';
-  static const String catBonus = 'bonus'; // Income cat
-  static const String catGift = 'gift'; // Income cat
-  static const String catInterest = 'interest'; // Income cat
-  static const String catOther = 'other';
-  static const String catBank = 'bank'; // Account type
-  static const String catCash = 'cash'; // Account type
-  static const String catCrypto = 'crypto'; // Account type
-  static const String catInvestment = 'investment'; // Account type
-
-  // Node keys (Aether)
-  static const String nodeIncome = 'income_node';
-  static const String nodeExpense = 'expense_node';
-  static const String nodeBalance = 'balance_node';
-}
+enum ListEntranceAnimation { fadeSlide, scaleFade, shimmerSweep, none }
 
 // --- Theme Asset Paths ---
 @immutable
 class ThemeAssetPaths {
-  // Keep constructor and properties the same
   const ThemeAssetPaths({
     this.fabGlow,
     this.divider,
@@ -125,25 +37,17 @@ class ThemeAssetPaths {
   final Map<String, String> charts;
   final Map<String, String> nodeAssets;
 
-  // Generic accessor
-  String? _getPath(Map<String, String> map, String key) {
-    final path = map[key.toLowerCase()];
-    return path;
-  }
-
-  // Accessor Methods (provide defaultPath as empty string for clarity)
   String getCommonIcon(String key, {String defaultPath = ''}) =>
-      _getPath(commonIcons, key) ?? defaultPath;
+      commonIcons[key.toLowerCase()] ?? defaultPath;
   String getCategoryIcon(String key, {String defaultPath = ''}) =>
-      _getPath(categoryIcons, key) ?? defaultPath;
+      categoryIcons[key.toLowerCase()] ?? defaultPath;
   String getIllustration(String key, {String defaultPath = ''}) =>
-      _getPath(illustrations, key) ?? defaultPath;
+      illustrations[key.toLowerCase()] ?? defaultPath;
   String getChartAsset(String key, {String defaultPath = ''}) =>
-      _getPath(charts, key) ?? defaultPath;
+      charts[key.toLowerCase()] ?? defaultPath;
   String getNodeAsset(String key, {String defaultPath = ''}) =>
-      _getPath(nodeAssets, key) ?? defaultPath;
+      nodeAssets[key.toLowerCase()] ?? defaultPath;
 
-  // --- copyWith (Ensure all properties are included) ---
   ThemeAssetPaths copyWith({
     String? fabGlow,
     String? divider,
@@ -182,11 +86,10 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     required this.cardStyle,
     required this.assets,
     required this.preferDataTableForLists,
-    required this.primaryAnimationDuration, // Keep for compatibility or specific uses
+    required this.primaryAnimationDuration,
     required this.listEntranceAnimation,
     this.incomeGlowColor,
     this.expenseGlowColor,
-    // --- NEW PROPERTIES ---
     this.pagePadding = const EdgeInsets.all(16.0),
     this.cardOuterPadding = const EdgeInsets.symmetric(
       horizontal: 16.0,
@@ -197,22 +100,13 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
       horizontal: 16.0,
       vertical: 12.0,
     ),
-    this.mediumDuration = const Duration(
-      milliseconds: 300,
-    ), // Default medium duration
-    this.fastDuration = const Duration(
-      milliseconds: 150,
-    ), // Default fast duration
-    this.primaryCurve = Curves.easeInOut, // Default curve
-    this.listAnimationDelay = const Duration(
-      milliseconds: 50,
-    ), // Default list stagger
-    this.listAnimationDuration = const Duration(
-      milliseconds: 400,
-    ), // Default list item duration
+    this.mediumDuration = const Duration(milliseconds: 300),
+    this.fastDuration = const Duration(milliseconds: 150),
+    this.primaryCurve = Curves.easeInOut,
+    this.listAnimationDelay = const Duration(milliseconds: 50),
+    this.listAnimationDuration = const Duration(milliseconds: 400),
   });
 
-  // Existing properties
   final String modeId;
   final LayoutDensity layoutDensity;
   final CardStyle cardStyle;
@@ -223,7 +117,6 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
   final Color? incomeGlowColor;
   final Color? expenseGlowColor;
 
-  // --- NEW PROPERTIES ---
   final EdgeInsets pagePadding;
   final EdgeInsets cardOuterPadding;
   final EdgeInsets cardInnerPadding;
@@ -243,9 +136,8 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     bool? preferDataTableForLists,
     Duration? primaryAnimationDuration,
     ListEntranceAnimation? listEntranceAnimation,
-    ValueGetter<Color?>? incomeGlowColor,
-    ValueGetter<Color?>? expenseGlowColor,
-    // New properties
+    Color? incomeGlowColor,
+    Color? expenseGlowColor,
     EdgeInsets? pagePadding,
     EdgeInsets? cardOuterPadding,
     EdgeInsets? cardInnerPadding,
@@ -267,13 +159,8 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
           primaryAnimationDuration ?? this.primaryAnimationDuration,
       listEntranceAnimation:
           listEntranceAnimation ?? this.listEntranceAnimation,
-      incomeGlowColor: incomeGlowColor != null
-          ? incomeGlowColor()
-          : this.incomeGlowColor,
-      expenseGlowColor: expenseGlowColor != null
-          ? expenseGlowColor()
-          : this.expenseGlowColor,
-      // Assign new properties
+      incomeGlowColor: incomeGlowColor ?? this.incomeGlowColor,
+      expenseGlowColor: expenseGlowColor ?? this.expenseGlowColor,
       pagePadding: pagePadding ?? this.pagePadding,
       cardOuterPadding: cardOuterPadding ?? this.cardOuterPadding,
       cardInnerPadding: cardInnerPadding ?? this.cardInnerPadding,
@@ -312,7 +199,6 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
           : other.listEntranceAnimation,
       incomeGlowColor: Color.lerp(incomeGlowColor, other.incomeGlowColor, t),
       expenseGlowColor: Color.lerp(expenseGlowColor, other.expenseGlowColor, t),
-      // Lerp new properties
       pagePadding:
           EdgeInsets.lerp(pagePadding, other.pagePadding, t) ?? pagePadding,
       cardOuterPadding:
@@ -363,19 +249,75 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
       ),
     );
   }
-
-  List<Object?> get props => [
-    modeId, layoutDensity, cardStyle, assets, preferDataTableForLists,
-    primaryAnimationDuration, listEntranceAnimation, incomeGlowColor,
-    expenseGlowColor,
-    // New properties
-    pagePadding, cardOuterPadding, cardInnerPadding, listItemPadding,
-    mediumDuration, fastDuration, primaryCurve, listAnimationDelay,
-    listAnimationDuration,
-  ];
 }
 
 // Keep context extension
 extension ThemeContextExtension on BuildContext {
   AppModeTheme? get modeTheme => Theme.of(this).extension<AppModeTheme>();
+}
+
+// --- Asset Keys ---
+class AssetKeys {
+  static const String cat = 'cat';
+  static const String catBank = 'catbank';
+  static const String catBonus = 'catbonus';
+  static const String catCash = 'catcash';
+  static const String catCrypto = 'catcrypto';
+  static const String catEntertainment = 'catentertainment';
+  static const String catFood = 'catfood';
+  static const String catFreelance = 'catfreelance';
+  static const String catGift = 'catgift';
+  static const String catGroceries = 'catgroceries';
+  static const String catHousing = 'cathousing';
+  static const String catInterest = 'catinterest';
+  static const String catInvestment = 'catinvestment';
+  static const String catMedical = 'catmedical';
+  static const String catOther = 'catother';
+  static const String catRent = 'catrent';
+  static const String catSalary = 'catsalary';
+  static const String catSubscription = 'catsubscription';
+  static const String catTransport = 'cattransport';
+  static const String catUtilities = 'catutilities';
+  static const String chartBalanceIndicator = 'chartbalanceindicator';
+  static const String chartBarSpending = 'chartbarspending';
+  static const String chartBarTemplate = 'chartbartemplate';
+  static const String chartChipExpense = 'chartchipexpense';
+  static const String chartChipIncome = 'chartchipincome';
+  static const String chartCircleBudget = 'chartcirclebudget';
+  static const String chartHorizontalBar = 'charthorizontalbar';
+  static const String chartPieCategory = 'chartpiecategory';
+  static const String chartProgressExpense = 'chartprogressexpense';
+  static const String chartProgressIncome = 'chartprogressincome';
+  static const String chartStatCardFrame = 'chartstatcardframe';
+  static const String chartStatWidgetFrame = 'chartstatwidgetframe';
+  static const String chartTopCatIncome = 'charttopcatincome';
+  static const String chartWeeklySparkline = 'chartweeklysparkline';
+  static const String iconAdd = 'iconadd';
+  static const String iconBack = 'iconback';
+  static const String iconBooks = 'iconbooks';
+  static const String iconCalendar = 'iconcalendar';
+  static const String iconCategory = 'iconcategory';
+  static const String iconChart = 'iconchart';
+  static const String iconDelete = 'icondelete';
+  static const String iconExpense = 'iconexpense';
+  static const String iconIncome = 'iconincome';
+  static const String iconMenu = 'iconmenu';
+  static const String iconNotes = 'iconnotes';
+  static const String iconPrivacy = 'iconprivacy';
+  static const String iconRestaurant = 'iconrestaurant';
+  static const String iconSalary = 'iconsalary';
+  static const String iconSettings = 'iconsettings';
+  static const String iconSync = 'iconsync';
+  static const String iconTheme = 'icontheme';
+  static const String iconUndo = 'iconundo';
+  static const String iconWallet = 'iconwallet';
+  static const String illuEmptyAddFirst = 'illuemptyaddfirst';
+  static const String illuEmptyCalendar = 'illuemptycalendar';
+  static const String illuEmptyFilter = 'illuemptyfilter';
+  static const String illuEmptyTransactions = 'illuemptytransactions';
+  static const String illuEmptyWallet = 'illuemptywallet';
+  static const String illuPlanetIsland = 'illuplanetisland';
+  static const String nodeBalance = 'nodebalance';
+  static const String nodeExpense = 'nodeexpense';
+  static const String nodeIncome = 'nodeincome';
 }

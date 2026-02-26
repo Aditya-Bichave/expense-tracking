@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_parser.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';

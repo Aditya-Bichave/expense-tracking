@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart'; // Import for themed padding
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // Import for themed padding
 
 class CategoriesSubTab extends StatelessWidget {
   const CategoriesSubTab({super.key});

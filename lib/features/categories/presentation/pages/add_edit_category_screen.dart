@@ -1,5 +1,5 @@
 // lib/features/categories/presentation/pages/add_edit_category_screen.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 // Keep if needed elsewhere
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';

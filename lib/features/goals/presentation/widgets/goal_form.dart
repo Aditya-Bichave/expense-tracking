@@ -1,5 +1,5 @@
 // lib/features/goals/presentation/widgets/goal_form.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 // Keep for direct use if needed
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // Keep for icon picker

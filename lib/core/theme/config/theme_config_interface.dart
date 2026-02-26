@@ -1,6 +1,6 @@
 // lib/core/theme/config/theme_config_interface.dart
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 
 /// Base interface for theme configuration objects.
 abstract class IThemePaletteConfig {

@@ -2,7 +2,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
