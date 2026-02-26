@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_motion.dart';
 
 class AppFadeScale extends StatefulWidget {
   final Widget child;
@@ -26,11 +26,8 @@ class _AppFadeScaleState extends State<AppFadeScale>
   @override
   void initState() {
     super.initState();
-    final kit =
-        const AppMotion(); // Can't access context here easily, use default
-    // Wait, I can't access context in initState.
-    // I'll set it up in didChangeDependencies or build, but reusing controller is better.
-    // I'll just use a default or wait for build.
+    // Removed unused kit variable or used AppMotion directly correctly if intended
+    // but here we just need default duration if not provided.
 
     _controller = AnimationController(
       vsync: this,

@@ -31,10 +31,10 @@ class AppFAB extends StatelessWidget {
 
     return FloatingActionButton(
       onPressed: onPressed,
-      child: icon,
       backgroundColor: kit.colors.primaryContainer,
       foregroundColor: kit.colors.onPrimaryContainer,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: icon,
     );
   }
 }
