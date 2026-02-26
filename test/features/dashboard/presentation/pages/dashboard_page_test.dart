@@ -97,13 +97,13 @@ void main() {
   });
 
   testWidgets('DashboardPage renders error snackbar', (tester) async {
-    when(() => mockDashboardBloc.state).thenReturn(
-      const DashboardError('Test Error'),
+    whenListen(
+      mockDashboardBloc,
+      Stream.fromIterable([const DashboardLoading(), const DashboardError('Test Error')]),
+      initialState: const DashboardLoading(),
     );
     await pumpDashboardPage(tester);
-    // Use pump to trigger the listener, and allow time for SnackBar animation
     await tester.pump();
-    // SnackBar animation takes time, pumpAndSettle might be needed, or pump with duration
     await tester.pump(const Duration(milliseconds: 500));
 
     expect(find.text('Dashboard Error: Test Error'), findsOneWidget);
