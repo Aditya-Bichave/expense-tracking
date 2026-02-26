@@ -25,6 +25,10 @@ class Expense extends Equatable {
   final List<ExpensePayer> payers;
   final List<ExpenseSplit> splits;
 
+  // Audit Fixes
+  final String? receiptUrl;
+  final String? clientGeneratedId;
+
   const Expense({
     required this.id,
     required this.title,
@@ -44,6 +48,8 @@ class Expense extends Equatable {
     this.notes,
     this.payers = const [],
     this.splits = const [],
+    this.receiptUrl,
+    this.clientGeneratedId,
   });
 
   Expense copyWith({
@@ -69,6 +75,11 @@ class Expense extends Equatable {
     ValueGetter<String?>? notesOrNull,
     List<ExpensePayer>? payers,
     List<ExpenseSplit>? splits,
+
+    String? receiptUrl,
+    ValueGetter<String?>? receiptUrlOrNull,
+    String? clientGeneratedId,
+    ValueGetter<String?>? clientGeneratedIdOrNull,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -96,6 +107,13 @@ class Expense extends Equatable {
       notes: notesOrNull != null ? notesOrNull() : (notes ?? this.notes),
       payers: payers ?? this.payers,
       splits: splits ?? this.splits,
+
+      receiptUrl: receiptUrlOrNull != null
+          ? receiptUrlOrNull()
+          : (receiptUrl ?? this.receiptUrl),
+      clientGeneratedId: clientGeneratedIdOrNull != null
+          ? clientGeneratedIdOrNull()
+          : (clientGeneratedId ?? this.clientGeneratedId),
     );
   }
 
@@ -117,5 +135,7 @@ class Expense extends Equatable {
     notes,
     payers,
     splits,
+    receiptUrl,
+    clientGeneratedId,
   ];
 }

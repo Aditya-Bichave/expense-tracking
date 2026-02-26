@@ -139,7 +139,7 @@ function getSmokeTest() {
   const data = safeJson(reportPath);
 
   if (!data.routes) {
-    return { status: "⚪️", passed: false, routesPass: 0, routesFail: 0, startup: "N/A", errors: [], flakiness: 0 };
+    return { status: "⚪️", passed: false, routesPass: 0, routesFail: 0, startup: "N/A", errors: [], flakiness: 0, consoleErrors: [], failedRoutes: [] };
   }
 
   const routesPass = data.routes.filter(r => r.passed === true).length;
@@ -241,7 +241,7 @@ if (jobs.static === "❌") topIssues.push("🛡️ **Static Analysis Failed**: P
 if (jobs.unit === "❌") topIssues.push("🧪 **Unit Tests Failed**: Check test logs for specific failures.");
 if (smoke.routesFail > 0) topIssues.push(`💨 **Smoke Test Failures**: \`${smoke.failedRoutes[0]}\` and ${smoke.routesFail - 1} more routes.`);
 if (coverage.diff < 80) topIssues.push(`🧪 **Low Diff Coverage**: PR coverage is only **${coverage.diff}%** (target 80%).`);
-if (smoke.consoleErrors.length > 0) topIssues.push(`🚫 **Console Errors Detected**: ${smoke.consoleErrors.length} errors found during smoke tests.`);
+if (smoke.consoleErrors && smoke.consoleErrors.length > 0) topIssues.push(`🚫 **Console Errors Detected**: ${smoke.consoleErrors.length} errors found during smoke tests.`);
 if (jobs.build === "✅" && !bundle.passed) topIssues.push("📦 **Bundle Size Exceeded**: Main JS bundle is over the 5MB threshold.");
 
 if (topIssues.length === 0) topIssues.push("✨ Everything looks stellar! No immediate action required.");

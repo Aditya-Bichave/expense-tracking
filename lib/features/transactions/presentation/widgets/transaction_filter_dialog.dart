@@ -142,8 +142,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 ],
               ),
             );
-          })
-          .toList(),
+          }),
     ];
 
     return AlertDialog(

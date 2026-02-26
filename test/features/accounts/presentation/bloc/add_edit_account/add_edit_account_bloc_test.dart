@@ -112,7 +112,7 @@ void main() {
       ),
       expect: () => [
         const AddEditAccountState(status: FormStatus.submitting),
-        const AddEditAccountState(
+        AddEditAccountState(
           status: FormStatus.error,
           errorMessage: 'Database Error: Could not save account. Error',
         ),

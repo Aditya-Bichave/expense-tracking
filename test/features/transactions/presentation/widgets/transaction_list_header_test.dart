@@ -1,5 +1,5 @@
 @Skip('Needs stabilization')
-library transaction_list_header_test;
+library;
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';

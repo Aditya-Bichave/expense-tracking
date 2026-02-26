@@ -421,10 +421,10 @@ class AddEditTransactionBloc
     log.warning(
       "[AddEditTransactionBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
-      case ValidationFailure:
+    switch (failure) {
+      case ValidationFailure _:
         return failure.message;
-      case CacheFailure:
+      case CacheFailure _:
         return 'Database Error: Could not save transaction. ${failure.message}';
       default:
         return 'An unexpected error occurred: ${failure.message}';

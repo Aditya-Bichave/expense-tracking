@@ -3,15 +3,15 @@ import 'failure.dart';
 extension FailureMessage on Failure {
   String toDisplayMessage({String? context}) {
     String specificMessage;
-    switch (runtimeType) {
-      case CacheFailure:
-      case SettingsFailure:
+    switch (this) {
+      case CacheFailure _:
+      case SettingsFailure _:
         specificMessage = 'Database Error: $message';
         break;
-      case ValidationFailure:
+      case ValidationFailure _:
         specificMessage = message;
         break;
-      case UnexpectedFailure:
+      case UnexpectedFailure _:
         specificMessage = 'An unexpected error occurred. Please try again.';
         break;
       default:

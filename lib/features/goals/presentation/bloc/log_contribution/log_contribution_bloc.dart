@@ -241,10 +241,10 @@ class LogContributionBloc
     log.warning(
       "[LogContributionBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
-      case ValidationFailure:
+    switch (failure) {
+      case ValidationFailure _:
         return failure.message;
-      case CacheFailure:
+      case CacheFailure _:
         return '$context: Database Error: ${failure.message}';
       default:
         return '$context: An unexpected error occurred.';

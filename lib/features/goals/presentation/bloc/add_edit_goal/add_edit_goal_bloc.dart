@@ -117,10 +117,10 @@ class AddEditGoalBloc extends Bloc<AddEditGoalEvent, AddEditGoalState> {
     log.warning(
       "[AddEditGoalBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
-      case ValidationFailure:
+    switch (failure) {
+      case ValidationFailure _:
         return failure.message;
-      case CacheFailure:
+      case CacheFailure _:
         return 'Database Error: ${failure.message}';
       default:
         return 'An unexpected error occurred saving the goal.';

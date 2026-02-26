@@ -91,10 +91,10 @@ class AddEditAccountBloc
     log.warning(
       "[AddEditAccountBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
-      case ValidationFailure:
+    switch (failure) {
+      case ValidationFailure _:
         return failure.message;
-      case CacheFailure:
+      case CacheFailure _:
         return 'Database Error: Could not save account. ${failure.message}';
       default:
         return 'An unexpected error occurred: ${failure.message}';

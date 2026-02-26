@@ -715,10 +715,10 @@ class TransactionListBloc
     log.warning(
       "[TransactionListBloc] Mapping failure: ${failure.runtimeType} - ${failure.message}",
     );
-    switch (failure.runtimeType) {
-      case CacheFailure:
+    switch (failure) {
+      case CacheFailure _:
         return '$context: Database Error: ${failure.message}';
-      case ValidationFailure:
+      case ValidationFailure _:
         return failure.message;
       default:
         return '$context: ${failure.message.isNotEmpty ? failure.message : 'An unknown error occurred.'}';
