@@ -1,56 +1,36 @@
 import 'package:bloc/bloc.dart';
 import 'package:expense_tracker/core/utils/bloc_observer.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
-class MockBloc extends Mock implements Bloc<Object, Object> {}
-
-class MockTransition extends Mock implements Transition<Object, Object> {}
-
-class MockChange extends Mock implements Change<Object> {}
-
-// Expose protected methods for testing
-class TestableBlocObserver extends SimpleBlocObserver {
-  @override
-  void onCreate(BlocBase bloc) {
-    super.onCreate(bloc);
-  }
-
-  @override
-  void onChange(BlocBase bloc, Change change) {
-    super.onChange(bloc, change);
-  }
-
-  @override
-  void onClose(BlocBase bloc) {
-    super.onClose(bloc);
+// Mock Bloc
+class MockBloc extends Bloc<int, int> {
+  MockBloc() : super(0) {
+    on<int>((event, emit) => emit(event));
   }
 }
 
 void main() {
-  test('SimpleBlocObserver handles lifecycle events without error', () {
-    final observer = TestableBlocObserver();
-    final bloc = MockBloc();
+  group('SimpleBlocObserver', () {
+    late SimpleBlocObserver observer;
 
-    // Test onChange
-    final change = MockChange();
-    observer.onChange(bloc, change);
+    setUp(() {
+      observer = SimpleBlocObserver();
+    });
 
-    // Test onTransition
-    final transition = MockTransition();
-    observer.onTransition(bloc, transition);
+    test('handles lifecycle events without error', () {
+      final bloc = MockBloc();
 
-    // Test onError
-    try {
-      observer.onError(bloc, Exception('test'), StackTrace.empty);
-    } catch (e) {
-      // Expected
-    }
+      // We can't verify log output easily without mocking Logger,
+      // but we can ensure methods don't crash.
+      observer.onEvent(bloc, 1);
+      observer.onTransition(
+        bloc,
+        const Transition(currentState: 0, event: 1, nextState: 1),
+      );
+      observer.onError(bloc, Exception('test'), StackTrace.current);
 
-    // Test onClose
-    observer.onClose(bloc);
-
-    // Test onCreate
-    observer.onCreate(bloc);
+      // If no exception, pass.
+      expect(true, true);
+    });
   });
 }

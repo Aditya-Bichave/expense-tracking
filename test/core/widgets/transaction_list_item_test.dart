@@ -1,99 +1,103 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
+// ignore_for_file: directives_ordering
+
 import 'package:expense_tracker/core/widgets/transaction_list_item.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  final tDate = DateTime(2023, 1, 1);
-  final tCategory = Category.uncategorized;
-  final tTransaction = TransactionEntity(
-    id: '1',
-    type: TransactionType.expense,
-    title: 'Test Expense',
-    amount: 100.0,
-    date: tDate,
-    category: tCategory,
-    status: CategorizationStatus.categorized,
-  );
-
-  testWidgets('TransactionListItem renders correctly for expense', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: TransactionListItem(
-            transaction: tTransaction,
-            currencySymbol: '\$',
-            onTap: () {},
-          ),
-        ),
-      ),
+  group('TransactionListItem', () {
+    final tDate = DateTime(2023, 1, 1);
+    final tCategory = Category(
+      id: 'c1',
+      name: 'Food',
+      iconName: 'food_icon_that_definitely_falls_back', // Use unknown icon
+      colorHex: 'FF0000',
+      isCustom: false,
+      type: CategoryType.expense,
     );
 
-    expect(find.text('Test Expense'), findsOneWidget);
-    // Date formatting depends on locale, assuming default US or checking partial match
-    // DateFormatter.formatDate(tDate) -> likely "Jan 1, 2023" or similar
-    // We can check if it finds *something* with date.
+    final tExpense = TransactionEntity(
+      id: '1',
+      type: TransactionType.expense,
+      title: 'Lunch',
+      amount: 10.0,
+      date: tDate,
+      category: tCategory,
+      accountId: 'acc1',
+    );
 
-    // Amount
-    expect(
-      find.text('- \$100.00'),
-      findsOneWidget,
-    ); // Assuming standard formatting
-
-    // Subtitle contains Category name
-    expect(find.textContaining('Uncategorized'), findsOneWidget);
-  });
-
-  testWidgets('TransactionListItem renders correctly for income', (
-    WidgetTester tester,
-  ) async {
     final tIncome = TransactionEntity(
       id: '2',
       type: TransactionType.income,
-      title: 'Test Income',
-      amount: 200.0,
+      title: 'Salary',
+      amount: 1000.0,
       date: tDate,
-      category: tCategory,
-      status: CategorizationStatus.categorized,
+      category: null, // Should default to uncategorized
+      accountId: 'acc1',
+      isRecurring: true,
     );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: TransactionListItem(
-            transaction: tIncome,
-            currencySymbol: '\$',
-            onTap: () {},
+    testWidgets('renders correctly for expense', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransactionListItem(
+              transaction: tExpense,
+              currencySymbol: '\$',
+              onTap: () {},
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text('Test Income'), findsOneWidget);
-    expect(find.text('+ \$200.00'), findsOneWidget);
-  });
+      expect(find.text('Lunch'), findsOneWidget);
+      expect(find.textContaining('Food'), findsOneWidget); // Subtitle
+      expect(find.text('- \$10.00'), findsOneWidget); // Trailing
 
-  testWidgets('TransactionListItem handles tap', (WidgetTester tester) async {
-    bool tapped = false;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: TransactionListItem(
-            transaction: tTransaction,
-            currencySymbol: '\$',
-            onTap: () {
-              tapped = true;
-            },
+      // Verify an icon is present (fallback or otherwise)
+      expect(find.byType(Icon), findsWidgets);
+    });
+
+    testWidgets('renders correctly for income', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransactionListItem(
+              transaction: tIncome,
+              currencySymbol: '\$',
+              onTap: () {},
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.byType(ListTile));
-    expect(tapped, true);
+      expect(find.text('Salary'), findsOneWidget);
+      expect(find.textContaining('Uncategorized'), findsOneWidget);
+      expect(find.text('+ \$1,000.00'), findsOneWidget);
+      // Should show recurring icon
+      expect(find.byType(SvgPicture), findsOneWidget);
+    });
+
+    testWidgets('handles tap', (tester) async {
+      bool tapped = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TransactionListItem(
+              transaction: tExpense,
+              currencySymbol: '\$',
+              onTap: () => tapped = true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(ListTile));
+      expect(tapped, true);
+    });
   });
 }

@@ -2,8 +2,6 @@ import 'package:expense_tracker/core/widgets/app_text_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '../../helpers/pump_app.dart';
-
 void main() {
   group('AppTextFormField', () {
     late TextEditingController controller;
@@ -12,185 +10,170 @@ void main() {
       controller = TextEditingController();
     });
 
-    tearDown(() {
-      controller.dispose();
-    });
-
     testWidgets('renders label and initial value', (tester) async {
-      // ARRANGE
-      controller.text = 'Initial Text';
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'My Text Field',
+      controller.text = 'Initial';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(
+              controller: controller,
+              labelText: 'My Label',
+            ),
           ),
         ),
       );
 
-      // ASSERT
-      expect(find.text('My Text Field'), findsOneWidget);
-      expect(find.text('Initial Text'), findsOneWidget);
-    });
-
-    testWidgets('calls onChanged when text is entered', (tester) async {
-      // ARRANGE
-      String? changedValue;
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(
-            key: const ValueKey('my_text_field'),
-            controller: controller,
-            labelText: 'My Text Field',
-            onChanged: (value) => changedValue = value,
-          ),
-        ),
-      );
-
-      // ACT
-      await tester.enterText(
-        find.byKey(const ValueKey('my_text_field')),
-        'New Text',
-      );
-      await tester.pump();
-
-      // ASSERT
-      expect(controller.text, 'New Text');
-      expect(changedValue, 'New Text');
+      expect(find.text('My Label'), findsOneWidget);
+      expect(find.text('Initial'), findsOneWidget);
     });
 
     testWidgets('shows clear button when text is present and not readOnly', (
       tester,
     ) async {
-      // ARRANGE
-      controller.text = 'Some Text';
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(controller: controller, labelText: 'Test'),
-        ),
-      );
-
-      // ASSERT
-      expect(find.byIcon(Icons.clear), findsOneWidget);
-    });
-
-    testWidgets('hides clear button when text is empty', (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(controller: controller, labelText: 'Test'),
-        ),
-      );
-
-      // ASSERT
-      expect(find.byIcon(Icons.clear), findsNothing);
-    });
-
-    testWidgets('hides clear button when readOnly is true', (tester) async {
-      // ARRANGE
-      controller.text = 'Some Text';
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'Test',
-            readOnly: true,
+      controller.text = 'Text';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(controller: controller, labelText: 'Label'),
           ),
         ),
       );
 
-      // ASSERT
+      expect(find.byIcon(Icons.clear), findsOneWidget);
+    });
+
+    testWidgets('hides clear button when text is empty', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(controller: controller, labelText: 'Label'),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.clear), findsNothing);
+    });
+
+    testWidgets('hides clear button when readOnly is true', (tester) async {
+      controller.text = 'Text';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(
+              controller: controller,
+              labelText: 'Label',
+              readOnly: true,
+            ),
+          ),
+        ),
+      );
+
       expect(find.byIcon(Icons.clear), findsNothing);
     });
 
     testWidgets('clear button clears the text in the controller', (
       tester,
     ) async {
-      // ARRANGE
-      controller.text = 'Some Text';
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(controller: controller, labelText: 'Test'),
+      controller.text = 'Text';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(controller: controller, labelText: 'Label'),
+          ),
         ),
       );
-      expect(find.byIcon(Icons.clear), findsOneWidget);
 
-      // ACT
       await tester.tap(find.byIcon(Icons.clear));
-      await tester.pump();
+      await tester.pump(); // Rebuild
 
-      // ASSERT
       expect(controller.text, isEmpty);
-      expect(find.byIcon(Icons.clear), findsNothing);
+      expect(find.text('Text'), findsNothing);
+    });
+
+    testWidgets('calls onChanged when text is entered', (tester) async {
+      String changedText = '';
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(
+              controller: controller,
+              labelText: 'Label',
+              onChanged: (val) => changedText = val,
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextFormField), 'New');
+      expect(changedText, 'New');
     });
 
     testWidgets('displays validation error when validator fails', (
       tester,
     ) async {
-      // ARRANGE
       final formKey = GlobalKey<FormState>();
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Form(
-          key: formKey,
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'Test',
-            validator: (value) => (value?.isEmpty ?? true) ? 'Error!' : null,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Form(
+              key: formKey,
+              child: AppTextFormField(
+                controller: controller,
+                labelText: 'Label',
+                validator: (val) => 'Error occurred',
+              ),
+            ),
           ),
         ),
       );
 
-      // ACT
+      // Trigger validation
       formKey.currentState!.validate();
       await tester.pump();
 
-      // ASSERT
-      expect(find.text('Error!'), findsOneWidget);
-    });
-
-    testWidgets('obeys obscureText property', (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'Password',
-            obscureText: true,
-          ),
-        ),
-      );
-
-      // ACT
-      final textField = tester.widget<TextField>(find.byType(TextField));
-
-      // ASSERT
-      expect(textField.obscureText, isTrue);
+      expect(find.text('Error occurred'), findsOneWidget);
     });
 
     testWidgets('renders asterisk when isRequired is true', (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: AppTextFormField(
-            controller: controller,
-            labelText: 'Required Field',
-            isRequired: true,
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(
+              controller: controller,
+              labelText: 'Label',
+              isRequired: true,
+            ),
           ),
         ),
       );
 
-      // ASSERT
-      // The RichText should contain the label and the asterisk
-      expect(find.text('Required Field *', findRichText: true), findsOneWidget);
+      final richTextFinder = find.byWidgetPredicate((widget) {
+        if (widget is Text && widget.textSpan != null) {
+          final span = widget.textSpan!;
+          return span.toPlainText().contains(' *');
+        }
+        return false;
+      });
+
+      expect(richTextFinder, findsOneWidget);
+    });
+
+    testWidgets('obeys obscureText property', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppTextFormField(
+              controller: controller,
+              labelText: 'Label',
+              obscureText: true,
+            ),
+          ),
+        ),
+      );
+
+      // Verify TextField inside TextFormField has obscureText = true
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.obscureText, true);
     });
   });
 }

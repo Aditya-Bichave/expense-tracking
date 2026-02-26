@@ -1,122 +1,145 @@
-import 'package:expense_tracker/core/theme/app_theme.dart';
+import 'package:expense_tracker/core/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
-import '../../helpers/pump_app.dart';
-
-class MockOnTap extends Mock {
-  void call();
-}
 
 void main() {
   group('AppCard', () {
     testWidgets('renders child widget correctly', (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: const AppCard(child: Text('Hello World')),
-      );
-
-      // ASSERT
-      expect(find.text('Hello World'), findsOneWidget);
-    });
-
-    testWidgets('is tappable and calls onTap when provided', (tester) async {
-      // ARRANGE
-      final mockOnTap = MockOnTap();
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: AppCard(
-          key: const ValueKey('tappable_card'),
-          onTap: mockOnTap.call,
-          child: const Text('Tap me'),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: AppCard(child: Text('Test Child'))),
         ),
       );
 
-      // ACT
-      await tester.tap(find.byKey(const ValueKey('tappable_card')));
-      await tester.pump();
+      expect(find.text('Test Child'), findsOneWidget);
+    });
 
-      // ASSERT
-      verify(() => mockOnTap.call()).called(1);
-      expect(find.byType(InkWell), findsOneWidget);
+    testWidgets('is tappable and calls onTap when provided', (tester) async {
+      bool tapped = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AppCard(
+              onTap: () => tapped = true,
+              child: const Text('Tap Me'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Tap Me'));
+      expect(tapped, true);
     });
 
     testWidgets('is not tappable when onTap is null', (tester) async {
-      // ARRANGE
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: const AppCard(child: Text('Not tappable')),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: AppCard(child: Text('No Tap'))),
+        ),
       );
 
-      // ASSERT
-      expect(find.byType(InkWell), findsNothing);
+      final inkWell = find.byType(InkWell);
+      expect(inkWell, findsNothing);
     });
 
     testWidgets('applies custom color and elevation properties', (
       tester,
     ) async {
-      // ARRANGE
-      const customColor = Colors.amber;
+      const customColor = Colors.red;
       const customElevation = 10.0;
 
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: const AppCard(
-          color: customColor,
-          elevation: customElevation,
-          child: SizedBox(),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AppCard(
+              color: customColor,
+              elevation: customElevation,
+              child: SizedBox(),
+            ),
+          ),
         ),
       );
 
-      // ACT
       final card = tester.widget<Card>(find.byType(Card));
-
-      // ASSERT
       expect(card.color, customColor);
       expect(card.elevation, customElevation);
     });
 
-    // Requirement 4.5: Test for theme adaptation
-    for (final uiMode in UIMode.values) {
-      testWidgets('renders correctly in ${uiMode.name} UI mode', (
-        tester,
-      ) async {
-        // ARRANGE
-        await pumpWidgetWithProviders(
-          tester: tester,
-          settingsState: SettingsState(uiMode: uiMode),
-          widget: const AppCard(child: SizedBox()),
-        );
+    testWidgets('renders correctly in aether UI mode (glass)', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            extensions: [
+              const AppModeTheme(
+                modeId: 'aether',
+                layoutDensity: LayoutDensity.spacious,
+                cardStyle: CardStyle.glass,
+                assets: ThemeAssetPaths(),
+                preferDataTableForLists: false,
+                primaryAnimationDuration: Duration(milliseconds: 300),
+                listEntranceAnimation: ListEntranceAnimation.fadeSlide,
+              ),
+            ],
+          ),
+          home: const Scaffold(body: AppCard(child: Text('Glass'))),
+        ),
+      );
 
-        // ACT
-        final card = tester.widget<Card>(find.byType(Card));
-        final theme = AppTheme.buildTheme(uiMode, AppTheme.elementalPalette1);
-        final cardTheme = theme.light.cardTheme;
+      expect(find.byType(BackdropFilter), findsOneWidget);
+    });
 
-        // ASSERT
-        // We check if the card's properties match the theme's cardTheme properties
-        if (uiMode == UIMode.stitch) {
-          // Stitch uses glass style which forces a transparent color and adds a border
-          // at runtime, differing from the static cardTheme.
-          expect(card.color, Colors.transparent);
-          expect(card.shape, isA<RoundedRectangleBorder>());
-          final shape = card.shape as RoundedRectangleBorder;
-          expect(
-            shape.side.color.opacity,
-            closeTo(0.05, 0.01),
-          ); // Light mode default
-        } else {
-          expect(card.shape, cardTheme.shape);
-          expect(card.color, cardTheme.color);
-        }
-        expect(card.margin, cardTheme.margin);
-        // Elevation can be tricky due to modeTheme overrides, let's check it's non-null
-        expect(card.elevation, isNotNull);
-      });
-    }
+    testWidgets('renders correctly in quantum UI mode (elevated)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            extensions: [
+              const AppModeTheme(
+                modeId: 'quantum',
+                layoutDensity: LayoutDensity.compact,
+                cardStyle: CardStyle.elevated,
+                assets: ThemeAssetPaths(),
+                preferDataTableForLists: true,
+                primaryAnimationDuration: Duration(milliseconds: 200),
+                listEntranceAnimation: ListEntranceAnimation.shimmerSweep,
+              ),
+            ],
+          ),
+          home: const Scaffold(body: AppCard(child: Text('Quantum'))),
+        ),
+      );
+
+      expect(find.byType(BackdropFilter), findsNothing);
+      final card = tester.widget<Card>(find.byType(Card));
+      expect(card.elevation, 2.0);
+    });
+
+    testWidgets('renders correctly in elemental UI mode (flat)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            extensions: [
+              const AppModeTheme(
+                modeId: 'elemental',
+                layoutDensity: LayoutDensity.comfortable,
+                cardStyle: CardStyle.flat,
+                assets: ThemeAssetPaths(),
+                preferDataTableForLists: false,
+                primaryAnimationDuration: Duration(milliseconds: 300),
+                listEntranceAnimation: ListEntranceAnimation.none,
+              ),
+            ],
+          ),
+          home: const Scaffold(body: AppCard(child: Text('Elemental'))),
+        ),
+      );
+
+      final card = tester.widget<Card>(find.byType(Card));
+      expect(card.elevation, 0);
+    });
   });
 }
