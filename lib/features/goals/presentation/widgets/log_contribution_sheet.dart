@@ -228,7 +228,7 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
                 children: [
                   if (_isEditing)
                     AppButton(
-                      variant: AppButtonVariant.secondaryDestructive,
+                      variant: AppButtonVariant.destructiveSecondary,
                       icon: const Icon(Icons.delete_outline),
                       label: "Delete",
                       onPressed:

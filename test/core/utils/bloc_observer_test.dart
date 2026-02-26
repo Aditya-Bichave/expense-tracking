@@ -27,10 +27,14 @@ void main() {
         bloc,
         const Transition(currentState: 0, event: 1, nextState: 1),
       );
-      observer.onError(bloc, Exception('test'), StackTrace.current);
 
-      // If no exception, pass.
-      expect(true, true);
+      // We expect onError to log but not crash. However, the test runner might
+      // interpret the logged exception as a failure if it's not handled.
+      // Since SimpleBlocObserver just logs, this should be safe, but we can verify it doesn't throw.
+      expect(
+        () => observer.onError(bloc, Exception('test'), StackTrace.current),
+        returnsNormally,
+      );
     });
   });
 }
