@@ -14,22 +14,19 @@ class AppTypography {
   );
 
   /// Standard screen title
-  TextStyle get title => _textTheme.headlineSmall!.copyWith(
-    fontWeight: FontWeight.w600,
-  );
+  TextStyle get title =>
+      _textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w600);
 
   /// Section headline
-  TextStyle get headline => _textTheme.titleLarge!.copyWith(
-    fontWeight: FontWeight.w600,
-  );
+  TextStyle get headline =>
+      _textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w600);
 
   /// Regular body text
   TextStyle get body => _textTheme.bodyMedium!;
 
   /// Emphasized body text (bold)
-  TextStyle get bodyStrong => _textTheme.bodyMedium!.copyWith(
-    fontWeight: FontWeight.w700,
-  );
+  TextStyle get bodyStrong =>
+      _textTheme.bodyMedium!.copyWith(fontWeight: FontWeight.w700);
 
   /// Small caption text
   TextStyle get caption => _textTheme.bodySmall!;

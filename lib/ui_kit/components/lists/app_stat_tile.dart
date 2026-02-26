@@ -55,10 +55,7 @@ class AppStatTile extends StatelessWidget {
                   ),
                 ),
                 kit.spacing.gapXs,
-                Text(
-                  value,
-                  style: kit.typography.headline,
-                ),
+                Text(value, style: kit.typography.headline),
               ],
             ),
           ),

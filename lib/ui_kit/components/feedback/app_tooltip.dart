@@ -5,11 +5,7 @@ class AppTooltip extends StatelessWidget {
   final String message;
   final Widget child;
 
-  const AppTooltip({
-    super.key,
-    required this.message,
-    required this.child,
-  });
+  const AppTooltip({super.key, required this.message, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +13,9 @@ class AppTooltip extends StatelessWidget {
 
     return Tooltip(
       message: message,
-      textStyle: kit.typography.caption.copyWith(color: kit.colors.onInverseSurface),
+      textStyle: kit.typography.caption.copyWith(
+        color: kit.colors.onInverseSurface,
+      ),
       decoration: BoxDecoration(
         color: kit.colors.inverseSurface,
         borderRadius: kit.radii.small,

@@ -26,17 +26,11 @@ class AppNavBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       centerTitle: centerTitle,
       leading: leading,
-      title: titleWidget ??
-          (title != null
-              ? Text(
-                  title!,
-                  style: kit.typography.title,
-                )
-              : null),
+      title:
+          titleWidget ??
+          (title != null ? Text(title!, style: kit.typography.title) : null),
       actions: actions,
-      iconTheme: IconThemeData(
-        color: kit.colors.textPrimary,
-      ),
+      iconTheme: IconThemeData(color: kit.colors.textPrimary),
     );
   }
 

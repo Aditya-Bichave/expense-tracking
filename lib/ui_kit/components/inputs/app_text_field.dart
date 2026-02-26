@@ -54,7 +54,9 @@ class AppTextField extends StatelessWidget {
           Text(
             label!,
             style: kit.typography.labelMedium.copyWith(
-              color: errorText != null ? kit.colors.error : kit.colors.textSecondary,
+              color: errorText != null
+                  ? kit.colors.error
+                  : kit.colors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -87,7 +89,9 @@ class AppTextField extends StatelessWidget {
             ),
             contentPadding: kit.spacing.allMd,
             filled: true,
-            fillColor: enabled ? kit.colors.surfaceContainer : kit.colors.surface.withOpacity(0.5),
+            fillColor: enabled
+                ? kit.colors.surfaceContainer
+                : kit.colors.surface.withOpacity(0.5),
           ),
           style: kit.typography.body,
           obscureText: obscureText,

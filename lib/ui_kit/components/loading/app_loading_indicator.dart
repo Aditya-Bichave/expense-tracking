@@ -5,11 +5,7 @@ class AppLoadingIndicator extends StatelessWidget {
   final double size;
   final Color? color;
 
-  const AppLoadingIndicator({
-    super.key,
-    this.size = 24.0,
-    this.color,
-  });
+  const AppLoadingIndicator({super.key, this.size = 24.0, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +17,9 @@ class AppLoadingIndicator extends StatelessWidget {
         height: size,
         child: CircularProgressIndicator(
           strokeWidth: 2.5,
-          valueColor: AlwaysStoppedAnimation<Color>(color ?? kit.colors.primary),
+          valueColor: AlwaysStoppedAnimation<Color>(
+            color ?? kit.colors.primary,
+          ),
         ),
       ),
     );

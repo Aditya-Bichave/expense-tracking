@@ -6,12 +6,7 @@ class AppSearchField extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final String? hint;
 
-  const AppSearchField({
-    super.key,
-    this.controller,
-    this.onChanged,
-    this.hint,
-  });
+  const AppSearchField({super.key, this.controller, this.onChanged, this.hint});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +24,10 @@ class AppSearchField extends StatelessWidget {
         ),
         filled: true,
         fillColor: kit.colors.surfaceContainer,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         isDense: true,
       ),
       style: kit.typography.body,

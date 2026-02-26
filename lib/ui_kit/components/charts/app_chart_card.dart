@@ -34,14 +34,13 @@ class AppChartCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: kit.typography.title,
-                  ),
+                  Text(title, style: kit.typography.title),
                   if (subtitle != null)
                     Text(
                       subtitle!,
-                      style: kit.typography.caption.copyWith(color: kit.colors.textSecondary),
+                      style: kit.typography.caption.copyWith(
+                        color: kit.colors.textSecondary,
+                      ),
                     ),
                 ],
               ),
@@ -52,11 +51,14 @@ class AppChartCard extends StatelessWidget {
           if (isEmpty)
             AspectRatio(
               aspectRatio: 1.5,
-              child: emptyState ??
+              child:
+                  emptyState ??
                   Center(
                     child: Text(
                       'No data available',
-                      style: kit.typography.body.copyWith(color: kit.colors.textMuted),
+                      style: kit.typography.body.copyWith(
+                        color: kit.colors.textMuted,
+                      ),
                     ),
                   ),
             )

@@ -72,11 +72,11 @@ class AppShadows {
   /// Subtle glow for dark mode, barely visible shadow for light
   List<BoxShadow> get glow => _isDark
       ? [
-        BoxShadow(
+          BoxShadow(
             color: const Color(0xFF64B5F6).withOpacity(0.15), // Light Blue tint
             blurRadius: 12,
             spreadRadius: 2,
-        )
-      ]
+          ),
+        ]
       : sm;
 }

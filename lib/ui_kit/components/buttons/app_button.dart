@@ -9,11 +9,7 @@ enum AppButtonVariant {
   secondaryDestructive,
 }
 
-enum AppButtonSize {
-  small,
-  medium,
-  large,
-}
+enum AppButtonSize { small, medium, large }
 
 class AppButton extends StatelessWidget {
   final String label;
@@ -49,17 +45,23 @@ class AppButton extends StatelessWidget {
     switch (size) {
       case AppButtonSize.small:
         padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
-        textStyle = kit.typography.labelSmall.copyWith(fontWeight: FontWeight.w600);
+        textStyle = kit.typography.labelSmall.copyWith(
+          fontWeight: FontWeight.w600,
+        );
         iconSize = 16;
         break;
       case AppButtonSize.medium:
         padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
-        textStyle = kit.typography.labelMedium.copyWith(fontWeight: FontWeight.w600);
+        textStyle = kit.typography.labelMedium.copyWith(
+          fontWeight: FontWeight.w600,
+        );
         iconSize = 20;
         break;
       case AppButtonSize.large:
         padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 16);
-        textStyle = kit.typography.labelLarge.copyWith(fontWeight: FontWeight.w600);
+        textStyle = kit.typography.labelLarge.copyWith(
+          fontWeight: FontWeight.w600,
+        );
         iconSize = 24;
         break;
     }
@@ -71,8 +73,12 @@ class AppButton extends StatelessWidget {
 
     switch (variant) {
       case AppButtonVariant.primary:
-        backgroundColor = disabled ? kit.colors.surfaceContainer : kit.colors.primary;
-        foregroundColor = disabled ? kit.colors.textMuted : kit.colors.onPrimary;
+        backgroundColor = disabled
+            ? kit.colors.surfaceContainer
+            : kit.colors.primary;
+        foregroundColor = disabled
+            ? kit.colors.textMuted
+            : kit.colors.onPrimary;
         borderColor = null;
         break;
       case AppButtonVariant.secondary:
@@ -86,7 +92,9 @@ class AppButton extends StatelessWidget {
         borderColor = null;
         break;
       case AppButtonVariant.destructive:
-        backgroundColor = disabled ? kit.colors.surfaceContainer : kit.colors.error;
+        backgroundColor = disabled
+            ? kit.colors.surfaceContainer
+            : kit.colors.error;
         foregroundColor = disabled ? kit.colors.textMuted : kit.colors.onError;
         borderColor = null;
         break;
@@ -118,10 +126,7 @@ class AppButton extends StatelessWidget {
           ),
           kit.spacing.gapSm,
         ],
-        Text(
-          label,
-          style: textStyle.copyWith(color: foregroundColor),
-        ),
+        Text(label, style: textStyle.copyWith(color: foregroundColor)),
       ],
     );
 
@@ -133,7 +138,9 @@ class AppButton extends StatelessWidget {
       shape: MaterialStateProperty.all(
         RoundedRectangleBorder(
           borderRadius: kit.radii.button,
-          side: borderColor != null ? BorderSide(color: borderColor) : BorderSide.none,
+          side: borderColor != null
+              ? BorderSide(color: borderColor)
+              : BorderSide.none,
         ),
       ),
       overlayColor: MaterialStateProperty.all(foregroundColor.withOpacity(0.1)),

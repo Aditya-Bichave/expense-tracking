@@ -5,11 +5,7 @@ class AppBottomSheet extends StatelessWidget {
   final Widget child;
   final String? title;
 
-  const AppBottomSheet({
-    super.key,
-    required this.child,
-    this.title,
-  });
+  const AppBottomSheet({super.key, required this.child, this.title});
 
   static Future<T?> show<T>({
     required BuildContext context,
@@ -21,10 +17,7 @@ class AppBottomSheet extends StatelessWidget {
       context: context,
       isScrollControlled: isScrollControlled,
       backgroundColor: Colors.transparent,
-      builder: (context) => AppBottomSheet(
-        title: title,
-        child: child,
-      ),
+      builder: (context) => AppBottomSheet(title: title, child: child),
     );
   }
 
@@ -35,9 +28,7 @@ class AppBottomSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: kit.colors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(kit.radii.xl),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(kit.radii.xl)),
         boxShadow: kit.shadows.lg,
       ),
       padding: EdgeInsets.only(

@@ -173,10 +173,10 @@ class AppRouter {
         branches: [
           StatefulShellBranch(
             routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+              GoRoute(
+                path: '/ui-kit',
+                builder: (context, state) => const UiKitShowcasePage(),
+              ),
               GoRoute(
                 path: RouteNames.dashboard,
                 name: RouteNames.dashboard,
@@ -188,10 +188,10 @@ class AppRouter {
           ),
           StatefulShellBranch(
             routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+              GoRoute(
+                path: '/ui-kit',
+                builder: (context, state) => const UiKitShowcasePage(),
+              ),
               GoRoute(
                 path: RouteNames.transactionsList,
                 name: RouteNames.transactionsList,
@@ -210,10 +210,10 @@ class AppRouter {
                   );
                 },
                 routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+                  GoRoute(
+                    path: '/ui-kit',
+                    builder: (context, state) => const UiKitShowcasePage(),
+                  ),
                   GoRoute(
                     path: RouteNames.addTransaction,
                     name: RouteNames.addTransaction,
@@ -255,20 +255,20 @@ class AppRouter {
           ),
           StatefulShellBranch(
             routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+              GoRoute(
+                path: '/ui-kit',
+                builder: (context, state) => const UiKitShowcasePage(),
+              ),
               GoRoute(
                 path: RouteNames.groups,
                 name: RouteNames.groups,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: GroupListPage()),
                 routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+                  GoRoute(
+                    path: '/ui-kit',
+                    builder: (context, state) => const UiKitShowcasePage(),
+                  ),
                   GoRoute(
                     path: ':id',
                     name: RouteNames.groupDetail,
@@ -281,20 +281,20 @@ class AppRouter {
           ),
           StatefulShellBranch(
             routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+              GoRoute(
+                path: '/ui-kit',
+                builder: (context, state) => const UiKitShowcasePage(),
+              ),
               GoRoute(
                 path: RouteNames.budgetsAndCats,
                 name: RouteNames.budgetsAndCats,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: BudgetsAndCatsTabPage()),
                 routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+                  GoRoute(
+                    path: '/ui-kit',
+                    builder: (context, state) => const UiKitShowcasePage(),
+                  ),
                   GoRoute(
                     path: RouteNames.manageCategories,
                     name: RouteNames.manageCategories,
@@ -302,10 +302,10 @@ class AppRouter {
                     builder: (context, state) =>
                         const CategoryManagementScreen(),
                     routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+                      GoRoute(
+                        path: '/ui-kit',
+                        builder: (context, state) => const UiKitShowcasePage(),
+                      ),
                       GoRoute(
                         path: RouteNames.addCategory,
                         name: RouteNames.addCategory,
@@ -376,20 +376,20 @@ class AppRouter {
           ),
           StatefulShellBranch(
             routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+              GoRoute(
+                path: '/ui-kit',
+                builder: (context, state) => const UiKitShowcasePage(),
+              ),
               GoRoute(
                 path: RouteNames.accounts,
                 name: RouteNames.accounts,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: AccountsTabPage()),
                 routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+                  GoRoute(
+                    path: '/ui-kit',
+                    builder: (context, state) => const UiKitShowcasePage(),
+                  ),
                   GoRoute(
                     path: RouteNames.addAccount,
                     name: RouteNames.addAccount,
@@ -410,20 +410,20 @@ class AppRouter {
           ),
           StatefulShellBranch(
             routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+              GoRoute(
+                path: '/ui-kit',
+                builder: (context, state) => const UiKitShowcasePage(),
+              ),
               GoRoute(
                 path: RouteNames.recurring,
                 name: RouteNames.recurring,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: RecurringRuleListPage()),
                 routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+                  GoRoute(
+                    path: '/ui-kit',
+                    builder: (context, state) => const UiKitShowcasePage(),
+                  ),
                   GoRoute(
                     path: RouteNames.addRecurring,
                     name: RouteNames.addRecurring,
@@ -444,10 +444,10 @@ class AppRouter {
           ),
           StatefulShellBranch(
             routes: [
-      GoRoute(
-        path: '/ui-kit',
-        builder: (context, state) => const UiKitShowcasePage(),
-      ),
+              GoRoute(
+                path: '/ui-kit',
+                builder: (context, state) => const UiKitShowcasePage(),
+              ),
               GoRoute(
                 path: RouteNames.settings,
                 name: RouteNames.settings,

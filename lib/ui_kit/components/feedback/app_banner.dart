@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-enum AppBannerType {
-  info,
-  success,
-  warning,
-  error,
-}
+enum AppBannerType { info, success, warning, error }
 
 class AppBanner extends StatelessWidget {
   final String message;

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-enum AppToastType {
-  success,
-  error,
-  info,
-}
+enum AppToastType { success, error, info }
 
 class AppToast {
-  static void show(BuildContext context, String message, {AppToastType type = AppToastType.info}) {
-    final kit = context.kit; // This might fail if context is not mounted, usually handled by caller.
+  static void show(
+    BuildContext context,
+    String message, {
+    AppToastType type = AppToastType.info,
+  }) {
+    final kit = context
+        .kit; // This might fail if context is not mounted, usually handled by caller.
 
     // We can't access context.kit inside ScafoldMessenger directly without a context that has the theme.
     // Assuming context passed has theme.

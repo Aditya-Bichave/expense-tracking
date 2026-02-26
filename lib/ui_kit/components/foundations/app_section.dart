@@ -27,10 +27,7 @@ class AppSection extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: kit.typography.headline,
-              ),
+              Text(title, style: kit.typography.headline),
               if (action != null) action!,
             ],
           ),

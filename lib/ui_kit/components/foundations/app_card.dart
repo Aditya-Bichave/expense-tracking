@@ -34,12 +34,12 @@ class AppCard extends StatelessWidget {
     // Determine elevation based on style if not provided
     double effectiveElevation = elevation ?? 0;
     if (elevation == null && !isGlass) {
-       if (modeTheme?.cardStyle == CardStyle.elevated) {
-         effectiveElevation = 2;
-       } else if (modeTheme?.cardStyle == CardStyle.floating) {
-         effectiveElevation = 6;
-       }
-       // flat is 0
+      if (modeTheme?.cardStyle == CardStyle.elevated) {
+        effectiveElevation = 2;
+      } else if (modeTheme?.cardStyle == CardStyle.floating) {
+        effectiveElevation = 6;
+      }
+      // flat is 0
     }
 
     Widget cardContent = Padding(

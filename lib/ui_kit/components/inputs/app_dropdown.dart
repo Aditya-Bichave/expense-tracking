@@ -46,9 +46,21 @@ class AppDropdown<T> extends StatelessWidget {
               value: value,
               items: items,
               onChanged: onChanged,
-              hint: hint != null ? Text(hint!, style: kit.typography.body.copyWith(color: kit.colors.textSecondary)) : null,
-              style: kit.typography.body.copyWith(color: kit.colors.textPrimary),
-              icon: Icon(Icons.keyboard_arrow_down, color: kit.colors.textSecondary),
+              hint: hint != null
+                  ? Text(
+                      hint!,
+                      style: kit.typography.body.copyWith(
+                        color: kit.colors.textSecondary,
+                      ),
+                    )
+                  : null,
+              style: kit.typography.body.copyWith(
+                color: kit.colors.textPrimary,
+              ),
+              icon: Icon(
+                Icons.keyboard_arrow_down,
+                color: kit.colors.textSecondary,
+              ),
               isExpanded: true,
               dropdownColor: kit.colors.surfaceContainer,
             ),

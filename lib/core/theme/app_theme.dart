@@ -455,7 +455,9 @@ class AppTheme {
             xl: 24.0,
           ),
           motion: const AppMotion(),
-          shadows: AppShadows(isDark: colorScheme.brightness == Brightness.dark),
+          shadows: AppShadows(
+            isDark: colorScheme.brightness == Brightness.dark,
+          ),
         ),
       ],
     );

@@ -59,10 +59,9 @@ class AppDialog extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: kit.radii.large),
       title: Text(title, style: kit.typography.headline),
-      content: contentWidget ??
-          (content != null
-              ? Text(content!, style: kit.typography.body)
-              : null),
+      content:
+          contentWidget ??
+          (content != null ? Text(content!, style: kit.typography.body) : null),
       actions: [
         if (cancelLabel != null)
           AppButton(
@@ -75,7 +74,9 @@ class AppDialog extends StatelessWidget {
           AppButton(
             label: confirmLabel!,
             onPressed: onConfirm,
-            variant: isDestructive ? AppButtonVariant.destructive : AppButtonVariant.primary,
+            variant: isDestructive
+                ? AppButtonVariant.destructive
+                : AppButtonVariant.primary,
             size: AppButtonSize.small,
           ),
       ],

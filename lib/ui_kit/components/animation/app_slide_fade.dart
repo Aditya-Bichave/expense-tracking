@@ -20,7 +20,8 @@ class AppSlideFade extends StatefulWidget {
   State<AppSlideFade> createState() => _AppSlideFadeState();
 }
 
-class _AppSlideFadeState extends State<AppSlideFade> with SingleTickerProviderStateMixin {
+class _AppSlideFadeState extends State<AppSlideFade>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _slide;
   late Animation<double> _opacity;
@@ -34,10 +35,16 @@ class _AppSlideFadeState extends State<AppSlideFade> with SingleTickerProviderSt
     );
 
     _slide = Tween<Offset>(begin: widget.offset, end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve ?? Curves.easeOutCubic),
+      CurvedAnimation(
+        parent: _controller,
+        curve: widget.curve ?? Curves.easeOutCubic,
+      ),
     );
     _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve ?? Curves.easeOut),
+      CurvedAnimation(
+        parent: _controller,
+        curve: widget.curve ?? Curves.easeOut,
+      ),
     );
 
     if (widget.delay > 0) {
@@ -59,10 +66,7 @@ class _AppSlideFadeState extends State<AppSlideFade> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _opacity,
-      child: SlideTransition(
-        position: _slide,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slide, child: widget.child),
     );
   }
 }

@@ -17,7 +17,8 @@ class AppFadeScale extends StatefulWidget {
   State<AppFadeScale> createState() => _AppFadeScaleState();
 }
 
-class _AppFadeScaleState extends State<AppFadeScale> with SingleTickerProviderStateMixin {
+class _AppFadeScaleState extends State<AppFadeScale>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
   late Animation<double> _opacity;
@@ -25,7 +26,8 @@ class _AppFadeScaleState extends State<AppFadeScale> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    final kit = const AppMotion(); // Can't access context here easily, use default
+    final kit =
+        const AppMotion(); // Can't access context here easily, use default
     // Wait, I can't access context in initState.
     // I'll set it up in didChangeDependencies or build, but reusing controller is better.
     // I'll just use a default or wait for build.
@@ -36,10 +38,16 @@ class _AppFadeScaleState extends State<AppFadeScale> with SingleTickerProviderSt
     );
 
     _scale = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve ?? Curves.easeOut),
+      CurvedAnimation(
+        parent: _controller,
+        curve: widget.curve ?? Curves.easeOut,
+      ),
     );
     _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: widget.curve ?? Curves.easeOut),
+      CurvedAnimation(
+        parent: _controller,
+        curve: widget.curve ?? Curves.easeOut,
+      ),
     );
 
     _controller.forward();
@@ -55,10 +63,7 @@ class _AppFadeScaleState extends State<AppFadeScale> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _opacity,
-      child: ScaleTransition(
-        scale: _scale,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scale, child: widget.child),
     );
   }
 }

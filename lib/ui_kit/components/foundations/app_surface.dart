@@ -40,10 +40,7 @@ class AppSurface extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: surface,
-      );
+      return GestureDetector(onTap: onTap, child: surface);
     }
 
     return surface;

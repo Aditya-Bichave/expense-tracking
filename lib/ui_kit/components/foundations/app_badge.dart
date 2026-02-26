@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-enum AppBadgeType {
-  primary,
-  secondary,
-  success,
-  warn,
-  error,
-}
+enum AppBadgeType { primary, secondary, success, warn, error }
 
 class AppBadge extends StatelessWidget {
   final String label;

@@ -30,11 +30,7 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor ?? kit.colors.bg, // Updated token
       appBar: appBar,
-      body: SafeArea(
-        top: safeAreaTop,
-        bottom: safeAreaBottom,
-        child: body,
-      ),
+      body: SafeArea(top: safeAreaTop, bottom: safeAreaBottom, child: body),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,

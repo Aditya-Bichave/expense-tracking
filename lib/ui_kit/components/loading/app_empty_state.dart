@@ -30,11 +30,7 @@ class AppEmptyState extends StatelessWidget {
             if (customIllustration != null)
               customIllustration!
             else if (icon != null)
-              Icon(
-                icon,
-                size: 64,
-                color: kit.colors.textMuted,
-              ),
+              Icon(icon, size: 64, color: kit.colors.textMuted),
             kit.spacing.gapLg,
             Text(
               title,
@@ -45,14 +41,13 @@ class AppEmptyState extends StatelessWidget {
               kit.spacing.gapSm,
               Text(
                 subtitle!,
-                style: kit.typography.body.copyWith(color: kit.colors.textSecondary),
+                style: kit.typography.body.copyWith(
+                  color: kit.colors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
-            if (action != null) ...[
-              kit.spacing.gapXl,
-              action!,
-            ],
+            if (action != null) ...[kit.spacing.gapXl, action!],
           ],
         ),
       ),

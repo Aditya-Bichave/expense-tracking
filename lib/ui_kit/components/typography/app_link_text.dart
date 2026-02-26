@@ -6,12 +6,7 @@ class AppLinkText extends StatelessWidget {
   final VoidCallback? onTap;
   final TextStyle? style;
 
-  const AppLinkText(
-    this.text, {
-    super.key,
-    this.onTap,
-    this.style,
-  });
+  const AppLinkText(this.text, {super.key, this.onTap, this.style});
 
   @override
   Widget build(BuildContext context) {

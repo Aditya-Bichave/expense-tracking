@@ -104,12 +104,36 @@ class _UiKitShowcasePageState extends State<UiKitShowcasePage> {
                   runSpacing: 8,
                   children: [
                     AppButton(label: 'Primary', onPressed: () {}),
-                    AppButton(label: 'Secondary', variant: AppButtonVariant.secondary, onPressed: () {}),
-                    AppButton(label: 'Ghost', variant: AppButtonVariant.ghost, onPressed: () {}),
-                    AppButton(label: 'Destructive', variant: AppButtonVariant.destructive, onPressed: () {}),
-                    AppButton(label: 'Loading', isLoading: true, onPressed: () {}),
-                    AppButton(label: 'Disabled', disabled: true, onPressed: () {}),
-                    const AppFAB(icon: Icon(Icons.add), label: 'Extended', extended: true),
+                    AppButton(
+                      label: 'Secondary',
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {},
+                    ),
+                    AppButton(
+                      label: 'Ghost',
+                      variant: AppButtonVariant.ghost,
+                      onPressed: () {},
+                    ),
+                    AppButton(
+                      label: 'Destructive',
+                      variant: AppButtonVariant.destructive,
+                      onPressed: () {},
+                    ),
+                    AppButton(
+                      label: 'Loading',
+                      isLoading: true,
+                      onPressed: () {},
+                    ),
+                    AppButton(
+                      label: 'Disabled',
+                      disabled: true,
+                      onPressed: () {},
+                    ),
+                    const AppFAB(
+                      icon: Icon(Icons.add),
+                      label: 'Extended',
+                      extended: true,
+                    ),
                     const AppFAB(icon: Icon(Icons.add)),
                   ],
                 ),
@@ -118,7 +142,10 @@ class _UiKitShowcasePageState extends State<UiKitShowcasePage> {
               _buildSection('Inputs', [
                 const AppTextField(label: 'Text Field', hint: 'Enter text'),
                 kit.spacing.gapMd,
-                const AppTextField(label: 'Error Field', errorText: 'Something went wrong'),
+                const AppTextField(
+                  label: 'Error Field',
+                  errorText: 'Something went wrong',
+                ),
                 kit.spacing.gapMd,
                 const AppSearchField(),
                 kit.spacing.gapMd,
@@ -141,9 +168,15 @@ class _UiKitShowcasePageState extends State<UiKitShowcasePage> {
                 kit.spacing.gapMd,
                 Row(
                   children: [
-                    AppSwitch(value: _switchVal, onChanged: (v) => setState(() => _switchVal = v)),
+                    AppSwitch(
+                      value: _switchVal,
+                      onChanged: (v) => setState(() => _switchVal = v),
+                    ),
                     kit.spacing.gapMd,
-                    AppCheckbox(value: _checkVal ?? false, onChanged: (v) => setState(() => _checkVal = v)),
+                    AppCheckbox(
+                      value: _checkVal ?? false,
+                      onChanged: (v) => setState(() => _checkVal = v),
+                    ),
                   ],
                 ),
                 kit.spacing.gapMd,
@@ -183,8 +216,16 @@ class _UiKitShowcasePageState extends State<UiKitShowcasePage> {
                 AppGroupCard(
                   title: 'Group Card',
                   children: [
-                    const AppStatTile(label: 'Total Spent', value: '\$1,234.56', icon: Icon(Icons.attach_money)),
-                    const AppStatTile(label: 'Budget Left', value: '\$456.00', icon: Icon(Icons.pie_chart)),
+                    const AppStatTile(
+                      label: 'Total Spent',
+                      value: '\$1,234.56',
+                      icon: Icon(Icons.attach_money),
+                    ),
+                    const AppStatTile(
+                      label: 'Budget Left',
+                      value: '\$456.00',
+                      icon: Icon(Icons.pie_chart),
+                    ),
                   ],
                 ),
               ]),
@@ -219,14 +260,24 @@ class _UiKitShowcasePageState extends State<UiKitShowcasePage> {
                     ),
                     AppButton(
                       label: 'Show Toast',
-                      onPressed: () => AppToast.show(context, 'Operation successful!', type: AppToastType.success),
+                      onPressed: () => AppToast.show(
+                        context,
+                        'Operation successful!',
+                        type: AppToastType.success,
+                      ),
                     ),
                   ],
                 ),
                 kit.spacing.gapMd,
-                const AppBanner(message: 'This is an info banner', type: AppBannerType.info),
+                const AppBanner(
+                  message: 'This is an info banner',
+                  type: AppBannerType.info,
+                ),
                 kit.spacing.gapSm,
-                const AppBanner(message: 'This is a warning banner', type: AppBannerType.warning),
+                const AppBanner(
+                  message: 'This is a warning banner',
+                  type: AppBannerType.warning,
+                ),
               ]),
 
               _buildSection('Loading & Empty', [
