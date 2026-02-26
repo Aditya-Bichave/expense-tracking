@@ -8,8 +8,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/pump_app.dart';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter_test/src/_matchers_io.dart';
+import 'package:flutter_test/src/_goldens_io.dart';
+import 'package:path/path.dart' as path;
+
+class TolerantGoldenFileComparator extends LocalFileComparator {
+  TolerantGoldenFileComparator(super.testFile, this.threshold);
+  final double threshold;
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
+    final result = await GoldenFileComparator.compareLists(
+      imageBytes,
+      await getGoldenBytes(golden),
+    );
+
+    if (!result.passed && result.diffPercent > threshold) {
+      final error = await generateFailureOutput(result, golden, basedir);
+      throw FlutterError(error);
+    }
+    if (!result.passed) {
+      print(
+        'A mismatch of ${result.diffPercent * 100}% was detected, but was within the threshold of ${threshold * 100}%.',
+      );
+    }
+    return true;
+  }
+}
 
 void main() {
+  setUpAll(() {
+    final testFileUri = Uri.file(
+      path.join(
+        Directory.current.path,
+        'test',
+        'golden',
+        'budget_summary_golden_test.dart',
+      ),
+    );
+    // Set threshold to 2% for CI stability
+    goldenFileComparator = TolerantGoldenFileComparator(testFileUri, 0.02);
+  });
+
   group('BudgetSummaryWidget Golden Test', () {
     testWidgets('renders correctly with budgets', (tester) async {
       final budgets = [

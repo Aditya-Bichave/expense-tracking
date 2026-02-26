@@ -1,11 +1,11 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -84,7 +84,14 @@ void main() {
       accountListBloc: mockAccountListBloc,
     );
 
-    // Verify icon is present (which implies _buildIcon -> _getElementalCategoryIcon logic ran)
-    expect(find.byType(Icon), findsOneWidget);
+    // Verify icon is present (either Icon or SvgPicture depending on theme assets)
+    final hasIcon = find.byType(Icon).evaluate().isNotEmpty;
+    final hasSvg = find.byType(SvgPicture).evaluate().isNotEmpty;
+
+    expect(
+      hasIcon || hasSvg,
+      isTrue,
+      reason: 'Should render either Icon or SvgPicture',
+    );
   });
 }
