@@ -33,7 +33,8 @@ class TransactionListItem extends StatelessWidget {
     // Attempt to get icon from category definition using the availableIcons map
     final IconData displayIconData =
         availableIcons[category.iconName] ?? fallbackIconData;
-    final Color displayColor = category.displayColor; // Color from category hex
+    final Color displayColor =
+        category.cachedDisplayColor; // Color from category hex
 
     return Icon(
       displayIconData,
@@ -53,7 +54,7 @@ class TransactionListItem extends StatelessWidget {
 
     return AppListTile(
       leading: CircleAvatar(
-        backgroundColor: category.displayColor.withOpacity(0.15),
+        backgroundColor: category.cachedDisplayColor.withOpacity(0.15),
         child: _buildIcon(context),
       ),
       title: Text(

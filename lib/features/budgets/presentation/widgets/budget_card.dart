@@ -45,7 +45,7 @@ class BudgetCard extends StatelessWidget {
         final category = allCategories.firstWhereOrNull((c) => c.id == id);
         // Use the uncategorized helper method with the correct type
         if (category != null && category.id != Category.uncategorized.id) {
-          final iconColor = category.displayColor;
+          final iconColor = category.cachedDisplayColor;
           Widget iconWidget;
           IconData fallbackIcon =
               availableIcons[category.iconName] ?? Icons.label;

@@ -3,6 +3,17 @@ import 'package:intl/intl.dart';
 class DateFormatter {
   static final Map<String?, DateFormat> _dateTimeFormatters = {};
   static final Map<String?, DateFormat> _dateFormatters = {};
+  static final Map<String, DateFormat> _patternFormatters = {};
+
+  static String format(DateTime date, String pattern, {String? locale}) {
+    final key = '$pattern|$locale';
+    var formatter = _patternFormatters[key];
+    if (formatter == null) {
+      formatter = DateFormat(pattern, locale);
+      _patternFormatters[key] = formatter;
+    }
+    return formatter.format(date);
+  }
 
   static String formatDateTime(DateTime dateTime, {String? locale}) {
     try {

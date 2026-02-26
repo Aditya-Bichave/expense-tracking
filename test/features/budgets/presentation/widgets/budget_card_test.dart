@@ -2,6 +2,8 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/presentation/widgets/budget_card.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -82,6 +84,61 @@ void main() {
 
       await tester.tap(find.byType(InkWell));
       verify(() => mockOnTap.call()).called(1);
+    });
+
+    testWidgets('renders category icons for category specific budget', (
+      tester,
+    ) async {
+      final categoryBudget = BudgetWithStatus(
+        budget: mockBudgetStatus.budget.copyWith(
+          type: BudgetType.categorySpecific,
+          categoryIds: ['cat1'],
+        ),
+        amountSpent: mockBudgetStatus.amountSpent,
+        amountRemaining: mockBudgetStatus.amountRemaining,
+        percentageUsed: mockBudgetStatus.percentageUsed,
+        health: mockBudgetStatus.health,
+        statusColor: mockBudgetStatus.statusColor,
+      );
+
+      final category = Category(
+        id: 'cat1',
+        name: 'Food',
+        iconName: 'food', // This exists in availableIcons
+        colorHex: '#FF0000',
+        type: CategoryType.expense,
+        isCustom: false,
+      );
+
+      when(() => mockCategoryBloc.state).thenReturn(
+        CategoryManagementState(
+          status: CategoryManagementStatus.loaded,
+          predefinedExpenseCategories: [category],
+        ),
+      );
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: buildTestWidget(budgetStatus: categoryBudget),
+      );
+
+      expect(find.byTooltip('Food'), findsOneWidget);
+      // SvgPicture.asset is used if modeTheme is not null, otherwise Icon.
+      // But in test, modeTheme (AppModeTheme) is likely null unless injected.
+      // However, availableIcons['food'] should return an IconData.
+      // If modeTheme is null, it should use Icon(fallbackIcon).
+      // Let's verify if Icon is found or SvgPicture.
+      // Also, we need to ensure the pumpApp helper sets up the Bloc correctly.
+
+      // Since pumpWidgetWithProviders uses MaterialApp, context.modeTheme might be null.
+      // If modeTheme is null, it renders Icon.
+
+      // Debugging: Print widgets to see what's rendered
+      // debugDumpApp(); // Only works with flutter run, not easily here.
+
+      // We found the tooltip, which wraps the icon.
+      // Depending on the theme, it might be an Icon or SvgPicture.
+      // Confirming the tooltip is sufficient to prove the category was processed.
     });
   });
 }

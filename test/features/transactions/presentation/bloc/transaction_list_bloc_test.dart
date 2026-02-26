@@ -205,5 +205,66 @@ void main() {
         verify(() => mockGetTransactionsUseCase(any())).called(1);
       },
     );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'SearchChanged debounces events and triggers LoadTransactions',
+      build: () {
+        when(
+          () => mockGetTransactionsUseCase(any()),
+        ).thenAnswer((_) async => const Right([]));
+        return TransactionListBloc(
+          getTransactionsUseCase: mockGetTransactionsUseCase,
+          deleteExpenseUseCase: mockDeleteExpenseUseCase,
+          deleteIncomeUseCase: mockDeleteIncomeUseCase,
+          applyCategoryToBatchUseCase: mockApplyCategoryToBatchUseCase,
+          saveUserHistoryUseCase: mockSaveUserCategorizationHistoryUseCase,
+          expenseRepository: mockExpenseRepository,
+          incomeRepository: mockIncomeRepository,
+          dataChangeStream: dataChangeController.stream,
+        );
+      },
+      act: (bloc) async {
+        bloc.add(const SearchChanged(searchTerm: 't'));
+        bloc.add(const SearchChanged(searchTerm: 'te'));
+        bloc.add(const SearchChanged(searchTerm: 'test'));
+        // Wait for debounce to complete
+        await Future.delayed(const Duration(milliseconds: 350));
+      },
+      wait: const Duration(milliseconds: 350),
+      expect: () => [
+        // Updates state with search term
+        isA<TransactionListState>().having(
+          (s) => s.searchTerm,
+          'searchTerm',
+          'test',
+        ),
+        // Triggers loading
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'status',
+          ListStatus.loading,
+        ),
+        // Completes loading
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'status',
+          ListStatus.success,
+        ),
+      ],
+      verify: (_) {
+        // Should only call usecase once with the final term 'test'
+        verify(
+          () => mockGetTransactionsUseCase(
+            any(
+              that: isA<GetTransactionsParams>().having(
+                (p) => p.searchTerm,
+                'searchTerm',
+                'test',
+              ),
+            ),
+          ),
+        ).called(1);
+      },
+    );
   });
 }

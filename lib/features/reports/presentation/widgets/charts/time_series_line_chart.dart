@@ -1,5 +1,6 @@
 // lib/features/reports/presentation/widgets/charts/time_series_line_chart.dart
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/chart_utils.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -282,14 +283,15 @@ class TimeSeriesLineChart extends StatelessWidget {
   String _formatTooltipDate(DateTime date, TimeSeriesGranularity granularity) {
     switch (granularity) {
       case TimeSeriesGranularity.daily:
-        return DateFormat(
+        return DateFormatter.format(
+          date,
           'E, MMM d, yyyy',
-        ).format(date); // More specific for tooltip
+        ); // More specific for tooltip
       case TimeSeriesGranularity.weekly:
         final weekEnd = date.add(const Duration(days: 6));
-        return 'Week: ${DateFormat.MMMd().format(date)} - ${DateFormat.MMMd().format(weekEnd)}';
+        return 'Week: ${DateFormatter.format(date, 'MMM d')} - ${DateFormatter.format(weekEnd, 'MMM d')}';
       case TimeSeriesGranularity.monthly:
-        return DateFormat('MMMM yyyy').format(date);
+        return DateFormatter.format(date, 'MMMM yyyy');
     }
   }
 
@@ -311,24 +313,24 @@ class TimeSeriesLineChart extends StatelessWidget {
     String text;
     switch (granularity) {
       case TimeSeriesGranularity.daily:
-        text = DateFormat('d').format(date);
+        text = DateFormatter.format(date, 'd');
         // Add month abbreviation if it's the first day or start of the range
         if (date.day == 1 || value == meta.min || durationDays < 10) {
-          text = '${DateFormat('MMM').format(date)}\n$text';
+          text = '${DateFormatter.format(date, 'MMM')}\n$text';
         }
         break;
       case TimeSeriesGranularity.weekly:
-        text = DateFormat('d').format(date); // Show start day of week
+        text = DateFormatter.format(date, 'd'); // Show start day of week
         // Add month if it's the first week shown or start of month
         if (date.day <= 7 || value == meta.min) {
-          text = '${DateFormat('MMM').format(date)}\n$text';
+          text = '${DateFormatter.format(date, 'MMM')}\n$text';
         }
         break;
       case TimeSeriesGranularity.monthly:
-        text = DateFormat('MMM').format(date);
+        text = DateFormatter.format(date, 'MMM');
         // Add year if it's January or the start of the range
         if (date.month == 1 || value == meta.min) {
-          text = '${DateFormat('yy').format(date)}\n$text';
+          text = '${DateFormatter.format(date, 'yy')}\n$text';
         }
         break;
     }

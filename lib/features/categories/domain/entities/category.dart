@@ -24,6 +24,16 @@ class Category extends Equatable {
 
   Color get displayColor => ColorUtils.fromHex(colorHex);
 
+  static final Map<String, Color> _colorCache = {};
+  Color get cachedDisplayColor {
+    var color = _colorCache[colorHex];
+    if (color == null) {
+      color = ColorUtils.fromHex(colorHex);
+      _colorCache[colorHex] = color;
+    }
+    return color;
+  }
+
   @override
   List<Object?> get props => [
     id,

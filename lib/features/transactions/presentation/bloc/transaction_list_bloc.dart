@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
@@ -27,6 +28,10 @@ import 'package:collection/collection.dart';
 
 part 'transaction_list_event.dart';
 part 'transaction_list_state.dart';
+
+EventTransformer<E> debounce<E>(Duration duration) {
+  return (events, mapper) => events.debounceTime(duration).flatMap(mapper);
+}
 
 class TransactionListBloc
     extends Bloc<TransactionListEvent, TransactionListState> {
@@ -61,7 +66,10 @@ class TransactionListBloc
     on<LoadTransactions>(_onLoadTransactions, transformer: restartable());
     on<FilterChanged>(_onFilterChanged);
     on<SortChanged>(_onSortChanged);
-    on<SearchChanged>(_onSearchChanged);
+    on<SearchChanged>(
+      _onSearchChanged,
+      transformer: debounce(const Duration(milliseconds: 300)),
+    );
     on<ToggleBatchEdit>(_onToggleBatchEdit);
     on<SelectTransaction>(_onSelectTransaction);
     on<ApplyBatchCategory>(_onApplyBatchCategory);
