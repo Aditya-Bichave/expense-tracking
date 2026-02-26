@@ -1,11 +1,9 @@
-
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/log_contribution/log_contribution_bloc.dart';
-
 
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
@@ -286,8 +284,7 @@ Future<bool?> showLogContributionSheet(
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => LogContributionSheet(
-      initialContribution: initialContribution,
-    ),
+    builder: (context) =>
+        LogContributionSheet(initialContribution: initialContribution),
   );
 }
