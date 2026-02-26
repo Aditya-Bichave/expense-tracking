@@ -76,7 +76,8 @@ Once running, create accounts, log expenses and income, and explore the analytic
 
 ## Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/Aditya-Bichave/expense-tracking/issues) or open a pull request.
+Contributions, issues, and feature requests are welcome!
+Please read [AGENTS.md](AGENTS.md) and the [docs/](docs/) folder for architectural guidelines and coding standards before submitting a PR.
 
 ## License
 
