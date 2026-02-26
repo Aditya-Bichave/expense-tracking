@@ -91,9 +91,15 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     this.incomeGlowColor,
     this.expenseGlowColor,
     this.pagePadding = const EdgeInsets.all(16.0),
-    this.cardOuterPadding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+    this.cardOuterPadding = const EdgeInsets.symmetric(
+      horizontal: 16.0,
+      vertical: 8.0,
+    ),
     this.cardInnerPadding = const EdgeInsets.all(16.0),
-    this.listItemPadding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+    this.listItemPadding = const EdgeInsets.symmetric(
+      horizontal: 16.0,
+      vertical: 12.0,
+    ),
     this.mediumDuration = const Duration(milliseconds: 300),
     this.fastDuration = const Duration(milliseconds: 150),
     this.primaryCurve = Curves.easeInOut,
@@ -147,9 +153,12 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
       layoutDensity: layoutDensity ?? this.layoutDensity,
       cardStyle: cardStyle ?? this.cardStyle,
       assets: assets ?? this.assets,
-      preferDataTableForLists: preferDataTableForLists ?? this.preferDataTableForLists,
-      primaryAnimationDuration: primaryAnimationDuration ?? this.primaryAnimationDuration,
-      listEntranceAnimation: listEntranceAnimation ?? this.listEntranceAnimation,
+      preferDataTableForLists:
+          preferDataTableForLists ?? this.preferDataTableForLists,
+      primaryAnimationDuration:
+          primaryAnimationDuration ?? this.primaryAnimationDuration,
+      listEntranceAnimation:
+          listEntranceAnimation ?? this.listEntranceAnimation,
       incomeGlowColor: incomeGlowColor ?? this.incomeGlowColor,
       expenseGlowColor: expenseGlowColor ?? this.expenseGlowColor,
       pagePadding: pagePadding ?? this.pagePadding,
@@ -160,7 +169,8 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
       fastDuration: fastDuration ?? this.fastDuration,
       primaryCurve: primaryCurve ?? this.primaryCurve,
       listAnimationDelay: listAnimationDelay ?? this.listAnimationDelay,
-      listAnimationDuration: listAnimationDuration ?? this.listAnimationDuration,
+      listAnimationDuration:
+          listAnimationDuration ?? this.listAnimationDuration,
     );
   }
 
@@ -172,29 +182,70 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
       layoutDensity: t < 0.5 ? layoutDensity : other.layoutDensity,
       cardStyle: t < 0.5 ? cardStyle : other.cardStyle,
       assets: t < 0.5 ? assets : other.assets,
-      preferDataTableForLists: t < 0.5 ? preferDataTableForLists : other.preferDataTableForLists,
+      preferDataTableForLists: t < 0.5
+          ? preferDataTableForLists
+          : other.preferDataTableForLists,
       primaryAnimationDuration: Duration(
-        milliseconds: ui.lerpDouble(primaryAnimationDuration.inMilliseconds, other.primaryAnimationDuration.inMilliseconds, t)!.round(),
+        milliseconds: ui
+            .lerpDouble(
+              primaryAnimationDuration.inMilliseconds,
+              other.primaryAnimationDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
       ),
-      listEntranceAnimation: t < 0.5 ? listEntranceAnimation : other.listEntranceAnimation,
+      listEntranceAnimation: t < 0.5
+          ? listEntranceAnimation
+          : other.listEntranceAnimation,
       incomeGlowColor: Color.lerp(incomeGlowColor, other.incomeGlowColor, t),
       expenseGlowColor: Color.lerp(expenseGlowColor, other.expenseGlowColor, t),
-      pagePadding: EdgeInsets.lerp(pagePadding, other.pagePadding, t) ?? pagePadding,
-      cardOuterPadding: EdgeInsets.lerp(cardOuterPadding, other.cardOuterPadding, t) ?? cardOuterPadding,
-      cardInnerPadding: EdgeInsets.lerp(cardInnerPadding, other.cardInnerPadding, t) ?? cardInnerPadding,
-      listItemPadding: EdgeInsets.lerp(listItemPadding, other.listItemPadding, t) ?? listItemPadding,
+      pagePadding:
+          EdgeInsets.lerp(pagePadding, other.pagePadding, t) ?? pagePadding,
+      cardOuterPadding:
+          EdgeInsets.lerp(cardOuterPadding, other.cardOuterPadding, t) ??
+          cardOuterPadding,
+      cardInnerPadding:
+          EdgeInsets.lerp(cardInnerPadding, other.cardInnerPadding, t) ??
+          cardInnerPadding,
+      listItemPadding:
+          EdgeInsets.lerp(listItemPadding, other.listItemPadding, t) ??
+          listItemPadding,
       mediumDuration: Duration(
-        milliseconds: ui.lerpDouble(mediumDuration.inMilliseconds, other.mediumDuration.inMilliseconds, t)!.round(),
+        milliseconds: ui
+            .lerpDouble(
+              mediumDuration.inMilliseconds,
+              other.mediumDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
       ),
       fastDuration: Duration(
-        milliseconds: ui.lerpDouble(fastDuration.inMilliseconds, other.fastDuration.inMilliseconds, t)!.round(),
+        milliseconds: ui
+            .lerpDouble(
+              fastDuration.inMilliseconds,
+              other.fastDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
       ),
       primaryCurve: t < 0.5 ? primaryCurve : other.primaryCurve,
       listAnimationDelay: Duration(
-        milliseconds: ui.lerpDouble(listAnimationDelay.inMilliseconds, other.listAnimationDelay.inMilliseconds, t)!.round(),
+        milliseconds: ui
+            .lerpDouble(
+              listAnimationDelay.inMilliseconds,
+              other.listAnimationDelay.inMilliseconds,
+              t,
+            )!
+            .round(),
       ),
       listAnimationDuration: Duration(
-        milliseconds: ui.lerpDouble(listAnimationDuration.inMilliseconds, other.listAnimationDuration.inMilliseconds, t)!.round(),
+        milliseconds: ui
+            .lerpDouble(
+              listAnimationDuration.inMilliseconds,
+              other.listAnimationDuration.inMilliseconds,
+              t,
+            )!
+            .round(),
       ),
     );
   }
