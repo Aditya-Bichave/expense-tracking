@@ -8,6 +8,18 @@ import 'package:expense_tracker/features/add_expense/domain/models/split_model.d
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_role.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_segmented_control.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // Added import
 
 class SplitScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -16,6 +28,8 @@ class SplitScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final kit = context.kit;
+
     return BlocConsumer<AddExpenseWizardBloc, AddExpenseWizardState>(
       listenWhen: (previous, current) => previous.status != current.status,
       listener: (context, state) {
@@ -28,39 +42,50 @@ class SplitScreen extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.errorMessage ?? 'Error adding expense'),
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: kit.colors.error,
             ),
           );
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
+        return AppScaffold(
+          appBar: AppNavBar(
             leading: IconButton(
               onPressed: onBack,
               icon: const Icon(Icons.arrow_back),
+              color: kit.colors.textPrimary,
             ),
-            title: const Text('Split Expense'),
+            title: 'Split Expense',
             actions: [
               if (state.status == FormStatus.processing)
-                const Center(
+                Center(
                   child: Padding(
-                    padding: EdgeInsets.only(right: 16),
+                    padding: kit.spacing.hMd,
                     child: SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(kit.colors.primary),
+                      ),
                     ),
                   ),
                 )
               else
-                TextButton(
-                  onPressed: state.isSplitValid
-                      ? () => context.read<AddExpenseWizardBloc>().add(
-                          const SubmitExpense(),
-                        )
-                      : null,
-                  child: const Text('SAVE'),
+                Padding(
+                  padding: kit.spacing.hSm,
+                  child: AppButton(
+                    variant: UiVariant.ghost,
+                    size: AppButtonSize.small,
+                    onPressed: state.isSplitValid
+                        ? () => context.read<AddExpenseWizardBloc>().add(
+                              const SubmitExpense(),
+                            )
+                        : null,
+                    label: 'SAVE',
+                    disabled: !state.isSplitValid,
+                  ),
                 ),
             ],
           ),
@@ -68,32 +93,31 @@ class SplitScreen extends StatelessWidget {
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: kit.spacing.allMd,
                 child: Column(
                   children: [
                     Text(
                       'Total: ${CurrencyFormatter.format(state.amountTotal, state.currency)}',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: kit.typography.title,
                     ),
-                    const SizedBox(height: 8),
-                    InkWell(
+                    kit.spacing.gapSm,
+                    GestureDetector(
                       onTap: () => _showPayerSelector(context, state),
                       child: Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: kit.spacing.allSm,
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               'Paid by ${_getPayerName(state)}',
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.bold,
+                              style: kit.typography.bodyStrong.copyWith(
+                                color: kit.colors.primary,
                               ),
                             ),
-                            const SizedBox(width: 4),
+                            kit.spacing.wXxs,
                             Icon(
                               Icons.arrow_drop_down,
-                              color: Theme.of(context).primaryColor,
+                              color: kit.colors.primary,
                             ),
                           ],
                         ),
@@ -104,35 +128,37 @@ class SplitScreen extends StatelessWidget {
               ),
 
               // Mode Selector
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: SplitMode.values.map((mode) {
-                    final isSelected = state.splitMode == mode;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: ChoiceChip(
-                        label: Text(mode.displayName),
-                        selected: isSelected,
-                        onSelected: (val) {
-                          if (val)
-                            context.read<AddExpenseWizardBloc>().add(
-                              SplitModeChanged(mode),
-                            );
-                        },
+              Padding(
+                padding: kit.spacing.hMd,
+                child: AppSegmentedControl<SplitMode>(
+                  groupValue: state.splitMode,
+                  onValueChanged: (mode) {
+                    if (mode != null) {
+                      context
+                          .read<AddExpenseWizardBloc>()
+                          .add(SplitModeChanged(mode));
+                    }
+                  },
+                  children: {
+                    for (var mode in SplitMode.values)
+                      mode: Padding(
+                        padding: kit.spacing.vSm,
+                        child: Text(
+                          mode.displayName,
+                          style: kit.typography.labelMedium,
+                        ),
                       ),
-                    );
-                  }).toList(),
+                  },
                 ),
               ),
-              const Divider(),
+              kit.spacing.gapMd,
+              const AppDivider(),
 
               // Split List
               Expanded(
                 child: ListView.separated(
                   itemCount: state.splits.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, __) => const AppDivider(),
                   itemBuilder: (context, index) {
                     final split = state.splits[index];
                     final member = state.groupMembers.firstWhere(
@@ -154,8 +180,8 @@ class SplitScreen extends StatelessWidget {
                       currency: state.currency,
                       onValueChanged: (val) {
                         context.read<AddExpenseWizardBloc>().add(
-                          SplitValueChanged(member.userId, val),
-                        );
+                              SplitValueChanged(member.userId, val),
+                            );
                       },
                     );
                   },
@@ -164,11 +190,11 @@ class SplitScreen extends StatelessWidget {
 
               if (!state.isSplitValid)
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: kit.spacing.allMd,
                   child: Text(
                     _getValidationError(state),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+                    style: kit.typography.caption.copyWith(
+                      color: kit.colors.error,
                     ),
                   ),
                 ),
@@ -209,39 +235,31 @@ class SplitScreen extends StatelessWidget {
   void _showPayerSelector(BuildContext context, AddExpenseWizardState state) {
     showModalBottomSheet(
       context: context,
-      builder: (_) => SizedBox(
-        height: 300,
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Who Paid?',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: state.groupMembers.length,
-                itemBuilder: (ctx, index) {
-                  final member = state.groupMembers[index];
-                  final isYou = member.userId == state.currentUserId;
-                  return ListTile(
-                    leading: CircleAvatar(
-                      child: Text(member.userId.substring(0, 1).toUpperCase()),
-                    ),
-                    title: Text(isYou ? 'You' : member.userId),
-                    onTap: () {
-                      context.read<AddExpenseWizardBloc>().add(
+      backgroundColor: Colors.transparent,
+      builder: (_) => AppBottomSheet(
+        title: 'Who Paid?',
+        child: SizedBox(
+          height: 300,
+          child: ListView.builder(
+            itemCount: state.groupMembers.length,
+            itemBuilder: (ctx, index) {
+              final member = state.groupMembers[index];
+              final isYou = member.userId == state.currentUserId;
+              return AppListTile(
+                leading: AppAvatar(
+                  initials: member.userId.substring(0, 1).toUpperCase(),
+                  size: 32,
+                ),
+                title: Text(isYou ? 'You' : member.userId),
+                onTap: () {
+                  context.read<AddExpenseWizardBloc>().add(
                         SinglePayerSelected(member.userId),
                       );
-                      Navigator.pop(ctx);
-                    },
-                  );
+                  Navigator.pop(ctx);
                 },
-              ),
-            ),
-          ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -309,57 +327,67 @@ class _SplitRowState extends State<_SplitRow> {
 
   @override
   Widget build(BuildContext context) {
+    final kit = context.kit;
     final bool isEditable = widget.mode != SplitMode.equal;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: kit.spacing.vSm.copyWith(
+          left: kit.spacing.md, right: kit.spacing.md), // Replaced hMd + vSm
       child: Row(
         children: [
-          CircleAvatar(
+          AppAvatar(
+            initials: widget.member.userId.isNotEmpty
+                ? widget.member.userId.substring(0, 1).toUpperCase()
+                : '?',
+            size: 32,
+          ),
+          kit.spacing.wMd,
+          Expanded(
             child: Text(
-              widget.member.userId.isNotEmpty
-                  ? widget.member.userId.substring(0, 1).toUpperCase()
-                  : '?',
+              widget.member.userId,
+              overflow: TextOverflow.ellipsis,
+              style: kit.typography.body,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(widget.member.userId, overflow: TextOverflow.ellipsis),
-          ),
-
           if (isEditable) ...[
             SizedBox(
               width: 80,
-              child: TextField(
+              child: AppTextField(
                 controller: _controller,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: InputDecoration(
-                  suffixText: widget.mode == SplitMode.percent
-                      ? '%'
-                      : (widget.mode == SplitMode.shares ? 'x' : ''),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 4,
-                  ),
-                ),
+                suffixIcon: widget.mode == SplitMode.percent
+                    ? Padding(
+                        padding: kit.spacing.allSm,
+                        child: Text(
+                          '%',
+                          style: kit.typography.bodySmall,
+                        ),
+                      )
+                    : (widget.mode == SplitMode.shares
+                        ? Padding(
+                            padding: kit.spacing.allSm,
+                            child: Text(
+                              'x',
+                              style: kit.typography.bodySmall,
+                            ),
+                          )
+                        : null),
                 onChanged: (val) {
                   final d = double.tryParse(val);
                   if (d != null) widget.onValueChanged(d);
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            kit.spacing.wMd,
           ],
-
           Text(
             CurrencyFormatter.format(
               widget.split.computedAmount,
               widget.currency,
             ),
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: kit.typography.bodyStrong,
           ),
         ],
       ),

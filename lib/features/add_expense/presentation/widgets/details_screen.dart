@@ -8,6 +8,16 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_chip.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // Added import
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
@@ -42,105 +52,112 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final kit = context.kit;
+
     return BlocConsumer<AddExpenseWizardBloc, AddExpenseWizardState>(
       listener: (context, state) {
         // Update controllers if state changes externally (optional)
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
+        return AppScaffold(
+          appBar: AppNavBar(
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: widget.onBack,
+              color: kit.colors.textPrimary,
             ),
-            title: const Text('Details'),
+            title: 'Details',
             actions: [
-              if (state.groupId == null)
-                TextButton(
-                  onPressed: () {
-                    context.read<AddExpenseWizardBloc>().add(
-                      const SubmitExpense(),
-                    );
-                  },
-                  child: const Text('SAVE'),
-                )
-              else
-                TextButton(
-                  onPressed: () => widget.onNext(true),
-                  child: const Text('NEXT'),
+              Padding(
+                padding: kit.spacing.hSm,
+                child: AppButton(
+                  variant: UiVariant.ghost,
+                  size: AppButtonSize.small,
+                  onPressed: state.groupId == null
+                      ? () => context
+                          .read<AddExpenseWizardBloc>()
+                          .add(const SubmitExpense())
+                      : () => widget.onNext(true),
+                  label: state.groupId == null ? 'SAVE' : 'NEXT',
                 ),
+              ),
             ],
           ),
           body: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: kit.spacing.allMd,
             children: [
               // Context Selector (Pill)
               Center(
-                child: ActionChip(
-                  avatar: Icon(
-                    state.groupId == null ? Icons.person : Icons.group,
+                child: GestureDetector(
+                  onTap: () => _showGroupSelector(context),
+                  child: AppChip(
+                    icon: Icon(
+                      state.groupId == null ? Icons.person : Icons.group,
+                      size: 16,
+                      color: kit.colors.textPrimary,
+                    ),
+                    label: state.selectedGroup?.name ?? 'Personal',
+                    isSelected: false,
+                    onSelected: () => _showGroupSelector(context),
                   ),
-                  label: Text(state.selectedGroup?.name ?? 'Personal'),
-                  onPressed: () => _showGroupSelector(context),
                 ),
               ),
-              const SizedBox(height: 16),
+              kit.spacing.gapLg,
 
               // Description
-              TextField(
+              AppTextField(
                 controller: _descController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'What is this for?',
-                ),
+                label: 'Description',
+                hint: 'What is this for?',
                 onChanged: (val) => context.read<AddExpenseWizardBloc>().add(
-                  DescriptionChanged(val),
-                ),
+                      DescriptionChanged(val),
+                    ),
               ),
-              const SizedBox(height: 24),
+              kit.spacing.gapLg,
 
               // Categories Grid
-              const Text(
+              Text(
                 'Category',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: kit.typography.labelMedium
+                    .copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
+              kit.spacing.gapSm,
               SizedBox(
-                height: 100, // Fixed height for scrolling
+                height: 40, // Height for chips
                 child: FutureBuilder<dynamic>(
                   future: sl<CategoryRepository>().getAllCategories(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData)
+                    if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
+                    }
                     final result = snapshot.data;
                     return result.fold(
-                      (failure) => const Text('Error loading categories'),
+                      (failure) => Text(
+                        'Error loading categories',
+                        style: kit.typography.caption
+                            .copyWith(color: kit.colors.error),
+                      ),
                       (List<Category> categories) {
-                        // Sort by usage? Or just take top 8
                         final topCategories = categories.take(10).toList();
                         return ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: topCategories.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 12),
+                          separatorBuilder: (_, __) => kit.spacing.wSm,
                           itemBuilder: (context, index) {
                             final cat = topCategories[index];
                             final isSelected = state.categoryId == cat.id;
-                            return ChoiceChip(
-                              label: Text(cat.name),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                if (selected) {
-                                  context.read<AddExpenseWizardBloc>().add(
-                                    CategorySelected(cat),
-                                  );
-                                  if (_descController.text.isEmpty) {
-                                    _descController.text = cat.name;
-                                    context.read<AddExpenseWizardBloc>().add(
-                                      DescriptionChanged(cat.name),
-                                    );
-                                  }
+                            return AppChip(
+                              label: cat.name,
+                              isSelected: isSelected,
+                              onSelected: () {
+                                context
+                                    .read<AddExpenseWizardBloc>()
+                                    .add(CategorySelected(cat));
+                                if (_descController.text.isEmpty) {
+                                  _descController.text = cat.name;
+                                  context
+                                      .read<AddExpenseWizardBloc>()
+                                      .add(DescriptionChanged(cat.name));
                                 }
                               },
                             );
@@ -151,48 +168,49 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   },
                 ),
               ),
-              const SizedBox(height: 24),
+              kit.spacing.gapLg,
 
               // Receipt & Date Row
               Row(
                 children: [
                   Expanded(
-                    child: InkWell(
+                    child: AppCard(
+                      padding: kit.spacing.allSm,
                       onTap: () => _showReceiptOptions(context),
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.receipt),
-                            const SizedBox(width: 8),
-                            Text(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt,
+                            size: 20,
+                            color: kit.colors.textSecondary,
+                          ),
+                          kit.spacing.wSm,
+                          Flexible(
+                            child: Text(
                               state.receiptLocalPath != null
                                   ? 'Receipt Attached'
                                   : 'Attach Receipt',
+                              style: kit.typography.bodySmall,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            if (state.isUploadingReceipt) ...[
-                              const SizedBox(width: 8),
-                              const SizedBox(
-                                width: 12,
-                                height: 12,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            ],
+                          ),
+                          if (state.isUploadingReceipt) ...[
+                            kit.spacing.wSm,
+                            const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
                           ],
-                        ),
+                        ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  kit.spacing.wMd,
                   Expanded(
-                    child: InkWell(
+                    child: AppCard(
+                      padding: kit.spacing.allSm,
                       onTap: () async {
                         final date = await showDatePicker(
                           context: context,
@@ -203,42 +221,36 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         if (date != null) {
                           if (!context.mounted) return;
                           context.read<AddExpenseWizardBloc>().add(
-                            DateChanged(date),
-                          );
+                                DateChanged(date),
+                              );
                         }
                       },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.calendar_today),
-                            const SizedBox(width: 8),
-                            Text(
-                              DateFormat(
-                                'MMM dd, yyyy',
-                              ).format(state.expenseDate),
-                            ),
-                          ],
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 20,
+                            color: kit.colors.textSecondary,
+                          ),
+                          kit.spacing.wSm,
+                          Text(
+                            DateFormat('MMM dd, yyyy')
+                                .format(state.expenseDate),
+                            style: kit.typography.bodySmall,
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              kit.spacing.gapLg,
 
               // Notes
-              TextField(
+              AppTextField(
                 controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notes (Optional)',
-                  border: OutlineInputBorder(),
-                ),
+                label: 'Notes (Optional)',
                 maxLines: 2,
                 onChanged: (val) =>
                     context.read<AddExpenseWizardBloc>().add(NotesChanged(val)),
@@ -253,36 +265,48 @@ class _DetailsScreenState extends State<DetailsScreen> {
   void _showGroupSelector(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => _GroupSelectorSheet(),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AppBottomSheet(
+        title: 'Select Context',
+        child: const _GroupSelectorContent(),
+      ),
     );
   }
 
   void _showReceiptOptions(BuildContext parentContext) {
     showModalBottomSheet(
       context: parentContext,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Camera'),
-              onTap: () async {
-                Navigator.pop(context);
-                if (parentContext.mounted)
-                  await _pickReceipt(parentContext, ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Gallery'),
-              onTap: () async {
-                Navigator.pop(context);
-                if (parentContext.mounted)
-                  await _pickReceipt(parentContext, ImageSource.gallery);
-              },
-            ),
-          ],
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => AppBottomSheet(
+        title: 'Receipt Options',
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AppListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (parentContext.mounted) {
+                    await _pickReceipt(parentContext, ImageSource.camera);
+                  }
+                },
+              ),
+              AppListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Gallery'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  if (parentContext.mounted) {
+                    await _pickReceipt(parentContext, ImageSource.gallery);
+                  }
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -298,26 +322,22 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 }
 
-class _GroupSelectorSheet extends StatelessWidget {
+class _GroupSelectorContent extends StatelessWidget {
+  const _GroupSelectorContent();
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      height: 400,
+    return SizedBox(
+      height: 300,
       child: Column(
         children: [
-          const Text(
-            'Select Context',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          ListTile(
+          AppListTile(
             leading: const Icon(Icons.person),
             title: const Text('Personal Expense'),
             onTap: () async {
               context.read<AddExpenseWizardBloc>().add(
-                const GroupSelected(null),
-              );
+                    const GroupSelected(null),
+                  );
               Navigator.pop(context);
             },
           ),
@@ -326,23 +346,27 @@ class _GroupSelectorSheet extends StatelessWidget {
             child: FutureBuilder<dynamic>(
               future: sl<GroupsRepository>().getGroups(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData)
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
+                }
                 return snapshot.data.fold(
-                  (failure) => const Text('Error loading groups'),
+                  (failure) =>
+                      const Center(child: Text('Error loading groups')),
                   (List<GroupEntity> groups) {
-                    if (groups.isEmpty) return const Text('No groups found');
+                    if (groups.isEmpty) {
+                      return const Center(child: Text('No groups found'));
+                    }
                     return ListView.builder(
                       itemCount: groups.length,
                       itemBuilder: (context, index) {
                         final group = groups[index];
-                        return ListTile(
+                        return AppListTile(
                           leading: const Icon(Icons.group),
                           title: Text(group.name),
                           onTap: () async {
                             context.read<AddExpenseWizardBloc>().add(
-                              GroupSelected(group),
-                            );
+                                  GroupSelected(group),
+                                );
                             Navigator.pop(context);
                           },
                         );

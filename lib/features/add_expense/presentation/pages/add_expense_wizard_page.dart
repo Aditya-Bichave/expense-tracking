@@ -6,6 +6,8 @@ import 'package:expense_tracker/features/add_expense/presentation/widgets/numpad
 import 'package:expense_tracker/features/add_expense/presentation/widgets/details_screen.dart';
 import 'package:expense_tracker/features/add_expense/presentation/widgets/split_screen.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddExpenseWizardPage extends StatelessWidget {
   const AddExpenseWizardPage({super.key});
@@ -52,34 +54,30 @@ class _AddExpenseWizardViewState extends State<AddExpenseWizardView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: PageView(
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            NumpadScreen(onNext: _nextPage),
-            DetailsScreen(
-              onNext: (isGroup) {
-                if (isGroup) {
-                  _nextPage();
-                } else {
-                  // DetailsScreen handles Submit for Personal.
-                  // But if we wanted to enforce flow:
-                  // context.read<AddExpenseWizardBloc>().add(SubmitExpense());
-                }
-              },
-              onBack: () {
-                if (_pageController.page == 0) {
-                  Navigator.of(context).pop();
-                } else {
-                  _prevPage();
-                }
-              },
-            ),
-            SplitScreen(onBack: _prevPage),
-          ],
-        ),
+    return AppScaffold(
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [
+          NumpadScreen(onNext: _nextPage),
+          DetailsScreen(
+            onNext: (isGroup) {
+              if (isGroup) {
+                _nextPage();
+              } else {
+                // DetailsScreen handles Submit for Personal.
+              }
+            },
+            onBack: () {
+              if (_pageController.page == 0) {
+                Navigator.of(context).pop();
+              } else {
+                _prevPage();
+              }
+            },
+          ),
+          SplitScreen(onBack: _prevPage),
+        ],
       ),
     );
   }
