@@ -1,7 +1,7 @@
 // lib/features/income/presentation/widgets/income_card.dart
 // MODIFIED FILE (Implement interactive prompts)
 
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:flutter/material.dart';

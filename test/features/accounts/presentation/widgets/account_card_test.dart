@@ -5,7 +5,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 
 import '../../../../helpers/pump_app.dart';
 

@@ -1,5 +1,5 @@
 // lib/core/widgets/common_form_fields.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_parser.dart';
 import 'package:expense_tracker/core/widgets/app_text_form_field.dart';

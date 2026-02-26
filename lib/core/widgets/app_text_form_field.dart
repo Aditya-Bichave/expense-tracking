@@ -1,4 +1,4 @@
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

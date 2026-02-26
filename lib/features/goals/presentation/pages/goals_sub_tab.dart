@@ -1,6 +1,6 @@
 // lib/features/goals/presentation/pages/goals_sub_tab.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/goals/presentation/widgets/goal_card.dart';
 import 'package:flutter/material.dart';

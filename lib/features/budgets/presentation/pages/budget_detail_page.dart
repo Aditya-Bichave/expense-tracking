@@ -4,7 +4,7 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';

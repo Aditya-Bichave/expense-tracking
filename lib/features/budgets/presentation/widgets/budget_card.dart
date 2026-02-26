@@ -1,5 +1,5 @@
 // lib/features/budgets/presentation/widgets/budget_card.dart
-import 'package:expense_tracker/core/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';

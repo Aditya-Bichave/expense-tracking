@@ -3,8 +3,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart'; // Import UIMode
-import 'app_mode_theme.dart'; // Import the ThemeExtension class
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // Import the ThemeExtension class
 import 'package:google_fonts/google_fonts.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_colors.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_motion.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_radii.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_spacing.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_typography.dart';
+
 // Import AppConstants
 
 // Import Theme Configs
@@ -239,7 +246,7 @@ class AppTheme {
         elevation: modeTheme.cardStyle == CardStyle.flat
             ? 0
             : (modeTheme.cardStyle == CardStyle.floating
-                  ? 6
+                  ? 6.0
                   : (modeTheme.cardStyle == CardStyle.glass ? 0 : 1.5)),
         margin: modeTheme.layoutDensity == LayoutDensity.compact
             ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
@@ -283,7 +290,9 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(modePrefix == 'quantum' ? 6 : 12),
+          borderRadius: BorderRadius.circular(
+            modePrefix == 'quantum' ? 6.0 : 12,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(
@@ -294,7 +303,7 @@ class AppTheme {
           ),
           borderRadius: BorderRadius.circular(
             modePrefix == 'quantum'
-                ? 6
+                ? 6.0
                 : ((modePrefix == 'aether' || modePrefix == 'stitch')
                       ? 16
                       : 12),
@@ -308,7 +317,7 @@ class AppTheme {
             : OutlineInputBorder(
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
                 borderRadius: BorderRadius.circular(
-                  modePrefix == 'quantum' ? 6 : 12,
+                  modePrefix == 'quantum' ? 6.0 : 12,
                 ),
               ),
         filled: modePrefix == 'aether' || modePrefix == 'stitch',
@@ -342,7 +351,7 @@ class AppTheme {
           textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(
-              modePrefix == 'quantum' ? 6 : 12,
+              modePrefix == 'quantum' ? 6.0 : 12,
             ),
           ),
           elevation: modeTheme.cardStyle == CardStyle.flat
@@ -360,7 +369,7 @@ class AppTheme {
             : colorScheme.onPrimaryContainer,
         elevation: modeTheme.cardStyle == CardStyle.flat
             ? 0
-            : (modePrefix == 'aether' ? 6 : 4),
+            : (modePrefix == 'aether' ? 6.0 : 4),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(modePrefix == 'aether' ? 20 : 16),
         ),
@@ -428,7 +437,25 @@ class AppTheme {
           : null,
 
       // Add the AppModeTheme extension
-      extensions: <ThemeExtension<dynamic>>[modeTheme],
+      extensions: <ThemeExtension<dynamic>>[
+        modeTheme,
+        AppKitTheme(
+          colors: AppColors(colorScheme),
+          typography: AppTypography(textTheme),
+          spacing: const AppSpacing(),
+          radii: AppRadii(
+            sm: modePrefix == 'quantum' ? 4.0 : 8.0,
+            md: modePrefix == 'quantum'
+                ? 6.0
+                : (modePrefix == 'aether' || modePrefix == 'stitch'
+                      ? 16.0
+                      : 12.0),
+            lg: modePrefix == 'aether' ? 20.0 : 16.0,
+            xl: 24.0,
+          ),
+          motion: const AppMotion(),
+        ),
+      ],
     );
   }
 }
