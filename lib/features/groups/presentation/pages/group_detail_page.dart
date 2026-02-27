@@ -71,11 +71,8 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                 (g) => g.id == widget.groupId,
               );
               groupName = group.name;
-            } on StateError {
-              // Group not found in loaded list, fallback to default name
-            } catch (e) {
-              // Log unexpected error if needed
-              debugPrint('Error finding group: $e');
+            } catch (_) {
+              // Group not found or error, fallback to default name
             }
           }
 
@@ -192,14 +189,14 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                                       return AppListTile(
                                         title: Text(expense.title),
                                         trailing: Text(
-                                          '${expense.amount} ${expense.currency}',
+                                          '\${expense.amount} \${expense.currency}',
                                           style: kit.typography.bodyStrong
                                               .copyWith(
                                                 color: kit.colors.textPrimary,
                                               ),
                                         ),
                                         subtitle: Text(
-                                          'Paid by ${expense.createdBy}',
+                                          'Paid by \${expense.createdBy}',
                                         ),
                                         onTap: canEdit
                                             ? () {
@@ -220,7 +217,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                                 } else if (state is GroupExpensesError) {
                                   return Center(
                                     child: Text(
-                                      'Error: ${state.message}',
+                                      'Error: \${state.message}',
                                       style: kit.typography.body.copyWith(
                                         color: kit.colors.error,
                                       ),
@@ -268,7 +265,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     AppDialog.show(
       context: context,
       title: 'Group Info',
-      content: 'Name: $groupName\nRole: Member/Viewer',
+      content: 'Name: \$groupName\nRole: Member/Viewer',
       cancelLabel: 'Close',
     );
   }
