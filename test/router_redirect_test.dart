@@ -40,7 +40,9 @@ void main() {
   });
 
   test('redirects skipped setup to dashboard', () {
-    final config = AppRouter.router.configuration; // Assuming AppRouter is the class name in router.dart
+    final config = AppRouter
+        .router
+        .configuration; // Assuming AppRouter is the class name in router.dart
     final redirect = config.topRedirect;
     final routeState = GoRouterState(
       config,

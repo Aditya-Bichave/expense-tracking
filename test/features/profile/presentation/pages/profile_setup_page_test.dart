@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
 
 class MockProfileBloc extends MockBloc<ProfileEvent, ProfileState>
     implements ProfileBloc {}
@@ -73,14 +74,14 @@ void main() {
     expect(find.text('UPI ID (VPA)'), findsOneWidget);
     expect(find.text('Currency'), findsOneWidget);
 
-    // Verify initial values in Controllers by accessing the TextField widgets
-    final nameField = tester.widget<TextField>(
-      find.widgetWithText(TextField, 'Full Name'),
+    // Verify initial values in Controllers by accessing the AppTextField widgets
+    final nameField = tester.widget<AppTextField>(
+      find.widgetWithText(AppTextField, 'Full Name'),
     );
     expect(nameField.controller?.text, 'Test User');
 
-    final upiField = tester.widget<TextField>(
-      find.widgetWithText(TextField, 'UPI ID (VPA)'),
+    final upiField = tester.widget<AppTextField>(
+      find.widgetWithText(AppTextField, 'UPI ID (VPA)'),
     );
     expect(upiField.controller?.text, 'test@upi');
   });
@@ -105,13 +106,13 @@ void main() {
 
       // Enter new Name
       await tester.enterText(
-        find.widgetWithText(TextField, 'Full Name'),
+        find.widgetWithText(AppTextField, 'Full Name'),
         'New Name',
       );
 
       // Enter UPI ID
       await tester.enterText(
-        find.widgetWithText(TextField, 'UPI ID (VPA)'),
+        find.widgetWithText(AppTextField, 'UPI ID (VPA)'),
         'new@upi',
       );
       await tester.pump();

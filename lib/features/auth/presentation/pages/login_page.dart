@@ -10,9 +10,8 @@ import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_gap.dart';
 import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
-import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
-import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart'; // Corrected import path
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,47 +20,69 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _phoneController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
 
   String? _getFormattedPhone(String raw) {
     if (raw.isEmpty) return null;
-    String digits = raw.replaceAll(RegExp(r'\D'), '');
+    // Basic stripping of non-digits (except +)
+    String digits = raw.replaceAll(RegExp(r'[^0-9+]'), '');
 
-    // Check if it's potentially valid length or structure
-    if (digits.length < 10) return null; // Very rough check
+    if (digits.isEmpty) return null;
 
-    // If starts with country code, assume it's there?
-    // This is a naive implementation, ideally use phone number parsing lib if available,
-    // but sticking to "no new dependencies" constraint.
-    // The memory mentions: "The LoginPage uses _getFormattedPhone to ensure consistent E.164 formatting (stripping leading zeros, handling country code)"
-
-    // Assuming user might type +91... or just 98...
-    if (raw.startsWith('+')) {
-      return raw.replaceAll(' ', '');
+    // Remove leading zero if it looks like a local number
+    if (!digits.startsWith('+') && digits.startsWith('0')) {
+      digits = digits.substring(1);
     }
 
-    // If not starting with +, maybe prepend + if it looks like full number?
-    // Or just pass as is if backend handles it or if the previous implementation was simpler.
-    // Let's stick to what was likely there:
-    // If input is 10 digits, prepend +91? Or ask user for country code?
-    // Given the previous code just had "Send Magic Link", let's assume raw input is okay or basic + check.
-
-    if (!raw.startsWith('+')) {
-      return '+';
+    // Add default country code if missing
+    if (!digits.startsWith('+')) {
+      return '+91$digits'; // Defaulting to +91 as per test expectation
     }
-    return raw;
+
+    return digits;
   }
 
-  void _submit() {
+  void _submitPhone() {
     final phone = _phoneController.text.trim();
     final formatted = _getFormattedPhone(phone);
-    if (formatted != null) {
+
+    if (formatted != null && formatted.length > 3) {
       context.read<AuthBloc>().add(AuthLoginRequested(formatted));
     } else {
       AppToast.show(
         context,
-        'Please enter a valid phone number with country code (e.g. +1234567890)',
+        'Please enter a valid phone number (e.g. 9876543210)',
+        type: AppToastType.error,
+      );
+    }
+  }
+
+  void _submitEmail() {
+    final email = _emailController.text.trim();
+    if (email.isNotEmpty && email.contains('@')) {
+      context.read<AuthBloc>().add(AuthLoginWithMagicLinkRequested(email));
+    } else {
+      AppToast.show(
+        context,
+        'Please enter a valid email address',
         type: AppToastType.error,
       );
     }
@@ -72,15 +93,10 @@ class _LoginPageState extends State<LoginPage> {
     final kit = context.kit;
 
     return AppScaffold(
-      appBar: const AppNavBar(title: 'Login'),
+      appBar: const AppNavBar(title: 'Login / Sign Up'),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthOtpSent) {
-            // Navigate to VerifyOtpPage with phone
-            // Assuming route is defined in AppRouter
-            // The previous code had context.push('/verify-otp', extra: state.phone);
-            // Verify if path is correct or use named route if possible.
-            // Sticking to path to be safe with existing router config unless I verify route names.
             context.push('/verify-otp', extra: state.phone);
           } else if (state is AuthError) {
             AppToast.show(context, state.message, type: AppToastType.error);
@@ -89,31 +105,84 @@ class _LoginPageState extends State<LoginPage> {
         child: Padding(
           padding: kit.spacing.allMd,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AppTextField(
-                controller: _phoneController,
-                label: 'Phone Number',
-                hint: '+1234567890',
-                keyboardType: TextInputType.phone,
-                textCapitalization: TextCapitalization.none,
+              AppCard(
+                child: TabBar(
+                  controller: _tabController,
+                  labelColor: kit.colors.primary,
+                  unselectedLabelColor: kit.colors.textSecondary,
+                  indicatorColor: kit.colors.primary,
+                  tabs: const [
+                    Tab(text: 'Phone'),
+                    Tab(text: 'Email'),
+                  ],
+                ),
               ),
               AppGap.md(context),
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, state) {
-                  final isLoading = state is AuthLoading;
-                  return AppButton(
-                    label: 'Send Magic Link',
-                    onPressed: isLoading ? null : _submit,
-                    isLoading: isLoading,
-                    isFullWidth: true,
-                  );
-                },
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [_buildPhoneTab(context), _buildEmailTab(context)],
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPhoneTab(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        AppTextField(
+          controller: _phoneController,
+          label: 'Phone Number',
+          hint: '1234567890',
+          keyboardType: TextInputType.phone,
+          textCapitalization: TextCapitalization.none,
+        ),
+        AppGap.md(context),
+        BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            final isLoading = state is AuthLoading;
+            return AppButton(
+              label: 'Send OTP',
+              onPressed: isLoading ? null : _submitPhone,
+              isLoading: isLoading,
+              isFullWidth: true,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailTab(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        AppTextField(
+          controller: _emailController,
+          label: 'Email Address',
+          hint: 'you@example.com',
+          keyboardType: TextInputType.emailAddress,
+          textCapitalization: TextCapitalization.none,
+        ),
+        AppGap.md(context),
+        BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            final isLoading = state is AuthLoading;
+            return AppButton(
+              label: 'Send Magic Link',
+              onPressed: isLoading ? null : _submitEmail,
+              isLoading: isLoading,
+              isFullWidth: true,
+            );
+          },
+        ),
+      ],
     );
   }
 }

@@ -53,19 +53,22 @@ import 'package:expense_tracker/features/profile/data/models/profile_model.dart'
 export 'package:expense_tracker/core/utils/logger.dart';
 
 void main(List<String> args) async {
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
+  runZonedGuarded(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
 
-    try {
-      await AppInitializer.init();
-      runApp(App(args: args));
-    } catch (e, stack) {
-      log.severe('Initialization failed: $e\nStack: $stack');
-      runApp(InitializationErrorApp(error: e));
-    }
-  }, (error, stack) {
-    log.severe('Unhandled error caught by zone: $error\nStack: $stack');
-  });
+      try {
+        await AppInitializer.init();
+        runApp(App(args: args));
+      } catch (e, stack) {
+        log.severe('Initialization failed: $e\nStack: $stack');
+        runApp(InitializationErrorApp(error: e));
+      }
+    },
+    (error, stack) {
+      log.severe('Unhandled error caught by zone: $error\nStack: $stack');
+    },
+  );
 }
 
 class AppInitializer {
@@ -93,21 +96,67 @@ class AppInitializer {
     // Let's assume standard opening for now to avoid complexity unless I see explicit usage.
     // Wait, `initLocator` takes `Box<Type>`.
 
-    final expenseBox = await Hive.openBox<ExpenseModel>('expenses', encryptionCipher: HiveAesCipher(encryptionKey));
-    final accountBox = await Hive.openBox<AssetAccountModel>('accounts', encryptionCipher: HiveAesCipher(encryptionKey));
-    final incomeBox = await Hive.openBox<IncomeModel>('income', encryptionCipher: HiveAesCipher(encryptionKey));
-    final categoryBox = await Hive.openBox<CategoryModel>('categories', encryptionCipher: HiveAesCipher(encryptionKey));
-    final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>('user_history_rules', encryptionCipher: HiveAesCipher(encryptionKey));
-    final budgetBox = await Hive.openBox<BudgetModel>('budgets', encryptionCipher: HiveAesCipher(encryptionKey));
-    final goalBox = await Hive.openBox<GoalModel>('goals', encryptionCipher: HiveAesCipher(encryptionKey));
-    final contributionBox = await Hive.openBox<GoalContributionModel>('goal_contributions', encryptionCipher: HiveAesCipher(encryptionKey));
-    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>('recurring_rules', encryptionCipher: HiveAesCipher(encryptionKey));
-    final recurringRuleAuditLogBox = await Hive.openBox<RecurringRuleAuditLogModel>('recurring_rule_audit_logs', encryptionCipher: HiveAesCipher(encryptionKey));
-    final outboxBox = await Hive.openBox<SyncMutationModel>('sync_outbox', encryptionCipher: HiveAesCipher(encryptionKey));
-    final groupBox = await Hive.openBox<GroupModel>('groups', encryptionCipher: HiveAesCipher(encryptionKey));
-    final groupMemberBox = await Hive.openBox<GroupMemberModel>('group_members', encryptionCipher: HiveAesCipher(encryptionKey));
-    final groupExpenseBox = await Hive.openBox<GroupExpenseModel>('group_expenses', encryptionCipher: HiveAesCipher(encryptionKey));
-    final profileBox = await Hive.openBox<ProfileModel>('profile', encryptionCipher: HiveAesCipher(encryptionKey));
+    final expenseBox = await Hive.openBox<ExpenseModel>(
+      'expenses',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final accountBox = await Hive.openBox<AssetAccountModel>(
+      'accounts',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final incomeBox = await Hive.openBox<IncomeModel>(
+      'income',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final categoryBox = await Hive.openBox<CategoryModel>(
+      'categories',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final userHistoryBox = await Hive.openBox<UserHistoryRuleModel>(
+      'user_history_rules',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final budgetBox = await Hive.openBox<BudgetModel>(
+      'budgets',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final goalBox = await Hive.openBox<GoalModel>(
+      'goals',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final contributionBox = await Hive.openBox<GoalContributionModel>(
+      'goal_contributions',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final recurringRuleBox = await Hive.openBox<RecurringRuleModel>(
+      'recurring_rules',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final recurringRuleAuditLogBox =
+        await Hive.openBox<RecurringRuleAuditLogModel>(
+          'recurring_rule_audit_logs',
+          encryptionCipher: HiveAesCipher(encryptionKey),
+        );
+    final outboxBox = await Hive.openBox<SyncMutationModel>(
+      'sync_outbox',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final groupBox = await Hive.openBox<GroupModel>(
+      'groups',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final groupMemberBox = await Hive.openBox<GroupMemberModel>(
+      'group_members',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final groupExpenseBox = await Hive.openBox<GroupExpenseModel>(
+      'group_expenses',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
+    final profileBox = await Hive.openBox<ProfileModel>(
+      'profile',
+      encryptionCipher: HiveAesCipher(encryptionKey),
+    );
 
     // 5. Initialize SharedPreferences
     final prefs = await SharedPreferences.getInstance();
@@ -137,49 +186,49 @@ class AppInitializer {
   static void _registerHiveAdapters() {
     // Check if registered to avoid errors in hot restart or multiple inits
     if (!Hive.isAdapterRegistered(ExpenseModelAdapter().typeId)) {
-        Hive.registerAdapter(ExpenseModelAdapter());
+      Hive.registerAdapter(ExpenseModelAdapter());
     }
     if (!Hive.isAdapterRegistered(AssetAccountModelAdapter().typeId)) {
-        Hive.registerAdapter(AssetAccountModelAdapter());
+      Hive.registerAdapter(AssetAccountModelAdapter());
     }
     if (!Hive.isAdapterRegistered(IncomeModelAdapter().typeId)) {
-        Hive.registerAdapter(IncomeModelAdapter());
+      Hive.registerAdapter(IncomeModelAdapter());
     }
     if (!Hive.isAdapterRegistered(CategoryModelAdapter().typeId)) {
-        Hive.registerAdapter(CategoryModelAdapter());
+      Hive.registerAdapter(CategoryModelAdapter());
     }
     if (!Hive.isAdapterRegistered(UserHistoryRuleModelAdapter().typeId)) {
-        Hive.registerAdapter(UserHistoryRuleModelAdapter());
+      Hive.registerAdapter(UserHistoryRuleModelAdapter());
     }
     if (!Hive.isAdapterRegistered(BudgetModelAdapter().typeId)) {
-        Hive.registerAdapter(BudgetModelAdapter());
+      Hive.registerAdapter(BudgetModelAdapter());
     }
     if (!Hive.isAdapterRegistered(GoalModelAdapter().typeId)) {
-        Hive.registerAdapter(GoalModelAdapter());
+      Hive.registerAdapter(GoalModelAdapter());
     }
     if (!Hive.isAdapterRegistered(GoalContributionModelAdapter().typeId)) {
-        Hive.registerAdapter(GoalContributionModelAdapter());
+      Hive.registerAdapter(GoalContributionModelAdapter());
     }
     if (!Hive.isAdapterRegistered(RecurringRuleModelAdapter().typeId)) {
-        Hive.registerAdapter(RecurringRuleModelAdapter());
+      Hive.registerAdapter(RecurringRuleModelAdapter());
     }
     if (!Hive.isAdapterRegistered(RecurringRuleAuditLogModelAdapter().typeId)) {
-        Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
+      Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
     }
     if (!Hive.isAdapterRegistered(SyncMutationModelAdapter().typeId)) {
-        Hive.registerAdapter(SyncMutationModelAdapter());
+      Hive.registerAdapter(SyncMutationModelAdapter());
     }
     if (!Hive.isAdapterRegistered(GroupModelAdapter().typeId)) {
-        Hive.registerAdapter(GroupModelAdapter());
+      Hive.registerAdapter(GroupModelAdapter());
     }
     if (!Hive.isAdapterRegistered(GroupMemberModelAdapter().typeId)) {
-        Hive.registerAdapter(GroupMemberModelAdapter());
+      Hive.registerAdapter(GroupMemberModelAdapter());
     }
     if (!Hive.isAdapterRegistered(GroupExpenseModelAdapter().typeId)) {
-        Hive.registerAdapter(GroupExpenseModelAdapter());
+      Hive.registerAdapter(GroupExpenseModelAdapter());
     }
     if (!Hive.isAdapterRegistered(ProfileModelAdapter().typeId)) {
-        Hive.registerAdapter(ProfileModelAdapter());
+      Hive.registerAdapter(ProfileModelAdapter());
     }
   }
 }
@@ -200,8 +249,7 @@ class App extends StatelessWidget {
           create: (context) => sl<DataManagementBloc>(),
         ),
         BlocProvider<AccountListBloc>(
-          create: (context) =>
-              sl<AccountListBloc>()..add(const LoadAccounts()),
+          create: (context) => sl<AccountListBloc>()..add(const LoadAccounts()),
         ),
         BlocProvider<TransactionListBloc>(
           create: (context) =>
