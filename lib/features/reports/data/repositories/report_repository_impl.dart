@@ -281,7 +281,7 @@ class ReportRepositoryImpl implements ReportRepository {
       categoryRepository.getAllCategories(),
     ]);
 
-    final transactionResult = results[0] as Either<Failure, List<dynamic>>;
+    final transactionResult = results[0];
     final categoryResult = results[1] as Either<Failure, List<Category>>;
 
     if (transactionResult.isLeft()) {
