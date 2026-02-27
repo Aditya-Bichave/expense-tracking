@@ -4,39 +4,44 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:simple_logger/simple_logger.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 
 class SecureStorageService {
   final FlutterSecureStorage _storage;
+  final SimpleLogger _logger;
 
   static const _hiveKeyKey = 'hive_encryption_key';
   static const _appPinKey = 'app_pin';
   static const _biometricEnabledKey = 'biometric_enabled';
 
   // Enforce secure options by default
-  SecureStorageService({FlutterSecureStorage? storage})
-    : _storage =
-          storage ??
-          const FlutterSecureStorage(
-            aOptions: AndroidOptions(encryptedSharedPreferences: true),
-            iOptions: IOSOptions(
-              accessibility: KeychainAccessibility.first_unlock,
-            ),
-          );
+  SecureStorageService({
+    FlutterSecureStorage? storage,
+    SimpleLogger? logger,
+  }) : _storage =
+           storage ??
+           const FlutterSecureStorage(
+             aOptions: AndroidOptions(encryptedSharedPreferences: true),
+             iOptions: IOSOptions(
+               accessibility: KeychainAccessibility.first_unlock,
+             ),
+           ),
+       _logger = logger ?? log;
 
   Future<List<int>> getHiveKey() async {
     String? keyString;
     try {
       keyString = await _storage.read(key: _hiveKeyKey);
     } on PlatformException catch (e, s) {
-      log.severe("Failed to read Hive key from secure storage: $e\n$s");
+      _logger.severe("Failed to read Hive key from secure storage: $e\n$s");
       // If we can't read the key due to platform error (e.g. keystore corrupted),
       // we treat it as corruption so the app can prompt for reset.
       throw HiveKeyCorruptionException(
         "Secure Storage Error: ${e.message} (Code: ${e.code})",
       );
     } catch (e, s) {
-      log.severe("Unexpected error reading Hive key: $e\n$s");
+      _logger.severe("Unexpected error reading Hive key: $e\n$s");
       throw HiveKeyCorruptionException("Unexpected Storage Error: $e");
     }
 
@@ -46,10 +51,9 @@ class SecureStorageService {
       try {
         return base64Url.decode(keyString);
       } catch (e, s) {
-        final snippet = keyString.length > 4
-            ? keyString.substring(0, 4)
-            : keyString;
-        log.severe(
+        final snippet =
+            keyString.length > 4 ? keyString.substring(0, 4) : keyString;
+        _logger.severe(
           'Hive encryption key corrupted. Key snippet: $snippet\nError: $e\n$s',
         );
         // CRITICAL: Do NOT regenerate the key automatically.

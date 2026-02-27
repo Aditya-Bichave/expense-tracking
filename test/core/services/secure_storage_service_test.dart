@@ -2,18 +2,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:simple_logger/simple_logger.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 
+class MockSimpleLogger extends Mock implements SimpleLogger {}
+
 void main() {
   late SecureStorageService service;
   late MockFlutterSecureStorage mockStorage;
+  late MockSimpleLogger mockLogger;
 
   setUp(() {
     mockStorage = MockFlutterSecureStorage();
-    service = SecureStorageService(storage: mockStorage);
+    mockLogger = MockSimpleLogger();
+    // Stub default behavior for logger to avoid missing stub errors
+    when(() => mockLogger.severe(any())).thenAnswer((_) => null);
+
+    service = SecureStorageService(storage: mockStorage, logger: mockLogger);
   });
 
   group('getHiveKey', () {
