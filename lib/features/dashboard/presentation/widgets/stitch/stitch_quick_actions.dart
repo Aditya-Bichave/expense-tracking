@@ -13,7 +13,10 @@ class StitchQuickActions extends StatelessWidget {
     final kit = context.kit;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg, vertical: kit.spacing.sm),
+      padding: EdgeInsets.symmetric(
+        horizontal: kit.spacing.lg,
+        vertical: kit.spacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -93,10 +96,7 @@ class StitchQuickActions extends StatelessWidget {
           alignment: Alignment.center,
           child: Column(
             children: [
-              Icon(
-                icon,
-                color: contentColor,
-              ),
+              Icon(icon, color: contentColor),
               kit.spacing.gapSm,
               BridgeText(
                 label,

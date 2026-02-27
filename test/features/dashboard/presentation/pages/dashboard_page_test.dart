@@ -54,9 +54,9 @@ void main() {
     // Default states
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(MockUser()));
-    when(() => mockTransactionListBloc.state).thenReturn(
-      const TransactionListState(status: ListStatus.initial),
-    );
+    when(
+      () => mockTransactionListBloc.state,
+    ).thenReturn(const TransactionListState(status: ListStatus.initial));
   });
 
   Future<void> pumpDashboardPage(WidgetTester tester) async {
@@ -82,7 +82,9 @@ void main() {
             BlocProvider<DashboardBloc>.value(value: mockDashboardBloc),
             BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
             BlocProvider<AuthBloc>.value(value: mockAuthBloc),
-            BlocProvider<TransactionListBloc>.value(value: mockTransactionListBloc),
+            BlocProvider<TransactionListBloc>.value(
+              value: mockTransactionListBloc,
+            ),
           ],
           child: const DashboardPage(),
         ),
@@ -99,7 +101,10 @@ void main() {
   testWidgets('DashboardPage renders error snackbar', (tester) async {
     whenListen(
       mockDashboardBloc,
-      Stream.fromIterable([const DashboardLoading(), const DashboardError('Test Error')]),
+      Stream.fromIterable([
+        const DashboardLoading(),
+        const DashboardError('Test Error'),
+      ]),
       initialState: const DashboardLoading(),
     );
     await pumpDashboardPage(tester);
@@ -110,10 +115,12 @@ void main() {
     expect(find.text('Retry'), findsOneWidget);
   });
 
-  testWidgets('DashboardPage renders Stitch body when mode is Stitch', (tester) async {
-    when(() => mockSettingsBloc.state).thenReturn(
-      const SettingsState(uiMode: UIMode.stitch),
-    );
+  testWidgets('DashboardPage renders Stitch body when mode is Stitch', (
+    tester,
+  ) async {
+    when(
+      () => mockSettingsBloc.state,
+    ).thenReturn(const SettingsState(uiMode: UIMode.stitch));
     when(() => mockDashboardBloc.state).thenReturn(
       const DashboardLoaded(
         FinancialOverview(
@@ -137,10 +144,12 @@ void main() {
     expect(find.byType(StitchDashboardBody), findsOneWidget);
   });
 
-  testWidgets('DashboardPage renders Aether body when mode is Aether', (tester) async {
-    when(() => mockSettingsBloc.state).thenReturn(
-      const SettingsState(uiMode: UIMode.aether),
-    );
+  testWidgets('DashboardPage renders Aether body when mode is Aether', (
+    tester,
+  ) async {
+    when(
+      () => mockSettingsBloc.state,
+    ).thenReturn(const SettingsState(uiMode: UIMode.aether));
     when(() => mockDashboardBloc.state).thenReturn(
       const DashboardLoaded(
         FinancialOverview(
