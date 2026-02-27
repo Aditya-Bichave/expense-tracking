@@ -23,10 +23,12 @@ void main() {
 
   setUp(() {
     mockBloc = MockAddExpenseWizardBloc();
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-    ));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+      ),
+    );
   });
 
   Widget createWidgetUnderTest() {
@@ -84,7 +86,9 @@ void main() {
     await tester.tap(find.text('.'));
     await tester.pump();
 
-    verify(() => mockBloc.add(any(that: isA<AmountChanged>()))).called(greaterThanOrEqualTo(1));
+    verify(
+      () => mockBloc.add(any(that: isA<AmountChanged>())),
+    ).called(greaterThanOrEqualTo(1));
   });
 
   testWidgets('NumpadScreen limits decimal places', (tester) async {
@@ -98,7 +102,9 @@ void main() {
     await tester.pump();
 
     // Verify 0.12 was emitted at least once (might be re-emitted on invalid input)
-    verify(() => mockBloc.add(const AmountChanged(0.12))).called(greaterThanOrEqualTo(1));
+    verify(
+      () => mockBloc.add(const AmountChanged(0.12)),
+    ).called(greaterThanOrEqualTo(1));
     // Should NOT see 0.123
     verifyNever(() => mockBloc.add(const AmountChanged(0.123)));
   });

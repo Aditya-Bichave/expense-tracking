@@ -29,36 +29,48 @@ void main() {
 
   setUp(() {
     mockBloc = MockAddExpenseWizardBloc();
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      amountTotal: 100.0,
-      currency: '\$',
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-      currentUserId: 'user1',
-      groupMembers: [
-        GroupMember(
-          id: '1',
-          groupId: 'g1',
-          userId: 'user1',
-          role: GroupRole.member,
-          joinedAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        GroupMember(
-          id: '2',
-          groupId: 'g1',
-          userId: 'user2',
-          role: GroupRole.member,
-          joinedAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ],
-      payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
-      splits: [
-        SplitModel(userId: 'user1', shareType: SplitType.EQUAL, shareValue: 50.0, computedAmount: 50.0),
-        SplitModel(userId: 'user2', shareType: SplitType.EQUAL, shareValue: 50.0, computedAmount: 50.0),
-      ],
-    ));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        amountTotal: 100.0,
+        currency: '\$',
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+        currentUserId: 'user1',
+        groupMembers: [
+          GroupMember(
+            id: '1',
+            groupId: 'g1',
+            userId: 'user1',
+            role: GroupRole.member,
+            joinedAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+          GroupMember(
+            id: '2',
+            groupId: 'g1',
+            userId: 'user2',
+            role: GroupRole.member,
+            joinedAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ],
+        payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
+        splits: [
+          SplitModel(
+            userId: 'user1',
+            shareType: SplitType.EQUAL,
+            shareValue: 50.0,
+            computedAmount: 50.0,
+          ),
+          SplitModel(
+            userId: 'user2',
+            shareType: SplitType.EQUAL,
+            shareValue: 50.0,
+            computedAmount: 50.0,
+          ),
+        ],
+      ),
+    );
   });
 
   Widget createWidgetUnderTest() {
@@ -98,35 +110,57 @@ void main() {
     await tester.tap(find.text('Exact Amounts'));
     await tester.pump();
 
-    verify(() => mockBloc.add(const SplitModeChanged(SplitMode.exact)))
-        .called(1);
+    verify(
+      () => mockBloc.add(const SplitModeChanged(SplitMode.exact)),
+    ).called(1);
   });
 
   testWidgets('SplitScreen entering split value updates bloc', (tester) async {
     // Need to set mode to something editable (not Equal)
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      amountTotal: 100.0,
-      currency: '\$',
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-      currentUserId: 'user1',
-      splitMode: SplitMode.exact,
-      groupMembers: [
-        GroupMember(id: '1', groupId: 'g1', userId: 'user1', role: GroupRole.member, joinedAt: DateTime.now(), updatedAt: DateTime.now()),
-      ],
-      payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
-      splits: [SplitModel(userId: 'user1', shareType: SplitType.EXACT, shareValue: 100.0, computedAmount: 100.0)],
-    ));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        amountTotal: 100.0,
+        currency: '\$',
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+        currentUserId: 'user1',
+        splitMode: SplitMode.exact,
+        groupMembers: [
+          GroupMember(
+            id: '1',
+            groupId: 'g1',
+            userId: 'user1',
+            role: GroupRole.member,
+            joinedAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ],
+        payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
+        splits: [
+          SplitModel(
+            userId: 'user1',
+            shareType: SplitType.EXACT,
+            shareValue: 100.0,
+            computedAmount: 100.0,
+          ),
+        ],
+      ),
+    );
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
     final appTextFieldFinder = find.byType(AppTextField);
-    final textFieldFinder = find.descendant(of: appTextFieldFinder, matching: find.byType(TextFormField));
+    final textFieldFinder = find.descendant(
+      of: appTextFieldFinder,
+      matching: find.byType(TextFormField),
+    );
 
     await tester.enterText(textFieldFinder.first, '50');
     await tester.pump();
 
-    verify(() => mockBloc.add(const SplitValueChanged('user1', 50.0))).called(1);
+    verify(
+      () => mockBloc.add(const SplitValueChanged('user1', 50.0)),
+    ).called(1);
   });
 }

@@ -19,6 +19,7 @@ class MockAddExpenseWizardBloc
     implements AddExpenseWizardBloc {}
 
 class MockGroupsRepository extends Mock implements GroupsRepository {}
+
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 void main() {
@@ -31,14 +32,18 @@ void main() {
     mockGroupsRepository = MockGroupsRepository();
     mockCategoryRepository = MockCategoryRepository();
 
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-    ));
-    when(() => mockGroupsRepository.getGroups())
-        .thenAnswer((_) async => const Right(<GroupEntity>[]));
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => const Right(<Category>[]));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+      ),
+    );
+    when(
+      () => mockGroupsRepository.getGroups(),
+    ).thenAnswer((_) async => const Right(<GroupEntity>[]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => const Right(<Category>[]));
 
     sl.registerSingleton<AddExpenseWizardBloc>(mockBloc);
     sl.registerSingleton<GroupsRepository>(mockGroupsRepository);
@@ -49,7 +54,9 @@ void main() {
     sl.reset();
   });
 
-  testWidgets('AddExpenseWizardPage navigates to DetailsScreen', (tester) async {
+  testWidgets('AddExpenseWizardPage navigates to DetailsScreen', (
+    tester,
+  ) async {
     await tester.pumpWidget(const MaterialApp(home: AddExpenseWizardPage()));
     await tester.pumpAndSettle();
 

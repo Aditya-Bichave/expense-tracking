@@ -18,11 +18,7 @@ class TestWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: child,
-      ),
-    );
+    return MaterialApp(home: Scaffold(body: child));
   }
 }
 
@@ -53,14 +49,16 @@ void main() {
   );
 
   testWidgets('ExpenseCard renders correctly', (tester) async {
-    await tester.pumpWidget(TestWrapper(
-      child: ExpenseCard(
-        expense: expense,
-        accountName: 'Cash',
-        currencySymbol: '\$',
-        onCardTap: (_) {},
+    await tester.pumpWidget(
+      TestWrapper(
+        child: ExpenseCard(
+          expense: expense,
+          accountName: 'Cash',
+          currencySymbol: '\$',
+          onCardTap: (_) {},
+        ),
       ),
-    ));
+    );
 
     expect(find.text('Lunch'), findsOneWidget);
     expect(find.text('\$50.00'), findsOneWidget);
@@ -74,16 +72,18 @@ void main() {
 
   testWidgets('ExpenseCard handles tap', (tester) async {
     bool tapped = false;
-    await tester.pumpWidget(TestWrapper(
-      child: ExpenseCard(
-        expense: expense,
-        accountName: 'Cash',
-        currencySymbol: '\$',
-        onCardTap: (_) {
-          tapped = true;
-        },
+    await tester.pumpWidget(
+      TestWrapper(
+        child: ExpenseCard(
+          expense: expense,
+          accountName: 'Cash',
+          currencySymbol: '\$',
+          onCardTap: (_) {
+            tapped = true;
+          },
+        ),
       ),
-    ));
+    );
 
     await tester.tap(find.byType(ExpenseCard));
     expect(tapped, true);

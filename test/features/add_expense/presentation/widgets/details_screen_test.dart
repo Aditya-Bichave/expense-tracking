@@ -38,7 +38,7 @@ void main() {
     iconName: 'food',
     colorHex: '#FF0000',
     type: CategoryType.expense,
-    isCustom: false
+    isCustom: false,
   );
 
   setUpAll(() {
@@ -53,14 +53,18 @@ void main() {
     mockGroupsRepository = MockGroupsRepository();
     mockCategoryRepository = MockCategoryRepository();
 
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-    ));
-    when(() => mockGroupsRepository.getGroups())
-        .thenAnswer((_) async => const Right(<GroupEntity>[]));
-    when(() => mockCategoryRepository.getAllCategories())
-        .thenAnswer((_) async => Right([testCategory]));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+      ),
+    );
+    when(
+      () => mockGroupsRepository.getGroups(),
+    ).thenAnswer((_) async => const Right(<GroupEntity>[]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([testCategory]));
 
     sl.registerSingleton<GroupsRepository>(mockGroupsRepository);
     sl.registerSingleton<CategoryRepository>(mockCategoryRepository);
@@ -92,7 +96,9 @@ void main() {
     expect(find.text('Food'), findsOneWidget); // Category chip
   });
 
-  testWidgets('DetailsScreen entering description updates bloc', (tester) async {
+  testWidgets('DetailsScreen entering description updates bloc', (
+    tester,
+  ) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pumpAndSettle();
 
@@ -105,7 +111,9 @@ void main() {
     await tester.enterText(textFieldFinder, 'Test Expense');
     await tester.pump();
 
-    verify(() => mockBloc.add(const DescriptionChanged('Test Expense'))).called(1);
+    verify(
+      () => mockBloc.add(const DescriptionChanged('Test Expense')),
+    ).called(1);
   });
 
   testWidgets('DetailsScreen selecting category updates bloc', (tester) async {
@@ -125,7 +133,10 @@ void main() {
 
     // Find the AppCard containing the calendar icon
     final calendarIconFinder = find.byIcon(Icons.calendar_today);
-    final appCardFinder = find.ancestor(of: calendarIconFinder, matching: find.byType(AppCard));
+    final appCardFinder = find.ancestor(
+      of: calendarIconFinder,
+      matching: find.byType(AppCard),
+    );
 
     // Tap the AppCard
     await tester.tap(appCardFinder);
