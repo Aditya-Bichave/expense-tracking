@@ -64,7 +64,7 @@ void main() {
       // 1. Save Contribution success
       when(
         () => mockContributionDataSource.saveContribution(any()),
-      ).thenAnswer((_) async => null);
+      ).thenAnswer((_) async {});
 
       // 2. _updateGoalTotalSavedCache mocks
       // Get contributions
@@ -85,7 +85,7 @@ void main() {
         ),
       );
       // Save Goal
-      when(() => mockGoalDataSource.saveGoal(any())).thenAnswer((_) async => null);
+      when(() => mockGoalDataSource.saveGoal(any())).thenAnswer((_) async {});
 
       final result = await repository.addContribution(tContributionValid);
 

@@ -31,8 +31,8 @@ void main() {
         id: '1',
         name: 'test',
         targetAmount: 100,
-        typeIndex: 0,
-        periodIndex: 0,
+        budgetTypeIndex: 0,
+        periodTypeIndex: 0,
         startDate: DateTime.now(),
         createdAt: DateTime.now(),
       ),
@@ -53,7 +53,7 @@ void main() {
     test('should call localDataSource.saveBudget and return Right(Budget)', () async {
       when(
         () => mockLocalDataSource.saveBudget(any()),
-      ).thenAnswer((_) async => null);
+      ).thenAnswer((_) async {});
 
       // Stub getBudgets for overlap check
       when(() => mockLocalDataSource.getBudgets()).thenAnswer((_) async => []);

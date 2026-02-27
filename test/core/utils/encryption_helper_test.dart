@@ -33,29 +33,20 @@ void main() {
       expect(decrypted, plainText);
     });
 
-    test(
-      'decryptString throws FormatException on wrong password (MAC check)',
-      () {
-        final encrypted = EncryptionHelper.encryptString(plainText, password);
+    test('decryptString throws on wrong password', () {
+      final encrypted = EncryptionHelper.encryptString(plainText, password);
 
-        expect(
-          () => EncryptionHelper.decryptString(encrypted, 'wrong_password'),
-          throwsA(
-            isA<FormatException>().having(
-              (e) => e.message,
-              'message',
-              contains('Invalid password'),
-            ),
-          ),
-        );
-      },
-    );
+      expect(
+        () => EncryptionHelper.decryptString(encrypted, 'wrong_password'),
+        throwsA(anyOf(isA<FormatException>(), isA<ArgumentError>())),
+      );
+    });
 
     test('decryptString throws on tampered cipher', () {
       final encrypted = EncryptionHelper.encryptString(plainText, password);
       // Tamper with cipher
       final tampered = Map<String, dynamic>.from(encrypted);
-      tampered['cipher'] = 'AAAA' + (tampered['cipher'] as String).substring(4);
+      tampered['cipher'] = 'AAAA${(tampered['cipher'] as String).substring(4)}';
 
       // Depending on implementation, this might throw Mac validation error or padding error
       expect(

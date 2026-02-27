@@ -31,8 +31,7 @@ void main() {
     name: 'Bank',
     initialBalance: 1000,
     currentBalance: 1000,
-    type: AssetType.bank, // Fixed: Use AssetType
-    createdAt: DateTime.now(), // Fixed: Add createdAt if not in constructor but in test entity
+    type: AssetType.bank,
   );
   // AssetAccount(id: 1, name: Bank, type: AssetType.bank, initialBalance: 1000.0, currentBalance: 1000.0)
   // Constructor: const AssetAccount({required this.id, required this.name, required this.type, this.initialBalance = 0.0, required this.currentBalance});

@@ -97,7 +97,7 @@ void main() {
     test('should save custom category', () async {
       when(
         () => mockLocalDataSource.saveCustomCategory(any()),
-      ).thenAnswer((_) async => null);
+      ).thenAnswer((_) async {});
 
       final result = await repository.addCustomCategory(tCategory);
 
