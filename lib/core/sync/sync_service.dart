@@ -269,13 +269,16 @@ class SyncService {
           // Actually, we need to modify imports to include dart:io.
           // But first, let's just do the logic.
 
-          await _client.storage.from('receipts').upload(
-            uploadPath,
-            File(localPath),
-            fileOptions: const FileOptions(upsert: true),
-          );
-          final publicUrl =
-              _client.storage.from('receipts').getPublicUrl(uploadPath);
+          await _client.storage
+              .from('receipts')
+              .upload(
+                uploadPath,
+                File(localPath),
+                fileOptions: const FileOptions(upsert: true),
+              );
+          final publicUrl = _client.storage
+              .from('receipts')
+              .getPublicUrl(uploadPath);
           payload['p_receipt_url'] = publicUrl;
         } catch (e) {
           log.warning('Failed to upload receipt: $e. Continuing without it.');

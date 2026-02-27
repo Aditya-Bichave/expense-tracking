@@ -31,7 +31,9 @@ void main() {
     mockAccountListBloc = MockAccountListBloc();
 
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
-    when(() => mockAccountListBloc.state).thenReturn(const AccountListInitial());
+    when(
+      () => mockAccountListBloc.state,
+    ).thenReturn(const AccountListInitial());
   });
 
   testWidgets('Refresh indicator triggers LoadDashboard and completes', (
@@ -50,7 +52,9 @@ void main() {
       recentContributionSparkline: [],
     );
 
-    when(() => mockDashboardBloc.state).thenReturn(DashboardLoaded(emptyOverview));
+    when(
+      () => mockDashboardBloc.state,
+    ).thenReturn(DashboardLoaded(emptyOverview));
 
     whenListen(
       mockDashboardBloc,
@@ -62,13 +66,13 @@ void main() {
     );
 
     const testAppModeTheme = AppModeTheme(
-        modeId: 'test',
-        layoutDensity: LayoutDensity.comfortable,
-        cardStyle: CardStyle.elevated,
-        assets: ThemeAssetPaths(),
-        preferDataTableForLists: false,
-        primaryAnimationDuration: Duration(milliseconds: 300),
-        listEntranceAnimation: ListEntranceAnimation.none,
+      modeId: 'test',
+      layoutDensity: LayoutDensity.comfortable,
+      cardStyle: CardStyle.elevated,
+      assets: ThemeAssetPaths(),
+      preferDataTableForLists: false,
+      primaryAnimationDuration: Duration(milliseconds: 300),
+      listEntranceAnimation: ListEntranceAnimation.none,
     );
 
     await tester.pumpWidget(
@@ -79,11 +83,10 @@ void main() {
           BlocProvider<AccountListBloc>(create: (_) => mockAccountListBloc),
         ],
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates, // Add delegates
+          localizationsDelegates:
+              AppLocalizations.localizationsDelegates, // Add delegates
           supportedLocales: AppLocalizations.supportedLocales, // Add locales
-          theme: ThemeData(
-            extensions: const [testAppModeTheme],
-          ),
+          theme: ThemeData(extensions: const [testAppModeTheme]),
           home: const DashboardPage(),
         ),
       ),
@@ -93,10 +96,7 @@ void main() {
 
     expect(find.byType(RefreshIndicator), findsOneWidget);
 
-    await tester.drag(
-      find.byType(RefreshIndicator),
-      const Offset(0, 300),
-    );
+    await tester.drag(find.byType(RefreshIndicator), const Offset(0, 300));
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     await tester.pump(const Duration(seconds: 1));
