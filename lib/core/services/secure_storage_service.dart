@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
-import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_ce/hive.dart';
@@ -45,6 +43,9 @@ class SecureStorageService {
     } else {
       try {
         return base64Url.decode(keyString);
+      } on FormatException catch (e) {
+        log.severe('Hive key corrupted (format): $e');
+        throw HiveKeyCorruptionException('Corrupted key format');
       } catch (e, s) {
         final snippet = keyString.length > 4
             ? keyString.substring(0, 4)

@@ -1,4 +1,3 @@
-// lib/features/reports/presentation/widgets/report_page_wrapper.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/error/failure.dart';
@@ -6,50 +5,61 @@ import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helpe
 import 'package:expense_tracker/features/reports/presentation/widgets/report_filter_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart'; // Logger
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
 
 class ReportPageWrapper extends StatelessWidget {
   final String title;
   final Widget body;
   final List<Widget>? actions;
-  // --- ADDED: Callback to get data for export ---
-  final Future<Either<String, Failure>> Function()?
-  onExportCSV; // Returns CSV string or Failure
-  // final Future<Either<Uint8List, Failure>> Function()? onExportPDF; // For PDF later
-  // --- END ADD ---
+  // Updated type: Right is Success (String CSV), Left is Failure
+  final Future<Either<Failure, String>> Function()? onExportCSV;
 
   const ReportPageWrapper({
     super.key,
     required this.title,
     required this.body,
     this.actions,
-    this.onExportCSV, // Make optional
-    // this.onExportPDF,
+    this.onExportCSV,
   });
 
-  // --- ADDED: Export Action Handling ---
   Future<void> _handleExportCSV(BuildContext context) async {
     if (onExportCSV == null) return;
+    final kit = context.kit;
 
     log.info("[ReportWrapper] CSV Export requested for report: $title");
-    // Show loading indicator maybe?
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text("Generating CSV...")));
+    ).showSnackBar(SnackBar(content: AppText("Generating CSV...", color: kit.colors.onPrimary), backgroundColor: kit.colors.primary));
 
     final result = await onExportCSV!();
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(
       context,
-    ).hideCurrentSnackBar(); // Hide generating message
+    ).hideCurrentSnackBar();
 
+    // Standard Dartz Either: fold(Left, Right) -> fold(Failure, Success)
     result.fold(
+      (failure) {
+        log.warning(
+          "[ReportWrapper] Failed to generate CSV data: ${failure.message}",
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: AppText("CSV Export Failed: ${failure.message}", color: kit.colors.onError),
+            backgroundColor: kit.colors.error,
+          ),
+        );
+      },
       (csvData) async {
         log.info(
           "[ReportWrapper] CSV data generated. Triggering download/save.",
         );
         try {
-          final exportHelper = sl<CsvExportHelper>(); // Get helper instance
+          final exportHelper = sl<CsvExportHelper>();
           final fileName =
               '${title.toLowerCase().replaceAll(' ', '_')}_export_${DateTime.now().toIso8601String().split('T').first}.csv';
           await exportHelper.saveCsvFile(
@@ -59,9 +69,9 @@ class ReportPageWrapper extends StatelessWidget {
           );
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("CSV export successful!"),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: AppText("CSV export successful!", color: kit.colors.onPrimary),
+              backgroundColor: Colors.green.shade700,
             ),
           );
         } catch (e) {
@@ -69,40 +79,26 @@ class ReportPageWrapper extends StatelessWidget {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Error saving CSV: $e"),
-              backgroundColor: Colors.red,
+              content: AppText("Error saving CSV: $e", color: kit.colors.onError),
+              backgroundColor: kit.colors.error,
             ),
           );
         }
       },
-      (failure) {
-        log.warning(
-          "[ReportWrapper] Failed to generate CSV data: ${failure.message}",
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("CSV Export Failed: ${failure.message}"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      },
     );
   }
-  // --- END Export Handling ---
 
   @override
   Widget build(BuildContext context) {
-    return _buildContent(context);
-  }
+    final kit = context.kit;
 
-  Widget _buildContent(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
+    return AppScaffold(
+      appBar: AppNavBar(
+        title: title,
         actions: [
           // Filter Button
           IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
+            icon: Icon(Icons.filter_alt_outlined, color: kit.colors.textPrimary),
             tooltip: "Filters",
             onPressed: () => ReportFilterControls.showFilterSheet(context),
           ),
@@ -110,34 +106,35 @@ class ReportPageWrapper extends StatelessWidget {
           if (actions != null) ...actions!,
           // Export Menu
           PopupMenuButton<String>(
-            icon: const Icon(Icons.download_outlined),
+            icon: Icon(Icons.download_outlined, color: kit.colors.textPrimary),
             tooltip: "Export Report",
+            color: kit.colors.surfaceContainer,
             onSelected: (String result) {
               if (result == 'csv') {
                 _handleExportCSV(context);
               } else if (result == 'pdf') {
-                // _handleExportPDF(context); // Call PDF handler later
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("PDF Export (Coming Soon)")),
+                   SnackBar(content: AppText("PDF Export (Coming Soon)", color: kit.colors.onPrimary), backgroundColor: kit.colors.primary),
                 );
               }
             },
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              if (onExportCSV != null) // Only show if callback is provided
-                const PopupMenuItem<String>(
+              if (onExportCSV != null)
+                PopupMenuItem<String>(
                   value: 'csv',
                   child: ListTile(
-                    leading: Icon(Icons.description_outlined),
-                    title: Text('Export as CSV'),
+                    leading: Icon(Icons.description_outlined, color: kit.colors.textSecondary),
+                    title: Text('Export as CSV', style: kit.typography.body),
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
-              // Add PDF option later
-              const PopupMenuItem<String>(
+              PopupMenuItem<String>(
                 value: 'pdf',
-                enabled: false, // Disable for now
+                enabled: false,
                 child: ListTile(
-                  leading: Icon(Icons.picture_as_pdf_outlined),
-                  title: Text('Export as PDF (Soon)'),
+                  leading: Icon(Icons.picture_as_pdf_outlined, color: kit.colors.textDisabled),
+                  title: Text('Export as PDF (Soon)', style: kit.typography.body.copyWith(color: kit.colors.textDisabled)),
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
             ],
@@ -148,11 +145,3 @@ class ReportPageWrapper extends StatelessWidget {
     );
   }
 }
-
-// --- Failure Class (Ensure these exist in core/error/failure.dart) ---
-// class ExportFailure extends Failure {
-//   const ExportFailure(String message) : super(message);
-// }
-// class FileSystemFailure extends Failure {
-//   const FileSystemFailure(String message) : super(message);
-// }
