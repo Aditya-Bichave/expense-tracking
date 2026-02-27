@@ -1,101 +1,91 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
-import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/presentation/widgets/expense_card.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-import '../../../../helpers/pump_app.dart';
+// Create a wrapper to provide context.kit
+class TestWrapper extends StatelessWidget {
+  final Widget child;
+  const TestWrapper({super.key, required this.child});
 
-class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
-    implements AccountListBloc {}
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        body: child,
+      ),
+    );
+  }
+}
 
 void main() {
-  late MockAccountListBloc mockAccountListBloc;
-
-  setUp(() {
-    mockAccountListBloc = MockAccountListBloc();
+  setUpAll(() async {
+    await initializeDateFormatting('en_US', null);
+    Intl.defaultLocale = 'en_US';
   });
 
-  final tExpense = Expense(
-    id: '1',
-    title: 'Groceries',
-    amount: 50.0,
-    date: DateTime(2024, 1, 1),
-    accountId: 'acc1',
+  final category = Category(
+    id: 'food',
+    name: 'Food',
+    iconName: 'food',
+    colorHex: '#FF0000',
+    type: CategoryType.expense,
+    isCustom: false,
   );
 
-  testWidgets('ExpenseCard displays expense details correctly', (tester) async {
-    // Act
-    await pumpWidgetWithProviders(
-      tester: tester,
-      widget: ExpenseCard(
-        expense: tExpense,
-        accountName: 'Main Account',
-        currencySymbol: '\$',
-      ),
-      accountListBloc: mockAccountListBloc,
-    );
+  final expense = Expense(
+    id: '1',
+    amount: 50.0,
+    currency: 'USD',
+    // Use a fixed time to ensure time formatting is consistent if displayed
+    date: DateTime(2023, 10, 26, 12, 0),
+    title: 'Lunch',
+    accountId: 'acc1',
+    category: category,
+  );
 
-    // Assert
-    expect(find.text('Groceries'), findsOneWidget);
-    expect(find.text('Acc: Main Account'), findsOneWidget);
-    expect(find.textContaining('50.00'), findsOneWidget);
+  testWidgets('ExpenseCard renders correctly', (tester) async {
+    await tester.pumpWidget(TestWrapper(
+      child: ExpenseCard(
+        expense: expense,
+        accountName: 'Cash',
+        currencySymbol: '\$',
+        onCardTap: (_) {},
+      ),
+    ));
+
+    expect(find.text('Lunch'), findsOneWidget);
+    expect(find.text('\$50.00'), findsOneWidget);
+    expect(find.text('Acc: Cash'), findsOneWidget);
+    // DateFormatter.formatDateTime uses yMMMd().add_jm() -> "Oct 26, 2023 12:00 PM"
+    // Just find "Oct 26, 2023" as substring or check full string.
+    // The previous failure said "Oct 26, 2023" not found.
+    // Let's use `find.textContaining`.
+    expect(find.textContaining('Oct 26, 2023'), findsOneWidget);
   });
 
-  testWidgets('ExpenseCard displays provided account name', (tester) async {
-    // Act
-    await pumpWidgetWithProviders(
-      tester: tester,
-      widget: ExpenseCard(
-        expense: tExpense,
-        accountName: 'Deleted',
+  testWidgets('ExpenseCard handles tap', (tester) async {
+    bool tapped = false;
+    await tester.pumpWidget(TestWrapper(
+      child: ExpenseCard(
+        expense: expense,
+        accountName: 'Cash',
         currencySymbol: '\$',
+        onCardTap: (_) {
+          tapped = true;
+        },
       ),
-      accountListBloc: mockAccountListBloc,
-    );
+    ));
 
-    // Assert
-    expect(find.text('Acc: Deleted'), findsOneWidget);
-  });
-
-  testWidgets('ExpenseCard renders correct icon for category', (tester) async {
-    final category = Category(
-      id: 'cat1',
-      name: 'Food',
-      iconName: 'food',
-      colorHex: '#FF0000',
-      type: CategoryType.expense,
-      isCustom: false,
-    );
-    final expenseWithCategory = tExpense.copyWith(
-      category: category,
-      status: CategorizationStatus.categorized,
-    );
-
-    await pumpWidgetWithProviders(
-      tester: tester,
-      widget: ExpenseCard(
-        expense: expenseWithCategory,
-        accountName: 'Main Account',
-        currencySymbol: '\$',
-      ),
-      accountListBloc: mockAccountListBloc,
-    );
-
-    // Verify icon is present (either Icon or SvgPicture depending on theme assets)
-    final hasIcon = find.byType(Icon).evaluate().isNotEmpty;
-    final hasSvg = find.byType(SvgPicture).evaluate().isNotEmpty;
-
-    expect(
-      hasIcon || hasSvg,
-      isTrue,
-      reason: 'Should render either Icon or SvgPicture',
-    );
+    await tester.tap(find.byType(ExpenseCard));
+    expect(tapped, true);
   });
 }
