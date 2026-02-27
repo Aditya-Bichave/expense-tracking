@@ -32,6 +32,12 @@ class UpiService {
       if (!launched) {
         if (context.mounted) _handleNoUpiApp(context, upiId);
       }
+    } on PlatformException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment Error: ${e.message}')),
+        );
+      }
     } catch (e) {
       if (context.mounted) _handleNoUpiApp(context, upiId);
     }

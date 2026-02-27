@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
@@ -241,7 +242,48 @@ class SyncService {
 
   Future<void> _processItem(SyncMutationModel item) async {
     final table = item.table;
-    final payload = item.payload;
+    var payload = Map<String, dynamic>.from(item.payload);
+
+    // 1. Handle Receipt Upload if needed
+    if (payload.containsKey('x_local_receipt_path')) {
+      final localPath = payload['x_local_receipt_path'];
+      if (localPath != null && localPath is String) {
+        log.info('Uploading offline receipt: $localPath');
+        try {
+          final fileExt = localPath.split('.').last;
+          // Use transaction ID from payload if available, else random
+          final txnId = payload['p_client_generated_id'] ?? item.id;
+          final fileName = '$txnId.$fileExt';
+          final groupId = payload['p_group_id'];
+          final pathPrefix = groupId != null ? '$groupId/' : 'personal/';
+          final uploadPath = '$pathPrefix$fileName';
+
+          // Upload
+          // Requires dart:io, but this is a service so it's fine.
+          // Note: File class is not imported, assuming we can add import or use a helper.
+          // Since we can't easily add import via search/replace, we'll try to use a helper
+          // or assume file path is valid for Supabase upload if it supports path.
+          // Supabase flutter upload takes File object.
+          // We need to import dart:io.
+          // Let's assume the surrounding code handles File or use a dynamic approach.
+          // Actually, we need to modify imports to include dart:io.
+          // But first, let's just do the logic.
+
+          await _client.storage.from('receipts').upload(
+            uploadPath,
+            File(localPath),
+            fileOptions: const FileOptions(upsert: true),
+          );
+          final publicUrl =
+              _client.storage.from('receipts').getPublicUrl(uploadPath);
+          payload['p_receipt_url'] = publicUrl;
+        } catch (e) {
+          log.warning('Failed to upload receipt: $e. Continuing without it.');
+        }
+      }
+      // Remove the local-only key before sending to Supabase
+      payload.remove('x_local_receipt_path');
+    }
 
     switch (item.operation) {
       case OpType.create:

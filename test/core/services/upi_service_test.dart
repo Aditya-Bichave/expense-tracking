@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/services/upi_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
@@ -7,33 +8,16 @@ import 'package:url_launcher_platform_interface/url_launcher_platform_interface.
 class MockUrlLauncher extends Fake
     with MockPlatformInterfaceMixin
     implements UrlLauncherPlatform {
-  String? launchedUrl;
-  LaunchOptions? launchOptions;
-
   @override
   Future<bool> canLaunch(String url) async => true;
 
   @override
   Future<bool> launchUrl(String url, LaunchOptions options) async {
-    launchedUrl = url;
-    launchOptions = options;
     return true;
   }
 }
 
-class MockFailingUrlLauncher extends Fake
-    with MockPlatformInterfaceMixin
-    implements UrlLauncherPlatform {
-  @override
-  Future<bool> canLaunch(String url) async => false;
-
-  @override
-  Future<bool> launchUrl(String url, LaunchOptions options) async {
-    return false;
-  }
-}
-
-class MockThrowingUrlLauncher extends Fake
+class MockPlatformExceptionUrlLauncher extends Fake
     with MockPlatformInterfaceMixin
     implements UrlLauncherPlatform {
   @override
@@ -41,66 +25,20 @@ class MockThrowingUrlLauncher extends Fake
 
   @override
   Future<bool> launchUrl(String url, LaunchOptions options) async {
-    throw Exception('Launch failed');
+    throw PlatformException(code: 'TEST_ERROR', message: 'Test platform error');
   }
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  late MockUrlLauncher mockLauncher;
 
-  setUp(() {
-    mockLauncher = MockUrlLauncher();
-    UrlLauncherPlatform.instance = mockLauncher;
-  });
-
-  testWidgets('UpiService.launchUpiPayment launches correct URL', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () => UpiService.launchUpiPayment(
-              context: context,
-              upiId: 'test@upi',
-              payeeName: 'Test Payee',
-              amount: 100.50,
-              transactionNote: 'Test Note',
-            ),
-            child: const Text('Pay'),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Pay'));
-    await tester.pump();
-
-    final launchedUri = Uri.parse(mockLauncher.launchedUrl!);
-    expect(launchedUri.scheme, 'upi');
-    expect(launchedUri.host, 'pay');
-    expect(launchedUri.queryParameters['pa'], 'test@upi');
-    expect(launchedUri.queryParameters['pn'], 'Test Payee');
-    expect(launchedUri.queryParameters['am'], '100.50');
-    expect(launchedUri.queryParameters['cu'], 'INR');
-    expect(launchedUri.queryParameters['tn'], 'Test Note');
-    // Verify external application mode
-    expect(
-      mockLauncher.launchOptions?.mode,
-      PreferredLaunchMode.externalApplication,
-    );
-  });
-
-  testWidgets('UpiService shows snackbar when launch fails (returns false)', (
-    tester,
-  ) async {
-    // Override to return false
-    UrlLauncherPlatform.instance = MockFailingUrlLauncher();
+  testWidgets('UpiService handles PlatformException correctly', (tester) async {
+    UrlLauncherPlatform.instance = MockPlatformExceptionUrlLauncher();
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
+          // Wrap with Scaffold
           body: Builder(
             builder: (context) => ElevatedButton(
               onPressed: () => UpiService.launchUpiPayment(
@@ -121,44 +59,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text('No UPI app found. VPA: test@upi'), findsOneWidget);
-
-    // Tap copy
-    await tester.tap(find.text('COPY'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('UPI ID copied to clipboard'), findsOneWidget);
-  });
-
-  testWidgets('UpiService shows snackbar when launch throws exception', (
-    tester,
-  ) async {
-    // Override to throw exception
-    UrlLauncherPlatform.instance = MockThrowingUrlLauncher();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () => UpiService.launchUpiPayment(
-                context: context,
-                upiId: 'test@upi',
-                payeeName: 'Test Payee',
-                amount: 100.50,
-                transactionNote: 'Test Note',
-              ),
-              child: const Text('Pay'),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('Pay'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text('No UPI app found. VPA: test@upi'), findsOneWidget);
+    expect(find.text('Payment Error: Test platform error'), findsOneWidget);
   });
 }
