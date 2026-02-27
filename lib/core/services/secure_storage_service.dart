@@ -63,9 +63,7 @@ class SecureStorageService {
           'Hive encryption key is corrupted and cannot be decoded.',
         );
       } catch (e, s) {
-        log.severe(
-          'Unexpected error decoding Hive key: $e\n$s',
-        );
+        log.severe('Unexpected error decoding Hive key: $e\n$s');
         throw HiveKeyCorruptionException(
           'Unexpected error decoding Hive key: $e',
         );
