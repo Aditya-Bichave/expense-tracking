@@ -6,8 +6,6 @@ import 'package:expense_tracker/features/reports/domain/entities/report_data.dar
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_bloc.dart';
-// import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_event.dart'; // Using main bloc import
-// import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_state.dart'; // Using main bloc import
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/time_series_line_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
@@ -43,7 +41,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     setState(() {
       _showComparison = !_showComparison;
     });
-    // Trigger reload with comparison flag
     final currentState = context.read<SpendingTimeReportBloc>().state;
     TimeSeriesGranularity currentGranularity = TimeSeriesGranularity.daily;
     if (currentState is SpendingTimeReportLoaded) {
@@ -65,10 +62,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     TimeSeriesDataPoint point,
     TimeSeriesGranularity granularity,
   ) {
-    // Construct filters based on report state and clicked point
     final filterBlocState = context.read<ReportFilterBloc>().state;
 
-    // Calculate start/end date for this point based on granularity
     DateTime start = point.date;
     DateTime end;
     switch (granularity) {
@@ -94,7 +89,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final Map<String, String> filters = {
       'startDate': start.toIso8601String(),
       'endDate': end.toIso8601String(),
-      'type': TransactionType.expense.name, // Spending report is always expense
+      'type': TransactionType.expense.name,
     };
     if (filterBlocState.selectedCategoryIds.isNotEmpty) {
       filters['categoryId'] = filterBlocState.selectedCategoryIds.join(',');
@@ -145,7 +140,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               initialValue: currentGranularity,
               color: kit.colors.surfaceContainer,
               onSelected: (g) {
-                // When granularity changes, also pass current comparison state
                 context.read<SpendingTimeReportBloc>().add(
                   LoadSpendingTimeReport(
                     granularity: g,
@@ -182,11 +176,11 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             showComparison: _showComparison,
           );
           return result.fold(
-            (csvString) => dartz.Right(csvString),
-            (failure) => dartz.Left(failure),
+            (csvString) => dartz.Right<Failure, String>(csvString),
+            (failure) => dartz.Left<Failure, String>(failure),
           );
         }
-        return dartz.Left(
+        return dartz.Left<Failure, String>(
           ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
         );
       },
@@ -221,7 +215,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               ),
             );
 
-            // Assuming uiMode is accessible via settingsState and compares correctly
             final bool showTable =
                 uiMode.name == 'quantum' &&
                 (modeTheme?.preferDataTableForLists ?? false);
@@ -290,7 +283,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         if (showComparison && changePercent != null) {
           if (changePercent.isInfinite) {
             changeText = changePercent.isNegative ? '-∞' : '+∞';
-            // Spending increase is bad (red)
             changeColor = changePercent.isNegative
                 ? Colors.green.shade700
                 : kit.colors.error;
@@ -350,7 +342,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         numeric: true,
       ),
     ];
-    // Add comparison columns dynamically
     if (showComparison) {
       columns.addAll([
         DataColumn(
@@ -400,7 +391,6 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                   CurrencyFormatter.format(item.currentAmount, currencySymbol),
                 ),
               ),
-              // Conditionally add comparison cells
               if (showComparison)
                 DataCell(
                   AppText(

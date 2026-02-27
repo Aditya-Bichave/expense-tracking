@@ -63,11 +63,11 @@ class GoalProgressPage extends StatelessWidget {
                 settingsState.currencySymbol,
               );
               return result.fold(
-                (csvString) => Right(csvString),
-                (failure) => Left(failure),
+                (csvString) => Right<Failure, String>(csvString),
+                (failure) => Left<Failure, String>(failure),
               );
             }
-            return Left(
+            return Left<Failure, String>(
               const ExportFailure("Report not loaded. Cannot export."),
             );
           },

@@ -98,11 +98,11 @@ class BudgetPerformancePage extends StatelessWidget {
             showComparison: state.showComparison,
           );
           return result.fold(
-            (csvString) => Right(csvString),
-            (failure) => Left(failure),
+            (csvString) => Right<Failure, String>(csvString),
+            (failure) => Left<Failure, String>(failure),
           );
         }
-        return Left(
+        return Left<Failure, String>(
           ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
         );
       },

@@ -4,28 +4,26 @@ import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/income_expense_report/income_expense_report_bloc.dart';
-// import 'package:expense_tracker/features/reports/presentation/bloc/income_expense_report/income_expense_report_event.dart'; // Use main bloc import
-// import 'package:expense_tracker/features/reports/presentation/bloc/income_expense_report/income_expense_report_state.dart'; // Use main bloc import
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/income_expense_bar_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
-import 'package:expense_tracker/core/constants/route_names.dart'; // Fixed import
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Fixed import for TransactionType
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:expense_tracker/main.dart'; // Logger
+import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
-import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // Needed for modeTheme
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
 import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
-import 'package:expense_tracker/core/error/failure.dart'; // Import Failure
-import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // If needed for UiMode logic
+import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 
 class IncomeVsExpensePage extends StatefulWidget {
   const IncomeVsExpensePage({super.key});
@@ -41,7 +39,6 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     setState(() {
       _showComparison = !_showComparison;
     });
-    // Trigger reload with comparison flag
     final currentState = context.read<IncomeExpenseReportBloc>().state;
     IncomeExpensePeriodType currentPeriod = IncomeExpensePeriodType.monthly;
     if (currentState is IncomeExpenseReportLoaded) {
@@ -65,16 +62,8 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
   ) {
     Map<String, String> filters = {};
 
-    // Date Range: Start and End of the specific period bar
     filters['startDate'] = periodData.periodStart.toIso8601String();
 
-    // Calculate periodEnd based on periodType.
-    // IncomeExpensePeriodData doesn't strictly define periodEnd in the entity I cat'ed earlier,
-    // so we calculate it here based on periodType context from bloc if available,
-    // or infer it.
-    // The entity has periodStart.
-    // If monthly, end is end of month. If yearly, end of year.
-    // We can infer from the state.
     final state = context.read<IncomeExpenseReportBloc>().state;
     IncomeExpensePeriodType periodType = IncomeExpensePeriodType.monthly;
     if (state is IncomeExpenseReportLoaded) {
@@ -96,12 +85,10 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
     }
     filters['endDate'] = endDate.toIso8601String();
 
-    // Transaction Type
     if (type != null) {
-      filters['type'] = type.name; // 'income' or 'expense'
+      filters['type'] = type.name;
     }
 
-    // Inherit global filters (Account, Category)
     final filterBlocState = context.read<ReportFilterBloc>().state;
     if (filterBlocState.selectedCategoryIds.isNotEmpty) {
       filters['categoryId'] = filterBlocState.selectedCategoryIds.join(',');
@@ -150,7 +137,6 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               initialValue: currentPeriod,
               color: kit.colors.surfaceContainer,
               onSelected: (p) {
-                // When period changes, also pass current comparison state
                 context.read<IncomeExpenseReportBloc>().add(
                   LoadIncomeExpenseReport(
                     periodType: p,
@@ -187,11 +173,11 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
             showComparison: _showComparison,
           );
           return result.fold(
-            (csvString) => Right(csvString),
-            (failure) => Left(failure),
+            (csvString) => Right<Failure, String>(csvString),
+            (failure) => Left<Failure, String>(failure),
           );
         }
-        return Left(
+        return Left<Failure, String>(
           ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
         );
       },
@@ -219,12 +205,10 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               onTapBar: (groupIndex, rodIndex) {
                 TransactionType type;
                 if (_showComparison) {
-                  // PrevIncome=0, CurrIncome=1, PrevExpense=2, CurrExpense=3
                   type = (rodIndex <= 1)
                       ? TransactionType.income
                       : TransactionType.expense;
                 } else {
-                  // CurrIncome=0, CurrExpense=1
                   type = (rodIndex == 0)
                       ? TransactionType.income
                       : TransactionType.expense;
@@ -331,13 +315,13 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               changeText = changePercent.isNegative ? '-∞' : '+∞';
               changeColor = changePercent.isNegative
                   ? kit.colors.error
-                  : Colors.green.shade700; // Negative change is worsening
+                  : Colors.green.shade700;
             } else if (!changePercent.isNaN) {
               changeText =
                   '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
               changeColor = changePercent >= 0
                   ? Colors.green.shade700
-                  : kit.colors.error; // Positive change is improving
+                  : kit.colors.error;
             }
           }
 
@@ -399,6 +383,11 @@ class _IncomeVsExpensePageState extends State<IncomeVsExpensePage> {
               if (showComparison)
                 DataCell(AppText(changeText, color: changeColor)),
             ],
+            onSelectChanged: (selected) {
+              if (selected == true) {
+                _navigateToFilteredTransactions(context, item, null);
+              }
+            },
           );
         }).toList(),
       ),
