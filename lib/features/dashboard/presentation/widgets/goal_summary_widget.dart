@@ -1,3 +1,4 @@
+// lib/features/dashboard/presentation/widgets/goal_summary_widget.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
@@ -10,6 +11,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_button.dart';
 
 class GoalSummaryWidget extends StatelessWidget {
   final List<Goal> goals;
@@ -33,41 +38,39 @@ class GoalSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final settings = context.watch<SettingsBloc>().state;
     final currency = settings.currencySymbol;
     final sparklineSpots = _getSparklineSpots(recentContributionData);
 
     if (goals.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: kit.spacing.vSm,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SectionHeader(title: 'Goal Progress'),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.savings_outlined,
-                        size: 32,
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "No savings goals set yet.",
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      TextButton(
-                        key: const ValueKey('button_goalSummary_create'),
-                        onPressed: () => context.pushNamed(RouteNames.addGoal),
-                        child: const Text('Create Goal'),
-                      ),
-                    ],
-                  ),
+            AppCard(
+              padding: kit.spacing.allLg,
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.savings_outlined,
+                      size: 32,
+                      color: kit.colors.textSecondary,
+                    ),
+                    kit.spacing.gapSm,
+                    BridgeText(
+                      "No savings goals set yet.",
+                      style: kit.typography.body,
+                    ),
+                    BridgeButton.ghost(
+                      key: const ValueKey('button_goalSummary_create'),
+                      onPressed: () => context.pushNamed(RouteNames.addGoal),
+                      label: 'Create Goal',
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -84,104 +87,101 @@ class GoalSummaryWidget extends StatelessWidget {
           children: goals.map((goal) {
             final progress = goal.percentageComplete;
             final progressColor = goal.isAchieved
-                ? Colors.green.shade600
-                : theme.colorScheme.primary;
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              child: InkWell(
-                onTap: () => context.pushNamed(
-                  RouteNames.goalDetail,
-                  pathParameters: {'id': goal.id},
-                  extra: goal,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
+                ? kit.colors.success
+                : kit.colors.primary;
+            return AppCard(
+              margin: kit.spacing.vXs,
+              onTap: () => context.pushNamed(
+                RouteNames.goalDetail,
+                pathParameters: {'id': goal.id},
+                extra: goal,
+              ),
+              padding: kit.spacing.allMd,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Wrap the inner Row with Flexible
-                          Flexible(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min, // Important
-                              children: [
-                                Icon(
-                                  goal.displayIconData,
-                                  color: progressColor,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                // Use Flexible instead of Expanded
-                                Flexible(
-                                  child: Text(
-                                    goal.name,
-                                    style: theme.textTheme.titleSmall,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
+                      // Wrap the inner Row with Flexible
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // Important
+                          children: [
+                            Icon(
+                              goal.displayIconData,
+                              color: progressColor,
+                              size: 20,
                             ),
-                          ),
-                          if (sparklineSpots.isNotEmpty &&
-                              sparklineSpots.length > 1)
-                            SizedBox(
-                              height: 20,
-                              width: 50, // Ensure sparkline has width
-                              child: LineChart(
-                                ChartUtils.sparklineChartData(
-                                  sparklineSpots,
-                                  progressColor,
+                            kit.spacing.gapSm,
+                            // Use Flexible instead of Expanded
+                            Flexible(
+                              child: BridgeText(
+                                goal.name,
+                                style: kit.typography.title.copyWith(
+                                  fontSize: 16,
                                 ),
-                                duration: Duration.zero,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                        ],
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      LinearPercentIndicator(
-                        padding: EdgeInsets.zero,
-                        lineHeight: 8.0,
-                        percent: progress.clamp(0.0, 1.0),
-                        barRadius: const Radius.circular(4),
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                        progressColor: progressColor,
-                        animation: true,
-                        animationDuration: 600,
+                      if (sparklineSpots.isNotEmpty &&
+                          sparklineSpots.length > 1)
+                        SizedBox(
+                          height: 20,
+                          width: 50, // Ensure sparkline has width
+                          child: LineChart(
+                            ChartUtils.sparklineChartData(
+                              sparklineSpots,
+                              progressColor,
+                            ),
+                            duration: Duration.zero,
+                          ),
+                        ),
+                    ],
+                  ),
+                  kit.spacing.gapSm,
+                  LinearPercentIndicator(
+                    padding: EdgeInsets.zero,
+                    lineHeight: 8.0,
+                    percent: progress.clamp(0.0, 1.0),
+                    barRadius: const Radius.circular(4),
+                    backgroundColor: kit.colors.surfaceContainer,
+                    progressColor: progressColor,
+                    animation: true,
+                    animationDuration: 600,
+                  ),
+                  kit.spacing.gapXs,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      BridgeText(
+                        'Saved: ${CurrencyFormatter.format(goal.totalSaved, currency)}',
+                        style: kit.typography.caption.copyWith(
+                          color: progressColor,
+                        ),
                       ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Saved: ${CurrencyFormatter.format(goal.totalSaved, currency)}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: progressColor,
-                            ),
-                          ),
-                          Text(
-                            '${(progress * 100).toStringAsFixed(0)}%',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                      BridgeText(
+                        '${(progress * 100).toStringAsFixed(0)}%',
+                        style: kit.typography.caption.copyWith(
+                          color: kit.colors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
             );
           }).toList(),
         ),
         if (goals.length >= 3)
           Padding(
-            padding: const EdgeInsets.only(top: 4.0),
+            padding: EdgeInsets.only(top: kit.spacing.xs),
             child: Center(
-              child: TextButton(
+              child: BridgeButton.ghost(
                 key: const ValueKey('button_goalSummary_viewAll'),
                 onPressed: () => context.go(
                   RouteNames.budgetsAndCats,
@@ -189,10 +189,7 @@ class GoalSummaryWidget extends StatelessWidget {
                     'initialTabIndex': 1, // Navigate to Goals tab
                   },
                 ),
-                style: TextButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                ),
-                child: const Text('View All Goals'),
+                label: 'View All Goals',
               ),
             ),
           ),

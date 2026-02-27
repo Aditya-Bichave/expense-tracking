@@ -1,3 +1,4 @@
+// lib/features/dashboard/presentation/widgets/stitch/stitch_dashboard_body.dart
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/recent_transactions_section.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/stitch_goals_list.dart';
@@ -6,6 +7,7 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/s
 import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/stitch_quick_actions.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class StitchDashboardBody extends StatelessWidget {
   final FinancialOverview overview;
@@ -21,6 +23,8 @@ class StitchDashboardBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final kit = context.kit;
+
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: CustomScrollView(
@@ -28,7 +32,7 @@ class StitchDashboardBody extends StatelessWidget {
           SliverAppBar(
             backgroundColor: Theme.of(
               context,
-            ).colorScheme.background.withOpacity(0.9),
+            ).colorScheme.surface.withOpacity(0.9), // Normalized to surface
             pinned: true,
             automaticallyImplyLeading: false,
             toolbarHeight: 90,
@@ -41,9 +45,9 @@ class StitchDashboardBody extends StatelessWidget {
               children: [
                 StitchNetBalanceCard(overview: overview),
                 const StitchQuickActions(),
-                const SizedBox(height: 16),
+                SizedBox(height: kit.spacing.lg),
                 StitchGoalsList(goals: overview.activeGoalsSummary),
-                const SizedBox(height: 16),
+                SizedBox(height: kit.spacing.lg),
                 RecentTransactionsSection(
                   navigateToDetailOrEdit: navigateToDetailOrEdit,
                 ),

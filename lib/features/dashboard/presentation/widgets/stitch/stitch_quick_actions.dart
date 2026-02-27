@@ -1,26 +1,33 @@
+// lib/features/dashboard/presentation/widgets/stitch/stitch_quick_actions.dart
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 
 class StitchQuickActions extends StatelessWidget {
   const StitchQuickActions({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final kit = context.kit;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: kit.spacing.lg,
+        vertical: kit.spacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          BridgeText(
             'QUICK ACTIONS',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            style: kit.typography.overline.copyWith(
+              color: kit.colors.textSecondary,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
             ),
           ),
-          const SizedBox(height: 12),
+          kit.spacing.gapMd,
           Row(
             children: [
               Expanded(
@@ -32,7 +39,7 @@ class StitchQuickActions extends StatelessWidget {
                   () => context.pushNamed(RouteNames.addTransaction),
                 ),
               ),
-              const SizedBox(width: 12),
+              kit.spacing.gapMd,
               Expanded(
                 child: _buildActionBtn(
                   context,
@@ -42,14 +49,18 @@ class StitchQuickActions extends StatelessWidget {
                   () => context.pushNamed(RouteNames.addTransaction),
                 ),
               ), // Could pass initial type
-              const SizedBox(width: 12),
+              kit.spacing.gapMd,
               Expanded(
                 child: _buildActionBtn(
                   context,
                   Icons.group_add,
                   'Group',
                   false,
-                  () {},
+                  () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Coming soon')),
+                    );
+                  },
                 ),
               ), // No route for Add Group yet?
             ],
@@ -66,33 +77,31 @@ class StitchQuickActions extends StatelessWidget {
     bool isPrimary,
     VoidCallback onTap,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
+    final bgColor = isPrimary
+        ? kit.colors.primary
+        : kit.colors.surfaceContainer;
+    final contentColor = isPrimary
+        ? kit.colors.onPrimary
+        : kit.colors.textPrimary;
+
     return Material(
-      color: isPrimary
-          ? theme.colorScheme.primary
-          : theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(16),
+      color: bgColor,
+      borderRadius: kit.radii.medium,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: kit.spacing.vLg,
           alignment: Alignment.center,
           child: Column(
             children: [
-              Icon(
-                icon,
-                color: isPrimary
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurface,
-              ),
-              const SizedBox(height: 8),
-              Text(
+              Icon(icon, color: contentColor),
+              kit.spacing.gapSm,
+              BridgeText(
                 label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: isPrimary
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
+                style: kit.typography.labelSmall.copyWith(
+                  color: contentColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),

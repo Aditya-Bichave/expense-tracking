@@ -5,6 +5,9 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // For useTables pref
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 
 class AssetDistributionSection extends StatelessWidget {
   final Map<String, double> accountBalances;
@@ -39,19 +42,19 @@ class AssetDistributionSection extends StatelessWidget {
     Map<String, double> accountBalances,
     SettingsState settings,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final currencySymbol = settings.currencySymbol;
     final rows = accountBalances.entries.map((entry) {
       return DataRow(
         cells: [
-          DataCell(Text(entry.key, style: theme.textTheme.bodyMedium)),
+          DataCell(BridgeText(entry.key, style: kit.typography.body)),
           DataCell(
-            Text(
+            BridgeText(
               CurrencyFormatter.format(entry.value, currencySymbol),
-              style: theme.textTheme.bodyMedium?.copyWith(
+              style: kit.typography.body.copyWith(
                 color: entry.value >= 0
-                    ? theme.colorScheme.tertiary
-                    : theme.colorScheme.error,
+                    ? kit.colors.tertiary
+                    : kit.colors.error,
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.end,
@@ -62,51 +65,54 @@ class AssetDistributionSection extends StatelessWidget {
     }).toList();
 
     if (rows.isEmpty) {
-      return Card(
-        margin:
-            theme.cardTheme.margin ??
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Text(
-              "No accounts with balance.",
-              style: theme.textTheme.bodyMedium,
-            ),
+      return AppCard(
+        margin: kit.spacing.vSm,
+        padding: kit.spacing.allLg,
+        child: Center(
+          child: BridgeText(
+            "No accounts with balance.",
+            style: kit.typography.body,
           ),
         ),
       );
     }
-    return Card(
-      margin:
-          theme.cardTheme.margin ??
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      shape: theme.cardTheme.shape,
-      elevation: theme.cardTheme.elevation,
-      color: theme.cardTheme.color,
-      clipBehavior: theme.cardTheme.clipBehavior ?? Clip.none,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text('Asset Balances', style: theme.textTheme.titleMedium),
+    return AppCard(
+      margin: kit.spacing.vSm,
+      padding: EdgeInsets.only(top: kit.spacing.md, bottom: kit.spacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: kit.spacing.hLg,
+            child: BridgeText('Asset Balances', style: kit.typography.headline),
+          ),
+          kit.spacing.gapSm,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: [
+                DataColumn(
+                  label: BridgeText(
+                    'Account',
+                    style: kit.typography.body.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                DataColumn(
+                  label: BridgeText(
+                    'Balance',
+                    style: kit.typography.body.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  numeric: true,
+                ),
+              ],
+              rows: rows,
             ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: const [
-                  DataColumn(label: Text('Account')),
-                  DataColumn(label: Text('Balance'), numeric: true),
-                ],
-                rows: rows,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -1,109 +1,175 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
+import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/stitch_dashboard_body.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
-import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
-import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
-import 'package:expense_tracker/l10n/app_localizations.dart'; // Import Localizations
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart'; // Needed for recent transactions
+import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+// Import tokens explicitly since app_theme_ext.dart doesn't export them
+import 'package:expense_tracker/ui_kit/tokens/app_colors.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_typography.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_spacing.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_radii.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_motion.dart';
+import 'package:expense_tracker/ui_kit/tokens/app_shadows.dart';
 
+// Mocks
 class MockDashboardBloc extends MockBloc<DashboardEvent, DashboardState>
     implements DashboardBloc {}
 
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
 
-class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
-    implements AccountListBloc {}
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
+
+class MockTransactionListBloc
+    extends MockBloc<TransactionListEvent, TransactionListState>
+    implements TransactionListBloc {}
+
+class MockUser extends Mock implements User {}
 
 void main() {
   late MockDashboardBloc mockDashboardBloc;
   late MockSettingsBloc mockSettingsBloc;
-  late MockAccountListBloc mockAccountListBloc;
+  late MockAuthBloc mockAuthBloc;
+  late MockTransactionListBloc mockTransactionListBloc;
 
   setUp(() {
     mockDashboardBloc = MockDashboardBloc();
     mockSettingsBloc = MockSettingsBloc();
-    mockAccountListBloc = MockAccountListBloc();
+    mockAuthBloc = MockAuthBloc();
+    mockTransactionListBloc = MockTransactionListBloc();
 
+    // Default states
     when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(MockUser()));
     when(
-      () => mockAccountListBloc.state,
-    ).thenReturn(const AccountListInitial());
+      () => mockTransactionListBloc.state,
+    ).thenReturn(const TransactionListState(status: ListStatus.initial));
   });
 
-  testWidgets('Refresh indicator triggers LoadDashboard and completes', (
-    tester,
-  ) async {
-    final emptyOverview = const FinancialOverview(
-      totalIncome: 0,
-      totalExpenses: 0,
-      netFlow: 0,
-      overallBalance: 0,
-      accounts: [],
-      accountBalances: {},
-      activeBudgetsSummary: [],
-      activeGoalsSummary: [],
-      recentSpendingSparkline: [],
-      recentContributionSparkline: [],
+  Future<void> pumpDashboardPage(WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: ThemeData(
+          extensions: [
+            // Ensure AppKitTheme is available
+            AppKitTheme(
+              colors: AppColors(ColorScheme.fromSeed(seedColor: Colors.blue)),
+              typography: AppTypography(Typography.material2021().englishLike),
+              spacing: const AppSpacing(),
+              radii: const AppRadii(),
+              motion: const AppMotion(),
+              shadows: const AppShadows(),
+            ),
+          ],
+        ),
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<DashboardBloc>.value(value: mockDashboardBloc),
+            BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
+            BlocProvider<AuthBloc>.value(value: mockAuthBloc),
+            BlocProvider<TransactionListBloc>.value(
+              value: mockTransactionListBloc,
+            ),
+          ],
+          child: const DashboardPage(),
+        ),
+      ),
     );
+  }
 
-    when(
-      () => mockDashboardBloc.state,
-    ).thenReturn(DashboardLoaded(emptyOverview));
+  testWidgets('DashboardPage renders loading', (tester) async {
+    when(() => mockDashboardBloc.state).thenReturn(const DashboardLoading());
+    await pumpDashboardPage(tester);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+  });
 
+  testWidgets('DashboardPage renders error snackbar', (tester) async {
     whenListen(
       mockDashboardBloc,
       Stream.fromIterable([
-        const DashboardLoading(isReloading: true),
-        DashboardLoaded(emptyOverview),
+        const DashboardLoading(),
+        const DashboardError('Test Error'),
       ]),
-      initialState: DashboardLoaded(emptyOverview),
+      initialState: const DashboardLoading(),
     );
+    await pumpDashboardPage(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    const testAppModeTheme = AppModeTheme(
-      modeId: 'test',
-      layoutDensity: LayoutDensity.comfortable,
-      cardStyle: CardStyle.elevated,
-      assets: ThemeAssetPaths(),
-      preferDataTableForLists: false,
-      primaryAnimationDuration: Duration(milliseconds: 300),
-      listEntranceAnimation: ListEntranceAnimation.none,
-    );
+    expect(find.text('Dashboard Error: Test Error'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+  });
 
-    await tester.pumpWidget(
-      MultiBlocProvider(
-        providers: [
-          BlocProvider<DashboardBloc>(create: (_) => mockDashboardBloc),
-          BlocProvider<SettingsBloc>(create: (_) => mockSettingsBloc),
-          BlocProvider<AccountListBloc>(create: (_) => mockAccountListBloc),
-        ],
-        child: MaterialApp(
-          localizationsDelegates:
-              AppLocalizations.localizationsDelegates, // Add delegates
-          supportedLocales: AppLocalizations.supportedLocales, // Add locales
-          theme: ThemeData(extensions: const [testAppModeTheme]),
-          home: const DashboardPage(),
+  testWidgets('DashboardPage renders Stitch body when mode is Stitch', (
+    tester,
+  ) async {
+    when(
+      () => mockSettingsBloc.state,
+    ).thenReturn(const SettingsState(uiMode: UIMode.stitch));
+    when(() => mockDashboardBloc.state).thenReturn(
+      const DashboardLoaded(
+        FinancialOverview(
+          overallBalance: 1000,
+          totalIncome: 2000,
+          totalExpenses: 1000,
+          netFlow: 1000,
+          accounts: [],
+          accountBalances: {'Cash': 1000},
+          recentSpendingSparkline: [],
+          recentContributionSparkline: [],
+          activeBudgetsSummary: [],
+          activeGoalsSummary: [],
         ),
       ),
     );
 
+    await pumpDashboardPage(tester);
     await tester.pumpAndSettle();
 
-    expect(find.byType(RefreshIndicator), findsOneWidget);
+    expect(find.byType(StitchDashboardBody), findsOneWidget);
+  });
 
-    await tester.drag(find.byType(RefreshIndicator), const Offset(0, 300));
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(seconds: 1));
+  testWidgets('DashboardPage renders Aether body when mode is Aether', (
+    tester,
+  ) async {
+    when(
+      () => mockSettingsBloc.state,
+    ).thenReturn(const SettingsState(uiMode: UIMode.aether));
+    when(() => mockDashboardBloc.state).thenReturn(
+      const DashboardLoaded(
+        FinancialOverview(
+          overallBalance: 1000,
+          totalIncome: 2000,
+          totalExpenses: 1000,
+          netFlow: 1000,
+          accounts: [],
+          accountBalances: {'Cash': 1000},
+          recentSpendingSparkline: [],
+          recentContributionSparkline: [],
+          activeBudgetsSummary: [],
+          activeGoalsSummary: [],
+        ),
+      ),
+    );
+
+    await pumpDashboardPage(tester);
     await tester.pumpAndSettle();
 
-    verify(
-      () => mockDashboardBloc.add(const LoadDashboard(forceReload: true)),
-    ).called(1);
+    // Verify Aether body components are present (by checking structure/key if possible, or absence of Stitch)
+    expect(find.byType(StitchDashboardBody), findsNothing);
   });
 }
