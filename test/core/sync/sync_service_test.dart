@@ -24,6 +24,9 @@ class MockStorageFileApi extends Mock implements StorageFileApi {}
 
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {}
+
 void main() {
   late MockSupabaseClient mockSupabaseClient;
   late MockOutboxRepository mockOutboxRepository;
@@ -33,6 +36,7 @@ void main() {
   late MockSupabaseStorageClient mockStorageClient;
   late MockStorageFileApi mockStorageFileApi;
   late MockSupabaseQueryBuilder mockQueryBuilder;
+  late MockPostgrestFilterBuilder mockPostgrestFilterBuilder;
 
   setUpAll(() {
     registerFallbackValue(File(''));
@@ -57,81 +61,109 @@ void main() {
     mockStorageClient = MockSupabaseStorageClient();
     mockStorageFileApi = MockStorageFileApi();
     mockQueryBuilder = MockSupabaseQueryBuilder();
+    mockPostgrestFilterBuilder = MockPostgrestFilterBuilder();
 
-    // Use thenAnswer for methods returning Future-like objects (e.g. SupabaseQueryBuilder)
     when(() => mockSupabaseClient.storage).thenReturn(mockStorageClient);
     when(() => mockStorageClient.from(any())).thenReturn(mockStorageFileApi);
+
+    // Use thenAnswer synchronously. Returns SupabaseQueryBuilder (which might be a Future in Dart type system view if it implements it, but we return the object directly).
     when(
       () => mockSupabaseClient.from(any()),
     ).thenAnswer((_) => mockQueryBuilder);
+
+    // Mock the Future behavior of the builder (for await)
+    // We return a Future that completes with an empty list
+    when(
+      () => mockPostgrestFilterBuilder.then(
+        any(),
+        onError: any(named: 'onError'),
+      ),
+    ).thenAnswer((invocation) async {
+      final onValue =
+          invocation.positionalArguments[0]
+              as dynamic Function(List<Map<String, dynamic>>);
+      return onValue([]);
+    });
+
+    // Use thenAnswer synchronously. Returns PostgrestFilterBuilder (which implements Future).
+    when(
+      () => mockQueryBuilder.upsert(any()),
+    ).thenAnswer((_) => mockPostgrestFilterBuilder);
   });
 
-  test(
-    'SyncService processes pending items with receipt upload (verifies upload call)',
-    () async {
-      // Arrange
-      when(
-        () => mockConnectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
-      when(
-        () => mockConnectivity.onConnectivityChanged,
-      ).thenAnswer((_) => const Stream.empty());
+  test('SyncService processes pending items with receipt upload', () async {
+    // Arrange
+    when(
+      () => mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(
+      () => mockConnectivity.onConnectivityChanged,
+    ).thenAnswer((_) => const Stream.empty());
 
-      final item = SyncMutationModel(
-        id: 'tx1',
-        table: 'rpc/create_expense_transaction',
-        operation: OpType.create,
-        payload: {
-          'p_amount_total': 100,
-          'x_local_receipt_path': '/path/to/receipt.jpg',
-        },
-        createdAt: DateTime.now(),
-      );
+    final item = SyncMutationModel(
+      id: 'tx1',
+      table: 'rpc/create_expense_transaction',
+      operation: OpType.create,
+      payload: {
+        'p_amount_total': 100,
+        'x_local_receipt_path': '/path/to/receipt.jpg',
+      },
+      createdAt: DateTime.now(),
+    );
 
-      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-      when(
-        () => mockOutboxRepository.markAsSent(any()),
-      ).thenAnswer((_) async {});
+    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+    when(() => mockOutboxRepository.markAsSent(any())).thenAnswer((_) async {});
 
-      when(
-        () => mockStorageFileApi.upload(
-          any(),
-          any(),
-          fileOptions: any(named: 'fileOptions'),
+    when(
+      () => mockStorageFileApi.upload(
+        any(),
+        any(),
+        fileOptions: any(named: 'fileOptions'),
+      ),
+    ).thenAnswer((_) async => '');
+    when(
+      () => mockStorageFileApi.getPublicUrl(any()),
+    ).thenReturn('https://supabase.co/receipt.jpg');
+
+    final service = SyncService(
+      mockSupabaseClient,
+      mockOutboxRepository,
+      mockConnectivity,
+      mockGroupBox,
+      mockGroupMemberBox,
+    );
+
+    // Act
+    await service.processOutbox();
+
+    // Assert
+    // Verify upload was called
+    verify(
+      () => mockStorageFileApi.upload(
+        any(that: contains('tx1.jpg')),
+        any(),
+        fileOptions: any(named: 'fileOptions'),
+      ),
+    ).called(1);
+
+    // Verify upsert called with updated payload
+    // Using dynamic cast to verify calling a method on the mock is safer for matchers
+    verify(
+      () => mockQueryBuilder.upsert(
+        any(
+          that: isA<Map<String, dynamic>>()
+              .having(
+                (m) => m['p_receipt_url'],
+                'receipt url',
+                'https://supabase.co/receipt.jpg',
+              )
+              .having(
+                (m) => m.containsKey('x_local_receipt_path'),
+                'no local path',
+                false,
+              ),
         ),
-      ).thenAnswer((_) async => '');
-      when(
-        () => mockStorageFileApi.getPublicUrl(any()),
-      ).thenReturn('https://supabase.co/receipt.jpg');
-
-      // NOTE: We intentionally DO NOT mock upsert here to avoid Mocktail Future type issues.
-      // It will throw a "no stub" exception when called, which we verify happens *after* upload.
-
-      final service = SyncService(
-        mockSupabaseClient,
-        mockOutboxRepository,
-        mockConnectivity,
-        mockGroupBox,
-        mockGroupMemberBox,
-      );
-
-      // Act
-      try {
-        await service.processOutbox();
-      } catch (_) {
-        // Expected exception (MissingStubError or similar) because we didn't mock upsert
-        // We don't assert on the type to be flexible, but it ensures we reached the upsert call.
-      }
-
-      // Assert
-      // Verify upload was called - this confirms the receipt upload logic is executed before upsert
-      verify(
-        () => mockStorageFileApi.upload(
-          any(that: contains('tx1.jpg')),
-          any(),
-          fileOptions: any(named: 'fileOptions'),
-        ),
-      ).called(1);
-    },
-  );
+      ),
+    ).called(1);
+  });
 }
