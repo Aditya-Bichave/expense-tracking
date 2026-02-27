@@ -1,9 +1,13 @@
+// lib/features/dashboard/presentation/widgets/stitch/stitch_net_balance_card.dart
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/dashboard/domain/entities/financial_overview.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'dart:ui';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart'; // Import AppCard (though we might use Container for custom style)
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 
 class StitchNetBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
@@ -14,7 +18,7 @@ class StitchNetBalanceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
-    final theme = Theme.of(context);
+    final kit = context.kit;
 
     double totalBudget = 0;
     double totalSpent = 0;
@@ -26,20 +30,21 @@ class StitchNetBalanceCard extends StatelessWidget {
         ? (totalSpent / totalBudget).clamp(0.0, 1.0)
         : 0.0;
 
+    // Heavily customized card, keeping structure but using tokens
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      // Fixed: Removed .horizontal accessor on double
+      margin: kit.spacing.vSm.copyWith(
+        left: kit.spacing.lg,
+        right: kit.spacing.lg,
+      ),
       height: 220,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: kit.colors.surface,
+        borderRadius: kit.radii.card, // Using card radius from token
+        border: Border.all(color: kit.colors.primary.withOpacity(0.1)),
+        boxShadow: kit
+            .shadows
+            .lg, // Using large shadow token if available, or approximated
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -51,7 +56,7 @@ class StitchNetBalanceCard extends StatelessWidget {
               width: 160,
               height: 160,
               decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.15),
+                color: kit.colors.primary.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
               child: BackdropFilter(
@@ -61,49 +66,47 @@ class StitchNetBalanceCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: kit.spacing.allXl,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                BridgeText(
                   'NET BALANCE',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
+                  style: kit.typography.overline.copyWith(
+                    color: kit.colors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
+                kit.spacing.gapXs,
+                BridgeText(
                   CurrencyFormatter.format(
                     overview.overallBalance,
                     currencySymbol,
                   ),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: theme.colorScheme.onSurface,
+                  style: kit.typography.display.copyWith(
+                    color: kit.colors.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 32,
                   ),
                 ),
-                const SizedBox(height: 24),
+                kit.spacing.gapXl,
                 Row(
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          BridgeText(
                             'MONTHLY INCOME',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                            style: kit.typography.overline.copyWith(
+                              color: kit.colors.textSecondary,
                               fontSize: 10,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
+                          kit.spacing.gapXs,
+                          BridgeText(
                             '+${CurrencyFormatter.format(overview.totalIncome, currencySymbol)}',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              color: theme.colorScheme.primary,
+                            style: kit.typography.title.copyWith(
+                              color: kit.colors.primary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -113,26 +116,26 @@ class StitchNetBalanceCard extends StatelessWidget {
                     Container(
                       width: 1,
                       height: 30,
-                      color: theme.colorScheme.outlineVariant.withOpacity(0.2),
+                      color: kit.colors.borderSubtle.withOpacity(0.2),
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 16.0),
+                        padding: EdgeInsets.only(left: kit.spacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            BridgeText(
                               'MONTHLY SPEND',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
+                              style: kit.typography.overline.copyWith(
+                                color: kit.colors.textSecondary,
                                 fontSize: 10,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
+                            kit.spacing.gapXs,
+                            BridgeText(
                               '-${CurrencyFormatter.format(overview.totalExpenses, currencySymbol)}',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                color: theme.colorScheme.onSurface,
+                              style: kit.typography.title.copyWith(
+                                color: kit.colors.textPrimary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -146,18 +149,18 @@ class StitchNetBalanceCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    BridgeText(
                       'Budget Progress',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      style: kit.typography.bodySmall.copyWith(
+                        color: kit.colors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     Text.rich(
                       TextSpan(
                         text: '${(progress * 100).toInt()}%',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface,
+                        style: kit.typography.bodySmall.copyWith(
+                          color: kit.colors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
                         children: [
@@ -165,7 +168,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                             text:
                                 ' (${CurrencyFormatter.format(totalSpent, currencySymbol)} / ${CurrencyFormatter.format(totalBudget, currencySymbol)})',
                             style: TextStyle(
-                              color: theme.colorScheme.onSurfaceVariant,
+                              color: kit.colors.textSecondary,
                               fontWeight: FontWeight.normal,
                             ),
                           ),
@@ -174,13 +177,13 @@ class StitchNetBalanceCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                kit.spacing.gapSm,
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: kit.radii.small,
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                    color: theme.colorScheme.primary,
+                    backgroundColor: kit.colors.surfaceContainer,
+                    color: kit.colors.primary,
                     minHeight: 6,
                   ),
                 ),
