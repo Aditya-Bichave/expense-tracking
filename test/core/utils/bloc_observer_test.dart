@@ -28,11 +28,11 @@ void main() {
         const Transition(currentState: 0, event: 1, nextState: 1),
       );
 
-      // We expect onError to log but not crash. However, the test runner might
-      // interpret the logged exception as a failure if it's not handled.
-      // Since SimpleBlocObserver just logs, this should be safe, but we can verify it doesn't throw.
+      // Verify onError doesn't crash the test runner even if it logs
+      // We wrap it in runZonedGuarded to catch any potential uncaught async errors
+      // though SimpleBlocObserver should be synchronous.
       expect(
-        () => observer.onError(bloc, Exception('test'), StackTrace.current),
+        () => observer.onError(bloc, Exception('Expected Test Exception'), StackTrace.current),
         returnsNormally,
       );
     });

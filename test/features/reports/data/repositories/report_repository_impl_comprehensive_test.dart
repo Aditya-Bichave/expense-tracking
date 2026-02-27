@@ -197,7 +197,9 @@ void main() {
           accountId: any(named: 'accountId'),
           categoryId: any(named: 'categoryId'),
         ),
-      ).thenAnswer((_) async => Right([tExpense1, tExpense2, tExpenseUncategorized]));
+      ).thenAnswer(
+        (_) async => Right([tExpense1, tExpense2, tExpenseUncategorized]),
+      );
 
       when(
         () => mockCategoryRepository.getAllCategories(),
@@ -230,47 +232,50 @@ void main() {
       expect(uncategorizedData.percentage, closeTo(0.142, 0.001)); // 25 / 175
     });
 
-    test('should return comparison data when compareToPrevious is true', () async {
-      // Arrange
-      final startDate = DateTime(2023, 10, 1);
-      final endDate = DateTime(2023, 10, 31);
+    test(
+      'should return comparison data when compareToPrevious is true',
+      () async {
+        // Arrange
+        final startDate = DateTime(2023, 10, 1);
+        final endDate = DateTime(2023, 10, 31);
 
-      // Mock repository behavior for different date ranges
-      when(
-        () => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          accountId: any(named: 'accountId'),
-          categoryId: any(named: 'categoryId'),
-        ),
-      ).thenAnswer((invocation) async {
-        final start = invocation.namedArguments[#startDate] as DateTime;
-        if (start.month == 10) {
-          return Right([tExpense1]); // 100.0
-        } else {
-          return Right([tExpensePrev]); // 80.0
-        }
-      });
+        // Mock repository behavior for different date ranges
+        when(
+          () => mockExpenseRepository.getExpenses(
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            accountId: any(named: 'accountId'),
+            categoryId: any(named: 'categoryId'),
+          ),
+        ).thenAnswer((invocation) async {
+          final start = invocation.namedArguments[#startDate] as DateTime;
+          if (start.month == 10) {
+            return Right([tExpense1]); // 100.0
+          } else {
+            return Right([tExpensePrev]); // 80.0
+          }
+        });
 
-      when(
-        () => mockCategoryRepository.getAllCategories(),
-      ).thenAnswer((_) async => const Right([tCategory]));
+        when(
+          () => mockCategoryRepository.getAllCategories(),
+        ).thenAnswer((_) async => const Right([tCategory]));
 
-      // Act
-      final result = await repository.getSpendingByCategory(
-        startDate: startDate,
-        endDate: endDate,
-        transactionType: TransactionType.expense,
-        compareToPrevious: true,
-      );
+        // Act
+        final result = await repository.getSpendingByCategory(
+          startDate: startDate,
+          endDate: endDate,
+          transactionType: TransactionType.expense,
+          compareToPrevious: true,
+        );
 
-      // Assert
-      expect(result.isRight(), true);
-      final report = result.getOrElse(() => throw Exception('Failed'));
+        // Assert
+        expect(result.isRight(), true);
+        final report = result.getOrElse(() => throw Exception('Failed'));
 
-      expect(report.totalSpending.currentValue, 100.0);
-      expect(report.totalSpending.previousValue, 80.0);
-    });
+        expect(report.totalSpending.currentValue, 100.0);
+        expect(report.totalSpending.previousValue, 80.0);
+      },
+    );
 
     test(
       'should return empty report when transactionType is Income (as per logic)',
@@ -308,7 +313,9 @@ void main() {
           accountId: any(named: 'accountId'),
           categoryId: any(named: 'categoryId'),
         ),
-      ).thenAnswer((_) async => Right([tExpense1, tExpense2, tExpenseUncategorized]));
+      ).thenAnswer(
+        (_) async => Right([tExpense1, tExpense2, tExpenseUncategorized]),
+      );
 
       // Act
       final result = await repository.getSpendingOverTime(
@@ -329,44 +336,47 @@ void main() {
       expect(report.spendingData[2].currentAmount, 25.0); // Oct 17
     });
 
-    test('should return comparison data when compareToPrevious is true', () async {
-      // Arrange
-      final startDate = DateTime(2023, 10, 1);
-      final endDate = DateTime(2023, 10, 31);
+    test(
+      'should return comparison data when compareToPrevious is true',
+      () async {
+        // Arrange
+        final startDate = DateTime(2023, 10, 1);
+        final endDate = DateTime(2023, 10, 31);
 
-      when(
-        () => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          accountId: any(named: 'accountId'),
-          categoryId: any(named: 'categoryId'),
-        ),
-      ).thenAnswer((invocation) async {
-        final start = invocation.namedArguments[#startDate] as DateTime;
-        if (start.month == 10) {
-          return Right([tExpense1]); // 100.0 on Oct 15
-        } else {
-          return Right([tExpensePrev]); // 80.0 on Sep 15
-        }
-      });
+        when(
+          () => mockExpenseRepository.getExpenses(
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            accountId: any(named: 'accountId'),
+            categoryId: any(named: 'categoryId'),
+          ),
+        ).thenAnswer((invocation) async {
+          final start = invocation.namedArguments[#startDate] as DateTime;
+          if (start.month == 10) {
+            return Right([tExpense1]); // 100.0 on Oct 15
+          } else {
+            return Right([tExpensePrev]); // 80.0 on Sep 15
+          }
+        });
 
-      // Act
-      final result = await repository.getSpendingOverTime(
-        startDate: startDate,
-        endDate: endDate,
-        granularity: TimeSeriesGranularity.monthly,
-        compareToPrevious: true,
-      );
+        // Act
+        final result = await repository.getSpendingOverTime(
+          startDate: startDate,
+          endDate: endDate,
+          granularity: TimeSeriesGranularity.monthly,
+          compareToPrevious: true,
+        );
 
-      // Assert
-      expect(result.isRight(), true);
-      final report = result.getOrElse(() => throw Exception('Failed'));
+        // Assert
+        expect(result.isRight(), true);
+        final report = result.getOrElse(() => throw Exception('Failed'));
 
-      // Monthly granularity -> grouped to 1st of month
-      // Current: Oct 1, Previous: Sep 1
-      expect(report.spendingData.first.currentAmount, 100.0);
-      expect(report.spendingData.first.amount.previousValue, null);
-    });
+        // Monthly granularity -> grouped to 1st of month
+        // Current: Oct 1, Previous: Sep 1
+        expect(report.spendingData.first.currentAmount, 100.0);
+        expect(report.spendingData.first.amount.previousValue, null);
+      },
+    );
   });
 
   group('getIncomeVsExpense', () {
@@ -383,7 +393,9 @@ void main() {
           accountId: any(named: 'accountId'),
           categoryId: any(named: 'categoryId'),
         ),
-      ).thenAnswer((_) async => Right([tExpense1, tExpense2])); // 150 total expense
+      ).thenAnswer(
+        (_) async => Right([tExpense1, tExpense2]),
+      ); // 150 total expense
 
       when(
         () => mockIncomeRepository.getIncomes(
@@ -410,145 +422,160 @@ void main() {
       expect(report.periodData.first.currentTotalExpense, 150.0);
     });
 
-    test('should return comparison data when compareToPrevious is true', () async {
-      // Arrange
-      final startDate = DateTime(2023, 10, 1);
-      final endDate = DateTime(2023, 10, 31);
+    test(
+      'should return comparison data when compareToPrevious is true',
+      () async {
+        // Arrange
+        final startDate = DateTime(2023, 10, 1);
+        final endDate = DateTime(2023, 10, 31);
 
-      when(
-        () => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          accountId: any(named: 'accountId'),
-          categoryId: any(named: 'categoryId'),
-        ),
-      ).thenAnswer((_) async => const Right([])); // Simplify expense to 0 for this test
+        when(
+          () => mockExpenseRepository.getExpenses(
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            accountId: any(named: 'accountId'),
+            categoryId: any(named: 'categoryId'),
+          ),
+        ).thenAnswer(
+          (_) async => const Right([]),
+        ); // Simplify expense to 0 for this test
 
-      when(
-        () => mockIncomeRepository.getIncomes(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          accountId: any(named: 'accountId'),
-          categoryId: any(named: 'categoryId'),
-        ),
-      ).thenAnswer((invocation) async {
-         final start = invocation.namedArguments[#startDate] as DateTime;
-         if (start.month == 10) {
-           return Right([tIncome1]); // 1000
-         } else {
-           return Right([tIncomePrev]); // 900
-         }
-      });
+        when(
+          () => mockIncomeRepository.getIncomes(
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            accountId: any(named: 'accountId'),
+            categoryId: any(named: 'categoryId'),
+          ),
+        ).thenAnswer((invocation) async {
+          final start = invocation.namedArguments[#startDate] as DateTime;
+          if (start.month == 10) {
+            return Right([tIncome1]); // 1000
+          } else {
+            return Right([tIncomePrev]); // 900
+          }
+        });
 
-      // Act
-      final result = await repository.getIncomeVsExpense(
-        startDate: startDate,
-        endDate: endDate,
-        periodType: IncomeExpensePeriodType.monthly,
-        compareToPrevious: true,
-      );
+        // Act
+        final result = await repository.getIncomeVsExpense(
+          startDate: startDate,
+          endDate: endDate,
+          periodType: IncomeExpensePeriodType.monthly,
+          compareToPrevious: true,
+        );
 
-      // Assert
-      expect(result.isRight(), true);
-      final report = result.getOrElse(() => throw Exception('Failed'));
+        // Assert
+        expect(result.isRight(), true);
+        final report = result.getOrElse(() => throw Exception('Failed'));
 
-      // Similar to time series, `periodStart` is used as key.
-      // Oct 1 vs Sep 1.
-      expect(report.periodData.first.currentTotalIncome, 1000.0);
-      // Previous value will be null because keys don't match
-      expect(report.periodData.first.totalIncome.previousValue, null);
-    });
+        // Similar to time series, `periodStart` is used as key.
+        // Oct 1 vs Sep 1.
+        expect(report.periodData.first.currentTotalIncome, 1000.0);
+        // Previous value will be null because keys don't match
+        expect(report.periodData.first.totalIncome.previousValue, null);
+      },
+    );
   });
 
   group('getBudgetPerformance', () {
-    test('should calculate budget performance correctly for multiple budgets', () async {
-      // Arrange
-      final startDate = DateTime(2023, 10, 1);
-      final endDate = DateTime(2023, 10, 31);
+    test(
+      'should calculate budget performance correctly for multiple budgets',
+      () async {
+        // Arrange
+        final startDate = DateTime(2023, 10, 1);
+        final endDate = DateTime(2023, 10, 31);
 
-      when(() => mockBudgetRepository.getBudgets())
-          .thenAnswer((_) async => Right([tBudget1, tBudget2]));
+        when(
+          () => mockBudgetRepository.getBudgets(),
+        ).thenAnswer((_) async => Right([tBudget1, tBudget2]));
 
-      when(
-        () => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          accountId: any(named: 'accountId'),
-        ),
-      ).thenAnswer((_) async => Right([tExpense1, tExpense2, tExpenseUncategorized]));
+        when(
+          () => mockExpenseRepository.getExpenses(
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            accountId: any(named: 'accountId'),
+          ),
+        ).thenAnswer(
+          (_) async => Right([tExpense1, tExpense2, tExpenseUncategorized]),
+        );
 
-      // Act
-      final result = await repository.getBudgetPerformance(
-        startDate: startDate,
-        endDate: endDate,
-      );
+        // Act
+        final result = await repository.getBudgetPerformance(
+          startDate: startDate,
+          endDate: endDate,
+        );
 
-      // Assert
-      expect(result.isRight(), true);
-      final report = result.getOrElse(() => throw Exception('Failed'));
+        // Assert
+        expect(result.isRight(), true);
+        final report = result.getOrElse(() => throw Exception('Failed'));
 
-      expect(report.performanceData.length, 2);
+        expect(report.performanceData.length, 2);
 
-      // Food Budget: Only tCategoryId expenses (100 + 50 = 150)
-      final foodPerf = report.performanceData.firstWhere(
-        (p) => p.budget.name == 'Food',
-      );
-      expect(foodPerf.actualSpending.currentValue, 150.0);
-      expect(foodPerf.varianceAmount.currentValue, 50.0); // 200 - 150
-      expect(foodPerf.currentVariancePercent, 25.0); // 50 / 200 * 100
+        // Food Budget: Only tCategoryId expenses (100 + 50 = 150)
+        final foodPerf = report.performanceData.firstWhere(
+          (p) => p.budget.name == 'Food',
+        );
+        expect(foodPerf.actualSpending.currentValue, 150.0);
+        expect(foodPerf.varianceAmount.currentValue, 50.0); // 200 - 150
+        expect(foodPerf.currentVariancePercent, 25.0); // 50 / 200 * 100
 
-      // Overall Budget: All expenses (100 + 50 + 25 = 175)
-      final overallPerf = report.performanceData.firstWhere(
-        (p) => p.budget.name == 'Overall',
-      );
-      expect(overallPerf.actualSpending.currentValue, 175.0);
-      expect(overallPerf.varianceAmount.currentValue, 325.0); // 500 - 175
-      expect(overallPerf.currentVariancePercent, 65.0); // 325 / 500 * 100
-    });
+        // Overall Budget: All expenses (100 + 50 + 25 = 175)
+        final overallPerf = report.performanceData.firstWhere(
+          (p) => p.budget.name == 'Overall',
+        );
+        expect(overallPerf.actualSpending.currentValue, 175.0);
+        expect(overallPerf.varianceAmount.currentValue, 325.0); // 500 - 175
+        expect(overallPerf.currentVariancePercent, 65.0); // 325 / 500 * 100
+      },
+    );
 
-    test('should return previous performance when compareToPrevious is true', () async {
-      // Arrange
-      final startDate = DateTime(2023, 10, 1);
-      final endDate = DateTime(2023, 10, 31);
+    test(
+      'should return previous performance when compareToPrevious is true',
+      () async {
+        // Arrange
+        final startDate = DateTime(2023, 10, 1);
+        final endDate = DateTime(2023, 10, 31);
 
-      when(() => mockBudgetRepository.getBudgets())
-          .thenAnswer((_) async => Right([tBudget1]));
+        when(
+          () => mockBudgetRepository.getBudgets(),
+        ).thenAnswer((_) async => Right([tBudget1]));
 
-      when(
-        () => mockExpenseRepository.getExpenses(
-          startDate: any(named: 'startDate'),
-          endDate: any(named: 'endDate'),
-          accountId: any(named: 'accountId'),
-        ),
-      ).thenAnswer((invocation) async {
-        final start = invocation.namedArguments[#startDate] as DateTime;
-        if (start.month == 10) {
-          return Right([tExpense1]); // 100.0
-        } else {
-          return Right([tExpensePrev]); // 80.0
-        }
-      });
+        when(
+          () => mockExpenseRepository.getExpenses(
+            startDate: any(named: 'startDate'),
+            endDate: any(named: 'endDate'),
+            accountId: any(named: 'accountId'),
+          ),
+        ).thenAnswer((invocation) async {
+          final start = invocation.namedArguments[#startDate] as DateTime;
+          if (start.month == 10) {
+            return Right([tExpense1]); // 100.0
+          } else {
+            return Right([tExpensePrev]); // 80.0
+          }
+        });
 
-      // Act
-      final result = await repository.getBudgetPerformance(
-        startDate: startDate,
-        endDate: endDate,
-        compareToPrevious: true,
-      );
+        // Act
+        final result = await repository.getBudgetPerformance(
+          startDate: startDate,
+          endDate: endDate,
+          compareToPrevious: true,
+        );
 
-      // Assert
-      expect(result.isRight(), true);
-      final report = result.getOrElse(() => throw Exception('Failed'));
+        // Assert
+        expect(result.isRight(), true);
+        final report = result.getOrElse(() => throw Exception('Failed'));
 
-      final perf = report.performanceData.first;
-      expect(perf.actualSpending.currentValue, 100.0);
-      expect(perf.actualSpending.previousValue, 80.0);
+        final perf = report.performanceData.first;
+        expect(perf.actualSpending.currentValue, 100.0);
+        expect(perf.actualSpending.previousValue, 80.0);
 
-      // Previous Variance: 200 - 80 = 120
-      expect(perf.varianceAmount.previousValue, 120.0);
-      // Previous Variance %: 120 / 200 * 100 = 60
-      expect(perf.previousVariancePercent, 60.0);
-    });
+        // Previous Variance: 200 - 80 = 120
+        expect(perf.varianceAmount.previousValue, 120.0);
+        // Previous Variance %: 120 / 200 * 100 = 60
+        expect(perf.previousVariancePercent, 60.0);
+      },
+    );
   });
 
   group('getGoalProgress', () {
