@@ -933,8 +933,7 @@ class ReportRepositoryImpl implements ReportRepository {
       // Optimization: Select relevant expenses first to avoid full list iteration
       Iterable<ExpenseModel> candidateExpenses;
       if (b.type == BudgetType.categorySpecific && b.categoryIds != null) {
-        final catIds = (b.categoryIds as List<dynamic>).cast<String>();
-        candidateExpenses = catIds.expand(
+        candidateExpenses = b.categoryIds!.expand(
           (catId) => expensesByCategory[catId] ?? const <ExpenseModel>[],
         );
       } else {
