@@ -16,6 +16,8 @@ import 'package:expense_tracker/features/reports/domain/repositories/report_repo
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart'; // For Colors in BudgetStatus calc
 import 'package:expense_tracker/core/di/service_locator.dart'; // For sl
+// Explicit Import for AssetAccount to solve type error
+import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 
 class GetFinancialOverviewUseCase
     implements UseCase<FinancialOverview, GetFinancialOverviewParams> {
@@ -43,128 +45,92 @@ class GetFinancialOverviewUseCase
       "Executing GetFinancialOverviewUseCase. Start: ${params.startDate}, End: ${params.endDate}",
     );
     try {
-      // 1. Get accounts
-      log.fine("[GetFinancialOverviewUseCase] Fetching accounts...");
-      final accountsEither = await accountRepository.getAssetAccounts();
-      if (accountsEither.isLeft())
-        return _handleFailure("accounts", accountsEither);
-      final accounts = accountsEither.getOrElse(() => []);
-      log.fine(
-        "[GetFinancialOverviewUseCase] Fetched ${accounts.length} accounts.",
-      );
+      // Execute all independent fetches in parallel using Future.wait
+      final results = await Future.wait([
+        // 0. Accounts
+        accountRepository.getAssetAccounts(),
+        // 1. Total Income
+        incomeRepository.getTotalIncomeForAccount(
+          '',
+          startDate: params.startDate,
+          endDate: params.endDate,
+        ),
+        // 2. Total Expenses
+        expenseRepository.getTotalExpensesForAccount(
+          '',
+          startDate: params.startDate,
+          endDate: params.endDate,
+        ),
+        // 3. Budgets
+        _getBudgetSummary(),
+        // 4. Goals
+        _getGoalSummary(),
+        // 5. Recent Spending
+        reportRepository.getRecentDailySpending(days: 7),
+      ]);
 
-      // 2. Calculate overall balance
-      final double overallBalance = accounts.fold(
-        0.0,
-        (sum, acc) => sum + acc.currentBalance,
-      );
-      log.fine(
-        "[GetFinancialOverviewUseCase] Calculated overall balance: $overallBalance",
-      );
+      // --- Process 0: Accounts ---
+      // Re-fetch individual results with proper casting
+      final accountsResult = results[0] as Either<Failure, List<AssetAccount>>; // Generic List
+      final incomeResult = results[1] as Either<Failure, double>;
+      final expenseResult = results[2] as Either<Failure, double>;
+      final budgetSummary = results[3] as List<BudgetWithStatus>;
+      final goalSummary = results[4] as List<Goal>;
+      final recentSpendingEither =
+          results[5] as Either<Failure, List<TimeSeriesDataPoint>>;
 
-      // 3. Create account balances map
-      final Map<String, double> accountBalancesMap = {
-        for (var acc in accounts) acc.name: acc.currentBalance,
-      };
-      log.fine(
-        "[GetFinancialOverviewUseCase] Created account balances map (${accountBalancesMap.length} entries).",
-      );
+      if (accountsResult.isLeft())
+        return _handleFailure("accounts", accountsResult);
 
-      // 4. Get total income/expenses for the period
-      log.fine(
-        "[GetFinancialOverviewUseCase] Fetching total income/expenses for period...",
-      );
-      final incomeResult = await incomeRepository.getTotalIncomeForAccount(
-        '',
-        startDate: params.startDate,
-        endDate: params.endDate,
-      );
-      if (incomeResult.isLeft()) {
-        final failure = incomeResult.swap().getOrElse(
-          () => const UnexpectedFailure('Unknown income failure'),
-        );
-        log.warning(
-          "[GetFinancialOverviewUseCase] Failed to get total income: ${failure.message}",
-        );
-        return Left(failure);
+      final accounts =
+          accountsResult.fold((_) => <AssetAccount>[], (list) => list);
+
+      double overallBalance = 0.0;
+      final Map<String, double> accountBalancesMap = {};
+
+      for (final acc in accounts) {
+        final balance = acc.currentBalance;
+        final name = acc.name;
+        overallBalance += balance;
+        accountBalancesMap[name] = balance;
       }
-      final expenseResult = await expenseRepository.getTotalExpensesForAccount(
-        '',
-        startDate: params.startDate,
-        endDate: params.endDate,
-      );
-      if (expenseResult.isLeft()) {
-        final failure = expenseResult.swap().getOrElse(
-          () => const UnexpectedFailure('Unknown expense failure'),
-        );
-        log.warning(
-          "[GetFinancialOverviewUseCase] Failed to get total expenses: ${failure.message}",
-        );
-        return Left(failure);
+
+      // --- Process Income/Expense ---
+      if (incomeResult.isLeft()) {
+        return _handleFailure("total income", incomeResult);
       }
       final totalIncome = incomeResult.getOrElse(() => 0.0);
+
+      if (expenseResult.isLeft()) {
+        return _handleFailure("total expenses", expenseResult);
+      }
       final totalExpenses = expenseResult.getOrElse(() => 0.0);
+
       final netFlow = totalIncome - totalExpenses;
-      log.fine(
-        "[GetFinancialOverviewUseCase] Period Totals - Income: $totalIncome, Expenses: $totalExpenses, Net Flow: $netFlow",
-      );
 
-      // 5. Fetch Budget Statuses
-      log.fine(
-        "[GetFinancialOverviewUseCase] Fetching budgets and calculating statuses...",
-      );
-      List<BudgetWithStatus> budgetSummary = await _getBudgetSummary();
-      log.fine(
-        "[GetFinancialOverviewUseCase] Prepared budget summary with ${budgetSummary.length} items.",
-      );
-
-      // 6. Fetch Goal Summary
-      log.fine(
-        "[GetFinancialOverviewUseCase] Fetching active goals summary...",
-      );
-      List<Goal> goalSummary = await _getGoalSummary();
-      log.fine(
-        "[GetFinancialOverviewUseCase] Prepared goal summary with ${goalSummary.length} items.",
-      );
-
-      // --- 7. Fetch Recent Spending & Contribution Data ---
-      log.fine(
-        "[GetFinancialOverviewUseCase] Fetching recent spending for sparklines...",
-      );
-      final recentSpendingEither = await reportRepository
-          .getRecentDailySpending(days: 7); // Last 7 days
+      // --- Process Recent Spending ---
       final recentSpendingData = recentSpendingEither.fold((l) {
         log.warning(
           "[GetFinancialOverviewUseCase] Failed fetch spending sparkline: ${l.message}",
         );
         return <TimeSeriesDataPoint>[];
       }, (r) => r);
-      log.fine(
-        "[GetFinancialOverviewUseCase] Fetched ${recentSpendingData.length} points for spending sparkline.",
-      );
 
-      // Fetch contribution sparkline data (e.g., for the top goal if available)
+      // --- Fetch Contribution Sparkline (Dependent on Goal Summary) ---
       List<TimeSeriesDataPoint> recentContributionData = [];
       if (goalSummary.isNotEmpty) {
         log.fine(
           "[GetFinancialOverviewUseCase] Fetching recent contributions for top goal sparkline: ${goalSummary.first.id}...",
         );
         final recentContribEither = await reportRepository
-            .getRecentDailyContributions(
-              goalSummary.first.id,
-              days: 30,
-            ); // Last 30 days for goals
+            .getRecentDailyContributions(goalSummary.first.id, days: 30);
         recentContributionData = recentContribEither.fold((l) {
           log.warning(
             "[GetFinancialOverviewUseCase] Failed fetch contribution sparkline: ${l.message}",
           );
           return <TimeSeriesDataPoint>[];
         }, (r) => r);
-        log.fine(
-          "[GetFinancialOverviewUseCase] Fetched ${recentContributionData.length} points for contribution sparkline.",
-        );
       }
-      // --- End Fetch Sparkline Data ---
 
       // 8. Construct the overview object
       final overview = FinancialOverview(
@@ -176,10 +142,10 @@ class GetFinancialOverviewUseCase
         accountBalances: accountBalancesMap,
         activeBudgetsSummary: budgetSummary,
         activeGoalsSummary: goalSummary,
-        recentSpendingSparkline: recentSpendingData, // Use refined data
-        recentContributionSparkline:
-            recentContributionData, // Add contribution data
+        recentSpendingSparkline: recentSpendingData,
+        recentContributionSparkline: recentContributionData,
       );
+
       log.info(
         "[GetFinancialOverviewUseCase] Successfully created FinancialOverview. Returning Right.",
       );
@@ -197,41 +163,58 @@ class GetFinancialOverviewUseCase
   // --- Helper Methods (Unchanged from previous, except _getRecentSpendingData) ---
   Left<Failure, FinancialOverview> _handleFailure(
     String context,
-    Either<Failure, dynamic> either,
+    Either<dynamic, dynamic> either,
   ) {
-    final failure = either.fold(
-      (l) => l,
-      (_) => const UnexpectedFailure("Incorrect fold logic"),
-    );
-    log.warning(
-      "[GetFinancialOverviewUseCase] Failed to fetch $context: ${failure.message}",
-    );
-    return Left(failure);
+    // We know the left side is Failure
+    Failure? failure;
+    if (either.isLeft()) {
+      either.fold((l) => failure = l as Failure, (_) {});
+      // failure is assigned
+      return Left(failure!);
+    }
+    return Left(UnexpectedFailure("Incorrect failure handling logic"));
   }
 
   Future<List<BudgetWithStatus>> _getBudgetSummary() async {
     List<BudgetWithStatus> budgetStatuses = [];
     Failure? budgetError;
     final budgetsResult = await budgetRepository.getBudgets();
-    await budgetsResult.fold((failure) async => budgetError = failure, (
-      budgets,
-    ) async {
-      const thrivingColor = Colors.green;
-      const nearingLimitColor = Colors.orange;
-      const overLimitColor = Colors.red;
-      for (final budget in budgets) {
-        final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
-        final spentResult = await budgetRepository.calculateAmountSpent(
+
+    // Check failure first
+    if(budgetsResult.isLeft()) {
+         budgetsResult.fold((f) => budgetError = f, (_) {});
+          log.warning(
+            "[GetFinancialOverviewUseCase] Error fetching budgets: ${budgetError!.message}",
+          );
+         return [];
+    }
+
+    final budgets = budgetsResult.getOrElse(() => []);
+    if(budgets.isEmpty) return [];
+
+    // Parallelize budget spent calculations
+    const thrivingColor = Colors.green;
+    const nearingLimitColor = Colors.orange;
+    const overLimitColor = Colors.red;
+
+    final spentFutures = budgets.map((budget) {
+      final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
+      return budgetRepository.calculateAmountSpent(
           budget: budget,
           periodStart: periodStart,
           periodEnd: periodEnd,
-        );
+        ).then((result) => (budget, result));
+    });
+
+    final results = await Future.wait(spentFutures);
+
+    for (final (budget, spentResult) in results) {
         spentResult.fold(
           (f) {
             log.warning(
               "[GetFinancialOverviewUseCase] Failed calc for budget ${budget.id}: ${f.message}",
             );
-            budgetError ??= f;
+            // We continue even if one fails
           },
           (spent) {
             budgetStatuses.add(
@@ -245,14 +228,8 @@ class GetFinancialOverviewUseCase
             );
           },
         );
-        if (budgetError != null && budgetError is! ValidationFailure) break;
-      }
-    });
-    if (budgetError != null) {
-      log.warning(
-        "[GetFinancialOverviewUseCase] Error during budget status calculation: ${budgetError!.message}",
-      );
     }
+
     budgetStatuses.sort((a, b) => b.percentageUsed.compareTo(a.percentageUsed));
     return budgetStatuses.take(3).toList(); // Take top 3 most used/overspent
   }
