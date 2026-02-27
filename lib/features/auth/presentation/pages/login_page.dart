@@ -64,7 +64,9 @@ class _LoginPageState extends State<LoginPage>
     final phone = _phoneController.text.trim();
     final formatted = _getFormattedPhone(phone);
 
-    if (formatted != null && formatted.length > 3) {
+    // Check for minimum length to avoid submitting invalid short numbers
+    // +91 (3 chars) + 5 digits = 8 chars minimum reasonable length
+    if (formatted != null && formatted.length > 8) {
       context.read<AuthBloc>().add(AuthLoginRequested(formatted));
     } else {
       AppToast.show(
@@ -77,7 +79,9 @@ class _LoginPageState extends State<LoginPage>
 
   void _submitEmail() {
     final email = _emailController.text.trim();
-    if (email.isNotEmpty && email.contains('@')) {
+    // Basic email validation
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (email.isNotEmpty && emailRegex.hasMatch(email)) {
       context.read<AuthBloc>().add(AuthLoginWithMagicLinkRequested(email));
     } else {
       AppToast.show(
