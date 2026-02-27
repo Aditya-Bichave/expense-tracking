@@ -51,12 +51,16 @@ void main() {
   });
 
   testWidgets('BudgetPerformancePage renders loading state', (tester) async {
-    when(() => mockReportBloc.state).thenReturn(const BudgetPerformanceReportLoading(compareToPrevious: false));
+    when(() => mockReportBloc.state).thenReturn(
+      const BudgetPerformanceReportLoading(compareToPrevious: false),
+    );
 
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
-          BlocProvider<BudgetPerformanceReportBloc>.value(value: mockReportBloc),
+          BlocProvider<BudgetPerformanceReportBloc>.value(
+            value: mockReportBloc,
+          ),
           BlocProvider<ReportFilterBloc>.value(value: mockFilterBloc),
           BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
         ],
@@ -74,15 +78,17 @@ void main() {
   });
 
   testWidgets('BudgetPerformancePage renders empty state', (tester) async {
-     final emptyData = BudgetPerformanceReportData(performanceData: []);
-     when(() => mockReportBloc.state).thenReturn(
-       BudgetPerformanceReportLoaded(emptyData, showComparison: false),
-     );
+    final emptyData = BudgetPerformanceReportData(performanceData: []);
+    when(() => mockReportBloc.state).thenReturn(
+      BudgetPerformanceReportLoaded(emptyData, showComparison: false),
+    );
 
     await tester.pumpWidget(
       MultiBlocProvider(
         providers: [
-          BlocProvider<BudgetPerformanceReportBloc>.value(value: mockReportBloc),
+          BlocProvider<BudgetPerformanceReportBloc>.value(
+            value: mockReportBloc,
+          ),
           BlocProvider<ReportFilterBloc>.value(value: mockFilterBloc),
           BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
         ],
