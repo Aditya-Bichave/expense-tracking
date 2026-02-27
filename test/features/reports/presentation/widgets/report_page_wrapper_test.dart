@@ -23,10 +23,14 @@ void main() {
   setUp(() {
     mockFilterBloc = MockReportFilterBloc();
     when(() => mockFilterBloc.state).thenReturn(ReportFilterState.initial());
-    when(() => mockFilterBloc.stream).thenAnswer((_) => Stream.value(ReportFilterState.initial()));
+    when(
+      () => mockFilterBloc.stream,
+    ).thenAnswer((_) => Stream.value(ReportFilterState.initial()));
   });
 
-  testWidgets('ReportPageWrapper renders title and body', (WidgetTester tester) async {
+  testWidgets('ReportPageWrapper renders title and body', (
+    WidgetTester tester,
+  ) async {
     await pumpWidgetWithProviders(
       tester: tester,
       blocProviders: [
@@ -42,7 +46,9 @@ void main() {
     expect(find.text('Report Body'), findsOneWidget);
   });
 
-  testWidgets('ReportPageWrapper shows export menu options', (WidgetTester tester) async {
+  testWidgets('ReportPageWrapper shows export menu options', (
+    WidgetTester tester,
+  ) async {
     await pumpWidgetWithProviders(
       tester: tester,
       blocProviders: [
@@ -51,6 +57,7 @@ void main() {
       widget: ReportPageWrapper(
         title: 'Test Report',
         body: const Text('Report Body'),
+
         // Explicitly type the Right value to match Expected Return Type Future<Either<String, Failure>>
         // BUT wait, onExportCSV returns Future<Either<String, Failure>>
         // Left is String (CSV data), Right is Failure?
@@ -159,7 +166,6 @@ void main() {
         // I NEED TO FIX `ReportPageWrapper.dart`.
 
         // AND THEN fix the test to return `Right('csv')` (Success).
-
         onExportCSV: () async => const Right<Failure, String>('csv,data'),
       ),
     );
@@ -172,7 +178,9 @@ void main() {
     expect(find.text('Export as PDF (Soon)'), findsOneWidget);
   });
 
-  testWidgets('ReportPageWrapper shows filter sheet on filter tap', (WidgetTester tester) async {
+  testWidgets('ReportPageWrapper shows filter sheet on filter tap', (
+    WidgetTester tester,
+  ) async {
     when(() => mockFilterBloc.add(any())).thenReturn(null);
 
     await pumpWidgetWithProviders(

@@ -1,11 +1,6 @@
-// lib/features/reports/presentation/pages/budget_performance_page.dart
-import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:dartz/dartz.dart' hide State;
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/error/failure.dart'; // For ExportFailure
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
-import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/budget_performance_report/budget_performance_report_bloc.dart';
@@ -13,38 +8,34 @@ import 'package:expense_tracker/features/reports/presentation/bloc/report_filter
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/budget_performance_bar_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/main.dart';
-import 'package:flutter/material.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 
 class BudgetPerformancePage extends StatelessWidget {
   const BudgetPerformancePage({super.key});
 
-  void _navigateToFilteredTransactions(BuildContext context, Budget budget) {
-    // ... (implementation unchanged) ...
+  void _navigateToFilteredTransactions(
+    BuildContext context,
+    BudgetPerformanceData budgetItem,
+  ) {
+    final budget = budgetItem.budget;
+    Map<String, String> filters = {};
+
     final filterBlocState = context.read<ReportFilterBloc>().state;
-    // Use budget period if one-time, else use report filter dates
-    final (start, end) =
-        budget.period == BudgetPeriodType.oneTime &&
-            budget.startDate != null &&
-            budget.endDate != null
-        ? (budget.startDate!, budget.endDate!)
-        : (filterBlocState.startDate, filterBlocState.endDate);
 
-    // Ensure end date includes full day
-    final endDateEndOfDay = DateTime(end.year, end.month, end.day, 23, 59, 59);
+    filters['startDate'] = filterBlocState.startDate.toIso8601String();
+    filters['endDate'] = filterBlocState.endDate.toIso8601String();
 
-    final Map<String, String> filters = {
-      'startDate': start.toIso8601String(),
-      'endDate': endDateEndOfDay.toIso8601String(),
-      'type': TransactionType.expense.name,
-    };
-    if (budget.type == BudgetType.categorySpecific &&
-        budget.categoryIds != null &&
-        budget.categoryIds!.isNotEmpty) {
+    if (budget.categoryIds != null && budget.categoryIds!.isNotEmpty) {
       filters['categoryId'] = budget.categoryIds!.join(',');
     }
     if (filterBlocState.selectedAccountIds.isNotEmpty) {
@@ -59,9 +50,9 @@ class BudgetPerformancePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final settingsState = context.watch<SettingsBloc>().state;
     final currencySymbol = settingsState.currencySymbol;
+    final kit = context.kit;
 
     return ReportPageWrapper(
       title: AppLocalizations.of(context)!.budgetPerformance,
@@ -71,7 +62,6 @@ class BudgetPerformancePage extends StatelessWidget {
             final bool showComparison = state is BudgetPerformanceReportLoaded
                 ? state.showComparison
                 : false;
-            // Enable comparison button only if loaded state has previous data OR if currently showing comparison (to allow hiding)
             final bool canCompare =
                 state is BudgetPerformanceReportLoaded &&
                 (state.reportData.previousPerformanceData != null ||
@@ -82,11 +72,13 @@ class BudgetPerformancePage extends StatelessWidget {
                 showComparison
                     ? Icons.compare_arrows_rounded
                     : Icons.compare_arrows_outlined,
+                color: showComparison
+                    ? kit.colors.primary
+                    : kit.colors.textPrimary,
               ),
               tooltip: showComparison
                   ? AppLocalizations.of(context)!.hideComparison
                   : AppLocalizations.of(context)!.compareToPreviousPeriod,
-              color: showComparison ? theme.colorScheme.primary : null,
               onPressed: canCompare
                   ? () => context.read<BudgetPerformanceReportBloc>().add(
                       const ToggleBudgetComparison(),
@@ -100,76 +92,83 @@ class BudgetPerformancePage extends StatelessWidget {
         final state = context.read<BudgetPerformanceReportBloc>().state;
         if (state is BudgetPerformanceReportLoaded) {
           final helper = sl<CsvExportHelper>();
-          return helper.exportBudgetPerformanceReport(
+          final result = await helper.exportBudgetPerformanceReport(
             state.reportData,
             currencySymbol,
             showComparison: state.showComparison,
-          ); // Pass flag
+          );
+          return result.fold(
+            (csvString) => Right(csvString),
+            (failure) => Left(failure),
+          );
         }
-        return Right(
+        return Left(
           ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
         );
       },
-      body: BlocBuilder<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
-        builder: (context, state) {
-          if (state is BudgetPerformanceReportLoading)
-            return const Center(child: CircularProgressIndicator());
-          if (state is BudgetPerformanceReportError)
-            return Center(
-              child: Text(
-                "Error: ${state.message}",
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            );
-          if (state is BudgetPerformanceReportLoaded) {
-            final reportData = state.reportData;
-            if (reportData.performanceData.isEmpty)
-              return Center(
-                child: Text(
-                  AppLocalizations.of(context)!.noBudgetsFoundForPeriod,
-                ),
-              );
-            final bool showComparison = state.showComparison; // Use state flag
-
-            return ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16.0,
-                    horizontal: 8.0,
+      body:
+          BlocBuilder<
+            BudgetPerformanceReportBloc,
+            BudgetPerformanceReportState
+          >(
+            builder: (context, state) {
+              if (state is BudgetPerformanceReportLoading)
+                return const Center(child: AppLoadingIndicator());
+              if (state is BudgetPerformanceReportError)
+                return Center(
+                  child: AppText(
+                    "Error: ${state.message}",
+                    color: kit.colors.error,
                   ),
-                  child: SizedBox(
-                    height: 250,
-                    child: BudgetPerformanceBarChart(
-                      data: reportData.performanceData,
-                      // Pass previous data if available and comparison is enabled
-                      previousData:
-                          (showComparison &&
-                              reportData.previousPerformanceData != null)
-                          ? reportData.previousPerformanceData
-                          : null,
-                      currencySymbol: currencySymbol,
-                      onTapBar: (index) => _navigateToFilteredTransactions(
-                        context,
-                        reportData.performanceData[index].budget,
-                      ), // Add tap handler
+                );
+              if (state is BudgetPerformanceReportLoaded) {
+                final reportData = state.reportData;
+                if (reportData.performanceData.isEmpty)
+                  return Center(
+                    child: AppText(
+                      AppLocalizations.of(context)!.noBudgetsFoundForPeriod,
+                      color: kit.colors.textSecondary,
                     ),
-                  ),
-                ),
-                const Divider(),
-                _buildDataTable(
-                  context,
-                  reportData,
-                  settingsState,
-                  showComparison,
-                ), // Pass comparison flag
-                const SizedBox(height: 80),
-              ],
-            );
-          }
-          return const Center(child: Text("Select filters to view report."));
-        },
-      ),
+                  );
+                final bool showComparison = state.showComparison;
+
+                return ListView(
+                  children: [
+                    Padding(
+                      padding: kit.spacing.vMd.add(kit.spacing.hSm),
+                      child: SizedBox(
+                        height: 250,
+                        child: BudgetPerformanceBarChart(
+                          data: reportData.performanceData,
+                          previousData:
+                              (showComparison &&
+                                  reportData.previousPerformanceData != null)
+                              ? reportData.previousPerformanceData
+                              : null,
+                          currencySymbol: currencySymbol,
+                          onTapBar: (index) => _navigateToFilteredTransactions(
+                            context,
+                            reportData.performanceData[index],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const AppDivider(),
+                    _buildDataTable(
+                      context,
+                      reportData,
+                      settingsState,
+                      showComparison,
+                    ),
+                    SizedBox(height: 80),
+                  ],
+                );
+              }
+              return const Center(
+                child: AppText("Select filters to view report."),
+              );
+            },
+          ),
     );
   }
 
@@ -179,34 +178,40 @@ class BudgetPerformancePage extends StatelessWidget {
     SettingsState settings,
     bool showComparison,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final currencySymbol = settings.currencySymbol;
 
     List<DataColumn> columns = [
-      const DataColumn(label: Text('Budget')),
-      const DataColumn(label: Text('Target'), numeric: true),
-      const DataColumn(label: Text('Actual'), numeric: true),
-      const DataColumn(label: Text('Variance'), numeric: true),
-      const DataColumn(
-        label: Text('Var %'),
+      DataColumn(label: AppText('Budget', style: AppTextStyle.bodyStrong)),
+      DataColumn(
+        label: AppText('Target', style: AppTextStyle.bodyStrong),
         numeric: true,
-      ), // Current Variance %
+      ),
+      DataColumn(
+        label: AppText('Actual', style: AppTextStyle.bodyStrong),
+        numeric: true,
+      ),
+      DataColumn(
+        label: AppText('Variance', style: AppTextStyle.bodyStrong),
+        numeric: true,
+      ),
+      DataColumn(
+        label: AppText('Var %', style: AppTextStyle.bodyStrong),
+        numeric: true,
+      ),
     ];
-    // Add comparison columns dynamically only if showComparison is true AND previous data exists
     if (showComparison && data.previousPerformanceData != null) {
       columns.addAll([
-        const DataColumn(label: Text('Prev Var %'), numeric: true),
-        const DataColumn(
-          label: Text('Var Δ%'),
+        DataColumn(
+          label: AppText('Prev Var %', style: AppTextStyle.bodyStrong),
           numeric: true,
-        ), // Variance Change %
+        ),
+        DataColumn(
+          label: AppText('Var Δ%', style: AppTextStyle.bodyStrong),
+          numeric: true,
+        ),
       ]);
     }
-
-    final Map<String, BudgetPerformanceData> previousDataMap =
-        (showComparison && data.previousPerformanceData != null)
-        ? {for (var item in data.previousPerformanceData!) item.budget.id: item}
-        : {};
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -220,10 +225,9 @@ class BudgetPerformancePage extends StatelessWidget {
           final budget = item.budget;
           final varianceColor = item.currentVarianceAmount >= 0
               ? Colors.green.shade700
-              : theme.colorScheme.error;
-          double? varianceChangePercent =
-              item.varianceChangePercent; // Use getter from entity
-          Color varianceChangeColor = theme.disabledColor;
+              : kit.colors.error;
+          double? varianceChangePercent = item.varianceChangePercent;
+          Color varianceChangeColor = kit.colors.textMuted;
           String varianceChangeText = "N/A";
 
           if (showComparison && varianceChangePercent != null) {
@@ -231,56 +235,56 @@ class BudgetPerformancePage extends StatelessWidget {
               varianceChangeText = varianceChangePercent.isNegative
                   ? '-∞'
                   : '+∞';
-              // Improvement is negative change (less overspending or more underspending)
               varianceChangeColor = varianceChangePercent.isNegative
                   ? Colors.green.shade700
-                  : theme.colorScheme.error;
+                  : kit.colors.error;
             } else if (!varianceChangePercent.isNaN) {
               varianceChangeText =
                   '${varianceChangePercent >= 0 ? '+' : ''}${varianceChangePercent.toStringAsFixed(0)}%';
               varianceChangeColor = varianceChangePercent <= 0
                   ? Colors.green.shade700
-                  : theme.colorScheme.error; // Negative/zero change is good
+                  : kit.colors.error;
             }
           }
 
           return DataRow(
             cells: [
-              DataCell(Text(budget.name, overflow: TextOverflow.ellipsis)),
+              DataCell(AppText(budget.name, overflow: TextOverflow.ellipsis)),
               DataCell(
-                Text(
+                AppText(
                   CurrencyFormatter.format(budget.targetAmount, currencySymbol),
                 ),
               ),
               DataCell(
-                Text(
+                AppText(
                   CurrencyFormatter.format(
                     item.currentActualSpending,
                     currencySymbol,
                   ),
                 ),
-              ), // Use getter
+              ),
               DataCell(
-                Text(
+                AppText(
                   CurrencyFormatter.format(
                     item.currentVarianceAmount,
                     currencySymbol,
-                  ), // Use getter
-                  style: TextStyle(color: varianceColor),
+                  ),
+                  style: AppTextStyle.body,
+                  color: varianceColor,
                 ),
               ),
               DataCell(
-                Text(
+                AppText(
                   item.currentVariancePercent.isFinite
                       ? '${item.currentVariancePercent.toStringAsFixed(1)}%'
                       : (item.currentVariancePercent.isNegative ? '-∞' : '+∞'),
-                  style: TextStyle(color: varianceColor),
+                  style: AppTextStyle.body,
+                  color: varianceColor,
                 ),
               ),
-              // Conditionally add comparison cells
               if (showComparison && data.previousPerformanceData != null)
                 DataCell(
-                  Text(
+                  AppText(
                     item.previousVariancePercent?.isFinite == true
                         ? '${item.previousVariancePercent!.toStringAsFixed(1)}%'
                         : 'N/A',
@@ -288,15 +292,16 @@ class BudgetPerformancePage extends StatelessWidget {
                 ),
               if (showComparison && data.previousPerformanceData != null)
                 DataCell(
-                  Text(
+                  AppText(
                     varianceChangeText,
-                    style: TextStyle(color: varianceChangeColor),
+                    style: AppTextStyle.body,
+                    color: varianceChangeColor,
                   ),
                 ),
             ],
             onSelectChanged: (selected) {
               if (selected == true) {
-                _navigateToFilteredTransactions(context, budget);
+                _navigateToFilteredTransactions(context, item);
               }
             },
           );

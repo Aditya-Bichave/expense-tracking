@@ -14,7 +14,9 @@ class ReportPageWrapper extends StatelessWidget {
   final String title;
   final Widget body;
   final List<Widget>? actions;
-  // Updated type: Right is Success (String CSV), Left is Failure
+  // Adjusted type to match what CsvExportHelper likely returns (Left=Failure, Right=String)
+  // If CsvExportHelper returns Left=String, Right=Failure (Anti-pattern), we need to check that.
+  // Assuming standard Either<Failure, String>.
   final Future<Either<Failure, String>> Function()? onExportCSV;
 
   const ReportPageWrapper({
@@ -30,18 +32,18 @@ class ReportPageWrapper extends StatelessWidget {
     final kit = context.kit;
 
     log.info("[ReportWrapper] CSV Export requested for report: $title");
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: AppText("Generating CSV...", color: kit.colors.onPrimary), backgroundColor: kit.colors.primary));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: AppText("Generating CSV...", color: kit.colors.onPrimary),
+        backgroundColor: kit.colors.primary,
+      ),
+    );
 
     final result = await onExportCSV!();
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    // Standard Dartz Either: fold(Left, Right) -> fold(Failure, Success)
     result.fold(
       (failure) {
         log.warning(
@@ -49,7 +51,10 @@ class ReportPageWrapper extends StatelessWidget {
         );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: AppText("CSV Export Failed: ${failure.message}", color: kit.colors.onError),
+            content: AppText(
+              "CSV Export Failed: ${failure.message}",
+              color: kit.colors.onError,
+            ),
             backgroundColor: kit.colors.error,
           ),
         );
@@ -70,7 +75,10 @@ class ReportPageWrapper extends StatelessWidget {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: AppText("CSV export successful!", color: kit.colors.onPrimary),
+              content: AppText(
+                "CSV export successful!",
+                color: kit.colors.onPrimary,
+              ),
               backgroundColor: Colors.green.shade700,
             ),
           );
@@ -79,7 +87,10 @@ class ReportPageWrapper extends StatelessWidget {
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: AppText("Error saving CSV: $e", color: kit.colors.onError),
+              content: AppText(
+                "Error saving CSV: $e",
+                color: kit.colors.onError,
+              ),
               backgroundColor: kit.colors.error,
             ),
           );
@@ -98,7 +109,10 @@ class ReportPageWrapper extends StatelessWidget {
         actions: [
           // Filter Button
           IconButton(
-            icon: Icon(Icons.filter_alt_outlined, color: kit.colors.textPrimary),
+            icon: Icon(
+              Icons.filter_alt_outlined,
+              color: kit.colors.textPrimary,
+            ),
             tooltip: "Filters",
             onPressed: () => ReportFilterControls.showFilterSheet(context),
           ),
@@ -114,7 +128,13 @@ class ReportPageWrapper extends StatelessWidget {
                 _handleExportCSV(context);
               } else if (result == 'pdf') {
                 ScaffoldMessenger.of(context).showSnackBar(
-                   SnackBar(content: AppText("PDF Export (Coming Soon)", color: kit.colors.onPrimary), backgroundColor: kit.colors.primary),
+                  SnackBar(
+                    content: AppText(
+                      "PDF Export (Coming Soon)",
+                      color: kit.colors.onPrimary,
+                    ),
+                    backgroundColor: kit.colors.primary,
+                  ),
                 );
               }
             },
@@ -123,7 +143,10 @@ class ReportPageWrapper extends StatelessWidget {
                 PopupMenuItem<String>(
                   value: 'csv',
                   child: ListTile(
-                    leading: Icon(Icons.description_outlined, color: kit.colors.textSecondary),
+                    leading: Icon(
+                      Icons.description_outlined,
+                      color: kit.colors.textSecondary,
+                    ),
                     title: Text('Export as CSV', style: kit.typography.body),
                     contentPadding: EdgeInsets.zero,
                   ),
@@ -132,8 +155,17 @@ class ReportPageWrapper extends StatelessWidget {
                 value: 'pdf',
                 enabled: false,
                 child: ListTile(
-                  leading: Icon(Icons.picture_as_pdf_outlined, color: kit.colors.textDisabled),
-                  title: Text('Export as PDF (Soon)', style: kit.typography.body.copyWith(color: kit.colors.textDisabled)),
+                  // Use textSecondary or textPrimary with opacity since textDisabled doesn't exist
+                  leading: Icon(
+                    Icons.picture_as_pdf_outlined,
+                    color: kit.colors.textSecondary.withOpacity(0.5),
+                  ),
+                  title: Text(
+                    'Export as PDF (Soon)',
+                    style: kit.typography.body.copyWith(
+                      color: kit.colors.textSecondary.withOpacity(0.5),
+                    ),
+                  ),
                   contentPadding: EdgeInsets.zero,
                 ),
               ),

@@ -1,25 +1,33 @@
-// lib/features/reports/presentation/pages/spending_over_time_page.dart
-import 'package:dartz/dartz.dart' show Right;
-import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:dartz/dartz.dart' as dartz;
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
-import 'package:expense_tracker/core/utils/date_formatter.dart' as df; // Alias
+import 'package:expense_tracker/core/utils/date_formatter.dart' as df;
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_bloc.dart';
+// import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_event.dart'; // Using main bloc import
+// import 'package:expense_tracker/features/reports/presentation/bloc/spending_time_report/spending_time_report_state.dart'; // Using main bloc import
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/time_series_line_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // For TransactionType
+import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/main.dart'; // Logger
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 
 class SpendingOverTimePage extends StatefulWidget {
   const SpendingOverTimePage({super.key});
@@ -32,82 +40,69 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
   bool _showComparison = false;
 
   void _toggleComparison() {
-    final newComparisonState = !_showComparison;
-    setState(() => _showComparison = newComparisonState);
-    // Get current granularity from state
-    final currentGranularity =
-        context.read<SpendingTimeReportBloc>().state is SpendingTimeReportLoaded
-        ? (context.read<SpendingTimeReportBloc>().state
-                  as SpendingTimeReportLoaded)
-              .reportData
-              .granularity
-        : (context.read<SpendingTimeReportBloc>().state
-              is SpendingTimeReportLoading)
-        ? (context.read<SpendingTimeReportBloc>().state
-                  as SpendingTimeReportLoading)
-              .granularity
-        : TimeSeriesGranularity.daily; // Default
+    setState(() {
+      _showComparison = !_showComparison;
+    });
+    // Trigger reload with comparison flag
+    final currentState = context.read<SpendingTimeReportBloc>().state;
+    TimeSeriesGranularity currentGranularity = TimeSeriesGranularity.daily;
+    if (currentState is SpendingTimeReportLoaded) {
+      currentGranularity = currentState.reportData.granularity;
+    } else if (currentState is SpendingTimeReportLoading) {
+      currentGranularity = currentState.granularity;
+    }
 
     context.read<SpendingTimeReportBloc>().add(
       LoadSpendingTimeReport(
-        compareToPrevious: newComparisonState, // Pass new comparison state
         granularity: currentGranularity,
+        compareToPrevious: _showComparison,
       ),
-    );
-    log.info(
-      "[SpendingOverTimePage] Toggled comparison to: $newComparisonState",
     );
   }
 
   void _navigateToFilteredTransactions(
     BuildContext context,
-    TimeSeriesDataPoint dataPoint,
+    TimeSeriesDataPoint point,
     TimeSeriesGranularity granularity,
   ) {
-    // ... (implementation unchanged) ...
+    // Construct filters based on report state and clicked point
     final filterBlocState = context.read<ReportFilterBloc>().state;
-    DateTime periodStart = dataPoint.date;
-    DateTime periodEnd;
+
+    // Calculate start/end date for this point based on granularity
+    DateTime start = point.date;
+    DateTime end;
     switch (granularity) {
       case TimeSeriesGranularity.daily:
-        periodEnd = DateTime(
-          periodStart.year,
-          periodStart.month,
-          periodStart.day,
-          23,
-          59,
-          59,
-        );
+        end = start
+            .add(const Duration(days: 1))
+            .subtract(const Duration(seconds: 1));
         break;
       case TimeSeriesGranularity.weekly:
-        periodEnd = periodStart.add(
-          const Duration(days: 6, hours: 23, minutes: 59, seconds: 59),
-        );
+        end = start
+            .add(const Duration(days: 7))
+            .subtract(const Duration(seconds: 1));
         break;
       case TimeSeriesGranularity.monthly:
-        periodEnd = DateTime(
-          periodStart.year,
-          periodStart.month + 1,
-          0,
-          23,
-          59,
-          59,
-        );
+        end = DateTime(
+          start.year,
+          start.month + 1,
+          1,
+        ).subtract(const Duration(seconds: 1));
         break;
     }
+
     final Map<String, String> filters = {
-      'startDate': periodStart.toIso8601String(),
-      'endDate': periodEnd.toIso8601String(),
-      'type':
-          filterBlocState.selectedTransactionType?.name ??
-          TransactionType.expense.name, // Use filter or default
+      'startDate': start.toIso8601String(),
+      'endDate': end.toIso8601String(),
+      'type': TransactionType.expense.name, // Spending report is always expense
     };
-    if (filterBlocState.selectedAccountIds.isNotEmpty) {
-      filters['accountId'] = filterBlocState.selectedAccountIds.join(',');
-    }
     if (filterBlocState.selectedCategoryIds.isNotEmpty) {
       filters['categoryId'] = filterBlocState.selectedCategoryIds.join(',');
     }
+    if (filterBlocState.selectedAccountIds.isNotEmpty) {
+      filters['accountId'] = filterBlocState.selectedAccountIds.join(',');
+    }
+
     log.info(
       "[SpendingOverTimePage] Navigating to transactions with filters: $filters",
     );
@@ -116,8 +111,9 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final settingsState = context.watch<SettingsBloc>().state;
+    final uiMode = settingsState.uiMode;
     final modeTheme = context.modeTheme;
     final currencySymbol = settingsState.currencySymbol;
 
@@ -129,11 +125,13 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             _showComparison
                 ? Icons.compare_arrows_rounded
                 : Icons.compare_arrows_outlined,
+            color: _showComparison
+                ? kit.colors.primary
+                : kit.colors.textPrimary,
           ),
           tooltip: _showComparison
               ? AppLocalizations.of(context)!.hideComparison
               : AppLocalizations.of(context)!.comparePeriod,
-          color: _showComparison ? theme.colorScheme.primary : null,
           onPressed: _toggleComparison,
         ),
         BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
@@ -145,6 +143,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                 : TimeSeriesGranularity.daily;
             return PopupMenuButton<TimeSeriesGranularity>(
               initialValue: currentGranularity,
+              color: kit.colors.surfaceContainer,
               onSelected: (g) {
                 // When granularity changes, also pass current comparison state
                 context.read<SpendingTimeReportBloc>().add(
@@ -154,13 +153,18 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                   ),
                 );
               },
-              icon: const Icon(Icons.timeline_outlined),
+              icon: Icon(
+                Icons.timeline_outlined,
+                color: kit.colors.textPrimary,
+              ),
               tooltip: AppLocalizations.of(context)!.changeGranularity,
               itemBuilder: (_) => TimeSeriesGranularity.values
                   .map(
                     (g) => PopupMenuItem<TimeSeriesGranularity>(
                       value: g,
-                      child: Text(toBeginningOfSentenceCase(g.name) ?? g.name),
+                      child: AppText(
+                        toBeginningOfSentenceCase(g.name) ?? g.name,
+                      ),
                     ),
                   )
                   .toList(),
@@ -172,25 +176,29 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         final state = context.read<SpendingTimeReportBloc>().state;
         if (state is SpendingTimeReportLoaded) {
           final helper = sl<CsvExportHelper>();
-          return helper.exportSpendingTimeReport(
+          final result = await helper.exportSpendingTimeReport(
             state.reportData,
             currencySymbol,
             showComparison: _showComparison,
           );
+          return result.fold(
+            (csvString) => dartz.Right(csvString),
+            (failure) => dartz.Left(failure),
+          );
         }
-        return Right(
+        return dartz.Left(
           ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
         );
       },
       body: BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
         builder: (context, state) {
           if (state is SpendingTimeReportLoading)
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: AppLoadingIndicator());
           if (state is SpendingTimeReportError) {
             return Center(
-              child: Text(
+              child: AppText(
                 "Error: ${state.message}",
-                style: TextStyle(color: theme.colorScheme.error),
+                color: kit.colors.error,
               ),
             );
           }
@@ -198,7 +206,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             final reportData = state.reportData;
             if (reportData.spendingData.isEmpty) {
               return const Center(
-                child: Text("No spending data for this period."),
+                child: AppText("No spending data for this period."),
               );
             }
 
@@ -213,20 +221,18 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               ),
             );
 
+            // Assuming uiMode is accessible via settingsState and compares correctly
             final bool showTable =
-                settingsState.uiMode == UIMode.quantum &&
+                uiMode.name == 'quantum' &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
             return ListView(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16.0,
-                    horizontal: 8.0,
-                  ),
+                  padding: kit.spacing.vMd.add(kit.spacing.hSm),
                   child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
                 ),
-                const Divider(),
+                const AppDivider(),
                 if (showTable)
                   _buildDataTable(
                     context,
@@ -241,11 +247,11 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                     settingsState,
                     _showComparison,
                   ),
-                const SizedBox(height: 80),
+                SizedBox(height: 80),
               ],
             );
           }
-          return const Center(child: Text("Select filters to view report."));
+          return const Center(child: AppText("Select filters to view report."));
         },
       ),
     );
@@ -268,7 +274,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     SettingsState settings,
     bool showComparison,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final currencySymbol = settings.currencySymbol;
 
     return ListView.separated(
@@ -278,7 +284,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
       itemBuilder: (context, index) {
         final item = data.spendingData[index];
         double? changePercent = item.amount.percentageChange;
-        Color changeColor = theme.disabledColor;
+        Color changeColor = kit.colors.textMuted;
         String changeText = "";
 
         if (showComparison && changePercent != null) {
@@ -287,33 +293,36 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
             // Spending increase is bad (red)
             changeColor = changePercent.isNegative
                 ? Colors.green.shade700
-                : theme.colorScheme.error;
+                : kit.colors.error;
           } else if (!changePercent.isNaN) {
             changeText =
                 '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
             changeColor = changePercent > 0
-                ? theme.colorScheme.error
+                ? kit.colors.error
                 : Colors.green.shade700;
           }
         }
 
-        return ListTile(
+        return AppListTile(
           dense: true,
-          title: Text(_formatDateHeader(item.date, data.granularity)),
+          title: AppText(
+            _formatDateHeader(item.date, data.granularity),
+            style: AppTextStyle.body,
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (showComparison && changeText.isNotEmpty)
-                Text(
+                AppText(
                   changeText,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: changeColor,
-                  ),
+                  style: AppTextStyle.caption,
+                  color: changeColor,
                 ),
               if (showComparison && changeText.isNotEmpty)
-                const SizedBox(width: 8),
-              Text(
+                SizedBox(width: kit.spacing.xs),
+              AppText(
                 CurrencyFormatter.format(item.currentAmount, currencySymbol),
+                style: AppTextStyle.body,
               ),
             ],
           ),
@@ -321,7 +330,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               _navigateToFilteredTransactions(context, item, data.granularity),
         );
       },
-      separatorBuilder: (_, __) => const Divider(height: 0.5),
+      separatorBuilder: (_, __) => const AppDivider(height: 0.5),
     );
   }
 
@@ -331,18 +340,27 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     SettingsState settings,
     bool showComparison,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final currencySymbol = settings.currencySymbol;
 
     List<DataColumn> columns = [
-      const DataColumn(label: Text('Period')),
-      DataColumn(label: const Text('Total Spent'), numeric: true),
+      DataColumn(label: AppText('Period', style: AppTextStyle.bodyStrong)),
+      DataColumn(
+        label: AppText('Total Spent', style: AppTextStyle.bodyStrong),
+        numeric: true,
+      ),
     ];
     // Add comparison columns dynamically
     if (showComparison) {
       columns.addAll([
-        DataColumn(label: const Text('Prev Spent'), numeric: true),
-        DataColumn(label: const Text('Change %'), numeric: true),
+        DataColumn(
+          label: AppText('Prev Spent', style: AppTextStyle.bodyStrong),
+          numeric: true,
+        ),
+        DataColumn(
+          label: AppText('Change %', style: AppTextStyle.bodyStrong),
+          numeric: true,
+        ),
       ]);
     }
 
@@ -356,7 +374,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
         columns: columns,
         rows: data.spendingData.map((item) {
           double? changePercent = item.amount.percentageChange;
-          Color changeColor = theme.disabledColor;
+          Color changeColor = kit.colors.textMuted;
           String changeText = "N/A";
 
           if (showComparison && changePercent != null) {
@@ -364,28 +382,28 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
               changeText = changePercent.isNegative ? '-∞' : '+∞';
               changeColor = changePercent.isNegative
                   ? Colors.green.shade700
-                  : theme.colorScheme.error;
+                  : kit.colors.error;
             } else if (!changePercent.isNaN) {
               changeText =
                   '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
               changeColor = changePercent > 0
-                  ? theme.colorScheme.error
+                  ? kit.colors.error
                   : Colors.green.shade700;
             }
           }
 
           return DataRow(
             cells: [
-              DataCell(Text(_formatDateHeader(item.date, data.granularity))),
+              DataCell(AppText(_formatDateHeader(item.date, data.granularity))),
               DataCell(
-                Text(
+                AppText(
                   CurrencyFormatter.format(item.currentAmount, currencySymbol),
                 ),
               ),
               // Conditionally add comparison cells
               if (showComparison)
                 DataCell(
-                  Text(
+                  AppText(
                     item.amount.previousValue != null
                         ? CurrencyFormatter.format(
                             item.amount.previousValue!,
@@ -395,9 +413,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                   ),
                 ),
               if (showComparison)
-                DataCell(
-                  Text(changeText, style: TextStyle(color: changeColor)),
-                ),
+                DataCell(AppText(changeText, color: changeColor)),
             ],
             onSelectChanged: (selected) {
               if (selected == true) {
