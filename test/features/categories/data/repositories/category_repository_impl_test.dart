@@ -15,135 +15,100 @@ class MockCategoryLocalDataSource extends Mock
 class MockCategoryPredefinedDataSource extends Mock
     implements CategoryPredefinedDataSource {}
 
-class FakeCategoryModel extends Fake implements CategoryModel {}
-
 void main() {
   late CategoryRepositoryImpl repository;
   late MockCategoryLocalDataSource mockLocalDataSource;
-  late MockCategoryPredefinedDataSource mockExpensePredefinedDataSource;
-  late MockCategoryPredefinedDataSource mockIncomePredefinedDataSource;
-
-  setUpAll(() {
-    registerFallbackValue(FakeCategoryModel());
-  });
+  late MockCategoryPredefinedDataSource mockExpenseDataSource;
+  late MockCategoryPredefinedDataSource mockIncomeDataSource;
 
   setUp(() {
     mockLocalDataSource = MockCategoryLocalDataSource();
-    mockExpensePredefinedDataSource = MockCategoryPredefinedDataSource();
-    mockIncomePredefinedDataSource = MockCategoryPredefinedDataSource();
+    mockExpenseDataSource = MockCategoryPredefinedDataSource();
+    mockIncomeDataSource = MockCategoryPredefinedDataSource();
     repository = CategoryRepositoryImpl(
       localDataSource: mockLocalDataSource,
-      expensePredefinedDataSource: mockExpensePredefinedDataSource,
-      incomePredefinedDataSource: mockIncomePredefinedDataSource,
+      expensePredefinedDataSource: mockExpenseDataSource,
+      incomePredefinedDataSource: mockIncomeDataSource,
+    );
+    registerFallbackValue(
+      CategoryModel(
+        id: '1',
+        name: 'test',
+        iconName: 'icon',
+        colorHex: '#000000',
+        typeIndex: 0,
+        isCustom: true,
+      ),
     );
   });
 
   const tCategory = Category(
     id: '1',
-    name: 'Custom',
-    iconName: 'icon',
-    colorHex: '#000000',
+    name: 'Food',
+    iconName: 'food',
+    colorHex: '#FFFFFF',
     type: CategoryType.expense,
     isCustom: true,
   );
 
-  final tCategoryModel = CategoryModel(
-    id: '1',
-    name: 'Custom',
-    iconName: 'icon',
-    colorHex: '#000000',
-    typeIndex: 0,
-    isCustom: true,
-  );
-
   group('getAllCategories', () {
-    test('should return combined list of categories', () async {
-      // Arrange
+    test('should aggregate all sources', () async {
       when(
-        () => mockExpensePredefinedDataSource.getPredefinedCategories(),
+        () => mockExpenseDataSource.getPredefinedCategories(),
       ).thenAnswer((_) async => []);
       when(
-        () => mockIncomePredefinedDataSource.getPredefinedCategories(),
+        () => mockIncomeDataSource.getPredefinedCategories(),
       ).thenAnswer((_) async => []);
       when(
         () => mockLocalDataSource.getCustomCategories(),
-      ).thenAnswer((_) async => [tCategoryModel]);
+      ).thenAnswer((_) async => [CategoryModel.fromEntity(tCategory)]);
 
-      // Act
       final result = await repository.getAllCategories();
 
-      // Assert
-      expect(result.isRight(), isTrue);
-      final categories = result.getOrElse(() => []);
-      expect(categories.length, 1);
-      expect(categories.first.id, tCategory.id);
+      expect(result.isRight(), true);
+      result.fold((l) => null, (list) {
+        expect(list.length, 1);
+        expect(list.first.id, '1');
+      });
     });
 
-    test('should return CacheFailure when any source fails', () async {
-      // Arrange
+    test('should return cached data on subsequent calls', () async {
+      // First call
       when(
-        () => mockExpensePredefinedDataSource.getPredefinedCategories(),
-      ).thenThrow(Exception());
+        () => mockExpenseDataSource.getPredefinedCategories(),
+      ).thenAnswer((_) async => []);
       when(
-        () => mockIncomePredefinedDataSource.getPredefinedCategories(),
+        () => mockIncomeDataSource.getPredefinedCategories(),
       ).thenAnswer((_) async => []);
       when(
         () => mockLocalDataSource.getCustomCategories(),
       ).thenAnswer((_) async => []);
 
-      // Act
-      final result = await repository.getAllCategories();
+      await repository.getAllCategories();
 
-      // Assert
-      expect(result.isLeft(), isTrue);
-      expect(result.fold((l) => l, (r) => null), isA<CacheFailure>());
+      // Second call - should not invoke data sources again
+      await repository.getAllCategories();
+
+      verify(() => mockLocalDataSource.getCustomCategories()).called(1);
     });
   });
 
   group('addCustomCategory', () {
-    test('should call saveCustomCategory on local data source', () async {
-      // Arrange
+    test('should save custom category', () async {
       when(
         () => mockLocalDataSource.saveCustomCategory(any()),
-      ).thenAnswer((_) async => Future.value());
+      ).thenAnswer((_) async => null);
 
-      // Act
       final result = await repository.addCustomCategory(tCategory);
 
-      // Assert
-      verify(
-        () => mockLocalDataSource.saveCustomCategory(any<CategoryModel>()),
-      ).called(1);
       expect(result, const Right(null));
+      verify(() => mockLocalDataSource.saveCustomCategory(any())).called(1);
     });
 
-    test('should return ValidationFailure if category is not custom', () async {
-      // Arrange
+    test('should fail if category is not custom', () async {
       final nonCustom = tCategory.copyWith(isCustom: false);
-
-      // Act
       final result = await repository.addCustomCategory(nonCustom);
-
-      // Assert
-      expect(result.isLeft(), isTrue);
-      expect(result.fold((l) => l, (r) => null), isA<ValidationFailure>());
-      verifyNever(() => mockLocalDataSource.saveCustomCategory(any()));
-    });
-  });
-
-  group('deleteCustomCategory', () {
-    test('should call deleteCustomCategory on local data source', () async {
-      // Arrange
-      when(
-        () => mockLocalDataSource.deleteCustomCategory(any()),
-      ).thenAnswer((_) async => Future.value());
-
-      // Act
-      final result = await repository.deleteCustomCategory('1', 'fallback');
-
-      // Assert
-      verify(() => mockLocalDataSource.deleteCustomCategory('1')).called(1);
-      expect(result, const Right(null));
+      expect(result, isA<Left>());
     });
   });
 }

@@ -16,18 +16,16 @@ class SecureStorageService {
   static const _biometricEnabledKey = 'biometric_enabled';
 
   // Enforce secure options by default
-  SecureStorageService({
-    FlutterSecureStorage? storage,
-    SimpleLogger? logger,
-  }) : _storage =
-           storage ??
-           const FlutterSecureStorage(
-             aOptions: AndroidOptions(encryptedSharedPreferences: true),
-             iOptions: IOSOptions(
-               accessibility: KeychainAccessibility.first_unlock,
-             ),
-           ),
-       _logger = logger ?? log;
+  SecureStorageService({FlutterSecureStorage? storage, SimpleLogger? logger})
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(encryptedSharedPreferences: true),
+            iOptions: IOSOptions(
+              accessibility: KeychainAccessibility.first_unlock,
+            ),
+          ),
+      _logger = logger ?? log;
 
   Future<List<int>> getHiveKey() async {
     String? keyString;
@@ -51,8 +49,9 @@ class SecureStorageService {
       try {
         return base64Url.decode(keyString);
       } catch (e, s) {
-        final snippet =
-            keyString.length > 4 ? keyString.substring(0, 4) : keyString;
+        final snippet = keyString.length > 4
+            ? keyString.substring(0, 4)
+            : keyString;
         _logger.severe(
           'Hive encryption key corrupted. Key snippet: $snippet\nError: $e\n$s',
         );

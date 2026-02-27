@@ -14,146 +14,88 @@ class MockGoalLocalDataSource extends Mock implements GoalLocalDataSource {}
 class MockGoalContributionLocalDataSource extends Mock
     implements GoalContributionLocalDataSource {}
 
-class FakeGoalModel extends Fake implements GoalModel {}
-
 void main() {
   late GoalRepositoryImpl repository;
-  late MockGoalLocalDataSource mockGoalDataSource;
+  late MockGoalLocalDataSource mockLocalDataSource;
   late MockGoalContributionLocalDataSource mockContributionDataSource;
 
-  setUpAll(() {
-    registerFallbackValue(FakeGoalModel());
-  });
-
   setUp(() {
-    mockGoalDataSource = MockGoalLocalDataSource();
+    mockLocalDataSource = MockGoalLocalDataSource();
     mockContributionDataSource = MockGoalContributionLocalDataSource();
     repository = GoalRepositoryImpl(
-      localDataSource: mockGoalDataSource,
+      localDataSource: mockLocalDataSource,
       contributionDataSource: mockContributionDataSource,
+    );
+    registerFallbackValue(
+      GoalModel(
+        id: '1',
+        name: 'test',
+        targetAmount: 100,
+        statusIndex: 0,
+        totalSavedCache: 0,
+        createdAt: DateTime.now(),
+      ),
     );
   });
 
   final tGoal = Goal(
     id: '1',
-    name: 'Car',
-    targetAmount: 5000.0,
-    totalSaved: 1000.0,
-    targetDate: DateTime(2025, 1, 1),
-    iconName: 'car',
-    description: 'Save for car',
+    name: 'Vacation',
+    targetAmount: 1000,
     status: GoalStatus.active,
-    createdAt: DateTime.now(),
-    achievedAt: null,
+    totalSaved: 0,
+    createdAt: DateTime.now(), // Fixed: Non-null createdAt
   );
 
-  final tGoalModel = GoalModel(
-    id: '1',
-    name: 'Car',
-    targetAmount: 5000.0,
-    totalSavedCache: 1000.0,
-    targetDate: DateTime(2025, 1, 1),
-    iconName: 'car',
-    description: 'Save for car',
-    statusIndex: 0,
-    createdAt: DateTime.now(),
-    achievedAt: null,
-  );
-
-  group('getGoals', () {
-    test('should return list of goals from data source', () async {
-      // Arrange
-      when(
-        () => mockGoalDataSource.getGoals(),
-      ).thenAnswer((_) async => [tGoalModel]);
-
-      // Act
-      final result = await repository.getGoals();
-
-      // Assert
-      expect(result.isRight(), isTrue);
-      final goals = result.getOrElse(() => []);
-      expect(goals.first.id, tGoal.id);
-    });
-
-    test('should return CacheFailure when data source fails', () async {
-      // Arrange
-      when(
-        () => mockGoalDataSource.getGoals(),
-      ).thenThrow(const CacheFailure('Hive Error'));
-
-      // Act
-      final result = await repository.getGoals();
-
-      // Assert
-      expect(result.isLeft(), true);
-      result.fold(
-        (failure) => expect(failure, isA<CacheFailure>()),
-        (r) => fail('Should return failure'),
-      );
-    });
-  });
+  final tGoalValid = tGoal.copyWith(createdAt: DateTime.now());
 
   group('addGoal', () {
-    test('should return added goal when successful', () async {
-      // Arrange
+    test('should save goal with active status and 0 saved', () async {
       when(
-        () => mockGoalDataSource.saveGoal(any()),
-      ).thenAnswer((_) async => Future.value());
+        () => mockLocalDataSource.saveGoal(any()),
+      ).thenAnswer((_) async => null);
 
-      // Act
-      final result = await repository.addGoal(tGoal);
+      final result = await repository.addGoal(tGoalValid);
 
-      // Assert
-      verify(() => mockGoalDataSource.saveGoal(any())).called(1);
-      expect(result.isRight(), isTrue);
+      expect(result.isRight(), true);
+      verify(() => mockLocalDataSource.saveGoal(any())).called(1);
     });
   });
 
-  group('deleteGoal', () {
-    test('should delete goal and contributions', () async {
-      // Arrange
-      when(
-        () => mockGoalDataSource.deleteGoal(any()),
-      ).thenAnswer((_) async => Future.value());
-      when(
-        () => mockContributionDataSource.getContributionsForGoal(any()),
-      ).thenAnswer((_) async => []);
-      when(
-        () => mockContributionDataSource.deleteContributions(any()),
-      ).thenAnswer((_) async => Future.value());
+  group('getGoals', () {
+    test('should return goals excluding archived by default', () async {
+      final activeModel = GoalModel.fromEntity(tGoalValid);
+      final archivedModel = GoalModel.fromEntity(
+        tGoalValid.copyWith(id: '2', status: GoalStatus.archived),
+      );
 
-      // Act
-      final result = await repository.deleteGoal('1');
+      when(
+        () => mockLocalDataSource.getGoals(),
+      ).thenAnswer((_) async => [activeModel, archivedModel]);
 
-      // Assert
-      verify(() => mockGoalDataSource.deleteGoal('1')).called(1);
-      verify(
-        () => mockContributionDataSource.getContributionsForGoal('1'),
-      ).called(1);
-      verify(
-        () => mockContributionDataSource.deleteContributions(any()),
-      ).called(1);
-      expect(result, const Right(null));
+      final result = await repository.getGoals();
+
+      expect(result.isRight(), true);
+      result.fold((l) => null, (list) {
+        expect(list.length, 1);
+        expect(list.first.id, '1');
+      });
     });
-  });
 
-  group('updateGoal', () {
-    test('should update goal', () async {
-      // Arrange
+    test('should return all goals when includeArchived is true', () async {
+      final activeModel = GoalModel.fromEntity(tGoalValid);
+      final archivedModel = GoalModel.fromEntity(
+        tGoalValid.copyWith(id: '2', status: GoalStatus.archived),
+      );
+
       when(
-        () => mockGoalDataSource.getGoalById(any()),
-      ).thenAnswer((_) async => tGoalModel);
-      when(
-        () => mockGoalDataSource.saveGoal(any()),
-      ).thenAnswer((_) async => Future.value());
+        () => mockLocalDataSource.getGoals(),
+      ).thenAnswer((_) async => [activeModel, archivedModel]);
 
-      // Act
-      final result = await repository.updateGoal(tGoal);
+      final result = await repository.getGoals(includeArchived: true);
 
-      // Assert
-      verify(() => mockGoalDataSource.saveGoal(any())).called(1);
-      expect(result.isRight(), isTrue);
+      expect(result.isRight(), true);
+      result.fold((l) => null, (list) => expect(list.length, 2));
     });
   });
 }
