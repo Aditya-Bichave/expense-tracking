@@ -26,24 +26,26 @@ void main() {
 
   setUp(() {
     mockBloc = MockAddExpenseWizardBloc();
-    when(() => mockBloc.state).thenReturn(AddExpenseWizardState(
-      amountTotal: 100.0,
-      currency: '\$',
-      expenseDate: DateTime.now(),
-      transactionId: 'test-tx-id',
-      currentUserId: 'user1',
-      groupMembers: [
-        GroupMember(
-          id: '1',
-          groupId: 'g1',
-          userId: 'user1',
-          role: GroupRole.member,
-          joinedAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ],
-      payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
-    ));
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        amountTotal: 100.0,
+        currency: '\$',
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+        currentUserId: 'user1',
+        groupMembers: [
+          GroupMember(
+            id: '1',
+            groupId: 'g1',
+            userId: 'user1',
+            role: GroupRole.member,
+            joinedAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ],
+        payers: [PayerModel(userId: 'user1', amountPaid: 100.0)],
+      ),
+    );
   });
 
   Widget createWidgetUnderTest() {
@@ -86,7 +88,8 @@ void main() {
     await tester.tap(find.text('Exact Amounts'));
     await tester.pump();
 
-    verify(() => mockBloc.add(const SplitModeChanged(SplitMode.exact)))
-        .called(1);
+    verify(
+      () => mockBloc.add(const SplitModeChanged(SplitMode.exact)),
+    ).called(1);
   });
 }
