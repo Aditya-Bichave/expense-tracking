@@ -55,7 +55,7 @@ class SyncCoordinator {
   void dispose() {
     _connectivitySubscription?.cancel();
     _authSubscription?.cancel();
-    _realtimeService.unsubscribe();
+    _realtimeService.dispose();
     _syncService.dispose();
   }
 }

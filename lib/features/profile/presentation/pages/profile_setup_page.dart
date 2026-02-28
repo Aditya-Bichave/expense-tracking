@@ -35,6 +35,13 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   ];
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _upiIdController.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _initTimezone();

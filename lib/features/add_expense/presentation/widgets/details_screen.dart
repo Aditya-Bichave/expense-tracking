@@ -126,8 +126,14 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 child: FutureBuilder<dynamic>(
                   future: sl<CategoryRepository>().getAllCategories(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData)
+                    if (snapshot.hasError) {
+                      return const Center(
+                        child: Text('Error loading categories'),
+                      );
+                    }
+                    if (!snapshot.hasData) {
                       return const Center(child: CircularProgressIndicator());
+                    }
                     final result = snapshot.data;
                     return result.fold(
                       (failure) => const Text('Error loading categories'),
@@ -343,8 +349,12 @@ class _GroupSelectorSheet extends StatelessWidget {
             child: FutureBuilder<dynamic>(
               future: sl<GroupsRepository>().getGroups(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData)
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error loading groups'));
+                }
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
+                }
                 return snapshot.data.fold(
                   (failure) => const Text('Error loading groups'),
                   (List<GroupEntity> groups) {

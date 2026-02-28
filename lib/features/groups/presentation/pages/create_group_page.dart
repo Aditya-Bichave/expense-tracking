@@ -26,6 +26,12 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   bool _isInitialized = false;
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_isInitialized) {
