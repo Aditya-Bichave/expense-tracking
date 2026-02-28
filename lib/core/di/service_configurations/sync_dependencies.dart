@@ -15,24 +15,32 @@ class SyncDependencies {
       sl.registerLazySingleton<Connectivity>(() => Connectivity());
     }
 
-    sl.registerLazySingleton<OutboxRepository>(
-      () => OutboxRepository(sl<Box<SyncMutationModel>>()),
-    );
+    if (!sl.isRegistered<OutboxRepository>()) {
+      sl.registerLazySingleton<OutboxRepository>(
+        () => OutboxRepository(sl<Box<SyncMutationModel>>()),
+      );
+    }
 
-    sl.registerLazySingleton<SyncService>(
-      () => SyncService(
-        sl(),
-        sl(),
-        sl(),
-        sl<Box<GroupModel>>(),
-        sl<Box<GroupMemberModel>>(),
-      ),
-    );
+    if (!sl.isRegistered<SyncService>()) {
+      sl.registerLazySingleton<SyncService>(
+        () => SyncService(
+          sl(),
+          sl(),
+          sl(),
+          sl<Box<GroupModel>>(),
+          sl<Box<GroupMemberModel>>(),
+        ),
+      );
+    }
 
-    sl.registerLazySingleton<RealtimeService>(() => RealtimeService(sl()));
+    if (!sl.isRegistered<RealtimeService>()) {
+      sl.registerLazySingleton<RealtimeService>(() => RealtimeService(sl()));
+    }
 
-    sl.registerLazySingleton<SyncCoordinator>(
-      () => SyncCoordinator(sl(), sl(), sl(), sl()),
-    );
+    if (!sl.isRegistered<SyncCoordinator>()) {
+      sl.registerLazySingleton<SyncCoordinator>(
+        () => SyncCoordinator(sl(), sl(), sl(), sl()),
+      );
+    }
   }
 }

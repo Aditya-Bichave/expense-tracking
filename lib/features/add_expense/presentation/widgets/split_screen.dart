@@ -23,7 +23,9 @@ class SplitScreen extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Expense added securely.')),
           );
-          Navigator.of(context).pop();
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
         } else if (state.status == FormStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -207,41 +209,45 @@ class SplitScreen extends StatelessWidget {
   }
 
   void _showPayerSelector(BuildContext context, AddExpenseWizardState state) {
+    final bloc = context.read<AddExpenseWizardBloc>();
     showModalBottomSheet(
       context: context,
-      builder: (_) => SizedBox(
-        height: 300,
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Who Paid?',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      builder: (_) => BlocProvider.value(
+        value: bloc,
+        child: SizedBox(
+          height: 300,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  'Who Paid?',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: state.groupMembers.length,
-                itemBuilder: (ctx, index) {
-                  final member = state.groupMembers[index];
-                  final isYou = member.userId == state.currentUserId;
-                  return ListTile(
-                    leading: CircleAvatar(
-                      child: Text(member.userId.substring(0, 1).toUpperCase()),
-                    ),
-                    title: Text(isYou ? 'You' : member.userId),
-                    onTap: () {
-                      context.read<AddExpenseWizardBloc>().add(
-                        SinglePayerSelected(member.userId),
-                      );
-                      Navigator.pop(ctx);
-                    },
-                  );
-                },
+              Expanded(
+                child: ListView.builder(
+                  itemCount: state.groupMembers.length,
+                  itemBuilder: (ctx, index) {
+                    final member = state.groupMembers[index];
+                    final isYou = member.userId == state.currentUserId;
+                    return ListTile(
+                      leading: CircleAvatar(
+                        child: Text(
+                          member.userId.substring(0, 1).toUpperCase(),
+                        ),
+                      ),
+                      title: Text(isYou ? 'You' : member.userId),
+                      onTap: () {
+                        bloc.add(SinglePayerSelected(member.userId));
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

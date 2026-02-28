@@ -35,6 +35,7 @@ import 'package:expense_tracker/core/di/service_configurations/group_expenses_de
 import 'package:expense_tracker/core/di/service_configurations/add_expense_dependencies.dart';
 import 'package:expense_tracker/core/di/service_configurations/sync_dependencies.dart';
 import 'package:expense_tracker/core/network/supabase_client_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/sync/sync_coordinator.dart';
 
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
@@ -183,7 +184,11 @@ Future<void> initLocator({
   }
   sl.registerLazySingleton(() => getDownloaderService());
 
-  sl.registerLazySingleton(() => SupabaseClientProvider.client);
+  if (!sl.isRegistered<SupabaseClient>()) {
+    sl.registerLazySingleton<SupabaseClient>(
+      () => SupabaseClientProvider.client,
+    );
+  }
 
   if (!sl.isRegistered<SettingsRepository>()) {
     SettingsDependencies.register();

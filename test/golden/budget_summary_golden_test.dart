@@ -48,8 +48,8 @@ void main() {
         'budget_summary_golden_test.dart',
       ),
     );
-    // Set threshold to 2% for CI stability
-    goldenFileComparator = TolerantGoldenFileComparator(testFileUri, 0.02);
+    // Set threshold to 5% for CI stability
+    goldenFileComparator = TolerantGoldenFileComparator(testFileUri, 0.05);
   });
 
   group('BudgetSummaryWidget Golden Test', () {

@@ -30,6 +30,8 @@ import 'package:expense_tracker/features/settings/domain/repositories/settings_r
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit_transaction/add_edit_transaction_bloc.dart';
+import 'package:expense_tracker/features/add_expense/domain/repositories/add_expense_repository.dart';
+import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_state.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
@@ -72,6 +74,8 @@ class MockDataManagementRepository extends Mock
     implements DataManagementRepository {}
 
 class MockSettingsRepository extends Mock implements SettingsRepository {}
+
+class MockAddExpenseRepository extends Mock implements AddExpenseRepository {}
 
 class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
     implements AccountListBloc {}
@@ -134,6 +138,9 @@ class _FakeAccountListState extends Fake implements AccountListState {
   List<Object?> get props => [];
 }
 
+class _FakeAddExpenseWizardState extends Fake
+    implements AddExpenseWizardState {}
+
 void registerFallbackValues() {
   registerFallbackValue(_FakeBuildContext());
   registerFallbackValue(_FakeTransactionEntity());
@@ -144,6 +151,7 @@ void registerFallbackValues() {
   registerFallbackValue(_FakeCategoryManagementState());
   registerFallbackValue(_FakeAddEditTransactionEvent());
   registerFallbackValue(_FakeAddEditTransactionState());
+  registerFallbackValue(_FakeAddExpenseWizardState());
   registerFallbackValue(Category.uncategorized);
   registerFallbackValue(TransactionType.expense);
   registerFallbackValue(TransactionSortBy.date);
@@ -162,6 +170,14 @@ Future<void> _register<T extends Object>(
     await getIt.unregister<T>();
   }
   getIt.registerLazySingleton<T>(factory);
+}
+
+// Registers mocks needed for the Add Expense feature
+Future<void> registerAddExpenseMocks(GetIt getIt) async {
+  await _register<AddExpenseRepository>(
+    getIt,
+    () => MockAddExpenseRepository(),
+  );
 }
 
 // Registers mocks needed for the Accounts feature

@@ -3,37 +3,55 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('EncryptionHelper', () {
-    test('encrypt and decrypt round trip', () {
-      const password = 'my-secret-password';
-      const plainText = 'Hello, World!';
+    const password = 'super_secret_password';
+    const plainText = 'This is a secret message!';
 
+    test('encryptString returns valid map keys', () {
+      final result = EncryptionHelper.encryptString(plainText, password);
+      expect(result.keys, containsAll(['salt', 'iv', 'cipher', 'mac']));
+      expect(result['salt'], isNotEmpty);
+      expect(result['iv'], isNotEmpty);
+      expect(result['cipher'], isNotEmpty);
+      expect(result['mac'], isNotEmpty);
+    });
+
+    test(
+      'encryptString produces different outputs for same input (random salt/iv)',
+      () {
+        final result1 = EncryptionHelper.encryptString(plainText, password);
+        final result2 = EncryptionHelper.encryptString(plainText, password);
+
+        expect(result1['cipher'], isNot(equals(result2['cipher'])));
+        expect(result1['iv'], isNot(equals(result2['iv'])));
+        expect(result1['salt'], isNot(equals(result2['salt'])));
+      },
+    );
+
+    test('decryptString decrypts correctly', () {
       final encrypted = EncryptionHelper.encryptString(plainText, password);
-      expect(encrypted['salt'], isNotNull);
-      expect(encrypted['iv'], isNotNull);
-      expect(encrypted['cipher'], isNotNull);
-      expect(encrypted['mac'], isNotNull);
-
       final decrypted = EncryptionHelper.decryptString(encrypted, password);
       expect(decrypted, plainText);
     });
 
-    test('decrypt with wrong password throws', () {
-      const password = 'correct-password';
-      const wrongPassword = 'wrong-password';
-      const plainText = 'Hello';
-
+    test('decryptString throws on wrong password', () {
       final encrypted = EncryptionHelper.encryptString(plainText, password);
 
-      // Decryption might fail at AES decryption (padding) OR HMAC check.
-      // The helper throws FormatException for HMAC mismatch if present, or potentially other errors if AES padding is invalid.
-      // But based on implementation:
-      // `encrypter.decrypt64` might throw if key is wrong before MAC check if padding is messed up.
-      // But if MAC check fails, it throws FormatException.
-
-      // Let's expect generic Exception or Error.
       expect(
-        () => EncryptionHelper.decryptString(encrypted, wrongPassword),
-        throwsA(anything),
+        () => EncryptionHelper.decryptString(encrypted, 'wrong_password'),
+        throwsA(anyOf(isA<FormatException>(), isA<ArgumentError>())),
+      );
+    });
+
+    test('decryptString throws on tampered cipher', () {
+      final encrypted = EncryptionHelper.encryptString(plainText, password);
+      // Tamper with cipher
+      final tampered = Map<String, dynamic>.from(encrypted);
+      tampered['cipher'] = 'AAAA${(tampered['cipher'] as String).substring(4)}';
+
+      // Depending on implementation, this might throw Mac validation error or padding error
+      expect(
+        () => EncryptionHelper.decryptString(tampered, password),
+        throwsA(isA<Exception>()),
       );
     });
   });

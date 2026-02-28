@@ -3,45 +3,107 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('showStrongConfirmation confirms only on exact phrase', (
-    tester,
-  ) async {
-    bool? result;
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () async {
-              result = await AppDialogs.showStrongConfirmation(
-                context,
-                title: 'Delete',
-                content: 'Type DELETE',
-                confirmText: 'Delete',
-                confirmationPhrase: 'DELETE',
-              );
-            },
-            child: const Text('open'),
+  group('AppDialogs', () {
+    testWidgets(
+      'showConfirmation shows dialog with correct title and content',
+      (tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) => TextButton(
+                onPressed: () => AppDialogs.showConfirmation(
+                  context,
+                  title: 'Test Title',
+                  content: 'Test Content',
+                  confirmText: 'Yes',
+                ),
+                child: const Text('Show'),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+
+        await tester.tap(find.text('Show'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Test Title'), findsOneWidget);
+        expect(find.text('Test Content'), findsOneWidget);
+        expect(find.text('Yes'), findsOneWidget);
+        expect(find.text('Cancel'), findsOneWidget);
+      },
     );
 
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
+    testWidgets('showConfirmation returns true on confirm', (tester) async {
+      bool? result;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () async {
+                result = await AppDialogs.showConfirmation(
+                  context,
+                  title: 'T',
+                  content: 'C',
+                  confirmText: 'OK',
+                );
+              },
+              child: const Text('Show'),
+            ),
+          ),
+        ),
+      );
 
-    // Confirm button should be disabled initially
-    final confirmButton = find.widgetWithText(TextButton, 'Delete');
-    expect(tester.widget<TextButton>(confirmButton).onPressed, isNull);
+      await tester.tap(find.text('Show'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
 
-    await tester.enterText(find.byType(TextFormField), 'DELETE');
-    await tester.pump();
-    expect(tester.widget<TextButton>(confirmButton).onPressed, isNotNull);
+      expect(result, true);
+    });
 
-    await tester.tap(confirmButton);
-    await tester.pumpAndSettle();
+    testWidgets('showStrongConfirmation requires exact phrase', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => AppDialogs.showStrongConfirmation(
+                context,
+                title: 'Delete',
+                content: 'Are you sure?',
+                confirmText: 'DELETE',
+                confirmationPhrase: 'confirm me',
+              ),
+              child: const Text('Show'),
+            ),
+          ),
+        ),
+      );
 
-    expect(result, isTrue);
-    expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Show'));
+      await tester.pumpAndSettle();
+
+      final confirmBtn = find.widgetWithText(TextButton, 'DELETE');
+
+      // Button should be disabled initially (or doing nothing)
+      // The implementation checks controller text in onPressed.
+      // If we tap it without text, it should not pop.
+      await tester.tap(confirmBtn);
+      await tester.pumpAndSettle();
+      expect(find.text('Delete'), findsOneWidget); // Still open
+
+      // Enter wrong text
+      await tester.enterText(find.byType(TextFormField), 'wrong');
+      await tester.pumpAndSettle();
+      await tester.tap(confirmBtn);
+      await tester.pumpAndSettle();
+      expect(find.text('Delete'), findsOneWidget); // Still open
+
+      // Enter correct text
+      await tester.enterText(find.byType(TextFormField), 'confirm me');
+      await tester.pumpAndSettle();
+      await tester.tap(confirmBtn);
+      await tester.pumpAndSettle();
+      expect(find.text('Delete'), findsNothing); // Popped
+    });
   });
 }
