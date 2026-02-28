@@ -3,6 +3,7 @@ import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
@@ -862,31 +863,20 @@ class ReportRepositoryImpl implements ReportRepository {
       ),
     ]);
 
-    final budgetsResult =
-        results[0]
-            as Either<
-              Failure,
-              List<dynamic>
-            >; // BudgetRepo returns List<Budget>
-    final expenseResult =
-        results[1]
-            as Either<
-              Failure,
-              List<dynamic>
-            >; // ExpenseRepo returns List<ExpenseModel>
+    final budgetsResult = results[0] as Either<Failure, List<Budget>>;
+    final expenseResult = results[1] as Either<Failure, List<ExpenseModel>>;
 
-    if (budgetsResult.isLeft())
+    if (budgetsResult.isLeft()) {
       return budgetsResult.fold(
         (l) => Left(l),
         (_) => const Left(CacheFailure("Failed to fetch budgets")),
       );
-    // Safe Cast
-    final allBudgets = budgetsResult.getOrElse(() => []).cast<dynamic>();
+    }
+
+    final allBudgets = budgetsResult.getOrElse(() => <Budget>[]);
     final relevantBudgets = (budgetIds == null || budgetIds.isEmpty)
         ? allBudgets
-        : allBudgets
-              .where((b) => budgetIds.contains((b as dynamic).id))
-              .toList();
+        : allBudgets.where((b) => budgetIds.contains(b.id)).toList();
 
     if (relevantBudgets.isEmpty) {
       log.fine(
@@ -895,14 +885,14 @@ class ReportRepositoryImpl implements ReportRepository {
       return const Right(BudgetPerformanceReportData(performanceData: []));
     }
 
-    if (expenseResult.isLeft())
+    if (expenseResult.isLeft()) {
       return expenseResult.fold(
         (l) => Left(l),
         (_) => const Left(CacheFailure("Expense fetch failed")),
       );
-    final allExpensesInRange = expenseResult
-        .getOrElse(() => [])
-        .cast<ExpenseModel>();
+    }
+
+    final allExpensesInRange = expenseResult.getOrElse(() => <ExpenseModel>[]);
 
     // Pre-group expenses by category for O(1) lookup optimization
     final Map<String, List<ExpenseModel>> expensesByCategory = {};
@@ -919,9 +909,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
     List<BudgetPerformanceData> performanceList = [];
 
-    for (final budget in relevantBudgets) {
-      // Cast budget to dynamic to access properties if type is lost, or rely on correct type from generic
-      final b = budget as dynamic;
+    for (final b in relevantBudgets) {
       // Determine effective dates for calculation based on budget period type vs report period
       final (effStart, effEnd) =
           (b.period == BudgetPeriodType.oneTime &&
@@ -952,7 +940,7 @@ class ReportRepositoryImpl implements ReportRepository {
           })
           .fold(0.0, (sum, exp) => sum + exp.amount);
 
-      final target = b.targetAmount as double;
+      final target = b.targetAmount;
       final variance = target - spent;
       final variancePercent = target > 0
           ? (variance / target) * 100

@@ -71,7 +71,8 @@ class GetFinancialOverviewUseCase
 
       // --- Process 0: Accounts ---
       // Re-fetch individual results with proper casting
-      final accountsResult = results[0] as Either<Failure, List<AssetAccount>>; // Generic List
+      final accountsResult =
+          results[0] as Either<Failure, List<AssetAccount>>; // Generic List
       final incomeResult = results[1] as Either<Failure, double>;
       final expenseResult = results[2] as Either<Failure, double>;
       final budgetSummary = results[3] as List<BudgetWithStatus>;
@@ -82,8 +83,10 @@ class GetFinancialOverviewUseCase
       if (accountsResult.isLeft())
         return _handleFailure("accounts", accountsResult);
 
-      final accounts =
-          accountsResult.fold((_) => <AssetAccount>[], (list) => list);
+      final accounts = accountsResult.fold(
+        (_) => <AssetAccount>[],
+        (list) => list,
+      );
 
       double overallBalance = 0.0;
       final Map<String, double> accountBalancesMap = {};
@@ -181,16 +184,16 @@ class GetFinancialOverviewUseCase
     final budgetsResult = await budgetRepository.getBudgets();
 
     // Check failure first
-    if(budgetsResult.isLeft()) {
-         budgetsResult.fold((f) => budgetError = f, (_) {});
-          log.warning(
-            "[GetFinancialOverviewUseCase] Error fetching budgets: ${budgetError!.message}",
-          );
-         return [];
+    if (budgetsResult.isLeft()) {
+      budgetsResult.fold((f) => budgetError = f, (_) {});
+      log.warning(
+        "[GetFinancialOverviewUseCase] Error fetching budgets: ${budgetError!.message}",
+      );
+      return [];
     }
 
     final budgets = budgetsResult.getOrElse(() => []);
-    if(budgets.isEmpty) return [];
+    if (budgets.isEmpty) return [];
 
     // Parallelize budget spent calculations
     const thrivingColor = Colors.green;
@@ -199,35 +202,37 @@ class GetFinancialOverviewUseCase
 
     final spentFutures = budgets.map((budget) {
       final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
-      return budgetRepository.calculateAmountSpent(
-          budget: budget,
-          periodStart: periodStart,
-          periodEnd: periodEnd,
-        ).then((result) => (budget, result));
+      return budgetRepository
+          .calculateAmountSpent(
+            budget: budget,
+            periodStart: periodStart,
+            periodEnd: periodEnd,
+          )
+          .then((result) => (budget, result));
     });
 
     final results = await Future.wait(spentFutures);
 
     for (final (budget, spentResult) in results) {
-        spentResult.fold(
-          (f) {
-            log.warning(
-              "[GetFinancialOverviewUseCase] Failed calc for budget ${budget.id}: ${f.message}",
-            );
-            // We continue even if one fails
-          },
-          (spent) {
-            budgetStatuses.add(
-              BudgetWithStatus.calculate(
-                budget: budget,
-                amountSpent: spent,
-                thrivingColor: thrivingColor,
-                nearingLimitColor: nearingLimitColor,
-                overLimitColor: overLimitColor,
-              ),
-            );
-          },
-        );
+      spentResult.fold(
+        (f) {
+          log.warning(
+            "[GetFinancialOverviewUseCase] Failed calc for budget ${budget.id}: ${f.message}",
+          );
+          // We continue even if one fails
+        },
+        (spent) {
+          budgetStatuses.add(
+            BudgetWithStatus.calculate(
+              budget: budget,
+              amountSpent: spent,
+              thrivingColor: thrivingColor,
+              nearingLimitColor: nearingLimitColor,
+              overLimitColor: overLimitColor,
+            ),
+          );
+        },
+      );
     }
 
     budgetStatuses.sort((a, b) => b.percentageUsed.compareTo(a.percentageUsed));
