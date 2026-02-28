@@ -8,6 +8,8 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class AssetDistributionPieChart extends StatefulWidget {
   final Map<String, double> accountBalances; // Map<AccountName, Balance>
@@ -198,7 +200,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         Container(
           width: 14,
           height: 14,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BridgeDecoration(color: color, shape: BoxShape.circle),
         ),
         kit.spacing.gapXs,
         BridgeText(name, style: kit.typography.caption),
@@ -230,7 +232,7 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         value: balance,
         title: '${percentage.toStringAsFixed(0)}%',
         radius: radius,
-        titleStyle: TextStyle(
+        titleStyle: BridgeTextStyle(
           fontSize: fontSize,
           fontWeight: FontWeight.bold,
           color: titleColor,

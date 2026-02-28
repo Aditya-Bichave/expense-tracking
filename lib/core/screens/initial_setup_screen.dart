@@ -5,6 +5,11 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class InitialSetupScreen extends StatefulWidget {
   const InitialSetupScreen({super.key});
@@ -31,10 +36,10 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
     final currentCountryCode = settingsBloc.state.selectedCountryCode;
     final currentCountry = AppCountries.findCountryByCode(currentCountryCode);
 
-    return Scaffold(
+    return BridgeScaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
+          padding: const BridgeEdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -70,7 +75,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const BridgeEdgeInsets.symmetric(vertical: 16),
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                 ),
@@ -81,7 +86,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 icon: const Icon(Icons.explore_outlined),
                 label: const Text('Explore Demo Mode'),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const BridgeEdgeInsets.symmetric(vertical: 14),
                   side: BorderSide(color: theme.colorScheme.primary),
                   foregroundColor: theme.colorScheme.primary,
                 ),
@@ -96,16 +101,16 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 children: [
                   Expanded(child: Divider()),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: BridgeEdgeInsets.symmetric(horizontal: 16.0),
                     child: Text("OR"),
                   ),
                   Expanded(child: Divider()),
                 ],
               ),
               const SizedBox(height: 16),
-              ElevatedButton(
+              BridgeElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const BridgeEdgeInsets.symmetric(vertical: 14),
                   backgroundColor: theme.colorScheme.secondaryContainer,
                   foregroundColor: theme.colorScheme.onSecondaryContainer,
                 ),
@@ -115,7 +120,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 child: const Text('Sign Up / Log In'),
               ),
               const SizedBox(height: 24),
-              TextButton(
+              BridgeTextButton(
                 style: TextButton.styleFrom(
                   foregroundColor: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -134,7 +139,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
   }
 
   void _showCurrencyPicker(BuildContext context) {
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       builder: (builderContext) {
         return BlocProvider.value(
@@ -157,11 +162,11 @@ class CurrencyPickerSheet extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+        padding: const BridgeEdgeInsets.only(top: 8.0, bottom: 8.0),
         child: Wrap(
           children: <Widget>[
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const BridgeEdgeInsets.all(16.0),
               child: Text(
                 'Select Your Currency',
                 style: theme.textTheme.titleLarge,

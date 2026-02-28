@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/income_e
 import 'package:expense_tracker/features/dashboard/presentation/widgets/overall_balance_card.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 
 class DashboardHeader extends StatelessWidget {
   final FinancialOverview overview;
@@ -17,9 +18,9 @@ class DashboardHeader extends StatelessWidget {
     // This widget combines the top cards
     return Column(
       children: [
-        OverallBalanceCard(overview: overview),
+        OverallBalanceBridgeCard(overview: overview),
         kit.spacing.gapSm, // Consistent spacing
-        IncomeExpenseSummaryCard(overview: overview),
+        IncomeExpenseSummaryBridgeCard(overview: overview),
       ],
     );
   }

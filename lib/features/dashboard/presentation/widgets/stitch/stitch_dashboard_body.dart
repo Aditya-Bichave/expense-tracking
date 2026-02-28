@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/dashboard/presentation/widgets/stitch/s
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 
 class StitchDashboardBody extends StatelessWidget {
   final FinancialOverview overview;
@@ -43,7 +44,7 @@ class StitchDashboardBody extends StatelessWidget {
           SliverToBoxAdapter(
             child: Column(
               children: [
-                StitchNetBalanceCard(overview: overview),
+                StitchNetBalanceBridgeCard(overview: overview),
                 const StitchQuickActions(),
                 SizedBox(height: kit.spacing.lg),
                 StitchGoalsList(goals: overview.activeGoalsSummary),

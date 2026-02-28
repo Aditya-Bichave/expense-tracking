@@ -13,6 +13,10 @@ import 'package:expense_tracker/core/utils/color_utils.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 // Keep for common builder
 
 class AddEditCategoryScreen extends StatelessWidget {
@@ -37,7 +41,7 @@ class AddEditCategoryScreen extends StatelessWidget {
       "[AddEditCategoryScreen] Building. Editing: $isEditing. Category: ${initialCategory?.name}. Forced Initial Type: ${forcedInitialType?.name}",
     );
 
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(
         title: Text(isEditing ? 'Edit Category' : 'Add Category'),
         leading: IconButton(
@@ -203,7 +207,7 @@ class _CategoryFormState extends State<CategoryForm> {
               bottom: 40,
               top: 16,
             ) ??
-            const EdgeInsets.all(16.0).copyWith(bottom: 40),
+            const BridgeEdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Category Type Toggle
           CommonFormFields.buildTypeToggle(
@@ -241,7 +245,7 @@ class _CategoryFormState extends State<CategoryForm> {
           const SizedBox(height: 20),
 
           // Parent Category Picker
-          ListTile(
+          BridgeListTile(
             leading: CommonFormFields.getPrefixIcon(
               context,
               'parent',
@@ -253,7 +257,7 @@ class _CategoryFormState extends State<CategoryForm> {
             onTap: _showParentPicker,
             shape: RoundedRectangleBorder(
               side: BorderSide(color: theme.dividerColor),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BridgeBorderRadius.circular(8),
             ),
             tileColor: theme.colorScheme.surfaceContainerHighest,
           ),
@@ -278,7 +282,7 @@ class _CategoryFormState extends State<CategoryForm> {
             ),
             label: Text(isEditing ? 'Update Category' : 'Add Category'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const BridgeEdgeInsets.symmetric(vertical: 16),
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,

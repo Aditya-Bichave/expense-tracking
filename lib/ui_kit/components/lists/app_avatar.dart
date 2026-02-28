@@ -8,6 +8,8 @@ class AppAvatar extends StatelessWidget {
   final Color? backgroundColor;
   final Color? foregroundColor;
 
+  final Widget? child;
+
   const AppAvatar({
     super.key,
     this.imageUrl,
@@ -15,6 +17,7 @@ class AppAvatar extends StatelessWidget {
     this.size = 40,
     this.backgroundColor,
     this.foregroundColor,
+    this.child,
   });
 
   @override
@@ -32,16 +35,18 @@ class AppAvatar extends StatelessWidget {
             : null,
       ),
       alignment: Alignment.center,
-      child: imageUrl == null && initials != null
-          ? Text(
-              initials!,
-              style: kit.typography.title.copyWith(
-                fontSize: size * 0.4,
-                color: foregroundColor ?? kit.colors.onPrimaryContainer,
-                fontWeight: FontWeight.bold,
-              ),
-            )
-          : null,
+      child:
+          child ??
+          (imageUrl == null && initials != null
+              ? Text(
+                  initials!,
+                  style: kit.typography.title.copyWith(
+                    fontSize: size * 0.4,
+                    color: foregroundColor ?? kit.colors.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+              : null),
     );
   }
 }

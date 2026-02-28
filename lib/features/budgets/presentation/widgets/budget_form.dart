@@ -13,6 +13,9 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 typedef BudgetSubmitCallback =
     Function(
@@ -142,7 +145,7 @@ class _BudgetFormState extends State<BudgetForm> {
         .where((id) => items.any((item) => item.value == id))
         .toList();
 
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       isScrollControlled: true,
       context: context,
       builder: (ctx) {
@@ -163,14 +166,14 @@ class _BudgetFormState extends State<BudgetForm> {
           searchTextStyle: theme.textTheme.bodyMedium,
           confirmText: Text(
             'CONFIRM',
-            style: TextStyle(
+            style: BridgeTextStyle(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
           ),
           cancelText: Text(
             'CANCEL',
-            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+            style: BridgeTextStyle(color: theme.colorScheme.onSurfaceVariant),
           ),
           searchable: true,
           onConfirm: (values) {
@@ -256,7 +259,7 @@ class _BudgetFormState extends State<BudgetForm> {
               bottom: 40,
               top: 16,
             ) ??
-            const EdgeInsets.all(16.0).copyWith(bottom: 40),
+            const BridgeEdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Name
           CommonFormFields.buildNameField(
@@ -423,8 +426,8 @@ class _BudgetFormState extends State<BudgetForm> {
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text('-', style: TextStyle(fontSize: 16)),
+                        padding: BridgeEdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text('-', style: BridgeTextStyle(fontSize: 16)),
                       ),
                       Expanded(
                         child: CommonFormFields.buildDatePickerTile(
@@ -482,7 +485,7 @@ class _BudgetFormState extends State<BudgetForm> {
               widget.initialBudget == null ? 'Add Budget' : 'Update Budget',
             ),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const BridgeEdgeInsets.symmetric(vertical: 16),
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,

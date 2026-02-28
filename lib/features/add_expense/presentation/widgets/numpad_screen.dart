@@ -6,6 +6,7 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_fab.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class NumpadScreen extends StatefulWidget {
   final VoidCallback onNext;
@@ -130,7 +131,7 @@ class _NumpadScreenState extends State<NumpadScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: _handleBackspace,
-          borderRadius: BorderRadius.circular(50),
+          borderRadius: BridgeBorderRadius.circular(50),
           child: Center(
             child: Icon(
               Icons.backspace_outlined,
@@ -146,7 +147,7 @@ class _NumpadScreenState extends State<NumpadScreen> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _handleInput(key),
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BridgeBorderRadius.circular(50),
         child: Center(
           child: Text(
             key,

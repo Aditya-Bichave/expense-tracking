@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class StitchSettingsTile extends StatelessWidget {
   final IconData icon;
@@ -20,11 +22,11 @@ class StitchSettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final kit = context.kit;
 
-    return AppListTile(
+    return AppBridgeListTile(
       leading: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
+        decoration: BridgeDecoration(
           color: kit.colors.primaryContainer,
           borderRadius: kit.radii.small,
         ),

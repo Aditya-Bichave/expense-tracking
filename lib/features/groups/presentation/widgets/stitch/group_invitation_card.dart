@@ -3,9 +3,10 @@ import 'dart:ui';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 
 class GroupInvitationCard extends StatelessWidget {
-  const GroupInvitationCard({super.key});
+  const GroupInvitationBridgeCard({super.key});
 
   @override
   Widget build(BuildContext context) {

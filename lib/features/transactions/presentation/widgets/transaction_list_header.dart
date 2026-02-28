@@ -2,6 +2,8 @@
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class TransactionListHeader extends StatelessWidget {
   final TextEditingController searchController;
@@ -30,7 +32,7 @@ class TransactionListHeader extends StatelessWidget {
         final bool hasSearchTerm =
             state.searchTerm != null && state.searchTerm!.isNotEmpty;
         return Padding(
-          padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 4.0),
+          padding: const BridgeEdgeInsets.fromLTRB(12.0, 8.0, 12.0, 4.0),
           child: Column(
             children: [
               TextField(
@@ -40,20 +42,20 @@ class TransactionListHeader extends StatelessWidget {
                   hintText: "Search title, category, amount...",
                   prefixIcon: const Icon(Icons.search, size: 20),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BridgeBorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BridgeBorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BridgeBorderRadius.circular(30),
                     borderSide: BorderSide(color: theme.colorScheme.primary),
                   ),
                   filled: true,
                   fillColor: theme.colorScheme.surfaceContainerHighest,
-                  contentPadding: const EdgeInsets.symmetric(
+                  contentPadding: const BridgeEdgeInsets.symmetric(
                     vertical: 0,
                     horizontal: 16,
                   ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
 
 class AppDialogs {
   // --- CORRECTED: context is the first positional argument ---
@@ -17,15 +19,15 @@ class AppDialogs {
       context: context,
       barrierDismissible: barrierDismissible,
       builder: (BuildContext ctx) {
-        return AlertDialog(
+        return BridgeAlertDialog(
           title: Text(title),
           content: Text(content, style: theme.textTheme.bodyMedium),
           actions: <Widget>[
-            TextButton(
+            BridgeTextButton(
               child: Text(cancelText),
               onPressed: () => Navigator.of(ctx).pop(false),
             ),
-            TextButton(
+            BridgeTextButton(
               style: TextButton.styleFrom(
                 foregroundColor: confirmColor ?? theme.colorScheme.primary,
               ),
@@ -70,11 +72,11 @@ class AppDialogs {
   static void showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => BridgeAlertDialog(
         title: const Text('Error'),
         content: Text(message),
         actions: [
-          TextButton(
+          BridgeTextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('OK'),
           ),
@@ -123,7 +125,7 @@ class _StrongConfirmationDialogState extends State<_StrongConfirmationDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AlertDialog(
+    return BridgeAlertDialog(
       title: Text(widget.title),
       content: Form(
         key: _formKey,
@@ -156,11 +158,11 @@ class _StrongConfirmationDialogState extends State<_StrongConfirmationDialog> {
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        BridgeTextButton(
           child: const Text('Cancel'),
           onPressed: () => Navigator.of(context).pop(false),
         ),
-        TextButton(
+        BridgeTextButton(
           style: TextButton.styleFrom(
             foregroundColor: widget.confirmColor ?? theme.colorScheme.error,
           ),

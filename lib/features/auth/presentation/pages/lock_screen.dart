@@ -19,6 +19,9 @@ import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
 import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class LockScreen extends StatefulWidget {
   const LockScreen({super.key});
@@ -144,10 +147,10 @@ class _LockScreenState extends State<LockScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(4, (index) {
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    margin: const BridgeEdgeInsets.symmetric(horizontal: 8),
                     width: 20,
                     height: 20,
-                    decoration: BoxDecoration(
+                    decoration: BridgeDecoration(
                       shape: BoxShape.circle,
                       color: index < enteredPin.length
                           ? kit.colors.primary
@@ -211,8 +214,8 @@ class _LockScreenState extends State<LockScreen> {
         return Container(
           width: 80,
           height: 80,
-          margin: const EdgeInsets.all(8),
-          child: TextButton(
+          margin: const BridgeEdgeInsets.all(8),
+          child: BridgeTextButton(
             style: TextButton.styleFrom(
               shape: const CircleBorder(),
               backgroundColor: kit.colors.surfaceContainer,

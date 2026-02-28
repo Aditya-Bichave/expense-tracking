@@ -1,6 +1,7 @@
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 
 class AppTextFormField extends StatefulWidget {
   final TextEditingController controller;
@@ -111,7 +112,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
               children: [
                 TextSpan(
                   text: ' *',
-                  style: TextStyle(color: theme.colorScheme.error),
+                  style: BridgeTextStyle(color: theme.colorScheme.error),
                 ),
               ],
             ),

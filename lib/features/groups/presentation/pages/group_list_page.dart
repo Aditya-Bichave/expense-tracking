@@ -17,6 +17,7 @@ import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_fab.dart';
 import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class GroupListPage extends StatefulWidget {
   const GroupListPage({super.key});
@@ -126,7 +127,7 @@ class _GroupListPageState extends State<GroupListPage> {
               itemCount: state.groups.length,
               itemBuilder: (context, index) {
                 final group = state.groups[index];
-                return AppListTile(
+                return AppBridgeListTile(
                   leading: AppAvatar(
                     initials: _getInitialsForGroup(group.name),
                     backgroundColor: kit.colors.primaryContainer,

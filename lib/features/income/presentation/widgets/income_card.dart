@@ -1,18 +1,15 @@
-// lib/features/income/presentation/widgets/income_card.dart
-// MODIFIED FILE (Implement interactive prompts)
-
-import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
-import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
-import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/features/transactions/presentation/widgets/categorization_status_widget.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:expense_tracker/core/widgets/app_card.dart';
-import 'package:expense_tracker/main.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
-import 'package:expense_tracker/features/transactions/presentation/widgets/categorization_status_widget.dart';
 
 class IncomeCard extends StatelessWidget {
   final Income income;
@@ -92,18 +89,18 @@ class IncomeCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
+          AppAvatar(
             backgroundColor: category.displayColor.withOpacity(0.15),
             child: _buildIcon(context, modeTheme),
           ),
-          SizedBox(width: modeTheme?.listItemPadding.left ?? 16),
+          SizedBox(width: context.kit.spacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   income.title,
-                  style: theme.textTheme.titleMedium,
+                  style: context.kit.typography.headline.copyWith(fontSize: 16),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -120,21 +117,21 @@ class IncomeCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Acc: $accountName',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  style: context.kit.typography.caption.copyWith(
+                    color: context.kit.colors.textSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   DateFormatter.formatDateTime(income.date),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  style: context.kit.typography.caption.copyWith(
+                    color: context.kit.colors.textSecondary,
                   ),
                 ),
                 if (income.notes != null && income.notes!.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
+                    padding: const BridgeEdgeInsets.only(top: 4.0),
                     child: Row(
                       children: [
                         Icon(
@@ -170,7 +167,7 @@ class IncomeCard extends StatelessWidget {
                 duration:
                     modeTheme?.fastDuration ??
                     const Duration(milliseconds: 150),
-                style: theme.textTheme.titleMedium!.copyWith(
+                style: context.kit.typography.headline.copyWith(
                   fontWeight: FontWeight.bold,
                   color: incomeAmountColor,
                 ),

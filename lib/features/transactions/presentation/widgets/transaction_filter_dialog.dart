@@ -5,6 +5,11 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class TransactionFilterDialog extends StatefulWidget {
   final DateTime? initialStartDate;
@@ -145,9 +150,9 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           }),
     ];
 
-    return AlertDialog(
+    return BridgeAlertDialog(
       title: const Text('Filter Transactions'),
-      contentPadding: const EdgeInsets.fromLTRB(
+      contentPadding: const BridgeEdgeInsets.fromLTRB(
         16,
         20,
         16,
@@ -164,8 +169,8 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
             Row(
               children: [
                 Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
+                  child: BridgeListTile(
+                    contentPadding: const BridgeEdgeInsets.only(),
                     leading: Icon(
                       Icons.date_range_outlined,
                       color: theme.iconTheme.color,
@@ -190,12 +195,12 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  padding: const BridgeEdgeInsets.symmetric(horizontal: 8.0),
                   child: Text('-', style: theme.textTheme.titleMedium),
                 ),
                 Expanded(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
+                  child: BridgeListTile(
+                    contentPadding: const BridgeEdgeInsets.only(),
                     leading: Icon(
                       Icons.date_range,
                       color: theme.iconTheme.color,
@@ -238,7 +243,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 ),
                 border: const OutlineInputBorder(),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
+                contentPadding: const BridgeEdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 14,
                 ),
@@ -300,7 +305,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 prefixIcon: Icon(Icons.category_outlined, size: 20),
                 border: OutlineInputBorder(),
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(
+                contentPadding: BridgeEdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 14,
                 ),
@@ -316,9 +321,12 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           ],
         ),
       ),
-      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      actionsPadding: const BridgeEdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ),
       actions: <Widget>[
-        TextButton(
+        BridgeTextButton(
           key: const ValueKey('button_filterDialog_clear'),
           onPressed: () {
             widget.onClearFilter();
@@ -326,12 +334,12 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           },
           child: const Text('Clear All'),
         ),
-        TextButton(
+        BridgeTextButton(
           key: const ValueKey('button_filterDialog_cancel'),
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
+        BridgeElevatedButton(
           key: const ValueKey('button_filterDialog_apply'),
           onPressed: () {
             widget.onApplyFilter(

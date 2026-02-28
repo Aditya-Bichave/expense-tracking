@@ -48,6 +48,11 @@ import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
 import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 // RE-ADDING THE EXPORT AS REQUESTED TO FIX LOGGER VISIBILITY
 export 'package:expense_tracker/core/utils/logger.dart';
@@ -376,12 +381,12 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
       theme: widget.theme ?? defaultThemePair!.light,
       darkTheme: widget.theme ?? defaultThemePair!.dark,
       themeMode: SettingsState.defaultThemeMode,
-      home: Scaffold(
+      home: BridgeScaffold(
         body: Builder(
           builder: (context) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const BridgeEdgeInsets.all(24.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -393,7 +398,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
                     const SizedBox(height: 16),
                     Text(
                       "Application Initialization Failed",
-                      style: TextStyle(
+                      style: BridgeTextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.red.shade900,
@@ -404,20 +409,20 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
                     Text(
                       "A critical error occurred during startup:\n\n${widget.error.toString()}\n\nPlease restart the app. If the problem persists, contact support or check logs.",
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14),
+                      style: const BridgeTextStyle(fontSize: 14),
                     ),
                     if (isCorruption) ...[
                       const SizedBox(height: 24),
                       const Text(
                         "Your encryption key appears to be corrupted. You can reset the app data to recover, but all local data will be lost.",
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.red),
+                        style: BridgeTextStyle(color: Colors.red),
                       ),
                       const SizedBox(height: 16),
                       if (_isResetting)
-                        const CircularProgressIndicator()
+                        const BridgeCircularProgressIndicator()
                       else
-                        ElevatedButton(
+                        BridgeElevatedButton(
                           onPressed: () => _resetApp(context),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,

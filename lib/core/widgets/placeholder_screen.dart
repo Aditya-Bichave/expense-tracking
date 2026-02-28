@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // To allow popping
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class PlaceholderScreen extends StatelessWidget {
   final String featureName;
@@ -8,7 +10,7 @@ class PlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(
         title: Text(featureName),
         // Ensure a way back if pushed onto stack
@@ -23,7 +25,7 @@ class PlaceholderScreen extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: const BridgeEdgeInsets.all(30.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

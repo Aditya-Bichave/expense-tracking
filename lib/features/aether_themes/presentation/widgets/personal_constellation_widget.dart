@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 
 class PersonalConstellationWidget extends StatelessWidget {
   const PersonalConstellationWidget({super.key});
@@ -10,7 +11,7 @@ class PersonalConstellationWidget extends StatelessWidget {
       child: Text(
         'Personal Constellation Dashboard\n(Coming Soon!)',
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+        style: BridgeTextStyle(fontSize: 18, color: Colors.blueAccent),
       ),
     );
   }

@@ -10,6 +10,9 @@ import 'package:expense_tracker/features/transactions/presentation/bloc/add_edit
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class TransactionForm extends StatefulWidget {
   final TransactionEntity? initialTransaction;
@@ -205,9 +208,9 @@ class TransactionFormState extends State<TransactionForm> {
           "[TransactionForm] Submit prevented: Account not selected.",
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select an account.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('Please select an account.'),
+            backgroundColor: context.kit.colors.warn,
           ),
         );
         return;
@@ -234,9 +237,9 @@ class TransactionFormState extends State<TransactionForm> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
-            content: Text('Please correct the errors in the form.'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('Please correct the errors in the form.'),
+            backgroundColor: context.kit.colors.warn,
           ),
         );
     }
@@ -251,25 +254,18 @@ class TransactionFormState extends State<TransactionForm> {
     final isExpense = _transactionType == TransactionType.expense;
 
     final List<Color> expenseColors = [
-      theme.colorScheme.errorContainer.withOpacity(0.7),
-      theme.colorScheme.errorContainer,
+      context.kit.colors.errorContainer.withOpacity(0.7),
+      context.kit.colors.errorContainer,
     ];
     final List<Color> incomeColors = [
-      theme.colorScheme.primaryContainer,
-      theme.colorScheme.primaryContainer.withOpacity(0.7),
+      context.kit.colors.primaryContainer,
+      context.kit.colors.primaryContainer.withOpacity(0.7),
     ];
 
     return Form(
       key: _formKey,
       child: ListView(
-        padding:
-            modeTheme?.pagePadding.copyWith(
-              left: 16,
-              right: 16,
-              bottom: 40,
-              top: 16,
-            ) ??
-            const EdgeInsets.all(16.0).copyWith(bottom: 40),
+        padding: context.space.allLg.copyWith(bottom: 40),
         children: [
           // Transaction Type Toggle
           CommonFormFields.buildTypeToggle(
@@ -368,23 +364,18 @@ class TransactionFormState extends State<TransactionForm> {
           const SizedBox(height: 32),
 
           // Submit Button
-          ElevatedButton.icon(
+          AppButton(
             key: const ValueKey('button_transactionForm_submit'),
             icon: Icon(
               widget.initialTransaction == null
                   ? Icons.add_circle_outline
                   : Icons.save_outlined,
             ),
-            label: Text(
-              widget.initialTransaction == null
-                  ? 'Add Transaction'
-                  : 'Update Transaction',
-            ),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              textStyle: theme.textTheme.titleMedium,
-            ),
+            label: widget.initialTransaction == null
+                ? 'Add Transaction'
+                : 'Update Transaction',
             onPressed: _submitForm,
+            isFullWidth: true,
           ),
         ],
       ),

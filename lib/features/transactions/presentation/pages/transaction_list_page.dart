@@ -24,6 +24,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:collection/collection.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 
 class TransactionListPage extends StatefulWidget {
   // --- ADDED: Accept optional initial filters ---
@@ -129,7 +134,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Error navigating to edit screen: $e"),
-          backgroundColor: Colors.red,
+          backgroundColor: context.kit.colors.danger,
         ),
       );
     }
@@ -187,7 +192,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
           content:
               'Are you sure you want to permanently delete this ${transaction.type.name}:\n"${transaction.title}"?',
           confirmText: "Delete",
-          confirmColor: Theme.of(context).colorScheme.error,
+          confirmColor: context.kit.colors.danger,
         ) ??
         false; // Default to false if dialog is dismissed
   }
@@ -254,10 +259,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
     TransactionListState currentState,
   ) {
     log.info("[TxnListPage] Showing sort bottom sheet.");
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BridgeBorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
         return TransactionSortSheet(
@@ -335,7 +340,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
       }
     }
 
-    return Scaffold(
+    return BridgeScaffold(
       body: Column(
         children: [
           TransactionListHeader(
@@ -347,7 +352,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
             showFilterDialog: _showFilterDialog,
             showSortDialog: _showSortDialog,
           ),
-          const Divider(height: 1, thickness: 1),
+          const AppDivider(),
           Expanded(
             child: BlocConsumer<TransactionListBloc, TransactionListState>(
               listener: (context, state) {
@@ -358,7 +363,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                     ..showSnackBar(
                       SnackBar(
                         content: Text("Error: ${state.errorMessage!}"),
-                        backgroundColor: theme.colorScheme.error,
+                        backgroundColor: context.kit.colors.danger,
                       ),
                     );
                 }
@@ -494,11 +499,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
                   label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
                   icon: const Icon(Icons.category_rounded),
                   backgroundColor: count > 0
-                      ? theme.colorScheme.secondaryContainer
-                      : theme.disabledColor.withOpacity(0.1),
+                      ? context.kit.colors.secondaryContainer
+                      : context.kit.colors.textMuted.withOpacity(0.1),
                   foregroundColor: count > 0
-                      ? theme.colorScheme.onSecondaryContainer
-                      : theme.disabledColor,
+                      ? context.kit.colors.onSecondaryContainer
+                      : context.kit.colors.textMuted,
                 ),
               );
             },

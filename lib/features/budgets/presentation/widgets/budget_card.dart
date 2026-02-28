@@ -15,6 +15,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class BudgetCard extends StatelessWidget {
   final BudgetWithStatus budgetStatus;
@@ -106,7 +109,7 @@ class BudgetCard extends StatelessWidget {
     if (isQuantum) {
       // Quantum: Minimalist bar, no text inside
       return LinearPercentIndicator(
-        padding: EdgeInsets.zero,
+        padding: const BridgeEdgeInsets.only(),
         lineHeight: 6.0,
         percent: percentage,
         barRadius: const Radius.circular(3),
@@ -125,7 +128,7 @@ class BudgetCard extends StatelessWidget {
         percent: percentage,
         center: Text(
           "${(budgetStatus.percentageUsed * 100).toStringAsFixed(0)}%",
-          style: TextStyle(
+          style: BridgeTextStyle(
             color: color.computeLuminance() > 0.5
                 ? Colors.black87
                 : Colors.white,
@@ -152,9 +155,9 @@ class BudgetCard extends StatelessWidget {
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 5);
+        const BridgeEdgeInsets.symmetric(horizontal: 12, vertical: 5);
     final cardPadding =
-        modeTheme?.cardInnerPadding ?? const EdgeInsets.all(12.0);
+        modeTheme?.cardInnerPadding ?? const BridgeEdgeInsets.all(12.0);
 
     return AppCard(
       onTap: onTap,
@@ -178,12 +181,12 @@ class BudgetCard extends StatelessWidget {
                     ),
                     if (categoryIcons.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
+                        padding: const BridgeEdgeInsets.only(top: 4.0),
                         child: Row(children: categoryIcons),
                       )
                     else if (budget.type == BudgetType.overall)
                       Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
+                        padding: const BridgeEdgeInsets.only(top: 4.0),
                         child: Text(
                           'Overall Spending',
                           style: theme.textTheme.labelSmall?.copyWith(

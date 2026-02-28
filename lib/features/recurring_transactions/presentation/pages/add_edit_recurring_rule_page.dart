@@ -14,6 +14,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
 import '../../utils/weekday_names.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class AddEditRecurringRulePage extends StatelessWidget {
   final RecurringRule? initialRule;
@@ -85,7 +90,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(
         title: Text(
           widget.initialRule == null
@@ -130,7 +135,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
         },
         builder: (context, state) {
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+            padding: const BridgeEdgeInsets.all(16.0),
             child: Form(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -187,7 +192,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                         .currencySymbol,
                   ),
                   const SizedBox(height: 16),
-                  ListTile(
+                  BridgeListTile(
                     leading: const Icon(Icons.category),
                     title: Text(
                       state.selectedCategory?.name ??
@@ -246,7 +251,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                   ),
                   const SizedBox(height: 8), // Smaller gap here
                   if (state.frequency == Frequency.daily)
-                    ListTile(
+                    BridgeListTile(
                       leading: const Icon(Icons.access_time),
                       title: Text(
                         state.startTime?.format(context) ??
@@ -326,7 +331,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                     },
                   ),
                   if (state.endConditionType == EndConditionType.onDate)
-                    ListTile(
+                    BridgeListTile(
                       leading: const Icon(Icons.calendar_today),
                       title: Text(
                         state.endDate != null
@@ -363,7 +368,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                           .add(TotalOccurrencesChanged(value)),
                     ),
                   const SizedBox(height: 32),
-                  ElevatedButton(
+                  BridgeElevatedButton(
                     onPressed: state.status == FormStatus.inProgress
                         ? null
                         : () {
@@ -375,7 +380,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
                             );
                           },
                     child: state.status == FormStatus.inProgress
-                        ? const CircularProgressIndicator()
+                        ? const BridgeCircularProgressIndicator()
                         : Text(AppLocalizations.of(context)!.save),
                   ),
                 ],

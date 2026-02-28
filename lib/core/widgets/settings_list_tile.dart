@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 // A standardized ListTile for settings for consistent styling and icon handling
 class SettingsListTile extends StatelessWidget {
@@ -37,7 +38,7 @@ class SettingsListTile extends StatelessWidget {
         theme.listTileTheme.subtitleTextStyle ?? theme.textTheme.bodyMedium;
     final disabledColor = theme.disabledColor;
 
-    return ListTile(
+    return BridgeListTile(
       enabled: enabled,
       leading: _buildLeadingIcon(context),
       title: Text(

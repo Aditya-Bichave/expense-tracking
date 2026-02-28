@@ -1,6 +1,7 @@
 // lib/features/reports/presentation/widgets/charts/chart_utils.dart
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 
 class ChartUtils {
   // Common style for tooltip titles
@@ -10,7 +11,7 @@ class ChartUtils {
           fontWeight: FontWeight.bold,
           color: theme.colorScheme.onSurface.withOpacity(0.8),
         ) ??
-        const TextStyle(fontWeight: FontWeight.bold);
+        const BridgeTextStyle(fontWeight: FontWeight.bold);
   }
 
   // Common style for tooltip content (value)
@@ -20,7 +21,7 @@ class ChartUtils {
           fontWeight: FontWeight.w500,
           color: color ?? theme.colorScheme.primary,
         ) ??
-        const TextStyle(fontWeight: FontWeight.w500);
+        const BridgeTextStyle(fontWeight: FontWeight.w500);
   }
 
   // Common widget builder for left (Y-axis) titles

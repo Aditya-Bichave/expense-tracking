@@ -8,6 +8,8 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 typedef GoalSubmitCallback =
     Function(
@@ -136,7 +138,7 @@ class _GoalFormState extends State<GoalForm> {
               bottom: 40,
               top: 16,
             ) ??
-            const EdgeInsets.all(16.0).copyWith(bottom: 40),
+            const BridgeEdgeInsets.all(16.0).copyWith(bottom: 40),
         children: [
           // Goal Name - Using Common Builder
           CommonFormFields.buildNameField(
@@ -175,8 +177,8 @@ class _GoalFormState extends State<GoalForm> {
           const SizedBox(height: 16),
 
           // Icon Picker - Kept Specific ListTile for now
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+          BridgeListTile(
+            contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
             shape:
                 theme.inputDecorationTheme.enabledBorder ??
                 const OutlineInputBorder(),
@@ -212,7 +214,7 @@ class _GoalFormState extends State<GoalForm> {
             ),
             label: Text(isEditing ? 'Update Goal' : 'Add Goal'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const BridgeEdgeInsets.symmetric(vertical: 16),
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,

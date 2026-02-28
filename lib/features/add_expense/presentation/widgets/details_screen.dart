@@ -21,6 +21,9 @@ import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // Added impor
 import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 
 class DetailsScreen extends StatefulWidget {
   final Function(bool isGroup) onNext;
@@ -132,7 +135,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   future: _categoriesFuture,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(
+                        child: BridgeCircularProgressIndicator(),
+                      );
                     }
                     final result = snapshot.data;
                     return result.fold(
@@ -205,7 +210,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                             const SizedBox(
                               width: 12,
                               height: 12,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: BridgeCircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
                             ),
                           ],
                         ],
@@ -269,7 +276,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   void _showGroupSelector(BuildContext context) {
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -281,7 +288,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   void _showReceiptOptions(BuildContext parentContext) {
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: parentContext,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -291,7 +298,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AppListTile(
+              AppBridgeListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Camera'),
                 onTap: () async {
@@ -301,7 +308,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   }
                 },
               ),
-              AppListTile(
+              AppBridgeListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Gallery'),
                 onTap: () async {
@@ -350,7 +357,7 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
       height: 300,
       child: Column(
         children: [
-          AppListTile(
+          AppBridgeListTile(
             leading: const Icon(Icons.person),
             title: const Text('Personal Expense'),
             onTap: () async {
@@ -366,7 +373,7 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
               future: _groupsFuture,
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: BridgeCircularProgressIndicator());
                 }
                 return snapshot.data.fold(
                   (failure) =>
@@ -379,7 +386,7 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
                       itemCount: groups.length,
                       itemBuilder: (context, index) {
                         final group = groups[index];
-                        return AppListTile(
+                        return AppBridgeListTile(
                           leading: const Icon(Icons.group),
                           title: Text(group.name),
                           onTap: () async {

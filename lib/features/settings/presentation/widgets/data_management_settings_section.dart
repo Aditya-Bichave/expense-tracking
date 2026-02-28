@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class DataManagementSettingsSection extends StatelessWidget {
   final bool isDataManagementLoading;
@@ -34,7 +35,7 @@ class DataManagementSettingsSection extends StatelessWidget {
       title: 'Data Management',
       child: Column(
         children: [
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(Icons.backup_outlined, color: kit.colors.textPrimary),
             title: Text('Backup Data'),
             subtitle: Text(
@@ -50,7 +51,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled ? null : onBackup,
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.restore_page_outlined,
               color: kit.colors.textPrimary,
@@ -69,7 +70,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled ? null : onRestore,
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.upload_file_outlined,
               color: kit.colors.textPrimary,
@@ -90,7 +91,7 @@ class DataManagementSettingsSection extends StatelessWidget {
                 ? null
                 : () => context.pushNamed(RouteNames.settingsExport),
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.delete_sweep_outlined,
               color: kit.colors.textPrimary,
@@ -109,7 +110,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             ),
             onTap: isDataManagementLoading || isInDemoMode ? null : onClearData,
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.restore_from_trash_outlined,
               color: kit.colors.textPrimary,

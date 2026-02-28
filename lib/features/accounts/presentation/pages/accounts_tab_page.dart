@@ -14,6 +14,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:toggle_switch/toggle_switch.dart'; // Import ToggleSwitch
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 enum AccountViewType { assets, liabilities }
 
@@ -75,7 +80,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
       theme.colorScheme.errorContainer,
     ];
 
-    return Scaffold(
+    return BridgeScaffold(
       body: RefreshIndicator(
         onRefresh: () async {
           context.read<AccountListBloc>().add(
@@ -88,11 +93,11 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         child: ListView(
           padding:
               modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-              const EdgeInsets.only(top: 8.0, bottom: 80.0),
+              const BridgeEdgeInsets.only(top: 8.0, bottom: 80.0),
           children: [
             // Add ToggleSwitch
             Padding(
-              padding: const EdgeInsets.symmetric(
+              padding: const BridgeEdgeInsets.symmetric(
                 vertical: 8.0,
                 horizontal: 16.0,
               ),
@@ -179,18 +184,18 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             if (state is AccountListLoading && !state.isReloading) {
               return const Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(),
+                  padding: BridgeEdgeInsets.all(32.0),
+                  child: BridgeCircularProgressIndicator(),
                 ),
               );
             }
             if (state is AccountListError) {
               return Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const BridgeEdgeInsets.all(16.0),
                 child: Center(
                   child: Text(
                     'Error loading accounts: ${state.message}',
-                    style: TextStyle(color: theme.colorScheme.error),
+                    style: BridgeTextStyle(color: theme.colorScheme.error),
                   ),
                 ),
               );
@@ -214,7 +219,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(
+                    padding: const BridgeEdgeInsets.symmetric(
                       horizontal: 16.0,
                       vertical: 4.0,
                     ),
@@ -238,7 +243,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                   const SizedBox(height: 8),
                   if (accounts.isEmpty)
                     Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: const BridgeEdgeInsets.symmetric(
                         horizontal: 16.0,
                         vertical: 24.0,
                       ),
@@ -259,7 +264,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       itemCount: accounts.length,
                       itemBuilder: (ctx, index) {
                         final account = accounts[index];
-                        return AccountCard(
+                        return AccountBridgeCard(
                           account: account,
                           onTap: () =>
                               _navigateToAccountDetail(context, account),
@@ -268,7 +273,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                     ),
                   // --- ADDED: Add Asset Account Button ---
                   Padding(
-                    padding: const EdgeInsets.symmetric(
+                    padding: const BridgeEdgeInsets.symmetric(
                       horizontal: 16.0,
                       vertical: 12.0,
                     ),
@@ -277,7 +282,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       label: const Text('Add Asset Account'),
                       onPressed: () => context.pushNamed(RouteNames.addAccount),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const BridgeEdgeInsets.symmetric(vertical: 12),
                         textStyle: theme.textTheme.labelLarge,
                         side: BorderSide(
                           color: theme.colorScheme.outlineVariant,
@@ -295,8 +300,8 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             // Fallback for Initial state
             return const Center(
               child: Padding(
-                padding: EdgeInsets.all(32.0),
-                child: CircularProgressIndicator(),
+                padding: BridgeEdgeInsets.all(32.0),
+                child: BridgeCircularProgressIndicator(),
               ),
             );
           },
@@ -311,7 +316,10 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
       children: [
         const SectionHeader(title: 'Liabilities'),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+          padding: const BridgeEdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 4.0,
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -333,7 +341,10 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         ),
         const SizedBox(height: 8),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+          padding: const BridgeEdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 24.0,
+          ),
           child: Center(
             child: Text(
               'Liability accounts (Credit Cards, Loans) coming soon!',
@@ -346,18 +357,21 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         ),
         Padding(
           // Button remains the same, but is effectively disabled by FAB logic now
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          padding: const BridgeEdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 12.0,
+          ),
           child: OutlinedButton.icon(
             icon: Icon(Icons.add_circle_outline, color: theme.disabledColor),
             label: Text(
               'Add Liability Account',
-              style: TextStyle(color: theme.disabledColor),
+              style: BridgeTextStyle(color: theme.disabledColor),
             ),
             onPressed: () => _showLiabilityComingSoon(
               context,
             ), // Show message on button press too
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const BridgeEdgeInsets.symmetric(vertical: 12),
               textStyle: theme.textTheme.labelLarge,
               side: BorderSide(color: theme.disabledColor.withOpacity(0.5)),
               minimumSize: const Size.fromHeight(45),

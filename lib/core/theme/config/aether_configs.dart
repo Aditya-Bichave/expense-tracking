@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart'; // For palette identifiers
 import 'theme_config_interface.dart'; // Import interface
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 // Config class implements the interface
 class AetherConfig implements IThemePaletteConfig {
@@ -38,17 +39,17 @@ class AetherConfig implements IThemePaletteConfig {
   @override
   final Color? expenseGlowColorDark;
   // Aether specific overrides for new properties (optional)
-  final EdgeInsets? pagePadding = const EdgeInsets.only(
+  final EdgeInsets? pagePadding = const BridgeEdgeInsets.only(
     top: 0,
     left: 0,
     right: 0,
     bottom: 16,
   ); // No top padding if AppBar is transparent/gone
-  final EdgeInsets? cardOuterPadding = const EdgeInsets.symmetric(
+  final EdgeInsets? cardOuterPadding = const BridgeEdgeInsets.symmetric(
     horizontal: 16.0,
     vertical: 10.0,
   );
-  final EdgeInsets? cardInnerPadding = const EdgeInsets.symmetric(
+  final EdgeInsets? cardInnerPadding = const BridgeEdgeInsets.symmetric(
     horizontal: 20.0,
     vertical: 16.0,
   );

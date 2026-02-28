@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class TopCategoriesList extends StatelessWidget {
   const TopCategoriesList({super.key});
@@ -8,7 +13,7 @@ class TopCategoriesList extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
         children: [
           Row(
@@ -20,11 +25,11 @@ class TopCategoriesList extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              TextButton(
+              BridgeTextButton(
                 onPressed: () {},
                 child: Text(
                   'View All',
-                  style: TextStyle(
+                  style: BridgeTextStyle(
                     color: theme.colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
@@ -78,9 +83,9 @@ class TopCategoriesList extends StatelessWidget {
         Container(
           width: 48,
           height: 48,
-          decoration: BoxDecoration(
+          decoration: BridgeDecoration(
             color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BridgeBorderRadius.circular(12),
           ),
           child: Icon(icon, color: color),
         ),
@@ -107,7 +112,7 @@ class TopCategoriesList extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BridgeBorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,

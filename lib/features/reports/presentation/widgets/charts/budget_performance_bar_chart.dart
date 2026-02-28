@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/reports/domain/entities/report_data.dar
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/chart_utils.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class BudgetPerformanceBarChart extends StatelessWidget {
   final List<BudgetPerformanceData> data;
@@ -240,14 +241,14 @@ class BudgetPerformanceBarChart extends StatelessWidget {
               toY: prevItem?.budget.targetAmount ?? 0,
               color: prevTargetColor,
               width: barWidth,
-              borderRadius: BorderRadius.zero,
+              borderRadius: BridgeBorderRadius.zero,
             ),
           // Current Target
           BarChartRodData(
             toY: budget.targetAmount,
             color: targetColor,
             width: barWidth,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BridgeBorderRadius.zero,
           ),
           // Previous Actual (if comparing)
           if (showComparison)
@@ -255,14 +256,14 @@ class BudgetPerformanceBarChart extends StatelessWidget {
               toY: prevItem?.currentActualSpending ?? 0,
               color: prevActualColor,
               width: barWidth,
-              borderRadius: BorderRadius.zero,
+              borderRadius: BridgeBorderRadius.zero,
             ),
           // Current Actual
           BarChartRodData(
             toY: currentItem.currentActualSpending,
             color: actualColor,
             width: barWidth,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BridgeBorderRadius.zero,
           ),
         ],
       );

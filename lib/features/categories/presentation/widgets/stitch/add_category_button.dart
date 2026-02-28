@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class AddCategoryButton extends StatelessWidget {
   final VoidCallback onTap;
@@ -13,11 +17,11 @@ class AddCategoryButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BridgeBorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+          padding: const BridgeEdgeInsets.all(16),
+          decoration: BridgeDecoration(
+            borderRadius: BridgeBorderRadius.circular(16),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withOpacity(0.3),
               style: BorderStyle.solid,
@@ -31,7 +35,7 @@ class AddCategoryButton extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 'Create Custom Category',
-                style: TextStyle(
+                style: BridgeTextStyle(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

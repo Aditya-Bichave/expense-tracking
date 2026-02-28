@@ -26,6 +26,7 @@ import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class SpendingOverTimePage extends StatefulWidget {
   const SpendingOverTimePage({super.key});
@@ -295,7 +296,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
           }
         }
 
-        return AppListTile(
+        return AppBridgeListTile(
           dense: true,
           title: AppText(
             _formatDateHeader(item.date, data.granularity),

@@ -8,6 +8,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class IncomeExpenseBarChart extends StatelessWidget {
   final List<IncomeExpensePeriodData> data;
@@ -137,7 +139,7 @@ class IncomeExpenseBarChart extends StatelessWidget {
                     ),
                   ),
                   // Optionally show net flow for the group in tooltip
-                  // TextSpan(text: '\nNet: ${CurrencyFormatter.format(item.currentNetFlow, currencySymbol)}', style: TextStyle(...))
+                  // TextSpan(text: '\nNet: ${CurrencyFormatter.format(item.currentNetFlow, currencySymbol)}', style: BridgeTextStyle(...))
                 ],
                 textAlign: TextAlign.left,
               );
@@ -231,14 +233,14 @@ class IncomeExpenseBarChart extends StatelessWidget {
               toY: item.totalIncome.previousValue ?? 0,
               color: prevIncomeColor,
               width: barWidth,
-              borderRadius: BorderRadius.zero,
+              borderRadius: BridgeBorderRadius.zero,
             ),
           // Current Income
           BarChartRodData(
             toY: item.currentTotalIncome,
             color: incomeColor,
             width: barWidth,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BridgeBorderRadius.zero,
           ),
           // Previous Expense (if comparing)
           if (showComparison)
@@ -246,14 +248,14 @@ class IncomeExpenseBarChart extends StatelessWidget {
               toY: item.totalExpense.previousValue ?? 0,
               color: prevExpenseColor,
               width: barWidth,
-              borderRadius: BorderRadius.zero,
+              borderRadius: BridgeBorderRadius.zero,
             ),
           // Current Expense
           BarChartRodData(
             toY: item.currentTotalExpense,
             color: expenseColor,
             width: barWidth,
-            borderRadius: BorderRadius.zero,
+            borderRadius: BridgeBorderRadius.zero,
           ),
         ],
       );
