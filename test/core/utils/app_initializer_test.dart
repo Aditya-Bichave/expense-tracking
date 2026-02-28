@@ -1,29 +1,54 @@
+import 'dart:io';
 import 'package:expense_tracker/core/utils/app_initializer.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive_ce/hive.dart';
-import 'package:mocktail/mocktail.dart';
-
-// Mock Hive Interface
-class MockHiveInterface extends Mock implements HiveInterface {}
-
-class MockBox<T> extends Mock implements Box<T> {}
+import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
+import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 
 void main() {
-  // Testing AppInitializer static methods involving Hive is hard because Hive uses a singleton.
-  // We can't easily mock the static `Hive` class calls unless we wrap them.
-  // However, `initHiveBoxes` does a LOT of `Hive.registerAdapter` and `Hive.openBox`.
-  //
-  // Strategy:
-  // Since we cannot mock static Hive methods easily without a wrapper,
-  // and `AppInitializer` is purely static, testing it effectively requires
-  // integration tests or refactoring to use a `HiveService` wrapper.
-  //
-  // For now, we will verify that the file compiles and the method exists,
-  // but extensive unit testing of static side-effects on 3rd party libs is out of scope for *unit* tests
-  // without refactoring.
+  late Directory tempDir;
 
-  test('AppInitializer exists', () {
-    // Trivial test to ensure file is analyzed/covered partially
-    expect(AppInitializer.initHiveBoxes, isNotNull);
+  setUp(() async {
+    tempDir = await Directory.systemTemp.createTemp('hive_test');
+    Hive.init(tempDir.path);
   });
+
+  tearDown(() async {
+    await Hive.close();
+    if (await tempDir.exists()) {
+      await tempDir.delete(recursive: true);
+    }
+  });
+
+  test(
+    'initHiveBoxes registers adapters and opens all expected boxes',
+    () async {
+      // 16-byte key for HiveAesCipher
+      final encryptionKey = List<int>.generate(32, (i) => i % 256);
+
+      // Call the initializer
+      final boxes = await AppInitializer.initHiveBoxes(encryptionKey);
+
+      // Verify that the boxes are open
+      expect(boxes.profileBox.isOpen, isTrue);
+      expect(boxes.expenseBox.isOpen, isTrue);
+      expect(boxes.accountBox.isOpen, isTrue);
+      expect(boxes.incomeBox.isOpen, isTrue);
+      expect(boxes.categoryBox.isOpen, isTrue);
+      expect(boxes.userHistoryBox.isOpen, isTrue);
+      expect(boxes.budgetBox.isOpen, isTrue);
+      expect(boxes.goalBox.isOpen, isTrue);
+      expect(boxes.contributionBox.isOpen, isTrue);
+      expect(boxes.recurringRuleBox.isOpen, isTrue);
+      expect(boxes.recurringRuleAuditLogBox.isOpen, isTrue);
+      expect(boxes.outboxBox.isOpen, isTrue);
+      expect(boxes.groupBox.isOpen, isTrue);
+      expect(boxes.groupMemberBox.isOpen, isTrue);
+      expect(boxes.groupExpenseBox.isOpen, isTrue);
+
+      // Verify a few adapters are registered
+      expect(Hive.isAdapterRegistered(ProfileModelAdapter().typeId), isTrue);
+      expect(Hive.isAdapterRegistered(ExpenseModelAdapter().typeId), isTrue);
+    },
+  );
 }

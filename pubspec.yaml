@@ -78,6 +78,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  integration_test:
+    sdk: flutter
 
   # Code Generation (for Hive)
   hive_ce_generator: ^1.9.3

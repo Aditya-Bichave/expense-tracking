@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_bloc.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_event.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_state.dart';
+import 'package:expense_tracker/features/add_expense/domain/models/add_expense_enums.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
@@ -44,7 +45,21 @@ class _DetailsScreenState extends State<DetailsScreen> {
   Widget build(BuildContext context) {
     return BlocConsumer<AddExpenseWizardBloc, AddExpenseWizardState>(
       listener: (context, state) {
-        // Update controllers if state changes externally (optional)
+        if (state.status == FormStatus.success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Expense added successfully.')),
+          );
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        } else if (state.status == FormStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.errorMessage ?? 'Error adding expense'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
       },
       builder: (context, state) {
         return Scaffold(
@@ -251,9 +266,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   void _showGroupSelector(BuildContext context) {
+    final bloc = context.read<AddExpenseWizardBloc>();
     showModalBottomSheet(
       context: context,
-      builder: (context) => _GroupSelectorSheet(),
+      builder: (context) =>
+          BlocProvider.value(value: bloc, child: _GroupSelectorSheet()),
     );
   }
 

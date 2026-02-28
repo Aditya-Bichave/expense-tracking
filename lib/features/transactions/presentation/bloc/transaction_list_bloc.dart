@@ -288,7 +288,7 @@ class TransactionListBloc
         emit(
           state.copyWith(
             status: ListStatus.error,
-            errorMessage: _mapFailureToMessage(failure),
+            errorMessage: _mapFailureToMessage(failure, context: "Load failed"),
           ),
         );
       },
