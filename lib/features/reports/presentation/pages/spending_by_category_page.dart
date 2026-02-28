@@ -1,9 +1,5 @@
-// lib/features/reports/presentation/pages/spending_by_category_page.dart
-import 'package:dartz/dartz.dart' show Right;
-import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:dartz/dartz.dart' hide State;
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
@@ -13,15 +9,22 @@ import 'package:expense_tracker/features/reports/presentation/widgets/charts/spe
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/spending_pie_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/main.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
+import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 
 class SpendingByCategoryPage extends StatefulWidget {
   const SpendingByCategoryPage({super.key});
@@ -31,18 +34,13 @@ class SpendingByCategoryPage extends StatefulWidget {
 }
 
 class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
-  bool _showPieChart = true; // Default remains pie chart for non-Quantum
   bool _showComparison = false;
+  bool _showPieChart = true;
 
   void _toggleComparison() {
-    final newComparisonState = !_showComparison;
-    setState(() => _showComparison = newComparisonState);
-    context.read<SpendingCategoryReportBloc>().add(
-      LoadSpendingCategoryReport(compareToPrevious: newComparisonState),
-    ); // Pass the flag
-    log.info(
-      "[SpendingByCategoryPage] Toggled comparison to: $newComparisonState",
-    );
+    setState(() {
+      _showComparison = !_showComparison;
+    });
   }
 
   void _navigateToFilteredTransactions(
@@ -53,7 +51,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     final Map<String, String> filters = {
       'startDate': filterBlocState.startDate.toIso8601String(),
       'endDate': filterBlocState.endDate.toIso8601String(),
-      'type': TransactionType.expense.name, // Spending report is always expense
+      'type': TransactionType.expense.name,
       'categoryId': categoryData.categoryId,
     };
     if (filterBlocState.selectedAccountIds.isNotEmpty) {
@@ -67,17 +65,14 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final settingsState = context.watch<SettingsBloc>().state;
     final uiMode = settingsState.uiMode;
-    final modeTheme = context.modeTheme;
-    final bool preferTables = modeTheme?.preferDataTableForLists ?? false;
-    // Bar chart is default for Quantum, or if comparison active, or if toggled
+
     final bool useBarChart =
-        uiMode == UIMode.quantum || _showComparison || !_showPieChart;
+        uiMode.name == 'quantum' || _showComparison || !_showPieChart;
     final bool showAlternateChartOption =
-        uiMode != UIMode.aether &&
-        !_showComparison; // Can toggle if not Aether and not comparing
+        uiMode.name != 'aether' && !_showComparison;
     final currencySymbol = settingsState.currencySymbol;
 
     return ReportPageWrapper(
@@ -88,11 +83,13 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
             _showComparison
                 ? Icons.compare_arrows_rounded
                 : Icons.compare_arrows_outlined,
+            color: _showComparison
+                ? kit.colors.primary
+                : kit.colors.textPrimary,
           ),
           tooltip: _showComparison
               ? AppLocalizations.of(context)!.hideComparison
               : AppLocalizations.of(context)!.comparePeriod,
-          color: _showComparison ? theme.colorScheme.primary : null,
           onPressed: _toggleComparison,
         ),
         if (showAlternateChartOption)
@@ -101,6 +98,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
               useBarChart
                   ? Icons.pie_chart_outline_rounded
                   : Icons.bar_chart_rounded,
+              color: kit.colors.textPrimary,
             ),
             tooltip: useBarChart
                 ? AppLocalizations.of(context)!.showPieChart
@@ -112,13 +110,17 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
         final state = context.read<SpendingCategoryReportBloc>().state;
         if (state is SpendingCategoryReportLoaded) {
           final helper = sl<CsvExportHelper>();
-          return helper.exportSpendingCategoryReport(
+          final result = await helper.exportSpendingCategoryReport(
             state.reportData,
             currencySymbol,
             showComparison: _showComparison,
           );
+          return result.fold(
+            (csvString) => Right(csvString),
+            (failure) => Left(failure),
+          );
         }
-        return Right(
+        return Left(
           ExportFailure(AppLocalizations.of(context)!.reportDataNotLoadedYet),
         );
       },
@@ -126,21 +128,24 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
           BlocBuilder<SpendingCategoryReportBloc, SpendingCategoryReportState>(
             builder: (context, state) {
               if (state is SpendingCategoryReportLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: AppLoadingIndicator());
               }
               if (state is SpendingCategoryReportError) {
                 return Center(
-                  child: Text(
+                  child: AppText(
                     "Error: ${state.message}",
-                    style: TextStyle(color: theme.colorScheme.error),
+                    color: kit.colors.error,
                   ),
                 );
               }
               if (state is SpendingCategoryReportLoaded) {
                 final reportData = state.reportData;
                 if (reportData.spendingByCategory.isEmpty) {
-                  return const Center(
-                    child: Text("No spending data for this period."),
+                  return Center(
+                    child: AppText(
+                      "No spending data for this period.",
+                      color: kit.colors.textSecondary,
+                    ),
                   );
                 }
 
@@ -148,7 +153,6 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                 if (useBarChart) {
                   chartWidget = SpendingBarChart(
                     data: reportData.spendingByCategory,
-                    // Pass previous data if comparison is active
                     previousData:
                         (_showComparison &&
                             reportData.previousSpendingByCategory != null)
@@ -160,7 +164,6 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                     ),
                   );
                 } else {
-                  // Pie Chart for Elemental/Aether (no comparison shown on pie)
                   chartWidget = SpendingPieChart(
                     data: reportData.spendingByCategory,
                     onTapSlice: (index) => _navigateToFilteredTransactions(
@@ -173,22 +176,22 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                 return ListView(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      padding: kit.spacing.vMd,
                       child: SizedBox(height: 250, child: chartWidget),
                     ),
-                    const Divider(),
+                    const AppDivider(),
                     _buildDataTable(
                       context,
                       reportData,
                       settingsState,
                       _showComparison,
-                    ), // Pass comparison flag
-                    const SizedBox(height: 80),
+                    ),
+                    SizedBox(height: 80),
                   ],
                 );
               }
               return const Center(
-                child: Text("Select filters to view report."),
+                child: AppText("Select filters to view report."),
               );
             },
           ),
@@ -201,24 +204,34 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
     SettingsState settings,
     bool showComparison,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final currencySymbol = settings.currencySymbol;
     final percentFormat = NumberFormat('##0.0%');
 
-    List<DataColumn> columns = const [
-      DataColumn(label: Text('Category')),
-      DataColumn(label: Text('Amount'), numeric: true),
-      DataColumn(label: Text('%'), numeric: true),
+    List<DataColumn> columns = [
+      DataColumn(label: AppText('Category', style: AppTextStyle.bodyStrong)),
+      DataColumn(
+        label: AppText('Amount', style: AppTextStyle.bodyStrong),
+        numeric: true,
+      ),
+      DataColumn(
+        label: AppText('%', style: AppTextStyle.bodyStrong),
+        numeric: true,
+      ),
     ];
-    // Add comparison columns dynamically
     if (showComparison && data.previousSpendingByCategory != null) {
       columns.addAll([
-        const DataColumn(label: Text('Prev Amt'), numeric: true),
-        const DataColumn(label: Text('Change %'), numeric: true),
+        DataColumn(
+          label: AppText('Prev Amt', style: AppTextStyle.bodyStrong),
+          numeric: true,
+        ),
+        DataColumn(
+          label: AppText('Change %', style: AppTextStyle.bodyStrong),
+          numeric: true,
+        ),
       ]);
     }
 
-    // Create a map for quick lookup of previous data
     final Map<String, CategorySpendingData> previousDataMap =
         (showComparison && data.previousSpendingByCategory != null)
         ? {
@@ -242,21 +255,20 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
             previousValue: prevItem?.currentTotalAmount,
           );
           double? changePercent = amountComp.percentageChange;
-          Color changeColor = theme.disabledColor;
+          Color changeColor = kit.colors.textMuted;
           String changeText = "N/A";
 
           if (showComparison && changePercent != null) {
             if (changePercent.isInfinite) {
               changeText = changePercent.isNegative ? '-∞' : '+∞';
-              // Spending increase is bad (red), decrease is good (green)
               changeColor = changePercent.isNegative
                   ? Colors.green.shade700
-                  : theme.colorScheme.error;
+                  : kit.colors.error;
             } else if (!changePercent.isNaN) {
               changeText =
                   '${changePercent >= 0 ? '+' : ''}${changePercent.toStringAsFixed(1)}%';
               changeColor = changePercent > 0
-                  ? theme.colorScheme.error
+                  ? kit.colors.error
                   : Colors.green.shade700;
             }
           }
@@ -266,9 +278,9 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                 Row(
                   children: [
                     Icon(Icons.circle, color: item.categoryColor, size: 12),
-                    const SizedBox(width: 8),
+                    SizedBox(width: kit.spacing.xs),
                     Expanded(
-                      child: Text(
+                      child: AppText(
                         item.categoryName,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -277,18 +289,17 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                 ),
               ),
               DataCell(
-                Text(
+                AppText(
                   CurrencyFormatter.format(
                     item.currentTotalAmount,
                     currencySymbol,
                   ),
                 ),
               ),
-              DataCell(Text(percentFormat.format(item.percentage))),
-              // Conditionally add comparison cells
+              DataCell(AppText(percentFormat.format(item.percentage))),
               if (showComparison && data.previousSpendingByCategory != null)
                 DataCell(
-                  Text(
+                  AppText(
                     amountComp.previousValue != null
                         ? CurrencyFormatter.format(
                             amountComp.previousValue!,
@@ -298,9 +309,7 @@ class _SpendingByCategoryPageState extends State<SpendingByCategoryPage> {
                   ),
                 ),
               if (showComparison && data.previousSpendingByCategory != null)
-                DataCell(
-                  Text(changeText, style: TextStyle(color: changeColor)),
-                ),
+                DataCell(AppText(changeText, color: changeColor)),
             ],
             onSelectChanged: (selected) {
               if (selected == true) {
