@@ -376,7 +376,7 @@ void main() {
         () => mockLocalDataSource.getGroupMembers('g1'),
       ).thenReturn([localMember1, localMember2]);
       when(
-        () => mockLocalDataSource.deleteMember(any()),
+        () => mockLocalDataSource.deleteMembers(any()),
       ).thenAnswer((_) async {});
 
       // Act
@@ -539,7 +539,7 @@ void main() {
       ).thenAnswer((_) async {});
       when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
       when(
-        () => mockLocalDataSource.deleteMember(any()),
+        () => mockLocalDataSource.deleteMembers(any()),
       ).thenAnswer((_) async {});
 
       final result = await repository.removeMember('1', 'u1');
