@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/groups/domain/entities/group_entity.dar
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_list_page.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -75,7 +76,7 @@ void main() {
     await tester.pumpWidget(buildTestWidget());
 
     expect(find.text('No groups yet.'), findsOneWidget);
-    expect(find.byType(TextButton), findsOneWidget);
+    expect(find.byType(AppButton), findsOneWidget);
   });
 
   testWidgets('renders list of groups when loaded', (tester) async {

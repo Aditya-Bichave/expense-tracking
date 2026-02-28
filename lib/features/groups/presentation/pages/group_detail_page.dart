@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart'; // Added
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/pages/add_group_expense_page.dart';
@@ -13,6 +13,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_fab.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
@@ -54,6 +62,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
       ],
       child: Builder(
         builder: (context) {
+          final kit = context.kit;
           final groupsState = context.watch<GroupsBloc>().state;
           String groupName = 'Group';
           if (groupsState is GroupsLoaded) {
@@ -62,7 +71,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                 (g) => g.id == widget.groupId,
               );
               groupName = group.name;
-            } catch (_) {}
+            } catch (_) {
+              // Group not found or error, fallback to default name
+            }
           }
 
           return BlocListener<GroupMembersBloc, GroupMembersState>(
@@ -99,45 +110,34 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                   }
                 }
 
-                return Scaffold(
-                  appBar: AppBar(
-                    title: Text(groupName),
+                return AppScaffold(
+                  appBar: AppNavBar(
+                    title: groupName,
                     actions: [
-                      // Invite Member (Admin Only)
                       if (isAdmin)
-                        IconButton(
+                        AppIconButton(
                           icon: const Icon(Icons.person_add),
                           onPressed: () => _showInviteSheet(context),
                           tooltip: 'Invite Members',
                         ),
-                      // Group Settings (Admin Only) or Info (Member)
-                      IconButton(
+                      AppIconButton(
                         icon: const Icon(Icons.settings),
                         onPressed: () {
                           if (isAdmin) {
-                            // Navigate to Group Settings (Placeholder)
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Group Settings (Admin Only)'),
                               ),
                             );
                           } else {
-                            // Show Read-Only Info
                             _showGroupInfoDialog(context, groupName);
                           }
                         },
                       ),
                     ],
-                    bottom: TabBar(
-                      controller: _tabController,
-                      tabs: const [
-                        Tab(text: 'Expenses'),
-                        Tab(text: 'Members'),
-                      ],
-                    ),
                   ),
                   floatingActionButton: canAddExpense
-                      ? FloatingActionButton(
+                      ? AppFAB(
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -150,60 +150,87 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                               ),
                             );
                           },
-                          child: const Icon(Icons.add),
+                          icon: const Icon(Icons.add),
                         )
                       : null,
-                  body: TabBarView(
-                    controller: _tabController,
+                  body: Column(
                     children: [
-                      BlocBuilder<GroupExpensesBloc, GroupExpensesState>(
-                        builder: (context, state) {
-                          if (state is GroupExpensesLoading) {
-                            return const Center(
-                              child: CircularProgressIndicator(),
-                            );
-                          } else if (state is GroupExpensesLoaded) {
-                            if (state.expenses.isEmpty) {
-                              return const Center(
-                                child: Text('No expenses yet.'),
-                              );
-                            }
-                            return ListView.builder(
-                              itemCount: state.expenses.length,
-                              itemBuilder: (context, index) {
-                                final expense = state.expenses[index];
-                                return ListTile(
-                                  title: Text(expense.title),
-                                  trailing: Text(
-                                    '${expense.amount} ${expense.currency}',
-                                  ),
-                                  subtitle: Text(
-                                    'Paid by ${expense.createdBy}',
-                                  ),
-                                  onTap: canEdit
-                                      ? () {
-                                          // Navigate to Edit Expense (Placeholder)
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Edit Expense'),
-                                            ),
-                                          );
-                                        }
-                                      : null, // Disable tap for viewers
-                                );
-                              },
-                            );
-                          } else if (state is GroupExpensesError) {
-                            return Center(
-                              child: Text('Error: ${state.message}'),
-                            );
-                          }
-                          return const SizedBox.shrink();
-                        },
+                      TabBar(
+                        controller: _tabController,
+                        tabs: const [
+                          Tab(text: 'Expenses'),
+                          Tab(text: 'Members'),
+                        ],
+                        labelColor: kit.colors.primary,
+                        unselectedLabelColor: kit.colors.textSecondary,
+                        indicatorColor: kit.colors.primary,
                       ),
-                      const GroupMembersTab(),
+                      Expanded(
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            BlocBuilder<GroupExpensesBloc, GroupExpensesState>(
+                              builder: (context, state) {
+                                if (state is GroupExpensesLoading) {
+                                  return const AppLoadingIndicator();
+                                } else if (state is GroupExpensesLoaded) {
+                                  if (state.expenses.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        'No expenses yet.',
+                                        style: kit.typography.body,
+                                      ),
+                                    );
+                                  }
+                                  return ListView.builder(
+                                    itemCount: state.expenses.length,
+                                    itemBuilder: (context, index) {
+                                      final expense = state.expenses[index];
+                                      return AppListTile(
+                                        title: Text(expense.title),
+                                        trailing: Text(
+                                          '\${expense.amount} \${expense.currency}',
+                                          style: kit.typography.bodyStrong
+                                              .copyWith(
+                                                color: kit.colors.textPrimary,
+                                              ),
+                                        ),
+                                        subtitle: Text(
+                                          'Paid by \${expense.createdBy}',
+                                        ),
+                                        onTap: canEdit
+                                            ? () {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'Edit Expense',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            : null,
+                                      );
+                                    },
+                                  );
+                                } else if (state is GroupExpensesError) {
+                                  return Center(
+                                    child: Text(
+                                      'Error: \${state.message}',
+                                      style: kit.typography.body.copyWith(
+                                        color: kit.colors.error,
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                            const GroupMembersTab(),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -235,18 +262,11 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   }
 
   void _showGroupInfoDialog(BuildContext context, String groupName) {
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Group Info'),
-        content: Text('Name: $groupName\nRole: Member/Viewer'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+      title: 'Group Info',
+      content: 'Name: \$groupName\nRole: Member/Viewer',
+      cancelLabel: 'Close',
     );
   }
 }

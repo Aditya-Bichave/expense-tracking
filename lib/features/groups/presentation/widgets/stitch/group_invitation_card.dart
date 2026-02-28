@@ -1,69 +1,66 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 
 class GroupInvitationCard extends StatelessWidget {
   const GroupInvitationCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: kit.spacing.allXl,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: kit.radii.large,
           child: Stack(
             children: [
               // Background Image Mock
               Container(
                 height: 500,
                 width: double.infinity,
-                color: theme.colorScheme.surface,
+                color: kit.colors.surfaceContainer,
               ),
               // Glass Overlay
               Positioned.fill(
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
                   child: Container(
-                    color: theme.colorScheme.surface.withOpacity(0.6),
-                    padding: const EdgeInsets.all(32),
+                    color: kit.colors.surface.withOpacity(0.6),
+                    padding: kit.spacing.allXxl,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
                           "YOU'RE INVITED",
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                          style: kit.typography.overline.copyWith(
+                            color: kit.colors.primary,
                             letterSpacing: 2.0,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        kit.spacing.gapLg,
                         Text(
                           'Europe Tour',
-                          style: theme.textTheme.headlineMedium?.copyWith(
+                          style: kit.typography.headline.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
+                        kit.spacing.gapLg,
+                        Text(
                           'Join your friends to plan the ultimate summer adventure across the continent.',
                           textAlign: TextAlign.center,
+                          style: kit.typography.body,
                         ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: theme.colorScheme.primary,
-                              foregroundColor: theme.colorScheme.onPrimary,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text('Join Group'),
-                          ),
+                        kit.spacing.gapXxl,
+                        AppButton(
+                          onPressed: () {},
+                          label: 'Join Group',
+                          isFullWidth: true,
+                          size: AppButtonSize.large,
                         ),
                       ],
                     ),

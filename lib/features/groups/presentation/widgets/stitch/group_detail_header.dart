@@ -1,21 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 
 class GroupDetailHeader extends StatelessWidget {
   const GroupDetailHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
-        ),
-      ),
+    return AppCard(
+      padding: kit.spacing.allXl,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -24,15 +20,14 @@ class GroupDetailHeader extends StatelessWidget {
             children: [
               Text(
                 'GROUP SPEND',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+                style: kit.typography.overline.copyWith(
+                  color: kit.colors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 4),
+              kit.spacing.gapXs,
               Text(
                 '\$2,450.00',
-                style: theme.textTheme.headlineMedium?.copyWith(
+                style: kit.typography.headline.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -43,27 +38,23 @@ class GroupDetailHeader extends StatelessWidget {
             children: [
               Text(
                 'You are owed',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                style: kit.typography.caption.copyWith(
+                  color: kit.colors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 4),
+              kit.spacing.gapXs,
               Text(
                 '\$120.00',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.primary,
+                style: kit.typography.title.copyWith(
+                  color: kit.colors.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 8),
-              FilledButton(
+              kit.spacing.gapSm,
+              AppButton(
                 onPressed: () {},
-                style: FilledButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  backgroundColor: theme.colorScheme.primary,
-                  foregroundColor: theme.colorScheme.onPrimary,
-                ),
-                child: const Text('Settle Up'),
+                label: 'Settle Up',
+                size: AppButtonSize.small,
               ),
             ],
           ),
