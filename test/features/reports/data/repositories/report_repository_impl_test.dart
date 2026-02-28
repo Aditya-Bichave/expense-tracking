@@ -124,6 +124,11 @@ void main() {
       ),
     ).thenAnswer((_) async => const Right([]));
 
+    // Added Mock for Categories which is now called in parallel
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => const Right([tCategory]));
+
     // Act
     final result = await repository.getSpendingByCategory(
       startDate: DateTime.now(),

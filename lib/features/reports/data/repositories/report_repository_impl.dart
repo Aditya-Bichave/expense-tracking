@@ -3,6 +3,7 @@ import 'package:collection/collection.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
+import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/domain/repositories/budget_repository.dart';
@@ -54,7 +55,7 @@ class ReportRepositoryImpl implements ReportRepository {
     return (start: prevStart, end: prevEnd);
   }
 
-  // Generic transaction fetcher (minor adjustment for clarity)
+  // Generic transaction fetcher
   Future<Either<Failure, List<dynamic>>> _fetchTransactions({
     required DateTime startDate,
     required DateTime endDate,
@@ -110,6 +111,7 @@ class ReportRepositoryImpl implements ReportRepository {
         ); // Return empty list if neither type is requested
       }
 
+      // Parallel execution
       final results = await Future.wait(futures);
 
       List<dynamic> combinedList = [];
@@ -156,31 +158,45 @@ class ReportRepositoryImpl implements ReportRepository {
       "[ReportRepo] getSpendingByCategory: Start=$startDate, End=$endDate, Type=${transactionType?.name}, Compare=$compareToPrevious",
     );
     try {
-      // Fetch Current Period Data
-      final currentDataEither = await _calculateSpendingByCategory(
-        startDate,
-        endDate,
-        accountIds,
-        categoryIds,
-        transactionType,
-      );
+      // Parallel execution for current and previous (if requested)
+      final futures = <Future<Either<Failure, SpendingCategoryReportData>>>[
+        _calculateSpendingByCategory(
+          startDate,
+          endDate,
+          accountIds,
+          categoryIds,
+          transactionType,
+        ),
+      ];
+
+      if (compareToPrevious) {
+        final prevDates = _getPreviousPeriod(startDate, endDate);
+        futures.add(
+          _calculateSpendingByCategory(
+            prevDates.start,
+            prevDates.end,
+            accountIds,
+            categoryIds,
+            transactionType,
+          ),
+        );
+      }
+
+      final results = await Future.wait(futures);
+
+      // Process Current Data
+      final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
       final currentData = currentDataEither.getOrElse(
         () => throw StateError("Current data fetch failed"),
       );
 
-      // Fetch Previous Period Data (if requested)
+      // Process Previous Data
       Map<String, CategorySpendingData> previousCategoryMap = {};
       double? previousTotalSpending;
-      if (compareToPrevious) {
-        final prevDates = _getPreviousPeriod(startDate, endDate);
-        final previousDataEither = await _calculateSpendingByCategory(
-          prevDates.start,
-          prevDates.end,
-          accountIds,
-          categoryIds,
-          transactionType,
-        );
+
+      if (compareToPrevious && results.length > 1) {
+        final previousDataEither = results[1];
         previousDataEither.fold(
           (failure) => log.warning(
             "[ReportRepo] Failed to get previous category spending data for comparison: ${failure.message}",
@@ -254,13 +270,20 @@ class ReportRepositoryImpl implements ReportRepository {
       );
     }
 
-    final transactionResult = await _fetchTransactions(
-      startDate: startDate,
-      endDate: endDate,
-      accountIds: accountIds,
-      categoryIds: categoryIds,
-      transactionType: typeToFetch,
-    );
+    // Parallel fetch: Transactions AND Categories
+    final results = await Future.wait([
+      _fetchTransactions(
+        startDate: startDate,
+        endDate: endDate,
+        accountIds: accountIds,
+        categoryIds: categoryIds,
+        transactionType: typeToFetch,
+      ),
+      categoryRepository.getAllCategories(),
+    ]);
+
+    final transactionResult = results[0];
+    final categoryResult = results[1] as Either<Failure, List<Category>>;
 
     if (transactionResult.isLeft()) {
       return transactionResult.fold(
@@ -285,8 +308,6 @@ class ReportRepositoryImpl implements ReportRepository {
       );
     }
 
-    // Fetch categories for names/colors
-    final categoryResult = await categoryRepository.getAllCategories();
     if (categoryResult.isLeft()) {
       return categoryResult.fold(
         (l) => Left(l),
@@ -363,32 +384,45 @@ class ReportRepositoryImpl implements ReportRepository {
       "[ReportRepo] getSpendingOverTime: Granularity=$granularity, Type=${transactionType?.name}, Compare=$compareToPrevious",
     );
     try {
-      // Fetch Current Period Data
-      final currentDataEither = await _calculateSpendingOverTime(
-        startDate,
-        endDate,
-        granularity,
-        accountIds,
-        categoryIds,
-        transactionType,
-      );
+      // Parallel execution for current and previous (if requested)
+      final futures = <Future<Either<Failure, SpendingTimeReportData>>>[
+        _calculateSpendingOverTime(
+          startDate,
+          endDate,
+          granularity,
+          accountIds,
+          categoryIds,
+          transactionType,
+        ),
+      ];
+
+      if (compareToPrevious) {
+        final prevDates = _getPreviousPeriod(startDate, endDate);
+        futures.add(
+          _calculateSpendingOverTime(
+            prevDates.start,
+            prevDates.end,
+            granularity,
+            accountIds,
+            categoryIds,
+            transactionType,
+          ),
+        );
+      }
+
+      final results = await Future.wait(futures);
+
+      // Process Current Data
+      final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
       final currentData = currentDataEither.getOrElse(
         () => throw StateError("Current data calculation failed"),
       );
 
-      // Fetch Previous Period Data (if requested)
+      // Process Previous Data
       Map<DateTime, TimeSeriesDataPoint> previousDataMap = {};
-      if (compareToPrevious) {
-        final prevDates = _getPreviousPeriod(startDate, endDate);
-        final previousDataEither = await _calculateSpendingOverTime(
-          prevDates.start,
-          prevDates.end,
-          granularity,
-          accountIds,
-          categoryIds,
-          transactionType,
-        );
+      if (compareToPrevious && results.length > 1) {
+        final previousDataEither = results[1];
         previousDataEither.fold(
           (failure) => log.warning(
             "[ReportRepo] Failed to get previous time series data for comparison: ${failure.message}",
@@ -539,28 +573,36 @@ class ReportRepositoryImpl implements ReportRepository {
       "[ReportRepo] getIncomeVsExpense: Period=$periodType, Compare=$compareToPrevious",
     );
     try {
-      // Fetch Current Period Data
-      final currentDataEither = await _calculateIncomeVsExpense(
-        startDate,
-        endDate,
-        periodType,
-        accountIds,
-      );
+      // Parallel execution for current and previous (if requested)
+      final futures = <Future<Either<Failure, IncomeExpenseReportData>>>[
+        _calculateIncomeVsExpense(startDate, endDate, periodType, accountIds),
+      ];
+
+      if (compareToPrevious) {
+        final prevDates = _getPreviousPeriod(startDate, endDate);
+        futures.add(
+          _calculateIncomeVsExpense(
+            prevDates.start,
+            prevDates.end,
+            periodType,
+            accountIds,
+          ),
+        );
+      }
+
+      final results = await Future.wait(futures);
+
+      // Process Current Data
+      final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
       final currentData = currentDataEither.getOrElse(
         () => throw StateError("Current data calculation failed"),
       );
 
-      // Fetch Previous Period Data (if requested)
+      // Process Previous Data
       Map<DateTime, IncomeExpensePeriodData> previousDataMap = {};
-      if (compareToPrevious) {
-        final prevDates = _getPreviousPeriod(startDate, endDate);
-        final previousDataEither = await _calculateIncomeVsExpense(
-          prevDates.start,
-          prevDates.end,
-          periodType,
-          accountIds,
-        );
+      if (compareToPrevious && results.length > 1) {
+        final previousDataEither = results[1];
         previousDataEither.fold(
           (failure) => log.warning(
             "[ReportRepo] Failed to get previous income/expense data for comparison: ${failure.message}",
@@ -701,28 +743,36 @@ class ReportRepositoryImpl implements ReportRepository {
       "[ReportRepo] getBudgetPerformance: Start=$startDate, End=$endDate, Compare=$compareToPrevious",
     );
     try {
-      // Fetch Current Period Data
-      final currentPerformanceEither = await _calculateBudgetPerformance(
-        startDate,
-        endDate,
-        budgetIds,
-        accountIds,
-      );
+      // Parallel execution for current and previous (if requested)
+      final futures = <Future<Either<Failure, BudgetPerformanceReportData>>>[
+        _calculateBudgetPerformance(startDate, endDate, budgetIds, accountIds),
+      ];
+
+      if (compareToPrevious) {
+        final prevDates = _getPreviousPeriod(startDate, endDate);
+        futures.add(
+          _calculateBudgetPerformance(
+            prevDates.start,
+            prevDates.end,
+            budgetIds,
+            accountIds,
+          ),
+        );
+      }
+
+      final results = await Future.wait(futures);
+
+      // Process Current Data
+      final currentPerformanceEither = results[0];
       if (currentPerformanceEither.isLeft()) return currentPerformanceEither;
       final currentPerformanceReport = currentPerformanceEither.getOrElse(
         () => throw StateError("Current data failed"),
       );
 
-      // Fetch Previous Period Data (if requested)
+      // Process Previous Data
       Map<String, BudgetPerformanceData> previousDataMap = {};
-      if (compareToPrevious) {
-        final prevDates = _getPreviousPeriod(startDate, endDate);
-        final previousPerformanceEither = await _calculateBudgetPerformance(
-          prevDates.start,
-          prevDates.end,
-          budgetIds,
-          accountIds,
-        );
+      if (compareToPrevious && results.length > 1) {
+        final previousPerformanceEither = results[1];
         previousPerformanceEither.fold(
           (failure) => log.warning(
             "[ReportRepo] Failed to get previous budget performance for comparison: ${failure.message}",
@@ -803,13 +853,27 @@ class ReportRepositoryImpl implements ReportRepository {
     List<String>? budgetIds,
     List<String>? accountIds,
   ) async {
-    final budgetsResult = await budgetRepository.getBudgets();
-    if (budgetsResult.isLeft())
+    // Parallel fetch: Budgets and Expenses
+    final results = await Future.wait([
+      budgetRepository.getBudgets(),
+      expenseRepository.getExpenses(
+        startDate: startDate,
+        endDate: endDate,
+        accountId: accountIds?.join(','),
+      ),
+    ]);
+
+    final budgetsResult = results[0] as Either<Failure, List<Budget>>;
+    final expenseResult = results[1] as Either<Failure, List<ExpenseModel>>;
+
+    if (budgetsResult.isLeft()) {
       return budgetsResult.fold(
         (l) => Left(l),
         (_) => const Left(CacheFailure("Failed to fetch budgets")),
       );
-    final allBudgets = budgetsResult.getOrElse(() => []);
+    }
+
+    final allBudgets = budgetsResult.getOrElse(() => <Budget>[]);
     final relevantBudgets = (budgetIds == null || budgetIds.isEmpty)
         ? allBudgets
         : allBudgets.where((b) => budgetIds.contains(b.id)).toList();
@@ -821,17 +885,14 @@ class ReportRepositoryImpl implements ReportRepository {
       return const Right(BudgetPerformanceReportData(performanceData: []));
     }
 
-    final expenseResult = await expenseRepository.getExpenses(
-      startDate: startDate,
-      endDate: endDate,
-      accountId: accountIds?.join(','),
-    );
-    if (expenseResult.isLeft())
+    if (expenseResult.isLeft()) {
       return expenseResult.fold(
         (l) => Left(l),
         (_) => const Left(CacheFailure("Expense fetch failed")),
       );
-    final allExpensesInRange = expenseResult.getOrElse(() => []);
+    }
+
+    final allExpensesInRange = expenseResult.getOrElse(() => <ExpenseModel>[]);
 
     // Pre-group expenses by category for O(1) lookup optimization
     final Map<String, List<ExpenseModel>> expensesByCategory = {};
@@ -848,23 +909,19 @@ class ReportRepositoryImpl implements ReportRepository {
 
     List<BudgetPerformanceData> performanceList = [];
 
-    for (final budget in relevantBudgets) {
+    for (final b in relevantBudgets) {
       // Determine effective dates for calculation based on budget period type vs report period
       final (effStart, effEnd) =
-          (budget.period == BudgetPeriodType.oneTime &&
-              budget.startDate != null &&
-              budget.endDate != null)
-          ? (
-              budget.startDate!,
-              budget.endDate!,
-            ) // Use budget's dates if one-time
+          (b.period == BudgetPeriodType.oneTime &&
+              b.startDate != null &&
+              b.endDate != null)
+          ? (b.startDate!, b.endDate!) // Use budget's dates if one-time
           : (startDate, endDate); // Use report range dates if recurring/overall
 
       // Optimization: Select relevant expenses first to avoid full list iteration
       Iterable<ExpenseModel> candidateExpenses;
-      if (budget.type == BudgetType.categorySpecific &&
-          budget.categoryIds != null) {
-        candidateExpenses = budget.categoryIds!.expand(
+      if (b.type == BudgetType.categorySpecific && b.categoryIds != null) {
+        candidateExpenses = b.categoryIds!.expand(
           (catId) => expensesByCategory[catId] ?? const <ExpenseModel>[],
         );
       } else {
@@ -883,7 +940,7 @@ class ReportRepositoryImpl implements ReportRepository {
           })
           .fold(0.0, (sum, exp) => sum + exp.amount);
 
-      final target = budget.targetAmount;
+      final target = b.targetAmount;
       final variance = target - spent;
       final variancePercent = target > 0
           ? (variance / target) * 100
@@ -891,7 +948,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
       // Use BudgetWithStatus helper for consistency
       final statusResult = BudgetWithStatus.calculate(
-        budget: budget,
+        budget: b,
         amountSpent: spent,
         thrivingColor: thrivingColor,
         nearingLimitColor: nearingLimitColor,
@@ -900,7 +957,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
       performanceList.add(
         BudgetPerformanceData(
-          budget: budget,
+          budget: b,
           actualSpending: ComparisonValue(currentValue: spent), // Only current
           varianceAmount: ComparisonValue(
             currentValue: variance,
@@ -934,9 +991,16 @@ class ReportRepositoryImpl implements ReportRepository {
       "[ReportRepo] getGoalProgress: Goals=${goalIds?.length ?? 'All Active'}",
     );
     try {
-      final goalsResult = await goalRepository.getGoals(
-        includeArchived: false,
-      ); // Only active goals
+      // Parallel fetch: Goals and Contributions
+      final results = await Future.wait([
+        goalRepository.getGoals(includeArchived: false),
+        goalContributionRepository.getAllContributions(),
+      ]);
+
+      final goalsResult = results[0] as Either<Failure, List<Goal>>;
+      final contribResult =
+          results[1] as Either<Failure, List<GoalContribution>>;
+
       if (goalsResult.isLeft())
         return goalsResult.fold(
           (l) => Left(l),
@@ -953,8 +1017,6 @@ class ReportRepositoryImpl implements ReportRepository {
         return const Right(GoalProgressReportData(progressData: []));
       }
 
-      final contribResult = await goalContributionRepository
-          .getAllContributions();
       if (contribResult.isLeft()) {
         return contribResult.fold(
           (l) => Left(l),
