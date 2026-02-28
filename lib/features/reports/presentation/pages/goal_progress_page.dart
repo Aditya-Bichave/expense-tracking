@@ -1,28 +1,32 @@
-// lib/features/reports/presentation/pages/goal_progress_page.dart
-import 'package:dartz/dartz.dart' as dartz;
-import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:dartz/dartz.dart' hide State;
 import 'package:expense_tracker/core/di/service_locator.dart';
-import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/goal_progress_report/goal_progress_report_bloc.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/charts/goal_contribution_chart.dart';
 import 'package:expense_tracker/features/reports/presentation/widgets/report_page_wrapper.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_gap.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 
 class GoalProgressPage extends StatelessWidget {
   const GoalProgressPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final settingsState = context.watch<SettingsBloc>().state;
 
     return BlocBuilder<GoalProgressReportBloc, GoalProgressReportState>(
@@ -39,8 +43,10 @@ class GoalProgressPage extends StatelessWidget {
                 isComparisonEnabled
                     ? Icons.compare_arrows
                     : Icons.compare_arrows_outlined,
+                color: isComparisonEnabled
+                    ? kit.colors.primary
+                    : kit.colors.textPrimary,
               ),
-              color: isComparisonEnabled ? theme.colorScheme.primary : null,
               tooltip: isComparisonEnabled ? "Hide Pacing" : "Show Pacing",
               onPressed: () {
                 context.read<GoalProgressReportBloc>().add(
@@ -52,32 +58,41 @@ class GoalProgressPage extends StatelessWidget {
           onExportCSV: () async {
             if (state is GoalProgressReportLoaded) {
               final helper = sl<CsvExportHelper>();
-              return await helper.exportGoalProgressReport(
+              final result = await helper.exportGoalProgressReport(
                 state.reportData,
                 settingsState.currencySymbol,
               );
+              return result.fold(
+                (csvString) => Right<Failure, String>(csvString),
+                (failure) => Left<Failure, String>(failure),
+              );
             }
-            return dartz.Right(
+            return Left<Failure, String>(
               const ExportFailure("Report not loaded. Cannot export."),
             );
           },
           body: Builder(
             builder: (context) {
               if (state is GoalProgressReportLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: AppLoadingIndicator());
               }
               if (state is GoalProgressReportError) {
                 return Center(
-                  child: Text(
+                  child: AppText(
                     "Error: ${state.message}",
-                    style: TextStyle(color: theme.colorScheme.error),
+                    color: kit.colors.error,
                   ),
                 );
               }
               if (state is GoalProgressReportLoaded) {
                 final reportData = state.reportData;
                 if (reportData.progressData.isEmpty) {
-                  return const Center(child: Text("No active goals found."));
+                  return Center(
+                    child: AppText(
+                      "No active goals found.",
+                      color: kit.colors.textSecondary,
+                    ),
+                  );
                 }
 
                 return ListView.builder(
@@ -94,7 +109,7 @@ class GoalProgressPage extends StatelessWidget {
                 );
               }
               return const Center(
-                child: Text("Select filters to view report."),
+                child: AppText("Select filters to view report."),
               );
             },
           ),
@@ -109,137 +124,121 @@ class GoalProgressPage extends StatelessWidget {
     SettingsState settings,
     bool isComparisonEnabled,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final currencySymbol = settings.currencySymbol;
     final goal = goalData.goal;
     final progressColor = goal.isAchieved
         ? Colors.green.shade600
-        : theme.colorScheme.primary;
+        : kit.colors.primary;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    return AppCard(
+      margin: kit.spacing.hMd.add(kit.spacing.vSm),
       elevation: 2,
-      child: InkWell(
-        onTap: () => context.pushNamed(
-          RouteNames.goalDetail,
-          pathParameters: {'id': goal.id},
-          extra: goal,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Icon(goal.displayIconData, color: progressColor, size: 24),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(goal.name, style: theme.textTheme.titleMedium),
-                        if (goal.targetDate != null)
-                          Text(
-                            'Target: ${DateFormatter.formatDate(goal.targetDate!)}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Text(
-                    '${(goal.percentageComplete * 100).toStringAsFixed(0)}%',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: progressColor,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Progress Bar
-              LinearPercentIndicator(
-                padding: EdgeInsets.zero,
-                lineHeight: 10.0,
-                percent: goal.percentageComplete.clamp(0.0, 1.0),
-                barRadius: const Radius.circular(5),
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                progressColor: progressColor,
-              ),
-              const SizedBox(height: 6),
-              // Amounts
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Saved: ${CurrencyFormatter.format(goal.totalSaved, currencySymbol)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: progressColor,
-                    ),
-                  ),
-                  Text(
-                    'Target: ${CurrencyFormatter.format(goal.targetAmount, currencySymbol)}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Comparison / Pacing Info
-              if (isComparisonEnabled) ...[
-                const Divider(height: 24),
-                Text(
-                  "Pacing Information",
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+      onTap: () => context.pushNamed(
+        RouteNames.goalDetail,
+        pathParameters: {'id': goal.id},
+        extra: goal,
+      ),
+      child: Padding(
+        padding: kit.spacing.allMd,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(goal.displayIconData, color: progressColor, size: 24),
+                SizedBox(width: kit.spacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppText(goal.name, style: AppTextStyle.title),
+                      if (goal.targetDate != null)
+                        AppText(
+                          'Target: ${DateFormatter.formatDate(goal.targetDate!)}',
+                          style: AppTextStyle.caption,
+                          color: kit.colors.textSecondary,
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  children: [
-                    _buildPacingItem(
-                      context,
-                      "Req. Daily",
-                      goalData.requiredDailySaving,
-                      currencySymbol,
-                    ),
-                    _buildPacingItem(
-                      context,
-                      "Req. Monthly",
-                      goalData.requiredMonthlySaving,
-                      currencySymbol,
-                    ),
-                    if (goalData.estimatedCompletionDate != null)
-                      _buildPacingDateItem(
-                        context,
-                        "Est. Finish",
-                        goalData.estimatedCompletionDate!,
-                      ),
-                  ],
+                AppText(
+                  '${(goal.percentageComplete * 100).toStringAsFixed(0)}%',
+                  style: AppTextStyle.title,
+                  color: progressColor,
                 ),
               ],
-
-              // Contribution Chart (Optional)
-              if (goalData.contributions.isNotEmpty) ...[
-                const Divider(height: 24),
-                Text("Recent Contributions", style: theme.textTheme.titleSmall),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 100, // Adjust height as needed
-                  child: GoalContributionChart(
-                    contributions: goalData.contributions,
-                  ),
+            ),
+            SizedBox(height: kit.spacing.sm),
+            LinearPercentIndicator(
+              padding: EdgeInsets.zero,
+              lineHeight: 10.0,
+              percent: goal.percentageComplete.clamp(0.0, 1.0),
+              barRadius: const Radius.circular(5),
+              backgroundColor: kit.colors.surfaceContainer,
+              progressColor: progressColor,
+            ),
+            SizedBox(height: kit.spacing.xs),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                AppText(
+                  'Saved: ${CurrencyFormatter.format(goal.totalSaved, currencySymbol)}',
+                  style: AppTextStyle.caption,
+                  color: progressColor,
+                ),
+                AppText(
+                  'Target: ${CurrencyFormatter.format(goal.targetAmount, currencySymbol)}',
+                  style: AppTextStyle.caption,
+                  color: kit.colors.textSecondary,
                 ),
               ],
+            ),
+            if (isComparisonEnabled) ...[
+              const AppDivider(),
+              AppText(
+                "Pacing Information",
+                style: AppTextStyle.bodyStrong,
+                color: kit.colors.primary,
+              ),
+              SizedBox(height: kit.spacing.xs),
+              Wrap(
+                spacing: 16,
+                runSpacing: 8,
+                children: [
+                  _buildPacingItem(
+                    context,
+                    "Req. Daily",
+                    goalData.requiredDailySaving,
+                    currencySymbol,
+                  ),
+                  _buildPacingItem(
+                    context,
+                    "Req. Monthly",
+                    goalData.requiredMonthlySaving,
+                    currencySymbol,
+                  ),
+                  if (goalData.estimatedCompletionDate != null)
+                    _buildPacingDateItem(
+                      context,
+                      "Est. Finish",
+                      goalData.estimatedCompletionDate!,
+                    ),
+                ],
+              ),
             ],
-          ),
+            if (goalData.contributions.isNotEmpty) ...[
+              const AppDivider(),
+              AppText("Recent Contributions", style: AppTextStyle.bodyStrong),
+              SizedBox(height: kit.spacing.xs),
+              SizedBox(
+                height: 100,
+                child: GoalContributionChart(
+                  contributions: goalData.contributions,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -251,30 +250,23 @@ class GoalProgressPage extends StatelessWidget {
     double? amount,
     String currencySymbol,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     String valueText = "N/A";
     if (amount != null && amount.isFinite) {
       valueText = CurrencyFormatter.format(amount, currencySymbol);
     } else if (amount != null && amount.isInfinite) {
-      valueText =
-          "Unreachable"; // Or "Finished" depending on context? Assuming positive infinity means unlikely
+      valueText = "Unreachable";
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        AppText(
           label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: AppTextStyle.caption,
+          color: kit.colors.textSecondary,
         ),
-        Text(
-          valueText,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        AppText(valueText, style: AppTextStyle.bodyStrong),
       ],
     );
   }
@@ -284,22 +276,16 @@ class GoalProgressPage extends StatelessWidget {
     String label,
     DateTime date,
   ) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        AppText(
           label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+          style: AppTextStyle.caption,
+          color: kit.colors.textSecondary,
         ),
-        Text(
-          DateFormatter.formatDate(date),
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        AppText(DateFormatter.formatDate(date), style: AppTextStyle.bodyStrong),
       ],
     );
   }
