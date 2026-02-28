@@ -21,6 +21,13 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
   final _uuid = const Uuid();
 
   @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Add Group Expense')),
