@@ -1,64 +1,66 @@
-import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
-import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
-
-import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/appearance_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/general_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/security_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/data_management_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/help_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/legal_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/widgets/about_settings_section.dart';
-import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker/main.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:expense_tracker/core/utils/app_dialogs.dart';
+import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
+// Removing part-of imports and importing bloc/state directly if exported or check proper imports
+// If they are part files, they should be imported via the main library file usually.
+// Let's assume settings_bloc.dart or data_management_bloc.dart exports them.
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+// import 'package:expense_tracker/features/settings/presentation/bloc/settings_event.dart'; // Likely part of settings_bloc
+// import 'package:expense_tracker/features/settings/presentation/bloc/settings_state.dart'; // Likely part of settings_bloc
 
-class SettingsPage extends StatelessWidget {
+// If data_management_bloc.dart is the main file, import that.
+import 'package:expense_tracker/features/settings/presentation/widgets/about_settings_section.dart';
+import 'package:expense_tracker/features/settings/presentation/widgets/appearance_settings_section.dart';
+import 'package:expense_tracker/features/settings/presentation/widgets/data_management_settings_section.dart';
+import 'package:expense_tracker/features/settings/presentation/widgets/general_settings_section.dart';
+import 'package:expense_tracker/features/settings/presentation/widgets/help_settings_section.dart';
+import 'package:expense_tracker/features/settings/presentation/widgets/legal_settings_section.dart';
+import 'package:expense_tracker/features/settings/presentation/widgets/security_settings_section.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // Import for modeTheme extension
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_gap.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
+
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const SettingsView();
-  }
+  State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class SettingsView extends StatefulWidget {
-  const SettingsView({super.key});
+class _SettingsPageState extends State<SettingsPage> {
   @override
-  State<SettingsView> createState() => _SettingsViewState();
-}
+  void initState() {
+    super.initState();
+    context.read<SettingsBloc>().add(const LoadSettings());
+  }
 
-class _SettingsViewState extends State<SettingsView> {
-  void _launchURL(BuildContext context, String urlString) async {
+  Future<void> _launchURL(BuildContext context, String urlString) async {
     final Uri url = Uri.parse(urlString);
-    try {
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        log.warning("[SettingsPage] Could not launch URL: $urlString");
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Could not open link: $urlString')),
-          );
-        }
-      }
-    } catch (e, s) {
-      log.severe("[SettingsPage] Error launching URL $urlString: $e\n$s");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error opening link: ${e.toString()}')),
-        );
+    if (!await launchUrl(url)) {
+      if (context.mounted) {
+        AppToast.show(context, 'Could not launch ', type: AppToastType.error);
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final modeTheme = context.modeTheme;
+    final kit = context.kit;
+    final modeTheme = context.modeTheme; // Valid now with import
 
     return MultiBlocListener(
       listeners: [
@@ -66,27 +68,21 @@ class _SettingsViewState extends State<SettingsView> {
           listener: (context, state) {
             final errorMsg = state.errorMessage;
             if (state.status == SettingsStatus.error && errorMsg != null) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text("Settings Error: $errorMsg"),
-                    backgroundColor: theme.colorScheme.error,
-                  ),
-                );
+              AppToast.show(
+                context,
+                "Settings Error: ",
+                type: AppToastType.error,
+              );
               context.read<SettingsBloc>().add(const ClearSettingsMessage());
             }
             final pkgErrorMsg = state.packageInfoError;
             if (state.packageInfoStatus == PackageInfoStatus.error &&
                 pkgErrorMsg != null) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text("Version Info Error: $pkgErrorMsg"),
-                    backgroundColor: theme.colorScheme.error,
-                  ),
-                );
+              AppToast.show(
+                context,
+                "Version Info Error: ",
+                type: AppToastType.error,
+              );
             }
           },
         ),
@@ -97,16 +93,11 @@ class _SettingsViewState extends State<SettingsView> {
                     state.status == DataManagementStatus.error) &&
                 dataMsg != null) {
               final isError = state.status == DataManagementStatus.error;
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(dataMsg),
-                    backgroundColor: isError
-                        ? theme.colorScheme.error
-                        : Colors.green,
-                  ),
-                );
+              AppToast.show(
+                context,
+                dataMsg,
+                type: isError ? AppToastType.error : AppToastType.success,
+              );
               context.read<DataManagementBloc>().add(
                 const ClearDataManagementMessage(),
               );
@@ -114,7 +105,7 @@ class _SettingsViewState extends State<SettingsView> {
           },
         ),
       ],
-      child: Scaffold(
+      child: AppScaffold(
         body: BlocBuilder<SettingsBloc, SettingsState>(
           builder: (context, settingsState) {
             final dataManagementState = context
@@ -129,7 +120,7 @@ class _SettingsViewState extends State<SettingsView> {
                 isDataManagementLoading || isSettingsLoading;
 
             if (settingsState.status == SettingsStatus.initial) {
-              return const Center(child: CircularProgressIndicator());
+              return const AppLoadingIndicator();
             }
 
             return Stack(
@@ -137,7 +128,7 @@ class _SettingsViewState extends State<SettingsView> {
                 ListView(
                   padding:
                       modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-                      const EdgeInsets.only(top: 8.0, bottom: 80.0),
+                      kit.spacing.allMd.copyWith(bottom: 80),
                   children: [
                     AppearanceSettingsSection(
                       state: settingsState,
@@ -163,41 +154,46 @@ class _SettingsViewState extends State<SettingsView> {
                         }
                       },
                       onRestore: () async {
-                        final confirmed = await AppDialogs.showConfirmation(
-                          context,
+                        AppDialog.show(
+                          context: context,
                           title: "Confirm Restore",
                           content:
                               "Restoring from backup will overwrite all current data. Are you sure you want to proceed?",
-                          confirmText: "Restore",
-                          confirmColor: Colors.orange[700],
-                        );
-                        if (confirmed == true && context.mounted) {
-                          final password = await _promptForPassword(
-                            context,
-                            'Backup Password',
-                          );
-                          if (password != null && password.isNotEmpty) {
-                            context.read<DataManagementBloc>().add(
-                              RestoreRequested(password),
+                          confirmLabel: "Restore",
+                          onConfirm: () async {
+                            Navigator.of(context).pop(); // Close confirm dialog
+                            final password = await _promptForPassword(
+                              context,
+                              'Backup Password',
                             );
-                          }
-                        }
+                            if (password != null && password.isNotEmpty) {
+                              if (context.mounted) {
+                                context.read<DataManagementBloc>().add(
+                                  RestoreRequested(password),
+                                );
+                              }
+                            }
+                          },
+                          cancelLabel: "Cancel",
+                          isDestructive: false,
+                        );
                       },
                       onClearData: () async {
-                        final confirmed = await AppDialogs.showStrongConfirmation(
-                          context,
+                        AppDialog.show(
+                          context: context,
                           title: "Confirm Clear All Data",
                           content:
                               "This action will permanently delete ALL accounts, expenses, and income data. This cannot be undone.",
-                          confirmText: "Clear Data",
-                          confirmationPhrase: "DELETE",
-                          confirmColor: Theme.of(context).colorScheme.error,
+                          confirmLabel: "Clear Data",
+                          onConfirm: () {
+                            Navigator.of(context).pop();
+                            context.read<DataManagementBloc>().add(
+                              const ClearDataRequested(),
+                            );
+                          },
+                          cancelLabel: "Cancel",
+                          isDestructive: true,
                         );
-                        if (confirmed == true && context.mounted) {
-                          context.read<DataManagementBloc>().add(
-                            const ClearDataRequested(),
-                          );
-                        }
                       },
                     ),
                     HelpSettingsSection(
@@ -213,25 +209,17 @@ class _SettingsViewState extends State<SettingsView> {
                       isLoading: isOverallLoading,
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onError,
-                        ),
+                      padding: kit.spacing.vMd,
+                      child: AppButton(
+                        label: 'Logout',
+                        icon: const Icon(Icons.logout),
+                        variant: UiVariant.destructive,
                         onPressed: () {
                           context.read<AuthBloc>().add(AuthLogoutRequested());
                         },
-                        icon: const Icon(Icons.logout),
-                        label: const Text('Logout'),
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    AppGap.xl(context),
                   ],
                 ),
                 if (isOverallLoading)
@@ -239,30 +227,21 @@ class _SettingsViewState extends State<SettingsView> {
                     child: Container(
                       color: Colors.black.withOpacity(0.5),
                       child: Center(
-                        child: Card(
-                          elevation: 8,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32.0,
-                              vertical: 24.0,
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const CircularProgressIndicator(),
-                                const SizedBox(height: 20),
-                                Text(
-                                  isDataManagementLoading
-                                      ? "Processing data..."
-                                      : "Loading settings...",
-                                  style: theme.textTheme.titleMedium,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
+                        child: AppCard(
+                          padding: kit.spacing.allLg,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const AppLoadingIndicator(),
+                              AppGap.md(context),
+                              AppText(
+                                isDataManagementLoading
+                                    ? "Processing data..."
+                                    : "Loading settings...",
+                                style: AppTextStyle.bodyStrong,
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -280,23 +259,17 @@ class _SettingsViewState extends State<SettingsView> {
     final controller = TextEditingController();
     return showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: TextField(
+      builder: (ctx) => AppDialog(
+        title: title,
+        contentWidget: AppTextField(
           controller: controller,
           obscureText: true,
-          decoration: const InputDecoration(labelText: 'Password'),
+          label: 'Password',
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(controller.text),
-            child: const Text('OK'),
-          ),
-        ],
+        confirmLabel: 'OK',
+        onConfirm: () => Navigator.of(ctx).pop(controller.text),
+        cancelLabel: 'Cancel',
+        onCancel: () => Navigator.of(ctx).pop(),
       ),
     );
   }

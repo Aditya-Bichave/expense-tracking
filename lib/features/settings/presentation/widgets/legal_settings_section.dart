@@ -1,8 +1,9 @@
-import 'package:expense_tracker/core/widgets/section_header.dart';
-import 'package:expense_tracker/core/widgets/settings_list_tile.dart'; // Changed import
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 
 class LegalSettingsSection extends StatelessWidget {
   final bool isLoading;
@@ -16,57 +17,58 @@ class LegalSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final bool isInDemoMode = context.watch<SettingsBloc>().state.isInDemoMode;
     final bool isEnabled = !isLoading && !isInDemoMode;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'Legal'),
-        SettingsListTile(
-          enabled: isEnabled,
-          leadingIcon: Icons.privacy_tip_outlined,
-          title: 'Privacy Policy',
-          trailing: Icon(
-            Icons.open_in_new,
-            size: 18,
-            color: !isEnabled
-                ? theme.disabledColor
-                : theme.colorScheme.secondary,
+    return AppSection(
+      title: 'Legal',
+      child: Column(
+        children: [
+          AppListTile(
+            leading: Icon(
+              Icons.privacy_tip_outlined,
+              color: kit.colors.textPrimary,
+            ),
+            title: Text('Privacy Policy'),
+            trailing: Icon(
+              Icons.open_in_new,
+              size: 18,
+              color: !isEnabled ? kit.colors.textMuted : kit.colors.primary,
+            ),
+            onTap: !isEnabled
+                ? null
+                : () =>
+                      launchUrlCallback(context, 'https://example.com/privacy'),
           ),
-          onTap: !isEnabled
-              ? null
-              : () => launchUrlCallback(context, 'https://example.com/privacy'),
-        ),
-        SettingsListTile(
-          enabled: isEnabled,
-          leadingIcon: Icons.gavel_outlined,
-          title: 'Terms of Service',
-          trailing: Icon(
-            Icons.open_in_new,
-            size: 18,
-            color: !isEnabled
-                ? theme.disabledColor
-                : theme.colorScheme.secondary,
+          AppListTile(
+            leading: Icon(Icons.gavel_outlined, color: kit.colors.textPrimary),
+            title: Text('Terms of Service'),
+            trailing: Icon(
+              Icons.open_in_new,
+              size: 18,
+              color: !isEnabled ? kit.colors.textMuted : kit.colors.primary,
+            ),
+            onTap: !isEnabled
+                ? null
+                : () => launchUrlCallback(context, 'https://example.com/terms'),
           ),
-          onTap: !isEnabled
-              ? null
-              : () => launchUrlCallback(context, 'https://example.com/terms'),
-        ),
-        SettingsListTile(
-          enabled: isEnabled,
-          leadingIcon: Icons.article_outlined,
-          title: 'Open Source Licenses',
-          trailing: Icon(
-            Icons.chevron_right,
-            color: !isEnabled
-                ? theme.disabledColor
-                : theme.colorScheme.onSurfaceVariant,
+          AppListTile(
+            leading: Icon(
+              Icons.article_outlined,
+              color: kit.colors.textPrimary,
+            ),
+            title: Text('Open Source Licenses'),
+            trailing: Icon(
+              Icons.chevron_right,
+              color: !isEnabled
+                  ? kit.colors.textMuted
+                  : kit.colors.textSecondary,
+            ),
+            onTap: !isEnabled ? null : () => showLicensePage(context: context),
           ),
-          onTap: !isEnabled ? null : () => showLicensePage(context: context),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
