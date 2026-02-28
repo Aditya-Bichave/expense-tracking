@@ -36,7 +36,7 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
                 widget.onTypeChanged(tab);
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: Duration(milliseconds: 200),
                 padding: context.space.vMd,
                 decoration: BridgeDecoration(
                   color: isSelected

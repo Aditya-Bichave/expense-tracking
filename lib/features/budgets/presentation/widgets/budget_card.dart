@@ -155,9 +155,11 @@ class BudgetCard extends StatelessWidget {
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
-        EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs);
-    final cardPadding =
-        modeTheme?.cardInnerPadding ?? context.space.allMd;
+        EdgeInsets.symmetric(
+          horizontal: context.space.md,
+          vertical: context.space.xs,
+        );
+    final cardPadding = modeTheme?.cardInnerPadding ?? context.space.allMd;
 
     return AppCard(
       onTap: onTap,

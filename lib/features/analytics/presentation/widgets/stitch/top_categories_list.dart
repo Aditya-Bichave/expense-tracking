@@ -113,7 +113,7 @@ class TopCategoriesList extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               ClipRRect(
                 borderRadius: context.kit.radii.xsmall,
                 child: LinearProgressIndicator(

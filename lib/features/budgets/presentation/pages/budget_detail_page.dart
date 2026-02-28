@@ -311,13 +311,13 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     if (_isLoading) {
       // Check main loading flag here
-      return const Padding(
+      return Padding(
         padding: context.space.vXl,
         child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_relevantTransactions.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: context.space.vXxl,
         child: Center(
           child: Text("No transactions found for this budget period."),
@@ -467,10 +467,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             backgroundColor: category.displayColor.withOpacity(0.1),
             side: BorderSide.none,
             visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 6,
-              vertical: 0,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           );
         })
         .whereNotNull()
@@ -507,7 +504,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     }
     if (_error != null || _budgetWithStatus == null) {
       return BridgeScaffold(
-        appBar: AppBar(title: const Text("Error")),
+        appBar: AppBar(title: Text("Error")),
         body: Center(
           child: Padding(
             padding: context.space.allLg,

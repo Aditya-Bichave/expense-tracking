@@ -14,7 +14,10 @@ class SpendingTrendsChart extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.sm),
+      margin: EdgeInsets.symmetric(
+        horizontal: context.space.lg,
+        vertical: context.space.sm,
+      ),
       padding: context.space.allXxl,
       decoration: BridgeDecoration(
         color: theme.colorScheme.surface, // Use theme surface (glass/dark)
@@ -45,10 +48,7 @@ class SpendingTrendsChart extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BridgeDecoration(
                   color: primaryColor.withOpacity(0.1),
                   borderRadius: context.kit.radii.xsmall,

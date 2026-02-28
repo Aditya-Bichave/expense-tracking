@@ -120,9 +120,7 @@ class CategoryManagementScreen extends StatelessWidget {
                     padding: context.space.allXl,
                     child: Text(
                       "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
-                      style: BridgeTextStyle(
-                        color: context.kit.colors.error,
-                      ),
+                      style: BridgeTextStyle(color: context.kit.colors.error),
                     ),
                   ),
                 );

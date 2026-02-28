@@ -117,7 +117,7 @@ class _CategoryPickerDialogContentState
               height: 4,
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BridgeDecoration(
-                color: context.kit.colors.borderSubtle[300],
+                color: context.kit.colors.borderSubtle.withOpacity(0.3),
                 borderRadius: context.kit.radii.small,
               ),
             ),
@@ -201,7 +201,7 @@ class _CategoryPickerDialogContentState
                     },
                   ),
           ),
-          const Divider(height: 1),
+          Divider(height: 1),
           Padding(
             padding: context.space.vMd,
             child: Center(

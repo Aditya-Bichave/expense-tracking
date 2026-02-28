@@ -31,9 +31,11 @@ class SummaryCard extends StatelessWidget {
             "[SummaryCard UI] State is initial SummaryLoading. Showing Shimmer/Indicator.",
           );
           // Use a shimmer effect or simple indicator for initial load
-          content = const Padding(
+          content = Padding(
             padding: context.space.allLg,
-            child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
+            child: Center(
+              child: BridgeCircularProgressIndicator(strokeWidth: 2),
+            ),
           );
         } else if (state is SummaryLoaded ||
             (state is SummaryLoading && state.isReloading)) {
@@ -50,7 +52,7 @@ class SummaryCard extends StatelessWidget {
             log.warning(
               "[SummaryCard UI] Summary is null during Loaded/Reloading state.",
             );
-            content = const Padding(
+            content = Padding(
               padding: context.space.allLg,
               child: Center(child: Text('Loading summary data...')),
             );
@@ -158,9 +160,11 @@ class SummaryCard extends StatelessWidget {
           log.info(
             "[SummaryCard UI] State is SummaryInitial or Unknown. Showing loading indicator.",
           );
-          content = const Padding(
+          content = Padding(
             padding: context.space.allLg,
-            child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
+            child: Center(
+              child: BridgeCircularProgressIndicator(strokeWidth: 2),
+            ),
           );
         }
 

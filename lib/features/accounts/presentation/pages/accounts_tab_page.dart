@@ -184,7 +184,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             if (state is AccountListLoading && !state.isReloading) {
               return const Center(
                 child: Padding(
-                  padding: context.space.allXxxl,
+                  padding: const EdgeInsets.all(32.0),
                   child: BridgeCircularProgressIndicator(),
                 ),
               );
@@ -279,7 +279,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                     ),
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.add_circle_outline),
-                      label: const Text('Add Asset Account'),
+                      label: Text('Add Asset Account'),
                       onPressed: () => context.pushNamed(RouteNames.addAccount),
                       style: OutlinedButton.styleFrom(
                         padding: context.space.vMd,
@@ -300,7 +300,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             // Fallback for Initial state
             return const Center(
               child: Padding(
-                padding: context.space.allXxxl,
+                padding: const EdgeInsets.all(32.0),
                 child: BridgeCircularProgressIndicator(),
               ),
             );
@@ -316,10 +316,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
       children: [
         const SectionHeader(title: 'Liabilities'),
         Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16.0,
-            vertical: 4.0,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -341,10 +338,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         ),
         const SizedBox(height: 8),
         Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16.0,
-            vertical: 24.0,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
           child: Center(
             child: Text(
               'Liability accounts (Credit Cards, Loans) coming soon!',
@@ -357,10 +351,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         ),
         Padding(
           // Button remains the same, but is effectively disabled by FAB logic now
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16.0,
-            vertical: 12.0,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           child: OutlinedButton.icon(
             icon: Icon(Icons.add_circle_outline, color: theme.disabledColor),
             label: Text(

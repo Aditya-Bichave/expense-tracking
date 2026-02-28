@@ -24,7 +24,7 @@ class CategorizationStatusWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textStyleSmall =
-        theme.textTheme.bodySmall ?? const BridgeTextStyle(fontSize: 12);
+        theme.textTheme.bodySmall ?? BridgeTextStyle(fontSize: 12);
     final Color primaryColor = theme.colorScheme.primary;
     final Color errorColor = theme.colorScheme.error;
     final Color successColor = context.kit.colors.success;

@@ -252,14 +252,8 @@ class AppTheme {
                   ? 6.0
                   : (modeTheme.cardStyle == CardStyle.glass ? 0 : 1.5)),
         margin: modeTheme.layoutDensity == LayoutDensity.compact
-            ? EdgeInsets.symmetric(
-                horizontal: context.space.sm,
-                vertical: context.space.xs,
-              )
-            : EdgeInsets.symmetric(
-                horizontal: context.space.lg,
-                vertical: context.space.sm,
-              ),
+            ? EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0)
+            : EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         shape: RoundedRectangleBorder(
           borderRadius: BridgeBorderRadius.circular(
             modeTheme.cardStyle == CardStyle.flat
@@ -281,14 +275,8 @@ class AppTheme {
 
       listTileTheme: ListTileThemeData(
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? EdgeInsets.symmetric(
-                horizontal: context.space.md,
-                vertical: context.space.xxs,
-              )
-            : EdgeInsets.symmetric(
-                horizontal: context.space.lg,
-                vertical: context.space.xs,
-              ),
+            ? EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0)
+            : EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
         dense: modeTheme.layoutDensity == LayoutDensity.compact,
         minVerticalPadding: modeTheme.layoutDensity == LayoutDensity.compact
             ? 8
@@ -326,7 +314,7 @@ class AppTheme {
         ),
         focusedBorder: (modePrefix == 'aether' || modePrefix == 'stitch')
             ? OutlineInputBorder(
-                borderRadius: context.kit.radii.large,
+                borderRadius: const BorderRadius.all(Radius.circular(16.0)),
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
               )
             : OutlineInputBorder(
@@ -340,14 +328,8 @@ class AppTheme {
             ? colorScheme.surface.withOpacity(0.05) // Generic low opacity fill
             : null,
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? EdgeInsets.symmetric(
-                horizontal: context.space.md,
-                vertical: context.space.sm,
-              )
-            : EdgeInsets.symmetric(
-                horizontal: context.space.lg,
-                vertical: context.space.md,
-              ),
+            ? EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0)
+            : EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         isDense: modeTheme.layoutDensity == LayoutDensity.compact,
         floatingLabelBehavior: modePrefix == 'quantum'
             ? FloatingLabelBehavior.always
@@ -367,14 +349,8 @@ class AppTheme {
               ? colorScheme.onPrimaryContainer
               : colorScheme.onPrimary,
           padding: modeTheme.layoutDensity == LayoutDensity.compact
-              ? EdgeInsets.symmetric(
-                  horizontal: context.space.lg,
-                  vertical: context.space.sm,
-                )
-              : EdgeInsets.symmetric(
-                  horizontal: context.space.xxl,
-                  vertical: context.space.md,
-                ),
+              ? EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0)
+              : EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(
             borderRadius: BridgeBorderRadius.circular(

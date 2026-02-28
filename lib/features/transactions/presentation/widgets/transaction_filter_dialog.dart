@@ -321,10 +321,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           ],
         ),
       ),
-      actionsPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
+      actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       actions: <Widget>[
         BridgeTextButton(
           key: const ValueKey('button_filterDialog_clear'),

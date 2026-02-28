@@ -114,7 +114,7 @@ class IncomeCard extends StatelessWidget {
                       ? null
                       : (_) => onChangeCategoryRequest!(income),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   'Acc: $accountName',
                   style: context.kit.typography.caption.copyWith(
@@ -165,8 +165,7 @@ class IncomeCard extends StatelessWidget {
             children: [
               AnimatedDefaultTextStyle(
                 duration:
-                    modeTheme?.fastDuration ??
-                    const Duration(milliseconds: 150),
+                    modeTheme?.fastDuration ?? Duration(milliseconds: 150),
                 style: context.kit.typography.headline.copyWith(
                   fontWeight: FontWeight.bold,
                   color: incomeAmountColor,

@@ -425,7 +425,7 @@ class _BudgetFormState extends State<BudgetForm> {
                           }),
                         ),
                       ),
-                      const Padding(
+                      Padding(
                         padding: context.space.hSm,
                         child: Text('-', style: BridgeTextStyle(fontSize: 16)),
                       ),

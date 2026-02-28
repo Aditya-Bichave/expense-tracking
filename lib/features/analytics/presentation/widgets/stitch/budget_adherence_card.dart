@@ -15,7 +15,10 @@ class BudgetAdherenceCard extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.sm),
+      margin: EdgeInsets.symmetric(
+        horizontal: context.space.lg,
+        vertical: context.space.sm,
+      ),
       padding: context.space.allXl,
       decoration: BridgeDecoration(
         color: theme.colorScheme.surface,

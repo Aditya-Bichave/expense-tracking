@@ -46,7 +46,7 @@ class BudgetsSubTab extends StatelessWidget {
             // Display empty state only when not loading and list is empty
             content = Center(
               child: Padding(
-                padding: context.space.allXxxl,
+                padding: const EdgeInsets.all(32.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

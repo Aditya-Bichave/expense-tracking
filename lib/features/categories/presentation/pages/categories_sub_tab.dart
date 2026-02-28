@@ -22,7 +22,10 @@ class CategoriesSubTab extends StatelessWidget {
         availableIcons[category.iconName] ?? Icons.category_outlined;
 
     return AppCard(
-      margin: EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs),
+      margin: EdgeInsets.symmetric(
+        horizontal: context.space.md,
+        vertical: context.space.xs,
+      ),
       padding: const EdgeInsets.only(),
       child: BridgeListTile(
         leading: CircleAvatar(

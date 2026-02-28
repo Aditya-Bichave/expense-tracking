@@ -322,13 +322,13 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     final settings = context.watch<SettingsBloc>().state;
 
     if (_isLoadingContributions) {
-      return const Padding(
+      return Padding(
         padding: context.space.vXl,
         child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_contributions.isEmpty) {
-      return const Padding(
+      return Padding(
         padding: context.space.vXxl,
         child: Center(child: Text("No contributions logged yet.")),
       );
@@ -341,14 +341,8 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           padding: const EdgeInsets.only(bottom: 8.0),
           child: CupertinoSlidingSegmentedControl<bool>(
             children: const {
-              true: Padding(
-                padding: context.space.allSm,
-                child: Text('Chart'),
-              ),
-              false: Padding(
-                padding: context.space.allSm,
-                child: Text('List'),
-              ),
+              true: Padding(padding: context.space.allSm, child: Text('Chart')),
+              false: Padding(padding: context.space.allSm, child: Text('List')),
             },
             groupValue: _showContributionChart,
             onValueChanged: (bool? value) {
@@ -465,7 +459,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     }
     if (_error != null || _currentGoal == null) {
       return BridgeScaffold(
-        appBar: AppBar(title: const Text("Error")),
+        appBar: AppBar(title: Text("Error")),
         body: Center(
           child: Padding(
             padding: context.space.allLg,

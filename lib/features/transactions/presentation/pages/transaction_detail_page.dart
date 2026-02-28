@@ -193,7 +193,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
             onPressed: () => _navigateToEdit(context),
           ),
           IconButton(
-            key: const ValueKey('button_transactionDetail_delete'),
+            key: ValueKey('button_transactionDetail_delete'),
             icon: Icon(Icons.delete_outline, color: context.kit.colors.danger),
             tooltip: 'Delete',
             onPressed: () => _handleDelete(context),
@@ -214,7 +214,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                     transaction.title,
                     style: context.kit.typography.headline,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     '${isExpense ? '-' : '+'} ${CurrencyFormatter.format(transaction.amount, currencySymbol)}',
                     style: context.kit.typography.display.copyWith(

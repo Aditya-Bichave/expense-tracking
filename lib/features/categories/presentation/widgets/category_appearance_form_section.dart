@@ -81,7 +81,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text("Appearance", style: theme.textTheme.titleMedium),
-        const SizedBox(height: 10),
+        SizedBox(height: 10),
         BridgeListTile(
           contentPadding: context.space.hMd,
           shape: RoundedRectangleBorder(
@@ -101,7 +101,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
           ),
           onTap: () => _showIconPicker(context),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         BridgeListTile(
           contentPadding: context.space.hMd,
           shape: RoundedRectangleBorder(

@@ -54,7 +54,7 @@ class MonthlyCommitmentsSummary extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               ClipRRect(
                 borderRadius: context.kit.radii.xsmall,
                 child: LinearProgressIndicator(

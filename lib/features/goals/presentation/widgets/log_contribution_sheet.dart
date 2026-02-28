@@ -187,7 +187,7 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               BridgeListTile(
                 contentPadding: context.space.hXxs,

@@ -39,7 +39,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
     return BridgeScaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: context.space.allXxxl,
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -83,8 +83,8 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               ),
               const SizedBox(height: 24),
               OutlinedButton.icon(
-                icon: const Icon(Icons.explore_outlined),
-                label: const Text('Explore Demo Mode'),
+                icon: Icon(Icons.explore_outlined),
+                label: Text('Explore Demo Mode'),
                 style: OutlinedButton.styleFrom(
                   padding: context.space.vMd,
                   side: BorderSide(color: theme.colorScheme.primary),
@@ -100,14 +100,11 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               const Row(
                 children: [
                   Expanded(child: Divider()),
-                  Padding(
-                    padding: context.space.hLg,
-                    child: Text("OR"),
-                  ),
+                  Padding(padding: context.space.hLg, child: Text("OR")),
                   Expanded(child: Divider()),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               BridgeElevatedButton(
                 style: ElevatedButton.styleFrom(
                   padding: context.space.vMd,

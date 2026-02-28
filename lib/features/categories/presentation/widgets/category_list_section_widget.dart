@@ -38,10 +38,7 @@ class CategoryListSectionWidget extends StatelessWidget {
     );
 
     return ListView.builder(
-      padding: const EdgeInsets.only(
-        top: 8.0,
-        bottom: 90.0,
-      ), // Padding for FAB
+      padding: const EdgeInsets.only(top: 8.0, bottom: 90.0), // Padding for FAB
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final category = categories[index];

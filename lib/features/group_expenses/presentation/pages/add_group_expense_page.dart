@@ -26,7 +26,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
   @override
   Widget build(BuildContext context) {
     return BridgeScaffold(
-      appBar: AppBar(title: const Text('Add Group Expense')),
+      appBar: AppBar(title: Text('Add Group Expense')),
       body: Padding(
         padding: context.space.allLg,
         child: Column(

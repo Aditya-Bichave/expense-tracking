@@ -70,7 +70,7 @@ class TransactionListView extends StatelessWidget {
         state.status != ListStatus.reloading) {
       return Center(
         child: Padding(
-          padding: context.space.allXxxl,
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

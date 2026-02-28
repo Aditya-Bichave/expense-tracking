@@ -296,7 +296,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedCategoryIds.length} Categories Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.category_outlined),
+                          buttonIcon: Icon(Icons.category_outlined),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
                             borderRadius: context.kit.radii.small,
@@ -330,7 +330,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedBudgetIds.length} Budgets Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.pie_chart_outline),
+                          buttonIcon: Icon(Icons.pie_chart_outline),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
                             borderRadius: context.kit.radii.small,
@@ -362,7 +362,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedGoalIds.length} Goals Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.savings_outlined),
+                          buttonIcon: Icon(Icons.savings_outlined),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
                             borderRadius: context.kit.radii.small,

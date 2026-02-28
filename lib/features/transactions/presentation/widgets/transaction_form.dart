@@ -208,7 +208,7 @@ class TransactionFormState extends State<TransactionForm> {
         );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Please select an account.'),
+            content: Text('Please select an account.'),
             backgroundColor: context.kit.colors.warn,
           ),
         );
@@ -237,7 +237,7 @@ class TransactionFormState extends State<TransactionForm> {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: const Text('Please correct the errors in the form.'),
+            content: Text('Please correct the errors in the form.'),
             backgroundColor: context.kit.colors.warn,
           ),
         );

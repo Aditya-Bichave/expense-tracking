@@ -17,7 +17,7 @@ class StitchGoalsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (goals.isEmpty) return const SizedBox.shrink();
+    if (goals.isEmpty) return SizedBox.shrink();
     final kit = context.kit;
 
     return Column(

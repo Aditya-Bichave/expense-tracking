@@ -62,7 +62,7 @@ class AccountListPage extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: context.space.allXxxl,
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -186,9 +186,7 @@ class AccountListPage extends StatelessWidget {
                           /* ... background ... */
                           color: theme.colorScheme.errorContainer,
                           alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
