@@ -13,12 +13,21 @@ import 'package:expense_tracker/features/transactions/presentation/bloc/transact
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGetTransactionsUseCase extends Mock implements GetTransactionsUseCase {}
+class MockGetTransactionsUseCase extends Mock
+    implements GetTransactionsUseCase {}
+
 class MockDeleteExpenseUseCase extends Mock implements DeleteExpenseUseCase {}
+
 class MockDeleteIncomeUseCase extends Mock implements DeleteIncomeUseCase {}
-class MockApplyCategoryToBatchUseCase extends Mock implements ApplyCategoryToBatchUseCase {}
-class MockSaveUserCategorizationHistoryUseCase extends Mock implements SaveUserCategorizationHistoryUseCase {}
+
+class MockApplyCategoryToBatchUseCase extends Mock
+    implements ApplyCategoryToBatchUseCase {}
+
+class MockSaveUserCategorizationHistoryUseCase extends Mock
+    implements SaveUserCategorizationHistoryUseCase {}
+
 class MockExpenseRepository extends Mock implements ExpenseRepository {}
+
 class MockIncomeRepository extends Mock implements IncomeRepository {}
 
 void main() {
@@ -40,9 +49,7 @@ void main() {
     mockExpenseRepository = MockExpenseRepository();
     mockIncomeRepository = MockIncomeRepository();
     dataChangeStream = const Stream.empty();
-    registerFallbackValue(
-      const GetTransactionsParams(),
-    );
+    registerFallbackValue(const GetTransactionsParams());
   });
 
   final tTxnValid = TransactionEntity(
@@ -56,7 +63,9 @@ void main() {
   blocTest<TransactionListBloc, TransactionListState>(
     'emits [loading, success] when LoadTransactions succeeds',
     build: () {
-      when(() => mockGetTransactionsUseCase(any())).thenAnswer((_) async => Right([tTxnValid]));
+      when(
+        () => mockGetTransactionsUseCase(any()),
+      ).thenAnswer((_) async => Right([tTxnValid]));
       return TransactionListBloc(
         getTransactionsUseCase: mockGetTransactionsUseCase,
         deleteExpenseUseCase: mockDeleteExpenseUseCase,
@@ -70,7 +79,11 @@ void main() {
     },
     act: (bloc) => bloc.add(const LoadTransactions()),
     expect: () => [
-      isA<TransactionListState>().having((s) => s.status, 'status', ListStatus.loading),
+      isA<TransactionListState>().having(
+        (s) => s.status,
+        'status',
+        ListStatus.loading,
+      ),
       isA<TransactionListState>()
           .having((s) => s.status, 'status', ListStatus.success)
           .having((s) => s.transactions.length, 'transactions', 1),
@@ -80,7 +93,9 @@ void main() {
   blocTest<TransactionListBloc, TransactionListState>(
     'updates search term and reloads',
     build: () {
-      when(() => mockGetTransactionsUseCase(any())).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGetTransactionsUseCase(any()),
+      ).thenAnswer((_) async => const Right([]));
       return TransactionListBloc(
         getTransactionsUseCase: mockGetTransactionsUseCase,
         deleteExpenseUseCase: mockDeleteExpenseUseCase,
@@ -98,8 +113,16 @@ void main() {
     },
     expect: () => [
       isA<TransactionListState>().having((s) => s.searchTerm, 'search', 'test'),
-      isA<TransactionListState>().having((s) => s.status, 'status', ListStatus.loading), // Use ListStatus.loading as per actual result
-      isA<TransactionListState>().having((s) => s.status, 'status', ListStatus.success),
+      isA<TransactionListState>().having(
+        (s) => s.status,
+        'status',
+        ListStatus.loading,
+      ), // Use ListStatus.loading as per actual result
+      isA<TransactionListState>().having(
+        (s) => s.status,
+        'status',
+        ListStatus.success,
+      ),
     ],
   );
 }

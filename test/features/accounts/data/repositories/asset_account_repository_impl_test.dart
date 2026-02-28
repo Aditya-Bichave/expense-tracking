@@ -62,8 +62,12 @@ void main() {
       ).thenAnswer((_) async => [model]);
 
       // Mock incomes/expenses for balance calc
-      when(() => mockIncomeRepository.getIncomes()).thenAnswer((_) async => const Right([]));
-      when(() => mockExpenseRepository.getExpenses()).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockIncomeRepository.getIncomes(),
+      ).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockExpenseRepository.getExpenses(),
+      ).thenAnswer((_) async => const Right([]));
 
       final result = await repository.getAssetAccounts();
 
@@ -78,9 +82,10 @@ void main() {
   group('addAssetAccount', () {
     test('should save account and return entity', () async {
       // The interface returns Future<AssetAccountModel>
-      when(
-        () => mockLocalDataSource.addAssetAccount(any()),
-      ).thenAnswer((invocation) async => invocation.positionalArguments[0] as AssetAccountModel);
+      when(() => mockLocalDataSource.addAssetAccount(any())).thenAnswer(
+        (invocation) async =>
+            invocation.positionalArguments[0] as AssetAccountModel,
+      );
 
       // Mocks for _calculateBalance
       when(

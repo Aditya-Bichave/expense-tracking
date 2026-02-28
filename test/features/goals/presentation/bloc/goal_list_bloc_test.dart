@@ -44,7 +44,9 @@ void main() {
   blocTest<GoalListBloc, GoalListState>(
     'emits [loading, success] when LoadGoals is added and succeeds',
     build: () {
-      when(() => mockGetGoalsUseCase(any())).thenAnswer((_) async => Right([tGoal]));
+      when(
+        () => mockGetGoalsUseCase(any()),
+      ).thenAnswer((_) async => Right([tGoal]));
       return GoalListBloc(
         getGoalsUseCase: mockGetGoalsUseCase,
         archiveGoalUseCase: mockArchiveGoalUseCase,
@@ -54,7 +56,9 @@ void main() {
     },
     act: (bloc) => bloc.add(const LoadGoals()),
     expect: () => [
-      const GoalListState(status: GoalListStatus.loading), // Fixed: Removed clearError
+      const GoalListState(
+        status: GoalListStatus.loading,
+      ), // Fixed: Removed clearError
       isA<GoalListState>()
           .having((s) => s.status, 'status', GoalListStatus.success)
           .having((s) => s.goals.length, 'goals', 1),
@@ -64,7 +68,9 @@ void main() {
   blocTest<GoalListBloc, GoalListState>(
     'emits optimistic delete and then success (via stream) when DeleteGoal is added',
     build: () {
-      when(() => mockDeleteGoalUseCase(any())).thenAnswer((_) async => const Right(null));
+      when(
+        () => mockDeleteGoalUseCase(any()),
+      ).thenAnswer((_) async => const Right(null));
       return GoalListBloc(
         getGoalsUseCase: mockGetGoalsUseCase,
         archiveGoalUseCase: mockArchiveGoalUseCase,
@@ -72,10 +78,7 @@ void main() {
         dataChangeStream: dataChangeStream,
       );
     },
-    seed: () => GoalListState(
-      status: GoalListStatus.success,
-      goals: [tGoal],
-    ),
+    seed: () => GoalListState(status: GoalListStatus.success, goals: [tGoal]),
     act: (bloc) => bloc.add(const DeleteGoal(goalId: '1')),
     expect: () => [
       isA<GoalListState>()

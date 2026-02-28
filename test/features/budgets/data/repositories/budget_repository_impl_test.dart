@@ -50,19 +50,24 @@ void main() {
   );
 
   group('addBudget', () {
-    test('should call localDataSource.saveBudget and return Right(Budget)', () async {
-      when(
-        () => mockLocalDataSource.saveBudget(any()),
-      ).thenAnswer((_) async {});
+    test(
+      'should call localDataSource.saveBudget and return Right(Budget)',
+      () async {
+        when(
+          () => mockLocalDataSource.saveBudget(any()),
+        ).thenAnswer((_) async {});
 
-      // Stub getBudgets for overlap check
-      when(() => mockLocalDataSource.getBudgets()).thenAnswer((_) async => []);
+        // Stub getBudgets for overlap check
+        when(
+          () => mockLocalDataSource.getBudgets(),
+        ).thenAnswer((_) async => []);
 
-      final result = await repository.addBudget(tBudget);
+        final result = await repository.addBudget(tBudget);
 
-      expect(result, isA<Right<Failure, Budget>>());
-      verify(() => mockLocalDataSource.saveBudget(any())).called(1);
-    });
+        expect(result, isA<Right<Failure, Budget>>());
+        verify(() => mockLocalDataSource.saveBudget(any())).called(1);
+      },
+    );
 
     test('should return Left(CacheFailure) when save fails', () async {
       when(() => mockLocalDataSource.getBudgets()).thenAnswer((_) async => []);

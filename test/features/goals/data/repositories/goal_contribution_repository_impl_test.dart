@@ -90,8 +90,12 @@ void main() {
       final result = await repository.addContribution(tContributionValid);
 
       expect(result.isRight(), true);
-      verify(() => mockContributionDataSource.saveContribution(any())).called(1);
-      verify(() => mockGoalDataSource.saveGoal(any())).called(1); // Cache update
+      verify(
+        () => mockContributionDataSource.saveContribution(any()),
+      ).called(1);
+      verify(
+        () => mockGoalDataSource.saveGoal(any()),
+      ).called(1); // Cache update
     });
   });
 }

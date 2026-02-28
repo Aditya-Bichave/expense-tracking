@@ -51,9 +51,7 @@ void main() {
 
   group('addGoal', () {
     test('should save goal with active status and 0 saved', () async {
-      when(
-        () => mockLocalDataSource.saveGoal(any()),
-      ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.saveGoal(any())).thenAnswer((_) async {});
 
       final result = await repository.addGoal(tGoalValid);
 

@@ -9,9 +9,11 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockGetAssetAccountsUseCase extends Mock implements GetAssetAccountsUseCase {}
+class MockGetAssetAccountsUseCase extends Mock
+    implements GetAssetAccountsUseCase {}
 
-class MockDeleteAssetAccountUseCase extends Mock implements DeleteAssetAccountUseCase {}
+class MockDeleteAssetAccountUseCase extends Mock
+    implements DeleteAssetAccountUseCase {}
 
 void main() {
   late MockGetAssetAccountsUseCase mockGetAssetAccountsUseCase;
@@ -48,7 +50,9 @@ void main() {
   blocTest<AccountListBloc, AccountListState>(
     'emits [AccountListLoading, AccountListLoaded] when LoadAccounts succeeds',
     build: () {
-      when(() => mockGetAssetAccountsUseCase(any())).thenAnswer((_) async => Right([tAccountCorrect]));
+      when(
+        () => mockGetAssetAccountsUseCase(any()),
+      ).thenAnswer((_) async => Right([tAccountCorrect]));
       return AccountListBloc(
         getAssetAccountsUseCase: mockGetAssetAccountsUseCase,
         deleteAssetAccountUseCase: mockDeleteAssetAccountUseCase,
@@ -65,7 +69,9 @@ void main() {
   blocTest<AccountListBloc, AccountListState>(
     'emits optimistic delete when DeleteAccountRequested',
     build: () {
-      when(() => mockDeleteAssetAccountUseCase(any())).thenAnswer((_) async => const Right(null));
+      when(
+        () => mockDeleteAssetAccountUseCase(any()),
+      ).thenAnswer((_) async => const Right(null));
       return AccountListBloc(
         getAssetAccountsUseCase: mockGetAssetAccountsUseCase,
         deleteAssetAccountUseCase: mockDeleteAssetAccountUseCase,

@@ -48,7 +48,9 @@ void main() {
   blocTest<BudgetListBloc, BudgetListState>(
     'emits [loading, success] when LoadBudgets is added and succeeds',
     build: () {
-      when(() => mockGetBudgetsUseCase(any())).thenAnswer((_) async => Right([tBudget]));
+      when(
+        () => mockGetBudgetsUseCase(any()),
+      ).thenAnswer((_) async => Right([tBudget]));
       when(
         () => mockExpenseRepository.getExpenses(
           startDate: any(named: 'startDate'),
@@ -64,7 +66,9 @@ void main() {
     },
     act: (bloc) => bloc.add(const LoadBudgets()),
     expect: () => [
-      const BudgetListState(status: BudgetListStatus.loading), // Fixed: Removed clearError
+      const BudgetListState(
+        status: BudgetListStatus.loading,
+      ), // Fixed: Removed clearError
       isA<BudgetListState>()
           .having((s) => s.status, 'status', BudgetListStatus.success)
           .having((s) => s.budgetsWithStatus.length, 'budgets', 1),
@@ -112,7 +116,9 @@ void main() {
     },
     act: (bloc) => bloc.add(const LoadBudgets()),
     expect: () => [
-      const BudgetListState(status: BudgetListStatus.loading), // Fixed: Removed clearError
+      const BudgetListState(
+        status: BudgetListStatus.loading,
+      ), // Fixed: Removed clearError
       isA<BudgetListState>().having(
         (s) => s.budgetsWithStatus.first.amountSpent,
         'amountSpent',

@@ -35,7 +35,14 @@ void main() {
     mockUpdateCustomCategoryUseCase = MockUpdateCustomCategoryUseCase();
     mockDeleteCustomCategoryUseCase = MockDeleteCustomCategoryUseCase();
     registerFallbackValue(NoParams());
-    registerFallbackValue(const AddCustomCategoryParams(name: 'test', type: CategoryType.expense, iconName: 'icon', colorHex: '#000000'));
+    registerFallbackValue(
+      const AddCustomCategoryParams(
+        name: 'test',
+        type: CategoryType.expense,
+        iconName: 'icon',
+        colorHex: '#000000',
+      ),
+    );
   });
 
   const tCategory = Category(
@@ -50,7 +57,9 @@ void main() {
   blocTest<CategoryManagementBloc, CategoryManagementState>(
     'emits [loading, loaded] when LoadCategories succeeds',
     build: () {
-      when(() => mockGetCategoriesUseCase(any())).thenAnswer((_) async => const Right([tCategory]));
+      when(
+        () => mockGetCategoriesUseCase(any()),
+      ).thenAnswer((_) async => const Right([tCategory]));
       return CategoryManagementBloc(
         getCategoriesUseCase: mockGetCategoriesUseCase,
         addCustomCategoryUseCase: mockAddCustomCategoryUseCase,
@@ -84,7 +93,12 @@ void main() {
       );
     },
     act: (bloc) => bloc.add(
-      const AddCategory(name: 'New', type: CategoryType.expense, iconName: 'icon', colorHex: '#000000'),
+      const AddCategory(
+        name: 'New',
+        type: CategoryType.expense,
+        iconName: 'icon',
+        colorHex: '#000000',
+      ),
     ),
     expect: () => [
       const CategoryManagementState(
@@ -94,8 +108,11 @@ void main() {
       isA<CategoryManagementState>()
           .having((s) => s.status, 'status', CategoryManagementStatus.error)
           .having((s) => s.errorMessage, 'error', 'Error'),
-      isA<CategoryManagementState>()
-          .having((s) => s.status, 'status', CategoryManagementStatus.loaded),
+      isA<CategoryManagementState>().having(
+        (s) => s.status,
+        'status',
+        CategoryManagementStatus.loaded,
+      ),
     ],
   );
 }

@@ -61,10 +61,7 @@ void main() {
 
   test('should return failure when name is empty', () async {
     final result = await useCase(
-      const AddGoalParams(
-        name: '',
-        targetAmount: 100,
-      ),
+      const AddGoalParams(name: '', targetAmount: 100),
     );
     expect(result.isLeft(), true);
     result.fold((l) => expect(l, isA<ValidationFailure>()), (r) => null);
@@ -72,10 +69,7 @@ void main() {
 
   test('should return failure when target amount is negative', () async {
     final result = await useCase(
-      const AddGoalParams(
-        name: 'Test',
-        targetAmount: -100,
-      ),
+      const AddGoalParams(name: 'Test', targetAmount: -100),
     );
     expect(result.isLeft(), true);
   });
