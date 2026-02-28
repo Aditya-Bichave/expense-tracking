@@ -614,6 +614,9 @@ void main() {
       when(
         () => mockGoalRepository.getGoals(includeArchived: false),
       ).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockGoalContributionRepository.getAllContributions(),
+      ).thenAnswer((_) async => const Right([]));
 
       // Act
       final result = await repository.getGoalProgress();
