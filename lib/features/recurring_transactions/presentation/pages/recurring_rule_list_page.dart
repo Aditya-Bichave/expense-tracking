@@ -8,7 +8,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class RecurringRuleListPage extends StatelessWidget {
@@ -43,7 +42,7 @@ class RecurringRuleListPage extends StatelessWidget {
                     background: Container(
                       color: context.kit.colors.errorContainer,
                       alignment: Alignment.centerRight,
-                      padding: const context.space.hXl,
+                      padding: context.space.hXl,
                       child: Icon(
                         Icons.delete_sweep_outlined,
                         color: context.kit.colors.onErrorContainer,

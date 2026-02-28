@@ -11,7 +11,6 @@ import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -201,7 +200,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                         onTap: () => _selectDateRange(context),
                         shape: RoundedRectangleBorder(
                           side: BorderSide(color: theme.dividerColor),
-                          borderRadius: Bridgecontext.kit.radii.small,
+                          borderRadius: context.kit.radii.small,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -268,7 +267,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                           ),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: Bridgecontext.kit.radii.small,
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -300,7 +299,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                           buttonIcon: const Icon(Icons.category_outlined),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: Bridgecontext.kit.radii.small,
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -334,7 +333,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                           buttonIcon: const Icon(Icons.pie_chart_outline),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: Bridgecontext.kit.radii.small,
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -366,7 +365,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                           buttonIcon: const Icon(Icons.savings_outlined),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: Bridgecontext.kit.radii.small,
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>

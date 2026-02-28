@@ -11,7 +11,6 @@ import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class StitchNetBalanceCard extends StatelessWidget {
   final FinancialOverview overview;

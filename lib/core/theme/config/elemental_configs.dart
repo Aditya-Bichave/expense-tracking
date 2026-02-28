@@ -4,7 +4,6 @@ import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart'; // For palette identifiers
 import 'theme_config_interface.dart'; // Import interface
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 // Config class implements the interface
 class ElementalConfig implements IThemePaletteConfig {

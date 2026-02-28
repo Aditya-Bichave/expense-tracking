@@ -3,7 +3,6 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/categories/presentation/widgets/category_list_item_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoryListSectionWidget extends StatelessWidget {
@@ -28,7 +27,7 @@ class CategoryListSectionWidget extends StatelessWidget {
     if (categories.isEmpty) {
       return Center(
         child: Padding(
-          padding: const context.space.allXl,
+          padding: context.space.allXl,
           child: Text(emptyMessage, style: theme.textTheme.titleMedium),
         ),
       );

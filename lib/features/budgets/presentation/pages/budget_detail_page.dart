@@ -32,7 +32,6 @@ import 'package:intl/intl.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetDetailPage extends StatefulWidget {
@@ -511,7 +510,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         appBar: AppBar(title: const Text("Error")),
         body: Center(
           child: Padding(
-            padding: const context.space.allLg,
+            padding: context.space.allLg,
             child: Text(
               _error ?? "Budget could not be loaded.",
               style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -541,7 +540,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                       MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
-          const context.space.allLg.copyWith(bottom: 80),
+          context.space.allLg.copyWith(bottom: 80),
       children: [
         // Budget Status Header Card
         AppCard(

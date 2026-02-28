@@ -9,7 +9,6 @@ import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class InitialSetupScreen extends StatefulWidget {
@@ -40,7 +39,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
     return BridgeScaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const context.space.allXxxl,
+          padding: context.space.allXxxl,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -76,7 +75,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: const context.space.vLg,
+                  padding: context.space.vLg,
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                 ),
@@ -87,7 +86,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 icon: const Icon(Icons.explore_outlined),
                 label: const Text('Explore Demo Mode'),
                 style: OutlinedButton.styleFrom(
-                  padding: const context.space.vMd,
+                  padding: context.space.vMd,
                   side: BorderSide(color: theme.colorScheme.primary),
                   foregroundColor: theme.colorScheme.primary,
                 ),
@@ -111,7 +110,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               const SizedBox(height: 16),
               BridgeElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  padding: const context.space.vMd,
+                  padding: context.space.vMd,
                   backgroundColor: theme.colorScheme.secondaryContainer,
                   foregroundColor: theme.colorScheme.onSecondaryContainer,
                 ),
@@ -167,7 +166,7 @@ class CurrencyPickerSheet extends StatelessWidget {
         child: Wrap(
           children: <Widget>[
             Padding(
-              padding: const context.space.allLg,
+              padding: context.space.allLg,
               child: Text(
                 'Select Your Currency',
                 style: theme.textTheme.titleLarge,

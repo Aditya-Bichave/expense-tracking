@@ -35,7 +35,7 @@ class StitchAuthButtons extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               shape: RoundedRectangleBorder(
-                borderRadius: Bridgecontext.kit.radii.large,
+                borderRadius: context.kit.radii.large,
               ),
             ),
           ),
@@ -64,7 +64,7 @@ class StitchAuthButtons extends StatelessWidget {
                 color: theme.colorScheme.outlineVariant.withOpacity(0.2),
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: Bridgecontext.kit.radii.large,
+                borderRadius: context.kit.radii.large,
               ),
             ),
           ),

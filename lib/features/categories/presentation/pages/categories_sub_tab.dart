@@ -10,7 +10,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // Import for themed padding
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoriesSubTab extends StatelessWidget {
@@ -23,7 +22,7 @@ class CategoriesSubTab extends StatelessWidget {
         availableIcons[category.iconName] ?? Icons.category_outlined;
 
     return AppCard(
-      margin: const EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs),
+      margin: EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs),
       padding: const EdgeInsets.only(),
       child: BridgeListTile(
         leading: CircleAvatar(
@@ -50,7 +49,7 @@ class CategoriesSubTab extends StatelessWidget {
     if (categories.isEmpty) {
       return Center(
         child: Padding(
-          padding: const context.space.allXl,
+          padding: context.space.allXl,
           child: Text(
             'No $title categories defined.',
             style: theme.textTheme.bodyMedium,

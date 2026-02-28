@@ -43,7 +43,7 @@ class AppButton extends StatelessWidget {
 
     switch (size) {
       case AppButtonSize.small:
-        padding = const EdgeInsets.symmetric(
+        padding = EdgeInsets.symmetric(
           horizontal: context.space.md,
           vertical: context.space.sm,
         );
@@ -53,7 +53,7 @@ class AppButton extends StatelessWidget {
         iconSize = 16;
         break;
       case AppButtonSize.medium:
-        padding = const EdgeInsets.symmetric(
+        padding = EdgeInsets.symmetric(
           horizontal: context.space.lg,
           vertical: context.space.md,
         );
@@ -63,7 +63,7 @@ class AppButton extends StatelessWidget {
         iconSize = 20;
         break;
       case AppButtonSize.large:
-        padding = const EdgeInsets.symmetric(
+        padding = EdgeInsets.symmetric(
           horizontal: context.space.xxl,
           vertical: context.space.lg,
         );

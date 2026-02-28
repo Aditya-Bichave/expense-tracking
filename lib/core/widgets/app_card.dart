@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AppCard extends StatelessWidget {
@@ -39,14 +38,14 @@ class AppCard extends StatelessWidget {
         margin ??
         theme.cardTheme.margin ??
         modeTheme?.cardOuterPadding ??
-        const EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.sm);
+        EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.sm);
 
     // Card itself doesn't have padding in theme. Apply padding via Padding widget.
     // Use provided padding -> modeTheme padding -> fallback.
     final cardInnerPadding =
         padding ??
         modeTheme?.cardInnerPadding ??
-        const context.space.allLg;
+        context.space.allLg;
 
     // If glass, force transparent color unless overridden
     final cardColor = isGlass

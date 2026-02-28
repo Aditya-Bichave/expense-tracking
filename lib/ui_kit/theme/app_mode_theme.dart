@@ -91,12 +91,12 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     required this.listEntranceAnimation,
     this.incomeGlowColor,
     this.expenseGlowColor,
-    this.pagePadding = const context.space.allLg,
+    this.pagePadding = context.space.allLg,
     this.cardOuterPadding = const EdgeInsets.symmetric(
       horizontal: 16.0,
       vertical: 8.0,
     ),
-    this.cardInnerPadding = const context.space.allLg,
+    this.cardInnerPadding = context.space.allLg,
     this.listItemPadding = const EdgeInsets.symmetric(
       horizontal: 16.0,
       vertical: 12.0,

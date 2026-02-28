@@ -22,7 +22,6 @@ import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class SplitScreen extends StatelessWidget {
   final VoidCallback onBack;

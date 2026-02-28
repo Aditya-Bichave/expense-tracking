@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class SectionHeader extends StatelessWidget {
   final String title;

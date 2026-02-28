@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class StitchHeader extends StatelessWidget {
   final String userName;
@@ -41,7 +40,7 @@ class StitchHeader extends StatelessWidget {
                   ),
                 ),
                 child: Padding(
-                  padding: const context.space.allXxs,
+                  padding: context.space.allXxs,
                   child: ClipOval(
                     child: Image.network(
                       userImageUrl,

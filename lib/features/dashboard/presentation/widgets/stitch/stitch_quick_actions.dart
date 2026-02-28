@@ -4,7 +4,6 @@ import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class StitchQuickActions extends StatelessWidget {
   const StitchQuickActions({super.key});

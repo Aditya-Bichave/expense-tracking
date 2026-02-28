@@ -6,7 +6,6 @@ import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -55,7 +54,7 @@ class CategorySelectorTile extends StatelessWidget {
     }
     if (svgPath != null && svgPath.isNotEmpty) {
       leadingWidget = Padding(
-        padding: const context.space.allSm,
+        padding: context.space.allSm,
         child: SvgPicture.asset(
           svgPath,
           width: 24,
@@ -69,7 +68,7 @@ class CategorySelectorTile extends StatelessWidget {
       leadingWidget = Icon(iconData, color: displayColor);
     }
 
-    BorderRadius inputBorderRadius = Bridgecontext.kit.radii.small;
+    BorderRadius inputBorderRadius = context.kit.radii.small;
     final borderConfig = theme.inputDecorationTheme.enabledBorder;
     BorderSide borderSide =
         theme.inputDecorationTheme.enabledBorder?.borderSide ??
@@ -90,7 +89,7 @@ class CategorySelectorTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         BridgeListTile(
-          contentPadding: const context.space.hMd,
+          contentPadding: context.space.hMd,
           shape: OutlineInputBorder(
             borderRadius: inputBorderRadius,
             borderSide: borderSide,

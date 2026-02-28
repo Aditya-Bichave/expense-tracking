@@ -7,7 +7,6 @@ import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class SummaryCard extends StatelessWidget {
@@ -57,7 +56,7 @@ class SummaryCard extends StatelessWidget {
             );
           } else {
             content = Padding(
-              padding: const context.space.allLg,
+              padding: context.space.allLg,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -145,7 +144,7 @@ class SummaryCard extends StatelessWidget {
             "[SummaryCard UI] State is SummaryError: ${state.message}. Showing error message.",
           );
           content = Padding(
-            padding: const context.space.allLg,
+            padding: context.space.allLg,
             child: Center(
               child: Text(
                 'Error loading summary: ${state.message}',
@@ -167,7 +166,7 @@ class SummaryCard extends StatelessWidget {
 
         // Wrap content in Card and AnimatedSwitcher
         return BridgeCard(
-          margin: const context.space.allMd,
+          margin: context.space.allMd,
           elevation: 2,
           clipBehavior: Clip.antiAlias,
           child: AnimatedSwitcher(

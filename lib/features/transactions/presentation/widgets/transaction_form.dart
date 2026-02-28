@@ -12,7 +12,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class TransactionForm extends StatefulWidget {
   final TransactionEntity? initialTransaction;

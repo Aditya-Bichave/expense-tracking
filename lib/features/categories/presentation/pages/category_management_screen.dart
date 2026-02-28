@@ -12,7 +12,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoryManagementScreen extends StatelessWidget {
@@ -118,7 +117,7 @@ class CategoryManagementScreen extends StatelessWidget {
                   state.customExpenseCategories.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: const context.space.allXl,
+                    padding: context.space.allXl,
                     child: Text(
                       "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
                       style: BridgeTextStyle(

@@ -4,7 +4,6 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoryListItemWidget extends StatelessWidget {
@@ -28,7 +27,7 @@ class CategoryListItemWidget extends StatelessWidget {
         availableIcons[category.iconName] ?? Icons.category_outlined;
 
     return AppCard(
-      margin: const EdgeInsets.symmetric(
+      margin: EdgeInsets.symmetric(
         horizontal: context.space.md,
         vertical: context.space.xs,
       ),

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class DemoIndicatorWidget extends StatelessWidget {
   const DemoIndicatorWidget({super.key});

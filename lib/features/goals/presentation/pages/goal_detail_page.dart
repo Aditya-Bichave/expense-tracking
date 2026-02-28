@@ -30,7 +30,6 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class GoalDetailPage extends StatefulWidget {
@@ -434,7 +433,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           background: Container(
             color: theme.colorScheme.errorContainer,
             alignment: Alignment.centerRight,
-            padding: const context.space.hXl,
+            padding: context.space.hXl,
             child: Icon(
               Icons.delete_sweep_outlined,
               color: theme.colorScheme.onErrorContainer,
@@ -469,7 +468,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         appBar: AppBar(title: const Text("Error")),
         body: Center(
           child: Padding(
-            padding: const context.space.allLg,
+            padding: context.space.allLg,
             child: Text(
               _error ?? "Goal could not be loaded.",
               style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -497,11 +496,11 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                       MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
-          const context.space.allLg.copyWith(bottom: 100),
+          context.space.allLg.copyWith(bottom: 100),
       children: [
         Center(
           child: Padding(
-            padding: const context.space.vLg,
+            padding: context.space.vLg,
             child: _buildProgressIndicatorWidget(context, modeTheme, uiMode),
           ),
         ),

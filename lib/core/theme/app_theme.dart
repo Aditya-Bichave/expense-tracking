@@ -22,7 +22,6 @@ import 'config/quantum_configs.dart';
 import 'config/aether_configs.dart';
 import 'config/stitch_configs.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 // Structure to hold both light and dark theme data (Keep as is)
@@ -253,11 +252,11 @@ class AppTheme {
                   ? 6.0
                   : (modeTheme.cardStyle == CardStyle.glass ? 0 : 1.5)),
         margin: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const EdgeInsets.symmetric(
+            ? EdgeInsets.symmetric(
                 horizontal: context.space.sm,
                 vertical: context.space.xs,
               )
-            : const EdgeInsets.symmetric(
+            : EdgeInsets.symmetric(
                 horizontal: context.space.lg,
                 vertical: context.space.sm,
               ),
@@ -282,11 +281,11 @@ class AppTheme {
 
       listTileTheme: ListTileThemeData(
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const EdgeInsets.symmetric(
+            ? EdgeInsets.symmetric(
                 horizontal: context.space.md,
                 vertical: context.space.xxs,
               )
-            : const EdgeInsets.symmetric(
+            : EdgeInsets.symmetric(
                 horizontal: context.space.lg,
                 vertical: context.space.xs,
               ),
@@ -327,7 +326,7 @@ class AppTheme {
         ),
         focusedBorder: (modePrefix == 'aether' || modePrefix == 'stitch')
             ? OutlineInputBorder(
-                borderRadius: Bridgecontext.kit.radii.large,
+                borderRadius: context.kit.radii.large,
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
               )
             : OutlineInputBorder(
@@ -341,11 +340,11 @@ class AppTheme {
             ? colorScheme.surface.withOpacity(0.05) // Generic low opacity fill
             : null,
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const EdgeInsets.symmetric(
+            ? EdgeInsets.symmetric(
                 horizontal: context.space.md,
                 vertical: context.space.sm,
               )
-            : const EdgeInsets.symmetric(
+            : EdgeInsets.symmetric(
                 horizontal: context.space.lg,
                 vertical: context.space.md,
               ),
@@ -368,11 +367,11 @@ class AppTheme {
               ? colorScheme.onPrimaryContainer
               : colorScheme.onPrimary,
           padding: modeTheme.layoutDensity == LayoutDensity.compact
-              ? const EdgeInsets.symmetric(
+              ? EdgeInsets.symmetric(
                   horizontal: context.space.lg,
                   vertical: context.space.sm,
                 )
-              : const EdgeInsets.symmetric(
+              : EdgeInsets.symmetric(
                   horizontal: context.space.xxl,
                   vertical: context.space.md,
                 ),

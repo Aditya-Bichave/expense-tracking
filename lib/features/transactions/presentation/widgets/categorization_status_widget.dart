@@ -4,7 +4,6 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -66,7 +65,7 @@ class CategorizationStatusWidget extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   side: BorderSide(color: successColor.withOpacity(0.5)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: Bridgecontext.kit.radii.medium,
+                    borderRadius: context.kit.radii.medium,
                   ),
                 ),
                 onPressed: () {

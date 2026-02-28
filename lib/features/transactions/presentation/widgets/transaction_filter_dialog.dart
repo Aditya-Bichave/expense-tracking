@@ -9,7 +9,6 @@ import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class TransactionFilterDialog extends StatefulWidget {
@@ -196,7 +195,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                   ),
                 ),
                 Padding(
-                  padding: const context.space.hSm,
+                  padding: context.space.hSm,
                   child: Text('-', style: theme.textTheme.titleMedium),
                 ),
                 Expanded(

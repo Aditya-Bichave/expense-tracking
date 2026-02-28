@@ -17,7 +17,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetCard extends StatelessWidget {
@@ -156,9 +155,9 @@ class BudgetCard extends StatelessWidget {
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
-        const EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs);
+        EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs);
     final cardPadding =
-        modeTheme?.cardInnerPadding ?? const context.space.allMd;
+        modeTheme?.cardInnerPadding ?? context.space.allMd;
 
     return AppCard(
       onTap: onTap,

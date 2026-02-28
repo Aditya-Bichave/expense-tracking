@@ -18,7 +18,6 @@ import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 enum AccountViewType { assets, liabilities }
@@ -192,7 +191,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             }
             if (state is AccountListError) {
               return Padding(
-                padding: const context.space.allLg,
+                padding: context.space.allLg,
                 child: Center(
                   child: Text(
                     'Error loading accounts: ${state.message}',
@@ -283,7 +282,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       label: const Text('Add Asset Account'),
                       onPressed: () => context.pushNamed(RouteNames.addAccount),
                       style: OutlinedButton.styleFrom(
-                        padding: const context.space.vMd,
+                        padding: context.space.vMd,
                         textStyle: theme.textTheme.labelLarge,
                         side: BorderSide(
                           color: theme.colorScheme.outlineVariant,
@@ -372,7 +371,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
               context,
             ), // Show message on button press too
             style: OutlinedButton.styleFrom(
-              padding: const context.space.vMd,
+              padding: context.space.vMd,
               textStyle: theme.textTheme.labelLarge,
               side: BorderSide(color: theme.disabledColor.withOpacity(0.5)),
               minimumSize: const Size.fromHeight(45),

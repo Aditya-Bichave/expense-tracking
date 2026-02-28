@@ -14,7 +14,6 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/category_selector_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -32,7 +31,7 @@ class CommonFormFields {
       String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
       if (svgPath.isNotEmpty) {
         return Padding(
-          padding: const context.space.allMd,
+          padding: context.space.allMd,
           child: SvgPicture.asset(
             svgPath,
             width: 20,
@@ -184,11 +183,11 @@ class CommonFormFields {
   }) {
     final theme = Theme.of(context);
     return BridgeListTile(
-      contentPadding: const context.space.hMd,
+      contentPadding: context.space.hMd,
       shape:
           theme.inputDecorationTheme.enabledBorder ??
           OutlineInputBorder(
-            borderRadius: Bridgecontext.kit.radii.small,
+            borderRadius: context.kit.radii.small,
             borderSide: BorderSide(color: theme.dividerColor),
           ),
       leading: getPrefixIcon(context, iconKey, fallbackIcon),
@@ -288,7 +287,7 @@ class CommonFormFields {
     }
 
     return Padding(
-      padding: const context.space.vSm,
+      padding: context.space.vSm,
       child: Center(
         child: IgnorePointer(
           ignoring: disabled,

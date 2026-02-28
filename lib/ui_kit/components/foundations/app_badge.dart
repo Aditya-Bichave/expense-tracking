@@ -44,7 +44,7 @@ class AppBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: context.space.sm,
         vertical: context.space.xxs,
       ),

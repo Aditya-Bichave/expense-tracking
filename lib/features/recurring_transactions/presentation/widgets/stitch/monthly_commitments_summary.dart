@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -13,11 +12,11 @@ class MonthlyCommitmentsSummary extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ClipRRect(
-      borderRadius: Bridgecontext.kit.radii.extraLarge,
+      borderRadius: context.kit.radii.extraLarge,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const context.space.allXxl,
+          padding: context.space.allXxl,
           decoration: BridgeDecoration(
             color: theme.colorScheme.surface.withOpacity(0.4),
             border: Border.all(
@@ -57,7 +56,7 @@ class MonthlyCommitmentsSummary extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               ClipRRect(
-                borderRadius: Bridgecontext.kit.radii.xsmall,
+                borderRadius: context.kit.radii.xsmall,
                 child: LinearProgressIndicator(
                   value: 0.65,
                   minHeight: 6,

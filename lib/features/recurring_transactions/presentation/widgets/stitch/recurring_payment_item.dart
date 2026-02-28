@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -30,12 +29,12 @@ class RecurringPaymentItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ClipRRect(
-      borderRadius: Bridgecontext.kit.radii.large,
+      borderRadius: context.kit.radii.large,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const context.space.allLg,
-          margin: const context.space.vXs,
+          padding: context.space.allLg,
+          margin: context.space.vXs,
           decoration: BridgeDecoration(
             color: theme.colorScheme.surface.withOpacity(0.4),
             border: Border.all(
@@ -49,7 +48,7 @@ class RecurringPaymentItem extends StatelessWidget {
                 height: 48,
                 decoration: BridgeDecoration(
                   color: color.withOpacity(0.2),
-                  borderRadius: Bridgecontext.kit.radii.medium,
+                  borderRadius: context.kit.radii.medium,
                   border: Border.all(color: color.withOpacity(0.3)),
                 ),
                 child: Icon(icon, color: color),
@@ -91,7 +90,7 @@ class RecurringPaymentItem extends StatelessWidget {
                     ),
                     decoration: BridgeDecoration(
                       color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: Bridgecontext.kit.radii.medium,
+                      borderRadius: context.kit.radii.medium,
                     ),
                     child: Text(
                       status,

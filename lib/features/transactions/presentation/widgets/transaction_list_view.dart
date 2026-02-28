@@ -18,7 +18,6 @@ import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class TransactionListView extends StatelessWidget {
@@ -57,7 +56,7 @@ class TransactionListView extends StatelessWidget {
     if (state.status == ListStatus.error && state.transactions.isEmpty) {
       return Center(
         child: Padding(
-          padding: const context.space.allXl,
+          padding: context.space.allXl,
           child: Text(
             "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
             style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -71,7 +70,7 @@ class TransactionListView extends StatelessWidget {
         state.status != ListStatus.reloading) {
       return Center(
         child: Padding(
-          padding: const context.space.allXxxl,
+          padding: context.space.allXxxl,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -224,7 +223,7 @@ class TransactionListView extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerRight,
               child: Padding(
-                padding: const context.space.hXl,
+                padding: context.space.hXl,
                 child: Icon(
                   Icons.delete_sweep_outlined,
                   color: theme.colorScheme.onErrorContainer,

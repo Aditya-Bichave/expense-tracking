@@ -26,7 +26,7 @@ class AppSegmentedControl<T extends Object> extends StatelessWidget {
         onValueChanged: onValueChanged,
         backgroundColor: kit.colors.surfaceContainer,
         thumbColor: kit.colors.surface,
-        padding: const context.space.allXs,
+        padding: context.space.allXs,
       ),
     );
   }

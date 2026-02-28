@@ -16,7 +16,6 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 import 'package:expense_tracker/ui_bridge/bridge_button.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class BudgetSummaryWidget extends StatelessWidget {
   final List<BudgetWithStatus> budgets;

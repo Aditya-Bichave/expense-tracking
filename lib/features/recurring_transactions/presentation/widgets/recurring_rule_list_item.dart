@@ -4,7 +4,6 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class RecurringRuleListItem extends StatelessWidget {
@@ -21,12 +20,12 @@ class RecurringRuleListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return BridgeCard(
-      margin: const EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.xs),
+      margin: EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.xs),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const context.space.allLg,
+          padding: context.space.allLg,
           child: Row(
             children: [
               CircleAvatar(

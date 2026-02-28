@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -184,7 +183,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                               // Optionally pop immediately on selection:
                               // Navigator.of(context).pop(_selectedIconName);
                             },
-                            borderRadius: Bridgecontext.kit.radii.small,
+                            borderRadius: context.kit.radii.small,
                             child: Container(
                               decoration: BridgeDecoration(
                                 border: Border.all(
@@ -199,7 +198,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                                     : theme
                                           .colorScheme
                                           .surfaceContainerHighest, // Use a background color
-                                borderRadius: Bridgecontext.kit.radii.small,
+                                borderRadius: context.kit.radii.small,
                               ),
                               padding: const EdgeInsets.all(
                                 4,

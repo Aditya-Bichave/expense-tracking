@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -119,7 +118,7 @@ class _CategoryPickerDialogContentState
               margin: const EdgeInsets.only(bottom: 10),
               decoration: BridgeDecoration(
                 color: context.kit.colors.borderSubtle[300],
-                borderRadius: Bridgecontext.kit.radii.small,
+                borderRadius: context.kit.radii.small,
               ),
             ),
           ),
@@ -204,7 +203,7 @@ class _CategoryPickerDialogContentState
           ),
           const Divider(height: 1),
           Padding(
-            padding: const context.space.vMd,
+            padding: context.space.vMd,
             child: Center(
               child: ElevatedButton.icon(
                 key: const ValueKey('button_add_new_category'),

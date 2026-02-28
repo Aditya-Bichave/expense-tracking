@@ -10,7 +10,6 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
@@ -56,7 +55,7 @@ class TransactionCalendarView extends StatelessWidget {
         currentTransactionsForCalendar.isEmpty) {
       return Center(
         child: Padding(
-          padding: const context.space.allXl,
+          padding: context.space.allXl,
           child: Text(
             "Error loading data for calendar: ${state.errorMessage}",
             style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -96,7 +95,7 @@ class TransactionCalendarView extends StatelessWidget {
             outsideDaysVisible: false,
             markersMaxCount: 1,
             markerSize: 5.0,
-            markerMargin: const context.space.hXxs,
+            markerMargin: context.space.hXxs,
             weekendTextStyle: BridgeTextStyle(
               color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
@@ -117,7 +116,7 @@ class TransactionCalendarView extends StatelessWidget {
               border: Border.all(
                 color: theme.colorScheme.primary.withOpacity(0.5),
               ),
-              borderRadius: Bridgecontext.kit.radii.medium,
+              borderRadius: context.kit.radii.medium,
             ),
             leftChevronIcon: Icon(
               Icons.chevron_left,
