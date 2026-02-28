@@ -1,38 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 
-/// Bridge adapter for list tiles.
-/// Wraps [AppListTile].
-class BridgeListTile extends StatelessWidget {
-  final Widget title;
-  final Widget? subtitle;
-  final Widget? leading;
-  final Widget? trailing;
-  final VoidCallback? onTap;
-  final bool dense;
-  final bool selected;
-
+class BridgeListTile extends ListTile {
   const BridgeListTile({
     super.key,
-    required this.title,
-    this.subtitle,
-    this.leading,
-    this.trailing,
-    this.onTap,
-    this.dense = false,
-    this.selected = false,
+    super.leading,
+    super.title,
+    super.subtitle,
+    super.trailing,
+    super.isThreeLine,
+    super.dense,
+    super.visualDensity,
+    super.shape,
+    super.style,
+    super.selectedColor,
+    super.iconColor,
+    super.textColor,
+    super.titleTextStyle,
+    super.subtitleTextStyle,
+    super.leadingAndTrailingTextStyle,
+    super.contentPadding,
+    super.enabled,
+    super.onTap,
+    super.onLongPress,
+    super.onFocusChange,
+    super.mouseCursor,
+    super.selected,
+    super.focusColor,
+    super.hoverColor,
+    super.splashColor,
+    super.focusNode,
+    super.autofocus,
+    super.tileColor,
+    super.selectedTileColor,
+    super.enableFeedback,
+    super.horizontalTitleGap,
+    super.minVerticalPadding,
+    super.minLeadingWidth,
+    super.titleAlignment,
   });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppListTile(
-      title: title,
-      subtitle: subtitle,
-      leading: leading,
-      trailing: trailing,
-      onTap: onTap,
-      dense: dense,
-      selected: selected,
-    );
-  }
 }

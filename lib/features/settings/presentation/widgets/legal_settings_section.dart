@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class LegalSettingsSection extends StatelessWidget {
   final bool isLoading;
@@ -25,7 +26,7 @@ class LegalSettingsSection extends StatelessWidget {
       title: 'Legal',
       child: Column(
         children: [
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.privacy_tip_outlined,
               color: kit.colors.textPrimary,
@@ -41,7 +42,7 @@ class LegalSettingsSection extends StatelessWidget {
                 : () =>
                       launchUrlCallback(context, 'https://example.com/privacy'),
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(Icons.gavel_outlined, color: kit.colors.textPrimary),
             title: Text('Terms of Service'),
             trailing: Icon(
@@ -53,7 +54,7 @@ class LegalSettingsSection extends StatelessWidget {
                 ? null
                 : () => launchUrlCallback(context, 'https://example.com/terms'),
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.article_outlined,
               color: kit.colors.textPrimary,

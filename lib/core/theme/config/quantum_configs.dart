@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart'; // For palette identifiers
 import 'theme_config_interface.dart'; // Import interface
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 // Config class implements the interface
 class QuantumConfig implements IThemePaletteConfig {
@@ -38,11 +39,11 @@ class QuantumConfig implements IThemePaletteConfig {
   @override
   final Color? expenseGlowColorDark = null;
   // Quantum specific overrides for new properties (optional)
-  final EdgeInsets? cardOuterPadding = const EdgeInsets.symmetric(
+  final EdgeInsets? cardOuterPadding = const BridgeEdgeInsets.symmetric(
     horizontal: 8.0,
     vertical: 4.0,
   );
-  final EdgeInsets? listItemPadding = const EdgeInsets.symmetric(
+  final EdgeInsets? listItemPadding = const BridgeEdgeInsets.symmetric(
     horizontal: 12.0,
     vertical: 2.0,
   );

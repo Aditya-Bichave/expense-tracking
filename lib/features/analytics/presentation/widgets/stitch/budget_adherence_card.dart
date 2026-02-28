@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class BudgetAdherenceCard extends StatelessWidget {
-  const BudgetAdherenceCard({super.key});
+  const BudgetAdherenceBridgeCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -10,11 +15,11 @@ class BudgetAdherenceCard extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      margin: const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const BridgeEdgeInsets.all(20),
+      decoration: BridgeDecoration(
         color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BridgeBorderRadius.circular(20),
         border: Border.all(
           color: theme.colorScheme.outlineVariant.withOpacity(0.2),
         ),
@@ -55,7 +60,7 @@ class BudgetAdherenceCard extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                CircularProgressIndicator(
+                BridgeCircularProgressIndicator(
                   value: 0.64,
                   strokeWidth: 6,
                   backgroundColor: theme.colorScheme.onSurface.withOpacity(0.1),

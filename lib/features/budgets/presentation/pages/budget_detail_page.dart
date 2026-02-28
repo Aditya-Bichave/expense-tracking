@@ -29,6 +29,10 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class BudgetDetailPage extends StatefulWidget {
   final String budgetId;
@@ -259,7 +263,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     if (isQuantum) {
       return LinearPercentIndicator(
-        padding: EdgeInsets.zero,
+        padding: const BridgeEdgeInsets.only(),
         lineHeight: 8.0,
         percent: percentage,
         barRadius: const Radius.circular(4),
@@ -278,7 +282,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         percent: percentage,
         center: Text(
           "${(status.percentageUsed * 100).toStringAsFixed(0)}%",
-          style: TextStyle(
+          style: BridgeTextStyle(
             color: color.computeLuminance() > 0.5
                 ? Colors.black87
                 : Colors.white,
@@ -308,13 +312,13 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     if (_isLoading) {
       // Check main loading flag here
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20.0),
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        padding: BridgeEdgeInsets.symmetric(vertical: 20.0),
+        child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_relevantTransactions.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24.0),
+        padding: BridgeEdgeInsets.symmetric(vertical: 24.0),
         child: Center(
           child: Text("No transactions found for this budget period."),
         ),
@@ -395,7 +399,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           }
           return Padding(
             // Add padding between items
-            padding: const EdgeInsets.only(bottom: 4.0),
+            padding: const BridgeEdgeInsets.only(bottom: 4.0),
             child: item,
           );
         },
@@ -463,7 +467,10 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             backgroundColor: category.displayColor.withOpacity(0.1),
             side: BorderSide.none,
             visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+            padding: const BridgeEdgeInsets.symmetric(
+              horizontal: 6,
+              vertical: 0,
+            ),
           );
         })
         .whereNotNull()
@@ -493,20 +500,20 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final modeTheme = context.modeTheme;
 
     if (_isLoading) {
-      return Scaffold(
+      return BridgeScaffold(
         appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: BridgeCircularProgressIndicator()),
       );
     }
     if (_error != null || _budgetWithStatus == null) {
-      return Scaffold(
+      return BridgeScaffold(
         appBar: AppBar(title: const Text("Error")),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const BridgeEdgeInsets.all(16.0),
             child: Text(
               _error ?? "Budget could not be loaded.",
-              style: TextStyle(color: theme.colorScheme.error),
+              style: BridgeTextStyle(color: theme.colorScheme.error),
             ),
           ),
         ),
@@ -533,7 +540,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                       MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
-          const EdgeInsets.all(16.0).copyWith(bottom: 80),
+          const BridgeEdgeInsets.all(16.0).copyWith(bottom: 80),
       children: [
         // Budget Status Header Card
         AppCard(
@@ -601,7 +608,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       ],
     );
 
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(
         title: Text(budget.name, overflow: TextOverflow.ellipsis),
         backgroundColor: isAether ? Colors.transparent : null,

@@ -7,6 +7,11 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class TransactionCalendarView extends StatelessWidget {
   final TransactionListState state;
@@ -44,16 +49,16 @@ class TransactionCalendarView extends StatelessWidget {
 
     if (state.status == ListStatus.loading &&
         currentTransactionsForCalendar.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: BridgeCircularProgressIndicator());
     }
     if (state.status == ListStatus.error &&
         currentTransactionsForCalendar.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const BridgeEdgeInsets.all(20.0),
           child: Text(
             "Error loading data for calendar: ${state.errorMessage}",
-            style: TextStyle(color: theme.colorScheme.error),
+            style: BridgeTextStyle(color: theme.colorScheme.error),
             textAlign: TextAlign.center,
           ),
         ),
@@ -75,41 +80,43 @@ class TransactionCalendarView extends StatelessWidget {
           },
           eventLoader: (day) => getEventsForDay(day),
           calendarStyle: CalendarStyle(
-            todayDecoration: BoxDecoration(
+            todayDecoration: BridgeDecoration(
               color: theme.colorScheme.primary.withOpacity(0.3),
               shape: BoxShape.circle,
             ),
-            selectedDecoration: BoxDecoration(
+            selectedDecoration: BridgeDecoration(
               color: theme.colorScheme.primary,
               shape: BoxShape.circle,
             ),
-            markerDecoration: BoxDecoration(
+            markerDecoration: BridgeDecoration(
               color: theme.colorScheme.secondary,
               shape: BoxShape.circle,
             ),
             outsideDaysVisible: false,
             markersMaxCount: 1,
             markerSize: 5.0,
-            markerMargin: const EdgeInsets.symmetric(horizontal: 0.5),
-            weekendTextStyle: TextStyle(
+            markerMargin: const BridgeEdgeInsets.symmetric(horizontal: 0.5),
+            weekendTextStyle: BridgeTextStyle(
               color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
-            selectedTextStyle: TextStyle(color: theme.colorScheme.onPrimary),
-            todayTextStyle: TextStyle(color: theme.colorScheme.primary),
+            selectedTextStyle: BridgeTextStyle(
+              color: theme.colorScheme.onPrimary,
+            ),
+            todayTextStyle: BridgeTextStyle(color: theme.colorScheme.primary),
           ),
           headerStyle: HeaderStyle(
             formatButtonVisible: true,
             titleCentered: true,
             titleTextStyle: theme.textTheme.titleMedium!,
-            formatButtonTextStyle: TextStyle(
+            formatButtonTextStyle: BridgeTextStyle(
               color: theme.colorScheme.primary,
               fontSize: 12,
             ),
-            formatButtonDecoration: BoxDecoration(
+            formatButtonDecoration: BridgeDecoration(
               border: Border.all(
                 color: theme.colorScheme.primary.withOpacity(0.5),
               ),
-              borderRadius: BorderRadius.circular(12.0),
+              borderRadius: BridgeBorderRadius.circular(12.0),
             ),
             leftChevronIcon: Icon(
               Icons.chevron_left,
@@ -132,7 +139,7 @@ class TransactionCalendarView extends StatelessWidget {
                 child: Container(
                   width: 6,
                   height: 6,
-                  decoration: BoxDecoration(
+                  decoration: BridgeDecoration(
                     shape: BoxShape.circle,
                     color: theme.colorScheme.secondary,
                   ),
@@ -155,7 +162,7 @@ class TransactionCalendarView extends StatelessWidget {
     if (selectedDayTransactions.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40.0),
+          padding: const BridgeEdgeInsets.symmetric(vertical: 40.0),
           child: Text(
             "No transactions on ${DateFormatter.formatDate(selectedDay ?? focusedDay)}.",
             style: theme.textTheme.bodyMedium,
@@ -165,7 +172,7 @@ class TransactionCalendarView extends StatelessWidget {
     }
     return ListView.builder(
       key: ValueKey(selectedDay),
-      padding: const EdgeInsets.only(top: 8.0, bottom: 80.0),
+      padding: const BridgeEdgeInsets.only(top: 8.0, bottom: 80.0),
       itemCount: selectedDayTransactions.length,
       itemBuilder: (ctx, index) {
         final transaction = selectedDayTransactions[index];

@@ -1,5 +1,10 @@
 // lib/features/categories/presentation/widgets/icon_picker_dialog.dart
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 // --- Populate this map extensively! ---
 const Map<String, IconData> availableIcons = {
@@ -124,9 +129,9 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return AlertDialog(
+    return BridgeAlertDialog(
       title: const Text('Select Icon'),
-      contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+      contentPadding: const BridgeEdgeInsets.fromLTRB(16, 20, 16, 0),
       content: SizedBox(
         width: double.maxFinite,
         height: MediaQuery.of(context).size.height * 0.5,
@@ -140,9 +145,9 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                 hintText: "Search icons by name...",
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BridgeBorderRadius.circular(30),
                 ),
-                contentPadding: const EdgeInsets.symmetric(
+                contentPadding: const BridgeEdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 16,
                 ),
@@ -178,9 +183,9 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                               // Optionally pop immediately on selection:
                               // Navigator.of(context).pop(_selectedIconName);
                             },
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BridgeBorderRadius.circular(8),
                             child: Container(
-                              decoration: BoxDecoration(
+                              decoration: BridgeDecoration(
                                 border: Border.all(
                                   color: isSelected
                                       ? theme.colorScheme.primary
@@ -193,9 +198,9 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                                     : theme
                                           .colorScheme
                                           .surfaceContainerHighest, // Use a background color
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: BridgeBorderRadius.circular(8),
                               ),
-                              padding: const EdgeInsets.all(
+                              padding: const BridgeEdgeInsets.all(
                                 4,
                               ), // Add padding around icon
                               child: Icon(
@@ -213,11 +218,11 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
         ),
       ),
       actions: <Widget>[
-        TextButton(
+        BridgeTextButton(
           child: const Text('Cancel'),
           onPressed: () => Navigator.of(context).pop(), // Return null
         ),
-        TextButton(
+        BridgeTextButton(
           key: const ValueKey('button_select'),
           child: const Text('Select'),
           onPressed: () => Navigator.of(

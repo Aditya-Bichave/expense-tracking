@@ -3,6 +3,8 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class RecurringRuleListItem extends StatelessWidget {
   final RecurringRule rule;
@@ -17,13 +19,13 @@ class RecurringRuleListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    return BridgeCard(
+      margin: const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 6),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const BridgeEdgeInsets.all(16.0),
           child: Row(
             children: [
               CircleAvatar(

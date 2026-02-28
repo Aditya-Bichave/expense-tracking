@@ -7,6 +7,8 @@ import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // Import for SVG
 // Import asset catalog
 import 'package:expense_tracker/core/widgets/app_card.dart'; // Import AppCard
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 
 class AccountCard extends StatelessWidget {
   final AssetAccount account;

@@ -5,6 +5,7 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class AboutSettingsSection extends StatelessWidget {
   final SettingsState state;
@@ -26,7 +27,7 @@ class AboutSettingsSection extends StatelessWidget {
       title: 'About',
       child: Column(
         children: [
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.info_outline_rounded,
               color: kit.colors.textPrimary,
@@ -51,7 +52,7 @@ class AboutSettingsSection extends StatelessWidget {
                     /* TODO: Navigate to a dedicated About screen if needed */
                   },
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(Icons.logout_rounded, color: kit.colors.textPrimary),
             title: Text('Logout'),
             subtitle: isInDemoMode ? Text('Disabled in Demo Mode') : null,

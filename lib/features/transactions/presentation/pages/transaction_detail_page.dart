@@ -12,6 +12,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:collection/collection.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class TransactionDetailPage extends StatefulWidget {
   final String transactionId;
@@ -61,7 +67,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       content:
           'Are you sure you want to permanently delete this ${_transaction!.type.name}:\n"${_transaction!.title}"?',
       confirmText: "Delete",
-      confirmColor: Theme.of(context).colorScheme.error,
+      confirmColor: context.kit.colors.danger,
     );
     if (confirmed == true && context.mounted) {
       log.info("[TxnDetailPage] Delete confirmed.");
@@ -129,24 +135,28 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       // If still loading, show loader. If loaded and not found, show error.
       if (txnState.status == ListStatus.loading ||
           txnState.status == ListStatus.initial) {
-        return Scaffold(
+        return BridgeScaffold(
           appBar: AppBar(title: const Text('Loading...')),
-          body: const Center(child: CircularProgressIndicator()),
+          body: const Center(child: BridgeCircularProgressIndicator()),
         );
       } else {
-        return Scaffold(
+        return BridgeScaffold(
           appBar: AppBar(title: const Text('Not Found')),
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: context.kit.colors.textMuted,
+                ),
                 const SizedBox(height: 16),
                 const Text('Transaction not found or deleted.'),
                 const SizedBox(height: 16),
-                ElevatedButton(
+                AppButton(
+                  label: 'Go to Dashboard',
                   onPressed: () => context.go(RouteNames.dashboard),
-                  child: const Text('Go to Dashboard'),
                 ),
               ],
             ),
@@ -160,8 +170,8 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
     final currencySymbol = settings.currencySymbol;
     final isExpense = transaction.type == TransactionType.expense;
     final amountColor = isExpense
-        ? theme.colorScheme.error
-        : Colors.green.shade700;
+        ? context.kit.colors.danger
+        : context.kit.colors.success;
 
     final accountState = context.watch<AccountListBloc>().state;
     String accountName = 'Loading...';
@@ -173,7 +183,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
           'Unknown/Deleted Account';
     }
 
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(
         title: Text(isExpense ? 'Expense Details' : 'Income Details'),
         actions: [
@@ -185,29 +195,31 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
           ),
           IconButton(
             key: const ValueKey('button_transactionDetail_delete'),
-            icon: Icon(Icons.delete_outline, color: theme.colorScheme.error),
+            icon: Icon(Icons.delete_outline, color: context.kit.colors.danger),
             tooltip: 'Delete',
             onPressed: () => _handleDelete(context),
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const BridgeEdgeInsets.all(16.0),
         children: [
-          Card(
+          AppCard(
             elevation: 1,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const BridgeEdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(transaction.title, style: theme.textTheme.headlineSmall),
+                  Text(
+                    transaction.title,
+                    style: context.kit.typography.headline,
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     '${isExpense ? '-' : '+'} ${CurrencyFormatter.format(transaction.amount, currencySymbol)}',
-                    style: theme.textTheme.displaySmall?.copyWith(
+                    style: context.kit.typography.display.copyWith(
                       color: amountColor,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -238,7 +250,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
               icon: Icons.label_off_outlined,
               label: 'Category',
               value: 'Uncategorized',
-              valueColor: theme.disabledColor,
+              valueColor: context.kit.colors.textMuted,
             ),
           _buildDetailRow(
             context,
@@ -270,20 +282,24 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   }) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      padding: const BridgeEdgeInsets.symmetric(vertical: 10.0),
       child: Row(
         crossAxisAlignment: isMultiline
             ? CrossAxisAlignment.start
             : CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 20, color: iconColor ?? theme.colorScheme.secondary),
+          Icon(
+            icon,
+            size: 20,
+            color: iconColor ?? context.kit.colors.secondary,
+          ),
           const SizedBox(width: 16),
           Text('$label:', style: theme.textTheme.bodyLarge),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               value,
-              style: theme.textTheme.bodyLarge?.copyWith(
+              style: context.kit.typography.body.copyWith(
                 fontWeight: FontWeight.w500,
                 color: valueColor,
               ),

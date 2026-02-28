@@ -7,6 +7,8 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 
 class AddEditGoalPage extends StatelessWidget {
   final Goal? initialGoal; // Passed via GoRouter extra
@@ -51,7 +53,7 @@ class AddEditGoalPage extends StatelessWidget {
             context.read<AddEditGoalBloc>().add(const ClearGoalFormMessage());
           }
         },
-        child: Scaffold(
+        child: BridgeScaffold(
           appBar: AppBar(
             title: Text(isEditing ? 'Edit Goal' : 'Add Goal'),
             leading: IconButton(
@@ -64,7 +66,7 @@ class AddEditGoalPage extends StatelessWidget {
           body: BlocBuilder<AddEditGoalBloc, AddEditGoalState>(
             builder: (context, state) {
               if (state.status == AddEditGoalStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: BridgeCircularProgressIndicator());
               }
               // Show form once initial state is processed
               return GoalForm(

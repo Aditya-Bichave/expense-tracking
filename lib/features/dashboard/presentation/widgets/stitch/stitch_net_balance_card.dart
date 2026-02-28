@@ -8,11 +8,15 @@ import 'dart:ui';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart'; // Import AppCard (though we might use Container for custom style)
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class StitchNetBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
 
-  const StitchNetBalanceCard({super.key, required this.overview});
+  const StitchNetBalanceBridgeCard({super.key, required this.overview});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,7 @@ class StitchNetBalanceCard extends StatelessWidget {
         right: kit.spacing.lg,
       ),
       height: 220,
-      decoration: BoxDecoration(
+      decoration: BridgeDecoration(
         color: kit.colors.surface,
         borderRadius: kit.radii.card, // Using card radius from token
         border: Border.all(color: kit.colors.primary.withOpacity(0.1)),
@@ -55,7 +59,7 @@ class StitchNetBalanceCard extends StatelessWidget {
             child: Container(
               width: 160,
               height: 160,
-              decoration: BoxDecoration(
+              decoration: BridgeDecoration(
                 color: kit.colors.primary.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
@@ -120,7 +124,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(left: kit.spacing.lg),
+                        padding: BridgeEdgeInsets.only(left: kit.spacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -167,7 +171,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                           TextSpan(
                             text:
                                 ' (${CurrencyFormatter.format(totalSpent, currencySymbol)} / ${CurrencyFormatter.format(totalBudget, currencySymbol)})',
-                            style: TextStyle(
+                            style: BridgeTextStyle(
                               color: kit.colors.textSecondary,
                               fontWeight: FontWeight.normal,
                             ),

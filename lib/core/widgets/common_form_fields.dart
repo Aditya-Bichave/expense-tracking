@@ -13,6 +13,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/core/widgets/category_selector_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 /// A utility class containing static builder methods for common form fields.
 class CommonFormFields {
@@ -28,7 +31,7 @@ class CommonFormFields {
       String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
       if (svgPath.isNotEmpty) {
         return Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const BridgeEdgeInsets.all(12.0),
           child: SvgPicture.asset(
             svgPath,
             width: 20,
@@ -179,12 +182,12 @@ class CommonFormFields {
     IconData fallbackIcon = Icons.calendar_today_outlined,
   }) {
     final theme = Theme.of(context);
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+    return BridgeListTile(
+      contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
       shape:
           theme.inputDecorationTheme.enabledBorder ??
           OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8.0),
+            borderRadius: BridgeBorderRadius.circular(8.0),
             borderSide: BorderSide(color: theme.dividerColor),
           ),
       leading: getPrefixIcon(context, iconKey, fallbackIcon),
@@ -284,7 +287,7 @@ class CommonFormFields {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const BridgeEdgeInsets.symmetric(vertical: 8.0),
       child: Center(
         child: IgnorePointer(
           ignoring: disabled,

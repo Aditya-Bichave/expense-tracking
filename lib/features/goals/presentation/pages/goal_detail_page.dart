@@ -27,6 +27,10 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class GoalDetailPage extends StatefulWidget {
   final String goalId;
@@ -290,7 +294,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                 ? theme.textTheme.headlineSmall
                 : theme.textTheme.headlineMedium)
             ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
-        TextStyle(color: color);
+        BridgeTextStyle(color: color);
 
     return CircularPercentIndicator(
       radius: radius,
@@ -319,13 +323,13 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
 
     if (_isLoadingContributions) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20.0),
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        padding: BridgeEdgeInsets.symmetric(vertical: 20.0),
+        child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_contributions.isEmpty) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24.0),
+        padding: BridgeEdgeInsets.symmetric(vertical: 24.0),
         child: Center(child: Text("No contributions logged yet.")),
       );
     }
@@ -334,11 +338,17 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       children: [
         // --- Toggle Button ---
         Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
+          padding: const BridgeEdgeInsets.only(bottom: 8.0),
           child: CupertinoSlidingSegmentedControl<bool>(
             children: const {
-              true: Padding(padding: EdgeInsets.all(8), child: Text('Chart')),
-              false: Padding(padding: EdgeInsets.all(8), child: Text('List')),
+              true: Padding(
+                padding: BridgeEdgeInsets.all(8),
+                child: Text('Chart'),
+              ),
+              false: Padding(
+                padding: BridgeEdgeInsets.all(8),
+                child: Text('List'),
+              ),
             },
             groupValue: _showContributionChart,
             onValueChanged: (bool? value) {
@@ -423,7 +433,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           background: Container(
             color: theme.colorScheme.errorContainer,
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const BridgeEdgeInsets.symmetric(horizontal: 20),
             child: Icon(
               Icons.delete_sweep_outlined,
               color: theme.colorScheme.onErrorContainer,
@@ -448,20 +458,20 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     final modeTheme = context.modeTheme;
 
     if (_isLoadingGoal) {
-      return Scaffold(
+      return BridgeScaffold(
         appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: BridgeCircularProgressIndicator()),
       );
     }
     if (_error != null || _currentGoal == null) {
-      return Scaffold(
+      return BridgeScaffold(
         appBar: AppBar(title: const Text("Error")),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const BridgeEdgeInsets.all(16.0),
             child: Text(
               _error ?? "Goal could not be loaded.",
-              style: TextStyle(color: theme.colorScheme.error),
+              style: BridgeTextStyle(color: theme.colorScheme.error),
             ),
           ),
         ),
@@ -486,17 +496,17 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                       MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
-          const EdgeInsets.all(16.0).copyWith(bottom: 100),
+          const BridgeEdgeInsets.all(16.0).copyWith(bottom: 100),
       children: [
         Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: const BridgeEdgeInsets.symmetric(vertical: 16.0),
             child: _buildProgressIndicatorWidget(context, modeTheme, uiMode),
           ),
         ),
         Center(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
+            padding: const BridgeEdgeInsets.only(bottom: 8.0),
             child: Text(
               '${CurrencyFormatter.format(goal.totalSaved, settings.currencySymbol)} / ${CurrencyFormatter.format(goal.targetAmount, settings.currencySymbol)}',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -507,7 +517,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         ),
         Center(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 24.0),
+            padding: const BridgeEdgeInsets.only(bottom: 24.0),
             child: Text(
               goal.isAchieved
                   ? 'Goal Achieved!'
@@ -523,7 +533,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         if (goal.targetDate != null)
           Center(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
+              padding: const BridgeEdgeInsets.only(bottom: 16.0),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -545,7 +555,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           ),
         if (goal.description != null && goal.description!.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.only(bottom: 24.0),
+            padding: const BridgeEdgeInsets.only(bottom: 24.0),
             child: Text(
               goal.description!,
               style: theme.textTheme.bodyMedium,
@@ -559,7 +569,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       ],
     );
 
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(
         title: Text(goal.name, overflow: TextOverflow.ellipsis),
         backgroundColor: isAether ? Colors.transparent : null,

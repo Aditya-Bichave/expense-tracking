@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class SpendingTrendsChart extends StatelessWidget {
   const SpendingTrendsChart({super.key});
@@ -10,11 +14,11 @@ class SpendingTrendsChart extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+      margin: const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const BridgeEdgeInsets.all(24),
+      decoration: BridgeDecoration(
         color: theme.colorScheme.surface, // Use theme surface (glass/dark)
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BridgeBorderRadius.circular(24),
         border: Border.all(color: primaryColor.withOpacity(0.1)),
       ),
       child: Column(
@@ -41,10 +45,13 @@ class SpendingTrendsChart extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
+                padding: const BridgeEdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BridgeDecoration(
                   color: primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BridgeBorderRadius.circular(4),
                 ),
                 child: Row(
                   children: [
@@ -52,7 +59,7 @@ class SpendingTrendsChart extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       '12%',
-                      style: TextStyle(
+                      style: BridgeTextStyle(
                         color: primaryColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,

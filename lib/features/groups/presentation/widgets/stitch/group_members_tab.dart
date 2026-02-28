@@ -10,6 +10,8 @@ import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
 import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 
 class GroupMembersTab extends StatelessWidget {
   const GroupMembersTab({super.key});
@@ -46,7 +48,7 @@ class GroupMembersTab extends StatelessWidget {
               final member = state.members[index];
               final isMe = member.userId == currentUser.id;
 
-              return AppListTile(
+              return AppBridgeListTile(
                 leading: AppAvatar(
                   initials: member.userId.substring(0, 2).toUpperCase(),
                   backgroundColor: kit.colors.primaryContainer,
@@ -91,7 +93,7 @@ class GroupMembersTab extends StatelessWidget {
   ) {
     final kit = context.kit;
 
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       backgroundColor: kit.colors.surface,
       shape: RoundedRectangleBorder(borderRadius: kit.radii.sheet),
@@ -101,7 +103,7 @@ class GroupMembersTab extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               kit.spacing.gapSm,
-              AppListTile(
+              AppBridgeListTile(
                 leading: Icon(Icons.security, color: kit.colors.textPrimary),
                 title: const Text('Change Role'),
                 onTap: () {
@@ -109,7 +111,7 @@ class GroupMembersTab extends StatelessWidget {
                   _showChangeRoleDialog(context, groupId, userId, currentRole);
                 },
               ),
-              AppListTile(
+              AppBridgeListTile(
                 leading: Icon(Icons.person_remove, color: kit.colors.error),
                 title: Text(
                   'Remove Member',

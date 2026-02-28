@@ -6,6 +6,10 @@ import 'package:expense_tracker/features/categories/presentation/widgets/icon_pi
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 enum CategoryTypeFilter { expense, income }
 
@@ -18,7 +22,7 @@ Future<Category?> showCategoryPicker(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      borderRadius: BridgeBorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (builderContext) {
       return CategoryPickerDialogContent(
@@ -99,7 +103,7 @@ class _CategoryPickerDialogContentState
 
     return Container(
       height: sheetHeight,
-      padding: const EdgeInsets.only(
+      padding: const BridgeEdgeInsets.only(
         top: 8.0,
         left: 16.0,
         right: 16.0,
@@ -111,10 +115,10 @@ class _CategoryPickerDialogContentState
             child: Container(
               width: 40,
               height: 4,
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
+              margin: const BridgeEdgeInsets.only(bottom: 10),
+              decoration: BridgeDecoration(
                 color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BridgeBorderRadius.circular(10),
               ),
             ),
           ),
@@ -129,9 +133,9 @@ class _CategoryPickerDialogContentState
               hintText: "Search categories...",
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BridgeBorderRadius.circular(30),
               ),
-              contentPadding: const EdgeInsets.symmetric(
+              contentPadding: const BridgeEdgeInsets.symmetric(
                 vertical: 0,
                 horizontal: 16,
               ),
@@ -175,7 +179,7 @@ class _CategoryPickerDialogContentState
                       final iconData =
                           availableIcons[category.iconName] ??
                           Icons.category_outlined;
-                      return ListTile(
+                      return BridgeListTile(
                         leading: CircleAvatar(
                           backgroundColor: category.displayColor.withOpacity(
                             0.15,
@@ -199,14 +203,14 @@ class _CategoryPickerDialogContentState
           ),
           const Divider(height: 1),
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12.0),
+            padding: const BridgeEdgeInsets.symmetric(vertical: 12.0),
             child: Center(
               child: ElevatedButton.icon(
                 key: const ValueKey('button_add_new_category'),
                 icon: const Icon(Icons.add_circle_outline, size: 18),
                 label: const Text("Add New Category"),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
+                  padding: const BridgeEdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
                   ),

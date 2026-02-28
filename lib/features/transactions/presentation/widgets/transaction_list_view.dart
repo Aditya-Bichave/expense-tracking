@@ -15,6 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
@@ -47,15 +51,15 @@ class TransactionListView extends StatelessWidget {
     final theme = Theme.of(context);
 
     if (state.status == ListStatus.loading && state.transactions.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: BridgeCircularProgressIndicator());
     }
     if (state.status == ListStatus.error && state.transactions.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const BridgeEdgeInsets.all(20.0),
           child: Text(
             "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
-            style: TextStyle(color: theme.colorScheme.error),
+            style: BridgeTextStyle(color: theme.colorScheme.error),
             textAlign: TextAlign.center,
           ),
         ),
@@ -66,7 +70,7 @@ class TransactionListView extends StatelessWidget {
         state.status != ListStatus.reloading) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: const BridgeEdgeInsets.all(30.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -103,7 +107,7 @@ class TransactionListView extends StatelessWidget {
                   label: const Text('Add First Transaction'),
                   onPressed: () => context.pushNamed(RouteNames.addTransaction),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
+                    padding: const BridgeEdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 12,
                     ),
@@ -116,7 +120,7 @@ class TransactionListView extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(
+      padding: const BridgeEdgeInsets.only(
         top: 0,
         bottom: 80,
       ), // Ensure padding for FAB
@@ -131,7 +135,7 @@ class TransactionListView extends StatelessWidget {
         Widget cardItem;
         final accountName = accountNameMap[transaction.accountId] ?? 'Deleted';
         if (transaction.type == TransactionType.expense) {
-          cardItem = ExpenseCard(
+          cardItem = ExpenseBridgeCard(
             expense: transaction.expense!,
             accountName: accountName,
             currencySymbol: currencySymbol,
@@ -167,7 +171,7 @@ class TransactionListView extends StatelessWidget {
           );
         } else {
           // Income
-          cardItem = IncomeCard(
+          cardItem = IncomeBridgeCard(
             income: transaction.income!,
             accountName: accountName,
             currencySymbol: currencySymbol,
@@ -219,7 +223,7 @@ class TransactionListView extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerRight,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const BridgeEdgeInsets.symmetric(horizontal: 20),
                 child: Icon(
                   Icons.delete_sweep_outlined,
                   color: theme.colorScheme.onErrorContainer,

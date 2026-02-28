@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class RecurringPaymentItem extends StatelessWidget {
   final String title;
@@ -26,13 +29,13 @@ class RecurringPaymentItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BridgeBorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const EdgeInsets.all(16),
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
+          padding: const BridgeEdgeInsets.all(16),
+          margin: const BridgeEdgeInsets.symmetric(vertical: 6),
+          decoration: BridgeDecoration(
             color: theme.colorScheme.surface.withOpacity(0.4),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withOpacity(0.1),
@@ -43,9 +46,9 @@ class RecurringPaymentItem extends StatelessWidget {
               Container(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(
+                decoration: BridgeDecoration(
                   color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BridgeBorderRadius.circular(12),
                   border: Border.all(color: color.withOpacity(0.3)),
                 ),
                 child: Icon(icon, color: color),
@@ -81,13 +84,13 @@ class RecurringPaymentItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(
+                    padding: const BridgeEdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 2,
                     ),
-                    decoration: BoxDecoration(
+                    decoration: BridgeDecoration(
                       color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BridgeBorderRadius.circular(12),
                     ),
                     child: Text(
                       status,

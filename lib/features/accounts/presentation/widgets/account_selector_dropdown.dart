@@ -3,6 +3,9 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class AccountSelectorDropdown extends StatelessWidget {
   final String? selectedAccountId;
@@ -69,7 +72,7 @@ class AccountSelectorDropdown extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: ' *',
-                      style: TextStyle(color: theme.colorScheme.error),
+                      style: BridgeTextStyle(color: theme.colorScheme.error),
                     ),
                   ],
                 ),
@@ -88,11 +91,11 @@ class AccountSelectorDropdown extends StatelessWidget {
             prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
             suffixIcon: isLoading && accounts.isEmpty
                 ? const Padding(
-                    padding: EdgeInsets.all(12.0),
+                    padding: BridgeEdgeInsets.all(12.0),
                     child: SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: BridgeCircularProgressIndicator(strokeWidth: 2),
                     ),
                   )
                 : null,

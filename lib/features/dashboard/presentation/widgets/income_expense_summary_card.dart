@@ -7,11 +7,12 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 
 class IncomeExpenseSummaryCard extends StatelessWidget {
   final FinancialOverview overview;
 
-  const IncomeExpenseSummaryCard({super.key, required this.overview});
+  const IncomeExpenseSummaryBridgeCard({super.key, required this.overview});
 
   @override
   Widget build(BuildContext context) {

@@ -9,6 +9,8 @@ import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart'
 import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class ReportPageWrapper extends StatelessWidget {
   final String title;
@@ -79,7 +81,7 @@ class ReportPageWrapper extends StatelessWidget {
                 "CSV export successful!",
                 color: kit.colors.onPrimary,
               ),
-              backgroundColor: Colors.green.shade700,
+              backgroundColor: kit.colors.success,
             ),
           );
         } catch (e) {
@@ -142,19 +144,19 @@ class ReportPageWrapper extends StatelessWidget {
               if (onExportCSV != null)
                 PopupMenuItem<String>(
                   value: 'csv',
-                  child: ListTile(
+                  child: BridgeListTile(
                     leading: Icon(
                       Icons.description_outlined,
                       color: kit.colors.textSecondary,
                     ),
                     title: Text('Export as CSV', style: kit.typography.body),
-                    contentPadding: EdgeInsets.zero,
+                    contentPadding: const BridgeEdgeInsets.only(),
                   ),
                 ),
               PopupMenuItem<String>(
                 value: 'pdf',
                 enabled: false,
-                child: ListTile(
+                child: BridgeListTile(
                   // Use textSecondary or textPrimary with opacity since textDisabled doesn't exist
                   leading: Icon(
                     Icons.picture_as_pdf_outlined,
@@ -166,7 +168,7 @@ class ReportPageWrapper extends StatelessWidget {
                       color: kit.colors.textSecondary.withOpacity(0.5),
                     ),
                   ),
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const BridgeEdgeInsets.only(),
                 ),
               ),
             ],

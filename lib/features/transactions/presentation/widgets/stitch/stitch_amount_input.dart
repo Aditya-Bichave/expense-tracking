@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class StitchAmountInput extends StatelessWidget {
   final TextEditingController controller;
@@ -18,17 +22,20 @@ class StitchAmountInput extends StatelessWidget {
       children: [
         // Currency Selector Mock
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
+          padding: const BridgeEdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 6,
+          ),
+          decoration: BridgeDecoration(
             color: theme.colorScheme.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BridgeBorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'USD (\$)',
-                style: TextStyle(
+                style: BridgeTextStyle(
                   color: theme.colorScheme.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -53,7 +60,7 @@ class StitchAmountInput extends StatelessWidget {
               offset: const Offset(-60, 0),
               child: Text(
                 currencySymbol,
-                style: TextStyle(
+                style: BridgeTextStyle(
                   fontSize: 40,
                   fontWeight: FontWeight.w300,
                   color: theme.colorScheme.onSurfaceVariant,
@@ -75,7 +82,7 @@ class StitchAmountInput extends StatelessWidget {
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const BridgeEdgeInsets.only(),
                 ),
                 cursorColor: theme.colorScheme.primary,
               ),
@@ -85,9 +92,9 @@ class StitchAmountInput extends StatelessWidget {
         Container(
           height: 4,
           width: 80,
-          decoration: BoxDecoration(
+          decoration: BridgeDecoration(
             color: theme.colorScheme.primary.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(2),
+            borderRadius: BridgeBorderRadius.circular(2),
           ),
         ),
       ],

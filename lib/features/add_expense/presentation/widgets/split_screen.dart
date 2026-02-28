@@ -19,6 +19,10 @@ import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class SplitScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -63,7 +67,7 @@ class SplitScreen extends StatelessWidget {
                     child: SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: BridgeCircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           kit.colors.primary,
@@ -235,7 +239,7 @@ class SplitScreen extends StatelessWidget {
   }
 
   void _showPayerSelector(BuildContext context, AddExpenseWizardState state) {
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => AppBottomSheet(
@@ -247,7 +251,7 @@ class SplitScreen extends StatelessWidget {
             itemBuilder: (ctx, index) {
               final member = state.groupMembers[index];
               final isYou = member.userId == state.currentUserId;
-              return AppListTile(
+              return AppBridgeListTile(
                 leading: AppAvatar(
                   initials: member.userId.substring(0, 1).toUpperCase(),
                   size: 32,
@@ -333,7 +337,7 @@ class _SplitRowState extends State<_SplitRow> {
     final bool isEditable = widget.mode != SplitMode.equal;
 
     return Padding(
-      padding: EdgeInsets.symmetric(
+      padding: BridgeEdgeInsets.symmetric(
         vertical: kit.spacing.sm, // vSm is sm
         horizontal: kit.spacing.md,
       ),

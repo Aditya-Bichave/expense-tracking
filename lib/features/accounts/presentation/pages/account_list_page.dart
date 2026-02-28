@@ -14,6 +14,11 @@ import 'package:expense_tracker/core/assets/app_assets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class AccountListPage extends StatelessWidget {
   const AccountListPage({super.key});
@@ -57,7 +62,7 @@ class AccountListPage extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(30.0),
+        padding: const BridgeEdgeInsets.all(30.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -96,7 +101,7 @@ class AccountListPage extends StatelessWidget {
               label: Text(AppLocalizations.of(context)!.addFirstAccount),
               onPressed: () => context.pushNamed(RouteNames.addAccount),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
+                padding: const BridgeEdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
@@ -115,7 +120,7 @@ class AccountListPage extends StatelessWidget {
 
     return BlocProvider<AccountListBloc>(
       create: (_) => sl<AccountListBloc>()..add(const LoadAccounts()),
-      child: Scaffold(
+      child: BridgeScaffold(
         appBar: AppBar(title: Text(AppLocalizations.of(context)!.accounts)),
         body: BlocConsumer<AccountListBloc, AccountListState>(
           listener: (context, state) {
@@ -135,7 +140,9 @@ class AccountListPage extends StatelessWidget {
 
             // --- CORRECTED: Access 'items' only on AccountListLoaded state ---
             if (state is AccountListLoading && !state.isReloading) {
-              bodyContent = const Center(child: CircularProgressIndicator());
+              bodyContent = const Center(
+                child: BridgeCircularProgressIndicator(),
+              );
             } else if (state is AccountListLoaded ||
                 (state is AccountListLoading && state.isReloading)) {
               // Determine the list to display (current or previous if reloading)
@@ -168,7 +175,7 @@ class AccountListPage extends StatelessWidget {
                   child: ListView.builder(
                     padding:
                         modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-                        const EdgeInsets.only(top: 8.0, bottom: 80.0),
+                        const BridgeEdgeInsets.only(top: 8.0, bottom: 80.0),
                     itemCount: accounts.length,
                     itemBuilder: (ctx, index) {
                       final account = accounts[index];
@@ -179,13 +186,15 @@ class AccountListPage extends StatelessWidget {
                           /* ... background ... */
                           color: theme.colorScheme.errorContainer,
                           alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const BridgeEdgeInsets.symmetric(
+                            horizontal: 20,
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
                                 AppLocalizations.of(context)!.delete,
-                                style: TextStyle(
+                                style: BridgeTextStyle(
                                   color: theme.colorScheme.onErrorContainer,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -202,7 +211,7 @@ class AccountListPage extends StatelessWidget {
                         confirmDismiss: (_) => _handleDelete(context, account),
                         // --- END CORRECTION ---
                         child:
-                            AccountCard(
+                            AccountBridgeCard(
                                   account: account,
                                   onTap: () =>
                                       _navigateToEditAccount(context, account),
@@ -219,7 +228,7 @@ class AccountListPage extends StatelessWidget {
               bodyContent = Center(
                 /* ... error display ... */
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const BridgeEdgeInsets.all(16.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -239,7 +248,7 @@ class AccountListPage extends StatelessWidget {
                       Text(
                         state.message,
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: theme.colorScheme.error),
+                        style: BridgeTextStyle(color: theme.colorScheme.error),
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton.icon(
@@ -255,7 +264,9 @@ class AccountListPage extends StatelessWidget {
                 ),
               );
             } else {
-              bodyContent = const Center(child: CircularProgressIndicator());
+              bodyContent = const Center(
+                child: BridgeCircularProgressIndicator(),
+              );
             }
 
             return AnimatedSwitcher(

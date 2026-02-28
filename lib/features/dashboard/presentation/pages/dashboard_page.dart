@@ -23,6 +23,10 @@ import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart'; // Import AppScaffold
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart'; // Import AppKitTheme
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -88,7 +92,7 @@ class _DashboardPageState extends State<DashboardPage> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding:
             modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-            EdgeInsets.only(top: kit.spacing.sm, bottom: 80.0),
+            BridgeEdgeInsets.only(top: kit.spacing.sm, bottom: 80.0),
         children: [
           DashboardHeader(overview: overview),
           SizedBox(height: kit.spacing.sm),
@@ -145,7 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   top: kToolbarHeight + MediaQuery.of(context).padding.top + 8,
                   bottom: 80,
                 ) ??
-                EdgeInsets.only(
+                BridgeEdgeInsets.only(
                   top:
                       kToolbarHeight + MediaQuery.of(context).padding.top + 8.0,
                   bottom: 80.0,
@@ -311,7 +315,7 @@ class _DashboardPageState extends State<DashboardPage> {
       // Let's stick to the plan: "Replace Scaffold with UiScaffold (if available) OR preserve existing but replace internal widgets".
       // I'll use AppScaffold for Quantum/Elemental/Stitch. Aether is "heavily customized", so "Replace only the styling parts. Preserve structure." applies.
       body: isAether
-          ? Scaffold(
+          ? BridgeScaffold(
               extendBodyBehindAppBar: true,
               appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
               body: _buildBody(context, uiMode, settingsState),
@@ -353,7 +357,7 @@ class _DashboardPageState extends State<DashboardPage> {
         Widget bodyContent;
 
         if (state is DashboardLoading && !state.isReloading) {
-          bodyContent = const Center(child: CircularProgressIndicator());
+          bodyContent = const Center(child: BridgeCircularProgressIndicator());
         } else if (state is DashboardLoaded ||
             (state is DashboardLoading && state.isReloading)) {
           final overview = (state is DashboardLoaded)
@@ -362,7 +366,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ?.overview; // Use previous data if reloading
           if (overview == null && state is DashboardLoading) {
             bodyContent = const Center(
-              child: CircularProgressIndicator(),
+              child: BridgeCircularProgressIndicator(),
             ); // Still loading initial data
           } else if (overview == null) {
             bodyContent = const Center(
@@ -397,13 +401,13 @@ class _DashboardPageState extends State<DashboardPage> {
         } else if (state is DashboardError) {
           bodyContent = Center(
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const BridgeEdgeInsets.all(20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'Error loading dashboard: ${state.message}',
-                    style: TextStyle(color: theme.colorScheme.error),
+                    style: BridgeTextStyle(color: theme.colorScheme.error),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -419,7 +423,7 @@ class _DashboardPageState extends State<DashboardPage> {
           );
         } else {
           // Initial state
-          bodyContent = const Center(child: CircularProgressIndicator());
+          bodyContent = const Center(child: BridgeCircularProgressIndicator());
         }
 
         return AnimatedSwitcher(

@@ -18,6 +18,7 @@ import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
 import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class ProfileSetupPage extends StatefulWidget {
   const ProfileSetupPage({super.key});
@@ -150,7 +151,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
                   child: Container(
                     width: 100,
                     height: 100,
-                    decoration: BoxDecoration(
+                    decoration: BridgeDecoration(
                       shape: BoxShape.circle,
                       color: kit.colors.primaryContainer,
                       image: _avatarFile != null

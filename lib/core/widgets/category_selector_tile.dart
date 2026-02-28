@@ -4,6 +4,10 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class CategorySelectorTile extends StatelessWidget {
   final Category? selectedCategory;
@@ -50,7 +54,7 @@ class CategorySelectorTile extends StatelessWidget {
     }
     if (svgPath != null && svgPath.isNotEmpty) {
       leadingWidget = Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const BridgeEdgeInsets.all(8.0),
         child: SvgPicture.asset(
           svgPath,
           width: 24,
@@ -64,7 +68,7 @@ class CategorySelectorTile extends StatelessWidget {
       leadingWidget = Icon(iconData, color: displayColor);
     }
 
-    BorderRadius inputBorderRadius = BorderRadius.circular(8.0);
+    BorderRadius inputBorderRadius = BridgeBorderRadius.circular(8.0);
     final borderConfig = theme.inputDecorationTheme.enabledBorder;
     BorderSide borderSide =
         theme.inputDecorationTheme.enabledBorder?.borderSide ??
@@ -84,8 +88,8 @@ class CategorySelectorTile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        BridgeListTile(
+          contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
           shape: OutlineInputBorder(
             borderRadius: inputBorderRadius,
             borderSide: borderSide,
@@ -93,7 +97,7 @@ class CategorySelectorTile extends StatelessWidget {
           leading: leadingWidget,
           title: Text(
             selectedCategory?.name ?? hint,
-            style: TextStyle(
+            style: BridgeTextStyle(
               color: hasError
                   ? theme.colorScheme.error
                   : (selectedCategory == null ? theme.disabledColor : null),

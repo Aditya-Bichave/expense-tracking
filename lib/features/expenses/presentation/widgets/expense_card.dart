@@ -7,12 +7,12 @@ import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
-import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/categorization_status_widget.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 
 class ExpenseCard extends StatelessWidget {
   final Expense expense;
@@ -115,14 +115,8 @@ class ExpenseCard extends StatelessWidget {
           // BUT, I can modify AppAvatar to accept `child`.
 
           // Let's modify AppAvatar to accept `child` as an alternative to initials/image.
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: category.cachedDisplayColor.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
+          AppAvatar(
+            backgroundColor: category.cachedDisplayColor.withOpacity(0.15),
             child: _buildIcon(context, modeTheme),
           ),
           kit.spacing.wMd,

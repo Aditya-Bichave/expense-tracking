@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class AppearanceSettingsSection extends StatelessWidget {
   final SettingsState state;
@@ -57,7 +58,7 @@ class AppearanceSettingsSection extends StatelessWidget {
       title: 'Appearance',
       child: Column(
         children: [
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.view_quilt_outlined,
               color: kit.colors.textPrimary,
@@ -92,7 +93,7 @@ class AppearanceSettingsSection extends StatelessWidget {
                   .toList(),
             ),
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.palette_outlined,
               color: kit.colors.textPrimary,
@@ -128,7 +129,7 @@ class AppearanceSettingsSection extends StatelessWidget {
                         .toList(),
                   ),
           ),
-          AppListTile(
+          AppBridgeListTile(
             leading: Icon(
               Icons.brightness_6_outlined,
               color: kit.colors.textPrimary,

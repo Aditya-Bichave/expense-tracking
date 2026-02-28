@@ -5,6 +5,9 @@ import 'package:expense_tracker/features/categories/presentation/widgets/icon_pi
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:collection/collection.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class CategorySelectorMultiTile extends StatelessWidget {
   final List<String> selectedCategoryIds;
@@ -98,7 +101,7 @@ class CategorySelectorMultiTile extends StatelessWidget {
     final leadingIcons = _getDisplayIcons(context, 3);
 
     // Determine border style
-    BorderRadius inputBorderRadius = BorderRadius.circular(8.0);
+    BorderRadius inputBorderRadius = BridgeBorderRadius.circular(8.0);
     final borderConfig = theme.inputDecorationTheme.enabledBorder;
     BorderSide borderSide =
         theme.inputDecorationTheme.enabledBorder?.borderSide ??
@@ -118,8 +121,8 @@ class CategorySelectorMultiTile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        BridgeListTile(
+          contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
           shape: OutlineInputBorder(
             borderRadius: inputBorderRadius,
             borderSide: borderSide,

@@ -15,6 +15,7 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 import 'package:expense_tracker/ui_bridge/bridge_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class GoalSummaryWidget extends StatelessWidget {
   final List<Goal> goals;
@@ -145,7 +146,7 @@ class GoalSummaryWidget extends StatelessWidget {
                   ),
                   kit.spacing.gapSm,
                   LinearPercentIndicator(
-                    padding: EdgeInsets.zero,
+                    padding: const BridgeEdgeInsets.only(),
                     lineHeight: 8.0,
                     percent: progress.clamp(0.0, 1.0),
                     barRadius: const Radius.circular(4),
@@ -179,7 +180,7 @@ class GoalSummaryWidget extends StatelessWidget {
         ),
         if (goals.length >= 3)
           Padding(
-            padding: EdgeInsets.only(top: kit.spacing.xs),
+            padding: BridgeEdgeInsets.only(top: kit.spacing.xs),
             child: Center(
               child: BridgeButton.ghost(
                 key: const ValueKey('button_goalSummary_viewAll'),

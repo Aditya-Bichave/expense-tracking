@@ -57,6 +57,7 @@ import 'package:expense_tracker/features/add_expense/presentation/pages/add_expe
 import 'package:expense_tracker/core/auth/session_state.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:expense_tracker/ui_kit/showcase/ui_kit_showcase_page.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 
 class GoRouterRefreshStream extends ChangeNotifier {
   late final List<StreamSubscription<dynamic>> _subscriptions;
@@ -523,7 +524,7 @@ class AppRouter {
     }
     if (id == null) {
       log.severe("[AppRouter] Txn Detail route missing ID!");
-      return Scaffold(
+      return BridgeScaffold(
         appBar: AppBar(),
         body: const Center(
           child: Text("Error: Could not load transaction details"),
@@ -574,7 +575,7 @@ class AppRouter {
       log.severe(
         "[AppRouter] Edit Txn route called without transaction ID or initial data!",
       );
-      return const Scaffold(
+      return const BridgeScaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Transaction Data")),
       );
@@ -597,7 +598,7 @@ class AppRouter {
 
     if (categoryId == null) {
       log.severe("[AppRouter] Edit Category route called without ID!");
-      return const Scaffold(
+      return const BridgeScaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Category ID")),
       );
@@ -624,7 +625,7 @@ class AppRouter {
         : null;
     if (accountId == null) {
       log.severe("[AppRouter] Edit Account route called without ID!");
-      return const Scaffold(
+      return const BridgeScaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Account ID")),
       );
@@ -646,7 +647,7 @@ class AppRouter {
     Budget? budget = state.extra is Budget ? state.extra as Budget : null;
     if (budgetId == null) {
       log.severe("[AppRouter] Edit Budget route called without ID!");
-      return const Scaffold(
+      return const BridgeScaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Budget ID")),
       );
@@ -667,7 +668,7 @@ class AppRouter {
     final budgetId = state.pathParameters[RouteNames.paramId];
     if (budgetId == null) {
       log.severe("[AppRouter] Budget Detail route called without ID!");
-      return const Scaffold(
+      return const BridgeScaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Budget ID")),
       );
@@ -680,7 +681,7 @@ class AppRouter {
     Goal? goal = state.extra is Goal ? state.extra as Goal : null;
     if (goalId == null) {
       log.severe("[AppRouter] Edit Goal route called without ID!");
-      return const Scaffold(
+      return const BridgeScaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Goal ID")),
       );
@@ -702,7 +703,7 @@ class AppRouter {
     Goal? goal = state.extra is Goal ? state.extra as Goal : null;
     if (goalId == null) {
       log.severe("[AppRouter] Goal Detail route called without ID!");
-      return const Scaffold(
+      return const BridgeScaffold(
         appBar: null,
         body: Center(child: Text("Error: Missing Goal ID")),
       );

@@ -3,6 +3,9 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class CategorizationStatusWidget extends StatelessWidget {
   final TransactionEntity transaction;
@@ -21,12 +24,12 @@ class CategorizationStatusWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final textStyleSmall =
-        theme.textTheme.bodySmall ?? const TextStyle(fontSize: 12);
+        theme.textTheme.bodySmall ?? const BridgeTextStyle(fontSize: 12);
     final Color primaryColor = theme.colorScheme.primary;
     final Color errorColor = theme.colorScheme.error;
     final Color successColor = Colors.green.shade600;
     final Color warningColor = Colors.orange.shade800;
-    const EdgeInsets buttonPadding = EdgeInsets.symmetric(
+    const EdgeInsets buttonPadding = BridgeEdgeInsets.symmetric(
       horizontal: 6.0,
       vertical: 2.0,
     );
@@ -62,7 +65,7 @@ class CategorizationStatusWidget extends StatelessWidget {
                   visualDensity: VisualDensity.compact,
                   side: BorderSide(color: successColor.withOpacity(0.5)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BridgeBorderRadius.circular(14),
                   ),
                 ),
                 onPressed: () {

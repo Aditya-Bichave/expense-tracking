@@ -3,6 +3,12 @@ import 'package:expense_tracker/core/utils/color_utils.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class CategoryAppearanceFormSection extends StatelessWidget {
   final String selectedIconName;
@@ -32,7 +38,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
     Color pickerColor = selectedColor;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => BridgeAlertDialog(
         title: const Text('Pick a color'),
         content: SingleChildScrollView(
           child: ColorPicker(
@@ -44,16 +50,16 @@ class CategoryAppearanceFormSection extends StatelessWidget {
             displayThumbColor: true,
             paletteType: PaletteType.hsvWithHue,
             labelTypes: const [ColorLabelType.hex],
-            pickerAreaBorderRadius: BorderRadius.circular(8),
+            pickerAreaBorderRadius: BridgeBorderRadius.circular(8),
             hexInputBar: true,
           ),
         ),
         actions: <Widget>[
-          TextButton(
+          BridgeTextButton(
             child: const Text('Cancel'),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          TextButton(
+          BridgeTextButton(
             child: const Text('Select'),
             onPressed: () {
               onColorSelected(pickerColor);
@@ -76,11 +82,11 @@ class CategoryAppearanceFormSection extends StatelessWidget {
       children: [
         Text("Appearance", style: theme.textTheme.titleMedium),
         const SizedBox(height: 10),
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        BridgeListTile(
+          contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(
             side: BorderSide(color: theme.dividerColor),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BridgeBorderRadius.circular(12),
           ),
           tileColor: theme.colorScheme.surfaceContainerHighest,
           leading: Padding(
@@ -96,11 +102,11 @@ class CategoryAppearanceFormSection extends StatelessWidget {
           onTap: () => _showIconPicker(context),
         ),
         const SizedBox(height: 16),
-        ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        BridgeListTile(
+          contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(
             side: BorderSide(color: theme.dividerColor),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BridgeBorderRadius.circular(12),
           ),
           tileColor: theme.colorScheme.surfaceContainerHighest,
           leading: Padding(
@@ -118,7 +124,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
             child: Container(
               width: 24,
               height: 24,
-              decoration: BoxDecoration(
+              decoration: BridgeDecoration(
                 color: selectedColor,
                 shape: BoxShape.circle,
                 border: Border.all(color: theme.dividerColor.withOpacity(0.5)),

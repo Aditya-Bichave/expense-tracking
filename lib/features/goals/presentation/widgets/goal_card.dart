@@ -9,6 +9,9 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class GoalCard extends StatelessWidget {
   final Goal goal;
@@ -77,7 +80,7 @@ class GoalCard extends StatelessWidget {
     final TextStyle centerTextStyle =
         (isQuantum ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)
             ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
-        TextStyle(color: color);
+        BridgeTextStyle(color: color);
 
     return CircularPercentIndicator(
       radius: radius,
@@ -106,9 +109,9 @@ class GoalCard extends StatelessWidget {
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 5);
+        const BridgeEdgeInsets.symmetric(horizontal: 12, vertical: 5);
     final cardPadding =
-        modeTheme?.cardInnerPadding ?? const EdgeInsets.all(12.0);
+        modeTheme?.cardInnerPadding ?? const BridgeEdgeInsets.all(12.0);
     final progressColor = goal.isAchieved
         ? Colors.green.shade600
         : theme.colorScheme.primary;
@@ -151,7 +154,7 @@ class GoalCard extends StatelessWidget {
                       : theme.colorScheme.surfaceContainerHighest,
                   side: BorderSide.none,
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: const BridgeEdgeInsets.symmetric(horizontal: 6),
                 ),
             ],
           ),
@@ -196,7 +199,7 @@ class GoalCard extends StatelessWidget {
           // --- Pacing Info Display ---
           if (pacingInfo.isNotEmpty && !goal.isAchieved && !goal.isArchived)
             Padding(
-              padding: const EdgeInsets.only(top: 4.0),
+              padding: const BridgeEdgeInsets.only(top: 4.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
