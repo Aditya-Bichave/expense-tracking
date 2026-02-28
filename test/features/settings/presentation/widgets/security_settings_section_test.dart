@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_switch.dart'; // Corrected import
 import '../../../../helpers/pump_app.dart';
 
 class MockSecureStorageService extends Mock implements SecureStorageService {}
@@ -31,11 +33,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(SwitchListTile), findsOneWidget);
-    final switchTile = tester.widget<SwitchListTile>(
-      find.byType(SwitchListTile),
-    );
-    expect(switchTile.value, isTrue);
+    expect(find.byType(AppListTile), findsWidgets);
+
+    final switchFinder = find.byType(AppSwitch);
+    expect(switchFinder, findsOneWidget);
+
+    final appSwitch = tester.widget<AppSwitch>(switchFinder);
+    expect(appSwitch.value, isTrue);
+
     verify(() => mockStorage.isBiometricEnabled()).called(1);
   });
 
@@ -52,7 +57,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(SwitchListTile));
+    await tester.tap(find.byType(AppSwitch));
     await tester.pumpAndSettle();
 
     verify(() => mockStorage.setBiometricEnabled(true)).called(1);

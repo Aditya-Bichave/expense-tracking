@@ -1,4 +1,4 @@
-import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/main.dart'; // Ensure InitializationErrorApp is exported or move test
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

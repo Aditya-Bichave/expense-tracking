@@ -1,10 +1,11 @@
 import 'package:expense_tracker/core/theme/app_theme.dart';
-import 'package:expense_tracker/core/widgets/section_header.dart';
-import 'package:expense_tracker/core/widgets/settings_list_tile.dart'; // Changed import
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 
 class AppearanceSettingsSection extends StatelessWidget {
   final SettingsState state;
@@ -46,103 +47,122 @@ class AppearanceSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
     final relevantPaletteIdentifiers = _getRelevantPaletteIdentifiers(
       state.uiMode,
     );
     final bool isEnabled = !isLoading && !state.isInDemoMode;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionHeader(title: 'Appearance'),
-        SettingsListTile(
-          enabled: isEnabled,
-          leadingIcon: Icons.view_quilt_outlined,
-          title: 'UI Mode',
-          subtitle:
+    return AppSection(
+      title: 'Appearance',
+      child: Column(
+        children: [
+          AppListTile(
+            leading: Icon(
+              Icons.view_quilt_outlined,
+              color: kit.colors.textPrimary,
+            ),
+            title: Text('UI Mode'),
+            subtitle: Text(
               AppTheme.uiModeNames[state.uiMode] ??
-              (toBeginningOfSentenceCase(state.uiMode.name) ??
-                  state.uiMode.name),
-          trailing: PopupMenuButton<UIMode>(
-            enabled: isEnabled,
-            icon: const Icon(Icons.arrow_drop_down),
-            tooltip: "Select UI Mode",
-            initialValue: state.uiMode,
-            onSelected: (UIMode newMode) =>
-                context.read<SettingsBloc>().add(UpdateUIMode(newMode)),
-            itemBuilder: (context) => UIMode.values
-                .map(
-                  (mode) => PopupMenuItem<UIMode>(
-                    value: mode,
-                    child: Text(
-                      AppTheme.uiModeNames[mode] ??
-                          (toBeginningOfSentenceCase(mode.name) ?? mode.name),
-                      style: theme.textTheme.bodyMedium,
+                  (toBeginningOfSentenceCase(state.uiMode.name) ??
+                      state.uiMode.name),
+            ),
+            trailing: PopupMenuButton<UIMode>(
+              enabled: isEnabled,
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: kit.colors.textSecondary,
+              ),
+              tooltip: "Select UI Mode",
+              initialValue: state.uiMode,
+              onSelected: (UIMode newMode) =>
+                  context.read<SettingsBloc>().add(UpdateUIMode(newMode)),
+              itemBuilder: (context) => UIMode.values
+                  .map(
+                    (mode) => PopupMenuItem<UIMode>(
+                      value: mode,
+                      child: Text(
+                        AppTheme.uiModeNames[mode] ??
+                            (toBeginningOfSentenceCase(mode.name) ?? mode.name),
+                        style: kit.typography.body,
+                      ),
                     ),
-                  ),
-                )
-                .toList(),
+                  )
+                  .toList(),
+            ),
           ),
-        ),
-        SettingsListTile(
-          enabled: isEnabled && relevantPaletteIdentifiers.isNotEmpty,
-          leadingIcon: Icons.palette_outlined,
-          title: 'Palette / Variant',
-          subtitle:
+          AppListTile(
+            leading: Icon(
+              Icons.palette_outlined,
+              color: kit.colors.textPrimary,
+            ),
+            title: Text('Palette / Variant'),
+            subtitle: Text(
               AppTheme.paletteNames[state.paletteIdentifier] ??
-              state.paletteIdentifier,
-          trailing: relevantPaletteIdentifiers.isEmpty
-              ? null
-              : PopupMenuButton<String>(
-                  enabled: isEnabled,
-                  icon: const Icon(Icons.arrow_drop_down),
-                  tooltip: "Select Palette",
-                  initialValue: state.paletteIdentifier,
-                  onSelected: (String newIdentifier) => context
-                      .read<SettingsBloc>()
-                      .add(UpdatePaletteIdentifier(newIdentifier)),
-                  itemBuilder: (context) => relevantPaletteIdentifiers
-                      .map(
-                        (id) => PopupMenuItem<String>(
-                          value: id,
-                          child: Text(
-                            AppTheme.paletteNames[id] ?? id,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-        ),
-        SettingsListTile(
-          enabled: isEnabled,
-          leadingIcon: Icons.brightness_6_outlined,
-          title: 'Brightness Mode',
-          subtitle:
-              toBeginningOfSentenceCase(state.themeMode.name) ??
-              state.themeMode.name,
-          trailing: PopupMenuButton<ThemeMode>(
-            enabled: isEnabled,
-            icon: const Icon(Icons.arrow_drop_down),
-            tooltip: "Select Brightness Mode",
-            initialValue: state.themeMode,
-            onSelected: (ThemeMode newMode) =>
-                context.read<SettingsBloc>().add(UpdateTheme(newMode)),
-            itemBuilder: (context) => ThemeMode.values
-                .map(
-                  (mode) => PopupMenuItem<ThemeMode>(
-                    value: mode,
-                    child: Text(
-                      toBeginningOfSentenceCase(mode.name) ?? mode.name,
-                      style: theme.textTheme.bodyMedium,
+                  state.paletteIdentifier,
+            ),
+            trailing: relevantPaletteIdentifiers.isEmpty
+                ? null
+                : PopupMenuButton<String>(
+                    enabled: isEnabled,
+                    icon: Icon(
+                      Icons.arrow_drop_down,
+                      color: kit.colors.textSecondary,
                     ),
+                    tooltip: "Select Palette",
+                    initialValue: state.paletteIdentifier,
+                    onSelected: (String newIdentifier) => context
+                        .read<SettingsBloc>()
+                        .add(UpdatePaletteIdentifier(newIdentifier)),
+                    itemBuilder: (context) => relevantPaletteIdentifiers
+                        .map(
+                          (id) => PopupMenuItem<String>(
+                            value: id,
+                            child: Text(
+                              AppTheme.paletteNames[id] ?? id,
+                              style: kit.typography.body,
+                            ),
+                          ),
+                        )
+                        .toList(),
                   ),
-                )
-                .toList(),
           ),
-        ),
-      ],
+          AppListTile(
+            leading: Icon(
+              Icons.brightness_6_outlined,
+              color: kit.colors.textPrimary,
+            ),
+            title: Text('Brightness Mode'),
+            subtitle: Text(
+              toBeginningOfSentenceCase(state.themeMode.name) ??
+                  state.themeMode.name,
+            ),
+            trailing: PopupMenuButton<ThemeMode>(
+              enabled: isEnabled,
+              icon: Icon(
+                Icons.arrow_drop_down,
+                color: kit.colors.textSecondary,
+              ),
+              tooltip: "Select Brightness Mode",
+              initialValue: state.themeMode,
+              onSelected: (ThemeMode newMode) =>
+                  context.read<SettingsBloc>().add(UpdateTheme(newMode)),
+              itemBuilder: (context) => ThemeMode.values
+                  .map(
+                    (mode) => PopupMenuItem<ThemeMode>(
+                      value: mode,
+                      child: Text(
+                        toBeginningOfSentenceCase(mode.name) ?? mode.name,
+                        style: kit.typography.body,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

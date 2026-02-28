@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:expense_tracker/router.dart' deferred as app_router;
+import 'package:expense_tracker/router.dart'; // Direct import
 
 import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:expense_tracker/core/auth/session_state.dart';
@@ -33,8 +33,6 @@ void main() {
     );
     when(() => sessionCubit.stream).thenAnswer((_) => const Stream.empty());
     when(() => sessionCubit.state).thenReturn(SessionUnauthenticated());
-
-    await app_router.loadLibrary();
   });
 
   tearDown(() {
@@ -42,7 +40,9 @@ void main() {
   });
 
   test('redirects skipped setup to dashboard', () {
-    final config = app_router.AppRouter.router.configuration;
+    final config = AppRouter
+        .router
+        .configuration; // Assuming AppRouter is the class name in router.dart
     final redirect = config.topRedirect;
     final routeState = GoRouterState(
       config,

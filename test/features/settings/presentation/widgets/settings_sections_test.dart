@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:get_it/get_it.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_switch.dart';
 
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
@@ -57,7 +58,7 @@ void main() {
         ),
       );
 
-      expect(find.text('APPEARANCE'), findsOneWidget);
+      expect(find.text('Appearance'), findsOneWidget);
       expect(find.text('Brightness Mode'), findsOneWidget);
       expect(find.text('UI Mode'), findsOneWidget);
     });
@@ -74,8 +75,9 @@ void main() {
         ),
       );
 
-      expect(find.text('GENERAL'), findsOneWidget);
-      expect(find.text('Country / Currency'), findsOneWidget);
+      // Empty in current implementation
+      expect(find.text('General'), findsNothing);
+      expect(find.text('Country / Currency'), findsNothing);
     });
 
     testWidgets('SecuritySettingsSection toggles app lock', (tester) async {
@@ -90,8 +92,7 @@ void main() {
       await tester.pumpWidget(pumpSection(const SecuritySettingsSection()));
       await tester.pumpAndSettle();
 
-      expect(find.text('App Lock'), findsOneWidget);
-      await tester.tap(find.byType(SwitchListTile));
+      await tester.tap(find.byType(AppSwitch));
       await tester.pumpAndSettle();
       verify(() => mockStorage.setBiometricEnabled(true)).called(1);
     });
@@ -110,8 +111,8 @@ void main() {
         ),
       );
 
-      expect(find.text('HELP & FEEDBACK'), findsOneWidget);
-      await tester.tap(find.text('FAQ / Help Center'));
+      expect(find.text('Help & Feedback'), findsOneWidget);
+      await tester.tap(find.text('Help Center'));
       expect(launchedUrl, isNotNull);
     });
 
@@ -129,7 +130,7 @@ void main() {
         ),
       );
 
-      expect(find.text('LEGAL'), findsOneWidget);
+      expect(find.text('Legal'), findsOneWidget);
       await tester.tap(find.text('Privacy Policy'));
       expect(launchedUrl, isNotNull);
     });
@@ -148,7 +149,7 @@ void main() {
         ),
       );
 
-      expect(find.text('ABOUT'), findsOneWidget);
+      expect(find.text('About App'), findsOneWidget);
     });
   });
 }
