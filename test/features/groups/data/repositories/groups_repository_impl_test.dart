@@ -310,8 +310,12 @@ void main() {
       await repository.syncGroups();
 
       // Assert
-      verify(() => mockLocalDataSource.deleteGroups(any(that: equals(['2'])))).called(1);
-      verifyNever(() => mockLocalDataSource.deleteGroups(any(that: equals(['1']))));
+      verify(
+        () => mockLocalDataSource.deleteGroups(any(that: equals(['2']))),
+      ).called(1);
+      verifyNever(
+        () => mockLocalDataSource.deleteGroups(any(that: equals(['1']))),
+      );
     });
 
     test('should delete stale members locally', () async {
@@ -379,8 +383,12 @@ void main() {
       await repository.syncGroups();
 
       // Assert
-      verify(() => mockLocalDataSource.deleteMembers(any(that: equals(['m2'])))).called(1);
-      verifyNever(() => mockLocalDataSource.deleteMembers(any(that: equals(['m1']))));
+      verify(
+        () => mockLocalDataSource.deleteMembers(any(that: equals(['m2']))),
+      ).called(1);
+      verifyNever(
+        () => mockLocalDataSource.deleteMembers(any(that: equals(['m1']))),
+      );
     });
 
     test(
