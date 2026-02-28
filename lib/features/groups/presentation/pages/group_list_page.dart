@@ -37,7 +37,9 @@ class _GroupListPageState extends State<GroupListPage> {
             stream: _syncStatusStream,
             initialData: SyncServiceStatus.synced,
             builder: (context, snapshot) {
-              final status = snapshot.data ?? SyncServiceStatus.synced;
+              final status = snapshot.hasError
+                  ? SyncServiceStatus.error
+                  : (snapshot.data ?? SyncServiceStatus.synced);
               IconData icon;
               Color? color;
               switch (status) {
