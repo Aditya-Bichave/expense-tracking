@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_bloc.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_event.dart';
-import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_state.dart';
-import 'package:expense_tracker/core/utils/currency_formatter.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_fab.dart';
 
 class NumpadScreen extends StatefulWidget {
   final VoidCallback onNext;
@@ -64,41 +66,42 @@ class _NumpadScreenState extends State<NumpadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(title: const Text('Enter Amount'), centerTitle: true),
+    final kit = context.kit;
+
+    return AppScaffold(
+      appBar: const AppNavBar(title: 'Enter Amount', centerTitle: true),
       body: Column(
         children: [
           Expanded(
             child: Center(
               child: Text(
-                // Simply display what we typed, formatted lightly?
-                // Or stick to _amountStr for raw feedback
                 _amountStr,
-                style: theme.textTheme.displayLarge?.copyWith(
+                style: kit.typography.display.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+                  color: kit.colors.primary,
                 ),
               ),
             ),
           ),
           _buildNumpad(context),
-          const SizedBox(height: 20),
+          kit.spacing.gapLg,
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: AppFAB(
         onPressed: (double.tryParse(_amountStr) ?? 0) > 0
             ? widget.onNext
             : null,
-        label: const Text('Next'),
+        label: 'Next',
         icon: const Icon(Icons.arrow_forward),
+        extended: true,
       ),
     );
   }
 
   Widget _buildNumpad(BuildContext context) {
+    final kit = context.kit;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: kit.spacing.hXxl,
       height: 350,
       child: Column(
         children: [
@@ -120,18 +123,40 @@ class _NumpadScreenState extends State<NumpadScreen> {
   }
 
   Widget _key(BuildContext context, String key) {
+    final kit = context.kit;
+
     if (key == '<') {
-      return InkWell(
-        onTap: _handleBackspace,
-        borderRadius: BorderRadius.circular(50),
-        child: const Center(child: Icon(Icons.backspace_outlined)),
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _handleBackspace,
+          borderRadius: BorderRadius.circular(50),
+          child: Center(
+            child: Icon(
+              Icons.backspace_outlined,
+              color: kit.colors.textPrimary,
+              size: 28,
+            ),
+          ),
+        ),
       );
     }
-    return InkWell(
-      onTap: () => _handleInput(key),
-      borderRadius: BorderRadius.circular(50),
-      child: Center(
-        child: Text(key, style: Theme.of(context).textTheme.headlineMedium),
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _handleInput(key),
+        borderRadius: BorderRadius.circular(50),
+        child: Center(
+          child: Text(
+            key,
+            style: kit.typography.display.copyWith(
+              fontSize: 32,
+              fontWeight: FontWeight.w400,
+              color: kit.colors.textPrimary,
+            ),
+          ),
+        ),
       ),
     );
   }
