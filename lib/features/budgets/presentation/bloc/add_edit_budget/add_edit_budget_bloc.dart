@@ -137,8 +137,7 @@ class AddEditBudgetBloc extends Bloc<AddEditBudgetEvent, AddEditBudgetState> {
             errorMessage: _mapFailureToMessage(failure),
           ),
         );
-        // Keep loading state on error? Or revert to initial? Reverting is safer.
-        emit(state.copyWith(status: AddEditBudgetStatus.initial));
+        // Keep error status so it can be cleared by the user or on next attempt.
       },
       (savedBudget) {
         log.info(
