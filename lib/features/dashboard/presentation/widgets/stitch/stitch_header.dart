@@ -21,7 +21,7 @@ class StitchHeader extends StatelessWidget {
     final kit = context.kit;
 
     return Padding(
-      padding: BridgeEdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: kit.spacing.lg,
         vertical: kit.spacing.md,
       ),
@@ -41,7 +41,7 @@ class StitchHeader extends StatelessWidget {
                   ),
                 ),
                 child: Padding(
-                  padding: const BridgeEdgeInsets.all(2.0),
+                  padding: const context.space.allXxs,
                   child: ClipOval(
                     child: Image.network(
                       userImageUrl,
@@ -89,7 +89,7 @@ class StitchHeader extends StatelessWidget {
                     color: kit.colors.textSecondary,
                   ),
                   onPressed: () {},
-                  padding: const BridgeEdgeInsets.only(),
+                  padding: const EdgeInsets.only(),
                 ),
               ),
               Positioned(

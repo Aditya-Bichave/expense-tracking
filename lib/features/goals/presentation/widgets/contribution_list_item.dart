@@ -42,7 +42,7 @@ class ContributionListItem extends StatelessWidget {
           Text(DateFormatter.formatDate(contribution.date)),
           if (contribution.note != null && contribution.note!.isNotEmpty)
             Padding(
-              padding: const BridgeEdgeInsets.only(top: 2.0),
+              padding: const EdgeInsets.only(top: 2.0),
               child: Text(
                 contribution.note!,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -68,7 +68,7 @@ class ContributionListItem extends StatelessWidget {
         },
       ),
       dense: true,
-      contentPadding: const BridgeEdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: 0,
         vertical: 4,
       ), // Adjust padding

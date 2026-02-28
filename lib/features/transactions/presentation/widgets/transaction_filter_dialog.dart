@@ -10,6 +10,7 @@ import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class TransactionFilterDialog extends StatefulWidget {
   final DateTime? initialStartDate;
@@ -152,7 +153,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
 
     return BridgeAlertDialog(
       title: const Text('Filter Transactions'),
-      contentPadding: const BridgeEdgeInsets.fromLTRB(
+      contentPadding: const EdgeInsets.fromLTRB(
         16,
         20,
         16,
@@ -170,7 +171,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
               children: [
                 Expanded(
                   child: BridgeListTile(
-                    contentPadding: const BridgeEdgeInsets.only(),
+                    contentPadding: const EdgeInsets.only(),
                     leading: Icon(
                       Icons.date_range_outlined,
                       color: theme.iconTheme.color,
@@ -195,12 +196,12 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                   ),
                 ),
                 Padding(
-                  padding: const BridgeEdgeInsets.symmetric(horizontal: 8.0),
+                  padding: const context.space.hSm,
                   child: Text('-', style: theme.textTheme.titleMedium),
                 ),
                 Expanded(
                   child: BridgeListTile(
-                    contentPadding: const BridgeEdgeInsets.only(),
+                    contentPadding: const EdgeInsets.only(),
                     leading: Icon(
                       Icons.date_range,
                       color: theme.iconTheme.color,
@@ -243,7 +244,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 ),
                 border: const OutlineInputBorder(),
                 isDense: true,
-                contentPadding: const BridgeEdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 14,
                 ),
@@ -305,7 +306,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
                 prefixIcon: Icon(Icons.category_outlined, size: 20),
                 border: OutlineInputBorder(),
                 isDense: true,
-                contentPadding: BridgeEdgeInsets.symmetric(
+                contentPadding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 14,
                 ),
@@ -321,7 +322,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           ],
         ),
       ),
-      actionsPadding: const BridgeEdgeInsets.symmetric(
+      actionsPadding: const EdgeInsets.symmetric(
         horizontal: 16,
         vertical: 8,
       ),

@@ -101,7 +101,7 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
       String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
       if (svgPath.isNotEmpty) {
         return Padding(
-          padding: const BridgeEdgeInsets.all(12.0),
+          padding: const context.space.allMd,
           child: SvgPicture.asset(
             svgPath,
             width: 20,
@@ -153,7 +153,7 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
               top: 8,
               bottom: 20,
             ) ??
-            const BridgeEdgeInsets.all(20.0),
+            const context.space.allXl,
         child: Form(
           key: _formKey,
           child: Column(
@@ -191,7 +191,7 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
               const SizedBox(height: 16),
 
               BridgeListTile(
-                contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 0),
+                contentPadding: const context.space.hXxs,
                 shape:
                     theme.inputDecorationTheme.enabledBorder ??
                     const OutlineInputBorder(),

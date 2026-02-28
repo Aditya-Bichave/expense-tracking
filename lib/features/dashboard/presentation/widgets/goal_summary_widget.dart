@@ -146,7 +146,7 @@ class GoalSummaryWidget extends StatelessWidget {
                   ),
                   kit.spacing.gapSm,
                   LinearPercentIndicator(
-                    padding: const BridgeEdgeInsets.only(),
+                    padding: const EdgeInsets.only(),
                     lineHeight: 8.0,
                     percent: progress.clamp(0.0, 1.0),
                     barRadius: const Radius.circular(4),
@@ -180,7 +180,7 @@ class GoalSummaryWidget extends StatelessWidget {
         ),
         if (goals.length >= 3)
           Padding(
-            padding: BridgeEdgeInsets.only(top: kit.spacing.xs),
+            padding: EdgeInsets.only(top: kit.spacing.xs),
             child: Center(
               child: BridgeButton.ghost(
                 key: const ValueKey('button_goalSummary_viewAll'),

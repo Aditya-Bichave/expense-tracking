@@ -19,6 +19,7 @@ import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddEditRecurringRulePage extends StatelessWidget {
   final RecurringRule? initialRule;
@@ -135,7 +136,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
         },
         builder: (context, state) {
           return SingleChildScrollView(
-            padding: const BridgeEdgeInsets.all(16.0),
+            padding: const context.space.allLg,
             child: Form(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,

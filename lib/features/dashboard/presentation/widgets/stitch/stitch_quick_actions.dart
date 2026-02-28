@@ -14,7 +14,7 @@ class StitchQuickActions extends StatelessWidget {
     final kit = context.kit;
 
     return Padding(
-      padding: BridgeEdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         horizontal: kit.spacing.lg,
         vertical: kit.spacing.sm,
       ),

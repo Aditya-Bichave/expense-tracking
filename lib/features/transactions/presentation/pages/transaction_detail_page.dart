@@ -202,12 +202,12 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
         ],
       ),
       body: ListView(
-        padding: const BridgeEdgeInsets.all(16.0),
+        padding: const context.space.allLg,
         children: [
           AppCard(
             elevation: 1,
             child: Padding(
-              padding: const BridgeEdgeInsets.all(16.0),
+              padding: const context.space.allLg,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -282,7 +282,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
   }) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const BridgeEdgeInsets.symmetric(vertical: 10.0),
+      padding: const context.space.vSm,
       child: Row(
         crossAxisAlignment: isMultiline
             ? CrossAxisAlignment.start

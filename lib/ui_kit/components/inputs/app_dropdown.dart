@@ -35,7 +35,7 @@ class AppDropdown<T> extends StatelessWidget {
           kit.spacing.gapXs,
         ],
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: const context.space.hMd,
           decoration: BoxDecoration(
             color: kit.colors.surfaceContainer,
             borderRadius: kit.radii.medium,

@@ -3,6 +3,7 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/stitc
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class StitchTypeSelector extends StatefulWidget {
   final ValueChanged<StitchTab> onTypeChanged;
@@ -21,10 +22,10 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const BridgeEdgeInsets.all(6),
+      padding: const context.space.allXs,
       decoration: BridgeDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
-        borderRadius: BridgeBorderRadius.circular(16),
+        borderRadius: Bridgecontext.kit.radii.large,
       ),
       child: Row(
         children: StitchTab.values.map((tab) {
@@ -37,12 +38,12 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const BridgeEdgeInsets.symmetric(vertical: 12),
+                padding: const context.space.vMd,
                 decoration: BridgeDecoration(
                   color: isSelected
                       ? theme.colorScheme.primary
                       : Colors.transparent,
-                  borderRadius: BridgeBorderRadius.circular(12),
+                  borderRadius: Bridgecontext.kit.radii.medium,
                 ),
                 alignment: Alignment.center,
                 child: Text(

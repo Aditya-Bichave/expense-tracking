@@ -147,7 +147,7 @@ class _LockScreenState extends State<LockScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(4, (index) {
                   return Container(
-                    margin: const BridgeEdgeInsets.symmetric(horizontal: 8),
+                    margin: const context.space.hSm,
                     width: 20,
                     height: 20,
                     decoration: BridgeDecoration(
@@ -214,7 +214,7 @@ class _LockScreenState extends State<LockScreen> {
         return Container(
           width: 80,
           height: 80,
-          margin: const BridgeEdgeInsets.all(8),
+          margin: const context.space.allSm,
           child: BridgeTextButton(
             style: TextButton.styleFrom(
               shape: const CircleBorder(),

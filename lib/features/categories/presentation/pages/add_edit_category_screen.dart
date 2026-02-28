@@ -17,6 +17,7 @@ import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 // Keep for common builder
 
 class AddEditCategoryScreen extends StatelessWidget {
@@ -207,7 +208,7 @@ class _CategoryFormState extends State<CategoryForm> {
               bottom: 40,
               top: 16,
             ) ??
-            const BridgeEdgeInsets.all(16.0).copyWith(bottom: 40),
+            const context.space.allLg.copyWith(bottom: 40),
         children: [
           // Category Type Toggle
           CommonFormFields.buildTypeToggle(
@@ -257,7 +258,7 @@ class _CategoryFormState extends State<CategoryForm> {
             onTap: _showParentPicker,
             shape: RoundedRectangleBorder(
               side: BorderSide(color: theme.dividerColor),
-              borderRadius: BridgeBorderRadius.circular(8),
+              borderRadius: Bridgecontext.kit.radii.small,
             ),
             tileColor: theme.colorScheme.surfaceContainerHighest,
           ),
@@ -282,7 +283,7 @@ class _CategoryFormState extends State<CategoryForm> {
             ),
             label: Text(isEditing ? 'Update Category' : 'Add Category'),
             style: ElevatedButton.styleFrom(
-              padding: const BridgeEdgeInsets.symmetric(vertical: 16),
+              padding: const context.space.vLg,
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,

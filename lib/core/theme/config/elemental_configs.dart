@@ -59,7 +59,7 @@ class ElementalConfig implements IThemePaletteConfig {
     this.incomeGlowColorDark = const Color(0x66C8E6C9),
     this.expenseGlowColorDark = const Color(0x66FFCDD2),
     // Example: Override specific padding for elemental
-    this.cardOuterPadding = const BridgeEdgeInsets.symmetric(
+    this.cardOuterPadding = const EdgeInsets.symmetric(
       horizontal: 12.0,
       vertical: 6.0,
     ),

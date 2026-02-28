@@ -35,7 +35,7 @@ class DataManagementSettingsSection extends StatelessWidget {
       title: 'Data Management',
       child: Column(
         children: [
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(Icons.backup_outlined, color: kit.colors.textPrimary),
             title: Text('Backup Data'),
             subtitle: Text(
@@ -51,7 +51,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled ? null : onBackup,
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.restore_page_outlined,
               color: kit.colors.textPrimary,
@@ -70,7 +70,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled ? null : onRestore,
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.upload_file_outlined,
               color: kit.colors.textPrimary,
@@ -91,7 +91,7 @@ class DataManagementSettingsSection extends StatelessWidget {
                 ? null
                 : () => context.pushNamed(RouteNames.settingsExport),
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.delete_sweep_outlined,
               color: kit.colors.textPrimary,
@@ -110,7 +110,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             ),
             onTap: isDataManagementLoading || isInDemoMode ? null : onClearData,
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.restore_from_trash_outlined,
               color: kit.colors.textPrimary,

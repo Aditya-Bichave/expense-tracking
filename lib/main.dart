@@ -53,6 +53,7 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 // RE-ADDING THE EXPORT AS REQUESTED TO FIX LOGGER VISIBILITY
 export 'package:expense_tracker/core/utils/logger.dart';
@@ -386,7 +387,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
           builder: (context) {
             return Center(
               child: Padding(
-                padding: const BridgeEdgeInsets.all(24.0),
+                padding: const context.space.allXxl,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -416,7 +417,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
                       const Text(
                         "Your encryption key appears to be corrupted. You can reset the app data to recover, but all local data will be lost.",
                         textAlign: TextAlign.center,
-                        style: BridgeTextStyle(color: Colors.red),
+                        style: BridgeTextStyle(color: context.kit.colors.danger),
                       ),
                       const SizedBox(height: 16),
                       if (_isResetting)
@@ -425,8 +426,8 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
                         BridgeElevatedButton(
                           onPressed: () => _resetApp(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
+                            backgroundColor: context.kit.colors.danger,
+                            foregroundColor: context.kit.colors.surface,
                           ),
                           child: const Text("Reset App Data"),
                         ),

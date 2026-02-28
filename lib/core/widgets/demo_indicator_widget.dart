@@ -24,7 +24,7 @@ class DemoIndicatorWidget extends StatelessWidget {
               elevation: 4.0, // Add slight elevation
               color: theme.colorScheme.secondaryContainer.withOpacity(0.95),
               child: Padding(
-                padding: const BridgeEdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
                   vertical: 6.0,
                 ),
@@ -48,7 +48,7 @@ class DemoIndicatorWidget extends StatelessWidget {
                     BridgeTextButton(
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.onSecondaryContainer,
-                        padding: const BridgeEdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 4,
                         ),

@@ -1,6 +1,7 @@
 import 'package:expense_tracker/core/widgets/section_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 void main() {
   group('SectionHeader', () {
@@ -15,7 +16,7 @@ void main() {
     });
 
     testWidgets('applies custom padding', (tester) async {
-      const padding = EdgeInsets.all(20);
+      const padding = context.space.allXl;
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

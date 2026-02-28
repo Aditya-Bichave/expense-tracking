@@ -92,7 +92,7 @@ class _DashboardPageState extends State<DashboardPage> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding:
             modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-            BridgeEdgeInsets.only(top: kit.spacing.sm, bottom: 80.0),
+            EdgeInsets.only(top: kit.spacing.sm, bottom: 80.0),
         children: [
           DashboardHeader(overview: overview),
           SizedBox(height: kit.spacing.sm),
@@ -149,7 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   top: kToolbarHeight + MediaQuery.of(context).padding.top + 8,
                   bottom: 80,
                 ) ??
-                BridgeEdgeInsets.only(
+                EdgeInsets.only(
                   top:
                       kToolbarHeight + MediaQuery.of(context).padding.top + 8.0,
                   bottom: 80.0,
@@ -401,7 +401,7 @@ class _DashboardPageState extends State<DashboardPage> {
         } else if (state is DashboardError) {
           bodyContent = Center(
             child: Padding(
-              padding: const BridgeEdgeInsets.all(20),
+              padding: const context.space.allXl,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

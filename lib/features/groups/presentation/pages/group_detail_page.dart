@@ -188,7 +188,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                                     itemCount: state.expenses.length,
                                     itemBuilder: (context, index) {
                                       final expense = state.expenses[index];
-                                      return AppBridgeListTile(
+                                      return AppListTile(
                                         title: Text(expense.title),
                                         trailing: Text(
                                           '\${expense.amount} \${expense.currency}',

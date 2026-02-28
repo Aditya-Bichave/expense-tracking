@@ -8,7 +8,7 @@ class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     required this.title,
-    this.padding = const BridgeEdgeInsets.fromLTRB(16.0, 20.0, 16.0, 8.0),
+    this.padding = const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 8.0),
   });
 
   @override

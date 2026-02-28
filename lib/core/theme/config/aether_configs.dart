@@ -39,17 +39,17 @@ class AetherConfig implements IThemePaletteConfig {
   @override
   final Color? expenseGlowColorDark;
   // Aether specific overrides for new properties (optional)
-  final EdgeInsets? pagePadding = const BridgeEdgeInsets.only(
+  final EdgeInsets? pagePadding = const EdgeInsets.only(
     top: 0,
     left: 0,
     right: 0,
     bottom: 16,
   ); // No top padding if AppBar is transparent/gone
-  final EdgeInsets? cardOuterPadding = const BridgeEdgeInsets.symmetric(
+  final EdgeInsets? cardOuterPadding = const EdgeInsets.symmetric(
     horizontal: 16.0,
     vertical: 10.0,
   );
-  final EdgeInsets? cardInnerPadding = const BridgeEdgeInsets.symmetric(
+  final EdgeInsets? cardInnerPadding = const EdgeInsets.symmetric(
     horizontal: 20.0,
     vertical: 16.0,
   );

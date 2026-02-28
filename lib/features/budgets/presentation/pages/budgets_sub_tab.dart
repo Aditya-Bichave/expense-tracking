@@ -12,6 +12,7 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetsSubTab extends StatelessWidget {
   const BudgetsSubTab({super.key});
@@ -32,7 +33,7 @@ class BudgetsSubTab extends StatelessWidget {
               state.budgetsWithStatus.isEmpty) {
             content = Center(
               child: Padding(
-                padding: const BridgeEdgeInsets.all(20.0),
+                padding: const context.space.allXl,
                 child: Text(
                   "Error loading budgets: ${state.errorMessage ?? 'Unknown error'}",
                   style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -44,7 +45,7 @@ class BudgetsSubTab extends StatelessWidget {
               state.status != BudgetListStatus.loading) {
             content = Center(
               child: Padding(
-                padding: const BridgeEdgeInsets.all(30.0),
+                padding: const context.space.allXxxl,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -76,7 +77,7 @@ class BudgetsSubTab extends StatelessWidget {
                       label: const Text('Add First Budget'),
                       onPressed: () => context.pushNamed(RouteNames.addBudget),
                       style: ElevatedButton.styleFrom(
-                        padding: const BridgeEdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
                         ),
@@ -91,11 +92,11 @@ class BudgetsSubTab extends StatelessWidget {
             content = ListView.builder(
               padding:
                   modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
-                  const BridgeEdgeInsets.only(top: 8.0, bottom: 90.0),
+                  const EdgeInsets.only(top: 8.0, bottom: 90.0),
               itemCount: state.budgetsWithStatus.length,
               itemBuilder: (ctx, index) {
                 final budgetStatus = state.budgetsWithStatus[index];
-                return BudgetBridgeCard(
+                return BudgetCard(
                   budgetStatus: budgetStatus,
                   onTap: () => context.pushNamed(
                     RouteNames.budgetDetail,

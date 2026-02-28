@@ -13,6 +13,7 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoryManagementScreen extends StatelessWidget {
   const CategoryManagementScreen({super.key});
@@ -84,8 +85,8 @@ class CategoryManagementScreen extends StatelessWidget {
                 Tab(icon: Icon(Icons.arrow_downward), text: 'Expenses'),
                 Tab(icon: Icon(Icons.arrow_upward), text: 'Income'),
               ],
-              indicatorColor: Theme.of(context).colorScheme.primary,
-              labelColor: Theme.of(context).colorScheme.primary,
+              indicatorColor: context.kit.colors.primary,
+              labelColor: context.kit.colors.primary,
               unselectedLabelColor: Theme.of(
                 context,
               ).colorScheme.onSurfaceVariant,
@@ -100,7 +101,7 @@ class CategoryManagementScreen extends StatelessWidget {
                   ..showSnackBar(
                     SnackBar(
                       content: Text("Error: ${state.errorMessage!}"),
-                      backgroundColor: Theme.of(context).colorScheme.error,
+                      backgroundColor: context.kit.colors.error,
                     ),
                   );
                 // Optionally clear error message via Bloc event
@@ -117,11 +118,11 @@ class CategoryManagementScreen extends StatelessWidget {
                   state.customExpenseCategories.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: const BridgeEdgeInsets.all(20.0),
+                    padding: const context.space.allXl,
                     child: Text(
                       "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
                       style: BridgeTextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                        color: context.kit.colors.error,
                       ),
                     ),
                   ),

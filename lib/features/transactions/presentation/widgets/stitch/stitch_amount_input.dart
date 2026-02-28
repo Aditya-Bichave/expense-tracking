@@ -3,6 +3,7 @@ import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class StitchAmountInput extends StatelessWidget {
   final TextEditingController controller;
@@ -22,10 +23,7 @@ class StitchAmountInput extends StatelessWidget {
       children: [
         // Currency Selector Mock
         Container(
-          padding: const BridgeEdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 6,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BridgeDecoration(
             color: theme.colorScheme.primary.withOpacity(0.1),
             borderRadius: BridgeBorderRadius.circular(20),
@@ -82,7 +80,7 @@ class StitchAmountInput extends StatelessWidget {
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
-                  contentPadding: const BridgeEdgeInsets.only(),
+                  contentPadding: const EdgeInsets.only(),
                 ),
                 cursorColor: theme.colorScheme.primary,
               ),
@@ -94,7 +92,7 @@ class StitchAmountInput extends StatelessWidget {
           width: 80,
           decoration: BridgeDecoration(
             color: theme.colorScheme.primary.withOpacity(0.3),
-            borderRadius: BridgeBorderRadius.circular(2),
+            borderRadius: Bridgecontext.kit.radii.xsmall,
           ),
         ),
       ],

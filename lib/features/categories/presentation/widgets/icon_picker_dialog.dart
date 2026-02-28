@@ -5,6 +5,7 @@ import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 // --- Populate this map extensively! ---
 const Map<String, IconData> availableIcons = {
@@ -131,7 +132,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
     final theme = Theme.of(context);
     return BridgeAlertDialog(
       title: const Text('Select Icon'),
-      contentPadding: const BridgeEdgeInsets.fromLTRB(16, 20, 16, 0),
+      contentPadding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
       content: SizedBox(
         width: double.maxFinite,
         height: MediaQuery.of(context).size.height * 0.5,
@@ -147,7 +148,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                 border: OutlineInputBorder(
                   borderRadius: BridgeBorderRadius.circular(30),
                 ),
-                contentPadding: const BridgeEdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   vertical: 0,
                   horizontal: 16,
                 ),
@@ -183,7 +184,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                               // Optionally pop immediately on selection:
                               // Navigator.of(context).pop(_selectedIconName);
                             },
-                            borderRadius: BridgeBorderRadius.circular(8),
+                            borderRadius: Bridgecontext.kit.radii.small,
                             child: Container(
                               decoration: BridgeDecoration(
                                 border: Border.all(
@@ -198,9 +199,9 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
                                     : theme
                                           .colorScheme
                                           .surfaceContainerHighest, // Use a background color
-                                borderRadius: BridgeBorderRadius.circular(8),
+                                borderRadius: Bridgecontext.kit.radii.small,
                               ),
-                              padding: const BridgeEdgeInsets.all(
+                              padding: const EdgeInsets.all(
                                 4,
                               ), // Add padding around icon
                               child: Icon(

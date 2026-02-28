@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class RecurringPaymentItem extends StatelessWidget {
   final String title;
@@ -29,12 +30,12 @@ class RecurringPaymentItem extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ClipRRect(
-      borderRadius: BridgeBorderRadius.circular(16),
+      borderRadius: Bridgecontext.kit.radii.large,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          padding: const BridgeEdgeInsets.all(16),
-          margin: const BridgeEdgeInsets.symmetric(vertical: 6),
+          padding: const context.space.allLg,
+          margin: const context.space.vXs,
           decoration: BridgeDecoration(
             color: theme.colorScheme.surface.withOpacity(0.4),
             border: Border.all(
@@ -48,7 +49,7 @@ class RecurringPaymentItem extends StatelessWidget {
                 height: 48,
                 decoration: BridgeDecoration(
                   color: color.withOpacity(0.2),
-                  borderRadius: BridgeBorderRadius.circular(12),
+                  borderRadius: Bridgecontext.kit.radii.medium,
                   border: Border.all(color: color.withOpacity(0.3)),
                 ),
                 child: Icon(icon, color: color),
@@ -84,13 +85,13 @@ class RecurringPaymentItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Container(
-                    padding: const BridgeEdgeInsets.symmetric(
+                    padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 2,
                     ),
                     decoration: BridgeDecoration(
                       color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BridgeBorderRadius.circular(12),
+                      borderRadius: Bridgecontext.kit.radii.medium,
                     ),
                     child: Text(
                       status,

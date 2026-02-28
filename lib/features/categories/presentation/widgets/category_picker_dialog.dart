@@ -10,6 +10,7 @@ import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 enum CategoryTypeFilter { expense, income }
 
@@ -103,7 +104,7 @@ class _CategoryPickerDialogContentState
 
     return Container(
       height: sheetHeight,
-      padding: const BridgeEdgeInsets.only(
+      padding: const EdgeInsets.only(
         top: 8.0,
         left: 16.0,
         right: 16.0,
@@ -115,10 +116,10 @@ class _CategoryPickerDialogContentState
             child: Container(
               width: 40,
               height: 4,
-              margin: const BridgeEdgeInsets.only(bottom: 10),
+              margin: const EdgeInsets.only(bottom: 10),
               decoration: BridgeDecoration(
-                color: Colors.grey[300],
-                borderRadius: BridgeBorderRadius.circular(10),
+                color: context.kit.colors.borderSubtle[300],
+                borderRadius: Bridgecontext.kit.radii.small,
               ),
             ),
           ),
@@ -135,7 +136,7 @@ class _CategoryPickerDialogContentState
               border: OutlineInputBorder(
                 borderRadius: BridgeBorderRadius.circular(30),
               ),
-              contentPadding: const BridgeEdgeInsets.symmetric(
+              contentPadding: const EdgeInsets.symmetric(
                 vertical: 0,
                 horizontal: 16,
               ),
@@ -203,14 +204,14 @@ class _CategoryPickerDialogContentState
           ),
           const Divider(height: 1),
           Padding(
-            padding: const BridgeEdgeInsets.symmetric(vertical: 12.0),
+            padding: const context.space.vMd,
             child: Center(
               child: ElevatedButton.icon(
                 key: const ValueKey('button_add_new_category'),
                 icon: const Icon(Icons.add_circle_outline, size: 18),
                 label: const Text("Add New Category"),
                 style: ElevatedButton.styleFrom(
-                  padding: const BridgeEdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,
                   ),

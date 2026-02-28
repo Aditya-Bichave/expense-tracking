@@ -112,7 +112,7 @@ class TransactionListItem extends StatelessWidget {
       ),
       onTap: onTap, // Use the passed onTap callback
       // onLongPress: onLongPress, // Uncomment if adding long press
-      contentPadding: const BridgeEdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: 16.0,
         vertical: 4.0,
       ),

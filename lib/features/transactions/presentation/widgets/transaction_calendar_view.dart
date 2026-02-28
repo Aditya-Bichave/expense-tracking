@@ -12,6 +12,7 @@ import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class TransactionCalendarView extends StatelessWidget {
   final TransactionListState state;
@@ -55,7 +56,7 @@ class TransactionCalendarView extends StatelessWidget {
         currentTransactionsForCalendar.isEmpty) {
       return Center(
         child: Padding(
-          padding: const BridgeEdgeInsets.all(20.0),
+          padding: const context.space.allXl,
           child: Text(
             "Error loading data for calendar: ${state.errorMessage}",
             style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -95,7 +96,7 @@ class TransactionCalendarView extends StatelessWidget {
             outsideDaysVisible: false,
             markersMaxCount: 1,
             markerSize: 5.0,
-            markerMargin: const BridgeEdgeInsets.symmetric(horizontal: 0.5),
+            markerMargin: const context.space.hXxs,
             weekendTextStyle: BridgeTextStyle(
               color: theme.colorScheme.onSurface.withOpacity(0.7),
             ),
@@ -116,7 +117,7 @@ class TransactionCalendarView extends StatelessWidget {
               border: Border.all(
                 color: theme.colorScheme.primary.withOpacity(0.5),
               ),
-              borderRadius: BridgeBorderRadius.circular(12.0),
+              borderRadius: Bridgecontext.kit.radii.medium,
             ),
             leftChevronIcon: Icon(
               Icons.chevron_left,
@@ -162,7 +163,7 @@ class TransactionCalendarView extends StatelessWidget {
     if (selectedDayTransactions.isEmpty) {
       return Center(
         child: Padding(
-          padding: const BridgeEdgeInsets.symmetric(vertical: 40.0),
+          padding: const EdgeInsets.symmetric(vertical: 40.0),
           child: Text(
             "No transactions on ${DateFormatter.formatDate(selectedDay ?? focusedDay)}.",
             style: theme.textTheme.bodyMedium,
@@ -172,7 +173,7 @@ class TransactionCalendarView extends StatelessWidget {
     }
     return ListView.builder(
       key: ValueKey(selectedDay),
-      padding: const BridgeEdgeInsets.only(top: 8.0, bottom: 80.0),
+      padding: const EdgeInsets.only(top: 8.0, bottom: 80.0),
       itemCount: selectedDayTransactions.length,
       itemBuilder: (ctx, index) {
         final transaction = selectedDayTransactions[index];

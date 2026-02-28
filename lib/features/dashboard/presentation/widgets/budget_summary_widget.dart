@@ -162,7 +162,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                   ),
                   kit.spacing.gapSm,
                   LinearPercentIndicator(
-                    padding: const BridgeEdgeInsets.only(),
+                    padding: const EdgeInsets.only(),
                     lineHeight: 8.0,
                     percent: progress,
                     barRadius: const Radius.circular(4),
@@ -196,7 +196,7 @@ class BudgetSummaryWidget extends StatelessWidget {
         ),
         if (budgets.length >= 3)
           Padding(
-            padding: BridgeEdgeInsets.only(top: kit.spacing.xs),
+            padding: EdgeInsets.only(top: kit.spacing.xs),
             child: Center(
               child: BridgeButton.ghost(
                 key: const ValueKey('button_budgetSummary_viewAll'),

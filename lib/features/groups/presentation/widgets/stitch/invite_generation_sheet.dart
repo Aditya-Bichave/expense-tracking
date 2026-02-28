@@ -24,7 +24,7 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
     final kit = context.kit;
 
     return Container(
-      padding: BridgeEdgeInsets.only(
+      padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: kit.spacing.lg,
         right: kit.spacing.lg,

@@ -79,10 +79,7 @@ class AssetDistributionSection extends StatelessWidget {
     }
     return AppCard(
       margin: kit.spacing.vSm,
-      padding: BridgeEdgeInsets.only(
-        top: kit.spacing.md,
-        bottom: kit.spacing.xs,
-      ),
+      padding: EdgeInsets.only(top: kit.spacing.md, bottom: kit.spacing.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

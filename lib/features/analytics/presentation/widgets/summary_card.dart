@@ -8,9 +8,10 @@ import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class SummaryCard extends StatelessWidget {
-  const SummaryBridgeCard({super.key});
+  const SummaryCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +33,7 @@ class SummaryCard extends StatelessWidget {
           );
           // Use a shimmer effect or simple indicator for initial load
           content = const Padding(
-            padding: BridgeEdgeInsets.all(16.0),
+            padding: context.space.allLg,
             child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
           );
         } else if (state is SummaryLoaded ||
@@ -51,12 +52,12 @@ class SummaryCard extends StatelessWidget {
               "[SummaryCard UI] Summary is null during Loaded/Reloading state.",
             );
             content = const Padding(
-              padding: BridgeEdgeInsets.all(16.0),
+              padding: context.space.allLg,
               child: Center(child: Text('Loading summary data...')),
             );
           } else {
             content = Padding(
-              padding: const BridgeEdgeInsets.all(16.0),
+              padding: const context.space.allLg,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -144,7 +145,7 @@ class SummaryCard extends StatelessWidget {
             "[SummaryCard UI] State is SummaryError: ${state.message}. Showing error message.",
           );
           content = Padding(
-            padding: const BridgeEdgeInsets.all(16.0),
+            padding: const context.space.allLg,
             child: Center(
               child: Text(
                 'Error loading summary: ${state.message}',
@@ -159,14 +160,14 @@ class SummaryCard extends StatelessWidget {
             "[SummaryCard UI] State is SummaryInitial or Unknown. Showing loading indicator.",
           );
           content = const Padding(
-            padding: BridgeEdgeInsets.all(16.0),
+            padding: context.space.allLg,
             child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
           );
         }
 
         // Wrap content in Card and AnimatedSwitcher
         return BridgeCard(
-          margin: const BridgeEdgeInsets.all(12.0),
+          margin: const context.space.allMd,
           elevation: 2,
           clipBehavior: Clip.antiAlias,
           child: AnimatedSwitcher(

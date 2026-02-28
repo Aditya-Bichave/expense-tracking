@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/reports/presentation/widgets/charts/cha
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetPerformanceBarChart extends StatelessWidget {
   final List<BudgetPerformanceData> data;
@@ -84,22 +85,22 @@ class BudgetPerformanceBarChart extends StatelessWidget {
                   isTargetBar = true;
                   isPreviousBar = true;
                   value = prevItem?.budget.targetAmount ?? 0;
-                  color = rod.color ?? Colors.grey;
+                  color = rod.color ?? context.kit.colors.borderSubtle;
                 } else if (rodIndex == 1) {
                   isTargetBar = true;
                   isPreviousBar = false;
                   value = budget.targetAmount;
-                  color = rod.color ?? Colors.grey;
+                  color = rod.color ?? context.kit.colors.borderSubtle;
                 } else if (rodIndex == 2) {
                   isTargetBar = false;
                   isPreviousBar = true;
                   value = prevItem?.currentActualSpending ?? 0;
-                  color = rod.color ?? Colors.grey;
+                  color = rod.color ?? context.kit.colors.borderSubtle;
                 } else /* rodIndex == 3 */ {
                   isTargetBar = false;
                   isPreviousBar = false;
                   value = currentItem.currentActualSpending;
-                  color = rod.color ?? Colors.grey;
+                  color = rod.color ?? context.kit.colors.borderSubtle;
                 }
               } else {
                 // Order: CurrTarget, CurrActual
@@ -107,12 +108,12 @@ class BudgetPerformanceBarChart extends StatelessWidget {
                   isTargetBar = true;
                   isPreviousBar = false;
                   value = budget.targetAmount;
-                  color = rod.color ?? Colors.grey;
+                  color = rod.color ?? context.kit.colors.borderSubtle;
                 } else /* rodIndex == 1 */ {
                   isTargetBar = false;
                   isPreviousBar = false;
                   value = currentItem.currentActualSpending;
-                  color = rod.color ?? Colors.grey;
+                  color = rod.color ?? context.kit.colors.borderSubtle;
                 }
               }
 
@@ -241,14 +242,14 @@ class BudgetPerformanceBarChart extends StatelessWidget {
               toY: prevItem?.budget.targetAmount ?? 0,
               color: prevTargetColor,
               width: barWidth,
-              borderRadius: BridgeBorderRadius.zero,
+              borderRadius: BorderRadius.zero,
             ),
           // Current Target
           BarChartRodData(
             toY: budget.targetAmount,
             color: targetColor,
             width: barWidth,
-            borderRadius: BridgeBorderRadius.zero,
+            borderRadius: BorderRadius.zero,
           ),
           // Previous Actual (if comparing)
           if (showComparison)
@@ -256,14 +257,14 @@ class BudgetPerformanceBarChart extends StatelessWidget {
               toY: prevItem?.currentActualSpending ?? 0,
               color: prevActualColor,
               width: barWidth,
-              borderRadius: BridgeBorderRadius.zero,
+              borderRadius: BorderRadius.zero,
             ),
           // Current Actual
           BarChartRodData(
             toY: currentItem.currentActualSpending,
             color: actualColor,
             width: barWidth,
-            borderRadius: BridgeBorderRadius.zero,
+            borderRadius: BorderRadius.zero,
           ),
         ],
       );

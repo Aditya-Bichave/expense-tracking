@@ -16,7 +16,7 @@ import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 class StitchNetBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
 
-  const StitchNetBalanceBridgeCard({super.key, required this.overview});
+  const StitchNetBalanceCard({super.key, required this.overview});
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +124,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: BridgeEdgeInsets.only(left: kit.spacing.lg),
+                        padding: EdgeInsets.only(left: kit.spacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

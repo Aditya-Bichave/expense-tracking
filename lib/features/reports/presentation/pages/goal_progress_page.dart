@@ -173,7 +173,7 @@ class GoalProgressPage extends StatelessWidget {
             ),
             SizedBox(height: kit.spacing.sm),
             LinearPercentIndicator(
-              padding: const BridgeEdgeInsets.only(),
+              padding: const EdgeInsets.only(),
               lineHeight: 10.0,
               percent: goal.percentageComplete.clamp(0.0, 1.0),
               barRadius: const Radius.circular(5),

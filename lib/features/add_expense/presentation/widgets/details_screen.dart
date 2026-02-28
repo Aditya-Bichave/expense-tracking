@@ -298,7 +298,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              AppBridgeListTile(
+              AppListTile(
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Camera'),
                 onTap: () async {
@@ -308,7 +308,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   }
                 },
               ),
-              AppBridgeListTile(
+              AppListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Gallery'),
                 onTap: () async {
@@ -357,7 +357,7 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
       height: 300,
       child: Column(
         children: [
-          AppBridgeListTile(
+          AppListTile(
             leading: const Icon(Icons.person),
             title: const Text('Personal Expense'),
             onTap: () async {
@@ -386,7 +386,7 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
                       itemCount: groups.length,
                       itemBuilder: (context, index) {
                         final group = groups[index];
-                        return AppBridgeListTile(
+                        return AppListTile(
                           leading: const Icon(Icons.group),
                           title: Text(group.name),
                           onTap: () async {

@@ -16,6 +16,7 @@ import 'package:expense_tracker/core/widgets/category_selector_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 /// A utility class containing static builder methods for common form fields.
 class CommonFormFields {
@@ -31,7 +32,7 @@ class CommonFormFields {
       String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
       if (svgPath.isNotEmpty) {
         return Padding(
-          padding: const BridgeEdgeInsets.all(12.0),
+          padding: const context.space.allMd,
           child: SvgPicture.asset(
             svgPath,
             width: 20,
@@ -183,11 +184,11 @@ class CommonFormFields {
   }) {
     final theme = Theme.of(context);
     return BridgeListTile(
-      contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
+      contentPadding: const context.space.hMd,
       shape:
           theme.inputDecorationTheme.enabledBorder ??
           OutlineInputBorder(
-            borderRadius: BridgeBorderRadius.circular(8.0),
+            borderRadius: Bridgecontext.kit.radii.small,
             borderSide: BorderSide(color: theme.dividerColor),
           ),
       leading: getPrefixIcon(context, iconKey, fallbackIcon),
@@ -287,7 +288,7 @@ class CommonFormFields {
     }
 
     return Padding(
-      padding: const BridgeEdgeInsets.symmetric(vertical: 8.0),
+      padding: const context.space.vSm,
       child: Center(
         child: IgnorePointer(
           ignoring: disabled,

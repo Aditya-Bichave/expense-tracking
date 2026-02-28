@@ -48,7 +48,7 @@ class GroupMembersTab extends StatelessWidget {
               final member = state.members[index];
               final isMe = member.userId == currentUser.id;
 
-              return AppBridgeListTile(
+              return AppListTile(
                 leading: AppAvatar(
                   initials: member.userId.substring(0, 2).toUpperCase(),
                   backgroundColor: kit.colors.primaryContainer,
@@ -103,7 +103,7 @@ class GroupMembersTab extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               kit.spacing.gapSm,
-              AppBridgeListTile(
+              AppListTile(
                 leading: Icon(Icons.security, color: kit.colors.textPrimary),
                 title: const Text('Change Role'),
                 onTap: () {
@@ -111,7 +111,7 @@ class GroupMembersTab extends StatelessWidget {
                   _showChangeRoleDialog(context, groupId, userId, currentRole);
                 },
               ),
-              AppBridgeListTile(
+              AppListTile(
                 leading: Icon(Icons.person_remove, color: kit.colors.error),
                 title: Text(
                   'Remove Member',

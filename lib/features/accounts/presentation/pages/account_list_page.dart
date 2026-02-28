@@ -19,6 +19,7 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AccountListPage extends StatelessWidget {
   const AccountListPage({super.key});
@@ -62,7 +63,7 @@ class AccountListPage extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const BridgeEdgeInsets.all(30.0),
+        padding: const context.space.allXxxl,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -101,7 +102,7 @@ class AccountListPage extends StatelessWidget {
               label: Text(AppLocalizations.of(context)!.addFirstAccount),
               onPressed: () => context.pushNamed(RouteNames.addAccount),
               style: ElevatedButton.styleFrom(
-                padding: const BridgeEdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
@@ -175,7 +176,7 @@ class AccountListPage extends StatelessWidget {
                   child: ListView.builder(
                     padding:
                         modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
-                        const BridgeEdgeInsets.only(top: 8.0, bottom: 80.0),
+                        const EdgeInsets.only(top: 8.0, bottom: 80.0),
                     itemCount: accounts.length,
                     itemBuilder: (ctx, index) {
                       final account = accounts[index];
@@ -186,7 +187,7 @@ class AccountListPage extends StatelessWidget {
                           /* ... background ... */
                           color: theme.colorScheme.errorContainer,
                           alignment: Alignment.centerRight,
-                          padding: const BridgeEdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: 20,
                           ),
                           child: Row(
@@ -211,7 +212,7 @@ class AccountListPage extends StatelessWidget {
                         confirmDismiss: (_) => _handleDelete(context, account),
                         // --- END CORRECTION ---
                         child:
-                            AccountBridgeCard(
+                            AccountCard(
                                   account: account,
                                   onTap: () =>
                                       _navigateToEditAccount(context, account),
@@ -228,7 +229,7 @@ class AccountListPage extends StatelessWidget {
               bodyContent = Center(
                 /* ... error display ... */
                 child: Padding(
-                  padding: const BridgeEdgeInsets.all(16.0),
+                  padding: const context.space.allLg,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

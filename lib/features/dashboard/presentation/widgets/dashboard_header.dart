@@ -18,9 +18,9 @@ class DashboardHeader extends StatelessWidget {
     // This widget combines the top cards
     return Column(
       children: [
-        OverallBalanceBridgeCard(overview: overview),
+        OverallBalanceCard(overview: overview),
         kit.spacing.gapSm, // Consistent spacing
-        IncomeExpenseSummaryBridgeCard(overview: overview),
+        IncomeExpenseSummaryCard(overview: overview),
       ],
     );
   }

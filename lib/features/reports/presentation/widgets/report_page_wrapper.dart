@@ -150,7 +150,7 @@ class ReportPageWrapper extends StatelessWidget {
                       color: kit.colors.textSecondary,
                     ),
                     title: Text('Export as CSV', style: kit.typography.body),
-                    contentPadding: const BridgeEdgeInsets.only(),
+                    contentPadding: const EdgeInsets.only(),
                   ),
                 ),
               PopupMenuItem<String>(
@@ -168,7 +168,7 @@ class ReportPageWrapper extends StatelessWidget {
                       color: kit.colors.textSecondary.withOpacity(0.5),
                     ),
                   ),
-                  contentPadding: const BridgeEdgeInsets.only(),
+                  contentPadding: const EdgeInsets.only(),
                 ),
               ),
             ],

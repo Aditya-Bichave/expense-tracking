@@ -39,11 +39,11 @@ class QuantumConfig implements IThemePaletteConfig {
   @override
   final Color? expenseGlowColorDark = null;
   // Quantum specific overrides for new properties (optional)
-  final EdgeInsets? cardOuterPadding = const BridgeEdgeInsets.symmetric(
+  final EdgeInsets? cardOuterPadding = const EdgeInsets.symmetric(
     horizontal: 8.0,
     vertical: 4.0,
   );
-  final EdgeInsets? listItemPadding = const BridgeEdgeInsets.symmetric(
+  final EdgeInsets? listItemPadding = const EdgeInsets.symmetric(
     horizontal: 12.0,
     vertical: 2.0,
   );

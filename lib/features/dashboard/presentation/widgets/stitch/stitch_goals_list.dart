@@ -25,7 +25,7 @@ class StitchGoalsList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: BridgeEdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: kit.spacing.lg,
             vertical: kit.spacing.sm,
           ),
@@ -52,19 +52,19 @@ class StitchGoalsList extends StatelessWidget {
         SizedBox(
           height: 140,
           child: ListView.separated(
-            padding: BridgeEdgeInsets.symmetric(horizontal: kit.spacing.lg),
+            padding: EdgeInsets.symmetric(horizontal: kit.spacing.lg),
             scrollDirection: Axis.horizontal,
             itemCount: goals.length,
             separatorBuilder: (_, __) => kit.spacing.gapMd,
             itemBuilder: (context, index) =>
-                _buildGoalBridgeCard(context, goals[index]),
+                _buildGoalCard(context, goals[index]),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildGoalBridgeCard(BuildContext context, Goal goal) {
+  Widget _buildGoalCard(BuildContext context, Goal goal) {
     final kit = context.kit;
     final currencySymbol = context.read<SettingsBloc>().state.currencySymbol;
     final progress =
@@ -75,7 +75,7 @@ class StitchGoalsList extends StatelessWidget {
     return SizedBox(
       width: 140,
       child: AppCard(
-        margin: const BridgeEdgeInsets.only(),
+        margin: const EdgeInsets.only(),
         padding: kit.spacing.allMd,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
