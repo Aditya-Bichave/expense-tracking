@@ -115,12 +115,16 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroups(remoteGroups);
 
       // Cleanup stale groups
+      // ⚡ Bolt Optimization: Batch deletion
+      // Reduces N+1 local db delete calls to a single batch delete, significantly improving performance for sync.
       final remoteGroupIds = remoteGroups.map((g) => g.id).toSet();
       final localGroups = _localDataSource.getGroups();
-      for (final lg in localGroups) {
-        if (!remoteGroupIds.contains(lg.id)) {
-          await _localDataSource.deleteGroup(lg.id);
-        }
+      final staleGroupIds = localGroups
+          .where((lg) => !remoteGroupIds.contains(lg.id))
+          .map((lg) => lg.id)
+          .toList();
+      if (staleGroupIds.isNotEmpty) {
+        await _localDataSource.deleteGroups(staleGroupIds);
       }
 
       // Fetch members for each group in parallel
@@ -133,12 +137,16 @@ class GroupsRepositoryImpl implements GroupsRepository {
             await _localDataSource.saveGroupMembers(remoteMembers);
 
             // Cleanup stale members
+            // ⚡ Bolt Optimization: Batch deletion
+            // Avoids O(N) single deletions, grouping them in a single fast I/O call.
             final remoteMemberIds = remoteMembers.map((m) => m.id).toSet();
             final localMembers = _localDataSource.getGroupMembers(group.id);
-            for (final lm in localMembers) {
-              if (!remoteMemberIds.contains(lm.id)) {
-                await _localDataSource.deleteMember(lm.id);
-              }
+            final staleMemberIds = localMembers
+                .where((lm) => !remoteMemberIds.contains(lm.id))
+                .map((lm) => lm.id)
+                .toList();
+            if (staleMemberIds.isNotEmpty) {
+              await _localDataSource.deleteMembers(staleMemberIds);
             }
           } catch (e) {
             // Log error or ignore partial failure
@@ -215,12 +223,16 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroupMembers(members);
 
       // Cleanup stale members
+      // ⚡ Bolt Optimization: Replace loop-based deletes with single batch `deleteAll`
+      // Greatly improves cleanup performance.
       final remoteMemberIds = members.map((m) => m.id).toSet();
       final localMembers = _localDataSource.getGroupMembers(groupId);
-      for (final lm in localMembers) {
-        if (!remoteMemberIds.contains(lm.id)) {
-          await _localDataSource.deleteMember(lm.id);
-        }
+      final staleMemberIds = localMembers
+          .where((lm) => !remoteMemberIds.contains(lm.id))
+          .map((lm) => lm.id)
+          .toList();
+      if (staleMemberIds.isNotEmpty) {
+        await _localDataSource.deleteMembers(staleMemberIds);
       }
 
       return const Right(null);
