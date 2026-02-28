@@ -10,6 +10,7 @@ import 'package:expense_tracker/core/utils/enums.dart'; // Shared FormStatus
 import 'package:expense_tracker/main.dart'; // Import logger
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddEditAccountPage extends StatelessWidget {
   final String? accountId;
@@ -42,7 +43,7 @@ class AddEditAccountPage extends StatelessWidget {
                   content: Text(
                     'Account ${isEditing ? 'updated' : 'added'} successfully!',
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: context.kit.colors.success,
                 ),
               );
             if (context.canPop()) {
@@ -63,7 +64,7 @@ class AddEditAccountPage extends StatelessWidget {
               ..showSnackBar(
                 SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: context.kit.colors.error,
                 ),
               );
             // Optionally clear the error message in the BLoC state here

@@ -8,7 +8,7 @@ import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:expense_tracker/core/widgets/common_form_fields.dart'; // Import common builders
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:intl/intl.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 // Callback remains the same, still submitting the value from the field as 'initialBalance'
 typedef AccountSubmitCallback =
@@ -107,7 +107,7 @@ class _AccountFormState extends State<AccountForm> {
               bottom: 40,
               top: 16,
             ) ??
-            const BridgeEdgeInsets.all(16.0).copyWith(bottom: 40),
+            context.space.allLg.copyWith(bottom: 40),
         children: [
           // Name
           CommonFormFields.buildNameField(
@@ -209,7 +209,7 @@ class _AccountFormState extends State<AccountForm> {
               widget.initialAccount == null ? 'Add Account' : 'Update Account',
             ),
             style: ElevatedButton.styleFrom(
-              padding: const BridgeEdgeInsets.symmetric(vertical: 16),
+              padding: context.space.vLg,
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,

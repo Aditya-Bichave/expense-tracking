@@ -11,7 +11,7 @@ import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class GoalsSubTab extends StatelessWidget {
   const GoalsSubTab({super.key});
@@ -31,7 +31,7 @@ class GoalsSubTab extends StatelessWidget {
               state.goals.isEmpty) {
             content = Center(
               child: Padding(
-                padding: const BridgeEdgeInsets.all(20.0),
+                padding: context.space.allXl,
                 child: Text(
                   "Error loading goals: ${state.errorMessage ?? 'Unknown error'}",
                   style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -43,7 +43,7 @@ class GoalsSubTab extends StatelessWidget {
               state.status != GoalListStatus.loading) {
             content = Center(
               child: Padding(
-                padding: const BridgeEdgeInsets.all(30.0),
+                padding: context.space.allXxxl,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -75,7 +75,7 @@ class GoalsSubTab extends StatelessWidget {
                       label: const Text('Add First Goal'),
                       onPressed: () => context.pushNamed(RouteNames.addGoal),
                       style: ElevatedButton.styleFrom(
-                        padding: const BridgeEdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 24,
                           vertical: 12,
                         ),
@@ -90,11 +90,11 @@ class GoalsSubTab extends StatelessWidget {
             content = ListView.builder(
               padding:
                   modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
-                  const BridgeEdgeInsets.only(top: 8.0, bottom: 90.0),
+                  const EdgeInsets.only(top: 8.0, bottom: 90.0),
               itemCount: state.goals.length,
               itemBuilder: (ctx, index) {
                 final goal = state.goals[index];
-                return GoalBridgeCard(
+                return GoalCard(
                   goal: goal,
                   onTap: () => context.pushNamed(
                     RouteNames.goalDetail,

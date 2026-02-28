@@ -43,21 +43,30 @@ class AppButton extends StatelessWidget {
 
     switch (size) {
       case AppButtonSize.small:
-        padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8);
+        padding = EdgeInsets.symmetric(
+          horizontal: context.space.md,
+          vertical: context.space.sm,
+        );
         textStyle = kit.typography.labelSmall.copyWith(
           fontWeight: FontWeight.w600,
         );
         iconSize = 16;
         break;
       case AppButtonSize.medium:
-        padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+        padding = EdgeInsets.symmetric(
+          horizontal: context.space.lg,
+          vertical: context.space.md,
+        );
         textStyle = kit.typography.labelMedium.copyWith(
           fontWeight: FontWeight.w600,
         );
         iconSize = 20;
         break;
       case AppButtonSize.large:
-        padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 16);
+        padding = EdgeInsets.symmetric(
+          horizontal: context.space.xxl,
+          vertical: context.space.lg,
+        );
         textStyle = kit.typography.labelLarge.copyWith(
           fontWeight: FontWeight.w600,
         );

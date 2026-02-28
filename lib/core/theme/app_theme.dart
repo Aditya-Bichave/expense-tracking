@@ -22,7 +22,6 @@ import 'config/quantum_configs.dart';
 import 'config/aether_configs.dart';
 import 'config/stitch_configs.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 // Structure to hold both light and dark theme data (Keep as is)
@@ -253,8 +252,14 @@ class AppTheme {
                   ? 6.0
                   : (modeTheme.cardStyle == CardStyle.glass ? 0 : 1.5)),
         margin: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const BridgeEdgeInsets.symmetric(horizontal: 8, vertical: 4)
-            : const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ? EdgeInsets.symmetric(
+                horizontal: context.space.sm,
+                vertical: context.space.xs,
+              )
+            : EdgeInsets.symmetric(
+                horizontal: context.space.lg,
+                vertical: context.space.sm,
+              ),
         shape: RoundedRectangleBorder(
           borderRadius: BridgeBorderRadius.circular(
             modeTheme.cardStyle == CardStyle.flat
@@ -276,8 +281,14 @@ class AppTheme {
 
       listTileTheme: ListTileThemeData(
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const BridgeEdgeInsets.symmetric(horizontal: 12, vertical: 2)
-            : const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            ? EdgeInsets.symmetric(
+                horizontal: context.space.md,
+                vertical: context.space.xxs,
+              )
+            : EdgeInsets.symmetric(
+                horizontal: context.space.lg,
+                vertical: context.space.xs,
+              ),
         dense: modeTheme.layoutDensity == LayoutDensity.compact,
         minVerticalPadding: modeTheme.layoutDensity == LayoutDensity.compact
             ? 8
@@ -315,7 +326,7 @@ class AppTheme {
         ),
         focusedBorder: (modePrefix == 'aether' || modePrefix == 'stitch')
             ? OutlineInputBorder(
-                borderRadius: BridgeBorderRadius.circular(16),
+                borderRadius: context.kit.radii.large,
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
               )
             : OutlineInputBorder(
@@ -329,8 +340,14 @@ class AppTheme {
             ? colorScheme.surface.withOpacity(0.05) // Generic low opacity fill
             : null,
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const BridgeEdgeInsets.symmetric(horizontal: 12, vertical: 10)
-            : const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ? EdgeInsets.symmetric(
+                horizontal: context.space.md,
+                vertical: context.space.sm,
+              )
+            : EdgeInsets.symmetric(
+                horizontal: context.space.lg,
+                vertical: context.space.md,
+              ),
         isDense: modeTheme.layoutDensity == LayoutDensity.compact,
         floatingLabelBehavior: modePrefix == 'quantum'
             ? FloatingLabelBehavior.always
@@ -350,8 +367,14 @@ class AppTheme {
               ? colorScheme.onPrimaryContainer
               : colorScheme.onPrimary,
           padding: modeTheme.layoutDensity == LayoutDensity.compact
-              ? const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 10)
-              : const BridgeEdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              ? EdgeInsets.symmetric(
+                  horizontal: context.space.lg,
+                  vertical: context.space.sm,
+                )
+              : EdgeInsets.symmetric(
+                  horizontal: context.space.xxl,
+                  vertical: context.space.md,
+                ),
           textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(
             borderRadius: BridgeBorderRadius.circular(

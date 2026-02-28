@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 // --- Enums ---
 enum LayoutDensity { compact, comfortable, spacious }
@@ -90,12 +91,12 @@ class AppModeTheme extends ThemeExtension<AppModeTheme> {
     required this.listEntranceAnimation,
     this.incomeGlowColor,
     this.expenseGlowColor,
-    this.pagePadding = const EdgeInsets.all(16.0),
+    this.pagePadding = context.space.allLg,
     this.cardOuterPadding = const EdgeInsets.symmetric(
       horizontal: 16.0,
       vertical: 8.0,
     ),
-    this.cardInnerPadding = const EdgeInsets.all(16.0),
+    this.cardInnerPadding = context.space.allLg,
     this.listItemPadding = const EdgeInsets.symmetric(
       horizontal: 16.0,
       vertical: 12.0,

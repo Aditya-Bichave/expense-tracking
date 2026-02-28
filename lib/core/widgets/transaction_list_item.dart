@@ -6,7 +6,6 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 // logger
 
 // Common widget to display either an Expense or Income in a ListTile format
@@ -112,7 +111,7 @@ class TransactionListItem extends StatelessWidget {
       ),
       onTap: onTap, // Use the passed onTap callback
       // onLongPress: onLongPress, // Uncomment if adding long press
-      contentPadding: const BridgeEdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: 16.0,
         vertical: 4.0,
       ),

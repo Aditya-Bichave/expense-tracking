@@ -127,7 +127,7 @@ class _GroupListPageState extends State<GroupListPage> {
               itemCount: state.groups.length,
               itemBuilder: (context, index) {
                 final group = state.groups[index];
-                return AppBridgeListTile(
+                return AppListTile(
                   leading: AppAvatar(
                     initials: _getInitialsForGroup(group.name),
                     backgroundColor: kit.colors.primaryContainer,

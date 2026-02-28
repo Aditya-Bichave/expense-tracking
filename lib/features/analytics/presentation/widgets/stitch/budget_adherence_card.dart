@@ -3,11 +3,11 @@ import 'dart:math';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetAdherenceCard extends StatelessWidget {
-  const BudgetAdherenceBridgeCard({super.key});
+  const BudgetAdherenceCard({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +15,8 @@ class BudgetAdherenceCard extends StatelessWidget {
     final primaryColor = theme.colorScheme.primary;
 
     return Container(
-      margin: const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const BridgeEdgeInsets.all(20),
+      margin: EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.sm),
+      padding: context.space.allXl,
       decoration: BridgeDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BridgeBorderRadius.circular(20),

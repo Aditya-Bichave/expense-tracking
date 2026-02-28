@@ -4,7 +4,7 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class RecurringRuleListItem extends StatelessWidget {
   final RecurringRule rule;
@@ -20,12 +20,12 @@ class RecurringRuleListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return BridgeCard(
-      margin: const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: EdgeInsets.symmetric(horizontal: context.space.lg, vertical: context.space.xs),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const BridgeEdgeInsets.all(16.0),
+          padding: context.space.allLg,
           child: Row(
             children: [
               CircleAvatar(
@@ -34,7 +34,7 @@ class RecurringRuleListItem extends StatelessWidget {
                 ).colorScheme.secondaryContainer,
                 child: Icon(
                   Icons.autorenew,
-                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  color: context.kit.colors.onSecondaryContainer,
                 ),
               ),
               const SizedBox(width: 16),
@@ -63,8 +63,8 @@ class RecurringRuleListItem extends StatelessWidget {
                     '${rule.transactionType == TransactionType.expense ? '-' : '+'}${rule.amount.toStringAsFixed(2)}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: rule.transactionType == TransactionType.expense
-                          ? Colors.red
-                          : Colors.green,
+                          ? context.kit.colors.danger
+                          : context.kit.colors.success,
                     ),
                   ),
                   const SizedBox(height: 4),

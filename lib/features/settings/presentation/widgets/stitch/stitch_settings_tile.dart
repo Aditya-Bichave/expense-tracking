@@ -22,7 +22,7 @@ class StitchSettingsTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final kit = context.kit;
 
-    return AppBridgeListTile(
+    return AppListTile(
       leading: Container(
         width: 40,
         height: 40,

@@ -17,7 +17,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetCard extends StatelessWidget {
   final BudgetWithStatus budgetStatus;
@@ -109,7 +109,7 @@ class BudgetCard extends StatelessWidget {
     if (isQuantum) {
       // Quantum: Minimalist bar, no text inside
       return LinearPercentIndicator(
-        padding: const BridgeEdgeInsets.only(),
+        padding: const EdgeInsets.only(),
         lineHeight: 6.0,
         percent: percentage,
         barRadius: const Radius.circular(3),
@@ -155,9 +155,9 @@ class BudgetCard extends StatelessWidget {
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
-        const BridgeEdgeInsets.symmetric(horizontal: 12, vertical: 5);
+        EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs);
     final cardPadding =
-        modeTheme?.cardInnerPadding ?? const BridgeEdgeInsets.all(12.0);
+        modeTheme?.cardInnerPadding ?? context.space.allMd;
 
     return AppCard(
       onTap: onTap,
@@ -181,12 +181,12 @@ class BudgetCard extends StatelessWidget {
                     ),
                     if (categoryIcons.isNotEmpty)
                       Padding(
-                        padding: const BridgeEdgeInsets.only(top: 4.0),
+                        padding: const EdgeInsets.only(top: 4.0),
                         child: Row(children: categoryIcons),
                       )
                     else if (budget.type == BudgetType.overall)
                       Padding(
-                        padding: const BridgeEdgeInsets.only(top: 4.0),
+                        padding: const EdgeInsets.only(top: 4.0),
                         child: Text(
                           'Overall Spending',
                           style: theme.textTheme.labelSmall?.copyWith(

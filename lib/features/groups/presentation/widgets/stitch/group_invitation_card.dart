@@ -6,7 +6,7 @@ import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 
 class GroupInvitationCard extends StatelessWidget {
-  const GroupInvitationBridgeCard({super.key});
+  const GroupInvitationCard({super.key});
 
   @override
   Widget build(BuildContext context) {

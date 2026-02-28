@@ -10,7 +10,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // Import for themed padding
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoriesSubTab extends StatelessWidget {
   const CategoriesSubTab({super.key});
@@ -22,8 +22,8 @@ class CategoriesSubTab extends StatelessWidget {
         availableIcons[category.iconName] ?? Icons.category_outlined;
 
     return AppCard(
-      margin: const BridgeEdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      padding: const BridgeEdgeInsets.only(),
+      margin: EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs),
+      padding: const EdgeInsets.only(),
       child: BridgeListTile(
         leading: CircleAvatar(
           backgroundColor: category.displayColor.withOpacity(0.15),
@@ -49,7 +49,7 @@ class CategoriesSubTab extends StatelessWidget {
     if (categories.isEmpty) {
       return Center(
         child: Padding(
-          padding: const BridgeEdgeInsets.all(20.0),
+          padding: context.space.allXl,
           child: Text(
             'No $title categories defined.',
             style: theme.textTheme.bodyMedium,
@@ -65,7 +65,7 @@ class CategoriesSubTab extends StatelessWidget {
       // --- MODIFIED: Apply themed padding OR a default, including bottom padding for FAB ---
       padding:
           modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
-          const BridgeEdgeInsets.only(
+          const EdgeInsets.only(
             top: 8.0,
             bottom: 90.0,
           ), // Increased bottom padding
@@ -138,7 +138,7 @@ class CategoriesSubTab extends StatelessWidget {
           // Add padding to avoid overlap with the FAB
           Padding(
             // Use themed horizontal padding if available
-            padding: BridgeEdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               modeTheme?.pagePadding.left ?? 16.0,
               16.0, // Top padding
               modeTheme?.pagePadding.right ?? 16.0,

@@ -8,7 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class RecurringRuleListPage extends StatelessWidget {
   const RecurringRuleListPage({super.key});
@@ -32,7 +32,7 @@ class RecurringRuleListPage extends StatelessWidget {
                 return const Center(child: Text('No recurring rules found.'));
               }
               return ListView.builder(
-                padding: const BridgeEdgeInsets.only(top: 8, bottom: 80),
+                padding: const EdgeInsets.only(top: 8, bottom: 80),
                 itemCount: state.rules.length,
                 itemBuilder: (context, index) {
                   final rule = state.rules[index];
@@ -40,12 +40,12 @@ class RecurringRuleListPage extends StatelessWidget {
                     key: Key(rule.id),
                     direction: DismissDirection.endToStart,
                     background: Container(
-                      color: Theme.of(context).colorScheme.errorContainer,
+                      color: context.kit.colors.errorContainer,
                       alignment: Alignment.centerRight,
-                      padding: const BridgeEdgeInsets.symmetric(horizontal: 20),
+                      padding: context.space.hXl,
                       child: Icon(
                         Icons.delete_sweep_outlined,
-                        color: Theme.of(context).colorScheme.onErrorContainer,
+                        color: context.kit.colors.onErrorContainer,
                       ),
                     ),
                     confirmDismiss: (_) async {

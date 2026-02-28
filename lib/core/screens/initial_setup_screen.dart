@@ -9,7 +9,7 @@ import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class InitialSetupScreen extends StatefulWidget {
   const InitialSetupScreen({super.key});
@@ -39,7 +39,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
     return BridgeScaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const BridgeEdgeInsets.all(32.0),
+          padding: context.space.allXxxl,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -75,7 +75,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  padding: const BridgeEdgeInsets.symmetric(vertical: 16),
+                  padding: context.space.vLg,
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                 ),
@@ -86,7 +86,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 icon: const Icon(Icons.explore_outlined),
                 label: const Text('Explore Demo Mode'),
                 style: OutlinedButton.styleFrom(
-                  padding: const BridgeEdgeInsets.symmetric(vertical: 14),
+                  padding: context.space.vMd,
                   side: BorderSide(color: theme.colorScheme.primary),
                   foregroundColor: theme.colorScheme.primary,
                 ),
@@ -101,7 +101,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 children: [
                   Expanded(child: Divider()),
                   Padding(
-                    padding: BridgeEdgeInsets.symmetric(horizontal: 16.0),
+                    padding: context.space.hLg,
                     child: Text("OR"),
                   ),
                   Expanded(child: Divider()),
@@ -110,7 +110,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
               const SizedBox(height: 16),
               BridgeElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  padding: const BridgeEdgeInsets.symmetric(vertical: 14),
+                  padding: context.space.vMd,
                   backgroundColor: theme.colorScheme.secondaryContainer,
                   foregroundColor: theme.colorScheme.onSecondaryContainer,
                 ),
@@ -162,11 +162,11 @@ class CurrencyPickerSheet extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const BridgeEdgeInsets.only(top: 8.0, bottom: 8.0),
+        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
         child: Wrap(
           children: <Widget>[
             Padding(
-              padding: const BridgeEdgeInsets.all(16.0),
+              padding: context.space.allLg,
               child: Text(
                 'Select Your Currency',
                 style: theme.textTheme.titleLarge,

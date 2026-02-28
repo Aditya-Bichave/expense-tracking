@@ -68,7 +68,7 @@ class _SecuritySettingsSectionState extends State<SecuritySettingsSection> {
       title: 'Security',
       child: Column(
         children: [
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(Icons.lock_outlined, color: kit.colors.textPrimary),
             title: Text('App Lock'),
             subtitle: Text('Require authentication to open app'),
@@ -78,7 +78,7 @@ class _SecuritySettingsSectionState extends State<SecuritySettingsSection> {
             ),
           ),
           if (_biometricEnabled)
-            AppBridgeListTile(
+            AppListTile(
               leading: Icon(Icons.lock_reset, color: kit.colors.textPrimary),
               title: Text('Change PIN'),
               trailing: Icon(

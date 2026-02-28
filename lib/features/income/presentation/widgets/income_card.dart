@@ -131,7 +131,7 @@ class IncomeCard extends StatelessWidget {
                 ),
                 if (income.notes != null && income.notes!.isNotEmpty)
                   Padding(
-                    padding: const BridgeEdgeInsets.only(top: 4.0),
+                    padding: const EdgeInsets.only(top: 4.0),
                     child: Row(
                       children: [
                         Icon(

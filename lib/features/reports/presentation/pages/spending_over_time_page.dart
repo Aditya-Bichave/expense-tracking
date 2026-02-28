@@ -296,7 +296,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
           }
         }
 
-        return AppBridgeListTile(
+        return AppListTile(
           dense: true,
           title: AppText(
             _formatDateHeader(item.date, data.granularity),

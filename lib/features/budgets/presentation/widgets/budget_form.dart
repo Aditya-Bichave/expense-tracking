@@ -15,7 +15,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 typedef BudgetSubmitCallback =
     Function(
@@ -259,7 +259,7 @@ class _BudgetFormState extends State<BudgetForm> {
               bottom: 40,
               top: 16,
             ) ??
-            const BridgeEdgeInsets.all(16.0).copyWith(bottom: 40),
+            context.space.allLg.copyWith(bottom: 40),
         children: [
           // Name
           CommonFormFields.buildNameField(
@@ -426,7 +426,7 @@ class _BudgetFormState extends State<BudgetForm> {
                         ),
                       ),
                       const Padding(
-                        padding: BridgeEdgeInsets.symmetric(horizontal: 8.0),
+                        padding: context.space.hSm,
                         child: Text('-', style: BridgeTextStyle(fontSize: 16)),
                       ),
                       Expanded(
@@ -485,7 +485,7 @@ class _BudgetFormState extends State<BudgetForm> {
               widget.initialBudget == null ? 'Add Budget' : 'Update Budget',
             ),
             style: ElevatedButton.styleFrom(
-              padding: const BridgeEdgeInsets.symmetric(vertical: 16),
+              padding: context.space.vLg,
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,

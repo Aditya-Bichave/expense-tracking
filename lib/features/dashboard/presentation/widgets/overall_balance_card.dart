@@ -12,7 +12,7 @@ import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 class OverallBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
 
-  const OverallBalanceBridgeCard({super.key, required this.overview});
+  const OverallBalanceCard({super.key, required this.overview});
 
   @override
   Widget build(BuildContext context) {

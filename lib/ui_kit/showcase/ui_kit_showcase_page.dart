@@ -254,7 +254,7 @@ class _UiKitShowcasePageState extends State<UiKitShowcasePage> {
                         title: 'Bottom Sheet',
                         child: Container(
                           height: 200,
-                          padding: const EdgeInsets.all(16),
+                          padding: context.space.allLg,
                           child: const Text('Sheet Content'),
                         ),
                       ),

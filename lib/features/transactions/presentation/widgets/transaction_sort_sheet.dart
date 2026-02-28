@@ -1,7 +1,7 @@
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 typedef ApplySortCallback =
     void Function(TransactionSortBy sortBy, SortDirection sortDirection);
@@ -68,13 +68,13 @@ class TransactionSortSheet extends StatelessWidget {
     }).toList();
 
     return Container(
-      padding: const BridgeEdgeInsets.symmetric(vertical: 16.0),
+      padding: context.space.vLg,
       child: Column(
         mainAxisSize: MainAxisSize.min, // Fit content
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const BridgeEdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
               vertical: 8.0,
             ),

@@ -7,8 +7,8 @@ import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_alert_dialog.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoryAppearanceFormSection extends StatelessWidget {
   final String selectedIconName;
@@ -50,7 +50,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
             displayThumbColor: true,
             paletteType: PaletteType.hsvWithHue,
             labelTypes: const [ColorLabelType.hex],
-            pickerAreaBorderRadius: BridgeBorderRadius.circular(8),
+            pickerAreaBorderRadius: context.kit.radii.small,
             hexInputBar: true,
           ),
         ),
@@ -83,10 +83,10 @@ class CategoryAppearanceFormSection extends StatelessWidget {
         Text("Appearance", style: theme.textTheme.titleMedium),
         const SizedBox(height: 10),
         BridgeListTile(
-          contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
+          contentPadding: context.space.hMd,
           shape: RoundedRectangleBorder(
             side: BorderSide(color: theme.dividerColor),
-            borderRadius: BridgeBorderRadius.circular(12),
+            borderRadius: context.kit.radii.medium,
           ),
           tileColor: theme.colorScheme.surfaceContainerHighest,
           leading: Padding(
@@ -103,10 +103,10 @@ class CategoryAppearanceFormSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         BridgeListTile(
-          contentPadding: const BridgeEdgeInsets.symmetric(horizontal: 12),
+          contentPadding: context.space.hMd,
           shape: RoundedRectangleBorder(
             side: BorderSide(color: theme.dividerColor),
-            borderRadius: BridgeBorderRadius.circular(12),
+            borderRadius: context.kit.radii.medium,
           ),
           tileColor: theme.colorScheme.surfaceContainerHighest,
           leading: Padding(

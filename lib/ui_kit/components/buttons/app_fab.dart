@@ -33,7 +33,7 @@ class AppFAB extends StatelessWidget {
       onPressed: onPressed,
       backgroundColor: kit.colors.primaryContainer,
       foregroundColor: kit.colors.onPrimaryContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: context.kit.radii.large),
       child: icon,
     );
   }

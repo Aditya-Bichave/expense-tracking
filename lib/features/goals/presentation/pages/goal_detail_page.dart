@@ -30,7 +30,7 @@ import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class GoalDetailPage extends StatefulWidget {
   final String goalId;
@@ -323,13 +323,13 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
 
     if (_isLoadingContributions) {
       return const Padding(
-        padding: BridgeEdgeInsets.symmetric(vertical: 20.0),
+        padding: context.space.vXl,
         child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_contributions.isEmpty) {
       return const Padding(
-        padding: BridgeEdgeInsets.symmetric(vertical: 24.0),
+        padding: context.space.vXxl,
         child: Center(child: Text("No contributions logged yet.")),
       );
     }
@@ -338,15 +338,15 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       children: [
         // --- Toggle Button ---
         Padding(
-          padding: const BridgeEdgeInsets.only(bottom: 8.0),
+          padding: const EdgeInsets.only(bottom: 8.0),
           child: CupertinoSlidingSegmentedControl<bool>(
             children: const {
               true: Padding(
-                padding: BridgeEdgeInsets.all(8),
+                padding: context.space.allSm,
                 child: Text('Chart'),
               ),
               false: Padding(
-                padding: BridgeEdgeInsets.all(8),
+                padding: context.space.allSm,
                 child: Text('List'),
               ),
             },
@@ -433,7 +433,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           background: Container(
             color: theme.colorScheme.errorContainer,
             alignment: Alignment.centerRight,
-            padding: const BridgeEdgeInsets.symmetric(horizontal: 20),
+            padding: context.space.hXl,
             child: Icon(
               Icons.delete_sweep_outlined,
               color: theme.colorScheme.onErrorContainer,
@@ -468,7 +468,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         appBar: AppBar(title: const Text("Error")),
         body: Center(
           child: Padding(
-            padding: const BridgeEdgeInsets.all(16.0),
+            padding: context.space.allLg,
             child: Text(
               _error ?? "Goal could not be loaded.",
               style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -496,17 +496,17 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
                       MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
-          const BridgeEdgeInsets.all(16.0).copyWith(bottom: 100),
+          context.space.allLg.copyWith(bottom: 100),
       children: [
         Center(
           child: Padding(
-            padding: const BridgeEdgeInsets.symmetric(vertical: 16.0),
+            padding: context.space.vLg,
             child: _buildProgressIndicatorWidget(context, modeTheme, uiMode),
           ),
         ),
         Center(
           child: Padding(
-            padding: const BridgeEdgeInsets.only(bottom: 8.0),
+            padding: const EdgeInsets.only(bottom: 8.0),
             child: Text(
               '${CurrencyFormatter.format(goal.totalSaved, settings.currencySymbol)} / ${CurrencyFormatter.format(goal.targetAmount, settings.currencySymbol)}',
               style: theme.textTheme.titleLarge?.copyWith(
@@ -517,14 +517,14 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         ),
         Center(
           child: Padding(
-            padding: const BridgeEdgeInsets.only(bottom: 24.0),
+            padding: const EdgeInsets.only(bottom: 24.0),
             child: Text(
               goal.isAchieved
                   ? 'Goal Achieved!'
                   : '${CurrencyFormatter.format(goal.amountRemaining, settings.currencySymbol)} remaining',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: goal.isAchieved
-                    ? Colors.green
+                    ? context.kit.colors.success
                     : theme.colorScheme.onSurfaceVariant,
               ),
             ),
@@ -533,7 +533,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         if (goal.targetDate != null)
           Center(
             child: Padding(
-              padding: const BridgeEdgeInsets.only(bottom: 16.0),
+              padding: const EdgeInsets.only(bottom: 16.0),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -555,7 +555,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           ),
         if (goal.description != null && goal.description!.isNotEmpty)
           Padding(
-            padding: const BridgeEdgeInsets.only(bottom: 24.0),
+            padding: const EdgeInsets.only(bottom: 24.0),
             child: Text(
               goal.description!,
               style: theme.textTheme.bodyMedium,
@@ -610,11 +610,11 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
               maxBlastForce: 7,
               minBlastForce: 3,
               particleDrag: 0.05,
-              colors: const [
-                Colors.green,
-                Colors.blue,
+              colors: [
+                context.kit.colors.success,
+                context.kit.colors.accent,
                 Colors.pink,
-                Colors.orange,
+                context.kit.colors.warn,
                 Colors.purple,
               ],
             ),

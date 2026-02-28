@@ -28,7 +28,7 @@ class HelpSettingsSection extends StatelessWidget {
       title: 'Help & Feedback',
       child: Column(
         children: [
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.help_outline_rounded,
               color: kit.colors.textPrimary,
@@ -45,7 +45,7 @@ class HelpSettingsSection extends StatelessWidget {
           ),
           Builder(
             builder: (context) {
-              return AppBridgeListTile(
+              return AppListTile(
                 leading: Icon(
                   Icons.share_outlined,
                   color: kit.colors.textPrimary,

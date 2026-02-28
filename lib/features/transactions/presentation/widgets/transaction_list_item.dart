@@ -53,7 +53,7 @@ class TransactionListItem extends StatelessWidget {
         ? kit.colors.error
         : kit.colors.primary; // Income as primary
 
-    return AppBridgeListTile(
+    return AppListTile(
       leading: CircleAvatar(
         backgroundColor: category.cachedDisplayColor.withOpacity(0.15),
         child: _buildIcon(context),

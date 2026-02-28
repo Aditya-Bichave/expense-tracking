@@ -32,7 +32,7 @@ import 'package:intl/intl.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetDetailPage extends StatefulWidget {
   final String budgetId;
@@ -263,7 +263,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     if (isQuantum) {
       return LinearPercentIndicator(
-        padding: const BridgeEdgeInsets.only(),
+        padding: const EdgeInsets.only(),
         lineHeight: 8.0,
         percent: percentage,
         barRadius: const Radius.circular(4),
@@ -312,13 +312,13 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     if (_isLoading) {
       // Check main loading flag here
       return const Padding(
-        padding: BridgeEdgeInsets.symmetric(vertical: 20.0),
+        padding: context.space.vXl,
         child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_relevantTransactions.isEmpty) {
       return const Padding(
-        padding: BridgeEdgeInsets.symmetric(vertical: 24.0),
+        padding: context.space.vXxl,
         child: Center(
           child: Text("No transactions found for this budget period."),
         ),
@@ -399,7 +399,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
           }
           return Padding(
             // Add padding between items
-            padding: const BridgeEdgeInsets.only(bottom: 4.0),
+            padding: const EdgeInsets.only(bottom: 4.0),
             child: item,
           );
         },
@@ -467,7 +467,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
             backgroundColor: category.displayColor.withOpacity(0.1),
             side: BorderSide.none,
             visualDensity: VisualDensity.compact,
-            padding: const BridgeEdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: 6,
               vertical: 0,
             ),
@@ -510,7 +510,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         appBar: AppBar(title: const Text("Error")),
         body: Center(
           child: Padding(
-            padding: const BridgeEdgeInsets.all(16.0),
+            padding: context.space.allLg,
             child: Text(
               _error ?? "Budget could not be loaded.",
               style: BridgeTextStyle(color: theme.colorScheme.error),
@@ -540,7 +540,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                       MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
-          const BridgeEdgeInsets.all(16.0).copyWith(bottom: 80),
+          context.space.allLg.copyWith(bottom: 80),
       children: [
         // Budget Status Header Card
         AppCard(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // To allow popping
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class PlaceholderScreen extends StatelessWidget {
   final String featureName;
@@ -25,7 +25,7 @@ class PlaceholderScreen extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: const BridgeEdgeInsets.all(30.0),
+          padding: context.space.allXxxl,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

@@ -8,7 +8,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class AssetDistributionSection extends StatelessWidget {
   final Map<String, double> accountBalances;
@@ -79,10 +78,7 @@ class AssetDistributionSection extends StatelessWidget {
     }
     return AppCard(
       margin: kit.spacing.vSm,
-      padding: BridgeEdgeInsets.only(
-        top: kit.spacing.md,
-        bottom: kit.spacing.xs,
-      ),
+      padding: EdgeInsets.only(top: kit.spacing.md, bottom: kit.spacing.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

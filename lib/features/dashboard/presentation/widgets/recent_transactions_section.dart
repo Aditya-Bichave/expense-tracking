@@ -12,7 +12,6 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_bridge/bridge_button.dart';
 import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart'; // Assuming this exists or using standard Circular
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class RecentTransactionsSection extends StatelessWidget {
   final Function(BuildContext, TransactionEntity) navigateToDetailOrEdit;
@@ -45,7 +44,7 @@ class RecentTransactionsSection extends StatelessWidget {
       children: [
         SectionHeader(
           title: 'Recent Activity',
-          padding: BridgeEdgeInsets.fromLTRB(
+          padding: EdgeInsets.fromLTRB(
             kit.spacing.lg,
             kit.spacing.xxl,
             kit.spacing.lg,
@@ -72,7 +71,7 @@ class RecentTransactionsSection extends StatelessWidget {
           )
         else if (recentItems.isEmpty)
           Padding(
-            padding: BridgeEdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: kit.spacing.lg,
               vertical: kit.spacing.xxl,
             ),
@@ -96,7 +95,7 @@ class RecentTransactionsSection extends StatelessWidget {
           ),
         // "View All" Button
         Padding(
-          padding: BridgeEdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: kit.spacing.lg,
             vertical: kit.spacing.md,
           ),

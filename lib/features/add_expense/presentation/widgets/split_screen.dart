@@ -22,7 +22,6 @@ import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class SplitScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -251,7 +250,7 @@ class SplitScreen extends StatelessWidget {
             itemBuilder: (ctx, index) {
               final member = state.groupMembers[index];
               final isYou = member.userId == state.currentUserId;
-              return AppBridgeListTile(
+              return AppListTile(
                 leading: AppAvatar(
                   initials: member.userId.substring(0, 1).toUpperCase(),
                   size: 32,
@@ -337,7 +336,7 @@ class _SplitRowState extends State<_SplitRow> {
     final bool isEditable = widget.mode != SplitMode.equal;
 
     return Padding(
-      padding: BridgeEdgeInsets.symmetric(
+      padding: EdgeInsets.symmetric(
         vertical: kit.spacing.sm, // vSm is sm
         horizontal: kit.spacing.md,
       ),

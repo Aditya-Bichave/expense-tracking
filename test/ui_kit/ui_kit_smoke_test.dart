@@ -291,7 +291,7 @@ void main() {
       expect(find.text('Content'), findsOneWidget);
     });
 
-    testWidgets('BridgeBottomSheet shows sheet', (tester) async {
+    testWidgets('AppBottomSheet shows sheet', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -312,7 +312,7 @@ void main() {
             body: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () {
-                  BridgeBottomSheet.show(
+                  AppBottomSheet.show(
                     context: context,
                     title: 'Sheet',
                     child: const Text('Sheet Content'),

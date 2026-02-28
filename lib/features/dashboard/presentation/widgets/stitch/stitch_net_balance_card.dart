@@ -11,12 +11,11 @@ import 'package:expense_tracker/ui_bridge/bridge_text.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class StitchNetBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
 
-  const StitchNetBalanceBridgeCard({super.key, required this.overview});
+  const StitchNetBalanceCard({super.key, required this.overview});
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +123,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: BridgeEdgeInsets.only(left: kit.spacing.lg),
+                        padding: EdgeInsets.only(left: kit.spacing.lg),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

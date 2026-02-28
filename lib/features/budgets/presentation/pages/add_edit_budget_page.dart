@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddEditBudgetPage extends StatelessWidget {
   final Budget? initialBudget; // Passed via GoRouter extra
@@ -36,7 +37,7 @@ class AddEditBudgetPage extends StatelessWidget {
                   content: Text(
                     'Budget ${isEditing ? 'updated' : 'added'} successfully!',
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: context.kit.colors.success,
                 ),
               );
             // Use context.pop() which is safer with GoRouter shells
@@ -51,7 +52,7 @@ class AddEditBudgetPage extends StatelessWidget {
               ..showSnackBar(
                 SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: context.kit.colors.error,
                 ),
               );
             // Clear error after showing

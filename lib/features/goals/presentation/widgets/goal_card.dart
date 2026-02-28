@@ -11,7 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class GoalCard extends StatelessWidget {
   final Goal goal;
@@ -109,11 +109,11 @@ class GoalCard extends StatelessWidget {
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
-        const BridgeEdgeInsets.symmetric(horizontal: 12, vertical: 5);
+        EdgeInsets.symmetric(horizontal: context.space.md, vertical: context.space.xs);
     final cardPadding =
-        modeTheme?.cardInnerPadding ?? const BridgeEdgeInsets.all(12.0);
+        modeTheme?.cardInnerPadding ?? context.space.allMd;
     final progressColor = goal.isAchieved
-        ? Colors.green.shade600
+        ? context.kit.colors.success
         : theme.colorScheme.primary;
 
     return AppCard(
@@ -154,7 +154,7 @@ class GoalCard extends StatelessWidget {
                       : theme.colorScheme.surfaceContainerHighest,
                   side: BorderSide.none,
                   visualDensity: VisualDensity.compact,
-                  padding: const BridgeEdgeInsets.symmetric(horizontal: 6),
+                  padding: context.space.hXs,
                 ),
             ],
           ),
@@ -199,7 +199,7 @@ class GoalCard extends StatelessWidget {
           // --- Pacing Info Display ---
           if (pacingInfo.isNotEmpty && !goal.isAchieved && !goal.isArchived)
             Padding(
-              padding: const BridgeEdgeInsets.only(top: 4.0),
+              padding: const EdgeInsets.only(top: 4.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -230,7 +230,7 @@ class GoalCard extends StatelessWidget {
                     : 'Remaining: ${CurrencyFormatter.format(goal.amountRemaining, currency)}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: goal.isAchieved
-                      ? Colors.green
+                      ? context.kit.colors.success
                       : theme.colorScheme.primary,
                   fontWeight: FontWeight.w500,
                 ),

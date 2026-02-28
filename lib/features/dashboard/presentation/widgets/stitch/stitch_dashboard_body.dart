@@ -44,7 +44,7 @@ class StitchDashboardBody extends StatelessWidget {
           SliverToBoxAdapter(
             child: Column(
               children: [
-                StitchNetBalanceBridgeCard(overview: overview),
+                StitchNetBalanceCard(overview: overview),
                 const StitchQuickActions(),
                 SizedBox(height: kit.spacing.lg),
                 StitchGoalsList(goals: overview.activeGoalsSummary),

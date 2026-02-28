@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class TopCategoriesList extends StatelessWidget {
   const TopCategoriesList({super.key});
@@ -13,7 +13,10 @@ class TopCategoriesList extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const BridgeEdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.space.lg,
+        vertical: context.space.lg,
+      ),
       child: Column(
         children: [
           Row(
@@ -41,7 +44,7 @@ class TopCategoriesList extends StatelessWidget {
           _buildCategoryItem(
             context,
             Icons.restaurant,
-            Colors.orange,
+            context.kit.colors.warn,
             'Food & Drinks',
             '\$840.20',
             0.75,
@@ -50,7 +53,7 @@ class TopCategoriesList extends StatelessWidget {
           _buildCategoryItem(
             context,
             Icons.directions_car,
-            Colors.blue,
+            context.kit.colors.accent,
             'Transport',
             '\$320.50',
             0.40,
@@ -85,7 +88,7 @@ class TopCategoriesList extends StatelessWidget {
           height: 48,
           decoration: BridgeDecoration(
             color: color.withOpacity(0.2),
-            borderRadius: BridgeBorderRadius.circular(12),
+            borderRadius: context.kit.radii.medium,
           ),
           child: Icon(icon, color: color),
         ),
@@ -112,7 +115,7 @@ class TopCategoriesList extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               ClipRRect(
-                borderRadius: BridgeBorderRadius.circular(4),
+                borderRadius: context.kit.radii.xsmall,
                 child: LinearProgressIndicator(
                   value: progress,
                   minHeight: 8,

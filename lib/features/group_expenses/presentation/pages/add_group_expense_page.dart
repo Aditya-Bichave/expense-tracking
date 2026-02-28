@@ -7,7 +7,7 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddGroupExpensePage extends StatefulWidget {
   final String groupId;
@@ -28,7 +28,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     return BridgeScaffold(
       appBar: AppBar(title: const Text('Add Group Expense')),
       body: Padding(
-        padding: const BridgeEdgeInsets.all(16.0),
+        padding: context.space.allLg,
         child: Column(
           children: [
             TextField(

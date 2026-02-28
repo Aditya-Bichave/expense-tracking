@@ -27,7 +27,7 @@ class AboutSettingsSection extends StatelessWidget {
       title: 'About',
       child: Column(
         children: [
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.info_outline_rounded,
               color: kit.colors.textPrimary,
@@ -52,7 +52,7 @@ class AboutSettingsSection extends StatelessWidget {
                     /* TODO: Navigate to a dedicated About screen if needed */
                   },
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(Icons.logout_rounded, color: kit.colors.textPrimary),
             title: Text('Logout'),
             subtitle: isInDemoMode ? Text('Disabled in Demo Mode') : null,
