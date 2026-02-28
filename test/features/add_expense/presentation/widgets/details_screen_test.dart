@@ -1,9 +1,3 @@
-// ignore_for_file: directives_ordering
-
-import 'package:bloc_test/bloc_test.dart';
-import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_bloc.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_event.dart';
 import 'package:expense_tracker/features/add_expense/presentation/bloc/add_expense_wizard_state.dart';
@@ -13,175 +7,146 @@ import 'package:expense_tracker/features/categories/domain/entities/category_typ
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_chip.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:get_it/get_it.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:dartz/dartz.dart';
+import 'package:intl/intl.dart';
 
-// Mocks
 class MockAddExpenseWizardBloc
     extends MockBloc<AddExpenseWizardEvent, AddExpenseWizardState>
     implements AddExpenseWizardBloc {}
 
-class MockCategoryRepository extends Mock implements CategoryRepository {}
-
 class MockGroupsRepository extends Mock implements GroupsRepository {}
 
-class FakeAddExpenseWizardState extends Fake implements AddExpenseWizardState {}
+class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 void main() {
   late MockAddExpenseWizardBloc mockBloc;
-  late MockCategoryRepository mockCategoryRepository;
   late MockGroupsRepository mockGroupsRepository;
-  final tDate = DateTime(2023, 1, 1);
+  late MockCategoryRepository mockCategoryRepository;
+
+  final testCategory = Category(
+    id: 'food',
+    name: 'Food',
+    iconName: 'food',
+    colorHex: '#FF0000',
+    type: CategoryType.expense,
+    isCustom: false,
+  );
 
   setUpAll(() {
-    registerFallbackValue(FakeAddExpenseWizardState());
+    registerFallbackValue(const WizardStarted());
     registerFallbackValue(const DescriptionChanged(''));
+    registerFallbackValue(CategorySelected(testCategory));
+    registerFallbackValue(DateChanged(DateTime.now()));
   });
 
-  setUp(() async {
+  setUp(() {
     mockBloc = MockAddExpenseWizardBloc();
-    mockCategoryRepository = MockCategoryRepository();
     mockGroupsRepository = MockGroupsRepository();
+    mockCategoryRepository = MockCategoryRepository();
 
-    // Reset GetIt
-    await GetIt.instance.reset();
-    GetIt.instance.registerSingleton<CategoryRepository>(
-      mockCategoryRepository,
+    when(() => mockBloc.state).thenReturn(
+      AddExpenseWizardState(
+        expenseDate: DateTime.now(),
+        transactionId: 'test-tx-id',
+      ),
     );
-    GetIt.instance.registerSingleton<GroupsRepository>(mockGroupsRepository);
+    when(
+      () => mockGroupsRepository.getGroups(),
+    ).thenAnswer((_) async => const Right(<GroupEntity>[]));
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([testCategory]));
+
+    sl.registerSingleton<GroupsRepository>(mockGroupsRepository);
+    sl.registerSingleton<CategoryRepository>(mockCategoryRepository);
+  });
+
+  tearDown(() {
+    sl.reset();
   });
 
   Widget createWidgetUnderTest() {
     return MaterialApp(
       home: BlocProvider<AddExpenseWizardBloc>.value(
         value: mockBloc,
-        child: DetailsScreen(onNext: (isGroup) {}, onBack: () {}),
+        child: DetailsScreen(onNext: (_) {}, onBack: () {}),
       ),
     );
   }
 
-  group('DetailsScreen', () {
-    testWidgets('renders input fields and loads categories', (tester) async {
-      when(() => mockBloc.state).thenReturn(
-        AddExpenseWizardState(
-          currentUserId: 'u1',
-          transactionId: 't1',
-          expenseDate: tDate,
-        ),
-      );
-      when(
-        () => mockCategoryRepository.getAllCategories(),
-      ).thenAnswer((_) async => const Right(<Category>[]));
+  testWidgets('DetailsScreen renders correctly', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle(); // Wait for FutureBuilder
+    expect(find.text('Details'), findsOneWidget);
+    expect(find.text('Personal'), findsOneWidget);
+    expect(find.text('Description'), findsOneWidget);
+    expect(find.text('Category'), findsOneWidget);
+    expect(find.text('Attach Receipt'), findsOneWidget);
+    expect(find.text('Notes (Optional)'), findsOneWidget);
+    expect(find.text('Food'), findsOneWidget); // Category chip
+  });
 
-      expect(find.text('Details'), findsOneWidget);
-      expect(find.byType(TextField), findsNWidgets(2)); // Description + Notes
-      expect(find.text('Description'), findsOneWidget);
-      expect(find.text('Notes (Optional)'), findsOneWidget);
-    });
+  testWidgets('DetailsScreen entering description updates bloc', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
 
-    testWidgets('populates description from state', (tester) async {
-      when(() => mockBloc.state).thenReturn(
-        AddExpenseWizardState(
-          currentUserId: 'u1',
-          transactionId: 't1',
-          expenseDate: tDate,
-          description: 'Lunch',
-        ),
-      );
-      when(
-        () => mockCategoryRepository.getAllCategories(),
-      ).thenAnswer((_) async => const Right(<Category>[]));
+    final appTextFieldFinder = find.widgetWithText(AppTextField, 'Description');
+    final textFieldFinder = find.descendant(
+      of: appTextFieldFinder,
+      matching: find.byType(TextFormField),
+    );
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    await tester.enterText(textFieldFinder, 'Test Expense');
+    await tester.pump();
 
-      expect(find.text('Lunch'), findsOneWidget);
-    });
+    verify(
+      () => mockBloc.add(const DescriptionChanged('Test Expense')),
+    ).called(1);
+  });
 
-    testWidgets('updates description on change', (tester) async {
-      when(() => mockBloc.state).thenReturn(
-        AddExpenseWizardState(
-          currentUserId: 'u1',
-          transactionId: 't1',
-          expenseDate: tDate,
-        ),
-      );
-      when(
-        () => mockCategoryRepository.getAllCategories(),
-      ).thenAnswer((_) async => const Right(<Category>[]));
+  testWidgets('DetailsScreen selecting category updates bloc', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+    await tester.tap(find.text('Food'));
+    await tester.pump();
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Description'),
-        'Dinner',
-      );
+    verify(() => mockBloc.add(CategorySelected(testCategory))).called(1);
+    verify(() => mockBloc.add(const DescriptionChanged('Food'))).called(1);
+  });
 
-      verify(() => mockBloc.add(const DescriptionChanged('Dinner'))).called(1);
-    });
+  testWidgets('DetailsScreen opens date picker', (tester) async {
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
 
-    testWidgets('displays categories and allows selection', (tester) async {
-      final tCategory = Category(
-        id: 'c1',
-        name: 'Food',
-        iconName: 'food',
-        colorHex: 'FFF',
-        isCustom: false,
-        type: CategoryType.expense,
-      );
+    // Find the AppCard containing the calendar icon
+    final calendarIconFinder = find.byIcon(Icons.calendar_today);
+    final appCardFinder = find.ancestor(
+      of: calendarIconFinder,
+      matching: find.byType(AppCard),
+    );
 
-      when(() => mockBloc.state).thenReturn(
-        AddExpenseWizardState(
-          currentUserId: 'u1',
-          transactionId: 't1',
-          expenseDate: tDate,
-        ),
-      );
-      // Use explicit type for Right to avoid dynamic inference issues
-      when(
-        () => mockCategoryRepository.getAllCategories(),
-      ).thenAnswer((_) async => Right<Failure, List<Category>>([tCategory]));
+    // Tap the AppCard
+    await tester.tap(appCardFinder);
+    await tester.pumpAndSettle();
 
-      // Verify SL setup
-      final repo = GetIt.instance<CategoryRepository>();
-      expect(repo, mockCategoryRepository);
+    // Verify DatePicker is shown. The header typically contains year or "Select date"
+    expect(find.byType(DatePickerDialog), findsOneWidget);
 
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump(); // Start Future
-      await tester.pump(
-        const Duration(milliseconds: 100),
-      ); // Wait for future completion
-      await tester.pumpAndSettle(); // Settle animations
-
-      // Verify repository was called
-      verify(
-        () => mockCategoryRepository.getAllCategories(),
-      ).called(greaterThan(0));
-
-      // Check if error state is shown
-      if (find.text('Error loading categories').evaluate().isNotEmpty) {
-        fail('Categories failed to load');
-      }
-
-      // Check if still loading
-      if (find.byType(CircularProgressIndicator).evaluate().isNotEmpty) {
-        fail('Still loading categories');
-      }
-
-      // Verify ChoiceChip exists
-      expect(find.byType(ChoiceChip), findsOneWidget);
-      // Verify Label
-      expect(find.text('Food'), findsOneWidget);
-
-      await tester.tap(find.text('Food'));
-      verify(() => mockBloc.add(any(that: isA<CategorySelected>()))).called(1);
-    });
+    // Tap cancel
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
   });
 }
