@@ -184,8 +184,9 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
       },
       body: BlocBuilder<SpendingTimeReportBloc, SpendingTimeReportState>(
         builder: (context, state) {
-          if (state is SpendingTimeReportLoading)
+          if (state is SpendingTimeReportLoading) {
             return const Center(child: CircularProgressIndicator());
+          }
           if (state is SpendingTimeReportError) {
             return Center(
               child: Text(
@@ -217,31 +218,36 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
                 settingsState.uiMode == UIMode.quantum &&
                 (modeTheme?.preferDataTableForLists ?? false);
 
-            return ListView(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16.0,
-                    horizontal: 8.0,
+            // OPTIMIZATION: Use CustomScrollView with Slivers to avoid shrinkWrap in nested lists.
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 16.0,
+                      horizontal: 8.0,
+                    ),
+                    child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
                   ),
-                  child: AspectRatio(aspectRatio: 16 / 9, child: chartWidget),
                 ),
-                const Divider(),
+                const SliverToBoxAdapter(child: Divider()),
                 if (showTable)
-                  _buildDataTable(
-                    context,
-                    reportData,
-                    settingsState,
-                    _showComparison,
+                  SliverToBoxAdapter(
+                    child: _buildDataTable(
+                      context,
+                      reportData,
+                      settingsState,
+                      _showComparison,
+                    ),
                   )
                 else
-                  _buildDataList(
+                  _buildDataListSliver(
                     context,
                     reportData,
                     settingsState,
                     _showComparison,
                   ),
-                const SizedBox(height: 80),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             );
           }
@@ -262,7 +268,7 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     }
   }
 
-  Widget _buildDataList(
+  Widget _buildDataListSliver(
     BuildContext context,
     SpendingTimeReportData data,
     SettingsState settings,
@@ -271,9 +277,8 @@ class _SpendingOverTimePageState extends State<SpendingOverTimePage> {
     final theme = Theme.of(context);
     final currencySymbol = settings.currencySymbol;
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    // Use SliverList.separated if available, or SliverList with delegate
+    return SliverList.separated(
       itemCount: data.spendingData.length,
       itemBuilder: (context, index) {
         final item = data.spendingData[index];
