@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/core/services/upi_service.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 
 class SettlementDialog extends StatelessWidget {
   final String receiverName;
@@ -19,18 +22,17 @@ class SettlementDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Settle with $receiverName'),
-      content: Column(
+    final kit = context.kit;
+
+    return AppDialog(
+      title: 'Settle with $receiverName',
+      contentWidget: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '$amount $currency',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 16),
+          Text('$amount $currency', style: kit.typography.display),
+          kit.spacing.gapLg,
           if (receiverUpiId != null && receiverUpiId!.isNotEmpty) ...[
-            ElevatedButton.icon(
+            AppButton(
               onPressed: () {
                 UpiService.launchUpiPayment(
                   context: context,
@@ -39,66 +41,54 @@ class SettlementDialog extends StatelessWidget {
                   amount: amount,
                   transactionNote: 'Settlement via Spend Savvy',
                 ).then((_) {
-                  // Prompt user after return
                   if (context.mounted) {
                     _showConfirmationDialog(context);
                   }
                 });
               },
               icon: const Icon(Icons.payment),
-              label: const Text('Pay via UPI'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-              ),
+              label: 'Pay via UPI',
+              variant: AppButtonVariant.primary,
             ),
-            const SizedBox(height: 8),
+            kit.spacing.gapSm,
             Text(
               'VPA: $receiverUpiId',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: kit.typography.caption.copyWith(
+                color: kit.colors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 16),
+            kit.spacing.gapLg,
           ],
-          const Text('Or mark as paid manually if you used cash/other.'),
+          Text(
+            'Or mark as paid manually if you used cash/other.',
+            style: kit.typography.body,
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            onSettled();
-            Navigator.pop(context);
-          },
-          child: const Text('Mark as Paid'),
-        ),
-      ],
+      confirmLabel: 'Mark as Paid',
+      onConfirm: () {
+        onSettled();
+        Navigator.pop(context);
+      },
+      cancelLabel: 'Cancel',
+      onCancel: () => Navigator.pop(context),
     );
   }
 
   void _showConfirmationDialog(BuildContext context) {
-    showDialog(
+    AppDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Payment Successful?'),
-        content: const Text('Did the UPI transaction complete successfully?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Not yet'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context); // Close confirmation
-              onSettled(); // Trigger settlement logic
-              Navigator.pop(context); // Close parent settlement dialog
-            },
-            child: const Text('Yes, Record Settlement'),
-          ),
-        ],
-      ),
+      title: 'Payment Successful?',
+      content: 'Did the UPI transaction complete successfully?',
+      confirmLabel: 'Yes, Record Settlement',
+      onConfirm: () {
+        Navigator.pop(context); // Close confirmation
+        onSettled(); // Trigger settlement logic
+        Navigator.pop(context); // Close parent settlement dialog
+      },
+      cancelLabel: 'Not yet',
+      onCancel: () => Navigator.pop(context),
     );
   }
 }

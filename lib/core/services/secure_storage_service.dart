@@ -48,18 +48,27 @@ class SecureStorageService {
     } else {
       try {
         return base64Url.decode(keyString);
-      } catch (e, s) {
+      } on FormatException catch (e, s) {
         final snippet = keyString.length > 4
             ? keyString.substring(0, 4)
             : keyString;
-        _logger.severe(
-          'Hive encryption key corrupted. Key snippet: $snippet\nError: $e\n$s',
-        );
+        try {
+          _logger.severe(
+            'Hive encryption key corrupted. Key snippet: $snippet\nError: $e\n$s',
+          );
+        } catch (_) {
+          // Ignore logging errors to ensure we throw the correct exception
+        }
         // CRITICAL: Do NOT regenerate the key automatically.
         // Doing so would render all existing encrypted data unreadable.
         // We throw an error so the app can handle it (e.g. prompt for restore/reset).
         throw HiveKeyCorruptionException(
           'Hive encryption key is corrupted and cannot be decoded.',
+        );
+      } catch (e, s) {
+        _logger.severe('Unexpected error decoding Hive key: $e\n$s');
+        throw HiveKeyCorruptionException(
+          'Unexpected error decoding Hive key: $e',
         );
       }
     }

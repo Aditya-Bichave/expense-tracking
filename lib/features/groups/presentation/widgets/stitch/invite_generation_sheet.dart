@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_dropdown.dart';
 
 class InviteGenerationSheet extends StatefulWidget {
   final void Function(String role, int expiry, int limit) onGenerate;
@@ -17,64 +19,92 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final kit = context.kit;
+
+    return Container(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
+        left: kit.spacing.lg,
+        right: kit.spacing.lg,
+        top: kit.spacing.lg,
+      ),
+      decoration: BoxDecoration(
+        color: kit.colors.surface,
+        borderRadius: kit.radii.sheet,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Invite Members', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          AppDropdownFormField<String>(
-            labelText: 'Role',
+          Text('Invite Members', style: kit.typography.title),
+          kit.spacing.gapMd,
+          AppDropdown<String>(
+            label: 'Role',
             value: _role,
-            items: const [
-              DropdownMenuItem(value: 'member', child: Text('Member')),
-              DropdownMenuItem(value: 'viewer', child: Text('Viewer')),
+            items: [
+              DropdownMenuItem(
+                value: 'member',
+                child: Text('Member', style: kit.typography.body),
+              ),
+              DropdownMenuItem(
+                value: 'viewer',
+                child: Text('Viewer', style: kit.typography.body),
+              ),
             ],
             onChanged: (val) {
               if (val != null) setState(() => _role = val);
             },
           ),
-          const SizedBox(height: 12),
-          AppDropdownFormField<int>(
-            labelText: 'Expires In',
+          kit.spacing.gapSm,
+          AppDropdown<int>(
+            label: 'Expires In',
             value: _expiry,
-            items: const [
-              DropdownMenuItem(value: 1, child: Text('1 Day')),
-              DropdownMenuItem(value: 7, child: Text('7 Days')),
-              DropdownMenuItem(value: 0, child: Text('Never')),
+            items: [
+              DropdownMenuItem(
+                value: 1,
+                child: Text('1 Day', style: kit.typography.body),
+              ),
+              DropdownMenuItem(
+                value: 7,
+                child: Text('7 Days', style: kit.typography.body),
+              ),
+              DropdownMenuItem(
+                value: 0,
+                child: Text('Never', style: kit.typography.body),
+              ),
             ],
             onChanged: (val) {
               if (val != null) setState(() => _expiry = val);
             },
           ),
-          const SizedBox(height: 12),
-          AppDropdownFormField<int>(
-            labelText: 'Usage Limit',
+          kit.spacing.gapSm,
+          AppDropdown<int>(
+            label: 'Usage Limit',
             value: _limit,
-            items: const [
-              DropdownMenuItem(value: 0, child: Text('Unlimited')),
-              DropdownMenuItem(value: 1, child: Text('Single Use')),
+            items: [
+              DropdownMenuItem(
+                value: 0,
+                child: Text('Unlimited', style: kit.typography.body),
+              ),
+              DropdownMenuItem(
+                value: 1,
+                child: Text('Single Use', style: kit.typography.body),
+              ),
             ],
             onChanged: (val) {
               if (val != null) setState(() => _limit = val);
             },
           ),
-          const SizedBox(height: 24),
-          ElevatedButton(
+          kit.spacing.gapXl,
+          AppButton(
             onPressed: () {
               Navigator.pop(context);
               widget.onGenerate(_role, _expiry, _limit);
             },
-            child: const Text('Generate Link'),
+            label: 'Generate Link',
+            isFullWidth: true,
           ),
-          const SizedBox(height: 16),
+          kit.spacing.gapLg,
         ],
       ),
     );

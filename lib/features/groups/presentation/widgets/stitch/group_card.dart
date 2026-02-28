@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 
 enum GroupStatus { owed, owe, settled }
 
@@ -24,36 +27,29 @@ class GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
 
     Color amountColor;
     String statusText;
 
     switch (status) {
       case GroupStatus.owed:
-        amountColor = theme.colorScheme.primary;
+        amountColor = kit.colors.primary;
         statusText = 'You are owed';
         break;
       case GroupStatus.owe:
-        amountColor = theme.colorScheme.error;
+        amountColor = kit.colors.error;
         statusText = 'You owe';
         break;
       case GroupStatus.settled:
-        amountColor = theme.colorScheme.onSurfaceVariant;
+        amountColor = kit.colors.textSecondary;
         statusText = 'All settled';
         break;
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.2),
-        ),
-      ),
+    return AppCard(
+      margin: kit.spacing.vSm,
+      padding: kit.spacing.allMd,
       child: Row(
         children: [
           Container(
@@ -61,11 +57,11 @@ class GroupCard extends StatelessWidget {
             height: 56,
             decoration: BoxDecoration(
               color: iconColor.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: kit.radii.medium,
             ),
             child: Icon(icon, color: iconColor, size: 28),
           ),
-          const SizedBox(width: 16),
+          kit.spacing.gapLg,
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,31 +71,24 @@ class GroupCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+                      style: kit.typography.bodyStrong.copyWith(fontSize: 16),
                     ),
                     Text(
                       timeAgo,
-                      style: TextStyle(
-                        fontSize: 10,
+                      style: kit.typography.caption.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                          0.7,
-                        ),
+                        color: kit.colors.textSecondary.withOpacity(0.7),
                       ),
                     ),
                   ],
                 ),
                 Text(
                   description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
+                  style: kit.typography.caption.copyWith(
+                    color: kit.colors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                kit.spacing.gapXs,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -107,9 +96,9 @@ class GroupCard extends StatelessWidget {
                     // Mock avatars
                     Row(
                       children: [
-                        _buildAvatar(Colors.blue),
-                        const SizedBox(width: -8),
-                        _buildAvatar(Colors.red),
+                        _buildAvatar(kit.colors.primary, kit),
+                        SizedBox(width: -8),
+                        _buildAvatar(kit.colors.secondary, kit),
                       ],
                     ),
                     Column(
@@ -117,16 +106,14 @@ class GroupCard extends StatelessWidget {
                       children: [
                         Text(
                           statusText,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: theme.colorScheme.onSurfaceVariant,
+                          style: kit.typography.caption.copyWith(
+                            color: kit.colors.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         Text(
                           amount,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                          style: kit.typography.bodyStrong.copyWith(
                             fontSize: 16,
                             color: amountColor,
                           ),
@@ -143,14 +130,14 @@ class GroupCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(Color color) {
+  Widget _buildAvatar(Color color, AppKitTheme kit) {
     return Container(
       width: 24,
       height: 24,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
+        border: Border.all(color: kit.colors.surface, width: 2),
       ),
     );
   }
