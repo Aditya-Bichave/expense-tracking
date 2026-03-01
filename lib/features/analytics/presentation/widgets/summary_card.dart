@@ -86,35 +86,31 @@ class SummaryCard extends StatelessWidget {
                     Text('By Category:', style: theme.textTheme.titleMedium),
                     const SizedBox(height: 8),
                     // Use ListView for potentially many categories
-                    ListView.separated(
-                      shrinkWrap: true, // Important inside Column
-                      physics:
-                          const NeverScrollableScrollPhysics(), // Disable ListView's own scrolling
-                      itemCount: summary.categoryBreakdown.length,
-                      itemBuilder: (context, index) {
-                        final entry = summary.categoryBreakdown.entries
-                            .elementAt(index);
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              entry.key,
-                              style: theme.textTheme.bodyMedium,
-                            ), // Category Name
-                            Text(
-                              CurrencyFormatter.format(
-                                entry.value,
-                                currencySymbol,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: summary.categoryBreakdown.entries.map((entry) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                entry.key,
+                                style: theme.textTheme.bodyMedium,
                               ),
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
+                              Text(
+                                CurrencyFormatter.format(
+                                  entry.value,
+                                  currencySymbol,
+                                ),
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ), // Amount
-                          ],
+                            ],
+                          ),
                         );
-                      },
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 6),
+                      }).toList(),
                     ),
                   ] else if (summary.totalExpenses > 0) ...[
                     // Show only if total > 0 but breakdown is empty
