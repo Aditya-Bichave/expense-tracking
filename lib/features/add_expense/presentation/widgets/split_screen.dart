@@ -24,7 +24,7 @@ class SplitScreen extends StatelessWidget {
             const SnackBar(content: Text('Expense added securely.')),
           );
           if (Navigator.of(context).canPop()) {
-            if (context.mounted) Navigator.of(context).pop();
+            Navigator.of(context).pop();
           }
         } else if (state.status == FormStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(

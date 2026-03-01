@@ -50,7 +50,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
             const SnackBar(content: Text('Expense added successfully.')),
           );
           if (Navigator.of(context).canPop()) {
-            if (context.mounted) Navigator.of(context).pop();
+            Navigator.of(context).pop();
           }
         } else if (state.status == FormStatus.error) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -291,7 +291,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               leading: const Icon(Icons.camera_alt),
               title: const Text('Camera'),
               onTap: () async {
-                if (context.mounted) Navigator.pop(context);
+                Navigator.pop(context);
                 if (parentContext.mounted)
                   await _pickReceipt(parentContext, ImageSource.camera);
               },
@@ -300,7 +300,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               leading: const Icon(Icons.photo_library),
               title: const Text('Gallery'),
               onTap: () async {
-                if (context.mounted) Navigator.pop(context);
+                Navigator.pop(context);
                 if (parentContext.mounted)
                   await _pickReceipt(parentContext, ImageSource.gallery);
               },
@@ -341,7 +341,7 @@ class _GroupSelectorSheet extends StatelessWidget {
               context.read<AddExpenseWizardBloc>().add(
                 const GroupSelected(null),
               );
-              if (context.mounted) Navigator.pop(context);
+              Navigator.pop(context);
             },
           ),
           const Divider(),
@@ -370,7 +370,7 @@ class _GroupSelectorSheet extends StatelessWidget {
                             context.read<AddExpenseWizardBloc>().add(
                               GroupSelected(group),
                             );
-                            if (context.mounted) Navigator.pop(context);
+                            Navigator.pop(context);
                           },
                         );
                       },

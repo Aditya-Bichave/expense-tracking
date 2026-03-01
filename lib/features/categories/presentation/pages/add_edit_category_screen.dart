@@ -58,7 +58,7 @@ class AddEditCategoryScreen extends StatelessWidget {
             final bloc = context.read<CategoryManagementBloc>();
             if (isEditing) {
               bloc.add(UpdateCategory(category: categoryObject));
-              if (context.mounted) Navigator.of(context).pop();
+              Navigator.of(context).pop();
             } else {
               bloc.add(
                 AddCategory(

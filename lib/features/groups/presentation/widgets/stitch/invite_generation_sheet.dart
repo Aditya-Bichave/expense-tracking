@@ -69,7 +69,7 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
-              if (context.mounted) Navigator.pop(context);
+              Navigator.pop(context);
               widget.onGenerate(_role, _expiry, _limit);
             },
             child: const Text('Generate Link'),

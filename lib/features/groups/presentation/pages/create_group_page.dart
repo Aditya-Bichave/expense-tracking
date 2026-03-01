@@ -55,7 +55,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
       child: BlocListener<CreateGroupBloc, CreateGroupState>(
         listener: (context, state) {
           if (state is CreateGroupSuccess) {
-            if (context.mounted) context.pop(); // Go back to list
+            context.pop(); // Go back to list
           } else if (state is CreateGroupFailure) {
             ScaffoldMessenger.of(
               context,

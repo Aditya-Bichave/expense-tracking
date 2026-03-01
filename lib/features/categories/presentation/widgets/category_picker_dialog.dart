@@ -78,7 +78,7 @@ class _CategoryPickerDialogContentState
   }
 
   void _navigateToAddCategory() {
-    if (context.mounted) Navigator.pop(context);
+    Navigator.pop(context);
     final categoryType = widget.categoryType == CategoryTypeFilter.expense
         ? CategoryType.expense
         : CategoryType.income;

@@ -110,12 +110,12 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
         transactionType: _tempSelectedTransactionType, // Pass the value
       ),
     );
-    if (context.mounted) Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   void _clearFilters() {
     context.read<ReportFilterBloc>().add(const ClearReportFilters());
-    if (context.mounted) Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   @override

@@ -38,7 +38,7 @@ class AddEditBudgetPage extends StatelessWidget {
                 ),
               );
             // Use context.pop() which is safer with GoRouter shells
-            if (context.canPop()) if (context.mounted) context.pop();
+            if (context.canPop()) context.pop();
           } else if (state.status == AddEditBudgetStatus.error &&
               state.errorMessage != null) {
             log.warning(

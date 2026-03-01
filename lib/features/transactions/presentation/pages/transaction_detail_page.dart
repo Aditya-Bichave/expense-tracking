@@ -67,7 +67,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
       log.info("[TxnDetailPage] Delete confirmed.");
       context.read<TransactionListBloc>().add(DeleteTransaction(_transaction!));
       if (context.canPop()) {
-        if (context.mounted) context.pop();
+        context.pop();
       } else {
         context.go(RouteNames.transactionsList);
       }

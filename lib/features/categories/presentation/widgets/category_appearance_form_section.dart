@@ -57,7 +57,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
             child: const Text('Select'),
             onPressed: () {
               onColorSelected(pickerColor);
-              if (context.mounted) Navigator.of(context).pop();
+              Navigator.of(context).pop();
             },
           ),
         ],

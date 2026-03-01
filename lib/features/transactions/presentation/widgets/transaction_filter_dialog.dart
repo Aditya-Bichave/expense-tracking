@@ -322,7 +322,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           key: const ValueKey('button_filterDialog_clear'),
           onPressed: () {
             widget.onClearFilter();
-            if (context.mounted) Navigator.of(context).pop();
+            Navigator.of(context).pop();
           },
           child: const Text('Clear All'),
         ),
@@ -341,7 +341,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
               _selectedAccountId,
               _selectedCategoryId,
             );
-            if (context.mounted) Navigator.of(context).pop();
+            Navigator.of(context).pop();
           },
           child: const Text('Apply Filters'),
         ),
