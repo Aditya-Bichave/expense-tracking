@@ -39,7 +39,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
     return BridgeScaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(32.0),
+          padding: EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -159,7 +159,7 @@ class CurrencyPickerSheet extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+        padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
         child: Wrap(
           children: <Widget>[
             Padding(

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
-import 'package:share_plus_platform_interface/share_plus_platform_interface.dart';
+// import 'package:share_plus_platform_interface/share_plus_platform_interface.dart';
 import '../../../../helpers/pump_app.dart';
 
 class MockSharePlatform extends Mock

@@ -340,7 +340,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: CupertinoSlidingSegmentedControl<bool>(
-            children: const {
+            children: {
               true: Padding(padding: context.space.allSm, child: Text('Chart')),
               false: Padding(padding: context.space.allSm, child: Text('List')),
             },
