@@ -71,7 +71,7 @@ class _AddExpenseWizardViewState extends State<AddExpenseWizardView> {
               },
               onBack: () {
                 if (_pageController.page == 0) {
-                  Navigator.of(context).pop();
+                  if (context.mounted) Navigator.of(context).pop();
                 } else {
                   _prevPage();
                 }

@@ -111,7 +111,7 @@ class DataManagementSettingsSection extends StatelessWidget {
           onTap: !isEnabled
               ? null
               : () {
-                  // TODO: Navigate to Trash Bin Screen
+                  // TODO(#1): Navigate to Trash Bin Screen
                 },
         ),
       ],

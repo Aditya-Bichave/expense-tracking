@@ -77,7 +77,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
                     context.read<GroupExpensesBloc>().add(
                       AddGroupExpenseRequested(expense),
                     );
-                    Navigator.pop(context);
+                    if (context.mounted) Navigator.pop(context);
                   }
                 }
               },

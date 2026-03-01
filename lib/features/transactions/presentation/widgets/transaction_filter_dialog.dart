@@ -135,7 +135,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
               value: category.id,
               child: Row(
                 children: [
-                  // TODO: Add category icon rendering here later
+                  // TODO(#1): Add category icon rendering here later
                   Icon(Icons.circle, color: category.displayColor, size: 12),
                   const SizedBox(width: 8),
                   Text(category.name, overflow: TextOverflow.ellipsis),
@@ -322,7 +322,8 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
           key: const ValueKey('button_filterDialog_clear'),
           onPressed: () {
             widget.onClearFilter();
-            Navigator.of(context).pop();
+            if (context.mounted)
+              if (context.mounted) Navigator.of(context).pop();
           },
           child: const Text('Clear All'),
         ),
@@ -341,7 +342,8 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
               _selectedAccountId,
               _selectedCategoryId,
             );
-            Navigator.of(context).pop();
+            if (context.mounted)
+              if (context.mounted) Navigator.of(context).pop();
           },
           child: const Text('Apply Filters'),
         ),

@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:html' as html; // ignore: avoid_web_libraries_in_flutter
 import 'package:flutter/foundation.dart';
+import 'package:logging/logging.dart';
 import 'downloader_service.dart';
 
 class DownloaderServiceImpl implements DownloaderService {
+  final log = Logger('DownloaderServiceWeb');
   @override
   Future<void> downloadFile({
     required Uint8List bytes,
@@ -20,7 +22,7 @@ class DownloaderServiceImpl implements DownloaderService {
     try {
       anchor.click();
     } catch (e) {
-      debugPrint('Download blocked by browser: $e');
+      log.warning('Download blocked by browser: $e');
     }
     html.document.body!.children.remove(anchor);
     html.Url.revokeObjectUrl(url);

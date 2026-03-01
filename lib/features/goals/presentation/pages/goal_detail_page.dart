@@ -226,7 +226,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     if (confirmed == true && context.mounted) {
       context.read<GoalListBloc>().add(ArchiveGoal(goalId: _currentGoal!.id));
       if (context.canPop()) {
-        context.pop();
+        if (context.mounted) if (context.mounted) context.pop();
       } else {
         context.go(
           RouteNames.budgetsAndCats,

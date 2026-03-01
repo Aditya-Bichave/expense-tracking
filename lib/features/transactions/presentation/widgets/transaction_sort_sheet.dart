@@ -60,7 +60,7 @@ class TransactionSortSheet extends StatelessWidget {
                       : SortDirection.descending)
                 : defaultDirection(value);
             onApplySort(value, newDirection);
-            Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
           }
         },
       );

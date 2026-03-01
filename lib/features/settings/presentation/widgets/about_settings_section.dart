@@ -42,7 +42,7 @@ class AboutSettingsSection extends StatelessWidget {
           onTap: isLoading
               ? null
               : () {
-                  /* TODO: Navigate to a dedicated About screen if needed */
+                  /* TODO(#1): Navigate to a dedicated About screen if needed */
                 },
         ),
         SettingsListTile(

@@ -70,7 +70,7 @@ class SettlementDialog extends StatelessWidget {
         FilledButton(
           onPressed: () {
             onSettled();
-            Navigator.pop(context);
+            if (context.mounted) Navigator.pop(context);
           },
           child: const Text('Mark as Paid'),
         ),
@@ -91,9 +91,10 @@ class SettlementDialog extends StatelessWidget {
           ),
           FilledButton(
             onPressed: () {
-              Navigator.pop(context); // Close confirmation
+              if (context.mounted) Navigator.pop(context); // Close confirmation
               onSettled(); // Trigger settlement logic
-              Navigator.pop(context); // Close parent settlement dialog
+              if (context.mounted)
+                Navigator.pop(context); // Close parent settlement dialog
             },
             child: const Text('Yes, Record Settlement'),
           ),

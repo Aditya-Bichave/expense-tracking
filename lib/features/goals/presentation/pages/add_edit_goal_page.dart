@@ -36,7 +36,7 @@ class AddEditGoalPage extends StatelessWidget {
                   backgroundColor: Colors.green,
                 ),
               );
-            if (context.canPop()) context.pop();
+            if (context.canPop()) if (context.mounted) context.pop();
           } else if (state.status == AddEditGoalStatus.error &&
               state.errorMessage != null) {
             log.warning("[AddEditGoalPage] Save error: ${state.errorMessage}");

@@ -75,7 +75,8 @@ class GroupMembersTab extends StatelessWidget {
                 leading: const Icon(Icons.security),
                 title: const Text('Change Role'),
                 onTap: () {
-                  Navigator.pop(context);
+                  if (context.mounted)
+                    if (context.mounted) Navigator.pop(context);
                   _showChangeRoleDialog(context, groupId, userId, currentRole);
                 },
               ),
@@ -86,7 +87,8 @@ class GroupMembersTab extends StatelessWidget {
                   style: TextStyle(color: Colors.red),
                 ),
                 onTap: () {
-                  Navigator.pop(context);
+                  if (context.mounted)
+                    if (context.mounted) Navigator.pop(context);
                   _confirmKickMember(context, groupId, userId);
                 },
               ),
@@ -118,7 +120,8 @@ class GroupMembersTab extends StatelessWidget {
                     newRole: role,
                   ),
                 );
-                Navigator.pop(context);
+                if (context.mounted)
+                  if (context.mounted) Navigator.pop(context);
               },
               child: Row(
                 children: [
@@ -153,7 +156,8 @@ class GroupMembersTab extends StatelessWidget {
                 context.read<GroupMembersBloc>().add(
                   KickMember(groupId: groupId, userId: userId),
                 );
-                Navigator.pop(context);
+                if (context.mounted)
+                  if (context.mounted) Navigator.pop(context);
               },
               child: const Text('Remove', style: TextStyle(color: Colors.red)),
             ),

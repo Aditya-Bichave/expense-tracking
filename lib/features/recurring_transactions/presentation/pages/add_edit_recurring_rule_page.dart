@@ -96,7 +96,7 @@ class _AddEditRecurringRuleViewState extends State<AddEditRecurringRuleView> {
       body: BlocConsumer<AddEditRecurringRuleBloc, AddEditRecurringRuleState>(
         listener: (context, state) {
           if (state.status == FormStatus.success) {
-            Navigator.of(context).pop();
+            if (context.mounted) Navigator.of(context).pop();
           } else if (state.status == FormStatus.failure) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()

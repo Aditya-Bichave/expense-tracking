@@ -85,7 +85,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
         log.fine(
           "No default category found for merchant '$merchantIdentifier'.",
         );
-        // TODO: Consider more advanced matching later if needed (e.g., partial matches, aliases)
+        // TODO(#1): Consider more advanced matching later if needed (e.g., partial matches, aliases)
       }
       return categoryId;
     } catch (e) {

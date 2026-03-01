@@ -63,9 +63,14 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
     );
 
     // Sync
-    _repository.syncExpenses(event.groupId).then((_) {
-      add(LoadGroupExpenses(event.groupId));
-    });
+    _repository
+        .syncExpenses(event.groupId)
+        .then((_) {
+          add(LoadGroupExpenses(event.groupId));
+        })
+        .catchError((error) {
+          // Ignore or handle
+        });
   }
 
   Future<void> _onAddExpense(

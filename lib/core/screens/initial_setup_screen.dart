@@ -185,7 +185,7 @@ class CurrencyPickerSheet extends StatelessWidget {
                     onChanged: (String? value) {
                       if (value != null) {
                         context.read<SettingsBloc>().add(UpdateCountry(value));
-                        Navigator.pop(context);
+                        if (context.mounted) Navigator.pop(context);
                       }
                     },
                   );
