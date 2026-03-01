@@ -206,7 +206,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         DeleteBudget(budgetId: _budgetWithStatus!.budget.id),
       );
       if (context.canPop()) {
-        if (context.mounted) if (context.mounted) context.pop();
+        if (context.mounted) context.pop();
       } else {
         context.go(RouteNames.budgetsAndCats);
       }

@@ -88,24 +88,22 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       AppDialogs.showConfirmation(
-            context,
-            title: "Suggestion",
-            content: "Did you mean '${suggestedCategory.name}'?",
-            confirmText: "Yes, use it",
-            cancelText: "No, pick myself",
-            barrierDismissible: false,
-          )
-          .then((confirmed) {
-            if (!mounted) return;
-            if (confirmed == true) {
-              log.info("[AddEditTxnPage] Suggestion accepted.");
-              _bloc.add(AcceptCategorySuggestion(suggestedCategory));
-            } else {
-              log.info("[AddEditTxnPage] Suggestion rejected.");
-              _bloc.add(const RejectCategorySuggestion());
-            }
-          })
-          .catchError((_) {});
+        context,
+        title: "Suggestion",
+        content: "Did you mean '${suggestedCategory.name}'?",
+        confirmText: "Yes, use it",
+        cancelText: "No, pick myself",
+        barrierDismissible: false,
+      ).then((confirmed) {
+        if (!mounted) return;
+        if (confirmed == true) {
+          log.info("[AddEditTxnPage] Suggestion accepted.");
+          _bloc.add(AcceptCategorySuggestion(suggestedCategory));
+        } else {
+          log.info("[AddEditTxnPage] Suggestion rejected.");
+          _bloc.add(const RejectCategorySuggestion());
+        }
+      });
     });
   }
 
@@ -116,59 +114,54 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       AppDialogs.showConfirmation(
-            context,
-            title: "Choose Category",
-            content:
-                "We couldn't find a matching category. Would you like to create a new one or select an existing category?",
-            confirmText: "Create New",
-            cancelText: "Select Existing",
-            barrierDismissible: false,
-          )
-          .then((create) {
-            if (!mounted) return;
-            if (create == true) {
-              log.info("[AddEditTxnPage] User chose to create a new category.");
-              final formState = _formKey.currentState;
-              if (formState != null) {
-                if (!context.mounted) return;
-                final settings = context.read<SettingsBloc>().state;
-                final locale = settings.selectedCountryCode;
-                final title = formState.currentTitle.trim();
-                final amount = parseCurrency(
-                  formState.currentAmountRaw,
-                  locale,
-                );
-                final notesText = formState.currentNotes.trim();
-                _bloc.add(
-                  CreateCustomCategoryRequested(
-                    title: title,
-                    amount: amount,
-                    date: formState.currentDate,
-                    accountId: formState.currentAccountId ?? '',
-                    notes: notesText.isEmpty ? null : notesText,
-                  ),
-                );
-              }
-            } else {
-              log.info(
-                "[AddEditTxnPage] User chose/cancelled to select an existing category.",
+        context,
+        title: "Choose Category",
+        content:
+            "We couldn't find a matching category. Would you like to create a new one or select an existing category?",
+        confirmText: "Create New",
+        cancelText: "Select Existing",
+        barrierDismissible: false,
+      ).then((create) {
+        if (!mounted) return;
+        if (create == true) {
+          log.info("[AddEditTxnPage] User chose to create a new category.");
+          final formState = _formKey.currentState;
+          if (formState != null) {
+            if (!context.mounted) return;
+            final settings = context.read<SettingsBloc>().state;
+            final locale = settings.selectedCountryCode;
+            final title = formState.currentTitle.trim();
+            final amount = parseCurrency(formState.currentAmountRaw, locale);
+            final notesText = formState.currentNotes.trim();
+            _bloc.add(
+              CreateCustomCategoryRequested(
+                title: title,
+                amount: amount,
+                date: formState.currentDate,
+                accountId: formState.currentAccountId ?? '',
+                notes: notesText.isEmpty ? null : notesText,
+              ),
+            );
+          }
+        } else {
+          log.info(
+            "[AddEditTxnPage] User chose/cancelled to select an existing category.",
+          );
+          _bloc.emit(
+            _bloc.state.copyWith(status: AddEditStatus.ready),
+          ); // Go back to ready
+          if (create == false) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text("Please select a category manually."),
+                ),
               );
-              _bloc.emit(
-                _bloc.state.copyWith(status: AddEditStatus.ready),
-              ); // Go back to ready
-              if (create == false) {
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(
-                    const SnackBar(
-                      content: Text("Please select a category manually."),
-                    ),
-                  );
-              }
-            }
-          })
-          .catchError((_) {});
+          }
+        }
+      });
     });
   }
 
@@ -257,7 +250,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               );
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted && context.canPop()) {
-                if (context.mounted) if (context.mounted) context.pop();
+                context.pop();
               } else if (mounted) {
                 context.go(RouteNames.transactionsList);
               }
@@ -295,7 +288,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               tooltip: 'Cancel',
               onPressed: () {
                 if (context.canPop()) {
-                  if (context.mounted) if (context.mounted) context.pop();
+                  context.pop();
                 } else {
                   context.go(RouteNames.transactionsList);
                 }

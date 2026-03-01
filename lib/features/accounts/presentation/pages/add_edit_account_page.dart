@@ -44,7 +44,7 @@ class AddEditAccountPage extends StatelessWidget {
                 ),
               );
             if (context.canPop()) {
-              if (context.mounted) if (context.mounted) context.pop();
+              if (context.mounted) context.pop();
             } else {
               log.warning(
                 "[AddEditAccountPage] Cannot pop context after successful save.",

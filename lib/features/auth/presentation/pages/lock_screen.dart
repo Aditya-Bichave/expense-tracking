@@ -28,7 +28,7 @@ class _LockScreenState extends State<LockScreen> {
   void initState() {
     super.initState();
     _checkBiometrics();
-    _loadPin().then((_) => _authenticate()).catchError((_) {});
+    _loadPin().then((_) => _authenticate());
   }
 
   Future<void> _checkBiometrics() async {
@@ -101,7 +101,7 @@ class _LockScreenState extends State<LockScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                if (context.mounted) Navigator.of(context).pop();
+                Navigator.of(context).pop();
                 context.read<AuthBloc>().add(AuthLogoutRequested());
                 // SessionCubit will listen to AuthBloc/Repository and redirect
               },
