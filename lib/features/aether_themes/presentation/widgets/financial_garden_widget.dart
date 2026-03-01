@@ -5,7 +5,7 @@ class FinancialGardenWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement Financial Garden visual dashboard (Phase 4)
+    // TODO(#1): Implement Financial Garden visual dashboard (Phase 4)
     return const Center(
       child: Text(
         'Financial Garden Dashboard\n(Coming Soon!)',

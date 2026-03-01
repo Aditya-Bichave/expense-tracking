@@ -236,7 +236,7 @@ class GoalContributionChart extends StatelessWidget {
     }
 
     // Avoid label overlap by checking distance to min/max (simplistic check)
-    // TODO: implement smarter label hiding if needed
+    // TODO(#1): implement smarter label hiding if needed
     return SideTitleWidget(
       axisSide: meta.axisSide,
       space: 4,

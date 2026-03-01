@@ -13,7 +13,6 @@ class ColorUtils {
       }
     } catch (e) {
       // Log error if needed
-      // print('Error parsing hex color $hexString: $e');
     }
     return Colors.grey; // Default fallback color
   }

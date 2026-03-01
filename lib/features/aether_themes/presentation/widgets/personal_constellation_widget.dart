@@ -5,7 +5,7 @@ class PersonalConstellationWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Implement Personal Constellation visual dashboard (Phase 5)
+    // TODO(#1): Implement Personal Constellation visual dashboard (Phase 5)
     return const Center(
       child: Text(
         'Personal Constellation Dashboard\n(Coming Soon!)',
