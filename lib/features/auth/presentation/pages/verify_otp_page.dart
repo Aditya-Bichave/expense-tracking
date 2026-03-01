@@ -18,6 +18,12 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   final _tokenController = TextEditingController();
 
   @override
+  void dispose() {
+    _tokenController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Verify OTP')),

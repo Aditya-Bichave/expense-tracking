@@ -21,4 +21,8 @@ class AuthSessionService {
   Future<void> signOut() async {
     await _client.auth.signOut();
   }
+
+  void dispose() {
+    _userController.close();
+  }
 }

@@ -278,7 +278,7 @@ class _SettingsViewState extends State<SettingsView> {
 
   Future<String?> _promptForPassword(BuildContext context, String title) async {
     final controller = TextEditingController();
-    return showDialog<String>(
+    final result = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
@@ -299,5 +299,7 @@ class _SettingsViewState extends State<SettingsView> {
         ],
       ),
     );
+    controller.dispose();
+    return result;
   }
 }

@@ -43,4 +43,9 @@ class RealtimeService {
       _channel = null;
     }
   }
+
+  void dispose() {
+    unsubscribe();
+    _changesController.close();
+  }
 }
