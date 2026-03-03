@@ -350,7 +350,12 @@ class _TransactionListPageState extends State<TransactionListPage> {
           const Divider(height: 1, thickness: 1),
           Expanded(
             child: BlocConsumer<TransactionListBloc, TransactionListState>(
-              buildWhen: (previous, current) => previous.status != current.status || previous.transactions != current.transactions || previous.isInBatchEditMode != current.isInBatchEditMode || previous.selectedTransactionIds != current.selectedTransactionIds,
+              buildWhen: (previous, current) =>
+                  previous.status != current.status ||
+                  previous.transactions != current.transactions ||
+                  previous.isInBatchEditMode != current.isInBatchEditMode ||
+                  previous.selectedTransactionIds !=
+                      current.selectedTransactionIds,
               listener: (context, state) {
                 if (state.status == ListStatus.error &&
                     state.errorMessage != null) {
@@ -438,7 +443,10 @@ class _TransactionListPageState extends State<TransactionListPage> {
       ),
       floatingActionButton:
           BlocBuilder<TransactionListBloc, TransactionListState>(
-            buildWhen: (previous, current) => previous.isInBatchEditMode != current.isInBatchEditMode || previous.selectedTransactionIds != current.selectedTransactionIds,
+            buildWhen: (previous, current) =>
+                previous.isInBatchEditMode != current.isInBatchEditMode ||
+                previous.selectedTransactionIds !=
+                    current.selectedTransactionIds,
             builder: (context, state) {
               final bool showFab =
                   state.isInBatchEditMode && !_showCalendarView;

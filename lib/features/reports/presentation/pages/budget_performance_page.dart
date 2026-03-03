@@ -111,7 +111,12 @@ class BudgetPerformancePage extends StatelessWidget {
         );
       },
       body: BlocBuilder<BudgetPerformanceReportBloc, BudgetPerformanceReportState>(
-        buildWhen: (previous, current) => previous.runtimeType != current.runtimeType || (previous is BudgetPerformanceReportLoaded && current is BudgetPerformanceReportLoaded && (previous.reportData != current.reportData || previous.showComparison != current.showComparison)),
+        buildWhen: (previous, current) =>
+            previous.runtimeType != current.runtimeType ||
+            (previous is BudgetPerformanceReportLoaded &&
+                current is BudgetPerformanceReportLoaded &&
+                (previous.reportData != current.reportData ||
+                    previous.showComparison != current.showComparison)),
         builder: (context, state) {
           if (state is BudgetPerformanceReportLoading)
             return const Center(child: CircularProgressIndicator());

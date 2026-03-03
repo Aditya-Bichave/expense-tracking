@@ -12,7 +12,11 @@ class GroupMembersTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<GroupMembersBloc, GroupMembersState>(
-      buildWhen: (previous, current) => previous.runtimeType != current.runtimeType || (previous is GroupMembersLoaded && current is GroupMembersLoaded && previous.members != current.members),
+      buildWhen: (previous, current) =>
+          previous.runtimeType != current.runtimeType ||
+          (previous is GroupMembersLoaded &&
+              current is GroupMembersLoaded &&
+              previous.members != current.members),
       builder: (context, state) {
         if (state is GroupMembersLoading) {
           return const Center(child: CircularProgressIndicator());

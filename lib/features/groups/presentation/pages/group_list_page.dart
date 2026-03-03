@@ -77,7 +77,11 @@ class _GroupListPageState extends State<GroupListPage> {
         child: const Icon(Icons.add),
       ),
       body: BlocBuilder<GroupsBloc, GroupsState>(
-        buildWhen: (previous, current) => previous.runtimeType != current.runtimeType || (previous is GroupsLoaded && current is GroupsLoaded && previous.groups != current.groups),
+        buildWhen: (previous, current) =>
+            previous.runtimeType != current.runtimeType ||
+            (previous is GroupsLoaded &&
+                current is GroupsLoaded &&
+                previous.groups != current.groups),
         builder: (context, state) {
           if (state is GroupsLoading) {
             return const Center(child: CircularProgressIndicator());

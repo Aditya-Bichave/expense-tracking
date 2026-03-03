@@ -175,7 +175,11 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
       children: [
         const SectionHeader(title: 'Assets'),
         BlocBuilder<AccountListBloc, AccountListState>(
-          buildWhen: (previous, current) => previous.runtimeType != current.runtimeType || (previous is AccountListLoaded && current is AccountListLoaded && previous.items != current.items),
+          buildWhen: (previous, current) =>
+              previous.runtimeType != current.runtimeType ||
+              (previous is AccountListLoaded &&
+                  current is AccountListLoaded &&
+                  previous.items != current.items),
           builder: (context, state) {
             if (state is AccountListLoading && !state.isReloading) {
               return const Center(
