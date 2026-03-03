@@ -18,6 +18,7 @@ class GoalsSubTab extends StatelessWidget {
 
     return Scaffold(
       body: BlocBuilder<GoalListBloc, GoalListState>(
+        buildWhen: (previous, current) => previous.status != current.status || previous.goals != current.goals,
         builder: (context, state) {
           Widget content;
           if (state.status == GoalListStatus.loading && state.goals.isEmpty) {

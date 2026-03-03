@@ -157,6 +157,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     controller: _tabController,
                     children: [
                       BlocBuilder<GroupExpensesBloc, GroupExpensesState>(
+                        buildWhen: (previous, current) => previous.runtimeType != current.runtimeType || (previous is GroupExpensesLoaded && current is GroupExpensesLoaded && previous.expenses != current.expenses),
                         builder: (context, state) {
                           if (state is GroupExpensesLoading) {
                             return const Center(

@@ -99,6 +99,7 @@ class CategoriesSubTab extends StatelessWidget {
           ),
           Expanded(
             child: BlocBuilder<CategoryManagementBloc, CategoryManagementState>(
+              buildWhen: (previous, current) => previous.status != current.status || previous.customExpenseCategories != current.customExpenseCategories || previous.customIncomeCategories != current.customIncomeCategories,
               builder: (context, state) {
                 if (state.status == CategoryManagementStatus.initial ||
                     state.status == CategoryManagementStatus.loading) {

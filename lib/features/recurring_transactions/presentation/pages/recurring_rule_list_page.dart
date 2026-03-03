@@ -17,6 +17,7 @@ class RecurringRuleListPage extends StatelessWidget {
       body: BlocProvider(
         create: (context) => sl<RecurringListBloc>()..add(LoadRecurringRules()),
         child: BlocBuilder<RecurringListBloc, RecurringListState>(
+          buildWhen: (previous, current) => previous.runtimeType != current.runtimeType || (previous is RecurringListLoaded && current is RecurringListLoaded && previous.rules != current.rules),
           builder: (context, state) {
             if (state is RecurringListLoading) {
               return const Center(child: CircularProgressIndicator());
