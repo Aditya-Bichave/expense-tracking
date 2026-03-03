@@ -507,27 +507,40 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final Map<DateTime, double> aggregatedData = {};
+    final Map<int, DateTime> dateCache = {};
+
     for (final hiveObject in filteredTxns) {
       // Assuming the transaction type is TransactionModel, adjust if different
       final txn = hiveObject as ExpenseModel;
-      DateTime periodKey;
+
+      final int cacheKey;
       switch (granularity) {
         case TimeSeriesGranularity.daily:
-          periodKey = DateTime(txn.date.year, txn.date.month, txn.date.day);
-          break;
-        case TimeSeriesGranularity.weekly:
-          int daysToSubtract =
-              txn.date.weekday - 1; // Assuming Monday is start of week (1)
-          periodKey = DateTime(
-            txn.date.year,
-            txn.date.month,
-            txn.date.day - daysToSubtract,
-          );
+        case TimeSeriesGranularity.weekly: // Using daily cacheKey for weekly is ok since week calculation uses exact date
+          cacheKey = txn.date.year * 10000 + txn.date.month * 100 + txn.date.day;
           break;
         case TimeSeriesGranularity.monthly:
-          periodKey = DateTime(txn.date.year, txn.date.month, 1);
+          cacheKey = txn.date.year * 100 + txn.date.month;
           break;
       }
+
+      final DateTime periodKey = dateCache.putIfAbsent(cacheKey, () {
+        switch (granularity) {
+          case TimeSeriesGranularity.daily:
+            return DateTime(txn.date.year, txn.date.month, txn.date.day);
+          case TimeSeriesGranularity.weekly:
+            int daysToSubtract =
+                txn.date.weekday - 1; // Assuming Monday is start of week (1)
+            return DateTime(
+              txn.date.year,
+              txn.date.month,
+              txn.date.day - daysToSubtract,
+            );
+          case TimeSeriesGranularity.monthly:
+            return DateTime(txn.date.year, txn.date.month, 1);
+        }
+      });
+
       aggregatedData.update(
         periodKey,
         (value) => value + txn.amount,
@@ -676,6 +689,7 @@ class ReportRepositoryImpl implements ReportRepository {
 
     final transactions = transactionResult.getOrElse(() => []);
     final Map<DateTime, ({double income, double expense})> aggregatedData = {};
+    final Map<int, DateTime> dateCache = {};
 
     for (final txn in transactions) {
       final DateTime date;
@@ -697,9 +711,15 @@ class ReportRepositoryImpl implements ReportRepository {
         continue;
       }
 
-      final periodKeyDate = periodType == IncomeExpensePeriodType.monthly
-          ? DateTime(date.year, date.month, 1)
-          : DateTime(date.year, 1, 1);
+      final int cacheKey = periodType == IncomeExpensePeriodType.monthly
+          ? date.year * 100 + date.month
+          : date.year;
+
+      final DateTime periodKeyDate = dateCache.putIfAbsent(cacheKey, () {
+        return periodType == IncomeExpensePeriodType.monthly
+            ? DateTime(date.year, date.month, 1)
+            : DateTime(date.year, 1, 1);
+      });
 
       final current =
           aggregatedData[periodKeyDate] ?? (income: 0.0, expense: 0.0);
@@ -928,13 +948,14 @@ class ReportRepositoryImpl implements ReportRepository {
         candidateExpenses = allExpensesInRange;
       }
 
+      // Ensure expense date falls within the effective period for the budget
+      final endDateInclusive = effEnd
+          .add(const Duration(days: 1))
+          .subtract(const Duration(microseconds: 1));
+
       // Filter expenses for *this* budget within the *effective* date range
       final double spent = candidateExpenses
           .where((exp) {
-            // Ensure expense date falls within the effective period for the budget
-            final endDateInclusive = effEnd
-                .add(const Duration(days: 1))
-                .subtract(const Duration(microseconds: 1));
             return !exp.date.isBefore(effStart) &&
                 !exp.date.isAfter(endDateInclusive);
           })
@@ -1121,16 +1142,17 @@ class ReportRepositoryImpl implements ReportRepository {
   }) async {
     log.info("[ReportRepo] getRecentDailySpending: Days=$days");
     try {
-      final endDate = DateTime.now();
+      final now = DateTime.now();
+      final endDate = now;
       final startDate = DateTime(
-        endDate.year,
-        endDate.month,
-        endDate.day,
+        now.year,
+        now.month,
+        now.day,
       ).subtract(Duration(days: days - 1));
       final endDateEndOfDay = DateTime(
-        endDate.year,
-        endDate.month,
-        endDate.day,
+        now.year,
+        now.month,
+        now.day,
         23,
         59,
         59,
@@ -1182,16 +1204,16 @@ class ReportRepositoryImpl implements ReportRepository {
       "[ReportRepo] getRecentDailyContributions: Goal=$goalId, Days=$days",
     );
     try {
-      final endDate = DateTime.now();
+      final now = DateTime.now();
       final startDate = DateTime(
-        endDate.year,
-        endDate.month,
-        endDate.day,
+        now.year,
+        now.month,
+        now.day,
       ).subtract(Duration(days: days - 1));
       final endDateEndOfDay = DateTime(
-        endDate.year,
-        endDate.month,
-        endDate.day,
+        now.year,
+        now.month,
+        now.day,
         23,
         59,
         59,
