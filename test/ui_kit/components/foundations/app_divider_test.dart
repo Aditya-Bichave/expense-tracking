@@ -6,11 +6,7 @@ void main() {
   group('AppDivider', () {
     testWidgets('renders basic divider with defaults', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Material(
-            child: AppDivider(),
-          ),
-        ),
+        const MaterialApp(home: Material(child: AppDivider())),
       );
 
       final dividerFinder = find.byType(Divider);

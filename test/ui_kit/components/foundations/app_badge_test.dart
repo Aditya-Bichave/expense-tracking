@@ -4,12 +4,12 @@ import 'package:expense_tracker/ui_kit/components/foundations/app_badge.dart';
 
 void main() {
   group('AppBadge', () {
-    testWidgets('renders basic badge with primary type by default', (tester) async {
+    testWidgets('renders basic badge with primary type by default', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Material(
-            child: AppBadge(label: 'New'),
-          ),
+          home: Material(child: AppBadge(label: 'New')),
         ),
       );
 
@@ -21,10 +21,7 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Material(
-              child: AppBadge(
-                label: type.name,
-                type: type,
-              ),
+              child: AppBadge(label: type.name, type: type),
             ),
           ),
         );

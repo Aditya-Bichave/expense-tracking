@@ -7,9 +7,7 @@ void main() {
     testWidgets('renders title', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Material(
-            child: AppEmptyState(title: 'No Data'),
-          ),
+          home: Material(child: AppEmptyState(title: 'No Data')),
         ),
       );
 
@@ -36,10 +34,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Material(
-            child: AppEmptyState(
-              title: 'No Data',
-              icon: Icons.error,
-            ),
+            child: AppEmptyState(title: 'No Data', icon: Icons.error),
           ),
         ),
       );

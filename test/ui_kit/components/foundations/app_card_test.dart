@@ -31,9 +31,7 @@ void main() {
 
             if (modeTheme != null) {
               return Theme(
-                data: ThemeData().copyWith(
-                  extensions: [modeTheme],
-                ),
+                data: ThemeData().copyWith(extensions: [modeTheme]),
                 child: Builder(
                   builder: (innerContext) {
                     return AppCard(
@@ -45,7 +43,7 @@ void main() {
                       glass: glass,
                       child: child,
                     );
-                  }
+                  },
                 ),
               );
             }
@@ -68,10 +66,7 @@ void main() {
 
     testWidgets('renders glass effect when requested', (tester) async {
       await tester.pumpWidget(
-        buildTestWidget(
-          glass: true,
-          child: const Text('Glass Content'),
-        ),
+        buildTestWidget(glass: true, child: const Text('Glass Content')),
       );
 
       expect(find.text('Glass Content'), findsOneWidget);
