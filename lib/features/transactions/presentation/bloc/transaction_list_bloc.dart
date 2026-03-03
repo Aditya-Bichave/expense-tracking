@@ -455,9 +455,7 @@ class TransactionListBloc
     final List<String> incomeIds = [];
 
     // O(1) lookup map
-    final currentTxnMap = {
-      for (final t in state.transactions) t.id: t,
-    };
+    final currentTxnMap = {for (final t in state.transactions) t.id: t};
 
     for (final id in state.selectedTransactionIds) {
       final txn = currentTxnMap[id];
