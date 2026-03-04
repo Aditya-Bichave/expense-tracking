@@ -33,7 +33,7 @@ class MockGoalContributionRepository extends Mock
 void main() {
   late ReportRepositoryImpl repository;
   late MockExpenseRepository mockExpenseRepository;
-  late MockBudgetRepository mockBudgetRepository;
+  late MockBudgetRepository mockBudgetRepo;
 
   setUpAll(() {
     registerFallbackValue(DateTime(2023));
@@ -41,7 +41,7 @@ void main() {
 
   setUp(() {
     mockExpenseRepository = MockExpenseRepository();
-    mockBudgetRepository = MockBudgetRepository();
+    mockBudgetRepo = MockBudgetRepository();
 
     // Stub unrelated repositories
     final mockIncomeRepository = MockIncomeRepository();
@@ -55,7 +55,7 @@ void main() {
       incomeRepository: mockIncomeRepository,
       categoryRepository: mockCategoryRepository,
       accountRepository: mockAccountRepository,
-      budgetRepository: mockBudgetRepository,
+      budgetRepository: mockBudgetRepo,
       goalRepository: mockGoalRepository,
       goalContributionRepository: mockGoalContributionRepository,
     );
@@ -148,7 +148,7 @@ void main() {
         accountId: 'a1',
       ); // Null category
 
-      when(() => mockBudgetRepository.getBudgets()).thenAnswer(
+      when(() => mockBudgetRepo.getBudgets()).thenAnswer(
         (_) async => Right([budgetFood, budgetTransport, budgetOverall]),
       );
       when(
