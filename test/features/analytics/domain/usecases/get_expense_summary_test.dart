@@ -19,13 +19,14 @@ class MockExpenseSummary extends Mock implements ExpenseSummary {
 void main() {
   late MockExpenseRepository mockRepository;
   late GetExpenseSummaryUseCase usecase;
+  late MockExpenseSummary tSummary;
 
   setUp(() {
     mockRepository = MockExpenseRepository();
     usecase = GetExpenseSummaryUseCase(mockRepository);
+    tSummary = MockExpenseSummary();
   });
 
-  final tSummary = MockExpenseSummary();
   final tStartDate = DateTime(2023, 1, 1);
   final tEndDate = DateTime(2023, 1, 31);
   final tParams = GetSummaryParams(startDate: tStartDate, endDate: tEndDate);
@@ -61,6 +62,11 @@ void main() {
     final result = await usecase(tParams);
 
     expect(result, const Left(CacheFailure('error')));
+    verify(() => mockRepository.getExpenseSummary(
+          startDate: tStartDate,
+          endDate: tEndDate,
+        )).called(1);
+    verifyNoMoreInteractions(mockRepository);
   });
 
   test('GetSummaryParams equality', () {

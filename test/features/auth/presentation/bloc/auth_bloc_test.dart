@@ -55,8 +55,8 @@ void main() {
     );
   });
 
-  tearDown(() {
-    bloc.close();
+  tearDown(() async {
+    await bloc.close();
   });
 
   group('AuthBloc', () {
@@ -64,30 +64,33 @@ void main() {
       expect(bloc.state, isA<AuthInitial>());
     });
 
-    test('AuthCheckStatus emits AuthAuthenticated when user exists', () {
+    test('AuthCheckStatus emits AuthAuthenticated when user exists', () async {
       when(() => mockGetCurrentUser()).thenReturn(Right(tUser));
 
-      bloc.add(AuthCheckStatus());
+      final future = expectLater(bloc.stream, emitsInOrder([AuthAuthenticated(tUser)]));
 
-      expectLater(bloc.stream, emitsInOrder([AuthAuthenticated(tUser)]));
+      bloc.add(AuthCheckStatus());
+      await future;
     });
 
-    test('AuthCheckStatus emits AuthUnauthenticated when user is null', () {
+    test('AuthCheckStatus emits AuthUnauthenticated when user is null', () async {
       when(() => mockGetCurrentUser()).thenReturn(const Right(null));
 
-      bloc.add(AuthCheckStatus());
+      final future = expectLater(bloc.stream, emitsInOrder([isA<AuthUnauthenticated>()]));
 
-      expectLater(bloc.stream, emitsInOrder([isA<AuthUnauthenticated>()]));
+      bloc.add(AuthCheckStatus());
+      await future;
     });
 
-    test('AuthCheckStatus emits AuthUnauthenticated on failure', () {
+    test('AuthCheckStatus emits AuthUnauthenticated on failure', () async {
       when(
         () => mockGetCurrentUser(),
       ).thenReturn(const Left(ServerFailure('error')));
 
-      bloc.add(AuthCheckStatus());
+      final future = expectLater(bloc.stream, emitsInOrder([isA<AuthUnauthenticated>()]));
 
-      expectLater(bloc.stream, emitsInOrder([isA<AuthUnauthenticated>()]));
+      bloc.add(AuthCheckStatus());
+      await future;
     });
 
     test(

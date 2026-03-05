@@ -48,5 +48,7 @@ void main() {
     final result = usecase();
 
     expect(result, const Left(ServerFailure('error')));
+    verify(() => mockRepository.getCurrentUser()).called(1);
+    verifyNoMoreInteractions(mockRepository);
   });
 }

@@ -38,5 +38,7 @@ void main() {
     final result = await usecase(tPhone);
 
     expect(result, const Left(ServerFailure('error')));
+    verify(() => mockRepository.signInWithOtp(tPhone)).called(1);
+    verifyNoMoreInteractions(mockRepository);
   });
 }

@@ -102,6 +102,19 @@ void main() {
       expect(result, equals([tModel2]));
     });
 
+    test('getExpenses returns values filtered by multiple criteria', () async {
+      when(() => mockBox.values).thenReturn(tModels);
+
+      final result = await dataSource.getExpenses(
+        startDate: DateTime(2023, 1, 1),
+        endDate: DateTime(2023, 1, 1, 23, 59, 59),
+        categoryId: 'cat1',
+        accountId: 'acc1',
+      );
+
+      expect(result, equals([tModel1]));
+    });
+
     test('getExpenseById returns expense if exists', () async {
       when(() => mockBox.get(any<dynamic>())).thenReturn(tModel1);
 

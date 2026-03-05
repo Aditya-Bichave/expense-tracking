@@ -4,8 +4,12 @@ def analyze_lcov(filepath):
     total_lines = 0
     covered_lines = 0
 
-    with open('coverage_exclusion.txt', 'r') as f:
-        exclusions = [line.strip().replace('**/*', '') for line in f if line.strip()]
+    try:
+        with open('coverage_exclusion.txt', 'r') as f:
+            exclusions = [line.strip().replace('**/*', '') for line in f if line.strip()]
+    except FileNotFoundError:
+        print("Warning: coverage_exclusion.txt not found. Using empty exclusions list.")
+        exclusions = []
 
     if not os.path.exists(filepath):
         print(f"File not found: {filepath}")

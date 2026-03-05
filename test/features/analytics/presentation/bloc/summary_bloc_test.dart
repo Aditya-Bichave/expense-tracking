@@ -32,9 +32,9 @@ void main() {
     );
   });
 
-  tearDown(() {
-    bloc.close();
-    dataChangeController.close();
+  tearDown(() async {
+    await bloc.close();
+    await dataChangeController.close();
   });
 
   final tSummary = MockExpenseSummary();
@@ -47,15 +47,16 @@ void main() {
     test('LoadSummary emits loading then loaded on success', () async {
       when(() => mockUseCase(any())).thenAnswer((_) async => Right(tSummary));
 
-      bloc.add(const LoadSummary());
-
-      await expectLater(
+      final future = expectLater(
         bloc.stream,
         emitsInOrder([
           isA<SummaryLoading>(),
           isA<SummaryLoaded>().having((s) => s.summary, 'summary', tSummary),
         ]),
       );
+
+      bloc.add(const LoadSummary());
+      await future;
 
       verify(() => mockUseCase(any())).called(1);
     });
@@ -65,9 +66,7 @@ void main() {
         () => mockUseCase(any()),
       ).thenAnswer((_) async => const Left(CacheFailure('cache error')));
 
-      bloc.add(const LoadSummary());
-
-      await expectLater(
+      final future = expectLater(
         bloc.stream,
         emitsInOrder([
           isA<SummaryLoading>(),
@@ -78,6 +77,9 @@ void main() {
           ),
         ]),
       );
+
+      bloc.add(const LoadSummary());
+      await future;
     });
 
     test('LoadSummary emits loading then error on UnexpectedFailure', () async {
@@ -85,9 +87,7 @@ void main() {
         () => mockUseCase(any()),
       ).thenAnswer((_) async => const Left(UnexpectedFailure('error')));
 
-      bloc.add(const LoadSummary());
-
-      await expectLater(
+      final future = expectLater(
         bloc.stream,
         emitsInOrder([
           isA<SummaryLoading>(),
@@ -98,14 +98,15 @@ void main() {
           ),
         ]),
       );
+
+      bloc.add(const LoadSummary());
+      await future;
     });
 
     test('LoadSummary handles exceptions gracefully', () async {
       when(() => mockUseCase(any())).thenThrow(Exception('crash'));
 
-      bloc.add(const LoadSummary());
-
-      await expectLater(
+      final future = expectLater(
         bloc.stream,
         emitsInOrder([
           isA<SummaryLoading>(),
@@ -118,10 +119,22 @@ void main() {
           ),
         ]),
       );
+
+      bloc.add(const LoadSummary());
+      await future;
     });
 
     test('data change stream triggers reset on system reset event', () async {
       when(() => mockUseCase(any())).thenAnswer((_) async => Right(tSummary));
+
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SummaryInitial>(),
+          isA<SummaryLoading>(),
+          isA<SummaryLoaded>(),
+        ]),
+      );
 
       dataChangeController.add(
         const DataChangedEvent(
@@ -130,18 +143,19 @@ void main() {
         ),
       );
 
-      await expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<SummaryInitial>(),
-          isA<SummaryLoading>(),
-          isA<SummaryLoaded>(),
-        ]),
-      );
+      await future;
     });
 
     test('data change stream triggers reload on expense data change', () async {
       when(() => mockUseCase(any())).thenAnswer((_) async => Right(tSummary));
+
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SummaryLoading>(), // Forced reload
+          isA<SummaryLoaded>(),
+        ]),
+      );
 
       dataChangeController.add(
         const DataChangedEvent(
@@ -150,13 +164,7 @@ void main() {
         ),
       );
 
-      await expectLater(
-        bloc.stream,
-        emitsInOrder([
-          isA<SummaryLoading>(), // Forced reload
-          isA<SummaryLoaded>(),
-        ]),
-      );
+      await future;
     });
   });
 }

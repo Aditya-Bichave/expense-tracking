@@ -39,8 +39,8 @@ void main() {
     repository = AuthRepositoryImpl(mockRemoteDataSource);
   });
 
-  tearDown(() {
-    sl.reset();
+  tearDown(() async {
+    await sl.reset();
   });
 
   group('signInWithOtp', () {
@@ -136,6 +136,13 @@ void main() {
         final result = await repository.signInAnonymously();
 
         expect(result, isA<Left<Failure, AuthResponse>>());
+        result.fold(
+          (l) {
+            expect(l, isA<ServerFailure>());
+            expect(l.message, 'Exception: error');
+          },
+          (r) => fail('Expected Left'),
+        );
       },
     );
   });
@@ -174,6 +181,13 @@ void main() {
         final result = await repository.verifyOtp(phone: tPhone, token: tToken);
 
         expect(result, isA<Left<Failure, AuthResponse>>());
+        result.fold(
+          (l) {
+            expect(l, isA<ServerFailure>());
+            expect(l.message, 'Exception: error');
+          },
+          (r) => fail('Expected Left'),
+        );
       },
     );
   });
@@ -219,6 +233,7 @@ void main() {
         expect(result, const Right(null));
         verify(() => mockRemoteDataSource.signOut()).called(1);
         verify(() => mockDataManagement.clearAllData()).called(1);
+        verify(() => mockSecureStorage.clearAll()).called(1);
       },
     );
 
