@@ -57,29 +57,23 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
           ? categoryId.split(',').toSet()
           : null;
 
+      final startDateOnly = startDate != null
+          ? DateTime(startDate.year, startDate.month, startDate.day)
+          : null;
+      final endDateInclusive = endDate != null
+          ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59)
+          : null;
+
       return expenses.where((expense) {
-        if (startDate != null) {
+        if (startDateOnly != null) {
           final expDateOnly = DateTime(
             expense.date.year,
             expense.date.month,
             expense.date.day,
           );
-          final startDateOnly = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day,
-          );
           if (expDateOnly.isBefore(startDateOnly)) return false;
         }
-        if (endDate != null) {
-          final endDateInclusive = DateTime(
-            endDate.year,
-            endDate.month,
-            endDate.day,
-            23,
-            59,
-            59,
-          );
+        if (endDateInclusive != null) {
           if (expense.date.isAfter(endDateInclusive)) return false;
         }
         if (accountIdSet != null && !accountIdSet.contains(expense.accountId)) {
