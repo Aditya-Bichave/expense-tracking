@@ -248,11 +248,12 @@ class GetFinancialOverviewUseCase
     goalsResult.fold((failure) => goalError = failure, (activeGoals) {
       // Sort by most complete first, then soonest target date
       final mutableGoals = List<Goal>.from(activeGoals);
+      final defaultDate = DateTime(2100);
       mutableGoals.sort((a, b) {
         int comparison = b.percentageComplete.compareTo(a.percentageComplete);
         if (comparison == 0) {
-          comparison = (a.targetDate ?? DateTime(2100)).compareTo(
-            b.targetDate ?? DateTime(2100),
+          comparison = (a.targetDate ?? defaultDate).compareTo(
+            b.targetDate ?? defaultDate,
           );
         }
         return comparison;

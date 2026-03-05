@@ -453,10 +453,13 @@ class TransactionListBloc
 
     final List<String> expenseIds = [];
     final List<String> incomeIds = [];
-    final currentTransactionsMap = {for (var t in state.transactions) t.id: t};
+
+    // O(1) lookup map
+    final currentTxnMap = {for (final t in state.transactions) t.id: t};
 
     for (final id in state.selectedTransactionIds) {
-      final txn = currentTransactionsMap[id];
+      final txn = currentTxnMap[id];
+
       if (txn == null) {
         log.warning(
           "[TransactionListBloc] Selected ID $id not found in current transactions. Skipping.",
