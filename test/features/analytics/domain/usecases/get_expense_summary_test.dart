@@ -1,77 +1,85 @@
-import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
-import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
+import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
+import 'package:expense_tracker/core/error/failure.dart';
+import 'package:dartz/dartz.dart';
 
-import '../../../../helpers/mock_helpers.dart';
+class MockExpenseRepository extends Mock implements ExpenseRepository {}
+
+class MockExpenseSummary extends Mock implements ExpenseSummary {
+  @override
+  double get totalExpenses => 1000.0;
+
+  @override
+  Map<String, double> get categoryBreakdown => {'Food': 1000.0};
+}
 
 void main() {
-  late GetExpenseSummaryUseCase useCase;
-  late MockExpenseRepository mockExpenseRepository;
+  late MockExpenseRepository mockRepository;
+  late GetExpenseSummaryUseCase usecase;
+  late MockExpenseSummary tSummary;
 
   setUp(() {
-    mockExpenseRepository = MockExpenseRepository();
-    useCase = GetExpenseSummaryUseCase(mockExpenseRepository);
+    mockRepository = MockExpenseRepository();
+    usecase = GetExpenseSummaryUseCase(mockRepository);
+    tSummary = MockExpenseSummary();
   });
-
-  const tExpenseSummary = ExpenseSummary(
-    totalExpenses: 100.0,
-    categoryBreakdown: {'Food': 60.0, 'Transport': 40.0},
-  );
 
   final tStartDate = DateTime(2023, 1, 1);
   final tEndDate = DateTime(2023, 1, 31);
   final tParams = GetSummaryParams(startDate: tStartDate, endDate: tEndDate);
 
-  test(
-    'should return ExpenseSummary from the repository when successful',
-    () async {
-      // Arrange
-      when(
-        () => mockExpenseRepository.getExpenseSummary(
-          startDate: tStartDate,
-          endDate: tEndDate,
-        ),
-      ).thenAnswer((_) async => const Right(tExpenseSummary));
-
-      // Act
-      final result = await useCase(tParams);
-
-      // Assert
-      expect(result, const Right(tExpenseSummary));
-      verify(
-        () => mockExpenseRepository.getExpenseSummary(
-          startDate: tStartDate,
-          endDate: tEndDate,
-        ),
-      ).called(1);
-      verifyNoMoreInteractions(mockExpenseRepository);
-    },
-  );
-
-  test('should return Failure from the repository when it fails', () async {
-    // Arrange
-    const tFailure = ServerFailure('Server Error');
+  test('should get expense summary from repository', () async {
     when(
-      () => mockExpenseRepository.getExpenseSummary(
-        startDate: tStartDate,
-        endDate: tEndDate,
+      () => mockRepository.getExpenseSummary(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
       ),
-    ).thenAnswer((_) async => const Left(tFailure));
+    ).thenAnswer((_) async => Right(tSummary));
 
-    // Act
-    final result = await useCase(tParams);
+    final result = await usecase(tParams);
 
-    // Assert
-    expect(result, const Left(tFailure));
+    expect(result, Right(tSummary));
     verify(
-      () => mockExpenseRepository.getExpenseSummary(
+      () => mockRepository.getExpenseSummary(
         startDate: tStartDate,
         endDate: tEndDate,
       ),
     ).called(1);
-    verifyNoMoreInteractions(mockExpenseRepository);
+    verifyNoMoreInteractions(mockRepository);
+  });
+
+  test('should return failure when repository fails', () async {
+    when(
+      () => mockRepository.getExpenseSummary(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+      ),
+    ).thenAnswer((_) async => const Left(CacheFailure('error')));
+
+    final result = await usecase(tParams);
+
+    expect(result, const Left(CacheFailure('error')));
+    verify(
+      () => mockRepository.getExpenseSummary(
+        startDate: tStartDate,
+        endDate: tEndDate,
+      ),
+    ).called(1);
+    verifyNoMoreInteractions(mockRepository);
+  });
+
+  test('GetSummaryParams equality', () {
+    final params1 = GetSummaryParams(startDate: tStartDate, endDate: tEndDate);
+    final params2 = GetSummaryParams(startDate: tStartDate, endDate: tEndDate);
+    final params3 = GetSummaryParams(
+      startDate: tStartDate,
+      endDate: DateTime(2023, 2, 1),
+    );
+
+    expect(params1, equals(params2));
+    expect(params1, isNot(equals(params3)));
   });
 }
