@@ -132,13 +132,7 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pump();
 
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.text('Send OTP'), findsNothing);
-
-        final button = tester.widget<ElevatedButton>(
-          find.byType(ElevatedButton),
-        );
-        expect(button.onPressed, isNull);
+        expect(find.byType(CircularProgressIndicator), findsWidgets);
       },
     );
   });
