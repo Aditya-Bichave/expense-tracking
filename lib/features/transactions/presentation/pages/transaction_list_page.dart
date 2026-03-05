@@ -155,7 +155,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
       categories,
     );
 
-    if (selectedCategory != null && context.mounted) {
+    if (!context.mounted) return;
+
+    if (selectedCategory != null) {
       log.info(
         "[TxnListPage] Category '${selectedCategory.name}' selected from picker.",
       );
@@ -471,16 +473,17 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                 pickerType,
                                 list,
                               );
+
+                          if (!context.mounted) return;
+
                           if (selectedCategory != null &&
                               selectedCategory.id !=
-                                  Category.uncategorized.id &&
-                              context.mounted) {
+                                  Category.uncategorized.id) {
                             context.read<TransactionListBloc>().add(
                               ApplyBatchCategory(selectedCategory.id),
                             );
                           } else if (selectedCategory?.id ==
-                                  Category.uncategorized.id &&
-                              context.mounted) {
+                              Category.uncategorized.id) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text(

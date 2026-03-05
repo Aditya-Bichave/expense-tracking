@@ -26,6 +26,8 @@ class ReportFilterControls extends StatelessWidget {
       }
     }
 
+    if (!context.mounted) return;
+
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,

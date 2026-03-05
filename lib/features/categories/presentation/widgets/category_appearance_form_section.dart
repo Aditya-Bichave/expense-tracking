@@ -23,6 +23,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
       context,
       selectedIconName,
     );
+    if (!context.mounted) return;
     if (selectedIcon != null && selectedIcon != selectedIconName) {
       onIconSelected(selectedIcon);
     }
@@ -32,7 +33,7 @@ class CategoryAppearanceFormSection extends StatelessWidget {
     Color pickerColor = selectedColor;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Pick a color'),
         content: SingleChildScrollView(
           child: ColorPicker(
@@ -51,13 +52,13 @@ class CategoryAppearanceFormSection extends StatelessWidget {
         actions: <Widget>[
           TextButton(
             child: const Text('Cancel'),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
           ),
           TextButton(
             child: const Text('Select'),
             onPressed: () {
               onColorSelected(pickerColor);
-              Navigator.of(context).pop();
+              Navigator.of(dialogContext).pop();
             },
           ),
         ],

@@ -13,8 +13,10 @@ import 'package:expense_tracker/features/groups/domain/entities/group_member.dar
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:rxdart/rxdart.dart';
 import 'dart:async'; // For unawaited
+import 'package:logging/logging.dart';
 
 class GroupsRepositoryImpl implements GroupsRepository {
+  final log = Logger('GroupsRepositoryImpl');
   final GroupsLocalDataSource _localDataSource;
   final GroupsRemoteDataSource _remoteDataSource;
   final OutboxRepository _outboxRepository;
@@ -55,7 +57,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       }
 
       return Right(group);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error creating group', e, s);
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -65,8 +68,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final models = _localDataSource.getGroups();
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
       if (e is Failure) return Left(e);
+      log.severe('Error getting groups', e, s);
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -92,8 +96,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
       if (e is Failure) return Left(e);
+      log.severe('Error getting group members', e, s);
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -148,14 +153,15 @@ class GroupsRepositoryImpl implements GroupsRepository {
             if (staleMemberIds.isNotEmpty) {
               await _localDataSource.deleteMembers(staleMemberIds);
             }
-          } catch (e) {
-            // Log error or ignore partial failure
+          } catch (e, s) {
+            log.warning('Error fetching members for group ${group.id}', e, s);
           }
         }),
       );
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error refreshing groups from server', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -175,7 +181,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
         maxUses: maxUses,
       );
       return Right(url);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error creating invite', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -187,7 +194,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final data = await _remoteDataSource.acceptInvite(token);
       return Right(data);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error accepting invite', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -204,7 +212,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final members = await _remoteDataSource.getGroupMembers(groupId);
       await _localDataSource.saveGroupMembers(members);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error updating member role', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -236,7 +245,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       }
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error removing member', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }

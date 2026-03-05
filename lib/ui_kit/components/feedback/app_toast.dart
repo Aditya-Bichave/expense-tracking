@@ -9,8 +9,9 @@ class AppToast {
     String message, {
     AppToastType type = AppToastType.info,
   }) {
-    final kit = context
-        .kit; // This might fail if context is not mounted, usually handled by caller.
+    if (!context.mounted) return;
+
+    final kit = context.kit;
 
     // We can't access context.kit inside ScafoldMessenger directly without a context that has the theme.
     // Assuming context passed has theme.

@@ -90,8 +90,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       if (model == null) return const Right(null);
       final hydratedResult = await _hydrateSingleModel(model);
       return hydratedResult;
-    } catch (e) {
-      log.severe("Error getting expense by ID $id: $e");
+    } catch (e, s) {
+      log.severe("Error getting expense by ID $id$e$s");
       return Left(CacheFailure("Error getting expense: $e"));
     }
   }
@@ -133,9 +133,11 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     try {
       await localDataSource.deleteExpense(id);
       return const Right(null);
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.warning("CacheFailure deleting expense: ${e.message}$e$s");
       return Left(e);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Unexpected error deleting expense$e$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -156,7 +158,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         double total = models.fold(0.0, (sum, item) => sum + item.amount);
         return Right(total);
       });
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Unexpected error calculating total expenses$e$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -204,7 +207,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Right(
         ExpenseSummary(totalExpenses: total, categoryBreakdown: sorted),
       );
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Unexpected error getting expense summary$e$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -242,7 +246,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       await localDataSource.updateExpense(updated);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Unexpected error updating expense categorization$e$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -281,7 +286,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       }
       await Future.wait(futures);
       return Right(toUpdate.length);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Unexpected error reassigning expenses category$e$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }

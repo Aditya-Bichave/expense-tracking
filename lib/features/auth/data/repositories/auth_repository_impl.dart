@@ -6,9 +6,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/data_management_repository.dart';
+import 'package:logging/logging.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
+  final _log = Logger('AuthRepositoryImpl');
 
   AuthRepositoryImpl(this._remoteDataSource);
 
@@ -17,7 +19,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.signInWithOtp(phone: phone);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      _log.severe('Error signing in with OTP', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -27,7 +30,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.signInWithMagicLink(email: email);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      _log.severe('Error signing in with Magic Link', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -37,7 +41,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _remoteDataSource.signInAnonymously();
       return Right(response);
-    } catch (e) {
+    } catch (e, s) {
+      _log.severe('Error signing in anonymously', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -53,7 +58,8 @@ class AuthRepositoryImpl implements AuthRepository {
         token: token,
       );
       return Right(response);
-    } catch (e) {
+    } catch (e, s) {
+      _log.severe('Error verifying OTP', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -77,7 +83,8 @@ class AuthRepositoryImpl implements AuthRepository {
       } catch (_) {}
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      _log.severe('Error signing out', e, s);
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -86,7 +93,8 @@ class AuthRepositoryImpl implements AuthRepository {
   Either<Failure, User?> getCurrentUser() {
     try {
       return Right(_remoteDataSource.getCurrentUser());
-    } catch (e) {
+    } catch (e, s) {
+      _log.severe('Error getting current user', e, s);
       return Left(CacheFailure(e.toString()));
     }
   }
