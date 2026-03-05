@@ -39,4 +39,23 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ReportFilterControls), findsOneWidget);
   });
+
+  testWidgets('showFilterSheet does not show bottom sheet if context unmounted after wait', (tester) async {
+    when(() => mockBloc.stream).thenAnswer((_) => Stream.fromIterable([
+      ReportFilterState.initial().copyWith(optionsStatus: FilterOptionsStatus.loaded)
+    ]));
+
+    await tester.pumpWidget(createWidget());
+
+    final context = tester.element(find.byType(ReportFilterControls));
+
+    // Unmount by pumping a different widget
+    await tester.pumpWidget(const SizedBox());
+
+    // Call method on now-unmounted context
+    await ReportFilterControls.showFilterSheet(context);
+
+    // Bottom sheet should not appear
+    expect(find.byType(BottomSheet), findsNothing);
+  });
 }

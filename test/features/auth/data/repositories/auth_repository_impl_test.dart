@@ -33,6 +33,41 @@ void main() {
     repository = AuthRepositoryImpl(mockRemoteDataSource);
   });
 
+  group('signInWithMagicLink', () {
+    const tEmail = 'test@example.com';
+
+    test('should return Right(null) when successful', () async {
+      // Arrange
+      when(
+        () => mockRemoteDataSource.signInWithMagicLink(email: any(named: 'email')),
+      ).thenAnswer((_) async {});
+
+      // Act
+      final result = await repository.signInWithMagicLink(tEmail);
+
+      // Assert
+      expect(result, const Right(null));
+      verify(() => mockRemoteDataSource.signInWithMagicLink(email: tEmail)).called(1);
+    });
+
+    test('should return ServerFailure when call fails', () async {
+      // Arrange
+      when(
+        () => mockRemoteDataSource.signInWithMagicLink(email: any(named: 'email')),
+      ).thenThrow(Exception('Error'));
+
+      // Act
+      final result = await repository.signInWithMagicLink(tEmail);
+
+      // Assert
+      expect(result.isLeft(), true);
+      result.fold(
+        (failure) => expect(failure, isA<ServerFailure>()),
+        (_) => fail('Should have returned a failure'),
+      );
+    });
+  });
+
   group('signInWithOtp', () {
     const tPhone = '+1234567890';
 
@@ -171,6 +206,21 @@ void main() {
 
       // Assert
       expect(result, const Right(null));
+    });
+
+    test('should return CacheFailure when an exception occurs', () {
+      // Arrange
+      when(() => mockRemoteDataSource.getCurrentUser()).thenThrow(Exception('Cache error'));
+
+      // Act
+      final result = repository.getCurrentUser();
+
+      // Assert
+      expect(result.isLeft(), true);
+      result.fold(
+        (failure) => expect(failure, isA<CacheFailure>()),
+        (_) => fail('Should have returned a failure'),
+      );
     });
   });
 }

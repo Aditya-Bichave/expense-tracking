@@ -13,6 +13,10 @@ class MockCallbacks extends Mock {
 void main() {
   late MockCallbacks mockCallbacks;
 
+  setUpAll(() {
+    registerFallbackValue(Colors.black);
+  });
+
   setUp(() {
     mockCallbacks = MockCallbacks();
   });
@@ -59,6 +63,37 @@ void main() {
       await tester.tap(find.text('Icon'));
       // No verification possible without a more complex setup,
       // but this confirms the widget is interactive.
+    });
+
+    testWidgets('tapping color tile shows color picker dialog and handles selection', (tester) async {
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: Material(
+          child: Scaffold(
+            body: CategoryAppearanceFormSection(
+              selectedIconName: 'food',
+              selectedColor: Colors.blue,
+              onIconSelected: mockCallbacks.onIconSelected,
+              onColorSelected: mockCallbacks.onColorSelected,
+            ),
+          ),
+        ),
+      );
+
+      final colorTileFinder = find.widgetWithText(ListTile, 'Color');
+      expect(colorTileFinder, findsOneWidget);
+
+      await tester.tap(colorTileFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+      expect(find.text('Pick a color'), findsOneWidget);
+
+      final selectButton = find.text('Select');
+      await tester.tap(selectButton);
+      await tester.pumpAndSettle();
+
+      verify(() => mockCallbacks.onColorSelected(any())).called(1);
     });
   });
 }
