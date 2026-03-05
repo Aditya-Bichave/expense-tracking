@@ -899,9 +899,8 @@ class ReportRepositoryImpl implements ReportRepository {
 
     List<Budget> relevantBudgets = allBudgets;
     if (budgetIds != null && budgetIds.isNotEmpty) {
-      final budgetIdSet = budgetIds.toSet();
       relevantBudgets = allBudgets
-          .where((b) => budgetIdSet.contains(b.id))
+          .where((b) => budgetIds.toSet().contains(b.id))
           .toList();
     }
 
