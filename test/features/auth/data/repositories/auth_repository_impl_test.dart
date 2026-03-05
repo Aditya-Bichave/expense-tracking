@@ -136,13 +136,10 @@ void main() {
         final result = await repository.signInAnonymously();
 
         expect(result, isA<Left<Failure, AuthResponse>>());
-        result.fold(
-          (l) {
-            expect(l, isA<ServerFailure>());
-            expect(l.message, 'Exception: error');
-          },
-          (r) => fail('Expected Left'),
-        );
+        result.fold((l) {
+          expect(l, isA<ServerFailure>());
+          expect(l.message, 'Exception: error');
+        }, (r) => fail('Expected Left'));
       },
     );
   });
@@ -181,13 +178,10 @@ void main() {
         final result = await repository.verifyOtp(phone: tPhone, token: tToken);
 
         expect(result, isA<Left<Failure, AuthResponse>>());
-        result.fold(
-          (l) {
-            expect(l, isA<ServerFailure>());
-            expect(l.message, 'Exception: error');
-          },
-          (r) => fail('Expected Left'),
-        );
+        result.fold((l) {
+          expect(l, isA<ServerFailure>());
+          expect(l.message, 'Exception: error');
+        }, (r) => fail('Expected Left'));
       },
     );
   });

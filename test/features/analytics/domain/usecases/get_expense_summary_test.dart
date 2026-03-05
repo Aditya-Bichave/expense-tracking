@@ -62,10 +62,12 @@ void main() {
     final result = await usecase(tParams);
 
     expect(result, const Left(CacheFailure('error')));
-    verify(() => mockRepository.getExpenseSummary(
-          startDate: tStartDate,
-          endDate: tEndDate,
-        )).called(1);
+    verify(
+      () => mockRepository.getExpenseSummary(
+        startDate: tStartDate,
+        endDate: tEndDate,
+      ),
+    ).called(1);
     verifyNoMoreInteractions(mockRepository);
   });
 
