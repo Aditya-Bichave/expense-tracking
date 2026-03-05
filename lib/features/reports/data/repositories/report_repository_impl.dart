@@ -896,12 +896,12 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final allBudgets = budgetsResult.getOrElse(() => <Budget>[]);
-
-    late final budgetIdSet = budgetIds?.toSet();
-    final relevantBudgets = (budgetIdSet == null || budgetIdSet.isEmpty)
+    final relevantBudgets = (budgetIds == null || budgetIds.isEmpty)
         ? allBudgets
-        // ⚡ Bolt Optimization: Use Set for O(1) lookups instead of O(N) List.contains
-        : allBudgets.where((b) => budgetIdSet.contains(b.id)).toList();
+        : () {
+            final budgetIdSet = budgetIds.toSet();
+            return allBudgets.where((b) => budgetIdSet.contains(b.id)).toList();
+          }();
 
     if (relevantBudgets.isEmpty) {
       log.fine(
@@ -1034,11 +1034,14 @@ class ReportRepositoryImpl implements ReportRepository {
         );
       final allActiveGoals = goalsResult.getOrElse(() => []);
 
-      late final goalIdSet = goalIds?.toSet();
-      final relevantGoals = (goalIdSet == null || goalIdSet.isEmpty)
+      final relevantGoals = (goalIds == null || goalIds.isEmpty)
           ? allActiveGoals
-          // ⚡ Bolt Optimization: Use Set for O(1) lookups instead of O(N) List.contains
-          : allActiveGoals.where((g) => goalIdSet.contains(g.id)).toList();
+          : () {
+              final goalIdSet = goalIds.toSet();
+              return allActiveGoals
+                  .where((g) => goalIdSet.contains(g.id))
+                  .toList();
+            }();
 
       if (relevantGoals.isEmpty) {
         log.fine("[ReportRepo] No relevant active goals found.");
