@@ -224,6 +224,16 @@ class GetTransactionsUseCase
       }
 
       // Apply Sorting
+      // ⚡ Bolt Performance Optimization
+      // Problem: toLowerCase() is called repeatedly during sorting which is O(N log N)
+      // Solution: Pre-compute lowercase values before the sort loop
+      // Impact: Significantly faster sorting on large lists by reducing string allocations
+
+      // Cache lowercased values to avoid O(N log N) string creations
+      final lowercaseCache = <String, String>{};
+      String getLower(String key) =>
+          lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
+
       filteredList.sort((a, b) {
         int comparison;
         switch (params.sortBy) {
@@ -231,13 +241,12 @@ class GetTransactionsUseCase
             comparison = a.amount.compareTo(b.amount);
             break;
           case TransactionSortBy.category:
-            comparison = (a.category?.name ?? 'zzzzzz').toLowerCase().compareTo(
-              (b.category?.name ?? 'zzzzzz').toLowerCase(),
-            );
+            final aCat = a.category?.name ?? 'zzzzzz';
+            final bCat = b.category?.name ?? 'zzzzzz';
+            comparison = getLower(aCat).compareTo(getLower(bCat));
             break;
-          // --- Added Title Sort ---
           case TransactionSortBy.title:
-            comparison = a.title.toLowerCase().compareTo(b.title.toLowerCase());
+            comparison = getLower(a.title).compareTo(getLower(b.title));
             break;
           case TransactionSortBy.date:
             comparison = a.date.compareTo(b.date);

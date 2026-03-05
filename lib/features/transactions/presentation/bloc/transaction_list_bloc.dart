@@ -453,10 +453,10 @@ class TransactionListBloc
 
     final List<String> expenseIds = [];
     final List<String> incomeIds = [];
-    final currentTransactions = state.transactions;
+    final currentTransactionsMap = {for (var t in state.transactions) t.id: t};
 
     for (final id in state.selectedTransactionIds) {
-      final txn = currentTransactions.firstWhereOrNull((t) => t.id == id);
+      final txn = currentTransactionsMap[id];
       if (txn == null) {
         log.warning(
           "[TransactionListBloc] Selected ID $id not found in current transactions. Skipping.",

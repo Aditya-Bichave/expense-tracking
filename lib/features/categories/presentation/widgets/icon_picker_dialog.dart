@@ -1,4 +1,5 @@
 // lib/features/categories/presentation/widgets/icon_picker_dialog.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 // --- Populate this map extensively! ---
@@ -89,6 +90,7 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
   final TextEditingController _searchController = TextEditingController();
   late String _selectedIconName;
   List<MapEntry<String, IconData>> _filteredIcons = [];
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -102,22 +104,30 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
   void dispose() {
     _searchController.removeListener(_filterIcons);
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
+  // ⚡ Bolt Performance Optimization
+  // Problem: Filtering large map of icons and sorting on every keystroke
+  // Solution: Debounce the search input using Dart's async features
+  // Impact: Reduces UI jank when searching through the icon library
   void _filterIcons() {
-    final query = _searchController.text.toLowerCase().trim();
-    setState(() {
-      if (query.isEmpty) {
-        _filteredIcons = availableIcons.entries.toList();
-      } else {
-        _filteredIcons = availableIcons.entries.where((entry) {
-          // Search by key (name)
-          return entry.key.toLowerCase().contains(query);
-        }).toList();
-      }
-      // Optional: Sort filtered results alphabetically by key
-      _filteredIcons.sort((a, b) => a.key.compareTo(b.key));
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      final query = _searchController.text.toLowerCase().trim();
+      setState(() {
+        if (query.isEmpty) {
+          _filteredIcons = availableIcons.entries.toList();
+        } else {
+          _filteredIcons = availableIcons.entries.where((entry) {
+            // Search by key (name)
+            return entry.key.toLowerCase().contains(query);
+          }).toList();
+        }
+        // Optional: Sort filtered results alphabetically by key
+        _filteredIcons.sort((a, b) => a.key.compareTo(b.key));
+      });
     });
   }
 

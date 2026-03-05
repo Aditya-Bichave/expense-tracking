@@ -25,6 +25,15 @@ class TransactionListHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return BlocBuilder<TransactionListBloc, TransactionListState>(
+      // ⚡ Bolt Performance Optimization
+      // Problem: Rebuilding the entire search header (and TextField) on every transaction list update
+      // Solution: Add buildWhen to only rebuild when search term, filter status, or batch mode changes
+      // Impact: Prevents TextField cursor jumping/jank during backend syncs or unrelated list updates
+      buildWhen: (previous, current) {
+        return previous.isInBatchEditMode != current.isInBatchEditMode ||
+            previous.searchTerm != current.searchTerm ||
+            previous.filtersApplied != current.filtersApplied;
+      },
       builder: (context, state) {
         final isInBatchMode = state.isInBatchEditMode;
         final bool hasSearchTerm =

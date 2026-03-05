@@ -436,7 +436,16 @@ class _TransactionListPageState extends State<TransactionListPage> {
         ],
       ),
       floatingActionButton:
+          // ⚡ Bolt Performance Optimization
+          // Problem: The FloatingActionButton rebuilds on EVERY transaction list state change
+          // Solution: Use buildWhen to only rebuild the FAB when its dependencies change
+          // Impact: Reduces unnecessary widget builds during list scrolling or background updates
           BlocBuilder<TransactionListBloc, TransactionListState>(
+            buildWhen: (previous, current) {
+              return previous.isInBatchEditMode != current.isInBatchEditMode ||
+                  previous.selectedTransactionIds.length !=
+                      current.selectedTransactionIds.length;
+            },
             builder: (context, state) {
               final bool showFab =
                   state.isInBatchEditMode && !_showCalendarView;
