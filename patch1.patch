@@ -1,0 +1,32 @@
+--- lib/features/reports/data/repositories/report_repository_impl.dart
++++ lib/features/reports/data/repositories/report_repository_impl.dart
+@@ -897,9 +897,12 @@
+     }
+
+     final allBudgets = budgetsResult.getOrElse(() => <Budget>[]);
+-    final relevantBudgets = (budgetIds == null || budgetIds.isEmpty)
+-        ? allBudgets
+-        : allBudgets.where((b) => budgetIds.contains(b.id)).toList();
++
++    late final budgetIdSet = budgetIds?.toSet();
++    final relevantBudgets = (budgetIdSet == null || budgetIdSet.isEmpty)
++        ? allBudgets
++        // ⚡ Bolt Optimization: Use Set for O(1) lookups instead of O(N) List.contains
++        : allBudgets.where((b) => budgetIdSet.contains(b.id)).toList();
+
+     if (relevantBudgets.isEmpty) {
+       log.fine(
+@@ -1032,9 +1035,11 @@
+         );
+       final allActiveGoals = goalsResult.getOrElse(() => []);
+
+-      final relevantGoals = (goalIds == null || goalIds.isEmpty)
++      late final goalIdSet = goalIds?.toSet();
++      final relevantGoals = (goalIdSet == null || goalIdSet.isEmpty)
+           ? allActiveGoals
+-          : allActiveGoals.where((g) => goalIds.contains(g.id)).toList();
++          // ⚡ Bolt Optimization: Use Set for O(1) lookups instead of O(N) List.contains
++          : allActiveGoals.where((g) => goalIdSet.contains(g.id)).toList();
+
+       if (relevantGoals.isEmpty) {
+         log.fine("[ReportRepo] No relevant active goals found.");
