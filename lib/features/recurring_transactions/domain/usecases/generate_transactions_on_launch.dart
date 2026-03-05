@@ -105,48 +105,47 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
       transactionResult = await addIncome(AddIncomeParams(newIncome));
     }
 
-    return await transactionResult.fold<Future<Either<Failure, RecurringRule>>>(
-      (failure) async => Left(failure),
-      (_) async {
-        // 2. Update rule
-        final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
-        final newNextOccurrenceDate = _calculateNextOccurrence(rule);
+    return await transactionResult.fold<
+      Future<Either<Failure, RecurringRule>>
+    >((failure) async => Left(failure), (_) async {
+      // 2. Update rule
+      final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
+      final newNextOccurrenceDate = _calculateNextOccurrence(rule);
 
-        RuleStatus newStatus = rule.status;
+      RuleStatus newStatus = rule.status;
 
-        // 3. Check end condition with safe null checks
-        bool hasEnded = false;
-        if (rule.endConditionType == EndConditionType.afterOccurrences) {
-          if (rule.totalOccurrences != null &&
-              newOccurrencesGenerated >= rule.totalOccurrences!) {
-            hasEnded = true;
-          }
-        } else if (rule.endConditionType == EndConditionType.onDate) {
-          if (rule.endDate != null &&
-              newNextOccurrenceDate.isAfter(rule.endDate!)) {
-            hasEnded = true;
-          }
+      // 3. Check end condition with safe null checks
+      bool hasEnded = false;
+      if (rule.endConditionType == EndConditionType.afterOccurrences) {
+        if (rule.totalOccurrences != null &&
+            newOccurrencesGenerated >= rule.totalOccurrences!) {
+          hasEnded = true;
         }
-
-        if (hasEnded) {
-          newStatus = RuleStatus.completed;
+      } else if (rule.endConditionType == EndConditionType.onDate) {
+        if (rule.endDate != null &&
+            newNextOccurrenceDate.isAfter(rule.endDate!)) {
+          hasEnded = true;
         }
+      }
 
-        final updatedRule = rule.copyWith(
-          status: newStatus,
-          nextOccurrenceDate: newNextOccurrenceDate,
-          occurrencesGenerated: newOccurrencesGenerated,
-        );
-        final updateResult = await recurringTransactionRepository
-            .updateRecurringRule(updatedRule);
+      if (hasEnded) {
+        newStatus = RuleStatus.completed;
+      }
 
-        // Return the updated rule instead of just void, so the caller can use it
-        return updateResult.fold(
-          (failure) => Left(failure),
-          (_) => Right(updatedRule),
-        );
-      },
-    );
+      final updatedRule = rule.copyWith(
+        status: newStatus,
+        nextOccurrenceDate: newNextOccurrenceDate,
+        occurrencesGenerated: newOccurrencesGenerated,
+      );
+      final updateResult = await recurringTransactionRepository
+          .updateRecurringRule(updatedRule);
+
+      // Return the updated rule instead of just void, so the caller can use it
+      return updateResult.fold(
+        (failure) => Left(failure),
+        (_) => Right(updatedRule),
+      );
+    });
   }
 
   DateTime _calculateNextOccurrence(RecurringRule rule) {
@@ -168,7 +167,16 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         final daysInMonth = DateTime(newYear, newMonth + 1, 0).day;
         final targetDay = rule.dayOfMonth ?? rule.startDate.day;
         final newDay = targetDay > daysInMonth ? daysInMonth : targetDay;
-        nextDate = DateTime(newYear, newMonth, newDay, nextDate.hour, nextDate.minute, nextDate.second, nextDate.millisecond, nextDate.microsecond);
+        nextDate = DateTime(
+          newYear,
+          newMonth,
+          newDay,
+          nextDate.hour,
+          nextDate.minute,
+          nextDate.second,
+          nextDate.millisecond,
+          nextDate.microsecond,
+        );
         break;
       case Frequency.yearly:
         final targetYear = nextDate.year + rule.interval;
@@ -177,7 +185,16 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         final targetDay = nextDate.day > daysInTargetMonth
             ? daysInTargetMonth
             : nextDate.day;
-        nextDate = DateTime(targetYear, targetMonth, targetDay, nextDate.hour, nextDate.minute, nextDate.second, nextDate.millisecond, nextDate.microsecond);
+        nextDate = DateTime(
+          targetYear,
+          targetMonth,
+          targetDay,
+          nextDate.hour,
+          nextDate.minute,
+          nextDate.second,
+          nextDate.millisecond,
+          nextDate.microsecond,
+        );
         break;
     }
     return nextDate;

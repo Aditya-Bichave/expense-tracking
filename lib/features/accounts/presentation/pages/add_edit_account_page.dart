@@ -64,7 +64,9 @@ class AddEditAccountPage extends StatelessWidget {
                   backgroundColor: Theme.of(context).colorScheme.error,
                 ),
               );
-            context.read<AddEditAccountBloc>().add(const ClearAccountFormMessage());
+            context.read<AddEditAccountBloc>().add(
+              const ClearAccountFormMessage(),
+            );
           }
         },
         child: Scaffold(

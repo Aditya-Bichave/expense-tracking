@@ -47,10 +47,18 @@ void main() {
         categoryId: 'cat1',
         frequency: Frequency.monthly,
         interval: 1,
-        startDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+        startDate: DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        ),
         endConditionType: EndConditionType.never,
         status: RuleStatus.active,
-        nextOccurrenceDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+        nextOccurrenceDate: DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+        ),
         occurrencesGenerated: 0,
       ),
     );
@@ -106,10 +114,18 @@ void main() {
     categoryId: 'cat1',
     frequency: Frequency.monthly,
     interval: 1,
-    startDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), // Run for today
+    startDate: DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    ), // Run for today
     endConditionType: EndConditionType.never,
     status: RuleStatus.active,
-    nextOccurrenceDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day), // Run for today
+    nextOccurrenceDate: DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    ), // Run for today
     occurrencesGenerated: 0,
   );
 
@@ -162,7 +178,11 @@ void main() {
   );
 
   test('should clamp next occurrence date for monthly rules', () async {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     // Use a date in the past that would evaluate just once if we trick the repo, or set nextOccurrence to today.
     // Wait, if it's today, it will just jump to next month from today. If we want to test Jan -> Feb logic specifically:
     // We can just test calculateNextOccurrence directly, or mock the date, but since we can't, we just test with current date if it's Jan 31? No.
@@ -259,7 +279,13 @@ void main() {
   });
 
   test('should return failure when addExpense fails', () async {
-    final runRule = tRule.copyWith(nextOccurrenceDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
+    final runRule = tRule.copyWith(
+      nextOccurrenceDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      ),
+    );
     const failure = ServerFailure('addExpense failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -281,7 +307,13 @@ void main() {
   });
 
   test('should return failure when addIncome fails', () async {
-    final runRule = tIncomeRule.copyWith(nextOccurrenceDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
+    final runRule = tIncomeRule.copyWith(
+      nextOccurrenceDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      ),
+    );
     const failure = ServerFailure('addIncome failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -303,7 +335,13 @@ void main() {
   });
 
   test('should return failure when updateRecurringRule fails', () async {
-    final runRule = tRule.copyWith(nextOccurrenceDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
+    final runRule = tRule.copyWith(
+      nextOccurrenceDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      ),
+    );
     const failure = ServerFailure('updateRecurringRule failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -328,7 +366,13 @@ void main() {
   });
 
   test('should return failure when category fetch fails', () async {
-    final runRule = tRule.copyWith(nextOccurrenceDate: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day));
+    final runRule = tRule.copyWith(
+      nextOccurrenceDate: DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      ),
+    );
     const failure = ServerFailure('getAllCategories failed');
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -367,7 +411,16 @@ void main() {
         occurrencesGenerated: 0,
       );
 
-      final expectedNextDate = DateTime(2023, 2, 28, 0, 0, 0, 0, 0); // Explicit zeros for precision
+      final expectedNextDate = DateTime(
+        2023,
+        2,
+        28,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ); // Explicit zeros for precision
 
       when(
         () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -415,7 +468,16 @@ void main() {
         occurrencesGenerated: 1, // Will reach 2 and complete
       );
 
-      final expectedNextDate = DateTime(2023, 3, 31, 0, 0, 0, 0, 0); // Explicit zeros for precision
+      final expectedNextDate = DateTime(
+        2023,
+        3,
+        31,
+        0,
+        0,
+        0,
+        0,
+        0,
+      ); // Explicit zeros for precision
 
       when(
         () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -446,10 +508,26 @@ void main() {
 
   test('should process multiple due rules sequentially', () async {
     // Ensure they are due by setting nextOccurrenceDate to today or past
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
     // Use endConditionType to make sure they only run once
-    final rule1 = tRule.copyWith(id: 'r1', description: 'Rule 1', nextOccurrenceDate: today.subtract(const Duration(days: 1)), endConditionType: EndConditionType.afterOccurrences, totalOccurrences: 1);
-    final rule2 = tRule.copyWith(id: 'r2', description: 'Rule 2', nextOccurrenceDate: today.subtract(const Duration(days: 1)), endConditionType: EndConditionType.afterOccurrences, totalOccurrences: 1);
+    final rule1 = tRule.copyWith(
+      id: 'r1',
+      description: 'Rule 1',
+      nextOccurrenceDate: today.subtract(const Duration(days: 1)),
+      endConditionType: EndConditionType.afterOccurrences,
+      totalOccurrences: 1,
+    );
+    final rule2 = tRule.copyWith(
+      id: 'r2',
+      description: 'Rule 2',
+      nextOccurrenceDate: today.subtract(const Duration(days: 1)),
+      endConditionType: EndConditionType.afterOccurrences,
+      totalOccurrences: 1,
+    );
 
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -473,8 +551,17 @@ void main() {
   });
 
   test('should handle missing category gracefully', () async {
-    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-    final ruleWithMissingCategory = tRule.copyWith(categoryId: 'missing_cat', nextOccurrenceDate: today.subtract(const Duration(days: 1)), endConditionType: EndConditionType.afterOccurrences, totalOccurrences: 1);
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    final ruleWithMissingCategory = tRule.copyWith(
+      categoryId: 'missing_cat',
+      nextOccurrenceDate: today.subtract(const Duration(days: 1)),
+      endConditionType: EndConditionType.afterOccurrences,
+      totalOccurrences: 1,
+    );
 
     when(
       () => mockRecurringTransactionRepository.getRecurringRules(),
@@ -503,7 +590,11 @@ void main() {
   test(
     'should mark rule as completed when total occurrences reached',
     () async {
-      final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+      final today = DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
       final finishingRule = tRule.copyWith(
         totalOccurrences: 5,
         occurrencesGenerated: 4, // This will be the 5th
@@ -526,12 +617,11 @@ void main() {
 
       await usecase(const NoParams());
 
-      final capturedList =
-          verify(
-                () => mockRecurringTransactionRepository.updateRecurringRule(
-                  captureAny(),
-                ),
-              ).captured;
+      final capturedList = verify(
+        () => mockRecurringTransactionRepository.updateRecurringRule(
+          captureAny(),
+        ),
+      ).captured;
       final capturedRule = capturedList.first as RecurringRule;
 
       expect(capturedRule.status, RuleStatus.completed);
@@ -543,7 +633,11 @@ void main() {
     final finishingRule = tRule.copyWith(
       startDate: DateTime(2023, 1, 1),
       nextOccurrenceDate: DateTime(2023, 1, 1),
-      endDate: DateTime(2023, 1, 2), // Next occurrence (calculated as feb) will be after this
+      endDate: DateTime(
+        2023,
+        1,
+        2,
+      ), // Next occurrence (calculated as feb) will be after this
       endConditionType: EndConditionType.onDate,
     );
 
@@ -556,18 +650,18 @@ void main() {
     when(
       () => mockAddExpenseUseCase(any()),
     ).thenAnswer((_) async => Right(tExpense));
-      RecurringRule? capturedRule;
+    RecurringRule? capturedRule;
     when(
       () => mockRecurringTransactionRepository.updateRecurringRule(any()),
-      ).thenAnswer((invocation) async {
-        capturedRule = invocation.positionalArguments.first as RecurringRule;
-        return const Right(null);
-      });
+    ).thenAnswer((invocation) async {
+      capturedRule = invocation.positionalArguments.first as RecurringRule;
+      return const Right(null);
+    });
 
-      await usecase(const NoParams());
+    await usecase(const NoParams());
 
-      expect(capturedRule, isNotNull);
-      expect(capturedRule!.status, RuleStatus.completed);
+    expect(capturedRule, isNotNull);
+    expect(capturedRule!.status, RuleStatus.completed);
   });
 
   // Verify Leap Year Handling
