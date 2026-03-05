@@ -896,12 +896,14 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final allBudgets = budgetsResult.getOrElse(() => <Budget>[]);
-    final relevantBudgets = (budgetIds == null || budgetIds.isEmpty)
-        ? allBudgets
-        : () {
-            final budgetIdSet = budgetIds.toSet();
-            return allBudgets.where((b) => budgetIdSet.contains(b.id)).toList();
-          }();
+
+    List<Budget> relevantBudgets = allBudgets;
+    if (budgetIds != null && budgetIds.isNotEmpty) {
+      final budgetIdSet = budgetIds.toSet();
+      relevantBudgets = allBudgets
+          .where((b) => budgetIdSet.contains(b.id))
+          .toList();
+    }
 
     if (relevantBudgets.isEmpty) {
       log.fine(
@@ -1034,14 +1036,13 @@ class ReportRepositoryImpl implements ReportRepository {
         );
       final allActiveGoals = goalsResult.getOrElse(() => []);
 
-      final relevantGoals = (goalIds == null || goalIds.isEmpty)
-          ? allActiveGoals
-          : () {
-              final goalIdSet = goalIds.toSet();
-              return allActiveGoals
-                  .where((g) => goalIdSet.contains(g.id))
-                  .toList();
-            }();
+      List<Goal> relevantGoals = allActiveGoals;
+      if (goalIds != null && goalIds.isNotEmpty) {
+        final goalIdSet = goalIds.toSet();
+        relevantGoals = allActiveGoals
+            .where((g) => goalIdSet.contains(g.id))
+            .toList();
+      }
 
       if (relevantGoals.isEmpty) {
         log.fine("[ReportRepo] No relevant active goals found.");

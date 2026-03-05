@@ -1,0 +1,12 @@
+--- lib/features/reports/data/repositories/report_repository_impl.dart
++++ lib/features/reports/data/repositories/report_repository_impl.dart
+@@ -898,7 +898,8 @@
+
+     List<Budget> relevantBudgets = allBudgets;
+     if (budgetIds != null && budgetIds.isNotEmpty) {
+-      relevantBudgets = allBudgets.where((b) => budgetIds.toSet().contains(b.id)).toList();
++      final budgetIdSet = budgetIds.toSet();
++      relevantBudgets = allBudgets.where((b) => budgetIdSet.contains(b.id)).toList();
+     }
+
+     if (relevantBudgets.isEmpty) {
