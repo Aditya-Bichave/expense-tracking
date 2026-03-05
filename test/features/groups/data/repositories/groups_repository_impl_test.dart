@@ -422,38 +422,55 @@ void main() {
       verifyNever(() => mockRemoteDataSource.getGroups());
     });
 
-    test('should catch exceptions during member fetch but continue processing other groups', () async {
-      // Arrange
-      final secondGroupModel = GroupModel(
-        id: '2',
-        name: 'Test Group 2',
-        typeValue: 'home',
-        currency: 'USD',
-        createdBy: 'user_1',
-        createdAt: DateTime(2024),
-        updatedAt: DateTime(2024),
-      );
-      when(
-        () => mockConnectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
-      when(() => mockRemoteDataSource.getGroups()).thenAnswer((_) async => [tGroupModel, secondGroupModel]);
-      when(() => mockLocalDataSource.saveGroups(any())).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.getGroups()).thenReturn([tGroupModel, secondGroupModel]);
-      when(() => mockRemoteDataSource.getGroupMembers('1')).thenThrow(Exception('Error'));
-      when(() => mockRemoteDataSource.getGroupMembers('2')).thenAnswer((_) async => []);
-      when(() => mockLocalDataSource.saveGroupMembers(any())).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
-      when(() => mockLocalDataSource.deleteMembers(any())).thenAnswer((_) async {});
+    test(
+      'should catch exceptions during member fetch but continue processing other groups',
+      () async {
+        // Arrange
+        final secondGroupModel = GroupModel(
+          id: '2',
+          name: 'Test Group 2',
+          typeValue: 'home',
+          currency: 'USD',
+          createdBy: 'user_1',
+          createdAt: DateTime(2024),
+          updatedAt: DateTime(2024),
+        );
+        when(
+          () => mockConnectivity.checkConnectivity(),
+        ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+        when(
+          () => mockRemoteDataSource.getGroups(),
+        ).thenAnswer((_) async => [tGroupModel, secondGroupModel]);
+        when(
+          () => mockLocalDataSource.saveGroups(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockLocalDataSource.getGroups(),
+        ).thenReturn([tGroupModel, secondGroupModel]);
+        when(
+          () => mockRemoteDataSource.getGroupMembers('1'),
+        ).thenThrow(Exception('Error'));
+        when(
+          () => mockRemoteDataSource.getGroupMembers('2'),
+        ).thenAnswer((_) async => []);
+        when(
+          () => mockLocalDataSource.saveGroupMembers(any()),
+        ).thenAnswer((_) async {});
+        when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
+        when(
+          () => mockLocalDataSource.deleteMembers(any()),
+        ).thenAnswer((_) async {});
 
-      // Act
-      final result = await repository.syncGroups();
+        // Act
+        final result = await repository.syncGroups();
 
-      // Assert
-      expect(result.isRight(), true);
-      verify(() => mockRemoteDataSource.getGroups()).called(1);
-      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
-      verify(() => mockRemoteDataSource.getGroupMembers('2')).called(1);
-    });
+        // Assert
+        expect(result.isRight(), true);
+        verify(() => mockRemoteDataSource.getGroups()).called(1);
+        verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
+        verify(() => mockRemoteDataSource.getGroupMembers('2')).called(1);
+      },
+    );
   });
 
   group('createInvite', () {

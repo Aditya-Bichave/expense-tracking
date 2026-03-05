@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 
 class MockExpenseLocalDataSource extends Mock
     implements ExpenseLocalDataSource {}
@@ -20,6 +21,19 @@ void main() {
   late MockCategoryRepository mockCategoryRepository;
   late MockSupabaseClient mockSupabaseClient;
   late ExpenseRepositoryImpl repository;
+
+  setUpAll(() {
+    registerFallbackValue(
+      ExpenseModel(
+        id: 'dummy',
+        title: 'dummy',
+        amount: 0,
+        date: DateTime(2000),
+        accountId: 'dummy',
+        categorizationStatusValue: 'uncategorized',
+      ),
+    );
+  });
 
   setUp(() {
     mockDataSource = MockExpenseLocalDataSource();
@@ -106,24 +120,27 @@ void main() {
     );
   });
 
-  test('propagates UnexpectedFailure from data source on unknown exception', () async {
-    when(
-      () => mockDataSource.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        categoryId: any(named: 'categoryId'),
-        accountId: any(named: 'accountId'),
-      ),
-    ).thenThrow(Exception('Unknown Error'));
+  test(
+    'propagates UnexpectedFailure from data source on unknown exception',
+    () async {
+      when(
+        () => mockDataSource.getExpenses(
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          categoryId: any(named: 'categoryId'),
+          accountId: any(named: 'accountId'),
+        ),
+      ).thenThrow(Exception('Unknown Error'));
 
-    final result = await repository.getExpenses();
+      final result = await repository.getExpenses();
 
-    expect(result.isLeft(), isTrue);
-    result.fold(
-      (failure) => expect(failure, isA<UnexpectedFailure>()),
-      (_) => fail('should not return Right'),
-    );
-  });
+      expect(result.isLeft(), isTrue);
+      result.fold(
+        (failure) => expect(failure, isA<UnexpectedFailure>()),
+        (_) => fail('should not return Right'),
+      );
+    },
+  );
 
   test('passes category filter to data source', () async {
     when(
@@ -171,7 +188,9 @@ void main() {
 
   group('getExpenseById', () {
     test('returns Right(null) when not found', () async {
-      when(() => mockDataSource.getExpenseById(any())).thenAnswer((_) async => null);
+      when(
+        () => mockDataSource.getExpenseById(any()),
+      ).thenAnswer((_) async => null);
 
       final result = await repository.getExpenseById('1');
 
@@ -180,7 +199,9 @@ void main() {
     });
 
     test('returns Right(Expense) when found', () async {
-      when(() => mockDataSource.getExpenseById(any())).thenAnswer((_) async => model1);
+      when(
+        () => mockDataSource.getExpenseById(any()),
+      ).thenAnswer((_) async => model1);
 
       final result = await repository.getExpenseById('1');
 
@@ -192,7 +213,9 @@ void main() {
     });
 
     test('returns CacheFailure on error', () async {
-      when(() => mockDataSource.getExpenseById(any())).thenThrow(Exception('error'));
+      when(
+        () => mockDataSource.getExpenseById(any()),
+      ).thenThrow(Exception('error'));
 
       final result = await repository.getExpenseById('1');
 
@@ -218,10 +241,7 @@ void main() {
       final result = await repository.getTotalExpensesForAccount('a1');
 
       expect(result.isRight(), isTrue);
-      result.fold(
-        (_) => fail('Should return Right'),
-        (r) => expect(r, 30.5),
-      );
+      result.fold((_) => fail('Should return Right'), (r) => expect(r, 30.5));
     });
 
     test('returns UnexpectedFailure on Exception', () async {
@@ -282,18 +302,34 @@ void main() {
 
   group('updateExpenseCategorization', () {
     test('returns Right on success', () async {
-      when(() => mockDataSource.getExpenseById(any())).thenAnswer((_) async => model1);
-      when(() => mockDataSource.updateExpense(any())).thenAnswer((_) async {});
+      when(
+        () => mockDataSource.getExpenseById(any()),
+      ).thenAnswer((_) async => model1);
+      when(
+        () => mockDataSource.updateExpense(any()),
+      ).thenAnswer((_) async => model1);
 
-      final result = await repository.updateExpenseCategorization('1', 'c2', CategorizationStatus.categorized, 0.9);
+      final result = await repository.updateExpenseCategorization(
+        '1',
+        'c2',
+        CategorizationStatus.categorized,
+        0.9,
+      );
 
       expect(result.isRight(), isTrue);
     });
 
     test('returns UnexpectedFailure on Exception', () async {
-      when(() => mockDataSource.getExpenseById(any())).thenThrow(Exception('error'));
+      when(
+        () => mockDataSource.getExpenseById(any()),
+      ).thenThrow(Exception('error'));
 
-      final result = await repository.updateExpenseCategorization('1', 'c2', CategorizationStatus.categorized, 0.9);
+      final result = await repository.updateExpenseCategorization(
+        '1',
+        'c2',
+        CategorizationStatus.categorized,
+        0.9,
+      );
 
       expect(result.isLeft(), isTrue);
       result.fold(
@@ -305,30 +341,33 @@ void main() {
 
   group('reassignExpensesCategory', () {
     test('returns counts on success', () async {
-      when(() => mockDataSource.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        categoryId: any(named: 'categoryId'),
-        accountId: any(named: 'accountId'),
-      )).thenAnswer((_) async => [model1]);
-      when(() => mockDataSource.updateExpense(any())).thenAnswer((_) async {});
+      when(
+        () => mockDataSource.getExpenses(
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          categoryId: any(named: 'categoryId'),
+          accountId: any(named: 'accountId'),
+        ),
+      ).thenAnswer((_) async => [model1]);
+      when(
+        () => mockDataSource.updateExpense(any()),
+      ).thenAnswer((_) async => model1);
 
       final result = await repository.reassignExpensesCategory('c1', 'c2');
 
       expect(result.isRight(), isTrue);
-      result.fold(
-        (_) => fail('Should return Right'),
-        (r) => expect(r, 1),
-      );
+      result.fold((_) => fail('Should return Right'), (r) => expect(r, 1));
     });
 
     test('returns UnexpectedFailure on Exception', () async {
-      when(() => mockDataSource.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        categoryId: any(named: 'categoryId'),
-        accountId: any(named: 'accountId'),
-      )).thenThrow(Exception('error'));
+      when(
+        () => mockDataSource.getExpenses(
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          categoryId: any(named: 'categoryId'),
+          accountId: any(named: 'accountId'),
+        ),
+      ).thenThrow(Exception('error'));
 
       final result = await repository.reassignExpensesCategory('c1', 'c2');
 
@@ -351,7 +390,9 @@ void main() {
     });
 
     test('returns CacheFailure on CacheFailure', () async {
-      when(() => mockDataSource.deleteExpense(any())).thenThrow(const CacheFailure('error'));
+      when(
+        () => mockDataSource.deleteExpense(any()),
+      ).thenThrow(const CacheFailure('error'));
 
       final result = await repository.deleteExpense('1');
 
@@ -363,7 +404,9 @@ void main() {
     });
 
     test('returns UnexpectedFailure on generic Exception', () async {
-      when(() => mockDataSource.deleteExpense(any())).thenThrow(Exception('error'));
+      when(
+        () => mockDataSource.deleteExpense(any()),
+      ).thenThrow(Exception('error'));
 
       final result = await repository.deleteExpense('1');
 

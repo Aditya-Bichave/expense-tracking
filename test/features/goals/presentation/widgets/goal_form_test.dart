@@ -59,6 +59,36 @@ void main() {
       expect(find.text('Initial description'), findsOneWidget);
     });
 
+    testWidgets('tapping icon tile shows icon picker', (tester) async {
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: Scaffold(body: GoalForm(onSubmit: mockOnSubmit.call)),
+      );
+
+      final iconTileFinder = find.text('Goal Icon');
+      expect(iconTileFinder, findsOneWidget);
+
+      await tester.tap(iconTileFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AlertDialog), findsOneWidget);
+    });
+
+    testWidgets('tapping target date shows date picker', (tester) async {
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: Scaffold(body: GoalForm(onSubmit: mockOnSubmit.call)),
+      );
+
+      final dateTileFinder = find.text('Target Date (Optional)');
+      expect(dateTileFinder, findsOneWidget);
+
+      await tester.tap(dateTileFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DatePickerDialog), findsOneWidget);
+    });
+
     testWidgets('onSubmit is called with correct data when form is valid', (
       tester,
     ) async {

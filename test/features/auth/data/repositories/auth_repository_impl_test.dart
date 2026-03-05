@@ -39,7 +39,9 @@ void main() {
     test('should return Right(null) when successful', () async {
       // Arrange
       when(
-        () => mockRemoteDataSource.signInWithMagicLink(email: any(named: 'email')),
+        () => mockRemoteDataSource.signInWithMagicLink(
+          email: any(named: 'email'),
+        ),
       ).thenAnswer((_) async {});
 
       // Act
@@ -47,13 +49,17 @@ void main() {
 
       // Assert
       expect(result, const Right(null));
-      verify(() => mockRemoteDataSource.signInWithMagicLink(email: tEmail)).called(1);
+      verify(
+        () => mockRemoteDataSource.signInWithMagicLink(email: tEmail),
+      ).called(1);
     });
 
     test('should return ServerFailure when call fails', () async {
       // Arrange
       when(
-        () => mockRemoteDataSource.signInWithMagicLink(email: any(named: 'email')),
+        () => mockRemoteDataSource.signInWithMagicLink(
+          email: any(named: 'email'),
+        ),
       ).thenThrow(Exception('Error'));
 
       // Act
@@ -210,7 +216,9 @@ void main() {
 
     test('should return CacheFailure when an exception occurs', () {
       // Arrange
-      when(() => mockRemoteDataSource.getCurrentUser()).thenThrow(Exception('Cache error'));
+      when(
+        () => mockRemoteDataSource.getCurrentUser(),
+      ).thenThrow(Exception('Cache error'));
 
       // Act
       final result = repository.getCurrentUser();

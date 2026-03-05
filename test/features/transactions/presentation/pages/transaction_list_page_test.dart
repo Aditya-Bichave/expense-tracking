@@ -13,6 +13,8 @@ import 'package:expense_tracker/features/transactions/presentation/widgets/trans
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
+import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
@@ -165,6 +167,7 @@ void main() {
       ).thenReturn(const CategoryManagementState());
 
       await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('batch_fab')), findsOneWidget);
     });

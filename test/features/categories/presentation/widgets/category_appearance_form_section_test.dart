@@ -44,35 +44,13 @@ void main() {
     });
 
     testWidgets('tapping icon tile shows icon picker', (tester) async {
-      // This test is hard to do without mocking the dialog itself.
-      // A simple test is to ensure the onTap is connected.
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: Material(
-          child: CategoryAppearanceFormSection(
-            selectedIconName: 'food',
-            selectedColor: Colors.green,
-            onIconSelected: mockCallbacks.onIconSelected,
-            onColorSelected: mockCallbacks.onColorSelected,
-          ),
-        ),
-      );
-
-      // We can't easily test that `showIconPicker` was called,
-      // but we can test that the ListTile is tappable.
-      await tester.tap(find.text('Icon'));
-      // No verification possible without a more complex setup,
-      // but this confirms the widget is interactive.
-    });
-
-    testWidgets('tapping color tile shows color picker dialog and handles selection', (tester) async {
       await pumpWidgetWithProviders(
         tester: tester,
         widget: Material(
           child: Scaffold(
             body: CategoryAppearanceFormSection(
               selectedIconName: 'food',
-              selectedColor: Colors.blue,
+              selectedColor: Colors.green,
               onIconSelected: mockCallbacks.onIconSelected,
               onColorSelected: mockCallbacks.onColorSelected,
             ),
@@ -80,20 +58,73 @@ void main() {
         ),
       );
 
-      final colorTileFinder = find.widgetWithText(ListTile, 'Color');
-      expect(colorTileFinder, findsOneWidget);
-
-      await tester.tap(colorTileFinder);
+      await tester.tap(find.text('Icon'));
       await tester.pumpAndSettle();
-
       expect(find.byType(AlertDialog), findsOneWidget);
-      expect(find.text('Pick a color'), findsOneWidget);
-
-      final selectButton = find.text('Select');
-      await tester.tap(selectButton);
-      await tester.pumpAndSettle();
-
-      verify(() => mockCallbacks.onColorSelected(any())).called(1);
+      expect(find.text('Select Icon'), findsOneWidget);
     });
+
+    testWidgets(
+      'tapping color tile shows color picker dialog and handles cancellation',
+      (tester) async {
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: Material(
+            child: Scaffold(
+              body: CategoryAppearanceFormSection(
+                selectedIconName: 'food',
+                selectedColor: Colors.blue,
+                onIconSelected: mockCallbacks.onIconSelected,
+                onColorSelected: mockCallbacks.onColorSelected,
+              ),
+            ),
+          ),
+        );
+
+        final colorTileFinder = find.widgetWithText(ListTile, 'Color');
+        await tester.tap(colorTileFinder);
+        await tester.pumpAndSettle();
+
+        final cancelButton = find.text('Cancel');
+        await tester.tap(cancelButton);
+        await tester.pumpAndSettle();
+
+        verifyNever(() => mockCallbacks.onColorSelected(any()));
+      },
+    );
+
+    testWidgets(
+      'tapping color tile shows color picker dialog and handles selection',
+      (tester) async {
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: Material(
+            child: Scaffold(
+              body: CategoryAppearanceFormSection(
+                selectedIconName: 'food',
+                selectedColor: Colors.blue,
+                onIconSelected: mockCallbacks.onIconSelected,
+                onColorSelected: mockCallbacks.onColorSelected,
+              ),
+            ),
+          ),
+        );
+
+        final colorTileFinder = find.widgetWithText(ListTile, 'Color');
+        expect(colorTileFinder, findsOneWidget);
+
+        await tester.tap(colorTileFinder);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AlertDialog), findsOneWidget);
+        expect(find.text('Pick a color'), findsOneWidget);
+
+        final selectButton = find.text('Select');
+        await tester.tap(selectButton);
+        await tester.pumpAndSettle();
+
+        verify(() => mockCallbacks.onColorSelected(any())).called(1);
+      },
+    );
   });
 }

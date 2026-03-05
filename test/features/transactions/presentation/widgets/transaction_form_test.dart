@@ -73,4 +73,47 @@ void main() {
 
     expect(find.byType(TextFormField), findsAtLeastNWidgets(1));
   });
+
+  testWidgets('TransactionForm tapping category opens picker', (tester) async {
+    when(
+      () => mockCategoryBloc.state,
+    ).thenReturn(const CategoryManagementState());
+    when(() => mockSettingsBloc.state).thenReturn(const SettingsState());
+    when(
+      () => mockAddEditBloc.state,
+    ).thenReturn(const AddEditTransactionState());
+    when(
+      () => mockAccountBloc.state,
+    ).thenReturn(const AccountListLoaded(accounts: []));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: MultiBlocProvider(
+          providers: [
+            BlocProvider<CategoryManagementBloc>.value(value: mockCategoryBloc),
+            BlocProvider<SettingsBloc>.value(value: mockSettingsBloc),
+            BlocProvider<AddEditTransactionBloc>.value(value: mockAddEditBloc),
+            BlocProvider<AccountListBloc>.value(value: mockAccountBloc),
+          ],
+          child: Scaffold(
+            body: TransactionForm(
+              initialType: TransactionType.expense,
+              onSubmit: (type, title, amount, date, cat, accId, notes) {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final catTileFinder = find.byType(ListTile).first;
+    expect(catTileFinder, findsOneWidget);
+    await tester.tap(catTileFinder);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsOneWidget);
+  });
 }
