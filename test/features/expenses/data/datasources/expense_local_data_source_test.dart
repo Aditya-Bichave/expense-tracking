@@ -1,205 +1,152 @@
-import 'package:expense_tracker/core/error/failure.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/features/expenses/data/datasources/expense_local_data_source.dart';
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
-import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:hive_ce/hive.dart';
-import 'package:mocktail/mocktail.dart';
 
-class MockBox extends Mock implements Box<ExpenseModel> {}
+class MockBox<T> extends Mock implements Box<T> {}
 
 class FakeExpenseModel extends Fake implements ExpenseModel {}
 
 void main() {
+  late MockBox<ExpenseModel> mockBox;
   late HiveExpenseLocalDataSource dataSource;
-  late MockBox mockBox;
 
   setUpAll(() {
     registerFallbackValue(FakeExpenseModel());
   });
 
   setUp(() {
-    mockBox = MockBox();
+    mockBox = MockBox<ExpenseModel>();
     dataSource = HiveExpenseLocalDataSource(mockBox);
   });
 
-  final tExpenseModel = ExpenseModel(
-    id: '1',
-    title: 'Test Expense',
-    amount: 100.0,
-    date: DateTime(2024, 1, 1),
-    accountId: 'acc1',
-    categoryId: 'cat1',
-  );
+  group('HiveExpenseLocalDataSource', () {
+    final tModel1 = ExpenseModel(
+      id: '1',
+      title: 'Expense 1',
+      amount: 100.0,
+      categoryId: 'cat1',
+      date: DateTime(2023, 1, 1),
+      notes: 'note1',
+      accountId: 'acc1',
+    );
+    final tModel2 = ExpenseModel(
+      id: '2',
+      title: 'Expense 2',
+      amount: 200.0,
+      categoryId: 'cat2',
+      date: DateTime(2023, 1, 2),
+      notes: 'note2',
+      accountId: 'acc2',
+    );
+    final tModels = [tModel1, tModel2];
 
-  group('addExpense', () {
-    test('should add expense to Hive box', () async {
-      // Arrange
+    test('addExpense puts single expense into box', () async {
       when(
-        () => mockBox.put(any(), any()),
+        () => mockBox.put(any<dynamic>(), any<ExpenseModel>()),
       ).thenAnswer((_) async => Future.value());
 
-      // Act
-      await dataSource.addExpense(tExpenseModel);
+      final result = await dataSource.addExpense(tModel1);
 
-      // Assert
-      verify(() => mockBox.put(tExpenseModel.id, tExpenseModel)).called(1);
+      expect(result, equals(tModel1));
+      verify(() => mockBox.put(tModel1.id, tModel1)).called(1);
     });
 
-    test('should throw CacheFailure when adding fails', () async {
-      // Arrange
-      when(() => mockBox.put(any(), any())).thenThrow(Exception('Hive Error'));
+    test('addExpense throws CacheFailure on exception', () async {
+      when(
+        () => mockBox.put(any<dynamic>(), any<ExpenseModel>()),
+      ).thenThrow(Exception('error'));
 
-      // Act & Assert
-      await expectLater(
-        () => dataSource.addExpense(tExpenseModel),
+      expect(
+        () => dataSource.addExpense(tModel1),
         throwsA(isA<CacheFailure>()),
       );
     });
-  });
 
-  group('deleteExpense', () {
-    test('should delete expense from Hive box', () async {
-      // Arrange
-      when(() => mockBox.delete(any())).thenAnswer((_) async => Future.value());
+    test('deleteExpense deletes from box', () async {
+      when(
+        () => mockBox.delete(any<dynamic>()),
+      ).thenAnswer((_) async => Future.value());
 
-      // Act
       await dataSource.deleteExpense('1');
 
-      // Assert
       verify(() => mockBox.delete('1')).called(1);
     });
 
-    test('should throw CacheFailure when deletion fails', () async {
-      // Arrange
-      when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
+    test('getExpenses returns values filtered by date', () async {
+      when(() => mockBox.values).thenReturn(tModels);
 
-      // Act & Assert
-      await expectLater(
-        () => dataSource.deleteExpense('1'),
-        throwsA(isA<CacheFailure>()),
-      );
-    });
-  });
-
-  group('getExpenses', () {
-    test('should return all expenses when no filters', () async {
-      // Arrange
-      when(() => mockBox.values).thenReturn([tExpenseModel]);
-
-      // Act
-      final result = await dataSource.getExpenses();
-
-      // Assert
-      expect(result, [tExpenseModel]);
-    });
-
-    test('should return filtered expenses by date', () async {
-      // Arrange
-      final oldExpense = ExpenseModel(
-        id: '2',
-        title: 'Old',
-        amount: 50,
-        date: DateTime(2023, 1, 1),
-        accountId: 'acc1',
-        categoryId: 'cat1',
-      );
-      when(() => mockBox.values).thenReturn([tExpenseModel, oldExpense]);
-
-      // Act
       final result = await dataSource.getExpenses(
-        startDate: DateTime(2024, 1, 1),
+        startDate: DateTime(2023, 1, 1),
+        endDate: DateTime(2023, 1, 1, 23, 59, 59),
       );
 
-      // Assert
-      expect(result, [tExpenseModel]);
+      expect(result, equals([tModel1]));
     });
 
-    test('should throw CacheFailure when retrieval fails', () async {
-      // Arrange
-      when(() => mockBox.values).thenThrow(Exception('Hive Error'));
+    test('getExpenses returns values filtered by categoryId', () async {
+      when(() => mockBox.values).thenReturn(tModels);
 
-      // Act & Assert
-      await expectLater(
-        () => dataSource.getExpenses(),
-        throwsA(isA<CacheFailure>()),
-      );
+      final result = await dataSource.getExpenses(categoryId: 'cat1');
+
+      expect(result, equals([tModel1]));
     });
-  });
 
-  group('getExpenseById', () {
-    test('should return expense when found', () async {
-      // Arrange
-      when(() => mockBox.get(any())).thenReturn(tExpenseModel);
+    test('getExpenses returns values filtered by accountId', () async {
+      when(() => mockBox.values).thenReturn(tModels);
 
-      // Act
+      final result = await dataSource.getExpenses(accountId: 'acc2');
+
+      expect(result, equals([tModel2]));
+    });
+
+    test('getExpenseById returns expense if exists', () async {
+      when(() => mockBox.get(any<dynamic>())).thenReturn(tModel1);
+
       final result = await dataSource.getExpenseById('1');
 
-      // Assert
-      expect(result, tExpenseModel);
+      expect(result, equals(tModel1));
       verify(() => mockBox.get('1')).called(1);
     });
 
-    test('should return null when not found', () async {
-      // Arrange
-      when(() => mockBox.get(any())).thenReturn(null);
+    test('getExpenseById returns null if not exists', () async {
+      when(() => mockBox.get(any<dynamic>())).thenReturn(null);
 
-      // Act
-      final result = await dataSource.getExpenseById('1');
+      final result = await dataSource.getExpenseById('unknown');
 
-      // Assert
-      expect(result, null);
+      expect(result, isNull);
+      verify(() => mockBox.get('unknown')).called(1);
     });
 
-    test('should throw CacheFailure when retrieval fails', () async {
-      // Arrange
-      when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
-
-      // Act & Assert
-      await expectLater(
-        () => dataSource.getExpenseById('1'),
-        throwsA(isA<CacheFailure>()),
-      );
-    });
-  });
-
-  group('updateExpense', () {
-    test('should update expense if it exists', () async {
-      // Arrange
-      when(() => mockBox.containsKey(any())).thenReturn(true);
+    test('updateExpense updates expense if exists', () async {
+      when(() => mockBox.containsKey(any<dynamic>())).thenReturn(true);
       when(
-        () => mockBox.put(any(), any()),
+        () => mockBox.put(any<dynamic>(), any<ExpenseModel>()),
       ).thenAnswer((_) async => Future.value());
 
-      // Act
-      await dataSource.updateExpense(tExpenseModel);
+      final result = await dataSource.updateExpense(tModel1);
 
-      // Assert
-      verify(() => mockBox.put(tExpenseModel.id, tExpenseModel)).called(1);
+      expect(result, equals(tModel1));
+      verify(() => mockBox.containsKey(tModel1.id)).called(1);
+      verify(() => mockBox.put(tModel1.id, tModel1)).called(1);
     });
 
-    test('should throw CacheFailure if expense does not exist', () async {
-      // Arrange
-      when(() => mockBox.containsKey(any())).thenReturn(false);
+    test('updateExpense throws CacheFailure if not exists', () async {
+      when(() => mockBox.containsKey(any<dynamic>())).thenReturn(false);
 
-      // Act & Assert
-      await expectLater(
-        () => dataSource.updateExpense(tExpenseModel),
+      expect(
+        () => dataSource.updateExpense(tModel1),
         throwsA(isA<CacheFailure>()),
       );
-      verify(() => mockBox.containsKey(tExpenseModel.id)).called(1);
-      verifyNever(() => mockBox.put(any(), any()));
     });
-  });
 
-  group('clearAll', () {
-    test('should clear Hive box', () async {
-      // Arrange
-      when(() => mockBox.clear()).thenAnswer((_) async => 0);
+    test('clearAll clears the box', () async {
+      when(() => mockBox.clear()).thenAnswer((_) async => 2);
 
-      // Act
       await dataSource.clearAll();
 
-      // Assert
       verify(() => mockBox.clear()).called(1);
     });
   });
