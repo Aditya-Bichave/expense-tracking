@@ -52,3 +52,4 @@ ci/smoke/routes.json
 # Environment variables
 .env
 .env.*
+test_pid.txt

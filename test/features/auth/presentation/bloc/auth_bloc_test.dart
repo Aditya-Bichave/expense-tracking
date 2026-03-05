@@ -1,22 +1,21 @@
-import 'package:bloc_test/bloc_test.dart';
-import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/features/auth/domain/usecases/get_current_user_usecase.dart';
-import 'package:expense_tracker/features/auth/domain/usecases/login_with_otp_usecase.dart';
-import 'package:expense_tracker/features/auth/domain/usecases/login_with_magic_link_usecase.dart';
-import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dart';
-import 'package:expense_tracker/features/auth/domain/usecases/verify_otp_usecase.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
-import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
-
-class MockLoginWithOtpUseCase extends Mock implements LoginWithOtpUseCase {}
+import 'package:expense_tracker/features/auth/domain/usecases/login_with_magic_link_usecase.dart';
+import 'package:expense_tracker/features/auth/domain/usecases/login_with_otp_usecase.dart';
+import 'package:expense_tracker/features/auth/domain/usecases/verify_otp_usecase.dart';
+import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dart';
+import 'package:expense_tracker/features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'package:expense_tracker/core/error/failure.dart';
+import 'package:dartz/dartz.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockLoginWithMagicLinkUseCase extends Mock
     implements LoginWithMagicLinkUseCase {}
+
+class MockLoginWithOtpUseCase extends Mock implements LoginWithOtpUseCase {}
 
 class MockVerifyOtpUseCase extends Mock implements VerifyOtpUseCase {}
 
@@ -24,103 +23,242 @@ class MockLogoutUseCase extends Mock implements LogoutUseCase {}
 
 class MockGetCurrentUserUseCase extends Mock implements GetCurrentUserUseCase {}
 
-class MockUser extends Mock implements User {}
-
-class FakeAuthResponse extends Fake implements AuthResponse {
-  final User? _user;
-  FakeAuthResponse({User? user}) : _user = user;
-  @override
-  User? get user => _user;
-}
-
 void main() {
+  late MockLoginWithMagicLinkUseCase mockMagicLink;
+  late MockLoginWithOtpUseCase mockLoginOtp;
+  late MockVerifyOtpUseCase mockVerifyOtp;
+  late MockLogoutUseCase mockLogout;
+  late MockGetCurrentUserUseCase mockGetCurrentUser;
   late AuthBloc bloc;
-  late MockLoginWithOtpUseCase mockLoginUseCase;
-  late MockLoginWithMagicLinkUseCase mockMagicLinkUseCase;
-  late MockVerifyOtpUseCase mockVerifyUseCase;
-  late MockLogoutUseCase mockLogoutUseCase;
-  late MockGetCurrentUserUseCase mockGetCurrentUserUseCase;
-  late MockUser mockUser;
+
+  final tUser = User(
+    id: 'user_id',
+    appMetadata: {},
+    userMetadata: {},
+    aud: 'authenticated',
+    createdAt: DateTime.now().toIso8601String(),
+  );
 
   setUp(() {
-    mockLoginUseCase = MockLoginWithOtpUseCase();
-    mockMagicLinkUseCase = MockLoginWithMagicLinkUseCase();
-    mockVerifyUseCase = MockVerifyOtpUseCase();
-    mockLogoutUseCase = MockLogoutUseCase();
-    mockGetCurrentUserUseCase = MockGetCurrentUserUseCase();
-    mockUser = MockUser();
+    mockMagicLink = MockLoginWithMagicLinkUseCase();
+    mockLoginOtp = MockLoginWithOtpUseCase();
+    mockVerifyOtp = MockVerifyOtpUseCase();
+    mockLogout = MockLogoutUseCase();
+    mockGetCurrentUser = MockGetCurrentUserUseCase();
 
     bloc = AuthBloc(
-      mockLoginUseCase,
-      mockMagicLinkUseCase,
-      mockVerifyUseCase,
-      mockLogoutUseCase,
-      mockGetCurrentUserUseCase,
+      mockLoginOtp,
+      mockMagicLink,
+      mockVerifyOtp,
+      mockLogout,
+      mockGetCurrentUser,
     );
+  });
+
+  tearDown(() async {
+    await bloc.close();
   });
 
   group('AuthBloc', () {
     test('initial state is AuthInitial', () {
-      expect(bloc.state, AuthInitial());
+      expect(bloc.state, isA<AuthInitial>());
     });
 
-    blocTest<AuthBloc, AuthState>(
-      'emits [AuthAuthenticated] when check status returns user',
-      setUp: () {
-        when(() => mockGetCurrentUserUseCase()).thenReturn(Right(mockUser));
+    test('AuthCheckStatus emits AuthAuthenticated when user exists', () async {
+      when(() => mockGetCurrentUser()).thenReturn(Right(tUser));
+
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([AuthAuthenticated(tUser)]),
+      );
+
+      bloc.add(AuthCheckStatus());
+      await future;
+    });
+
+    test(
+      'AuthCheckStatus emits AuthUnauthenticated when user is null',
+      () async {
+        when(() => mockGetCurrentUser()).thenReturn(const Right(null));
+
+        final future = expectLater(
+          bloc.stream,
+          emitsInOrder([isA<AuthUnauthenticated>()]),
+        );
+
+        bloc.add(AuthCheckStatus());
+        await future;
       },
-      build: () => bloc,
-      act: (bloc) => bloc.add(AuthCheckStatus()),
-      expect: () => [AuthAuthenticated(mockUser)],
     );
 
-    blocTest<AuthBloc, AuthState>(
-      'emits [AuthUnauthenticated] when check status returns null',
-      setUp: () {
-        when(() => mockGetCurrentUserUseCase()).thenReturn(const Right(null));
-      },
-      build: () => bloc,
-      act: (bloc) => bloc.add(AuthCheckStatus()),
-      expect: () => [AuthUnauthenticated()],
-    );
+    test('AuthCheckStatus emits AuthUnauthenticated on failure', () async {
+      when(
+        () => mockGetCurrentUser(),
+      ).thenReturn(const Left(ServerFailure('error')));
 
-    blocTest<AuthBloc, AuthState>(
-      'emits [AuthLoading, AuthOtpSent] on successful login',
-      setUp: () {
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([isA<AuthUnauthenticated>()]),
+      );
+
+      bloc.add(AuthCheckStatus());
+      await future;
+    });
+
+    test(
+      'AuthLoginWithMagicLinkRequested emits loading then sent on right',
+      () async {
         when(
-          () => mockLoginUseCase(any()),
+          () => mockMagicLink(any()),
         ).thenAnswer((_) async => const Right(null));
+
+        bloc.add(const AuthLoginWithMagicLinkRequested('test@test.com'));
+
+        await expectLater(
+          bloc.stream,
+          emitsInOrder([
+            isA<AuthLoading>(),
+            isA<AuthMagicLinkSent>().having(
+              (s) => s.email,
+              'email',
+              'test@test.com',
+            ),
+          ]),
+        );
+
+        verify(() => mockMagicLink('test@test.com')).called(1);
       },
-      build: () => bloc,
-      act: (bloc) => bloc.add(AuthLoginRequested('123456')),
-      expect: () => [AuthLoading(), AuthOtpSent('123456')],
     );
 
-    blocTest<AuthBloc, AuthState>(
-      'emits [AuthLoading, AuthAuthenticated] on successful verify otp',
-      setUp: () {
+    test('AuthLoginWithMagicLinkRequested emits error on left', () async {
+      when(
+        () => mockMagicLink(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('error')));
+
+      bloc.add(const AuthLoginWithMagicLinkRequested('test@test.com'));
+
+      await expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<AuthLoading>(),
+          isA<AuthError>().having((s) => s.message, 'message', 'error'),
+        ]),
+      );
+    });
+
+    test('AuthLoginRequested emits loading then sent on right', () async {
+      when(
+        () => mockLoginOtp(any()),
+      ).thenAnswer((_) async => const Right(null));
+
+      bloc.add(const AuthLoginRequested('123'));
+
+      await expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<AuthLoading>(),
+          isA<AuthOtpSent>().having((s) => s.phone, 'phone', '123'),
+        ]),
+      );
+
+      verify(() => mockLoginOtp('123')).called(1);
+    });
+
+    test('AuthLoginRequested emits error on left', () async {
+      when(
+        () => mockLoginOtp(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure('error')));
+
+      bloc.add(const AuthLoginRequested('123'));
+
+      await expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<AuthLoading>(),
+          isA<AuthError>().having((s) => s.message, 'message', 'error'),
+        ]),
+      );
+    });
+
+    test(
+      'AuthVerifyOtpRequested emits loading then success when user is returned',
+      () async {
+        final tAuthResponse = AuthResponse(user: tUser, session: null);
         when(
-          () => mockVerifyUseCase(
+          () => mockVerifyOtp(
             phone: any(named: 'phone'),
             token: any(named: 'token'),
           ),
-        ).thenAnswer((_) async => Right(FakeAuthResponse(user: mockUser)));
+        ).thenAnswer((_) async => Right(tAuthResponse));
+
+        bloc.add(const AuthVerifyOtpRequested('123', '456'));
+
+        await expectLater(
+          bloc.stream,
+          emitsInOrder([isA<AuthLoading>(), AuthAuthenticated(tUser)]),
+        );
+
+        verify(() => mockVerifyOtp(phone: '123', token: '456')).called(1);
       },
-      build: () => bloc,
-      act: (bloc) => bloc.add(AuthVerifyOtpRequested('123456', '1234')),
-      expect: () => [AuthLoading(), AuthAuthenticated(mockUser)],
     );
 
-    blocTest<AuthBloc, AuthState>(
-      'emits [AuthLoading, AuthUnauthenticated] on logout',
-      setUp: () {
+    test(
+      'AuthVerifyOtpRequested emits error when user is null in response',
+      () async {
+        final tAuthResponse = AuthResponse(user: null, session: null);
         when(
-          () => mockLogoutUseCase(),
-        ).thenAnswer((_) async => const Right(null));
+          () => mockVerifyOtp(
+            phone: any(named: 'phone'),
+            token: any(named: 'token'),
+          ),
+        ).thenAnswer((_) async => Right(tAuthResponse));
+
+        bloc.add(const AuthVerifyOtpRequested('123', '456'));
+
+        await expectLater(
+          bloc.stream,
+          emitsInOrder([
+            isA<AuthLoading>(),
+            isA<AuthError>().having(
+              (s) => s.message,
+              'message',
+              'Login failed: No user returned',
+            ),
+          ]),
+        );
       },
-      build: () => bloc,
-      act: (bloc) => bloc.add(AuthLogoutRequested()),
-      expect: () => [AuthLoading(), AuthUnauthenticated()],
     );
+
+    test('AuthVerifyOtpRequested emits error on left', () async {
+      when(
+        () => mockVerifyOtp(
+          phone: any(named: 'phone'),
+          token: any(named: 'token'),
+        ),
+      ).thenAnswer((_) async => const Left(ServerFailure('error')));
+
+      bloc.add(const AuthVerifyOtpRequested('123', '456'));
+
+      await expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<AuthLoading>(),
+          isA<AuthError>().having((s) => s.message, 'message', 'error'),
+        ]),
+      );
+    });
+
+    test('AuthLogoutRequested emits loading then unauthenticated', () async {
+      when(() => mockLogout()).thenAnswer((_) async => const Right(null));
+
+      bloc.add(AuthLogoutRequested());
+
+      await expectLater(
+        bloc.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthUnauthenticated>()]),
+      );
+
+      verify(() => mockLogout()).called(1);
+    });
   });
 }

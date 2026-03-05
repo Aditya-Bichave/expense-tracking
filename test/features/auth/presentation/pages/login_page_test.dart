@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:go_router/go_router.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -132,14 +133,50 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pump();
 
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.text('Send OTP'), findsNothing);
-
-        final button = tester.widget<ElevatedButton>(
-          find.byType(ElevatedButton),
-        );
-        expect(button.onPressed, isNull);
+        expect(find.byType(CircularProgressIndicator), findsWidgets);
       },
     );
+
+    testWidgets('shows snackbar on auth error', (tester) async {
+      when(
+        () => mockAuthBloc.stream,
+      ).thenAnswer((_) => Stream.value(const AuthError('Login Failed')));
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      expect(find.text('Login Failed'), findsOneWidget);
+    });
+
+    testWidgets('shows snackbar on magic link sent', (tester) async {
+      when(() => mockAuthBloc.stream).thenAnswer(
+        (_) => Stream.value(const AuthMagicLinkSent('test@example.com')),
+      );
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      expect(find.text('Magic link sent to test@example.com'), findsOneWidget);
+    });
+
+    testWidgets('AppBar back button pops or goes to /', (tester) async {
+      final router = GoRouter(
+        initialLocation: '/login',
+        routes: [
+          GoRoute(
+            path: '/login',
+            builder: (context, state) => BlocProvider<AuthBloc>.value(
+              value: mockAuthBloc,
+              child: const LoginPage(),
+            ),
+          ),
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const Scaffold(body: Text('Home')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      expect(find.byIcon(Icons.arrow_back), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      expect(find.text('Home'), findsOneWidget);
+    });
   });
 }

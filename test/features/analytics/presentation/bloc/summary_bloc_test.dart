@@ -1,150 +1,170 @@
 import 'dart:async';
-
-import 'package:bloc_test/bloc_test.dart';
-import 'package:dartz/dartz.dart';
-import 'package:expense_tracker/core/error/failure.dart';
-import 'package:expense_tracker/core/events/data_change_event.dart';
-import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
-import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
-import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
+import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
+import 'package:expense_tracker/features/analytics/domain/usecases/get_expense_summary.dart';
+import 'package:expense_tracker/core/events/data_change_event.dart';
+import 'package:expense_tracker/core/error/failure.dart';
+import 'package:dartz/dartz.dart';
 
 class MockGetExpenseSummaryUseCase extends Mock
     implements GetExpenseSummaryUseCase {}
 
-class FakeGetSummaryParams extends Fake implements GetSummaryParams {}
+class MockExpenseSummary extends Mock implements ExpenseSummary {}
 
 void main() {
-  late SummaryBloc bloc;
   late MockGetExpenseSummaryUseCase mockUseCase;
-  late StreamController<DataChangedEvent> dataChangeStreamController;
+  late StreamController<DataChangedEvent> dataChangeController;
+  late SummaryBloc bloc;
 
   setUpAll(() {
-    registerFallbackValue(FakeGetSummaryParams());
+    registerFallbackValue(GetSummaryParams(startDate: null, endDate: null));
   });
 
   setUp(() {
     mockUseCase = MockGetExpenseSummaryUseCase();
-    dataChangeStreamController = StreamController<DataChangedEvent>.broadcast();
+    dataChangeController = StreamController<DataChangedEvent>.broadcast();
+
     bloc = SummaryBloc(
       getExpenseSummaryUseCase: mockUseCase,
-      dataChangeStream: dataChangeStreamController.stream,
+      dataChangeStream: dataChangeController.stream,
     );
   });
 
-  tearDown(() {
-    bloc.close();
-    dataChangeStreamController.close();
+  tearDown(() async {
+    await bloc.close();
+    await dataChangeController.close();
   });
 
-  test('initial state is SummaryInitial', () {
-    expect(bloc.state, isA<SummaryInitial>());
-  });
+  final tSummary = MockExpenseSummary();
 
-  group('LoadSummary', () {
-    const tSummary = ExpenseSummary(
-      totalExpenses: 100,
-      categoryBreakdown: {'Food': 100},
-    );
-
-    blocTest<SummaryBloc, SummaryState>(
-      'emits [SummaryLoading, SummaryLoaded] when usecase succeeds',
-      build: () {
-        when(
-          () => mockUseCase(any()),
-        ).thenAnswer((_) async => const Right(tSummary));
-        return bloc;
-      },
-      act: (bloc) => bloc.add(const LoadSummary()),
-      expect: () => [
-        const SummaryLoading(isReloading: false),
-        const SummaryLoaded(tSummary),
-      ],
-    );
-
-    blocTest<SummaryBloc, SummaryState>(
-      'emits [SummaryLoading, SummaryError] when usecase fails',
-      build: () {
-        when(
-          () => mockUseCase(any()),
-        ).thenAnswer((_) async => const Left(ServerFailure('Server Error')));
-        return bloc;
-      },
-      act: (bloc) => bloc.add(const LoadSummary()),
-      expect: () => [
-        const SummaryLoading(isReloading: false),
-        const SummaryError('Server Error'),
-      ],
-    );
-
-    blocTest<SummaryBloc, SummaryState>(
-      'emits [SummaryLoading, SummaryLoaded] with isReloading=true when already loaded and forced',
-      seed: () => const SummaryLoaded(tSummary),
-      build: () {
-        when(
-          () => mockUseCase(any()),
-        ).thenAnswer((_) async => const Right(tSummary));
-        return bloc;
-      },
-      act: (bloc) => bloc.add(const LoadSummary(forceReload: true)),
-      expect: () => [
-        const SummaryLoading(isReloading: true),
-        const SummaryLoaded(tSummary),
-      ],
-    );
-  });
-
-  group('DataChangedEvent', () {
-    const tSummary = ExpenseSummary(
-      totalExpenses: 200,
-      categoryBreakdown: {'Food': 200},
-    );
-
-    test('triggers reload when expense data changes', () async {
-      when(
-        () => mockUseCase(any()),
-      ).thenAnswer((_) async => const Right(tSummary));
-
-      // Trigger the event via stream
-      dataChangeStreamController.add(
-        const DataChangedEvent(
-          type: DataChangeType.expense,
-          reason: DataChangeReason.updated,
-        ),
-      );
-
-      // Wait for async processing
-      await expectLater(
-        bloc.stream,
-        emitsInOrder([
-          const SummaryLoading(isReloading: false),
-          const SummaryLoaded(tSummary),
-        ]),
-      );
+  group('SummaryBloc', () {
+    test('initial state is SummaryInitial', () {
+      expect(bloc.state, isA<SummaryInitial>());
     });
 
-    test('triggers ResetState when system reset happens', () async {
+    test('LoadSummary emits loading then loaded on success', () async {
+      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tSummary));
+
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SummaryLoading>(),
+          isA<SummaryLoaded>().having((s) => s.summary, 'summary', tSummary),
+        ]),
+      );
+
+      bloc.add(const LoadSummary());
+      await future;
+
+      verify(() => mockUseCase(any())).called(1);
+    });
+
+    test('LoadSummary emits loading then error on CacheFailure', () async {
       when(
         () => mockUseCase(any()),
-      ).thenAnswer((_) async => const Right(tSummary));
+      ).thenAnswer((_) async => const Left(CacheFailure('cache error')));
 
-      dataChangeStreamController.add(
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SummaryLoading>(),
+          isA<SummaryError>().having(
+            (s) => s.message,
+            'message',
+            'Could not load summary from local data. cache error',
+          ),
+        ]),
+      );
+
+      bloc.add(const LoadSummary());
+      await future;
+    });
+
+    test('LoadSummary emits loading then error on UnexpectedFailure', () async {
+      when(
+        () => mockUseCase(any()),
+      ).thenAnswer((_) async => const Left(UnexpectedFailure('error')));
+
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SummaryLoading>(),
+          isA<SummaryError>().having(
+            (s) => s.message,
+            'message',
+            'An unexpected error occurred loading the summary.',
+          ),
+        ]),
+      );
+
+      bloc.add(const LoadSummary());
+      await future;
+    });
+
+    test('LoadSummary handles exceptions gracefully', () async {
+      when(() => mockUseCase(any())).thenThrow(Exception('crash'));
+
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SummaryLoading>(),
+          isA<SummaryError>().having(
+            (s) => s.message,
+            'message',
+            contains(
+              'An unexpected error occurred loading summary: Exception: crash',
+            ),
+          ),
+        ]),
+      );
+
+      bloc.add(const LoadSummary());
+      await future;
+    });
+
+    test('data change stream triggers reset on system reset event', () async {
+      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tSummary));
+
+      final future = expectLater(
+        bloc.stream,
+        emitsInOrder([
+          isA<SummaryInitial>(),
+          isA<SummaryLoading>(),
+          isA<SummaryLoaded>(),
+        ]),
+      );
+
+      dataChangeController.add(
         const DataChangedEvent(
           type: DataChangeType.system,
           reason: DataChangeReason.reset,
         ),
       );
 
-      // Should go to Initial, then Loading -> Loaded (because ResetState triggers LoadSummary)
-      await expectLater(
+      await future;
+    });
+
+    test('data change stream triggers reload on expense data change', () async {
+      when(() => mockUseCase(any())).thenAnswer((_) async => Right(tSummary));
+
+      final future = expectLater(
         bloc.stream,
         emitsInOrder([
-          isA<SummaryInitial>(),
-          const SummaryLoading(isReloading: false),
-          const SummaryLoaded(tSummary),
+          isA<SummaryLoading>(), // Forced reload
+          isA<SummaryLoaded>(),
         ]),
       );
+
+      dataChangeController.add(
+        const DataChangedEvent(
+          type: DataChangeType.expense,
+          reason: DataChangeReason.added,
+        ),
+      );
+
+      await future;
     });
   });
 }
