@@ -54,7 +54,7 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextField), 'shop');
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
 
       expect(find.text('Food'), findsNothing);
       expect(find.text('Shopping'), findsOneWidget);
@@ -73,7 +73,7 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextField), 'xyz');
-      await tester.pump();
+      await tester.pumpAndSettle(const Duration(milliseconds: 350));
 
       expect(find.text('No matching categories found.'), findsOneWidget);
       expect(find.byIcon(Icons.search_off), findsOneWidget);

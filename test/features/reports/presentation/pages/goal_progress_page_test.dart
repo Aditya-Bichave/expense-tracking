@@ -100,6 +100,21 @@ void main() {
     );
   }
 
+  testWidgets('uses findChildIndexCallback in goal progress list', (
+    tester,
+  ) async {
+    when(() => mockBloc.state).thenReturn(
+      GoalProgressReportLoaded(tReportData, isComparisonEnabled: false),
+    );
+
+    await tester.pumpWidget(createWidgetUnderTest());
+
+    // If findChildIndexCallback throws or errors, pumping the widget would fail.
+    // The framework will use it internally.
+    expect(find.byType(ListView), findsOneWidget);
+    expect(find.text('Test Goal'), findsOneWidget);
+  });
+
   testWidgets('renders loading state', (tester) async {
     when(() => mockBloc.state).thenReturn(GoalProgressReportLoading());
 

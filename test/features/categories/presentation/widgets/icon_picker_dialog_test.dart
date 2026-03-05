@@ -29,7 +29,7 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextField), 'salary');
-      await tester.pump();
+      await tester.pumpAndSettle(const Duration(milliseconds: 350));
 
       expect(find.byIcon(Icons.work_outline_rounded), findsOneWidget);
       expect(find.byIcon(Icons.restaurant_menu_outlined), findsNothing);
