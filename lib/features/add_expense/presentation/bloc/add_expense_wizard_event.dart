@@ -95,3 +95,7 @@ class PayerChanged extends AddExpenseWizardEvent {
 class SubmitExpense extends AddExpenseWizardEvent {
   const SubmitExpense();
 }
+
+class ClearWizardMessage extends AddExpenseWizardEvent {
+  const ClearWizardMessage();
+}

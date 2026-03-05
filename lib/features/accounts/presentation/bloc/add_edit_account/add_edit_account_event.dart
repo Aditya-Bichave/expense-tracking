@@ -6,6 +6,10 @@ abstract class AddEditAccountEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+class ClearAccountFormMessage extends AddEditAccountEvent {
+  const ClearAccountFormMessage();
+}
+
 class SaveAccountRequested extends AddEditAccountEvent {
   final String name;
   final AssetType type;

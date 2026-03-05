@@ -89,9 +89,7 @@ class AddEditGoalBloc extends Bloc<AddEditGoalEvent, AddEditGoalState> {
             errorMessage: _mapFailureToMessage(failure),
           ),
         );
-        emit(
-          state.copyWith(status: AddEditGoalStatus.initial),
-        ); // Revert status after error
+        // Keep error status so it can be cleared by the user or on next attempt.
       },
       (savedGoal) {
         log.info("[AddEditGoalBloc] Save successful for '${savedGoal.name}'.");

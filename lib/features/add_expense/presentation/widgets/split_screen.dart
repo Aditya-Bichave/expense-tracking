@@ -33,6 +33,7 @@ class SplitScreen extends StatelessWidget {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
+          context.read<AddExpenseWizardBloc>().add(const ClearWizardMessage());
         }
       },
       builder: (context, state) {
