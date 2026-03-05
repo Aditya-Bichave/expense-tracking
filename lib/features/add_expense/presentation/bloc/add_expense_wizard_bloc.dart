@@ -56,6 +56,19 @@ class AddExpenseWizardBloc
     on<PayerChanged>(_onPayerChanged);
     on<SinglePayerSelected>(_onSinglePayerSelected);
     on<SubmitExpense>(_onSubmitExpense);
+    on<ClearWizardMessage>(_onClearMessage);
+  }
+
+  void _onClearMessage(
+    ClearWizardMessage event,
+    Emitter<AddExpenseWizardState> emit,
+  ) {
+    if (state.status == FormStatus.error ||
+        state.status == FormStatus.success) {
+      emit(state.copyWith(status: FormStatus.initial, clearError: true));
+    } else {
+      emit(state.copyWith(clearError: true));
+    }
   }
 
   void _onWizardStarted(

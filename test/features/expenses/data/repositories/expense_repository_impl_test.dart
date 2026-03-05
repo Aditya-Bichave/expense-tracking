@@ -115,8 +115,8 @@ void main() {
         splits: const [
           ExpenseSplit(
             userId: 'user1',
-            shareType: SplitType.equal,
-            shareValue: 1,
+            shareType: SplitType.exact,
+            shareValue: 50.00,
             computedAmount: 50.00,
           ),
         ],

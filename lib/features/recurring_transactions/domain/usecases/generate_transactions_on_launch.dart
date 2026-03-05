@@ -52,13 +52,19 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
                 .toList();
 
             for (var rule in activeRules) {
-              if (rule.nextOccurrenceDate.isBefore(today) ||
-                  rule.nextOccurrenceDate.isAtSameMomentAs(today)) {
-                final category = categoryMap[rule.categoryId];
-                final result = await _processRule(rule, category);
+              var currentRule = rule;
+              while (currentRule.nextOccurrenceDate.isBefore(today) ||
+                  currentRule.nextOccurrenceDate.isAtSameMomentAs(today)) {
+                final category = categoryMap[currentRule.categoryId];
+                final result = await _processRule(currentRule, category);
                 if (result.isLeft()) {
-                  return result;
+                  return result.fold(
+                    (failure) => Left(failure),
+                    (_) => const Right(null), // Unreachable due to isLeft check
+                  );
                 }
+                currentRule = result.getOrElse(() => currentRule);
+                if (currentRule.status == RuleStatus.completed) break;
               }
             }
             return const Right(null);
@@ -68,7 +74,7 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
     );
   }
 
-  Future<Either<Failure, void>> _processRule(
+  Future<Either<Failure, RecurringRule>> _processRule(
     RecurringRule rule,
     Category? category,
   ) async {
@@ -99,43 +105,47 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
       transactionResult = await addIncome(AddIncomeParams(newIncome));
     }
 
-    return await transactionResult.fold<Future<Either<Failure, void>>>(
-      (failure) async => Left(failure),
-      (_) async {
-        // 2. Update rule
-        final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
-        final newNextOccurrenceDate = _calculateNextOccurrence(rule);
+    return await transactionResult.fold<
+      Future<Either<Failure, RecurringRule>>
+    >((failure) async => Left(failure), (_) async {
+      // 2. Update rule
+      final newOccurrencesGenerated = rule.occurrencesGenerated + 1;
+      final newNextOccurrenceDate = _calculateNextOccurrence(rule);
 
-        RuleStatus newStatus = rule.status;
+      RuleStatus newStatus = rule.status;
 
-        // 3. Check end condition with safe null checks
-        bool hasEnded = false;
-        if (rule.endConditionType == EndConditionType.afterOccurrences) {
-          if (rule.totalOccurrences != null &&
-              newOccurrencesGenerated >= rule.totalOccurrences!) {
-            hasEnded = true;
-          }
-        } else if (rule.endConditionType == EndConditionType.onDate) {
-          if (rule.endDate != null &&
-              newNextOccurrenceDate.isAfter(rule.endDate!)) {
-            hasEnded = true;
-          }
+      // 3. Check end condition with safe null checks
+      bool hasEnded = false;
+      if (rule.endConditionType == EndConditionType.afterOccurrences) {
+        if (rule.totalOccurrences != null &&
+            newOccurrencesGenerated >= rule.totalOccurrences!) {
+          hasEnded = true;
         }
-
-        if (hasEnded) {
-          newStatus = RuleStatus.completed;
+      } else if (rule.endConditionType == EndConditionType.onDate) {
+        if (rule.endDate != null &&
+            newNextOccurrenceDate.isAfter(rule.endDate!)) {
+          hasEnded = true;
         }
+      }
 
-        final updatedRule = rule.copyWith(
-          status: newStatus,
-          nextOccurrenceDate: newNextOccurrenceDate,
-          occurrencesGenerated: newOccurrencesGenerated,
-        );
-        final updateResult = await recurringTransactionRepository
-            .updateRecurringRule(updatedRule);
-        return updateResult;
-      },
-    );
+      if (hasEnded) {
+        newStatus = RuleStatus.completed;
+      }
+
+      final updatedRule = rule.copyWith(
+        status: newStatus,
+        nextOccurrenceDate: newNextOccurrenceDate,
+        occurrencesGenerated: newOccurrencesGenerated,
+      );
+      final updateResult = await recurringTransactionRepository
+          .updateRecurringRule(updatedRule);
+
+      // Return the updated rule instead of just void, so the caller can use it
+      return updateResult.fold(
+        (failure) => Left(failure),
+        (_) => Right(updatedRule),
+      );
+    });
   }
 
   DateTime _calculateNextOccurrence(RecurringRule rule) {
@@ -157,7 +167,16 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         final daysInMonth = DateTime(newYear, newMonth + 1, 0).day;
         final targetDay = rule.dayOfMonth ?? rule.startDate.day;
         final newDay = targetDay > daysInMonth ? daysInMonth : targetDay;
-        nextDate = DateTime(newYear, newMonth, newDay);
+        nextDate = DateTime(
+          newYear,
+          newMonth,
+          newDay,
+          nextDate.hour,
+          nextDate.minute,
+          nextDate.second,
+          nextDate.millisecond,
+          nextDate.microsecond,
+        );
         break;
       case Frequency.yearly:
         final targetYear = nextDate.year + rule.interval;
@@ -166,7 +185,16 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         final targetDay = nextDate.day > daysInTargetMonth
             ? daysInTargetMonth
             : nextDate.day;
-        nextDate = DateTime(targetYear, targetMonth, targetDay);
+        nextDate = DateTime(
+          targetYear,
+          targetMonth,
+          targetDay,
+          nextDate.hour,
+          nextDate.minute,
+          nextDate.second,
+          nextDate.millisecond,
+          nextDate.microsecond,
+        );
         break;
     }
     return nextDate;

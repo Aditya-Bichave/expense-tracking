@@ -36,7 +36,7 @@ class CsvExportHelper {
       return csv;
     } catch (e, s) {
       log.severe("Error generating CSV string: $e\n$s");
-      throw Exception("CSV Generation Error: $e");
+      throw ExportFailure("CSV Generation Error: $e");
     }
   }
 
@@ -63,7 +63,7 @@ class CsvExportHelper {
       log.info("[CsvExportHelper] Web CSV download initiated for '$fileName'.");
     } catch (e, s) {
       log.severe("[CsvExportHelper] Error saving CSV on Web: $e\n$s");
-      throw Exception("Web Download Error: $e");
+      throw ExportFailure("Web Download Error: $e");
     }
   }
 
@@ -93,7 +93,7 @@ class CsvExportHelper {
 
       if (outputFile == null) {
         log.info("[CsvExportHelper] User cancelled CSV save.");
-        throw Exception("Save cancelled by user.");
+        throw const ExportFailure("Save cancelled by user.");
       }
 
       String finalPath = outputFile;
@@ -123,7 +123,7 @@ class CsvExportHelper {
           ),
         );
       }
-      throw Exception("File Picker Error: ${e.message}");
+      throw ExportFailure("File Picker Error: ${e.message}");
     } catch (e, s) {
       log.severe("[CsvExportHelper] Error saving CSV file: $e\n$s");
       if (context.mounted) {
@@ -131,7 +131,7 @@ class CsvExportHelper {
           context,
         ).showSnackBar(SnackBar(content: Text("File Save Error: $e")));
       }
-      throw Exception("File Save Error: $e");
+      throw ExportFailure("File Save Error: $e");
     }
   }
 

@@ -59,6 +59,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
+          context.read<AddExpenseWizardBloc>().add(const ClearWizardMessage());
         }
       },
       builder: (context, state) {

@@ -29,9 +29,22 @@ class AddEditAccountBloc
        _uuid = const Uuid(),
        super(AddEditAccountState(initialAccount: initialAccount)) {
     on<SaveAccountRequested>(_onSaveAccountRequested);
+    on<ClearAccountFormMessage>(_onClearMessage);
     log.info(
       "[AddEditAccountBloc] Initialized. Editing: ${initialAccount != null}",
     );
+  }
+
+  void _onClearMessage(
+    ClearAccountFormMessage event,
+    Emitter<AddEditAccountState> emit,
+  ) {
+    if (state.status == FormStatus.error ||
+        state.status == FormStatus.success) {
+      emit(state.copyWith(status: FormStatus.initial, clearError: true));
+    } else {
+      emit(state.copyWith(clearError: true));
+    }
   }
 
   Future<void> _onSaveAccountRequested(

@@ -82,6 +82,7 @@ class AddExpenseWizardState extends Equatable {
     String? currentUserId,
     String? transactionId,
     String? currency,
+    bool clearError = false,
   }) {
     return AddExpenseWizardState(
       amountTotal: amountTotal ?? this.amountTotal,
@@ -101,7 +102,7 @@ class AddExpenseWizardState extends Equatable {
       splits: splits ?? this.splits,
       isSplitValid: isSplitValid ?? this.isSplitValid,
       status: status ?? this.status,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       currentUserId: currentUserId ?? this.currentUserId,
       transactionId: transactionId ?? this.transactionId,
       currency: currency ?? this.currency,

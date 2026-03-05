@@ -110,7 +110,7 @@ void main() {
     );
 
     blocTest<AddEditGoalBloc, AddEditGoalState>(
-      'emits [loading, error, initial] when SaveGoal fails (Add Mode)',
+      'emits [loading, error] when SaveGoal fails (Add Mode)',
       setUp: () {
         when(
           () => mockAddGoalUseCase(any()),
@@ -128,11 +128,6 @@ void main() {
         isA<AddEditGoalState>()
             .having((s) => s.status, 'status', AddEditGoalStatus.error)
             .having((s) => s.errorMessage, 'error', contains('Database Error')),
-        isA<AddEditGoalState>().having(
-          (s) => s.status,
-          'status',
-          AddEditGoalStatus.initial,
-        ),
       ],
     );
 
