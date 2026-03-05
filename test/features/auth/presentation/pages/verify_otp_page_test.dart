@@ -47,4 +47,20 @@ void main() {
       ),
     ).called(1);
   });
+
+  testWidgets('shows snackbar on auth error', (tester) async {
+    when(() => mockAuthBloc.stream).thenAnswer(
+      (_) => Stream.value(const AuthError('OTP Error')),
+    );
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump();
+    expect(find.text('OTP Error'), findsOneWidget);
+  });
+
+  testWidgets('shows loading indicator when state is AuthLoading', (tester) async {
+    when(() => mockAuthBloc.state).thenReturn(AuthLoading());
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsWidgets);
+  });
 }

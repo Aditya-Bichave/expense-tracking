@@ -135,5 +135,23 @@ void main() {
         expect(find.byType(CircularProgressIndicator), findsWidgets);
       },
     );
+
+    testWidgets('shows snackbar on auth error', (tester) async {
+      when(() => mockAuthBloc.stream).thenAnswer(
+        (_) => Stream.value(const AuthError('Login Failed')),
+      );
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      expect(find.text('Login Failed'), findsOneWidget);
+    });
+
+    testWidgets('shows snackbar on magic link sent', (tester) async {
+      when(() => mockAuthBloc.stream).thenAnswer(
+        (_) => Stream.value(const AuthMagicLinkSent('test@example.com')),
+      );
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump();
+      expect(find.text('Magic link sent to test@example.com'), findsOneWidget);
+    });
   });
 }
