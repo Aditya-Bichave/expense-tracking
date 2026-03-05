@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   final String phone;
@@ -26,7 +27,19 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Verify OTP')),
+      appBar: AppBar(
+        title: const Text('Verify OTP'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/login');
+            }
+          },
+        ),
+      ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
@@ -52,10 +65,10 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
               const SizedBox(height: 16),
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {
-                  if (state is AuthLoading) {
-                    return const CircularProgressIndicator();
-                  }
-                  return ElevatedButton(
+                  return AppButton(
+                    label: 'Verify',
+                    isLoading: state is AuthLoading,
+                    isFullWidth: true,
                     onPressed: () {
                       final token = _tokenController.text.trim();
                       if (token.isNotEmpty) {
@@ -64,7 +77,6 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
                         );
                       }
                     },
-                    child: const Text('Verify'),
                   );
                 },
               ),

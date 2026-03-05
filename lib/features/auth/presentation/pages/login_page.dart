@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -79,7 +81,19 @@ class _LoginPageState extends State<LoginPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login / Sign Up')),
+      appBar: AppBar(
+        title: const Text('Login / Sign Up'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
+      ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthOtpSent) {
@@ -104,8 +118,9 @@ class _LoginPageState extends State<LoginPage>
                   Tab(text: 'Phone'),
                   Tab(text: 'Email'),
                 ],
-                labelColor: Theme.of(context).primaryColor,
-                unselectedLabelColor: Colors.grey,
+                labelColor: context.kit.colors.primary,
+                unselectedLabelColor: context.kit.colors.textMuted,
+                indicatorColor: context.kit.colors.primary,
               ),
               const SizedBox(height: 24),
               Expanded(
@@ -158,18 +173,11 @@ class _LoginPageState extends State<LoginPage>
         ),
         const SizedBox(height: 16),
         BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) => ElevatedButton(
-            onPressed: state is AuthLoading ? null : _submitPhone,
-            child: state is AuthLoading
-                ? SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  )
-                : const Text('Send OTP'),
+          builder: (context, state) => AppButton(
+            label: 'Send OTP',
+            onPressed: _submitPhone,
+            isLoading: state is AuthLoading,
+            isFullWidth: true,
           ),
         ),
       ],
@@ -196,19 +204,11 @@ class _LoginPageState extends State<LoginPage>
         const SizedBox(height: 16),
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
-            final isLoading = state is AuthLoading;
-            return ElevatedButton(
-              onPressed: isLoading ? null : _submitEmailLogin,
-              child: isLoading
-                  ? SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    )
-                  : const Text('Send Magic Link'),
+            return AppButton(
+              label: 'Send Magic Link',
+              onPressed: _submitEmailLogin,
+              isLoading: state is AuthLoading,
+              isFullWidth: true,
             );
           },
         ),
