@@ -15,6 +15,8 @@ class MockGroupsRepository extends Mock implements GroupsRepository {}
 
 class MockAuthRepository extends Mock implements AuthRepository {}
 
+class MockUser extends Mock implements User {}
+
 void main() {
   late MockAppLinks mockAppLinks;
   late MockGroupsRepository mockGroupsRepository;
@@ -81,6 +83,36 @@ void main() {
       ],
       verify: (_) {
         verifyNever(() => mockAuthRepository.signInAnonymously());
+      },
+    );
+
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'blocks anonymous users from joining groups',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(true);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Right(mockUser)); // Logged in anonymously
+        return DeepLinkBloc(
+          mockAppLinks,
+          mockGroupsRepository,
+          mockAuthRepository,
+        );
+      },
+      act: (bloc) => bloc.add(
+        const DeepLinkManualEntry(token: '123'),
+      ),
+      expect: () => [
+        isA<DeepLinkProcessing>(),
+        isA<DeepLinkError>().having(
+          (e) => e.message,
+          'message',
+          contains('Please log in'),
+        ),
+      ],
+      verify: (_) {
+        verifyNever(() => mockGroupsRepository.acceptInvite(any()));
       },
     );
   });

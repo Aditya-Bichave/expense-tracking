@@ -110,7 +110,7 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
         (_) => null,
         (user) => user,
       );
-      if (currentUser == null) {
+      if (currentUser == null || currentUser.isAnonymous) {
         // Security Fix: Do not auto-create anonymous accounts.
         // Prompt user to log in instead.
         emit(const DeepLinkError("Please log in to join the group."));
