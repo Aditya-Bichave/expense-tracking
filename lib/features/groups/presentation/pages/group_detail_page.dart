@@ -57,9 +57,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           final groupsState = context.watch<GroupsBloc>().state;
           String groupName = 'Group';
           if (groupsState is GroupsLoaded) {
-            final group = groupsState.groups.where(
-              (g) => g.id == widget.groupId,
-            ).firstOrNull;
+            final group = groupsState.groups
+                .where((g) => g.id == widget.groupId)
+                .firstOrNull;
             if (group != null) {
               groupName = group.name;
             }
@@ -87,9 +87,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                   final authState = context.read<AuthBloc>().state;
                   if (authState is AuthAuthenticated) {
                     final currentUser = authState.user;
-                    final member = membersState.members.where(
-                      (m) => m.userId == currentUser.id,
-                    ).firstOrNull;
+                    final member = membersState.members
+                        .where((m) => m.userId == currentUser.id)
+                        .firstOrNull;
                     if (member != null) {
                       isAdmin = member.role == GroupRole.admin;
                       // Viewers cannot add, edit, or settle
