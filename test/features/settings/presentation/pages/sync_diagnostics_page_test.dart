@@ -13,13 +13,21 @@ import '../../../../helpers/pump_app.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockDeadLetterRepository extends Mock implements DeadLetterRepository {}
+
 class MockOutboxRepository extends Mock implements OutboxRepository {}
+
 class MockSyncService extends Mock implements SyncService {}
 
 void main() {
   setUpAll(() {
     registerFallbackValue(
-      SyncMutationModel(id: '1', table: 'x', operation: OpType.create, payload: {}, createdAt: DateTime.now())
+      SyncMutationModel(
+        id: '1',
+        table: 'x',
+        operation: OpType.create,
+        payload: {},
+        createdAt: DateTime.now(),
+      ),
     );
   });
 
@@ -32,7 +40,8 @@ void main() {
     mockOutboxRepository = MockOutboxRepository();
     mockSyncService = MockSyncService();
 
-    if (sl.isRegistered<DeadLetterRepository>()) sl.unregister<DeadLetterRepository>();
+    if (sl.isRegistered<DeadLetterRepository>())
+      sl.unregister<DeadLetterRepository>();
     if (sl.isRegistered<OutboxRepository>()) sl.unregister<OutboxRepository>();
     if (sl.isRegistered<SyncService>()) sl.unregister<SyncService>();
 
@@ -41,13 +50,14 @@ void main() {
     sl.registerSingleton<SyncService>(mockSyncService);
   });
 
-
-
   group('SyncDiagnosticsPage', () {
     testWidgets('shows empty state when no items', (tester) async {
       when(() => mockDeadLetterRepository.getItems()).thenReturn([]);
 
-      await pumpWidgetWithProviders(tester: tester, widget: const SyncDiagnosticsPage());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: const SyncDiagnosticsPage(),
+      );
 
       expect(find.text('No failed sync items.'), findsOneWidget);
     });
@@ -65,9 +75,14 @@ void main() {
       );
 
       when(() => mockDeadLetterRepository.getItems()).thenReturn([item]);
-      when(() => mockDeadLetterRepository.deleteItem(item)).thenAnswer((_) async {});
+      when(
+        () => mockDeadLetterRepository.deleteItem(item),
+      ).thenAnswer((_) async {});
 
-      await pumpWidgetWithProviders(tester: tester, widget: const SyncDiagnosticsPage());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: const SyncDiagnosticsPage(),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Table: expenses'), findsOneWidget);
@@ -93,11 +108,15 @@ void main() {
 
       when(() => mockDeadLetterRepository.getItems()).thenReturn([item]);
       when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
-      when(() => mockDeadLetterRepository.deleteItem(item)).thenAnswer((_) async {});
+      when(
+        () => mockDeadLetterRepository.deleteItem(item),
+      ).thenAnswer((_) async {});
       when(() => mockSyncService.processOutbox()).thenAnswer((_) async {});
 
-
-      await pumpWidgetWithProviders(tester: tester, widget: const SyncDiagnosticsPage());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: const SyncDiagnosticsPage(),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Retry'));
@@ -122,7 +141,10 @@ void main() {
 
       when(() => mockDeadLetterRepository.getItems()).thenReturn([item]);
 
-      await pumpWidgetWithProviders(tester: tester, widget: const SyncDiagnosticsPage());
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: const SyncDiagnosticsPage(),
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Payload'));

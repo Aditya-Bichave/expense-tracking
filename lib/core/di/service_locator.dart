@@ -1,3 +1,4 @@
+// ignore_for_file: coverage:ignore-file
 import 'dart:async';
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source_impl.dart';

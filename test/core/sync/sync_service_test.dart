@@ -11,6 +11,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'dart:async';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
@@ -28,8 +29,75 @@ class MockStorageFileApi extends Mock implements StorageFileApi {}
 
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {}
+
+class FakePostgrestFilterBuilder extends Fake
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {
+  final List<Map<String, dynamic>> _data;
+  FakePostgrestFilterBuilder(this._data);
+
+  @override
+  PostgrestFilterBuilder<List<Map<String, dynamic>>> eq(
+    String column,
+    Object value,
+  ) {
+    return this;
+  }
+
+  @override
+  PostgrestTransformBuilder<List<Map<String, dynamic>>> select([
+    String columns = '*',
+  ]) {
+    return FakePostgrestTransformBuilder(_data);
+  }
+
+  @override
+  Future<R> then<R>(
+    FutureOr<R> Function(List<Map<String, dynamic>> value) onValue, {
+    Function? onError,
+  }) {
+    return Future.value(_data).then(onValue, onError: onError);
+  }
+}
+
+class FakePostgrestTransformBuilder extends Fake
+    implements PostgrestTransformBuilder<List<Map<String, dynamic>>> {
+  final List<Map<String, dynamic>> _data;
+  FakePostgrestTransformBuilder(this._data);
+
+  @override
+  Future<R> then<R>(
+    FutureOr<R> Function(List<Map<String, dynamic>> value) onValue, {
+    Function? onError,
+  }) {
+    return Future.value(_data).then(onValue, onError: onError);
+  }
+}
+
+// Separate Fake for delete
+class FakeDeleteFilterBuilder extends Fake
+    implements PostgrestFilterBuilder<dynamic> {
+  @override
+  PostgrestFilterBuilder<dynamic> eq(String column, Object value) {
+    return this;
+  }
+
+  @override
+  Future<R> then<R>(
+    FutureOr<R> Function(dynamic value) onValue, {
+    Function? onError,
+  }) {
+    // Actually, delete() without select() returns a PostgrestResponse or List. Usually it is a List or null.
+    // The await expects a Future<void> or Future<dynamic>.
+    // In Dart, if we just return Future.value(null), it should work if R is dynamic.
+    return Future<dynamic>.value(null).then(onValue, onError: onError)
+        ;
+  }
+}
 
 class FakeDeadLetterModel extends Fake implements DeadLetterModel {}
+
 class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
 
 void main() {
@@ -42,6 +110,7 @@ void main() {
   late MockSupabaseStorageClient mockStorageClient;
   late MockStorageFileApi mockStorageFileApi;
   late MockSupabaseQueryBuilder mockQueryBuilder;
+  late MockPostgrestFilterBuilder mockFilterBuilder;
 
   setUpAll(() {
     registerFallbackValue(FakeDeadLetterModel());
@@ -59,6 +128,17 @@ void main() {
     );
   });
 
+  SyncService createService() {
+    return SyncService(
+      mockSupabaseClient,
+      mockOutboxRepository,
+      mockDeadLetterRepository,
+      mockConnectivity,
+      mockGroupBox,
+      mockGroupMemberBox,
+    );
+  }
+
   setUp(() {
     mockSupabaseClient = MockSupabaseClient();
     mockOutboxRepository = MockOutboxRepository();
@@ -69,6 +149,7 @@ void main() {
     mockStorageClient = MockSupabaseStorageClient();
     mockStorageFileApi = MockStorageFileApi();
     mockQueryBuilder = MockSupabaseQueryBuilder();
+    mockFilterBuilder = MockPostgrestFilterBuilder();
 
     // Use thenAnswer for methods returning Future-like objects (e.g. SupabaseQueryBuilder)
     when(() => mockSupabaseClient.storage).thenReturn(mockStorageClient);
@@ -148,88 +229,116 @@ void main() {
     },
   );
 
-  test('SyncService moves item to DeadLetterRepository when max retries exceeded', () async {
-    when(() => mockConnectivity.checkConnectivity()).thenAnswer((_) async => [ConnectivityResult.wifi]);
-    when(() => mockConnectivity.onConnectivityChanged).thenAnswer((_) => const Stream.empty());
+  test(
+    'SyncService moves item to DeadLetterRepository when max retries exceeded',
+    () async {
+      when(
+        () => mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(
+        () => mockConnectivity.onConnectivityChanged,
+      ).thenAnswer((_) => const Stream.empty());
 
-    final item = SyncMutationModel(
-      id: 'tx1',
-      table: 'expenses',
-      operation: OpType.create,
-      payload: {},
-      createdAt: DateTime.now(),
-      retryCount: 5,
-    );
+      final item = SyncMutationModel(
+        id: 'tx1',
+        table: 'expenses',
+        operation: OpType.create,
+        payload: {},
+        createdAt: DateTime.now(),
+        retryCount: 5,
+      );
 
-    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-    when(() => mockDeadLetterRepository.add(any())).thenAnswer((_) async {});
-    when(() => mockOutboxRepository.markAsSent(item)).thenAnswer((_) async {});
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+      when(() => mockDeadLetterRepository.add(any())).thenAnswer((_) async {});
+      when(
+        () => mockOutboxRepository.markAsSent(item),
+      ).thenAnswer((_) async {});
 
-    final service = SyncService(
-      mockSupabaseClient,
-      mockOutboxRepository,
-      mockDeadLetterRepository,
-      mockConnectivity,
-      mockGroupBox,
-      mockGroupMemberBox,
-    );
+      final service = SyncService(
+        mockSupabaseClient,
+        mockOutboxRepository,
+        mockDeadLetterRepository,
+        mockConnectivity,
+        mockGroupBox,
+        mockGroupMemberBox,
+      );
 
-    await service.processOutbox();
+      await service.processOutbox();
 
-    verify(() => mockDeadLetterRepository.add(any())).called(1);
-    verify(() => mockOutboxRepository.markAsSent(item)).called(1);
-  });
+      verify(() => mockDeadLetterRepository.add(any())).called(1);
+      verify(() => mockOutboxRepository.markAsSent(item)).called(1);
+    },
+  );
 
-  test('SyncService moves item to DeadLetterRepository on schema error', () async {
-    when(() => mockConnectivity.checkConnectivity()).thenAnswer((_) async => [ConnectivityResult.wifi]);
-    when(() => mockConnectivity.onConnectivityChanged).thenAnswer((_) => const Stream.empty());
+  test(
+    'SyncService moves item to DeadLetterRepository on schema error',
+    () async {
+      when(
+        () => mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(
+        () => mockConnectivity.onConnectivityChanged,
+      ).thenAnswer((_) => const Stream.empty());
 
-    final item = SyncMutationModel(
-      id: 'tx1',
-      table: 'expenses',
-      operation: OpType.create,
-      payload: {},
-      createdAt: DateTime.now(),
-    );
+      final item = SyncMutationModel(
+        id: 'tx1',
+        table: 'expenses',
+        operation: OpType.create,
+        payload: {},
+        createdAt: DateTime.now(),
+      );
 
-    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
-    when(() => mockDeadLetterRepository.add(any())).thenAnswer((_) async {});
-    when(() => mockOutboxRepository.markAsSent(item)).thenAnswer((_) async {});
-    when(() => mockQueryBuilder.upsert(any())).thenThrow(Exception('schema error'));
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+      when(() => mockDeadLetterRepository.add(any())).thenAnswer((_) async {});
+      when(
+        () => mockOutboxRepository.markAsSent(item),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockQueryBuilder.upsert(any()),
+      ).thenThrow(Exception('schema error'));
 
-    final service = SyncService(
-      mockSupabaseClient,
-      mockOutboxRepository,
-      mockDeadLetterRepository,
-      mockConnectivity,
-      mockGroupBox,
-      mockGroupMemberBox,
-    );
+      final service = SyncService(
+        mockSupabaseClient,
+        mockOutboxRepository,
+        mockDeadLetterRepository,
+        mockConnectivity,
+        mockGroupBox,
+        mockGroupMemberBox,
+      );
 
-    await service.processOutbox();
+      await service.processOutbox();
 
-    verify(() => mockDeadLetterRepository.add(any())).called(1);
-    verify(() => mockOutboxRepository.markAsSent(item)).called(1);
-  });
+      verify(() => mockDeadLetterRepository.add(any())).called(1);
+      verify(() => mockOutboxRepository.markAsSent(item)).called(1);
+    },
+  );
 
   test('SyncService queues receipt upload on storage error', () async {
-    when(() => mockConnectivity.checkConnectivity()).thenAnswer((_) async => [ConnectivityResult.wifi]);
-    when(() => mockConnectivity.onConnectivityChanged).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(
+      () => mockConnectivity.onConnectivityChanged,
+    ).thenAnswer((_) => const Stream.empty());
 
     final item = SyncMutationModel(
       id: 'tx1',
       table: 'expenses',
       operation: OpType.create,
-      payload: {
-        'x_local_receipt_path': '/path/to/receipt.jpg',
-      },
+      payload: {'x_local_receipt_path': '/path/to/receipt.jpg'},
       createdAt: DateTime.now(),
     );
 
     when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
     when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
     // We let upsert throw a normal error so the item gets marked as failed (which is fine, or we mock upsert to throw Null again)
-    when(() => mockStorageFileApi.upload(any(), any(), fileOptions: any(named: 'fileOptions'))).thenThrow(Exception('Storage timeout'));
+    when(
+      () => mockStorageFileApi.upload(
+        any(),
+        any(),
+        fileOptions: any(named: 'fileOptions'),
+      ),
+    ).thenThrow(Exception('Storage timeout'));
 
     final service = SyncService(
       mockSupabaseClient,
@@ -242,6 +351,105 @@ void main() {
 
     await service.processOutbox();
 
-    verify(() => mockOutboxRepository.add(any(that: isA<SyncMutationModel>().having((m) => m.table, 'table', 'receipt_upload_queue')))).called(1);
+    verify(
+      () => mockOutboxRepository.add(
+        any(
+          that: isA<SyncMutationModel>().having(
+            (m) => m.table,
+            'table',
+            'receipt_upload_queue',
+          ),
+        ),
+      ),
+    ).called(1);
+  });
+
+  test('SyncService processes update operation correctly', () async {
+    final item = SyncMutationModel(
+      id: 'tx1',
+      table: 'expenses',
+      operation: OpType.update,
+      payload: {'amount': 200},
+      createdAt: DateTime.now(),
+    );
+
+    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+    when(
+      () => mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(
+      () => mockConnectivity.onConnectivityChanged,
+    ).thenAnswer((_) => const Stream.empty());
+
+    final fakeBuilder = FakePostgrestFilterBuilder([
+      {'id': 'tx1'},
+    ]);
+    when(() => mockQueryBuilder.update(any())).thenAnswer((_) => fakeBuilder);
+
+    final service = createService();
+    await service.processOutbox();
+
+    verify(() => mockQueryBuilder.update({'amount': 200})).called(1);
+    verify(() => mockOutboxRepository.markAsSent(item)).called(1);
+  });
+
+  test(
+    'SyncService processes update operation and falls back to upsert if 0 rows affected',
+    () async {
+      final item = SyncMutationModel(
+        id: 'tx1',
+        table: 'expenses',
+        operation: OpType.update,
+        payload: {'amount': 200},
+        createdAt: DateTime.now(),
+      );
+
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+      when(
+        () => mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(
+        () => mockConnectivity.onConnectivityChanged,
+      ).thenAnswer((_) => const Stream.empty());
+
+      final fakeBuilder = FakePostgrestFilterBuilder([]);
+      when(() => mockQueryBuilder.update(any())).thenAnswer((_) => fakeBuilder);
+      when(
+        () => mockQueryBuilder.upsert(any()),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder([]));
+
+      final service = createService();
+      await service.processOutbox();
+
+      verify(() => mockQueryBuilder.update({'amount': 200})).called(1);
+      verify(() => mockQueryBuilder.upsert({'amount': 200})).called(1);
+    },
+  );
+
+  test('SyncService processes delete operation correctly', () async {
+    final item = SyncMutationModel(
+      id: 'tx1',
+      table: 'expenses',
+      operation: OpType.delete,
+      payload: {},
+      createdAt: DateTime.now(),
+    );
+
+    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+    when(
+      () => mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(
+      () => mockConnectivity.onConnectivityChanged,
+    ).thenAnswer((_) => const Stream.empty());
+
+    final fakeBuilder = FakeDeleteFilterBuilder();
+    when(() => mockQueryBuilder.delete()).thenAnswer((_) => fakeBuilder);
+
+    final service = createService();
+    await service.processOutbox();
+
+    verify(() => mockQueryBuilder.delete()).called(1);
+    verify(() => mockOutboxRepository.markAsSent(item)).called(1);
   });
 }

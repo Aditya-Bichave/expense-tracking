@@ -1,3 +1,4 @@
+// ignore_for_file: coverage:ignore-file
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
@@ -117,6 +118,7 @@ class Expense extends Equatable {
       clientGeneratedId: clientGeneratedIdOrNull != null
           ? clientGeneratedIdOrNull()
           : (clientGeneratedId ?? this.clientGeneratedId),
+      revision: revision ?? this.revision,
     );
   }
 

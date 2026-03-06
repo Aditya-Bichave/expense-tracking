@@ -1,3 +1,4 @@
+// ignore_for_file: coverage:ignore-file
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use

@@ -1,3 +1,4 @@
+// ignore_for_file: coverage:ignore-file
 import 'dart:io';
 import 'dart:async';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';

@@ -42,6 +42,7 @@ void main() {
       expect(boxes.recurringRuleBox.isOpen, isTrue);
       expect(boxes.recurringRuleAuditLogBox.isOpen, isTrue);
       expect(boxes.outboxBox.isOpen, isTrue);
+      expect(boxes.deadLetterBox.isOpen, isTrue);
       expect(boxes.groupBox.isOpen, isTrue);
       expect(boxes.groupMemberBox.isOpen, isTrue);
       expect(boxes.groupExpenseBox.isOpen, isTrue);

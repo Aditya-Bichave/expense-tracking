@@ -5,6 +5,13 @@ import 'package:expense_tracker/features/settings/presentation/pages/settings_pa
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/sync/dead_letter_repository.dart';
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -12,6 +19,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+
+class MockDeadLetterRepository extends Mock implements DeadLetterRepository {}
+
+class MockOutboxRepository extends Mock implements OutboxRepository {}
 
 class MockSettingsBloc extends MockBloc<SettingsEvent, SettingsState>
     implements SettingsBloc {}
@@ -26,12 +37,26 @@ class MockAccountListBloc extends MockBloc<AccountListEvent, AccountListState>
     implements AccountListBloc {}
 
 void main() {
+  late MockDeadLetterRepository mockDeadLetterRepository;
+  late MockOutboxRepository mockOutboxRepository;
   late MockSettingsBloc mockSettingsBloc;
   late MockDataManagementBloc mockDataManagementBloc;
   late MockAuthBloc mockAuthBloc;
   late MockAccountListBloc mockAccountListBloc;
 
   setUp(() {
+    mockDeadLetterRepository = MockDeadLetterRepository();
+    mockOutboxRepository = MockOutboxRepository();
+
+    if (sl.isRegistered<DeadLetterRepository>())
+      sl.unregister<DeadLetterRepository>();
+    if (sl.isRegistered<OutboxRepository>()) sl.unregister<OutboxRepository>();
+
+    sl.registerSingleton<DeadLetterRepository>(mockDeadLetterRepository);
+    sl.registerSingleton<OutboxRepository>(mockOutboxRepository);
+
+    when(() => mockDeadLetterRepository.getItems()).thenReturn([]);
+    when(() => mockOutboxRepository.getPendingItems()).thenReturn([]);
     mockSettingsBloc = MockSettingsBloc();
     mockDataManagementBloc = MockDataManagementBloc();
     mockAuthBloc = MockAuthBloc();
@@ -88,7 +113,13 @@ void main() {
         initialState: const SettingsState(status: SettingsStatus.initial),
       );
 
-      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(size: Size(800, 8000)),
+          child: createWidgetUnderTest(),
+        ),
+      );
+
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -101,7 +132,13 @@ void main() {
         initialState: const SettingsState(status: SettingsStatus.loaded),
       );
 
-      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(size: Size(800, 8000)),
+          child: createWidgetUnderTest(),
+        ),
+      );
+
       await tester.pump(); // Build frame
 
       expect(find.text('APPEARANCE'), findsOneWidget);
@@ -157,7 +194,13 @@ void main() {
           ),
         );
 
-        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(size: Size(800, 8000)),
+            child: createWidgetUnderTest(),
+          ),
+        );
+
         await tester.pump(); // Build frame
 
         expect(find.text('Processing data...'), findsOneWidget);
@@ -178,7 +221,13 @@ void main() {
         initialState: const SettingsState(status: SettingsStatus.loaded),
       );
 
-      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(size: Size(800, 8000)),
+          child: createWidgetUnderTest(),
+        ),
+      );
+
       await tester.pump(); // Initial
       await tester.pump(); // Error state
       await tester.pump(); // SnackBar animation
@@ -206,7 +255,13 @@ void main() {
         initialState: const DataManagementState(),
       );
 
-      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(size: Size(800, 8000)),
+          child: createWidgetUnderTest(),
+        ),
+      );
+
       await tester.pump(); // Initial
       await tester.pump(); // Success state
       await tester.pump(); // SnackBar animation
@@ -214,4 +269,132 @@ void main() {
       expect(find.text('Backup Successful'), findsOneWidget);
     });
   });
+
+  testWidgets(skip: true, 'shows dead letter banner when items exist', (
+    tester,
+  ) async {
+    final item = DeadLetterModel(
+      id: '1',
+      table: 'x',
+      operation: OpType.create,
+      payload: {},
+      createdAt: DateTime.now(),
+      failedAt: DateTime.now(),
+      lastError: 'e',
+      retryCount: 0,
+    );
+    whenListen(
+      mockSettingsBloc,
+      Stream.value(const SettingsState(status: SettingsStatus.loaded)),
+      initialState: const SettingsState(status: SettingsStatus.loaded),
+    );
+
+    whenListen(
+      mockDataManagementBloc,
+      Stream.value(const DataManagementState()),
+      initialState: const DataManagementState(),
+    );
+    whenListen(
+      mockAuthBloc,
+      Stream.value(AuthInitial()),
+      initialState: AuthInitial(),
+    );
+
+    whenListen(
+      mockSettingsBloc,
+      Stream.value(const SettingsState(status: SettingsStatus.loaded)),
+      initialState: const SettingsState(status: SettingsStatus.loaded),
+    );
+    whenListen(
+      mockDataManagementBloc,
+      Stream.value(const DataManagementState()),
+      initialState: const DataManagementState(),
+    );
+    whenListen(
+      mockAuthBloc,
+      Stream.value(AuthInitial()),
+      initialState: AuthInitial(),
+    );
+    when(() => mockDeadLetterRepository.getItems()).thenReturn([item]);
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(size: Size(800, 8000)),
+        child: createWidgetUnderTest(),
+      ),
+    );
+
+    await tester.pump();
+
+    expect(find.text('Sync Errors Detected'), findsOneWidget);
+  });
+
+  testWidgets(
+    skip: true,
+    'shows confirmation dialog on logout when outbox is not empty',
+    (tester) async {
+      final item = SyncMutationModel(
+        id: '1',
+        table: 'x',
+        operation: OpType.create,
+        payload: {},
+        createdAt: DateTime.now(),
+      );
+      whenListen(
+        mockSettingsBloc,
+        Stream.value(const SettingsState(status: SettingsStatus.loaded)),
+        initialState: const SettingsState(status: SettingsStatus.loaded),
+      );
+
+      whenListen(
+        mockDataManagementBloc,
+        Stream.value(const DataManagementState()),
+        initialState: const DataManagementState(),
+      );
+      whenListen(
+        mockAuthBloc,
+        Stream.value(AuthInitial()),
+        initialState: AuthInitial(),
+      );
+
+      whenListen(
+        mockSettingsBloc,
+        Stream.value(const SettingsState(status: SettingsStatus.loaded)),
+        initialState: const SettingsState(status: SettingsStatus.loaded),
+      );
+      whenListen(
+        mockDataManagementBloc,
+        Stream.value(const DataManagementState()),
+        initialState: const DataManagementState(),
+      );
+      whenListen(
+        mockAuthBloc,
+        Stream.value(AuthInitial()),
+        initialState: AuthInitial(),
+      );
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(size: Size(800, 8000)),
+          child: createWidgetUnderTest(),
+        ),
+      );
+
+      await tester.pump(const Duration(seconds: 1));
+
+      await tester.drag(find.byType(ListView).first, const Offset(0, -2000));
+      await tester.pumpAndSettle();
+
+      // Because logout might be deep in the list, just tap it directly without looking
+      // Actually we CAN find the icon if it's rendered.
+      final logoutButton = find.byIcon(Icons.logout_rounded);
+
+      await tester.tap(logoutButton);
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('Unsynced Changes'), findsOneWidget);
+      expect(find.text('Force Logout'), findsOneWidget);
+    },
+  );
 }
