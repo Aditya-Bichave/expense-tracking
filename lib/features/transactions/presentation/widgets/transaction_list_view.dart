@@ -115,12 +115,27 @@ class TransactionListView extends StatelessWidget {
       );
     }
 
+    // ⚡ Bolt Performance Optimization
+    // Problem: ListView.builder creates a standard scroll view which can be janky with many items
+    // Solution: Add findChildIndexCallback for O(1) tracking using a precomputed map
+    // Impact: Improves scrolling performance and reduces widget rebuilds for long transaction lists
+    final childIndexMap = {
+      for (var i = 0; i < state.transactions.length; i++)
+        "${state.transactions[i].id}_dismissible": i,
+    };
+
     return ListView.builder(
       padding: const EdgeInsets.only(
         top: 0,
         bottom: 80,
       ), // Ensure padding for FAB
       itemCount: state.transactions.length,
+      findChildIndexCallback: (Key key) {
+        if (key is ValueKey<String>) {
+          return childIndexMap[key.value];
+        }
+        return null;
+      },
       itemBuilder: (ctx, index) {
         final transaction = state.transactions[index];
         final isSelected = state.selectedTransactionIds.contains(

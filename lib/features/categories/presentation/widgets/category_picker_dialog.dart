@@ -1,5 +1,6 @@
 // lib/features/categories/presentation/widgets/category_picker_dialog.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'dart:async';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
@@ -48,6 +49,7 @@ class _CategoryPickerDialogContentState
   final TextEditingController _searchController = TextEditingController();
   List<Category> _allCategories = [];
   List<Category> _filteredCategories = [];
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -65,15 +67,23 @@ class _CategoryPickerDialogContentState
   void dispose() {
     _searchController.removeListener(_filterCategories);
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
+  // ⚡ Bolt Performance Optimization
+  // Problem: Re-calculating lowercased names and filtering on every keystroke
+  // Solution: Debounce the search input using Dart's async features
+  // Impact: Reduces UI jank and unnecessary re-renders when typing fast
   void _filterCategories() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredCategories = _allCategories
-          .where((category) => category.name.toLowerCase().contains(query))
-          .toList();
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      final query = _searchController.text.toLowerCase();
+      setState(() {
+        _filteredCategories = _allCategories
+            .where((category) => category.name.toLowerCase().contains(query))
+            .toList();
+      });
     });
   }
 

@@ -459,6 +459,7 @@ class TransactionListBloc
 
     for (final id in state.selectedTransactionIds) {
       final txn = currentTxnMap[id];
+
       if (txn == null) {
         log.warning(
           "[TransactionListBloc] Selected ID $id not found in current transactions. Skipping.",

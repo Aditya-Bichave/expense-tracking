@@ -211,6 +211,62 @@ void main() {
     expect(result.isLeft(), true);
   });
 
+  test('should sort case-insensitively using cached lowercasing', () async {
+    // arrange
+    final tExpenseApple = ExpenseModel(
+      id: 'e_apple',
+      title: 'apple',
+      amount: 100.0,
+      date: tDate,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+    );
+    final tExpenseBanana = ExpenseModel(
+      id: 'e_banana',
+      title: 'Banana',
+      amount: 200.0,
+      date: tDate,
+      accountId: 'acc1',
+      categoryId: 'cat1',
+    );
+
+    when(
+      () => mockCategoryRepository.getAllCategories(),
+    ).thenAnswer((_) async => Right([tCategory1]));
+    when(
+      () => mockExpenseRepository.getExpenses(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([tExpenseBanana, tExpenseApple]));
+    when(
+      () => mockIncomeRepository.getIncomes(
+        startDate: any(named: 'startDate'),
+        endDate: any(named: 'endDate'),
+        categoryId: any(named: 'categoryId'),
+        accountId: any(named: 'accountId'),
+      ),
+    ).thenAnswer((_) async => Right([]));
+
+    // act
+    final result = await useCase(
+      const GetTransactionsParams(
+        sortBy: TransactionSortBy.title,
+        sortDirection: SortDirection.ascending,
+      ),
+    );
+
+    // assert
+    expect(result.isRight(), true);
+    final list = result.getOrElse(() => []);
+    expect(list.length, 2);
+    // 'apple' should come before 'Banana' if sorting is properly case-insensitive
+    expect(list[0].title, 'apple');
+    expect(list[1].title, 'Banana');
+  });
+
   test('should handle repository failure (Expenses)', () async {
     // arrange
     when(

@@ -80,15 +80,33 @@ class GoalProgressPage extends StatelessWidget {
                   return const Center(child: Text("No active goals found."));
                 }
 
+                // ⚡ Bolt Performance Optimization
+                // Problem: ListView.builder creates a standard scroll view which can be janky with many items
+                // Solution: Add findChildIndexCallback for O(1) tracking via precomputed map
+                // Impact: Improves scrolling performance and reduces widget rebuilds
+                final childIndexMap = {
+                  for (var i = 0; i < reportData.progressData.length; i++)
+                    reportData.progressData[i].goal.id: i,
+                };
+
                 return ListView.builder(
                   itemCount: reportData.progressData.length,
+                  findChildIndexCallback: (Key key) {
+                    if (key is ValueKey<String>) {
+                      return childIndexMap[key.value];
+                    }
+                    return null;
+                  },
                   itemBuilder: (context, index) {
                     final goalData = reportData.progressData[index];
-                    return _buildGoalProgressCard(
-                      context,
-                      goalData,
-                      settingsState,
-                      isComparisonEnabled,
+                    return KeyedSubtree(
+                      key: ValueKey(goalData.goal.id),
+                      child: _buildGoalProgressCard(
+                        context,
+                        goalData,
+                        settingsState,
+                        isComparisonEnabled,
+                      ),
                     );
                   },
                 );
