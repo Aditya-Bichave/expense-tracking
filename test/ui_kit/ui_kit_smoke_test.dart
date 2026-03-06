@@ -14,6 +14,7 @@ import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
 import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 
 // Bridge
@@ -312,7 +313,7 @@ void main() {
             body: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () {
-                  BridgeBottomSheet.show(
+                  AppBottomSheet.show(
                     context: context,
                     title: 'Sheet',
                     child: const Text('Sheet Content'),

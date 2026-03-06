@@ -184,7 +184,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             if (state is AccountListLoading && !state.isReloading) {
               return const Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(32.0),
+                  padding: EdgeInsets.all(32.0),
                   child: BridgeCircularProgressIndicator(),
                 ),
               );
@@ -300,7 +300,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             // Fallback for Initial state
             return const Center(
               child: Padding(
-                padding: const EdgeInsets.all(32.0),
+                padding: EdgeInsets.all(32.0),
                 child: BridgeCircularProgressIndicator(),
               ),
             );

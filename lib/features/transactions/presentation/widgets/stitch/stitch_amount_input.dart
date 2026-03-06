@@ -79,7 +79,7 @@ class StitchAmountInput extends StatelessWidget {
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.only(),
+                  contentPadding: EdgeInsets.only(),
                 ),
                 cursorColor: theme.colorScheme.primary,
               ),
