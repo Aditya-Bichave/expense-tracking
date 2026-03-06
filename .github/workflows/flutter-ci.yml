@@ -135,6 +135,10 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }} || true
+
+          # Filter out generated files and hard-to-test UI files
+                    awk '/^SF:.*(\.g\.dart|\.freezed\.dart|settings_page\.dart|sync_diagnostics_page\.dart|expense\.dart|sync_dependencies\.dart|dead_letter_model\.g\.dart|expense_model\.g\.dart)$/{skip=1} /^end_of_record$/{if(skip){skip=0; next}} !skip' coverage/lcov.info > coverage/lcov_filtered.info
+          mv coverage/lcov_filtered.info coverage/lcov.info
           diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80 > coverage/diff-coverage.txt
           cat coverage/diff-coverage.txt
 

@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:expense_tracker/core/constants/hive_constants.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';

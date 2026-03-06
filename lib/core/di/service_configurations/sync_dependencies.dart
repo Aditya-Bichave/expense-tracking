@@ -1,3 +1,4 @@
+// coverage:ignore-file
 // ignore_for_file: coverage:ignore-file
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';

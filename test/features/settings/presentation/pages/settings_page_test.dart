@@ -270,7 +270,7 @@ void main() {
     });
   });
 
-  testWidgets(skip: true, 'shows dead letter banner when items exist', (
+  testWidgets('shows dead letter banner when items exist', (
     tester,
   ) async {
     final item = DeadLetterModel(

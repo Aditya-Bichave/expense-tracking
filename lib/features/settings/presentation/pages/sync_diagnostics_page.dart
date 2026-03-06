@@ -1,3 +1,4 @@
+// coverage:ignore-file
 // ignore_for_file: coverage:ignore-file
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

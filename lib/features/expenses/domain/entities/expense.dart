@@ -1,3 +1,4 @@
+// coverage:ignore-file
 // ignore_for_file: coverage:ignore-file
 import 'package:equatable/equatable.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';

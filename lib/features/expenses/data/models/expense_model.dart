@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';

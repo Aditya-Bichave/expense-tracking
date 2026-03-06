@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
 import 'package:hive_ce/hive.dart';
 

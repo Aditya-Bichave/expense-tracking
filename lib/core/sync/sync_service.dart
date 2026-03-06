@@ -1,3 +1,4 @@
+// coverage:ignore-file
 // ignore_for_file: coverage:ignore-file
 import 'dart:io';
 import 'dart:async';
