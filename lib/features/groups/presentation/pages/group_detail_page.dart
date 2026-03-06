@@ -57,12 +57,12 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           final groupsState = context.watch<GroupsBloc>().state;
           String groupName = 'Group';
           if (groupsState is GroupsLoaded) {
-            try {
-              final group = groupsState.groups.firstWhere(
-                (g) => g.id == widget.groupId,
-              );
+            final group = groupsState.groups.where(
+              (g) => g.id == widget.groupId,
+            ).firstOrNull;
+            if (group != null) {
               groupName = group.name;
-            } catch (_) {}
+            }
           }
 
           return BlocListener<GroupMembersBloc, GroupMembersState>(
@@ -87,15 +87,19 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                   final authState = context.read<AuthBloc>().state;
                   if (authState is AuthAuthenticated) {
                     final currentUser = authState.user;
-                    try {
-                      final member = membersState.members.firstWhere(
-                        (m) => m.userId == currentUser.id,
-                      );
+                    final member = membersState.members.where(
+                      (m) => m.userId == currentUser.id,
+                    ).firstOrNull;
+                    if (member != null) {
                       isAdmin = member.role == GroupRole.admin;
                       // Viewers cannot add, edit, or settle
                       canAddExpense = member.role != GroupRole.viewer;
                       canEdit = member.role != GroupRole.viewer;
-                    } catch (_) {}
+                    } else {
+                      isAdmin = false;
+                      canAddExpense = false;
+                      canEdit = false;
+                    }
                   }
                 }
 

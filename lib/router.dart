@@ -152,7 +152,7 @@ class AppRouter {
       GoRoute(
         path: RouteNames.verifyOtp,
         builder: (context, state) =>
-            VerifyOtpPage(phone: (state.extra as String?) ?? ''),
+            VerifyOtpPage(phone: (state.extra is String ? state.extra as String : '')),
       ),
 
       GoRoute(
@@ -191,7 +191,7 @@ class AppRouter {
                   final Map<String, dynamic> queryParams =
                       state.uri.queryParameters;
                   final Map<String, dynamic>? extra =
-                      state.extra as Map<String, dynamic>?;
+                      state.extra is Map<String, dynamic> ? state.extra as Map<String, dynamic> : null;
                   Map<String, dynamic>? filtersFromExtra =
                       extra?['filters'] as Map<String, dynamic>?;
 
@@ -212,9 +212,9 @@ class AppRouter {
                       String? merchantIdFromExtra;
                       if (state.extra is String) {
                         merchantIdFromExtra = state.extra as String;
-                      } else if (state.extra is Map) {
+                      } else if (state.extra is Map<String, dynamic>) {
                         merchantIdFromExtra =
-                            (state.extra as Map)['merchantId'];
+                            (state.extra as Map<String, dynamic>)['merchantId'] as String?;
                       }
                       return AddEditTransactionPage(
                         merchantId: merchantId ?? merchantIdFromExtra,
@@ -280,7 +280,7 @@ class AppRouter {
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) {
                           final Map<String, dynamic>? extra =
-                              state.extra as Map<String, dynamic>?;
+                              state.extra is Map<String, dynamic> ? state.extra as Map<String, dynamic> : null;
                           final CategoryType? initialType =
                               extra?['initialType'] as CategoryType?;
                           return AddEditCategoryScreen(
