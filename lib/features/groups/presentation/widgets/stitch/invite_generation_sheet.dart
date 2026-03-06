@@ -3,7 +3,6 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:expense_tracker/ui_kit/components/inputs/app_dropdown.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class InviteGenerationSheet extends StatefulWidget {
   final void Function(String role, int expiry, int limit) onGenerate;
@@ -24,7 +23,7 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
     final kit = context.kit;
 
     return Container(
-      padding: BridgeEdgeInsets.only(
+      padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
         left: kit.spacing.lg,
         right: kit.spacing.lg,

@@ -58,7 +58,7 @@ class AppearanceSettingsSection extends StatelessWidget {
       title: 'Appearance',
       child: Column(
         children: [
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.view_quilt_outlined,
               color: kit.colors.textPrimary,
@@ -93,7 +93,7 @@ class AppearanceSettingsSection extends StatelessWidget {
                   .toList(),
             ),
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.palette_outlined,
               color: kit.colors.textPrimary,
@@ -129,7 +129,7 @@ class AppearanceSettingsSection extends StatelessWidget {
                         .toList(),
                   ),
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.brightness_6_outlined,
               color: kit.colors.textPrimary,

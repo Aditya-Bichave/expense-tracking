@@ -51,3 +51,4 @@ ci/smoke/routes.json
 # Environment variables
 .env
 .env.*
+*.txt

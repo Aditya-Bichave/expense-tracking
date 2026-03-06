@@ -11,8 +11,8 @@ import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class ReportFilterControls extends StatelessWidget {
   const ReportFilterControls({super.key});
@@ -162,7 +162,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
         }
 
         return Padding(
-          padding: BridgeEdgeInsets.only(
+          padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom + 16,
             top: 16,
             left: 16,
@@ -180,7 +180,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                 ),
                 if (state.optionsStatus == FilterOptionsStatus.loading)
                   const Padding(
-                    padding: BridgeEdgeInsets.only(top: 8),
+                    padding: EdgeInsets.only(top: 8),
                     child: LinearProgressIndicator(),
                   ),
                 const SizedBox(height: 16),
@@ -200,7 +200,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                         onTap: () => _selectDateRange(context),
                         shape: RoundedRectangleBorder(
                           side: BorderSide(color: theme.dividerColor),
-                          borderRadius: BridgeBorderRadius.circular(8),
+                          borderRadius: context.kit.radii.small,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -223,7 +223,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                           ),
                           border: const OutlineInputBorder(),
                           isDense: true,
-                          contentPadding: const BridgeEdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 14,
                           ),
@@ -267,7 +267,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                           ),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BridgeBorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -296,10 +296,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedCategoryIds.length} Categories Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.category_outlined),
+                          buttonIcon: Icon(Icons.category_outlined),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BridgeBorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -330,10 +330,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedBudgetIds.length} Budgets Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.pie_chart_outline),
+                          buttonIcon: Icon(Icons.pie_chart_outline),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BridgeBorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -362,10 +362,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedGoalIds.length} Goals Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.savings_outlined),
+                          buttonIcon: Icon(Icons.savings_outlined),
                           decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BridgeBorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>

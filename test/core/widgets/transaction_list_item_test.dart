@@ -96,7 +96,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(ListTile));
+      await tester.tap(find.byType(InkWell));
       expect(tapped, true);
     });
   });

@@ -10,7 +10,6 @@ import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class ReportPageWrapper extends StatelessWidget {
   final String title;
@@ -150,7 +149,7 @@ class ReportPageWrapper extends StatelessWidget {
                       color: kit.colors.textSecondary,
                     ),
                     title: Text('Export as CSV', style: kit.typography.body),
-                    contentPadding: const BridgeEdgeInsets.only(),
+                    contentPadding: const EdgeInsets.only(),
                   ),
                 ),
               PopupMenuItem<String>(
@@ -168,7 +167,7 @@ class ReportPageWrapper extends StatelessWidget {
                       color: kit.colors.textSecondary.withOpacity(0.5),
                     ),
                   ),
-                  contentPadding: const BridgeEdgeInsets.only(),
+                  contentPadding: const EdgeInsets.only(),
                 ),
               ),
             ],

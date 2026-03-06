@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/categories/presentation/bloc/category_m
 import 'package:expense_tracker/features/categories/presentation/pages/category_management_screen.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/category_list_section_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -48,7 +49,7 @@ void main() {
         widget: const CategoryManagementScreen(),
         settle: false,
       );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('renders CategoryListSectionWidget when loaded', (

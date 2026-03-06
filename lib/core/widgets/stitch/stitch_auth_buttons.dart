@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class StitchAuthButtons extends StatelessWidget {
   final VoidCallback onPhoneTap;
@@ -34,7 +35,7 @@ class StitchAuthButtons extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: theme.colorScheme.primary,
               shape: RoundedRectangleBorder(
-                borderRadius: BridgeBorderRadius.circular(16),
+                borderRadius: context.kit.radii.large,
               ),
             ),
           ),
@@ -63,7 +64,7 @@ class StitchAuthButtons extends StatelessWidget {
                 color: theme.colorScheme.outlineVariant.withOpacity(0.2),
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BridgeBorderRadius.circular(16),
+                borderRadius: context.kit.radii.large,
               ),
             ),
           ),

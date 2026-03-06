@@ -12,7 +12,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class TransactionForm extends StatefulWidget {
   final TransactionEntity? initialTransaction;
@@ -209,7 +208,7 @@ class TransactionFormState extends State<TransactionForm> {
         );
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Please select an account.'),
+            content: Text('Please select an account.'),
             backgroundColor: context.kit.colors.warn,
           ),
         );
@@ -238,7 +237,7 @@ class TransactionFormState extends State<TransactionForm> {
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
-            content: const Text('Please correct the errors in the form.'),
+            content: Text('Please correct the errors in the form.'),
             backgroundColor: context.kit.colors.warn,
           ),
         );

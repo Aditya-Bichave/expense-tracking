@@ -21,7 +21,6 @@ import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class GoalProgressPage extends StatelessWidget {
   const GoalProgressPage({super.key});
@@ -173,7 +172,7 @@ class GoalProgressPage extends StatelessWidget {
             ),
             SizedBox(height: kit.spacing.sm),
             LinearPercentIndicator(
-              padding: const BridgeEdgeInsets.only(),
+              padding: const EdgeInsets.only(),
               lineHeight: 10.0,
               percent: goal.percentageComplete.clamp(0.0, 1.0),
               barRadius: const Radius.circular(5),

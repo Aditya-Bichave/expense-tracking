@@ -26,7 +26,7 @@ class LegalSettingsSection extends StatelessWidget {
       title: 'Legal',
       child: Column(
         children: [
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.privacy_tip_outlined,
               color: kit.colors.textPrimary,
@@ -42,7 +42,7 @@ class LegalSettingsSection extends StatelessWidget {
                 : () =>
                       launchUrlCallback(context, 'https://example.com/privacy'),
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(Icons.gavel_outlined, color: kit.colors.textPrimary),
             title: Text('Terms of Service'),
             trailing: Icon(
@@ -54,7 +54,7 @@ class LegalSettingsSection extends StatelessWidget {
                 ? null
                 : () => launchUrlCallback(context, 'https://example.com/terms'),
           ),
-          AppBridgeListTile(
+          AppListTile(
             leading: Icon(
               Icons.article_outlined,
               color: kit.colors.textPrimary,

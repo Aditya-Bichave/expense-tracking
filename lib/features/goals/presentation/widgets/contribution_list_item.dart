@@ -7,7 +7,6 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class ContributionListItem extends StatelessWidget {
   final GoalContribution contribution;
@@ -42,7 +41,7 @@ class ContributionListItem extends StatelessWidget {
           Text(DateFormatter.formatDate(contribution.date)),
           if (contribution.note != null && contribution.note!.isNotEmpty)
             Padding(
-              padding: const BridgeEdgeInsets.only(top: 2.0),
+              padding: const EdgeInsets.only(top: 2.0),
               child: Text(
                 contribution.note!,
                 style: theme.textTheme.bodySmall?.copyWith(
@@ -68,7 +67,7 @@ class ContributionListItem extends StatelessWidget {
         },
       ),
       dense: true,
-      contentPadding: const BridgeEdgeInsets.symmetric(
+      contentPadding: const EdgeInsets.symmetric(
         horizontal: 0,
         vertical: 4,
       ), // Adjust padding

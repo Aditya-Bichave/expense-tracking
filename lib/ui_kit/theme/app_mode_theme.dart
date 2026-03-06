@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 // --- Enums ---
 enum LayoutDensity { compact, comfortable, spacious }

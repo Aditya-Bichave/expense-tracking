@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/goals/presentation/pages/goals_sub_tab.
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart'; // Import GoRouterState
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 // Bloc imports are assumed to be global via main.dart MultiBlocProvider
 
@@ -40,7 +41,7 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
       child: BridgeScaffold(
         appBar: AppBar(
           elevation: 0,
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          backgroundColor: context.kit.colors.surface,
           toolbarHeight: 0,
           bottom: TabBar(
             // --- FIX: Remove Categories Tab ---
@@ -49,8 +50,8 @@ class BudgetsAndCatsTabPage extends StatelessWidget {
               Tab(text: 'Goals'),
             ],
             // --- END FIX ---
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            labelColor: Theme.of(context).colorScheme.primary,
+            indicatorColor: context.kit.colors.primary,
+            labelColor: context.kit.colors.primary,
             unselectedLabelColor: Theme.of(
               context,
             ).colorScheme.onSurfaceVariant,

@@ -497,7 +497,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                         }
                       : null,
                   label: Text(count > 0 ? 'Categorize ($count)' : 'Categorize'),
-                  icon: const Icon(Icons.category_rounded),
+                  icon: Icon(Icons.category_rounded),
                   backgroundColor: count > 0
                       ? context.kit.colors.secondaryContainer
                       : context.kit.colors.textMuted.withOpacity(0.1),

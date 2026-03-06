@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class DemoIndicatorWidget extends StatelessWidget {
   const DemoIndicatorWidget({super.key});
@@ -24,7 +23,7 @@ class DemoIndicatorWidget extends StatelessWidget {
               elevation: 4.0, // Add slight elevation
               color: theme.colorScheme.secondaryContainer.withOpacity(0.95),
               child: Padding(
-                padding: const BridgeEdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 16.0,
                   vertical: 6.0,
                 ),
@@ -48,7 +47,7 @@ class DemoIndicatorWidget extends StatelessWidget {
                     BridgeTextButton(
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.onSecondaryContainer,
-                        padding: const BridgeEdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 4,
                         ),

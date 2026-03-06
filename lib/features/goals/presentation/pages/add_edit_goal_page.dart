@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddEditGoalPage extends StatelessWidget {
   final Goal? initialGoal; // Passed via GoRouter extra
@@ -35,7 +36,7 @@ class AddEditGoalPage extends StatelessWidget {
                   content: Text(
                     'Goal ${isEditing ? 'updated' : 'added'} successfully!',
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: context.kit.colors.success,
                 ),
               );
             if (context.canPop()) context.pop();
@@ -47,7 +48,7 @@ class AddEditGoalPage extends StatelessWidget {
               ..showSnackBar(
                 SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: context.kit.colors.error,
                 ),
               );
             context.read<AddEditGoalBloc>().add(const ClearGoalFormMessage());

@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -31,12 +32,12 @@ void main() {
     await tester.pumpAndSettle();
 
     // Confirm button should be disabled initially
-    final confirmButton = find.widgetWithText(TextButton, 'Delete');
-    expect(tester.widget<TextButton>(confirmButton).onPressed, isNull);
+    final confirmButton = find.widgetWithText(BridgeTextButton, 'Delete');
+    expect(tester.widget<BridgeTextButton>(confirmButton).onPressed, isNull);
 
     await tester.enterText(find.byType(TextFormField), 'DELETE');
     await tester.pump();
-    expect(tester.widget<TextButton>(confirmButton).onPressed, isNotNull);
+    expect(tester.widget<BridgeTextButton>(confirmButton).onPressed, isNotNull);
 
     await tester.tap(confirmButton);
     await tester.pumpAndSettle();

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/ui_bridge/bridge_edge_insets.dart';
 
 class SectionHeader extends StatelessWidget {
   final String title;
@@ -8,7 +7,7 @@ class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     required this.title,
-    this.padding = const BridgeEdgeInsets.fromLTRB(16.0, 20.0, 16.0, 8.0),
+    this.padding = const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 8.0),
   });
 
   @override
