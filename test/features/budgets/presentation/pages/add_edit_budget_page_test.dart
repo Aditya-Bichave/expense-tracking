@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.da
 import 'package:expense_tracker/features/budgets/presentation/bloc/add_edit_budget/add_edit_budget_bloc.dart';
 import 'package:expense_tracker/features/budgets/presentation/pages/add_edit_budget_page.dart';
 import 'package:expense_tracker/features/budgets/presentation/widgets/budget_form.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -83,7 +84,7 @@ void main() {
         widget: const AddEditBudgetPage(),
         settle: false,
       );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('shows success SnackBar when state is success', (tester) async {

@@ -1,6 +1,8 @@
 import 'package:expense_tracker/main.dart'; // Ensure InitializationErrorApp is exported or move test
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -71,13 +73,16 @@ void main() {
       InitializationErrorApp(error: exception, theme: testTheme),
     );
 
-    final resetButton = find.widgetWithText(ElevatedButton, "Reset App Data");
+    final resetButton = find.widgetWithText(
+      BridgeElevatedButton,
+      "Reset App Data",
+    );
     expect(resetButton, findsOneWidget);
 
     await tester.tap(resetButton);
     await tester.pump(); // Start animation
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
     expect(find.text("Reset App Data"), findsNothing);
   });
 }
