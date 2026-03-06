@@ -5,6 +5,7 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class AboutSettingsSection extends StatelessWidget {
   final SettingsState state;

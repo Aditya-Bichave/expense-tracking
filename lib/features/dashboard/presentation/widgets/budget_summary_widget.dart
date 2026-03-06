@@ -161,7 +161,7 @@ class BudgetSummaryWidget extends StatelessWidget {
                   ),
                   kit.spacing.gapSm,
                   LinearPercentIndicator(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.only(),
                     lineHeight: 8.0,
                     percent: progress,
                     barRadius: const Radius.circular(4),

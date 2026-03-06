@@ -2,6 +2,8 @@
 import 'dart:ui';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -36,12 +38,15 @@ class AppCard extends StatelessWidget {
         margin ??
         theme.cardTheme.margin ??
         modeTheme?.cardOuterPadding ??
-        const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
+        EdgeInsets.symmetric(
+          horizontal: context.space.lg,
+          vertical: context.space.sm,
+        );
 
     // Card itself doesn't have padding in theme. Apply padding via Padding widget.
     // Use provided padding -> modeTheme padding -> fallback.
     final cardInnerPadding =
-        padding ?? modeTheme?.cardInnerPadding ?? const EdgeInsets.all(16.0);
+        padding ?? modeTheme?.cardInnerPadding ?? context.space.allLg;
 
     // If glass, force transparent color unless overridden
     final cardColor = isGlass
@@ -77,7 +82,7 @@ class AppCard extends StatelessWidget {
     Widget cardContent = Padding(padding: cardInnerPadding, child: child);
 
     if (isGlass) {
-      return Card(
+      return BridgeCard(
         margin: cardMargin,
         elevation: finalElevation,
         shape: cardShape,
@@ -110,7 +115,7 @@ class AppCard extends StatelessWidget {
       );
     }
 
-    return Card(
+    return BridgeCard(
       margin: cardMargin,
       elevation: finalElevation,
       shape: cardShape,

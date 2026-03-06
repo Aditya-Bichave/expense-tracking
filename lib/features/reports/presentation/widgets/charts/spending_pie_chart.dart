@@ -2,6 +2,7 @@ import 'package:expense_tracker/features/reports/domain/entities/report_data.dar
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 
 class SpendingPieChart extends StatefulWidget {
   final List<CategorySpendingData> data;
@@ -83,7 +84,7 @@ class _SpendingPieChartState extends State<SpendingPieChart> {
         value: item.currentTotalAmount,
         title: '${percentage.toStringAsFixed(0)}%',
         radius: radius,
-        titleStyle: TextStyle(
+        titleStyle: BridgeTextStyle(
           fontSize: fontSize,
           fontWeight: FontWeight.bold,
           color: titleColor,

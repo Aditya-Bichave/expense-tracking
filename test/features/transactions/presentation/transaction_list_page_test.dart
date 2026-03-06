@@ -23,6 +23,8 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_list_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_list_view.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -246,7 +248,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
 
       controller.add(
         TransactionListState(
@@ -423,7 +425,9 @@ void main() {
     await tester.tap(find.text('Checking').last);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Apply Filters'));
+    await tester.tap(
+      find.widgetWithText(BridgeElevatedButton, 'Apply Filters'),
+    );
     await tester.pumpAndSettle();
 
     verify(

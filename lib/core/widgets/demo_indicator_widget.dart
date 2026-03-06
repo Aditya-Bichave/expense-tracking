@@ -3,6 +3,7 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 
 class DemoIndicatorWidget extends StatelessWidget {
   const DemoIndicatorWidget({super.key});
@@ -43,7 +44,7 @@ class DemoIndicatorWidget extends StatelessWidget {
                       ),
                     ),
                     const Spacer(), // Push button to the right
-                    TextButton(
+                    BridgeTextButton(
                       style: TextButton.styleFrom(
                         foregroundColor: theme.colorScheme.onSecondaryContainer,
                         padding: const EdgeInsets.symmetric(

@@ -8,6 +8,9 @@ import 'dart:ui';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart'; // Import AppCard (though we might use Container for custom style)
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class StitchNetBalanceCard extends StatelessWidget {
   final FinancialOverview overview;
@@ -38,7 +41,7 @@ class StitchNetBalanceCard extends StatelessWidget {
         right: kit.spacing.lg,
       ),
       height: 220,
-      decoration: BoxDecoration(
+      decoration: BridgeDecoration(
         color: kit.colors.surface,
         borderRadius: kit.radii.card, // Using card radius from token
         border: Border.all(color: kit.colors.primary.withOpacity(0.1)),
@@ -55,7 +58,7 @@ class StitchNetBalanceCard extends StatelessWidget {
             child: Container(
               width: 160,
               height: 160,
-              decoration: BoxDecoration(
+              decoration: BridgeDecoration(
                 color: kit.colors.primary.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
@@ -167,7 +170,7 @@ class StitchNetBalanceCard extends StatelessWidget {
                           TextSpan(
                             text:
                                 ' (${CurrencyFormatter.format(totalSpent, currencySymbol)} / ${CurrencyFormatter.format(totalBudget, currencySymbol)})',
-                            style: TextStyle(
+                            style: BridgeTextStyle(
                               color: kit.colors.textSecondary,
                               fontWeight: FontWeight.normal,
                             ),

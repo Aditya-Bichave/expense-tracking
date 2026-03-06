@@ -22,6 +22,9 @@ import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart'; // Added impor
 import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 
 class DetailsScreen extends StatefulWidget {
   final Function(bool isGroup) onNext;
@@ -153,7 +156,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       );
                     }
                     if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(
+                        child: BridgeCircularProgressIndicator(),
+                      );
                     }
                     final result = snapshot.data;
                     return result.fold(
@@ -226,7 +231,9 @@ class _DetailsScreenState extends State<DetailsScreen> {
                             const SizedBox(
                               width: 12,
                               height: 12,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: BridgeCircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
                             ),
                           ],
                         ],
@@ -291,7 +298,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   void _showGroupSelector(BuildContext context) {
     final bloc = context.read<AddExpenseWizardBloc>();
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -306,7 +313,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
   }
 
   void _showReceiptOptions(BuildContext parentContext) {
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: parentContext,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
@@ -394,7 +401,7 @@ class _GroupSelectorContentState extends State<_GroupSelectorContent> {
                   return const Center(child: Text('Error loading groups'));
                 }
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: BridgeCircularProgressIndicator());
                 }
                 return snapshot.data.fold(
                   (failure) =>

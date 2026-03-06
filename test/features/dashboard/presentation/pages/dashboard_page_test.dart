@@ -12,6 +12,7 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart'
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart'; // Needed for recent transactions
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
@@ -94,7 +95,7 @@ void main() {
   testWidgets('DashboardPage renders loading', (tester) async {
     when(() => mockDashboardBloc.state).thenReturn(const DashboardLoading());
     await pumpDashboardPage(tester);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
   });
 
   testWidgets('DashboardPage renders error snackbar', (tester) async {

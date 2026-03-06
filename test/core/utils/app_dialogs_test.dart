@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

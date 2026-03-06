@@ -8,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 
 class StitchGoalsList extends StatelessWidget {
   final List<Goal> goals;
@@ -16,7 +17,7 @@ class StitchGoalsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (goals.isEmpty) return const SizedBox.shrink();
+    if (goals.isEmpty) return SizedBox.shrink();
     final kit = context.kit;
 
     return Column(
@@ -73,7 +74,7 @@ class StitchGoalsList extends StatelessWidget {
     return SizedBox(
       width: 140,
       child: AppCard(
-        margin: EdgeInsets.zero,
+        margin: const EdgeInsets.only(),
         padding: kit.spacing.allMd,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

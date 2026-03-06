@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/stitch/stitch_tab.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class StitchTypeSelector extends StatefulWidget {
   final ValueChanged<StitchTab> onTypeChanged;
@@ -18,10 +21,10 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
+      padding: context.space.allXs,
+      decoration: BridgeDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: context.kit.radii.large,
       ),
       child: Row(
         children: StitchTab.values.map((tab) {
@@ -33,13 +36,13 @@ class _StitchTypeSelectorState extends State<StitchTypeSelector> {
                 widget.onTypeChanged(tab);
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
+                duration: Duration(milliseconds: 200),
+                padding: context.space.vMd,
+                decoration: BridgeDecoration(
                   color: isSelected
                       ? theme.colorScheme.primary
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: context.kit.radii.medium,
                 ),
                 alignment: Alignment.center,
                 child: Text(

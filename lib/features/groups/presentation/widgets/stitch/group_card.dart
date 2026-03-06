@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 enum GroupStatus { owed, owe, settled }
 
@@ -55,7 +57,7 @@ class GroupCard extends StatelessWidget {
           Container(
             width: 56,
             height: 56,
-            decoration: BoxDecoration(
+            decoration: BridgeDecoration(
               color: iconColor.withOpacity(0.2),
               borderRadius: kit.radii.medium,
             ),
@@ -134,7 +136,7 @@ class GroupCard extends StatelessWidget {
     return Container(
       width: 24,
       height: 24,
-      decoration: BoxDecoration(
+      decoration: BridgeDecoration(
         color: color,
         shape: BoxShape.circle,
         border: Border.all(color: kit.colors.surface, width: 2),

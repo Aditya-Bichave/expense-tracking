@@ -2,6 +2,7 @@
 import 'package:expense_tracker/features/transactions/presentation/bloc/transaction_list_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 class TransactionListHeader extends StatelessWidget {
   final TextEditingController searchController;
@@ -49,15 +50,15 @@ class TransactionListHeader extends StatelessWidget {
                   hintText: "Search title, category, amount...",
                   prefixIcon: const Icon(Icons.search, size: 20),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BridgeBorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BridgeBorderRadius.circular(30),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BridgeBorderRadius.circular(30),
                     borderSide: BorderSide(color: theme.colorScheme.primary),
                   ),
                   filled: true,

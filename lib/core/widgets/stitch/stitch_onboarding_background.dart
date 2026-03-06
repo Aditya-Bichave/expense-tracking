@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class StitchOnboardingBackground extends StatelessWidget {
   final Widget child;
@@ -22,7 +23,7 @@ class StitchOnboardingBackground extends StatelessWidget {
           child: Container(
             width: 300,
             height: 300,
-            decoration: BoxDecoration(
+            decoration: BridgeDecoration(
               shape: BoxShape.circle,
               color: primary.withOpacity(0.15),
             ),
@@ -38,7 +39,7 @@ class StitchOnboardingBackground extends StatelessWidget {
           child: Container(
             width: 250,
             height: 250,
-            decoration: BoxDecoration(
+            decoration: BridgeDecoration(
               shape: BoxShape.circle,
               color: primary.withOpacity(0.1),
             ),

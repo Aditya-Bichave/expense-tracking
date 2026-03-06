@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:expense_tracker/ui_kit/components/inputs/app_dropdown.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class InviteGenerationSheet extends StatefulWidget {
   final void Function(String role, int expiry, int limit) onGenerate;
@@ -28,7 +29,7 @@ class _InviteGenerationSheetState extends State<InviteGenerationSheet> {
         right: kit.spacing.lg,
         top: kit.spacing.lg,
       ),
-      decoration: BoxDecoration(
+      decoration: BridgeDecoration(
         color: kit.colors.surface,
         borderRadius: kit.radii.sheet,
       ),

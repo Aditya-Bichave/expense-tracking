@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class StitchHeader extends StatelessWidget {
   final String userName;
@@ -31,7 +32,7 @@ class StitchHeader extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: BridgeDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: kit.colors.primary.withOpacity(0.3),
@@ -39,7 +40,7 @@ class StitchHeader extends StatelessWidget {
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(2.0),
+                  padding: context.space.allXxs,
                   child: ClipOval(
                     child: Image.network(
                       userImageUrl,
@@ -77,7 +78,7 @@ class StitchHeader extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: BridgeDecoration(
                   shape: BoxShape.circle,
                   color: kit.colors.surfaceContainer.withOpacity(0.5),
                 ),
@@ -87,7 +88,7 @@ class StitchHeader extends StatelessWidget {
                     color: kit.colors.textSecondary,
                   ),
                   onPressed: () {},
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.only(),
                 ),
               ),
               Positioned(
@@ -96,7 +97,7 @@ class StitchHeader extends StatelessWidget {
                 child: Container(
                   width: 10,
                   height: 10,
-                  decoration: BoxDecoration(
+                  decoration: BridgeDecoration(
                     color: kit.colors.primary,
                     shape: BoxShape.circle,
                     border: Border.all(color: kit.colors.surface, width: 2),

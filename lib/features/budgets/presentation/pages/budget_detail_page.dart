@@ -29,6 +29,10 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class BudgetDetailPage extends StatefulWidget {
   final String budgetId;
@@ -259,7 +263,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     if (isQuantum) {
       return LinearPercentIndicator(
-        padding: EdgeInsets.zero,
+        padding: const EdgeInsets.only(),
         lineHeight: 8.0,
         percent: percentage,
         barRadius: const Radius.circular(4),
@@ -278,7 +282,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         percent: percentage,
         center: Text(
           "${(status.percentageUsed * 100).toStringAsFixed(0)}%",
-          style: TextStyle(
+          style: BridgeTextStyle(
             color: color.computeLuminance() > 0.5
                 ? Colors.black87
                 : Colors.white,
@@ -307,14 +311,14 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
 
     if (_isLoading) {
       // Check main loading flag here
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 20.0),
-        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      return Padding(
+        padding: context.space.vXl,
+        child: Center(child: BridgeCircularProgressIndicator(strokeWidth: 2)),
       );
     }
     if (_relevantTransactions.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24.0),
+      return Padding(
+        padding: context.space.vXxl,
         child: Center(
           child: Text("No transactions found for this budget period."),
         ),
@@ -493,20 +497,20 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
     final modeTheme = context.modeTheme;
 
     if (_isLoading) {
-      return Scaffold(
+      return BridgeScaffold(
         appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: BridgeCircularProgressIndicator()),
       );
     }
     if (_error != null || _budgetWithStatus == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text("Error")),
+      return BridgeScaffold(
+        appBar: AppBar(title: Text("Error")),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: context.space.allLg,
             child: Text(
               _error ?? "Budget could not be loaded.",
-              style: TextStyle(color: theme.colorScheme.error),
+              style: BridgeTextStyle(color: theme.colorScheme.error),
             ),
           ),
         ),
@@ -533,7 +537,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
                       MediaQuery.of(context).padding.top)
                 : modeTheme.pagePadding.top,
           ) ??
-          const EdgeInsets.all(16.0).copyWith(bottom: 80),
+          context.space.allLg.copyWith(bottom: 80),
       children: [
         // Budget Status Header Card
         AppCard(
@@ -601,7 +605,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       ],
     );
 
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(
         title: Text(budget.name, overflow: TextOverflow.ellipsis),
         backgroundColor: isAether ? Colors.transparent : null,

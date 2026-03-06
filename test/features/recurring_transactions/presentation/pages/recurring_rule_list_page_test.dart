@@ -3,6 +3,7 @@ import 'package:expense_tracker/features/recurring_transactions/presentation/pag
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:get_it/get_it.dart';
@@ -41,6 +42,6 @@ void main() {
 
     await tester.pumpWidget(const MaterialApp(home: RecurringRuleListPage()));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
   });
 }

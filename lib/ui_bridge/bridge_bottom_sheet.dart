@@ -1,16 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
 
-/// Bridge adapter for bottom sheets.
-class BridgeBottomSheet {
-  static Future<T?> show<T>({
-    required BuildContext context,
-    required String title,
-    required Widget child,
-    bool isDismissible = true,
-  }) {
-    // AppBottomSheet.show does not currently support isDismissible in its signature based on error logs.
-    // We will ignore it for now or implement it in AppBottomSheet if needed later.
-    return AppBottomSheet.show<T>(context: context, title: title, child: child);
-  }
+Future<T?> bridgeShowModalBottomSheet<T>({
+  required BuildContext context,
+  required WidgetBuilder builder,
+  Color? backgroundColor,
+  String? barrierLabel,
+  double? elevation,
+  ShapeBorder? shape,
+  Clip? clipBehavior,
+  BoxConstraints? constraints,
+  Color? barrierColor,
+  bool isScrollControlled = false,
+  double scrollControlDisabledMaxHeightRatio = 9.0 / 16.0,
+  bool useRootNavigator = false,
+  bool isDismissible = true,
+  bool enableDrag = true,
+  bool? showDragHandle,
+  bool useSafeArea = false,
+  RouteSettings? routeSettings,
+  AnimationController? transitionAnimationController,
+  Offset? anchorPoint,
+}) {
+  return showModalBottomSheet<T>(
+    context: context,
+    builder: builder,
+    backgroundColor: backgroundColor,
+    barrierLabel: barrierLabel,
+    elevation: elevation,
+    shape: shape,
+    clipBehavior: clipBehavior,
+    constraints: constraints,
+    barrierColor: barrierColor,
+    isScrollControlled: isScrollControlled,
+    scrollControlDisabledMaxHeightRatio: scrollControlDisabledMaxHeightRatio,
+    useRootNavigator: useRootNavigator,
+    isDismissible: isDismissible,
+    enableDrag: enableDrag,
+    showDragHandle: showDragHandle,
+    useSafeArea: useSafeArea,
+    routeSettings: routeSettings,
+    transitionAnimationController: transitionAnimationController,
+    anchorPoint: anchorPoint,
+  );
 }

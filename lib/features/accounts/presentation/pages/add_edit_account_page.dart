@@ -8,6 +8,9 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/add_edit_acc
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_form.dart';
 import 'package:expense_tracker/core/utils/enums.dart'; // Shared FormStatus
 import 'package:expense_tracker/main.dart'; // Import logger
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddEditAccountPage extends StatelessWidget {
   final String? accountId;
@@ -40,7 +43,7 @@ class AddEditAccountPage extends StatelessWidget {
                   content: Text(
                     'Account ${isEditing ? 'updated' : 'added'} successfully!',
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: context.kit.colors.success,
                 ),
               );
             if (context.canPop()) {
@@ -61,7 +64,7 @@ class AddEditAccountPage extends StatelessWidget {
               ..showSnackBar(
                 SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: context.kit.colors.error,
                 ),
               );
             context.read<AddEditAccountBloc>().add(
@@ -69,7 +72,7 @@ class AddEditAccountPage extends StatelessWidget {
             );
           }
         },
-        child: Scaffold(
+        child: BridgeScaffold(
           appBar: AppBar(
             title: Text(isEditing ? 'Edit Account' : 'Add Account'),
           ),
@@ -84,7 +87,7 @@ class AddEditAccountPage extends StatelessWidget {
                 child: state.status == FormStatus.submitting
                     ? const Center(
                         key: ValueKey('loading'),
-                        child: CircularProgressIndicator(),
+                        child: BridgeCircularProgressIndicator(),
                       )
                     : AccountForm(
                         key: const ValueKey('form'),

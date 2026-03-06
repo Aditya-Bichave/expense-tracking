@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/goals/domain/usecases/get_contributions
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/goal_detail_page.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -81,7 +82,7 @@ void main() {
         settle: false,
       );
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
       await tester.pumpAndSettle();
 
       expect(find.text('Test Goal'), findsOneWidget);

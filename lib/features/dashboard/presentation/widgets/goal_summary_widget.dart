@@ -145,7 +145,7 @@ class GoalSummaryWidget extends StatelessWidget {
                   ),
                   kit.spacing.gapSm,
                   LinearPercentIndicator(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.only(),
                     lineHeight: 8.0,
                     percent: progress.clamp(0.0, 1.0),
                     barRadius: const Radius.circular(4),

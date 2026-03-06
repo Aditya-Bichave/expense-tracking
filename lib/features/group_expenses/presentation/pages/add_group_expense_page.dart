@@ -5,6 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddGroupExpensePage extends StatefulWidget {
   final String groupId;
@@ -29,10 +32,10 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Add Group Expense')),
+    return BridgeScaffold(
+      appBar: AppBar(title: Text('Add Group Expense')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: context.space.allLg,
         child: Column(
           children: [
             TextField(
@@ -49,7 +52,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
               ),
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            BridgeElevatedButton(
               onPressed: () {
                 final title = _titleController.text.trim();
                 final amount =

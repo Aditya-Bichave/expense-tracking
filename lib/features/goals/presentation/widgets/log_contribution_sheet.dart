@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class LogContributionSheet extends StatefulWidget {
   final GoalContribution? initialContribution;
@@ -99,7 +100,7 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
       String svgPath = modeTheme.assets.getCommonIcon(iconKey, defaultPath: '');
       if (svgPath.isNotEmpty) {
         return Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: context.space.allMd,
           child: SvgPicture.asset(
             svgPath,
             width: 20,
@@ -151,7 +152,7 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
               top: 8,
               bottom: 20,
             ) ??
-            const EdgeInsets.all(20.0),
+            context.space.allXl,
         child: Form(
           key: _formKey,
           child: Column(
@@ -186,10 +187,10 @@ class _LogContributionSheetState extends State<LogContributionSheet> {
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+              BridgeListTile(
+                contentPadding: context.space.hXxs,
                 shape:
                     theme.inputDecorationTheme.enabledBorder ??
                     const OutlineInputBorder(),

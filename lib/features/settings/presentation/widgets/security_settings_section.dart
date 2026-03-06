@@ -8,6 +8,8 @@ import 'package:expense_tracker/ui_kit/components/inputs/app_switch.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
 import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class SecuritySettingsSection extends StatefulWidget {
   const SecuritySettingsSection({super.key});
@@ -150,7 +152,7 @@ class _PinSetupContentState extends State<PinSetupContent> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            TextButton(
+            BridgeTextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text(
                 'Cancel',
@@ -159,7 +161,7 @@ class _PinSetupContentState extends State<PinSetupContent> {
                 ),
               ),
             ),
-            TextButton(
+            BridgeTextButton(
               onPressed: () async {
                 final pin = _pinController.text;
                 if (pin.length == 4 && int.tryParse(pin) != null) {

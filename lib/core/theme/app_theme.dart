@@ -21,6 +21,8 @@ import 'config/elemental_configs.dart';
 import 'config/quantum_configs.dart';
 import 'config/aether_configs.dart';
 import 'config/stitch_configs.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 
 // Structure to hold both light and dark theme data (Keep as is)
 class AppThemeDataPair {
@@ -250,10 +252,10 @@ class AppTheme {
                   ? 6.0
                   : (modeTheme.cardStyle == CardStyle.glass ? 0 : 1.5)),
         margin: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const EdgeInsets.symmetric(horizontal: 8, vertical: 4)
-            : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ? EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0)
+            : EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(
+          borderRadius: BridgeBorderRadius.circular(
             modeTheme.cardStyle == CardStyle.flat
                 ? 8
                 : (modeTheme.layoutDensity == LayoutDensity.spacious ? 20 : 16),
@@ -273,8 +275,8 @@ class AppTheme {
 
       listTileTheme: ListTileThemeData(
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 2)
-            : const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            ? EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0)
+            : EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
         dense: modeTheme.layoutDensity == LayoutDensity.compact,
         minVerticalPadding: modeTheme.layoutDensity == LayoutDensity.compact
             ? 8
@@ -291,7 +293,7 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(
+          borderRadius: BridgeBorderRadius.circular(
             modePrefix == 'quantum' ? 6.0 : 12,
           ),
         ),
@@ -302,7 +304,7 @@ class AppTheme {
                 : colorScheme.outlineVariant,
             width: 0.8,
           ),
-          borderRadius: BorderRadius.circular(
+          borderRadius: BridgeBorderRadius.circular(
             modePrefix == 'quantum'
                 ? 6.0
                 : ((modePrefix == 'aether' || modePrefix == 'stitch')
@@ -312,12 +314,12 @@ class AppTheme {
         ),
         focusedBorder: (modePrefix == 'aether' || modePrefix == 'stitch')
             ? OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: const BorderRadius.all(Radius.circular(16.0)),
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
               )
             : OutlineInputBorder(
                 borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
-                borderRadius: BorderRadius.circular(
+                borderRadius: BridgeBorderRadius.circular(
                   modePrefix == 'quantum' ? 6.0 : 12,
                 ),
               ),
@@ -326,14 +328,14 @@ class AppTheme {
             ? colorScheme.surface.withOpacity(0.05) // Generic low opacity fill
             : null,
         contentPadding: modeTheme.layoutDensity == LayoutDensity.compact
-            ? const EdgeInsets.symmetric(horizontal: 12, vertical: 10)
-            : const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ? EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0)
+            : EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         isDense: modeTheme.layoutDensity == LayoutDensity.compact,
         floatingLabelBehavior: modePrefix == 'quantum'
             ? FloatingLabelBehavior.always
             : FloatingLabelBehavior.auto,
         floatingLabelStyle: (modePrefix == 'aether' || modePrefix == 'stitch')
-            ? TextStyle(color: colorScheme.primary)
+            ? BridgeTextStyle(color: colorScheme.primary)
             : null,
         prefixIconColor: colorScheme.onSurfaceVariant,
       ),
@@ -347,11 +349,11 @@ class AppTheme {
               ? colorScheme.onPrimaryContainer
               : colorScheme.onPrimary,
           padding: modeTheme.layoutDensity == LayoutDensity.compact
-              ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10)
-              : const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              ? EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0)
+              : EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
           textStyle: textTheme.labelLarge,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
+            borderRadius: BridgeBorderRadius.circular(
               modePrefix == 'quantum' ? 6.0 : 12,
             ),
           ),
@@ -372,7 +374,9 @@ class AppTheme {
             ? 0
             : (modePrefix == 'aether' ? 6.0 : 4),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(modePrefix == 'aether' ? 20 : 16),
+          borderRadius: BridgeBorderRadius.circular(
+            modePrefix == 'aether' ? 20 : 16,
+          ),
         ),
       ),
 

@@ -19,6 +19,9 @@ import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_bottom_sheet.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_divider.dart';
 import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 
 class SplitScreen extends StatelessWidget {
   final VoidCallback onBack;
@@ -66,7 +69,7 @@ class SplitScreen extends StatelessWidget {
                     child: SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: BridgeCircularProgressIndicator(
                         strokeWidth: 2,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           kit.colors.primary,
@@ -239,7 +242,7 @@ class SplitScreen extends StatelessWidget {
 
   void _showPayerSelector(BuildContext context, AddExpenseWizardState state) {
     final bloc = context.read<AddExpenseWizardBloc>();
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => AppBottomSheet(

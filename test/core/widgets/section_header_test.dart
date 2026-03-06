@@ -6,7 +6,7 @@ void main() {
   group('SectionHeader', () {
     testWidgets('renders title in uppercase', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(body: SectionHeader(title: 'My Title')),
         ),
       );
@@ -15,9 +15,9 @@ void main() {
     });
 
     testWidgets('applies custom padding', (tester) async {
-      const padding = EdgeInsets.all(20);
+      const padding = EdgeInsets.all(24);
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
           home: Scaffold(
             body: SectionHeader(title: 'Title', padding: padding),
           ),

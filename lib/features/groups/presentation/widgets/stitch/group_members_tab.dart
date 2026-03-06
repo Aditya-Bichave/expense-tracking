@@ -10,6 +10,8 @@ import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
 import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
 import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 
 class GroupMembersTab extends StatelessWidget {
   const GroupMembersTab({super.key});
@@ -91,7 +93,7 @@ class GroupMembersTab extends StatelessWidget {
   ) {
     final kit = context.kit;
 
-    showModalBottomSheet(
+    bridgeShowModalBottomSheet(
       context: context,
       backgroundColor: kit.colors.surface,
       shape: RoundedRectangleBorder(borderRadius: kit.radii.sheet),
