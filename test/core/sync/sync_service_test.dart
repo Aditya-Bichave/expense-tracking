@@ -28,6 +28,10 @@ class MockStorageFileApi extends Mock implements StorageFileApi {}
 
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
+
+class FakeDeadLetterModel extends Fake implements DeadLetterModel {}
+class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
+
 void main() {
   late MockSupabaseClient mockSupabaseClient;
   late MockOutboxRepository mockOutboxRepository;
@@ -40,6 +44,8 @@ void main() {
   late MockSupabaseQueryBuilder mockQueryBuilder;
 
   setUpAll(() {
+    registerFallbackValue(FakeDeadLetterModel());
+    registerFallbackValue(FakeSyncMutationModel());
     registerFallbackValue(File(''));
     registerFallbackValue(const FileOptions());
     registerFallbackValue(
@@ -141,4 +147,101 @@ void main() {
       ).called(1);
     },
   );
+
+  test('SyncService moves item to DeadLetterRepository when max retries exceeded', () async {
+    when(() => mockConnectivity.checkConnectivity()).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(() => mockConnectivity.onConnectivityChanged).thenAnswer((_) => const Stream.empty());
+
+    final item = SyncMutationModel(
+      id: 'tx1',
+      table: 'expenses',
+      operation: OpType.create,
+      payload: {},
+      createdAt: DateTime.now(),
+      retryCount: 5,
+    );
+
+    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+    when(() => mockDeadLetterRepository.add(any())).thenAnswer((_) async {});
+    when(() => mockOutboxRepository.markAsSent(item)).thenAnswer((_) async {});
+
+    final service = SyncService(
+      mockSupabaseClient,
+      mockOutboxRepository,
+      mockDeadLetterRepository,
+      mockConnectivity,
+      mockGroupBox,
+      mockGroupMemberBox,
+    );
+
+    await service.processOutbox();
+
+    verify(() => mockDeadLetterRepository.add(any())).called(1);
+    verify(() => mockOutboxRepository.markAsSent(item)).called(1);
+  });
+
+  test('SyncService moves item to DeadLetterRepository on schema error', () async {
+    when(() => mockConnectivity.checkConnectivity()).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(() => mockConnectivity.onConnectivityChanged).thenAnswer((_) => const Stream.empty());
+
+    final item = SyncMutationModel(
+      id: 'tx1',
+      table: 'expenses',
+      operation: OpType.create,
+      payload: {},
+      createdAt: DateTime.now(),
+    );
+
+    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+    when(() => mockDeadLetterRepository.add(any())).thenAnswer((_) async {});
+    when(() => mockOutboxRepository.markAsSent(item)).thenAnswer((_) async {});
+    when(() => mockQueryBuilder.upsert(any())).thenThrow(Exception('schema error'));
+
+    final service = SyncService(
+      mockSupabaseClient,
+      mockOutboxRepository,
+      mockDeadLetterRepository,
+      mockConnectivity,
+      mockGroupBox,
+      mockGroupMemberBox,
+    );
+
+    await service.processOutbox();
+
+    verify(() => mockDeadLetterRepository.add(any())).called(1);
+    verify(() => mockOutboxRepository.markAsSent(item)).called(1);
+  });
+
+  test('SyncService queues receipt upload on storage error', () async {
+    when(() => mockConnectivity.checkConnectivity()).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(() => mockConnectivity.onConnectivityChanged).thenAnswer((_) => const Stream.empty());
+
+    final item = SyncMutationModel(
+      id: 'tx1',
+      table: 'expenses',
+      operation: OpType.create,
+      payload: {
+        'x_local_receipt_path': '/path/to/receipt.jpg',
+      },
+      createdAt: DateTime.now(),
+    );
+
+    when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+    when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
+    // We let upsert throw a normal error so the item gets marked as failed (which is fine, or we mock upsert to throw Null again)
+    when(() => mockStorageFileApi.upload(any(), any(), fileOptions: any(named: 'fileOptions'))).thenThrow(Exception('Storage timeout'));
+
+    final service = SyncService(
+      mockSupabaseClient,
+      mockOutboxRepository,
+      mockDeadLetterRepository,
+      mockConnectivity,
+      mockGroupBox,
+      mockGroupMemberBox,
+    );
+
+    await service.processOutbox();
+
+    verify(() => mockOutboxRepository.add(any(that: isA<SyncMutationModel>().having((m) => m.table, 'table', 'receipt_upload_queue')))).called(1);
+  });
 }
