@@ -95,4 +95,24 @@ void main() {
 
     await controller.close();
   });
+
+  test('dispose cancels auth subscription', () async {
+    final controller = StreamController<AuthState>();
+    when(
+      () => mockGoTrueClient.onAuthStateChange,
+    ).thenAnswer((_) => controller.stream);
+
+    authSessionService = AuthSessionService(mockSupabaseClient);
+
+    expect(controller.hasListener, isTrue);
+
+    authSessionService.dispose();
+
+    // Allow microtasks to complete to process the unsubscription
+    await Future.microtask(() {});
+
+    expect(controller.hasListener, isFalse);
+
+    await controller.close();
+  });
 }

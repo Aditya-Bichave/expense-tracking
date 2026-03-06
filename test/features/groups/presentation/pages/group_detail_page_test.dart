@@ -174,4 +174,31 @@ void main() {
 
     expect(find.byIcon(Icons.person_add), findsNothing);
   });
+
+  testWidgets('handles group not found gracefully', (tester) async {
+    when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([])); // Empty list
+    when(() => mockGroupMembersBloc.state).thenReturn(GroupMembersInitial());
+    when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
+
+    await tester.pumpWidget(buildTestWidget());
+
+    expect(find.text('Group'), findsOneWidget); // Default fallback name
+  });
+
+  testWidgets('handles user not found in members list gracefully', (
+    tester,
+  ) async {
+    when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([tGroup]));
+    // Empty members list
+    when(() => mockGroupMembersBloc.state).thenReturn(GroupMembersLoaded([]));
+    when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
+
+    await tester.pumpWidget(buildTestWidget());
+
+    // Should default to non-admin and hide actions
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byIcon(Icons.person_add), findsNothing);
+  });
 }

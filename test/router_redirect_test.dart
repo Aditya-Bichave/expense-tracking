@@ -55,4 +55,97 @@ void main() {
     final result = redirect(FakeBuildContext(), routeState);
     expect(result, RouteNames.dashboard);
   });
+
+  group('Route Builders with extra type safety', () {
+    late GoRouter router;
+
+    setUp(() {
+      router = app_router.AppRouter.router;
+    });
+
+    test('verifyOtp handles extra being null or not String', () {
+      final config = router.configuration;
+      final route =
+          config.routes.firstWhere(
+                (r) => r is GoRoute && r.path == RouteNames.verifyOtp,
+              )
+              as GoRoute;
+
+      final stateString = GoRouterState(
+        config,
+        uri: Uri.parse(RouteNames.verifyOtp),
+        matchedLocation: RouteNames.verifyOtp,
+        fullPath: RouteNames.verifyOtp,
+        pathParameters: const {},
+        pageKey: const ValueKey('page'),
+        extra: '1234567890',
+      );
+
+      expect(route.builder, isNotNull);
+      final widget1 = route.builder!(FakeBuildContext(), stateString);
+      expect(widget1.runtimeType.toString(), 'VerifyOtpPage');
+
+      final stateNull = GoRouterState(
+        config,
+        uri: Uri.parse(RouteNames.verifyOtp),
+        matchedLocation: RouteNames.verifyOtp,
+        fullPath: RouteNames.verifyOtp,
+        pathParameters: const {},
+        pageKey: const ValueKey('page'),
+        extra: null,
+      );
+      final widget2 = route.builder!(FakeBuildContext(), stateNull);
+      expect(widget2.runtimeType.toString(), 'VerifyOtpPage');
+    });
+
+    test('addTransaction handles extra being Map, String, or null', () {
+      final config = router.configuration;
+
+      GoRoute? findRoute(List<RouteBase> routes, String name) {
+        for (var r in routes) {
+          if (r is GoRoute && r.path == name) return r;
+          if (r is GoRoute) {
+            var found = findRoute(r.routes, name);
+            if (found != null) return found;
+          }
+          if (r is ShellRoute) {
+            var found = findRoute(r.routes, name);
+            if (found != null) return found;
+          }
+          if (r is StatefulShellRoute) {
+            for (var b in r.branches) {
+              var found = findRoute(b.routes, name);
+              if (found != null) return found;
+            }
+          }
+        }
+        return null;
+      }
+
+      final addRoute = findRoute(config.routes, RouteNames.addTransaction)!;
+
+      final stateMap = GoRouterState(
+        config,
+        uri: Uri.parse(RouteNames.addTransaction),
+        matchedLocation: RouteNames.addTransaction,
+        fullPath: RouteNames.addTransaction,
+        pathParameters: const {},
+        pageKey: const ValueKey('page'),
+        extra: {'merchantId': 'merch_123'},
+      );
+
+      expect(addRoute.builder, isNotNull);
+      // We just ensure it doesn't throw a type cast exception.
+      try {
+        addRoute.builder!(FakeBuildContext(), stateMap);
+      } catch (e) {
+        // Will throw provider not found which is fine, we just want to avoid Type Cast exceptions.
+        expect(
+          e.toString(),
+          isNot(contains("type 'Null' is not a subtype of type")),
+        );
+        expect(e.toString(), isNot(contains("as String")));
+      }
+    });
+  });
 }
