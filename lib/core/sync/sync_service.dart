@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:async';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/dead_letter_repository.dart';
+import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:hive_ce/hive.dart';
@@ -14,6 +16,7 @@ enum SyncServiceStatus { synced, syncing, offline, error }
 class SyncService {
   final SupabaseClient _client;
   final OutboxRepository _outboxRepository;
+  final DeadLetterRepository _deadLetterRepository;
   final Connectivity _connectivity;
   final Box<GroupModel> _groupBox;
   final Box<GroupMemberModel> _groupMemberBox;
@@ -31,6 +34,7 @@ class SyncService {
   SyncService(
     this._client,
     this._outboxRepository,
+    this._deadLetterRepository,
     this._connectivity,
     this._groupBox,
     this._groupMemberBox,
@@ -199,7 +203,12 @@ class SyncService {
 
       for (final item in pendingItems) {
         if (item.retryCount >= _maxRetries) {
-          await _outboxRepository.markAsFailed(item, 'Max retries exceeded.');
+          await _deadLetterRepository.add(
+            DeadLetterModel.fromSyncMutation(
+              item..lastError = 'Max retries exceeded.',
+            ),
+          );
+          await _outboxRepository.markAsSent(item); // Remove from outbox
           // Treated as processed (failed permanently), so effectively "synced" regarding queue blocking,
           // but arguably an error state. For now, following established pattern of continuing.
           continue;
@@ -210,8 +219,22 @@ class SyncService {
           await _outboxRepository.markAsSent(item);
         } catch (e) {
           log.warning('Failed to sync item ${item.id}: $e');
-          await _outboxRepository.markAsFailed(item, e.toString());
-          hadError = true;
+          final isNonRecoverable =
+              e.toString().contains('PGRST') ||
+              e.toString().contains('schema') ||
+              e.toString().contains('CONFLICT');
+          if (isNonRecoverable) {
+            log.severe(
+              'Non-recoverable error for item ${item.id}. Moving to dead letter queue.',
+            );
+            await _deadLetterRepository.add(
+              DeadLetterModel.fromSyncMutation(item..lastError = e.toString()),
+            );
+            await _outboxRepository.markAsSent(item); // Remove from outbox
+          } else {
+            await _outboxRepository.markAsFailed(item, e.toString());
+            hadError = true;
+          }
         }
       }
 
@@ -249,12 +272,14 @@ class SyncService {
       final localPath = payload['x_local_receipt_path'];
       if (localPath != null && localPath is String) {
         log.info('Uploading offline receipt: $localPath');
+        final txnId = payload['p_client_generated_id'] ?? item.id;
+        final groupId = payload['p_group_id'];
         try {
           final fileExt = localPath.split('.').last;
           // Use transaction ID from payload if available, else random
-          final txnId = payload['p_client_generated_id'] ?? item.id;
+
           final fileName = '$txnId.$fileExt';
-          final groupId = payload['p_group_id'];
+
           final pathPrefix = groupId != null ? '$groupId/' : 'personal/';
           final uploadPath = '$pathPrefix$fileName';
 
@@ -281,11 +306,54 @@ class SyncService {
               .getPublicUrl(uploadPath);
           payload['p_receipt_url'] = publicUrl;
         } catch (e) {
-          log.warning('Failed to upload receipt: $e. Continuing without it.');
+          log.warning(
+            'Failed to upload receipt: $e. Queuing receipt upload for later.',
+          );
+          final updatePayload = {
+            'x_local_receipt_path': localPath,
+            'p_client_generated_id': txnId,
+            'p_group_id': groupId,
+          };
+          final receiptMutation = SyncMutationModel(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            table: 'receipt_upload_queue',
+            operation: OpType.update,
+            payload: updatePayload,
+            createdAt: DateTime.now(),
+          );
+          await _outboxRepository.add(receiptMutation);
         }
       }
       // Remove the local-only key before sending to Supabase
       payload.remove('x_local_receipt_path');
+    }
+
+    if (table == 'receipt_upload_queue') {
+      final localPath = payload['x_local_receipt_path'];
+      final txnId = payload['p_client_generated_id'];
+      final groupId = payload['p_group_id'];
+      final fileExt = localPath.split('.').last;
+      final fileName = '$txnId.$fileExt';
+      final pathPrefix = groupId != null ? '$groupId/' : 'personal/';
+      final uploadPath = '$pathPrefix$fileName';
+
+      await _client.storage
+          .from('receipts')
+          .upload(
+            uploadPath,
+            File(localPath),
+            fileOptions: const FileOptions(upsert: true),
+          );
+      final publicUrl = _client.storage
+          .from('receipts')
+          .getPublicUrl(uploadPath);
+
+      // Update the expense row directly since it should exist by now
+      await _client
+          .from('expenses')
+          .update({'receipt_url': publicUrl})
+          .eq('client_generated_id', txnId);
+      return;
     }
 
     switch (item.operation) {
@@ -293,6 +361,27 @@ class SyncService {
         await _client.from(table).upsert(payload);
         break;
       case OpType.update:
+        // Optimistic concurrency check
+        if (payload.containsKey('revision')) {
+          final expectedRevision = payload['revision'];
+          final serverData = await _client
+              .from(table)
+              .select('revision')
+              .eq('id', item.id)
+              .maybeSingle();
+          if (serverData != null) {
+            final serverRevision = serverData['revision'] as int;
+            if (serverRevision > expectedRevision) {
+              log.warning(
+                'Conflict detected for $table:${item.id}. Server revision: $serverRevision, Local revision: $expectedRevision',
+              );
+              throw Exception(
+                'CONFLICT: Server version is newer. Please resolve manually.',
+              );
+            }
+          }
+        }
+
         final response = await _client
             .from(table)
             .update(payload)

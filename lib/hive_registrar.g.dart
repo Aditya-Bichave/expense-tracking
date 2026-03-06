@@ -3,6 +3,7 @@
 // Check in to version control
 
 import 'package:hive_ce/hive.dart';
+import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
@@ -25,6 +26,7 @@ extension HiveRegistrar on HiveInterface {
     registerAdapter(AssetAccountModelAdapter());
     registerAdapter(BudgetModelAdapter());
     registerAdapter(CategoryModelAdapter());
+    registerAdapter(DeadLetterModelAdapter());
     registerAdapter(ExpenseModelAdapter());
     registerAdapter(ExpensePayerModelAdapter());
     registerAdapter(ExpenseSplitModelAdapter());
@@ -50,6 +52,7 @@ extension IsolatedHiveRegistrar on IsolatedHiveInterface {
     registerAdapter(AssetAccountModelAdapter());
     registerAdapter(BudgetModelAdapter());
     registerAdapter(CategoryModelAdapter());
+    registerAdapter(DeadLetterModelAdapter());
     registerAdapter(ExpenseModelAdapter());
     registerAdapter(ExpensePayerModelAdapter());
     registerAdapter(ExpenseSplitModelAdapter());

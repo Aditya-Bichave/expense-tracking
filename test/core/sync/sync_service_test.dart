@@ -1,6 +1,8 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/dead_letter_repository.dart';
+import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
@@ -13,6 +15,8 @@ import 'dart:io';
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
 class MockOutboxRepository extends Mock implements OutboxRepository {}
+
+class MockDeadLetterRepository extends Mock implements DeadLetterRepository {}
 
 class MockConnectivity extends Mock implements Connectivity {}
 
@@ -27,6 +31,7 @@ class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 void main() {
   late MockSupabaseClient mockSupabaseClient;
   late MockOutboxRepository mockOutboxRepository;
+  late MockDeadLetterRepository mockDeadLetterRepository;
   late MockConnectivity mockConnectivity;
   late MockBox<GroupModel> mockGroupBox;
   late MockBox<GroupMemberModel> mockGroupMemberBox;
@@ -51,6 +56,7 @@ void main() {
   setUp(() {
     mockSupabaseClient = MockSupabaseClient();
     mockOutboxRepository = MockOutboxRepository();
+    mockDeadLetterRepository = MockDeadLetterRepository();
     mockConnectivity = MockConnectivity();
     mockGroupBox = MockBox<GroupModel>();
     mockGroupMemberBox = MockBox<GroupMemberModel>();
@@ -110,6 +116,7 @@ void main() {
       final service = SyncService(
         mockSupabaseClient,
         mockOutboxRepository,
+        mockDeadLetterRepository,
         mockConnectivity,
         mockGroupBox,
         mockGroupMemberBox,

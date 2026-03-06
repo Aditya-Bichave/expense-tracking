@@ -22,4 +22,5 @@ abstract class HiveConstants {
 
   static const int dataVersion = 1;
   static const String dataVersionKey = 'hive_data_version';
+  static const String deadLetterBoxName = 'dead_letter_v1';
 }

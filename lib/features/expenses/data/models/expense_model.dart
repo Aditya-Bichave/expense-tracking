@@ -75,6 +75,10 @@ class ExpenseModel extends HiveObject {
   @JsonKey(includeIfNull: false)
   final String? clientGeneratedId;
 
+  @HiveField(16)
+  @JsonKey(defaultValue: 1)
+  final int revision;
+
   // Not storing lists in Hive/JSON by default to avoid complexity without generator
   @JsonKey(includeFromJson: false, includeToJson: false)
   final List<ExpensePayer> payers;
@@ -105,6 +109,7 @@ class ExpenseModel extends HiveObject {
     this.splits = const [],
     this.receiptUrl,
     this.clientGeneratedId,
+    this.revision = 1,
   });
 
   factory ExpenseModel.fromEntity(Expense entity) {
@@ -127,6 +132,7 @@ class ExpenseModel extends HiveObject {
       splits: entity.splits,
       receiptUrl: entity.receiptUrl,
       clientGeneratedId: entity.clientGeneratedId,
+      revision: entity.revision,
     );
   }
 
@@ -152,6 +158,7 @@ class ExpenseModel extends HiveObject {
       splits: splits,
       receiptUrl: receiptUrl,
       clientGeneratedId: clientGeneratedId,
+      revision: revision,
     );
   }
 

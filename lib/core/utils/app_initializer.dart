@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/constants/hive_constants.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
@@ -38,6 +39,7 @@ class AppInitializer {
       Box<RecurringRuleModel> recurringRuleBox,
       Box<RecurringRuleAuditLogModel> recurringRuleAuditLogBox,
       Box<SyncMutationModel> outboxBox,
+      Box<DeadLetterModel> deadLetterBox,
       Box<GroupModel> groupBox,
       Box<GroupMemberModel> groupMemberBox,
       Box<GroupExpenseModel> groupExpenseBox,
@@ -60,6 +62,7 @@ class AppInitializer {
     _registerAdapter(SyncMutationModelAdapter());
     _registerAdapter(SyncStatusAdapter());
     _registerAdapter(OpTypeAdapter());
+    _registerAdapter(DeadLetterModelAdapter());
 
     _registerAdapter(GroupModelAdapter());
     _registerAdapter(GroupMemberModelAdapter());
@@ -103,6 +106,10 @@ class AppInitializer {
           HiveConstants.recurringRuleAuditLogBoxName,
         );
 
+    final deadLetterBoxFuture = Hive.openBox<DeadLetterModel>(
+      HiveConstants.deadLetterBoxName,
+    );
+
     final outboxBoxFuture = Hive.openBox<SyncMutationModel>(
       HiveConstants.outboxBoxName,
     );
@@ -128,6 +135,7 @@ class AppInitializer {
       recurringRuleBoxFuture,
       recurringRuleAuditLogBoxFuture,
       outboxBoxFuture,
+      deadLetterBoxFuture,
       groupBoxFuture,
       groupMemberBoxFuture,
       groupExpenseBoxFuture,
@@ -148,9 +156,10 @@ class AppInitializer {
       recurringRuleBox: results[9] as Box<RecurringRuleModel>,
       recurringRuleAuditLogBox: results[10] as Box<RecurringRuleAuditLogModel>,
       outboxBox: results[11] as Box<SyncMutationModel>,
-      groupBox: results[12] as Box<GroupModel>,
-      groupMemberBox: results[13] as Box<GroupMemberModel>,
-      groupExpenseBox: results[14] as Box<GroupExpenseModel>,
+      deadLetterBox: results[12] as Box<DeadLetterModel>,
+      groupBox: results[13] as Box<GroupModel>,
+      groupMemberBox: results[14] as Box<GroupMemberModel>,
+      groupExpenseBox: results[15] as Box<GroupExpenseModel>,
     );
   }
 }

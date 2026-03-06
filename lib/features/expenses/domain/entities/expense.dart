@@ -28,6 +28,7 @@ class Expense extends Equatable {
   // Audit Fixes
   final String? receiptUrl;
   final String? clientGeneratedId;
+  final int revision;
 
   const Expense({
     required this.id,
@@ -50,6 +51,7 @@ class Expense extends Equatable {
     this.splits = const [],
     this.receiptUrl,
     this.clientGeneratedId,
+    this.revision = 1,
   });
 
   Expense copyWith({
@@ -79,6 +81,7 @@ class Expense extends Equatable {
     String? receiptUrl,
     ValueGetter<String?>? receiptUrlOrNull,
     String? clientGeneratedId,
+    int? revision,
     ValueGetter<String?>? clientGeneratedIdOrNull,
   }) {
     return Expense(

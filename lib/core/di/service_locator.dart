@@ -50,6 +50,7 @@ import 'package:expense_tracker/features/recurring_transactions/data/models/recu
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
@@ -80,6 +81,7 @@ Future<void> initLocator({
   required Box<RecurringRuleModel> recurringRuleBox,
   required Box<RecurringRuleAuditLogModel> recurringRuleAuditLogBox,
   required Box<SyncMutationModel> outboxBox,
+  required Box<DeadLetterModel> deadLetterBox,
   required Box<GroupModel> groupBox,
   required Box<GroupMemberModel> groupMemberBox,
   required Box<GroupExpenseModel> groupExpenseBox,
@@ -146,6 +148,10 @@ Future<void> initLocator({
 
   if (!sl.isRegistered<Box<SyncMutationModel>>()) {
     sl.registerLazySingleton<Box<SyncMutationModel>>(() => outboxBox);
+
+    if (!sl.isRegistered<Box<DeadLetterModel>>()) {
+      sl.registerLazySingleton<Box<DeadLetterModel>>(() => deadLetterBox);
+    }
   }
   if (!sl.isRegistered<Box<GroupModel>>()) {
     sl.registerLazySingleton<Box<GroupModel>>(() => groupBox);

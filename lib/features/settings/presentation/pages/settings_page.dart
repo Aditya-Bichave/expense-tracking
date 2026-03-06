@@ -13,6 +13,14 @@ import 'package:expense_tracker/features/settings/presentation/widgets/legal_set
 import 'package:expense_tracker/features/settings/presentation/widgets/about_settings_section.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/data_management/data_management_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/features/settings/presentation/pages/sync_diagnostics_page.dart';
+import 'package:expense_tracker/core/sync/dead_letter_repository.dart';
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/foundation/ui_enums.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -139,6 +147,61 @@ class _SettingsViewState extends State<SettingsView> {
                       modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
                       const EdgeInsets.only(top: 8.0, bottom: 80.0),
                   children: [
+                    Builder(
+                      builder: (context) {
+                        final deadLetterRepo = sl<DeadLetterRepository>();
+                        final hasDeadLetters = deadLetterRepo
+                            .getItems()
+                            .isNotEmpty;
+                        if (!hasDeadLetters) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0,
+                            vertical: 8.0,
+                          ),
+                          child: AppCard(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: context.kit.colors.errorContainer,
+                                borderRadius: BorderRadius.circular(
+                                  context.kit.radii.lg,
+                                ),
+                              ),
+                              child: ListTile(
+                                leading: Icon(
+                                  Icons.warning,
+                                  color: context.kit.colors.error,
+                                ),
+                                title: Text(
+                                  'Sync Errors Detected',
+                                  style: TextStyle(
+                                    color: context.kit.colors.error,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Some items failed to sync.',
+                                  style: TextStyle(
+                                    color: context.kit.colors.error,
+                                  ),
+                                ),
+                                trailing: AppButton(
+                                  label: 'Review',
+                                  variant: UiVariant.primary,
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const SyncDiagnosticsPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     AppearanceSettingsSection(
                       state: settingsState,
                       isLoading: isOverallLoading,
@@ -224,8 +287,23 @@ class _SettingsViewState extends State<SettingsView> {
                             context,
                           ).colorScheme.onError,
                         ),
-                        onPressed: () {
-                          context.read<AuthBloc>().add(AuthLogoutRequested());
+                        onPressed: () async {
+                          final outboxRepo = sl<OutboxRepository>();
+                          final pending = outboxRepo.getPendingItems();
+                          if (pending.isNotEmpty) {
+                            final proceed = await AppDialogs.showConfirmation(
+                              context,
+                              title: "Unsynced Changes",
+                              content:
+                                  "You have ${pending.length} unsynced items. Logging out will discard them permanently. Are you sure you want to proceed?",
+                              confirmText: "Force Logout",
+                              confirmColor: context.kit.colors.error,
+                            );
+                            if (proceed != true) return;
+                          }
+                          if (context.mounted) {
+                            context.read<AuthBloc>().add(AuthLogoutRequested());
+                          }
                         },
                         icon: const Icon(Icons.logout),
                         label: const Text('Logout'),

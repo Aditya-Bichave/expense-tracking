@@ -116,6 +116,7 @@ Future<void> main(List<String> args) async {
       recurringRuleBox: boxes.recurringRuleBox,
       recurringRuleAuditLogBox: boxes.recurringRuleAuditLogBox,
       outboxBox: boxes.outboxBox,
+      deadLetterBox: boxes.deadLetterBox,
       groupBox: boxes.groupBox,
       groupMemberBox: boxes.groupMemberBox,
       groupExpenseBox: boxes.groupExpenseBox,

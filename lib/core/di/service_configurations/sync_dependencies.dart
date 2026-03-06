@@ -1,6 +1,8 @@
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/dead_letter_repository.dart';
+import 'package:expense_tracker/core/sync/models/dead_letter_model.dart';
 import 'package:expense_tracker/core/sync/realtime_service.dart';
 import 'package:expense_tracker/core/sync/sync_coordinator.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
@@ -21,9 +23,16 @@ class SyncDependencies {
       );
     }
 
+    if (!sl.isRegistered<DeadLetterRepository>()) {
+      sl.registerLazySingleton<DeadLetterRepository>(
+        () => DeadLetterRepository(sl<Box<DeadLetterModel>>()),
+      );
+    }
+
     if (!sl.isRegistered<SyncService>()) {
       sl.registerLazySingleton<SyncService>(
         () => SyncService(
+          sl(),
           sl(),
           sl(),
           sl(),

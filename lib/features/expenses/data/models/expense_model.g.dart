@@ -29,13 +29,20 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       confidenceScoreValue: (fields[7] as num?)?.toDouble(),
       isRecurring: fields[8] == null ? false : fields[8] as bool,
       merchantId: fields[9] as String?,
+      groupId: fields[10] as String?,
+      createdBy: fields[11] as String?,
+      currency: fields[12] == null ? 'USD' : fields[12] as String,
+      notes: fields[13] as String?,
+      receiptUrl: fields[14] as String?,
+      clientGeneratedId: fields[15] as String?,
+      revision: fields[16] == null ? 1 : (fields[16] as num).toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -55,7 +62,21 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(8)
       ..write(obj.isRecurring)
       ..writeByte(9)
-      ..write(obj.merchantId);
+      ..write(obj.merchantId)
+      ..writeByte(10)
+      ..write(obj.groupId)
+      ..writeByte(11)
+      ..write(obj.createdBy)
+      ..writeByte(12)
+      ..write(obj.currency)
+      ..writeByte(13)
+      ..write(obj.notes)
+      ..writeByte(14)
+      ..write(obj.receiptUrl)
+      ..writeByte(15)
+      ..write(obj.clientGeneratedId)
+      ..writeByte(16)
+      ..write(obj.revision);
   }
 
   @override
@@ -88,6 +109,13 @@ ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
   confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
   isRecurring: json['isRecurring'] as bool? ?? false,
   merchantId: json['merchantId'] as String?,
+  groupId: json['groupId'] as String?,
+  createdBy: json['createdBy'] as String?,
+  currency: json['currency'] as String? ?? 'USD',
+  notes: json['notes'] as String?,
+  receiptUrl: json['receiptUrl'] as String?,
+  clientGeneratedId: json['clientGeneratedId'] as String?,
+  revision: (json['revision'] as num?)?.toInt() ?? 1,
 );
 
 Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
@@ -104,4 +132,11 @@ Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
       'confidenceScoreValue': ?instance.confidenceScoreValue,
       'isRecurring': instance.isRecurring,
       'merchantId': ?instance.merchantId,
+      'groupId': ?instance.groupId,
+      'createdBy': ?instance.createdBy,
+      'currency': instance.currency,
+      'notes': ?instance.notes,
+      'receiptUrl': ?instance.receiptUrl,
+      'clientGeneratedId': ?instance.clientGeneratedId,
+      'revision': instance.revision,
     };
