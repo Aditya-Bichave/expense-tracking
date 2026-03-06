@@ -16,6 +16,6 @@ void main() {
     final textWidget = tester.widget<Text>(
       find.text('Financial Garden Dashboard\n(Coming Soon!)'),
     );
-    expect(textWidget.style?.color, Colors.green);
+    expect(textWidget.style?.color, const Color(0xFF388E3C));
   });
 }

@@ -3,6 +3,7 @@ import 'package:expense_tracker/features/categories/presentation/bloc/category_m
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/widgets/transaction_filter_dialog.dart';
 import 'package:expense_tracker/l10n/app_localizations.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,7 +47,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TransactionFilterDialog), findsOneWidget);
-    expect(find.byType(ElevatedButton), findsWidgets);
+    expect(find.byType(BridgeElevatedButton), findsWidgets);
   });
 }
 

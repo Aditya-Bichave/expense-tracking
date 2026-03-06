@@ -4,7 +4,7 @@ import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 class AppGap extends StatelessWidget {
   final double size;
 
-  AppGap(this.size, {super.key});
+  const AppGap(this.size, {super.key});
 
   factory AppGap.xs(BuildContext context) => AppGap(context.kit.spacing.xs);
   factory AppGap.sm(BuildContext context) => AppGap(context.kit.spacing.sm);

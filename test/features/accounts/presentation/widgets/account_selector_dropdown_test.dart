@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/accounts/presentation/widgets/account_s
 import 'package:expense_tracker/core/widgets/app_dropdown_form_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import '../../../../helpers/pump_app.dart';
 
 void main() {
@@ -47,7 +48,7 @@ void main() {
     await tester.pump();
 
     // Verify loading indicator
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
   });
 
   testWidgets('AccountSelectorDropdown shows error', (

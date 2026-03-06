@@ -10,6 +10,7 @@ import 'package:expense_tracker/features/transactions/presentation/pages/transac
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:go_router/go_router.dart';
 
@@ -172,7 +173,7 @@ void main() {
       await tester.pump();
 
       // ASSERT
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('tapping Edit button does not throw', (tester) async {

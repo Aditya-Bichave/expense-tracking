@@ -12,7 +12,7 @@ class FinancialGardenWidget extends StatelessWidget {
       child: Text(
         'Financial Garden Dashboard\n(Coming Soon!)',
         textAlign: TextAlign.center,
-        style: BridgeTextStyle(fontSize: 18, color: const Color(0xFF388E3C)),
+        style: BridgeTextStyle(fontSize: 18, color: Color(0xFF388E3C)),
       ),
     );
   }

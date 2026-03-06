@@ -97,7 +97,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              const Row(
+              Row(
                 children: [
                   Expanded(child: Divider()),
                   Padding(padding: context.space.hLg, child: Text("OR")),

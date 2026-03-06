@@ -416,7 +416,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
                       const Text(
                         "Your encryption key appears to be corrupted. You can reset the app data to recover, but all local data will be lost.",
                         textAlign: TextAlign.center,
-                        style: BridgeTextStyle(color: const Color(0xFFD32F2F)),
+                        style: BridgeTextStyle(color: Color(0xFFD32F2F)),
                       ),
                       const SizedBox(height: 16),
                       if (_isResetting)
