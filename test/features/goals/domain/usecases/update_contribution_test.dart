@@ -12,56 +12,90 @@ class MockGoalContributionRepository extends Mock
 class FakeGoalContribution extends Fake implements GoalContribution {}
 
 void main() {
-  late UpdateContributionUseCase useCase;
-  late MockGoalContributionRepository mockRepository;
+  late UpdateContributionUseCase usecase;
+  late MockGoalContributionRepository mockGoalContributionRepository;
 
   setUpAll(() {
     registerFallbackValue(FakeGoalContribution());
   });
 
   setUp(() {
-    mockRepository = MockGoalContributionRepository();
-    useCase = UpdateContributionUseCase(mockRepository);
+    mockGoalContributionRepository = MockGoalContributionRepository();
+    usecase = UpdateContributionUseCase(mockGoalContributionRepository);
   });
 
   final tContribution = GoalContribution(
-    id: '1',
-    goalId: 'g1',
-    amount: 100.0,
-    date: DateTime.now(),
-    createdAt: DateTime.now(),
+    id: 'test_id',
+    goalId: 'goal_id',
+    amount: 100,
+    date: DateTime(2023, 1, 1),
+    createdAt: DateTime(2023, 1, 1),
   );
 
-  test('should call updateContribution on repository', () async {
+  final tInvalidContribution = GoalContribution(
+    id: 'test_id',
+    goalId: 'goal_id',
+    amount: -50,
+    date: DateTime(2023, 1, 1),
+    createdAt: DateTime(2023, 1, 1),
+  );
+
+  test(
+    'should return GoalContribution from the repository when successful',
+    () async {
+      // arrange
+      when(
+        () => mockGoalContributionRepository.updateContribution(any()),
+      ).thenAnswer((_) async => Right(tContribution));
+
+      // act
+      final result = await usecase(
+        UpdateContributionParams(contribution: tContribution),
+      );
+
+      // assert
+      expect(result, Right(tContribution));
+      verify(
+        () => mockGoalContributionRepository.updateContribution(tContribution),
+      );
+      verifyNoMoreInteractions(mockGoalContributionRepository);
+    },
+  );
+
+  test(
+    'should return ValidationFailure when amount is less than or equal to 0',
+    () async {
+      // act
+      final result = await usecase(
+        UpdateContributionParams(contribution: tInvalidContribution),
+      );
+
+      // assert
+      expect(
+        result,
+        const Left(ValidationFailure("Contribution amount must be positive.")),
+      );
+      verifyZeroInteractions(mockGoalContributionRepository);
+    },
+  );
+
+  test('should return Failure from the repository when unsuccessful', () async {
     // arrange
+    final tFailure = CacheFailure('Cache Error');
     when(
-      () => mockRepository.updateContribution(tContribution),
-    ).thenAnswer((_) async => Right(tContribution));
+      () => mockGoalContributionRepository.updateContribution(any()),
+    ).thenAnswer((_) async => Left(tFailure));
 
     // act
-    final result = await useCase(
+    final result = await usecase(
       UpdateContributionParams(contribution: tContribution),
     );
 
     // assert
-    expect(result, Right(tContribution));
-    verify(() => mockRepository.updateContribution(tContribution));
-    verifyNoMoreInteractions(mockRepository);
-  });
-
-  test('should return failure when repository fails', () async {
-    // arrange
-    when(
-      () => mockRepository.updateContribution(tContribution),
-    ).thenAnswer((_) async => Left(CacheFailure()));
-
-    // act
-    final result = await useCase(
-      UpdateContributionParams(contribution: tContribution),
+    expect(result, Left(tFailure));
+    verify(
+      () => mockGoalContributionRepository.updateContribution(tContribution),
     );
-
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.updateContribution(tContribution));
+    verifyNoMoreInteractions(mockGoalContributionRepository);
   });
 }

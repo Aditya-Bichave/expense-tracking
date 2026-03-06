@@ -16,17 +16,36 @@ void main() {
     usecase = JoinGroup(mockGroupsRepository);
   });
 
-  const tToken = 'invite-token-123';
-  final tResult = {'group_id': '1'};
+  const tToken = 'test_token';
+  final tResult = {'status': 'success', 'groupId': 'test_group_id'};
 
-  test('should pass the token to the repository', () async {
+  test('should return Map from the repository when successful', () async {
+    // arrange
     when(
       () => mockGroupsRepository.acceptInvite(any()),
     ).thenAnswer((_) async => Right(tResult));
 
+    // act
     final result = await usecase(tToken);
 
+    // assert
     expect(result, Right(tResult));
+    verify(() => mockGroupsRepository.acceptInvite(tToken));
+    verifyNoMoreInteractions(mockGroupsRepository);
+  });
+
+  test('should return Failure from the repository when unsuccessful', () async {
+    // arrange
+    final tFailure = ServerFailure('Server Error');
+    when(
+      () => mockGroupsRepository.acceptInvite(any()),
+    ).thenAnswer((_) async => Left(tFailure));
+
+    // act
+    final result = await usecase(tToken);
+
+    // assert
+    expect(result, Left(tFailure));
     verify(() => mockGroupsRepository.acceptInvite(tToken));
     verifyNoMoreInteractions(mockGroupsRepository);
   });

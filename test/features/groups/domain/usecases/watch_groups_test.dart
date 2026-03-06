@@ -18,24 +18,45 @@ void main() {
     usecase = WatchGroups(mockGroupsRepository);
   });
 
-  final tGroup = GroupEntity(
-    id: '1',
-    name: 'Test Group',
-    type: GroupType.trip,
-    currency: 'USD',
-    createdBy: 'user1',
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-    isArchived: false,
-  );
+  final tGroupList = [
+    GroupEntity(
+      id: 'test_id_1',
+      name: 'Test Group 1',
+      type: GroupType.custom,
+      currency: 'USD',
+      createdBy: 'user_123',
+      createdAt: DateTime(2023, 1, 1),
+      updatedAt: DateTime(2023, 1, 1),
+    ),
+  ];
 
-  test('should return a stream of groups from the repository', () {
-    final tStream = Stream.value(Right<Failure, List<GroupEntity>>([tGroup]));
-    when(() => mockGroupsRepository.watchGroups()).thenAnswer((_) => tStream);
+  test('should return stream of Right(List<GroupEntity>) from repository', () {
+    // arrange
+    when(
+      () => mockGroupsRepository.watchGroups(),
+    ).thenAnswer((_) => Stream.value(Right(tGroupList)));
 
+    // act
     final result = usecase();
 
-    expect(result, tStream);
+    // assert
+    expect(result, emitsInOrder([Right(tGroupList)]));
+    verify(() => mockGroupsRepository.watchGroups());
+    verifyNoMoreInteractions(mockGroupsRepository);
+  });
+
+  test('should return stream of Left(Failure) from repository', () {
+    // arrange
+    final tFailure = ServerFailure('Server Error');
+    when(
+      () => mockGroupsRepository.watchGroups(),
+    ).thenAnswer((_) => Stream.value(Left(tFailure)));
+
+    // act
+    final result = usecase();
+
+    // assert
+    expect(result, emitsInOrder([Left(tFailure)]));
     verify(() => mockGroupsRepository.watchGroups());
     verifyNoMoreInteractions(mockGroupsRepository);
   });

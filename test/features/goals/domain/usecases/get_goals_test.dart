@@ -11,42 +11,61 @@ import 'package:mocktail/mocktail.dart';
 class MockGoalRepository extends Mock implements GoalRepository {}
 
 void main() {
-  late GetGoalsUseCase useCase;
-  late MockGoalRepository mockRepository;
+  late GetGoalsUseCase usecase;
+  late MockGoalRepository mockGoalRepository;
 
   setUp(() {
-    mockRepository = MockGoalRepository();
-    useCase = GetGoalsUseCase(mockRepository);
+    mockGoalRepository = MockGoalRepository();
+    usecase = GetGoalsUseCase(mockGoalRepository);
   });
 
-  final tGoal = Goal(
-    id: '1',
-    name: 'Car',
-    targetAmount: 5000.0,
-    totalSaved: 1000.0,
-    targetDate: DateTime(2025, 1, 1),
-    iconName: 'car',
-    description: 'Save for car',
-    status: GoalStatus.active,
-    createdAt: DateTime(2024, 1, 1),
-    achievedAt: null,
+  final tGoalList = [
+    Goal(
+      id: 'test_id',
+      name: 'Test Goal',
+      targetAmount: 1000,
+      totalSaved: 500,
+      targetDate: DateTime(2023, 12, 31),
+      status: GoalStatus.active,
+      createdAt: DateTime(2023, 1, 1),
+    ),
+  ];
+
+  test(
+    'should return list of Goal from the repository when successful',
+    () async {
+      // arrange
+      when(
+        () => mockGoalRepository.getGoals(
+          includeArchived: any(named: 'includeArchived'),
+        ),
+      ).thenAnswer((_) async => Right(tGoalList));
+
+      // act
+      final result = await usecase(NoParams());
+
+      // assert
+      expect(result, Right(tGoalList));
+      verify(() => mockGoalRepository.getGoals(includeArchived: false));
+      verifyNoMoreInteractions(mockGoalRepository);
+    },
   );
 
-  test('should get goals from repository', () async {
-    // Arrange
+  test('should return Failure from the repository when unsuccessful', () async {
+    // arrange
+    final tFailure = CacheFailure('Cache Error');
     when(
-      () => mockRepository.getGoals(),
-    ).thenAnswer((_) async => Right([tGoal]));
+      () => mockGoalRepository.getGoals(
+        includeArchived: any(named: 'includeArchived'),
+      ),
+    ).thenAnswer((_) async => Left(tFailure));
 
-    // Act
-    final result = await useCase(const NoParams());
+    // act
+    final result = await usecase(NoParams());
 
-    // Assert
-    expect(result.isRight(), isTrue);
-    result.fold(
-      (l) => fail("Should be Right"),
-      (r) => expect(r.first.id, tGoal.id),
-    );
-    verify(() => mockRepository.getGoals()).called(1);
+    // assert
+    expect(result, Left(tFailure));
+    verify(() => mockGoalRepository.getGoals(includeArchived: false));
+    verifyNoMoreInteractions(mockGoalRepository);
   });
 }

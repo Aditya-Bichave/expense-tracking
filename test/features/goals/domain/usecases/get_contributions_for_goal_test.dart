@@ -10,51 +10,63 @@ class MockGoalContributionRepository extends Mock
     implements GoalContributionRepository {}
 
 void main() {
-  late GetContributionsForGoalUseCase useCase;
-  late MockGoalContributionRepository mockRepository;
+  late GetContributionsForGoalUseCase usecase;
+  late MockGoalContributionRepository mockGoalContributionRepository;
 
   setUp(() {
-    mockRepository = MockGoalContributionRepository();
-    useCase = GetContributionsForGoalUseCase(mockRepository);
+    mockGoalContributionRepository = MockGoalContributionRepository();
+    usecase = GetContributionsForGoalUseCase(mockGoalContributionRepository);
   });
 
-  final tContributions = [
+  final tContributionList = [
     GoalContribution(
-      id: '1',
-      goalId: 'g1',
-      amount: 100.0,
-      date: DateTime.now(),
-      createdAt: DateTime.now(),
+      id: 'test_id',
+      goalId: 'goal_id',
+      amount: 100,
+      date: DateTime(2023, 1, 1),
+      createdAt: DateTime(2023, 1, 1),
     ),
   ];
-  const tGoalId = 'g1';
 
-  test('should get contributions from repository', () async {
+  test(
+    'should return list of GoalContribution from the repository when successful',
+    () async {
+      // arrange
+      when(
+        () => mockGoalContributionRepository.getContributionsForGoal(any()),
+      ).thenAnswer((_) async => Right(tContributionList));
+
+      // act
+      final result = await usecase(
+        const GetContributionsParams(goalId: 'goal_id'),
+      );
+
+      // assert
+      expect(result, Right(tContributionList));
+      verify(
+        () => mockGoalContributionRepository.getContributionsForGoal('goal_id'),
+      );
+      verifyNoMoreInteractions(mockGoalContributionRepository);
+    },
+  );
+
+  test('should return Failure from the repository when unsuccessful', () async {
     // arrange
+    final tFailure = CacheFailure('Cache Error');
     when(
-      () => mockRepository.getContributionsForGoal(tGoalId),
-    ).thenAnswer((_) async => Right(tContributions));
+      () => mockGoalContributionRepository.getContributionsForGoal(any()),
+    ).thenAnswer((_) async => Left(tFailure));
 
     // act
-    final result = await useCase(const GetContributionsParams(goalId: tGoalId));
+    final result = await usecase(
+      const GetContributionsParams(goalId: 'goal_id'),
+    );
 
     // assert
-    expect(result, Right(tContributions));
-    verify(() => mockRepository.getContributionsForGoal(tGoalId));
-    verifyNoMoreInteractions(mockRepository);
-  });
-
-  test('should return failure when repository fails', () async {
-    // arrange
-    when(
-      () => mockRepository.getContributionsForGoal(tGoalId),
-    ).thenAnswer((_) async => Left(CacheFailure()));
-
-    // act
-    final result = await useCase(const GetContributionsParams(goalId: tGoalId));
-
-    // assert
-    expect(result.isLeft(), true);
-    verify(() => mockRepository.getContributionsForGoal(tGoalId));
+    expect(result, Left(tFailure));
+    verify(
+      () => mockGoalContributionRepository.getContributionsForGoal('goal_id'),
+    );
+    verifyNoMoreInteractions(mockGoalContributionRepository);
   });
 }

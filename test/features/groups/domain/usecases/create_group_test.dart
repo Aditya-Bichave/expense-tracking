@@ -25,36 +25,44 @@ void main() {
   });
 
   final tGroup = GroupEntity(
-    id: '1',
+    id: 'test_id',
     name: 'Test Group',
-    type: GroupType.trip,
+    type: GroupType.custom,
     currency: 'USD',
-    createdBy: 'user1',
-    createdAt: DateTime.now(),
-    updatedAt: DateTime.now(),
-    isArchived: false,
+    createdBy: 'user_123',
+    createdAt: DateTime(2023, 1, 1),
+    updatedAt: DateTime(2023, 1, 1),
   );
 
-  test('should pass the group entity to the repository', () async {
-    when(
-      () => mockGroupsRepository.createGroup(any()),
-    ).thenAnswer((_) async => Right(tGroup));
+  test(
+    'should return GroupEntity from the repository when successful',
+    () async {
+      // arrange
+      when(
+        () => mockGroupsRepository.createGroup(any()),
+      ).thenAnswer((_) async => Right(tGroup));
 
-    final result = await usecase(tGroup);
+      // act
+      final result = await usecase(tGroup);
 
-    expect(result, Right(tGroup));
-    verify(() => mockGroupsRepository.createGroup(tGroup));
-    verifyNoMoreInteractions(mockGroupsRepository);
-  });
+      // assert
+      expect(result, Right(tGroup));
+      verify(() => mockGroupsRepository.createGroup(tGroup));
+      verifyNoMoreInteractions(mockGroupsRepository);
+    },
+  );
 
-  test('should return Failure when repository fails', () async {
-    final tFailure = ServerFailure('Server Failure');
+  test('should return Failure from the repository when unsuccessful', () async {
+    // arrange
+    final tFailure = ServerFailure('Server Error');
     when(
       () => mockGroupsRepository.createGroup(any()),
     ).thenAnswer((_) async => Left(tFailure));
 
+    // act
     final result = await usecase(tGroup);
 
+    // assert
     expect(result, Left(tFailure));
     verify(() => mockGroupsRepository.createGroup(tGroup));
     verifyNoMoreInteractions(mockGroupsRepository);

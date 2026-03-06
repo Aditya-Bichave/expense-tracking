@@ -16,26 +16,35 @@ void main() {
     usecase = SyncGroups(mockGroupsRepository);
   });
 
-  test('should call syncGroups on the repository', () async {
-    when(
-      () => mockGroupsRepository.syncGroups(),
-    ).thenAnswer((_) async => const Right(null));
+  test(
+    'should call syncGroups from the repository and return Right(null) when successful',
+    () async {
+      // arrange
+      when(
+        () => mockGroupsRepository.syncGroups(),
+      ).thenAnswer((_) async => const Right(null));
 
-    final result = await usecase();
+      // act
+      final result = await usecase();
 
-    expect(result, const Right(null));
-    verify(() => mockGroupsRepository.syncGroups());
-    verifyNoMoreInteractions(mockGroupsRepository);
-  });
+      // assert
+      expect(result, const Right(null));
+      verify(() => mockGroupsRepository.syncGroups());
+      verifyNoMoreInteractions(mockGroupsRepository);
+    },
+  );
 
-  test('should return Failure when repository fails', () async {
-    final tFailure = ServerFailure('Server Failure');
+  test('should return Failure from the repository when unsuccessful', () async {
+    // arrange
+    final tFailure = ServerFailure('Server Error');
     when(
       () => mockGroupsRepository.syncGroups(),
     ).thenAnswer((_) async => Left(tFailure));
 
+    // act
     final result = await usecase();
 
+    // assert
     expect(result, Left(tFailure));
     verify(() => mockGroupsRepository.syncGroups());
     verifyNoMoreInteractions(mockGroupsRepository);

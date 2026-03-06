@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/usecases/usecase.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/features/goals/domain/usecases/audit_goal_totals.dart';
@@ -10,25 +11,44 @@ class MockGoalContributionRepository extends Mock
 
 void main() {
   late AuditGoalTotalsUseCase usecase;
-  late MockGoalContributionRepository mockRepository;
+  late MockGoalContributionRepository mockGoalContributionRepository;
 
   setUp(() {
-    mockRepository = MockGoalContributionRepository();
-    usecase = AuditGoalTotalsUseCase(mockRepository);
+    mockGoalContributionRepository = MockGoalContributionRepository();
+    usecase = AuditGoalTotalsUseCase(mockGoalContributionRepository);
   });
 
-  test('should call auditGoalTotals on repository', () async {
-    // Arrange
+  test(
+    'should call auditGoalTotals from the repository when successful',
+    () async {
+      // arrange
+      when(
+        () => mockGoalContributionRepository.auditGoalTotals(),
+      ).thenAnswer((_) async => const Right(null));
+
+      // act
+      final result = await usecase(NoParams());
+
+      // assert
+      expect(result, const Right(null));
+      verify(() => mockGoalContributionRepository.auditGoalTotals());
+      verifyNoMoreInteractions(mockGoalContributionRepository);
+    },
+  );
+
+  test('should return Failure from the repository when unsuccessful', () async {
+    // arrange
+    final tFailure = CacheFailure('Cache Error');
     when(
-      () => mockRepository.auditGoalTotals(),
-    ).thenAnswer((_) async => const Right(null));
+      () => mockGoalContributionRepository.auditGoalTotals(),
+    ).thenAnswer((_) async => Left(tFailure));
 
-    // Act
-    final result = await usecase(const NoParams());
+    // act
+    final result = await usecase(NoParams());
 
-    // Assert
-    expect(result, const Right(null));
-    verify(() => mockRepository.auditGoalTotals()).called(1);
-    verifyNoMoreInteractions(mockRepository);
+    // assert
+    expect(result, Left(tFailure));
+    verify(() => mockGoalContributionRepository.auditGoalTotals());
+    verifyNoMoreInteractions(mockGoalContributionRepository);
   });
 }
