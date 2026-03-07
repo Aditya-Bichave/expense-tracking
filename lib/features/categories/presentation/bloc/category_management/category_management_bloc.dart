@@ -91,17 +91,23 @@ class CategoryManagementBloc
             .where((c) => !c.isCustom && c.type == CategoryType.income)
             .toList();
 
+        // ⚡ Bolt Performance Optimization
+        // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
+        // Solution: Cache lowercased names outside the sort function
+        // Impact: Improves loading speed by reducing CPU cycles and garbage collection overhead
+        final lowerCaseNames = {for (var c in allCategories) c.id: c.name.toLowerCase()};
+
         customExpense.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
         );
         customIncome.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
         );
         predefinedExpense.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
         );
         predefinedIncome.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
         );
 
         log.info(

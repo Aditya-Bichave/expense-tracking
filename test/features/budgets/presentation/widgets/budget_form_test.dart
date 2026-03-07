@@ -1,6 +1,8 @@
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/presentation/widgets/budget_form.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -43,9 +45,19 @@ void main() {
     id: '1',
     name: 'Initial Budget',
     targetAmount: 500,
-    type: BudgetType.overall,
+    type: BudgetType.categorySpecific,
+    categoryIds: const ['cat1'],
     period: BudgetPeriodType.recurringMonthly,
     createdAt: DateTime(2023),
+  );
+
+  final mockCategory = const Category(
+    id: 'cat1',
+    name: 'Food',
+    iconName: 'food',
+    colorHex: 'FFFFFF',
+    type: CategoryType.expense,
+    isCustom: false,
   );
 
   group('BudgetForm', () {
@@ -66,12 +78,22 @@ void main() {
         widget: BudgetForm(
           initialBudget: mockBudget,
           onSubmit: mockOnSubmit.call,
-          availableCategories: const [],
+          availableCategories: [mockCategory],
         ),
       );
       expect(find.text('Update Budget'), findsOneWidget);
       expect(find.text('Initial Budget'), findsOneWidget);
       expect(find.text('500.00'), findsOneWidget);
+
+      // Tap on the category field to show the bottom sheet (hitting line 152)
+      await tester.tap(find.byType(DropdownButtonFormField<BudgetType>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Category Specific').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('1 Categories Selected'));
+      await tester.pumpAndSettle();
+      expect(find.text('Food'), findsWidgets);
     });
 
     testWidgets('onSubmit is called with correct data when form is valid', (
