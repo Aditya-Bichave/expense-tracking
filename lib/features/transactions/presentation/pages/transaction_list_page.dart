@@ -485,6 +485,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                 pickerType,
                                 list,
                               );
+                          if (!context.mounted) return;
                           if (selectedCategory != null &&
                               selectedCategory.id !=
                                   Category.uncategorized.id &&

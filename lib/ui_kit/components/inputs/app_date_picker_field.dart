@@ -24,6 +24,7 @@ class AppDatePickerField extends StatelessWidget {
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
+    if (!context.mounted) return;
     if (picked != null && picked != selectedDate) {
       onDateSelected(picked);
     }

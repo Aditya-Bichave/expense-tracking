@@ -371,7 +371,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
           )
         : null;
 
-    final isCorruption = widget.error is HiveKeyCorruptionException;
+    final isCorruption = true; // Allow reset for any initialization error
 
     return MaterialApp(
       theme: widget.theme ?? defaultThemePair!.light,

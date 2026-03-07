@@ -272,6 +272,7 @@ class _SettingsPageState extends State<SettingsPage> {
         onCancel: () => Navigator.of(ctx).pop(),
       ),
     );
+    if (!context.mounted) return null;
     controller.dispose();
     return result;
   }

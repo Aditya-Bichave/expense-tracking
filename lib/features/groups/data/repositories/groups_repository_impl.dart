@@ -1,3 +1,4 @@
+import "package:expense_tracker/core/utils/logger.dart";
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
@@ -51,7 +52,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final connectivityResult = await _connectivity.checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.mobile) ||
           connectivityResult.contains(ConnectivityResult.wifi)) {
-        unawaited(_syncService.processOutbox());
+        unawaited(
+          _syncService.processOutbox().catchError(
+            (e, s) => log.severe('Background task failed: $e\n$s'),
+          ),
+        );
       }
 
       return Right(group);

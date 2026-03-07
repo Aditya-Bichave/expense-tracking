@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 // lib/core/data/countries.dart
 
 // Renamed from CountryInfo to avoid conflict if imported directly elsewhere
