@@ -31,6 +31,7 @@ import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.da
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
 
 // Hive Models
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
@@ -166,7 +167,10 @@ class AppInitializer {
     // 5. Initialize SharedPreferences
     final prefs = await SharedPreferences.getInstance();
 
-    // 6. Initialize Service Locator
+    // 6. Initialize Supabase
+    await SupabaseClientProvider.initialize();
+
+    // 7. Initialize Service Locator
     await initLocator(
       prefs: prefs,
       secureStorageService: secureStorageService,
