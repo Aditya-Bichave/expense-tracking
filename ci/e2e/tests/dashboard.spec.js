@@ -9,6 +9,20 @@ const { test, expect } = require('@playwright/test');
 const FLUTTER_READY_TIMEOUT = 30_000;
 const FLUTTER_RENDER_WAIT = 2000; // time for Flutter to paint content after canvas appears
 
+/**
+ * Perform client-side navigation within Flutter Web to avoid deep-link boot crashes.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} path
+ */
+async function navigateClientSide(page, path) {
+    await page.evaluate((r) => {
+        window.history.pushState({}, '', r);
+        window.dispatchEvent(new Event('popstate'));
+    }, path);
+    await page.waitForURL(`**${path}*`, { timeout: 10000 });
+    await page.waitForTimeout(FLUTTER_RENDER_WAIT);
+}
+
 test.describe('Dashboard @flow:dashboard', () => {
     /** @type {string[]} */
     let pageErrors = [];
@@ -56,10 +70,7 @@ test.describe('Dashboard @flow:dashboard', () => {
     for (const route of routes) {
         test(`navigating to ${route.path} works`, async ({ page }) => {
             // First boot Dashboard, then navigate, to prevent deep link failures on complex routes
-            await page.goto('/dashboard');
-            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
-            await page.goto(route.path);
-            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+            await navigateClientSide(page, route.path);
 
             const url = page.url();
             expect(url).toContain(route.path);

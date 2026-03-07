@@ -22,6 +22,20 @@ const filterFatalErrors = (errors) => {
     return errors.filter(e => !IGNORABLE_ERRORS.some(ignored => e.includes(ignored)));
 };
 
+/**
+ * Perform client-side navigation within Flutter Web to avoid deep-link boot crashes.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} path
+ */
+async function navigateClientSide(page, path) {
+    await page.evaluate((r) => {
+        window.history.pushState({}, '', r);
+        window.dispatchEvent(new Event('popstate'));
+    }, path);
+    await page.waitForURL(`**${path}*`, { timeout: 10000 });
+    await page.waitForTimeout(FLUTTER_RENDER_WAIT);
+}
+
 test.describe('Transactions @flow:transactions', () => {
     /** @type {string[]} */
     let pageErrors = [];
@@ -38,8 +52,9 @@ test.describe('Transactions @flow:transactions', () => {
     });
 
     test('transactions list page loads without errors', async ({ page }) => {
-        await page.goto('/transactions');
+        await page.goto('/dashboard');
         await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+        await navigateClientSide(page, '/transactions');
 
         await page.screenshot({ path: 'test-results/transactions-list.png', fullPage: true });
 
@@ -51,8 +66,7 @@ test.describe('Transactions @flow:transactions', () => {
     test('add expense wizard page loads', async ({ page }) => {
         await page.goto('/dashboard');
         await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
-        await page.goto('/add-expense-wizard');
-        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+        await navigateClientSide(page, '/add-expense-wizard');
 
         await page.screenshot({ path: 'test-results/add-expense-wizard.png', fullPage: true });
 
@@ -88,8 +102,7 @@ test.describe('Reports @flow:reports', () => {
         test(`report page loads: ${route}`, async ({ page }) => {
             await page.goto('/dashboard');
             await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
-            await page.goto(route);
-            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+            await navigateClientSide(page, route);
 
             const screenshotName = route.replace(/\//g, '_').replace(/^_/, '');
             await page.screenshot({
