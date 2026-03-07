@@ -1,5 +1,6 @@
 import "package:collection/collection.dart";
 // lib/core/data/countries.dart
+import 'package:collection/collection.dart'; // Import for firstWhereOrNull
 
 // Renamed from CountryInfo to avoid conflict if imported directly elsewhere
 class AppCountry {
@@ -102,14 +103,6 @@ abstract class AppCountries {
 
   static AppCountry? findCountryByCode(String? code) {
     if (code == null) return null;
-    try {
-      return availableCountries.firstWhere(
-        (c) => c.code == code,
-        orElse: () => defaultCountry,
-      );
-    } catch (e) {
-      // Return default if not found? Or null? Returning null for now.
-      return null; // Or return defaultCountry;
-    }
+    return availableCountries.firstWhereOrNull((c) => c.code == code);
   }
 }
