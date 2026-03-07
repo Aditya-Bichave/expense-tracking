@@ -9,10 +9,37 @@ set -e
 # 1. Load environment variables
 if [ -f .env ]; then
   echo "--- Loading .env ---"
-  # This simple parser handles BASIC KEY=VALUE pairs
-  export $(grep -v '^#' .env | xargs)
+  # Robust parser for .env files
+  while read -r line || [ -n "$line" ]; do
+    # Skip comments and blank lines
+    [[ "$line" =~ ^#.*$ ]] && continue
+    [[ -z "$line" ]] && continue
+    
+    # Parse KEY=VALUE
+    if [[ "$line" =~ ^([^=]+)=(.*)$ ]]; then
+      key="${BASH_REMATCH[1]}"
+      value="${BASH_REMATCH[2]}"
+      # Remove potential surrounding quotes from value
+      value="${value%\"}"
+      value="${value#\"}"
+      value="${value%\'}"
+      value="${value#\'}"
+      export "$key"="$value"
+    fi
+  done < .env
 else
   echo "Error: .env file not found. Please create one with SUPABASE_URL and SUPABASE_ANON_KEY."
+  exit 1
+fi
+
+# 1.1 Validate critical environment variables
+if [ -z "$SUPABASE_URL" ]; then
+  echo "Error: SUPABASE_URL is missing in .env"
+  exit 1
+fi
+
+if [ -z "$SUPABASE_ANON_KEY" ]; then
+  echo "Error: SUPABASE_ANON_KEY is missing in .env"
   exit 1
 fi
 

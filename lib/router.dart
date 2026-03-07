@@ -96,7 +96,7 @@ class AppRouter {
     redirect: (context, state) {
       final sessionState = sl<SessionCubit>().state;
       final settingsState = sl<SettingsBloc>().state;
-      final location = state.uri.toString();
+      final location = state.uri.path;
       final isLoggingIn =
           location == RouteNames.login ||
           location == RouteNames.initialSetup ||
