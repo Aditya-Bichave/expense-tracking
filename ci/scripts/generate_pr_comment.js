@@ -178,7 +178,8 @@ function getJobBreakdown() {
     static: statusEmoji(process.env.STATIC_STATUS),
     unit: statusEmoji(process.env.UNIT_STATUS),
     build: statusEmoji(process.env.WEB_BUILD_STATUS),
-    smoke: statusEmoji(process.env.WEB_SMOKE_STATUS)
+    smoke: statusEmoji(process.env.WEB_SMOKE_STATUS),
+    e2e: statusEmoji(process.env.WEB_E2E_STATUS)
   };
 }
 
@@ -226,7 +227,7 @@ const flutterVerRaw = getVersion("flutter --version");
 const flutterVer = flutterVerRaw.replace(/^Flutter\s+/i, '').split(' • ')[0];
 const nodeVer = getVersion("node -v");
 
-const hasFailures = jobs.static === "❌" || jobs.unit === "❌" || jobs.build === "❌" || jobs.smoke === "❌";
+const hasFailures = jobs.static === "❌" || jobs.unit === "❌" || jobs.build === "❌" || jobs.smoke === "❌" || jobs.e2e === "❌";
 const hasWarnings = coverage.diff < 80 || (jobs.build === "✅" && !bundle.passed) || (jobs.smoke === "✅" && !smoke.passed);
 
 const overallStatus = computeOverallStatus(hasFailures, hasWarnings, score);
@@ -284,6 +285,7 @@ const body = `<!-- ci-summary-bot -->
 - 🧪 Unit Tests: ${jobs.unit}
 - 🌐 Web Build: ${jobs.build}
 - 💨 Web Smoke: ${jobs.smoke}
+- 🎭 E2E Tests: ${jobs.e2e}
 
 ---
 

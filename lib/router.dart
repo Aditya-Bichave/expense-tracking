@@ -52,6 +52,7 @@ import 'package:expense_tracker/features/auth/presentation/pages/verify_otp_page
 import 'package:expense_tracker/features/groups/presentation/pages/group_list_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
 import 'package:expense_tracker/features/profile/presentation/pages/profile_setup_page.dart';
+import 'package:expense_tracker/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/pages/lock_screen.dart';
 import 'package:expense_tracker/features/add_expense/presentation/pages/add_expense_wizard_page.dart';
 import 'package:expense_tracker/core/auth/session_state.dart';
@@ -151,7 +152,10 @@ class AppRouter {
       GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
       GoRoute(
         path: '/profile-setup',
-        builder: (context, state) => const ProfileSetupPage(),
+        builder: (context, state) => BlocProvider<ProfileBloc>(
+          create: (_) => sl<ProfileBloc>(),
+          child: const ProfileSetupPage(),
+        ),
       ),
       GoRoute(
         path: RouteNames.login,

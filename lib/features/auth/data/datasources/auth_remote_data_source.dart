@@ -29,7 +29,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     await _client.auth.signInWithOtp(
       email: email,
       emailRedirectTo: kIsWeb
-          ? Uri.base.origin
+          ? '${Uri.base.origin}/login-callback'
           : 'io.supabase.expensetracker://login-callback',
     );
   }

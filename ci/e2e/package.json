@@ -1,0 +1,19 @@
+{
+  "name": "e2e-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright E2E tests for FinancialOS (authenticated)",
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:headed": "playwright test --headed",
+    "e2e:debug": "playwright test --debug",
+    "e2e:report": "playwright show-report playwright-report"
+  },
+  "dependencies": {
+    "@playwright/test": "1.58.2",
+    "@supabase/supabase-js": "2.98.0",
+    "dotenv": "17.3.1",
+    "http-server": "^14.1.1"
+  }
+}
