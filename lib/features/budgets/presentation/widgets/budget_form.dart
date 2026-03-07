@@ -68,10 +68,16 @@ class _BudgetFormState extends State<BudgetForm> {
     _selectedPeriod = initial?.period ?? BudgetPeriodType.recurringMonthly;
     _selectedStartDate = initial?.startDate;
     _selectedEndDate = initial?.endDate;
+
+    // ⚡ Bolt Performance Optimization
+    // Problem: .any() inside .where() creates an O(N*M) time complexity loop
+    // Solution: Precompute a Set of available category IDs for O(1) lookups
+    // Impact: Faster form initialization, eliminating a potential UI bottleneck
+    final availableCategoryIds = widget.availableCategories.map((c) => c.id).toSet();
     _selectedCategoryIds =
         initial?.categoryIds
             ?.where(
-              (id) => widget.availableCategories.any((cat) => cat.id == id),
+              (id) => availableCategoryIds.contains(id),
             )
             .toList() ??
         [];
@@ -138,8 +144,14 @@ class _BudgetFormState extends State<BudgetForm> {
     final items = expenseCategories
         .map((category) => MultiSelectItem<String>(category.id, category.name))
         .toList();
+
+    // ⚡ Bolt Performance Optimization
+    // Problem: .any() inside .where() creates an O(N*M) time complexity loop during dialog opening
+    // Solution: Precompute a Set of valid item values for O(1) lookups
+    // Impact: Prevents UI jank when opening the MultiSelect dialog with many categories
+    final validItemValues = items.map((i) => i.value).toSet();
     final validInitialValue = _selectedCategoryIds
-        .where((id) => items.any((item) => item.value == id))
+        .where((id) => validItemValues.contains(id))
         .toList();
 
     showModalBottomSheet(

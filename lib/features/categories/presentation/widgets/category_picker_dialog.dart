@@ -55,9 +55,16 @@ class _CategoryPickerDialogContentState
   void initState() {
     super.initState();
     final uncategorizedId = Category.uncategorized.id;
+
+    // ⚡ Bolt Performance Optimization
+    // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during dialog load
+    // Solution: Cache lowercased names outside the sort function
+    // Impact: Improves dialog open speed by reducing CPU cycles and garbage collection
+    final lowerCaseNames = {for (var c in widget.categories) c.id: c.name.toLowerCase()};
+
     _allCategories =
         widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
         );
     _filteredCategories = List.from(_allCategories);
     _searchController.addListener(_filterCategories);

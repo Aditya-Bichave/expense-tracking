@@ -54,9 +54,15 @@ class CategoriesSubTab extends StatelessWidget {
         ),
       );
     }
+    // ⚡ Bolt Performance Optimization
+    // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
+    // Solution: Cache lowercased names outside the sort function
+    // Impact: Improves loading speed by reducing CPU cycles and garbage collection
+    final lowerCaseNames = {for (var c in categories) c.id: c.name.toLowerCase()};
+
     // Sort list before displaying
     categories.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
     );
     return ListView.builder(
       // --- MODIFIED: Apply themed padding OR a default, including bottom padding for FAB ---
