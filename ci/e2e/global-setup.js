@@ -61,14 +61,23 @@ module.exports = async function globalSetup() {
     console.log('[E2E] Authenticating with Supabase (email+password)...');
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: TEST_EMAIL,
-        password: TEST_PASSWORD,
-    });
+    let authData = null;
+    let authError = null;
+    for (let i = 0; i < 3; i++) {
+        const result = await supabase.auth.signInWithPassword({
+            email: TEST_EMAIL,
+            password: TEST_PASSWORD,
+        });
+        authData = result.data;
+        authError = result.error;
+        if (!authError && authData?.session) break;
+        console.warn(`[E2E] Supabase auth attempt ${i+1} failed: ${authError?.message}. Retrying...`);
+        await new Promise(r => setTimeout(r, 2000));
+    }
 
     if (authError || !authData?.session) {
         throw new Error(
-            `[E2E globalSetup] Supabase auth failed: ${authError?.message || 'No session returned'}\n` +
+            `[E2E globalSetup] Supabase auth failed after retries: ${authError?.message || 'No session returned'}\n` +
             `Make sure the test user exists in Supabase Auth > Users with email+password enabled.`
         );
     }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/utils/e2e_ready.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce/hive.dart'; // Using hive_ce instead of hive
@@ -492,6 +493,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       routerConfig: AppRouter.router,
+
+      builder: (context, child) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          signalE2EReady();
+        });
+        return child!;
+      },
     );
   }
 }

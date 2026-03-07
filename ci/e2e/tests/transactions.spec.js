@@ -39,10 +39,7 @@ test.describe('Transactions', () => {
 
     test('transactions list page loads without errors', async ({ page }) => {
         await page.goto('/transactions');
-        await page.waitForSelector('flt-glass-pane', { timeout: FLUTTER_READY_TIMEOUT });
-
-        // TODO: Replace with condition-based wait (e.g. app-loaded hook) when available
-        await page.waitForTimeout(FLUTTER_RENDER_WAIT);
+        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
 
         await page.screenshot({ path: 'test-results/transactions-list.png', fullPage: true });
 
@@ -53,10 +50,7 @@ test.describe('Transactions', () => {
 
     test('add expense wizard page loads', async ({ page }) => {
         await page.goto('/add-expense-wizard');
-        await page.waitForSelector('flt-glass-pane', { timeout: FLUTTER_READY_TIMEOUT });
-
-        // TODO: Replace with condition-based wait
-        await page.waitForTimeout(FLUTTER_RENDER_WAIT);
+        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
 
         await page.screenshot({ path: 'test-results/add-expense-wizard.png', fullPage: true });
 
@@ -91,10 +85,7 @@ test.describe('Reports', () => {
     for (const route of reportRoutes) {
         test(`report page loads: ${route}`, async ({ page }) => {
             await page.goto(route);
-            await page.waitForSelector('flt-glass-pane', { timeout: FLUTTER_READY_TIMEOUT });
-
-            // TODO: Replace with condition-based wait
-            await page.waitForTimeout(FLUTTER_RENDER_WAIT);
+            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
 
             const screenshotName = route.replace(/\//g, '_').replace(/^_/, '');
             await page.screenshot({

@@ -281,15 +281,14 @@ jobs:
           npx playwright install chromium --with-deps
 
       - name: Run E2E Tests
-        working-directory: ci/e2e
         env:
           E2E_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           E2E_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
           APP_BASE_URL: http://localhost:8080
-          BUILD_DIR: ../../build/web
-        run: npx playwright test
+          BUILD_DIR: build/web
+        run: ./run_e2e.sh --skip-build
 
       - name: Upload E2E Artifacts
         if: always()
