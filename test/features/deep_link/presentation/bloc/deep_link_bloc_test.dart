@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_b
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockAppLinks extends Mock implements AppLinks {}
 
@@ -100,7 +101,7 @@ void main() {
           mockAuthRepository,
         );
       },
-      act: (bloc) => bloc.add(const DeepLinkManualEntry(token: '123')),
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('123')),
       expect: () => [
         isA<DeepLinkProcessing>(),
         isA<DeepLinkError>().having(
