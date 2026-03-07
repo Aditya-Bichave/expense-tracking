@@ -29,6 +29,7 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
 import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -86,20 +87,14 @@ class AppInitializer {
     // 2. Register Adapters
     _registerHiveAdapters();
 
-    // 3. Initialize Secure Storage & Encryption Key
+    // 3. Initialize Supabase (MUST happen before service locator)
+    await SupabaseClientProvider.initialize();
+
+    // 4. Initialize Secure Storage & Encryption Key
     final secureStorageService = SecureStorageService();
-    // Assuming getHiveKey handles key generation/retrieval
     final encryptionKey = await secureStorageService.getHiveKey();
 
-    // 4. Open Hive Boxes
-    // Note: Using encryption for sensitive data if supported/required.
-    // Assuming generic openBox for now, but in production, we should check if encryption is needed for all.
-    // Based on memory, there was a mention of secure storage keys, so let's use it where appropriate.
-    // For simplicity in this fix, I'll open them without explicit encryption unless strictly required by the model/box definitions in previous context.
-    // Actually, `getHiveKey` suggests encryption IS used. Let's try to use it if we can.
-    // However, `Hive.openBox` takes `HiveCipher`.
-    // Let's assume standard opening for now to avoid complexity unless I see explicit usage.
-    // Wait, `initLocator` takes `Box<Type>`.
+    // 5. Open Hive Boxes with encryption
 
     final expenseBox = await Hive.openBox<ExpenseModel>(
       'expenses',
@@ -163,10 +158,10 @@ class AppInitializer {
       encryptionCipher: HiveAesCipher(encryptionKey),
     );
 
-    // 5. Initialize SharedPreferences
+    // 6. Initialize SharedPreferences
     final prefs = await SharedPreferences.getInstance();
 
-    // 6. Initialize Service Locator
+    // 7. Initialize Service Locator
     await initLocator(
       prefs: prefs,
       secureStorageService: secureStorageService,
