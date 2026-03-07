@@ -6,15 +6,20 @@ const { test, expect } = require('@playwright/test');
  * that the app correctly routes authenticated users to the dashboard.
  */
 
-const FLUTTER_READY_TIMEOUT = 60_000;
+const FLUTTER_READY_TIMEOUT = 30_000;
 
 test.describe('Authentication', () => {
+    /** @type {string[]} */
+    let pageErrors = [];
+
     test.beforeEach(async ({ page }) => {
+        pageErrors = [];
         page.on('console', msg => {
             console.log(`[BROWSER LOG] ${msg.text()}`);
         });
         page.on('pageerror', err => {
             console.log(`[BROWSER FATAL] ${err.message}`);
+            pageErrors.push(err.message);
         });
     });
 
@@ -22,13 +27,7 @@ test.describe('Authentication', () => {
         // The storageState from global-setup injects the Supabase session.
         await page.goto('/dashboard');
 
-        // Wait for Flutter to finish loading the engine (CanvasKit can be slow)
-        await page.waitForSelector('flt-glass-pane', { timeout: 60000 });
-
-        // Should be at /dashboard or redirected to a valid sub-page
-        await expect(page).toHaveURL(/.*dashboard|.*reports|.*transactions/, { timeout: 30000 });
-
-        // App should redirect away from auth pages
+        // App should redirect away from auth pages to a valid dashboard-like route
         await page.waitForURL(/\/(dashboard|transactions|groups|budgets|accounts|recurring|settings)/, {
             timeout: FLUTTER_READY_TIMEOUT,
         });
@@ -44,11 +43,6 @@ test.describe('Authentication', () => {
         // This tests the fix for the BlocProvider<ProfileBloc> missing issue.
         await page.goto('/dashboard');
         await page.waitForSelector('flt-glass-pane', { timeout: FLUTTER_READY_TIMEOUT });
-
-        // Verify no fatal JS errors
-        /** @type {string[]} */
-        const pageErrors = [];
-        page.on('pageerror', (err) => pageErrors.push(err.message));
 
         // Force navigate to profile-setup
         await page.goto('/profile-setup');

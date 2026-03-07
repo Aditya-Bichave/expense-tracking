@@ -26,9 +26,9 @@ const BASE_URL = process.env.APP_BASE_URL || 'http://localhost:8080';
 const BUILD_DIR = path.resolve(__dirname, process.env.BUILD_DIR || '../../build/web');
 const STORAGE_DIR = path.join(__dirname, 'storage');
 const AUTH_STATE_PATH = path.join(STORAGE_DIR, 'auth-state.json');
-const PORT = 8080;
 
-// Flutter/Supabase localStorage key (matches SupabaseConfig.supabasePersistSessionKey)
+// SharedPreferences on Web uses 'flutter.' prefix by default.
+// Matches 'SUPABASE_PERSIST_SESSION_KEY' in lib/core/network/supabase_config.dart
 const FLUTTER_SESSION_KEY = 'SUPABASE_PERSIST_SESSION_KEY';
 
 module.exports = async function globalSetup() {
@@ -123,19 +123,3 @@ module.exports = async function globalSetup() {
 
     console.log('[E2E] globalSetup complete. Tests will start pre-authenticated. 🚀');
 };
-
-async function waitForServer(url, timeoutMs) {
-    const http = require('http');
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-        try {
-            await new Promise((resolve, reject) => {
-                http.get(url, resolve).on('error', reject);
-            });
-            return;
-        } catch (_) {
-            await new Promise((r) => setTimeout(r, 200));
-        }
-    }
-    throw new Error(`[E2E] Server at ${url} did not become ready within ${timeoutMs}ms`);
-}

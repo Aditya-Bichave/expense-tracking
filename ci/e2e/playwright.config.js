@@ -4,6 +4,7 @@ require('dotenv').config({ path: __dirname + '/.env' });
 const { defineConfig, devices } = require('@playwright/test');
 
 const BASE_URL = process.env.APP_BASE_URL || 'http://localhost:8080';
+const PORT = 8080;
 
 module.exports = defineConfig({
     testDir: './tests',
@@ -11,7 +12,7 @@ module.exports = defineConfig({
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 1 : 0,
     workers: 1,                 // Single worker — Flutter web is heavy
-    timeout: 90_000,            // 90s per test (Flutter web loads slowly)
+    timeout: 45_000,            // 45s per test (Reduced from 90s)
 
     reporter: [
         ['list'],
@@ -39,8 +40,8 @@ module.exports = defineConfig({
     globalSetup: './global-setup.js',
 
     webServer: {
-        command: 'node helpers/server.js ../../build/web 8080',
-        port: 8080,
+        command: `node helpers/server.js ../../build/web ${PORT}`,
+        port: PORT,
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
     },

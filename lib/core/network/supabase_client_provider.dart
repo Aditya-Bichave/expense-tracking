@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:expense_tracker/core/network/supabase_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:expense_tracker/core/network/web_local_storage.dart';
 
 class SecureLocalStorage extends LocalStorage {
   final FlutterSecureStorage storage;
@@ -58,6 +60,7 @@ class SecureLocalStorage extends LocalStorage {
 class SupabaseClientProvider {
   static Future<void> initialize() async {
     try {
+      log.fine('Initializing Supabase...');
       if (!SupabaseConfig.isValid) {
         // SECURITY FIX: Do not initialize with placeholders in production.
         // It's better to crash/fail initialization than to leak confusing "placeholder" states
@@ -71,12 +74,20 @@ class SupabaseClientProvider {
         aOptions: AndroidOptions(encryptedSharedPreferences: true),
         iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
       );
+
+      // On Web, FlutterSecureStorage uses encryption with a key stored in localStorage.
+      // This makes E2E session injection difficult. SharedPreferences on Web uses
+      // plain localStorage with a "flutter." prefix, which is easy to inject.
+      final localStorage = kIsWeb
+          ? getWebLocalStorage()
+          : SecureLocalStorage(secureStorage);
+
       await Supabase.initialize(
         url: SupabaseConfig.supabaseUrl,
         anonKey: SupabaseConfig.supabaseAnonKey,
         authOptions: FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
-          localStorage: SecureLocalStorage(secureStorage),
+          localStorage: localStorage,
         ),
       );
       log.info('Supabase initialized successfully.');

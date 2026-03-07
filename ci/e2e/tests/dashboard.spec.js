@@ -6,16 +6,21 @@ const { test, expect } = require('@playwright/test');
  * for an authenticated user.
  */
 
-const FLUTTER_READY_TIMEOUT = 60_000;
-const FLUTTER_RENDER_WAIT = 5000; // time for Flutter to paint content after canvas appears
+const FLUTTER_READY_TIMEOUT = 30_000;
+const FLUTTER_RENDER_WAIT = 2000; // time for Flutter to paint content after canvas appears
 
 test.describe('Dashboard', () => {
+    /** @type {string[]} */
+    let pageErrors = [];
+
     test.beforeEach(async ({ page }) => {
+        pageErrors = [];
         page.on('console', msg => {
             console.log(`[BROWSER LOG] ${msg.text()}`);
         });
         page.on('pageerror', err => {
             console.log(`[BROWSER FATAL] ${err.message}`);
+            pageErrors.push(err.message);
         });
         await page.goto('/dashboard');
         await page.waitForSelector('flt-glass-pane', { timeout: FLUTTER_READY_TIMEOUT });
@@ -24,12 +29,8 @@ test.describe('Dashboard', () => {
     });
 
     test('dashboard loads without fatal errors', async ({ page }) => {
-        /** @type {string[]} */
-        const pageErrors = [];
-        page.on('pageerror', (err) => pageErrors.push(err.message));
-
         // Let some time pass to capture delayed errors
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(1000);
 
         // Filter out known non-fatal Flutter web browser noise
         const fatalErrors = pageErrors.filter(
@@ -52,32 +53,24 @@ test.describe('Dashboard', () => {
         await expect(page).toHaveTitle(/Financial OS/i);
     });
 
-    test('navigating to /transactions works', async ({ page }) => {
-        await page.goto('/transactions');
-        await page.waitForSelector('canvas', { timeout: FLUTTER_READY_TIMEOUT });
-        await page.waitForTimeout(3000);
+    const routes = [
+        { path: '/transactions', screenshot: true },
+        { path: '/settings', screenshot: false },
+        { path: '/groups', screenshot: false },
+    ];
 
-        const url = page.url();
-        expect(url).toContain('/transactions');
+    for (const route of routes) {
+        test(`navigating to ${route.path} works`, async ({ page }) => {
+            await page.goto(route.path);
+            await page.waitForSelector('canvas', { timeout: FLUTTER_READY_TIMEOUT });
+            await page.waitForTimeout(1000);
 
-        await page.screenshot({ path: 'test-results/transactions-page.png', fullPage: true });
-    });
+            const url = page.url();
+            expect(url).toContain(route.path);
 
-    test('navigating to /settings works', async ({ page }) => {
-        await page.goto('/settings');
-        await page.waitForSelector('canvas', { timeout: FLUTTER_READY_TIMEOUT });
-        await page.waitForTimeout(3000);
-
-        const url = page.url();
-        expect(url).toContain('/settings');
-    });
-
-    test('navigating to /groups works', async ({ page }) => {
-        await page.goto('/groups');
-        await page.waitForSelector('canvas', { timeout: FLUTTER_READY_TIMEOUT });
-        await page.waitForTimeout(3000);
-
-        const url = page.url();
-        expect(url).toContain('/groups');
-    });
+            if (route.screenshot) {
+                await page.screenshot({ path: `test-results${route.path.replace(/\//g, '-')}-page.png`, fullPage: true });
+            }
+        });
+    }
 });

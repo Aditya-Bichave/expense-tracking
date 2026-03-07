@@ -5,7 +5,8 @@ Playwright-based E2E tests for FinancialOS. Uses email+password auth to bypass m
 ## How it works
 
 `globalSetup.js` runs once before tests:
-1. Signs in to Supabase with `test@financialos.co` / `123456@password`
+
+1. Signs in to Supabase using credentials from environment variables (`E2E_TEST_EMAIL` and `E2E_TEST_PASSWORD`)
 2. Injects the session into browser `localStorage` under Flutter's session key
 3. Saves the state to `storage/auth-state.json`
 4. All tests start pre-authenticated — no login page shown
@@ -13,6 +14,7 @@ Playwright-based E2E tests for FinancialOS. Uses email+password auth to bypass m
 ## Setup (one-time)
 
 ### 1. Create `.env`
+
 Copy `.env.example` to `.env` and fill in your Supabase project's URL and anon key:
 
 ```bash
@@ -21,6 +23,7 @@ cp .env.example .env
 ```
 
 ### 2. Build the Flutter web app
+
 ```bash
 # From the app root (apps/mobile/expense_tracking)
 flutter build web --release \
@@ -29,6 +32,7 @@ flutter build web --release \
 ```
 
 ### 3. Install dependencies (already done on first setup)
+
 ```bash
 npm install
 npx playwright install chromium

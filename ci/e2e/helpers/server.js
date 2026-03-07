@@ -28,9 +28,10 @@ const MIME_TYPES = {
  * Start a static file server for the Flutter web build.
  * @param {string} buildDir - Absolute path to the build/web directory
  * @param {number} port
- * @returns {{ server: http.Server, stop: () => void }}
+ * @returns {{ server: http.Server, stop: () => Promise<void> }}
  */
 function startServer(buildDir, port) {
+  const resolvedBuildDir = path.resolve(buildDir);
   const server = http.createServer((req, res) => {
     // Handle POST /log (Flutter web logging)
     if (req.method === 'POST' && req.url === '/log') {
@@ -40,10 +41,15 @@ function startServer(buildDir, port) {
     }
 
     let urlPath = req.url.split('?')[0]; // strip query params
-    let filePath = path.join(buildDir, urlPath === '/' ? 'index.html' : urlPath);
+    // On Windows, a path starting with / or \ can be treated as absolute to drive root.
+    // We must ensure it's relative before joining with resolvedBuildDir.
+    const relativePath = path.normalize(urlPath === '/' ? 'index.html' : urlPath)
+      .replace(/^(\/|\\)/, '') // Strip leading slash
+      .replace(/^(\.\.(\/|\\|$))+/, ''); // Prevent traversal
+    const filePath = path.resolve(resolvedBuildDir, relativePath);
 
     // Security: prevent directory traversal
-    if (!filePath.startsWith(buildDir)) {
+    if (!filePath.toLowerCase().startsWith(resolvedBuildDir.toLowerCase())) {
       res.writeHead(403);
       res.end('Forbidden');
       return;
@@ -53,7 +59,7 @@ function startServer(buildDir, port) {
       if (err || !stats.isFile()) {
         // SPA fallback: serve index.html for extensionless paths
         if (path.extname(filePath) === '') {
-          const index = path.join(buildDir, 'index.html');
+          const index = path.join(resolvedBuildDir, 'index.html');
           fs.readFile(index, (readErr, data) => {
             if (readErr) {
               res.writeHead(404);
@@ -109,6 +115,15 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  startServer(buildDir, port);
+  const { server, stop } = startServer(buildDir, port);
   console.log(`Server listening at http://localhost:${port}`);
+
+  const shutdown = async () => {
+    console.log('\nStopping static server...');
+    await stop();
+    process.exit(0);
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
