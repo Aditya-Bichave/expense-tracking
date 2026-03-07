@@ -16,6 +16,7 @@ module.exports = defineConfig({
 
     reporter: [
         ['list'],
+        ['./helpers/coverageReporter.js', { outputFile: './test-results/e2e-coverage.json' }],
         ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ],
 

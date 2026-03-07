@@ -1,8 +1,4 @@
-[project]
-id = "spend-savvy"
-
 [api]
-enabled = true
 port = 54321
 schemas = ["public", "storage", "graphql_public"]
 extra_search_path = ["public", "extensions"]
@@ -13,18 +9,14 @@ port = 54322
 major_version = 15
 
 [studio]
-enabled = true
 port = 54323
-api_port = 54324
 
 [inbucket]
-enabled = true
 port = 54324
 smtp_port = 54325
 pop3_port = 54326
 
 [storage]
-enabled = true
 file_size_limit = "52428800"
 
 [auth]
@@ -32,10 +24,8 @@ site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
-email_login = true
-email_confirm = true
-external_email_enabled = true
-external_phone_enabled = true
 
-[functions]
-enabled = true
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false

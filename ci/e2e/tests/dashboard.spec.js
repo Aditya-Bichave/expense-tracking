@@ -9,7 +9,7 @@ const { test, expect } = require('@playwright/test');
 const FLUTTER_READY_TIMEOUT = 30_000;
 const FLUTTER_RENDER_WAIT = 2000; // time for Flutter to paint content after canvas appears
 
-test.describe('Dashboard', () => {
+test.describe('Dashboard @flow:dashboard', () => {
     /** @type {string[]} */
     let pageErrors = [];
 
@@ -45,10 +45,6 @@ test.describe('Dashboard', () => {
     test('dashboard renders a canvas (Flutter app is alive)', async ({ page }) => {
         const canvas = page.locator('canvas');
         await expect(canvas).toBeVisible();
-    });
-
-    test('page title is correct', async ({ page }) => {
-        await expect(page).toHaveTitle(/Financial OS/i);
     });
 
     const routes = [

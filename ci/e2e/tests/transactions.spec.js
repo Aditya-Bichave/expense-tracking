@@ -22,7 +22,7 @@ const filterFatalErrors = (errors) => {
     return errors.filter(e => !IGNORABLE_ERRORS.some(ignored => e.includes(ignored)));
 };
 
-test.describe('Transactions', () => {
+test.describe('Transactions @flow:transactions', () => {
     /** @type {string[]} */
     let pageErrors = [];
 
@@ -59,7 +59,7 @@ test.describe('Transactions', () => {
     });
 });
 
-test.describe('Reports', () => {
+test.describe('Reports @flow:reports', () => {
     const reportRoutes = [
         '/dashboard/report/spending-category',
         '/dashboard/report/spending-time',
