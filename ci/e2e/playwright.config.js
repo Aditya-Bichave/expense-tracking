@@ -8,11 +8,11 @@ const PORT = 8080;
 
 module.exports = defineConfig({
     testDir: './tests',
-    fullyParallel: true,       // Flutter canvas tests are sequential-friendly
+    fullyParallel: false,       // Flutter canvas tests are sequential-friendly
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 4 : undefined,                 // Single worker — Flutter web is heavy
-    timeout: 30_000,            // 45s per test (Reduced from 90s)
+    workers: 1,                 // Single worker — Flutter web is heavy
+    timeout: 45_000,            // 45s per test (Reduced from 90s)
 
     reporter: [
         ['list'],
