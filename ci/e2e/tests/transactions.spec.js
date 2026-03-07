@@ -49,6 +49,8 @@ test.describe('Transactions @flow:transactions', () => {
     });
 
     test('add expense wizard page loads', async ({ page }) => {
+        await page.goto('/dashboard');
+        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
         await page.goto('/add-expense-wizard');
         await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
 
@@ -61,11 +63,11 @@ test.describe('Transactions @flow:transactions', () => {
 
 test.describe('Reports @flow:reports', () => {
     const reportRoutes = [
-        '/dashboard/report/spending-category',
-        '/dashboard/report/spending-time',
-        '/dashboard/report/income-expense',
-        '/dashboard/report/budget-performance',
-        '/dashboard/report/goal-progress',
+        '/dashboard/spending_category',
+        '/dashboard/spending_time',
+        '/dashboard/income_expense',
+        '/dashboard/budget_performance',
+        '/dashboard/goal_progress',
     ];
 
     /** @type {string[]} */
@@ -84,6 +86,8 @@ test.describe('Reports @flow:reports', () => {
 
     for (const route of reportRoutes) {
         test(`report page loads: ${route}`, async ({ page }) => {
+            await page.goto('/dashboard');
+            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
             await page.goto(route);
             await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
 

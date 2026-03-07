@@ -55,6 +55,9 @@ test.describe('Dashboard @flow:dashboard', () => {
 
     for (const route of routes) {
         test(`navigating to ${route.path} works`, async ({ page }) => {
+            // First boot Dashboard, then navigate, to prevent deep link failures on complex routes
+            await page.goto('/dashboard');
+            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
             await page.goto(route.path);
             await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
 
