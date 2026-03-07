@@ -112,7 +112,7 @@ module.exports = async function globalSetup() {
     });
 
     // Navigate to the app first (localStorage is origin-scoped)
-    await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 60_000 });
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 
     // Inject the Supabase session the way Flutter's SecureLocalStorage expects it
     await page.evaluate(
