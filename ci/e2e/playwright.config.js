@@ -8,11 +8,11 @@ const PORT = 8080;
 
 module.exports = defineConfig({
     testDir: './tests',
-    fullyParallel: false,       // Flutter canvas tests are sequential-friendly
+    fullyParallel: true,       // Flutter canvas tests are sequential-friendly
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 1 : 0,
-    workers: 1,                 // Single worker — Flutter web is heavy
-    timeout: 45_000,            // 45s per test (Reduced from 90s)
+    retries: process.env.CI ? 2 : 0,
+    workers: process.env.CI ? 4 : undefined,                 // Single worker — Flutter web is heavy
+    timeout: 30_000,            // 45s per test (Reduced from 90s)
 
     reporter: [
         ['list'],
@@ -27,14 +27,7 @@ module.exports = defineConfig({
 
         screenshot: 'only-on-failure',
         video: 'on-first-retry',
-        trace: 'retain-on-failure',
-        // Capture browser console logs
-        launchOptions: {
-            logger: {
-                isEnabled: (name, severity) => true,
-                log: (name, severity, message, args) => console.log(`${name} [${severity}] ${message}`)
-            }
-        }
+        trace: 'retain-on-failure'
     },
 
     globalSetup: './global-setup.js',
@@ -43,15 +36,15 @@ module.exports = defineConfig({
         command: `node helpers/server.js ../../build/web ${PORT}`,
         port: PORT,
         reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
+        timeout: 120 * 1000
     },
 
     projects: [
         {
             name: 'chromium',
-            use: { ...devices['Desktop Chrome'] },
-        },
+            use: { ...devices['Desktop Chrome'] }
+    }
     ],
 
-    outputDir: './test-results',
+    outputDir: './test-results'
 });
