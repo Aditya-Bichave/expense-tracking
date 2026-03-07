@@ -27,6 +27,14 @@ void main() {
       type: CategoryType.expense,
       isCustom: true,
     ),
+    const Category(
+      id: 'e2',
+      name: 'Apple',
+      iconName: 'test',
+      colorHex: '#000000',
+      type: CategoryType.expense,
+      isCustom: true,
+    ),
   ];
   final mockIncomeCategories = [
     const Category(
