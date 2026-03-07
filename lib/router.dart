@@ -100,6 +100,7 @@ class AppRouter {
       final isLoggingIn =
           location == RouteNames.login ||
           location == RouteNames.initialSetup ||
+          location == '/login-callback' ||
           location.startsWith(RouteNames.verifyOtp);
 
       if (sessionState is SessionLocked) {
@@ -127,6 +128,7 @@ class AppRouter {
       if (sessionState is SessionAuthenticated) {
         if (isLoggingIn ||
             location == '/lock' ||
+            location == '/login-callback' ||
             location == '/profile-setup') {
           return RouteNames.dashboard;
         }
@@ -140,6 +142,11 @@ class AppRouter {
       GoRoute(
         path: '/ui-kit',
         builder: (context, state) => const UiKitShowcasePage(),
+      ),
+      GoRoute(
+        path: '/login-callback',
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
       GoRoute(
