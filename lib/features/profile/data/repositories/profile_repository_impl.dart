@@ -41,7 +41,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         await _localDataSource.cacheProfile(remoteProfile);
         return Right(remoteProfile);
       });
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -53,7 +53,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       await _remoteDataSource.updateProfile(model);
       await _localDataSource.cacheProfile(model);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -72,7 +72,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         );
         return Right(url);
       });
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -82,7 +82,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await _localDataSource.clearProfile();
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
       return Left(CacheFailure(e.toString()));
     }
   }

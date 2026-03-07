@@ -88,7 +88,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
         // TODO(#1): Consider more advanced matching later if needed (e.g., partial matches, aliases)
       }
       return categoryId;
-    } catch (e) {
+    } catch (e, s) {
       // Errors during loading are handled in _loadDb, but catch potential future issues
       log.severe(
         "Error looking up default category for '$merchantIdentifier': $e",

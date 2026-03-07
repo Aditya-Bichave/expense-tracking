@@ -114,7 +114,10 @@ class GoalsSubTab extends StatelessWidget {
                 await context
                     .read<GoalListBloc>()
                     .stream
-                    .firstWhere((s) => s.status != GoalListStatus.loading)
+                    .firstWhere(
+                      (s) => s.status != GoalListStatus.loading,
+                      orElse: () => state,
+                    )
                     .timeout(const Duration(seconds: 3));
               } catch (_) {}
             },

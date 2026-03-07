@@ -52,7 +52,7 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       }
 
       return Right(expense);
-    } catch (e) {
+    } catch (e, s) {
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -64,7 +64,7 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
     try {
       final models = _localDataSource.getExpenses(groupId);
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -81,7 +81,7 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       await _localDataSource.saveExpenses(remoteExpenses);
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }

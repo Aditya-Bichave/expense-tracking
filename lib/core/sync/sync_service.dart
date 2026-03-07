@@ -44,7 +44,11 @@ class SyncService {
       } else {
         // Online: Do not emit 'synced' here to avoid flicker.
         // processOutbox will emit 'syncing' then 'synced'/'error'.
-        unawaited(processOutbox());
+        unawaited(
+          processOutbox().catchError(
+            (e, s) => log.severe('Background task failed: $e\n$s'),
+          ),
+        );
       }
     });
   }
@@ -82,7 +86,7 @@ class SyncService {
             )
             .subscribe();
       }
-    } catch (e) {
+    } catch (e, s) {
       log.severe('Failed to initialize realtime: $e');
     }
   }
@@ -125,7 +129,7 @@ class SyncService {
           _groupBox.put(serverGroup.id, serverGroup);
         }
       }
-    } catch (e) {
+    } catch (e, s) {
       log.severe('Error handling group realtime payload: $e');
     }
   }
@@ -150,7 +154,11 @@ class SyncService {
 
       if (localMember == null) {
         _groupMemberBox.put(serverMember.id, serverMember);
-        unawaited(_ensureGroupExists(serverMember.groupId));
+        unawaited(
+          _ensureGroupExists(
+            serverMember.groupId,
+          ).catchError((e, s) => log.severe('Background task failed: $e\n$s')),
+        );
       } else {
         // Last-Write-Wins check for member
         if (serverMember.updatedAt.isAfter(localMember.updatedAt)) {
@@ -159,7 +167,7 @@ class SyncService {
           log.info('Ignoring stale update for group member ${serverMember.id}');
         }
       }
-    } catch (e) {
+    } catch (e, s) {
       log.severe('Error handling group member realtime payload: $e');
     }
   }
@@ -175,7 +183,7 @@ class SyncService {
             .single();
         final group = GroupModel.fromJson(groupData);
         await _groupBox.put(group.id, group);
-      } catch (e) {
+      } catch (e, s) {
         log.warning('Failed to fetch missing group $groupId: $e');
       }
     }
@@ -208,7 +216,7 @@ class SyncService {
         try {
           await _processItem(item);
           await _outboxRepository.markAsSent(item);
-        } catch (e) {
+        } catch (e, s) {
           log.warning('Failed to sync item ${item.id}: $e');
           await _outboxRepository.markAsFailed(item, e.toString());
           hadError = true;
@@ -227,7 +235,7 @@ class SyncService {
           _safeAddStatus(SyncServiceStatus.synced);
         }
       }
-    } catch (e) {
+    } catch (e, s) {
       _safeAddStatus(SyncServiceStatus.error);
     } finally {
       _isSyncing = false;
@@ -280,7 +288,7 @@ class SyncService {
               .from('receipts')
               .getPublicUrl(uploadPath);
           payload['p_receipt_url'] = publicUrl;
-        } catch (e) {
+        } catch (e, s) {
           log.warning('Failed to upload receipt: $e. Continuing without it.');
         }
       }

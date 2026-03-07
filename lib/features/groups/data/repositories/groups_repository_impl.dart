@@ -1,3 +1,4 @@
+import "package:expense_tracker/core/utils/logger.dart";
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
@@ -51,11 +52,15 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final connectivityResult = await _connectivity.checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.mobile) ||
           connectivityResult.contains(ConnectivityResult.wifi)) {
-        unawaited(_syncService.processOutbox());
+        unawaited(
+          _syncService.processOutbox().catchError(
+            (e, s) => log.severe('Background task failed: $e\n$s'),
+          ),
+        );
       }
 
       return Right(group);
-    } catch (e) {
+    } catch (e, s) {
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -65,7 +70,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final models = _localDataSource.getGroups();
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
       if (e is Failure) return Left(e);
       return Left(CacheFailure(e.toString()));
     }
@@ -92,7 +97,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
       if (e is Failure) return Left(e);
       return Left(CacheFailure(e.toString()));
     }
@@ -148,14 +153,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
             if (staleMemberIds.isNotEmpty) {
               await _localDataSource.deleteMembers(staleMemberIds);
             }
-          } catch (e) {
+          } catch (e, s) {
             // Log error or ignore partial failure
           }
         }),
       );
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -175,7 +180,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
         maxUses: maxUses,
       );
       return Right(url);
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -187,7 +192,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final data = await _remoteDataSource.acceptInvite(token);
       return Right(data);
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -204,7 +209,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final members = await _remoteDataSource.getGroupMembers(groupId);
       await _localDataSource.saveGroupMembers(members);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -236,7 +241,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       }
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
       return Left(ServerFailure(e.toString()));
     }
   }
