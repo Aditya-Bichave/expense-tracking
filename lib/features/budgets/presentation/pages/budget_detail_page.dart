@@ -135,15 +135,10 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         );
       },
       (transactions) {
-        final categoryIdSet =
-            budget.type == BudgetType.categorySpecific &&
-                budget.categoryIds != null
-            ? budget.categoryIds!.toSet()
-            : null;
-
         foundTransactions = transactions.where((txn) {
-          if (categoryIdSet != null &&
-              !categoryIdSet.contains(txn.category?.id)) {
+          if (budget.type == BudgetType.categorySpecific &&
+              budget.categoryIds != null &&
+              !budget.categoryIds!.contains(txn.category?.id)) {
             return false;
           }
           return true;

@@ -164,12 +164,6 @@ class BudgetRepositoryImpl implements BudgetRepository {
     try {
       final models = await localDataSource.getBudgets();
       final entities = models.map((m) => m.toEntity()).toList();
-
-      // Cache lowercased values to avoid O(N log N) string creations
-      final lowercaseCache = <String, String>{};
-      String getLower(String key) =>
-          lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
-
       // Default sort: Overall first, then by name
       entities.sort((a, b) {
         if (a.type == BudgetType.overall && b.type != BudgetType.overall) {
@@ -178,7 +172,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
         if (a.type != BudgetType.overall && b.type == BudgetType.overall) {
           return 1;
         }
-        return getLower(a.name).compareTo(getLower(b.name));
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
       log.info("[BudgetRepo] Retrieved and sorted ${entities.length} budgets.");
       return Right(entities);

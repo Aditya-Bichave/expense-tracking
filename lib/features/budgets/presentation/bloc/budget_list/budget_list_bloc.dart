@@ -161,12 +161,6 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
               for (final budget in budgets) {
                 final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
 
-                final categoryIdSet =
-                    budget.type == BudgetType.categorySpecific &&
-                        budget.categoryIds != null
-                    ? budget.categoryIds!.toSet()
-                    : null;
-
                 // Filter in memory
                 double spent = 0;
                 for (final expense in allExpenses) {
@@ -184,9 +178,12 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
                   bool categoryMatch = false;
                   if (budget.type == BudgetType.overall) {
                     categoryMatch = true;
-                  } else if (categoryIdSet != null &&
-                      categoryIdSet.isNotEmpty) {
-                    categoryMatch = categoryIdSet.contains(expense.categoryId);
+                  } else if (budget.type == BudgetType.categorySpecific &&
+                      budget.categoryIds != null &&
+                      budget.categoryIds!.isNotEmpty) {
+                    categoryMatch = budget.categoryIds!.contains(
+                      expense.categoryId,
+                    );
                   }
 
                   if (categoryMatch) {

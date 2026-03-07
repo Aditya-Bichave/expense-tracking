@@ -29,7 +29,6 @@ class CategoryAppearanceFormSection extends StatelessWidget {
       context,
       selectedIconName,
     );
-    if (!context.mounted) return;
     if (selectedIcon != null && selectedIcon != selectedIconName) {
       onIconSelected(selectedIcon);
     }

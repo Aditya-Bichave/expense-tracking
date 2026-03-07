@@ -64,21 +64,12 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
           ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59)
           : null;
 
-      final dateCache = <int, DateTime>{};
-
       return expenses.where((expense) {
         if (startDateOnly != null) {
-          final dateKey =
-              expense.date.year * 10000 +
-              expense.date.month * 100 +
-              expense.date.day;
-          final expDateOnly = dateCache.putIfAbsent(
-            dateKey,
-            () => DateTime(
-              expense.date.year,
-              expense.date.month,
-              expense.date.day,
-            ),
+          final expDateOnly = DateTime(
+            expense.date.year,
+            expense.date.month,
+            expense.date.day,
           );
           if (expDateOnly.isBefore(startDateOnly)) return false;
         }

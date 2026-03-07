@@ -998,13 +998,9 @@ class ReportRepositoryImpl implements ReportRepository {
       );
     }
 
-    // Cache lowercased values to avoid O(N log N) string creations
-    final lowercaseCache = <String, String>{};
-    String getLower(String key) =>
-        lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
-
     performanceList.sort(
-      (a, b) => getLower(a.budget.name).compareTo(getLower(b.budget.name)),
+      (a, b) =>
+          a.budget.name.toLowerCase().compareTo(b.budget.name.toLowerCase()),
     );
     log.fine(
       "[ReportRepo:_calculateBudgetPerformance] Calculated performance for ${performanceList.length} budgets.",

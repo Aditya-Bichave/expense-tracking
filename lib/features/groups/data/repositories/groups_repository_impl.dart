@@ -51,10 +51,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final connectivityResult = await _connectivity.checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.mobile) ||
           connectivityResult.contains(ConnectivityResult.wifi)) {
-        _syncService.processOutbox().catchError((e, s) {
-          // ignore: avoid_print
-          print("[GroupsRepo] Background sync failed: $e\n$s");
-        });
+        unawaited(_syncService.processOutbox());
       }
 
       return Right(group);
