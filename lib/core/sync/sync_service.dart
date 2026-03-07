@@ -46,7 +46,9 @@ class SyncService {
         // processOutbox will emit 'syncing' then 'synced'/'error'.
         unawaited(
           processOutbox().catchError((e, s) {
-            log.severe("Failed to process outbox on connectivity change: $e\n$s");
+            log.severe(
+              "Failed to process outbox on connectivity change: $e\n$s",
+            );
           }),
         );
       }
