@@ -60,12 +60,18 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
           ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59)
           : null;
 
+      final dateCache = <int, DateTime>{};
+
       return incomes.where((income) {
         if (startDateOnly != null) {
-          final incDateOnly = DateTime(
-            income.date.year,
-            income.date.month,
-            income.date.day,
+          final dateKey =
+              income.date.year * 10000 +
+              income.date.month * 100 +
+              income.date.day;
+          final incDateOnly = dateCache.putIfAbsent(
+            dateKey,
+            () =>
+                DateTime(income.date.year, income.date.month, income.date.day),
           );
           if (incDateOnly.isBefore(startDateOnly)) return false;
         }

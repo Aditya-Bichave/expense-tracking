@@ -37,9 +37,13 @@ class CategoryRepositoryImpl implements CategoryRepository {
 
   List<Category> _processAndSort(List<CategoryModel> models) {
     final entities = models.map((model) => model.toEntity()).toList();
-    entities.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+
+    // Cache lowercased values to avoid O(N log N) string creations
+    final lowercaseCache = <String, String>{};
+    String getLower(String key) =>
+        lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
+
+    entities.sort((a, b) => getLower(a.name).compareTo(getLower(b.name)));
     return entities;
   }
 

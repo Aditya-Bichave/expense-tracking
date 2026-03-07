@@ -91,17 +91,22 @@ class CategoryManagementBloc
             .where((c) => !c.isCustom && c.type == CategoryType.income)
             .toList();
 
+        // Cache lowercased values to avoid O(N log N) string creations
+        final lowercaseCache = <String, String>{};
+        String getLower(String key) =>
+            lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
+
         customExpense.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => getLower(a.name).compareTo(getLower(b.name)),
         );
         customIncome.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => getLower(a.name).compareTo(getLower(b.name)),
         );
         predefinedExpense.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => getLower(a.name).compareTo(getLower(b.name)),
         );
         predefinedIncome.sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+          (a, b) => getLower(a.name).compareTo(getLower(b.name)),
         );
 
         log.info(

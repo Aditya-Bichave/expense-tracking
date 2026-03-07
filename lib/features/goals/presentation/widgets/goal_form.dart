@@ -90,7 +90,8 @@ class _GoalFormState extends State<GoalForm> {
       context,
       _selectedIconName ?? 'savings_outlined',
     );
-    if (selectedIcon != null && mounted) {
+    if (!mounted) return;
+    if (selectedIcon != null) {
       setState(() => _selectedIconName = selectedIcon);
       log.info("[GoalForm] Icon selected: $_selectedIconName");
     }

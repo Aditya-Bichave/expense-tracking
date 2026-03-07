@@ -60,10 +60,13 @@ class CategoriesSubTab extends StatelessWidget {
         ),
       );
     }
+    // Cache lowercased values to avoid O(N log N) string creations
+    final lowercaseCache = <String, String>{};
+    String getLower(String key) =>
+        lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
+
     // Sort list before displaying
-    categories.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+    categories.sort((a, b) => getLower(a.name).compareTo(getLower(b.name)));
     return ListView.builder(
       // --- MODIFIED: Apply themed padding OR a default, including bottom padding for FAB ---
       padding:

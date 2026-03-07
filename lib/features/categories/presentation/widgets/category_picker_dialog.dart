@@ -59,10 +59,15 @@ class _CategoryPickerDialogContentState
   void initState() {
     super.initState();
     final uncategorizedId = Category.uncategorized.id;
+
+    // Cache lowercased values to avoid O(N log N) string creations
+    final lowercaseCache = <String, String>{};
+    String getLower(String key) =>
+        lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
+
     _allCategories =
-        widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(
-          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-        );
+        widget.categories.where((c) => c.id != uncategorizedId).toList()
+          ..sort((a, b) => getLower(a.name).compareTo(getLower(b.name)));
     _filteredCategories = List.from(_allCategories);
     _searchController.addListener(_filterCategories);
   }

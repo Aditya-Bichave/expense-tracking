@@ -190,7 +190,8 @@ class TransactionFormState extends State<TransactionForm> {
       categoryFilter,
       categories,
     );
-    if (result != null && mounted) {
+    if (!mounted) return;
+    if (result != null) {
       setState(() => _selectedCategory = result);
       log.info(
         "[TransactionForm] Category selected via picker: ${result.name} (ID: ${result.id})",

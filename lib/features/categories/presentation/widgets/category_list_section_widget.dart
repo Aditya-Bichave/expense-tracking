@@ -32,10 +32,13 @@ class CategoryListSectionWidget extends StatelessWidget {
         ),
       );
     }
+    // Cache lowercased values to avoid O(N log N) string creations
+    final lowercaseCache = <String, String>{};
+    String getLower(String key) =>
+        lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
+
     // Sort combined list for consistent display
-    categories.sort(
-      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-    );
+    categories.sort((a, b) => getLower(a.name).compareTo(getLower(b.name)));
 
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8.0, bottom: 90.0), // Padding for FAB
