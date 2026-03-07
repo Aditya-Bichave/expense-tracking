@@ -7,6 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class GoalsSubTab extends StatelessWidget {
   const GoalsSubTab({super.key});
@@ -16,20 +21,20 @@ class GoalsSubTab extends StatelessWidget {
     final theme = Theme.of(context);
     final modeTheme = context.modeTheme;
 
-    return Scaffold(
+    return BridgeScaffold(
       body: BlocBuilder<GoalListBloc, GoalListState>(
         builder: (context, state) {
           Widget content;
           if (state.status == GoalListStatus.loading && state.goals.isEmpty) {
-            content = const Center(child: CircularProgressIndicator());
+            content = const Center(child: BridgeCircularProgressIndicator());
           } else if (state.status == GoalListStatus.error &&
               state.goals.isEmpty) {
             content = Center(
               child: Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: context.space.allXl,
                 child: Text(
                   "Error loading goals: ${state.errorMessage ?? 'Unknown error'}",
-                  style: TextStyle(color: theme.colorScheme.error),
+                  style: BridgeTextStyle(color: theme.colorScheme.error),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -38,7 +43,7 @@ class GoalsSubTab extends StatelessWidget {
               state.status != GoalListStatus.loading) {
             content = Center(
               child: Padding(
-                padding: const EdgeInsets.all(30.0),
+                padding: const EdgeInsets.all(32.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

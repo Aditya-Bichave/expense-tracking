@@ -1,5 +1,5 @@
 import 'package:expense_tracker/features/settings/presentation/widgets/legal_settings_section.dart';
-import 'package:expense_tracker/core/widgets/settings_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/pump_app.dart';
@@ -19,7 +19,7 @@ void main() {
     expect(find.text('Privacy Policy'), findsOneWidget);
     expect(find.text('Terms of Service'), findsOneWidget);
     expect(find.text('Open Source Licenses'), findsOneWidget);
-    expect(find.byType(SettingsListTile), findsNWidgets(3));
+    expect(find.byType(AppListTile), findsNWidgets(3));
   });
 
   testWidgets('LegalSettingsSection triggers callbacks', (

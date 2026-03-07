@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class StitchSettingsTile extends StatelessWidget {
   final IconData icon;
@@ -16,57 +20,23 @@ class StitchSettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
 
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: theme.colorScheme.outlineVariant.withOpacity(0.1),
-            ),
-          ),
+    return AppListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BridgeDecoration(
+          color: kit.colors.primaryContainer,
+          borderRadius: kit.radii.small,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: theme.colorScheme.primary),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ],
-        ),
+        child: Icon(icon, color: kit.colors.onPrimaryContainer),
       ),
+      title: Text(title),
+      subtitle: Text(subtitle),
+      onTap: onTap,
+      trailing: Icon(Icons.chevron_right, color: kit.colors.textSecondary),
+      contentPadding: kit.spacing.allMd,
     );
   }
 }

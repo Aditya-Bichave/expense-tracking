@@ -19,6 +19,9 @@ import 'package:expense_tracker/features/categories/presentation/pages/add_edit_
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddEditTransactionPage extends StatefulWidget {
   final dynamic initialTransactionData;
@@ -245,7 +248,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                   content: Text(
                     'Transaction ${isEditing ? 'updated' : 'added'} successfully!',
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: context.kit.colors.success,
                 ),
               );
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -268,7 +271,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
               ..showSnackBar(
                 SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: context.kit.colors.danger,
                 ),
               );
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -279,7 +282,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
           // Update previous state tracking *after* handling transitions
           _previousStatus = state.status;
         },
-        child: Scaffold(
+        child: BridgeScaffold(
           appBar: AppBar(
             title: Text(isEditing ? 'Edit Transaction' : 'Add Transaction'),
             leading: IconButton(
@@ -370,8 +373,10 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                   if (isLoadingOverlayVisible)
                     Positioned.fill(
                       child: Container(
-                        color: Colors.black.withOpacity(0.1),
-                        child: const Center(child: CircularProgressIndicator()),
+                        color: context.kit.colors.overlay,
+                        child: const Center(
+                          child: BridgeCircularProgressIndicator(),
+                        ),
                       ),
                     ),
                 ],

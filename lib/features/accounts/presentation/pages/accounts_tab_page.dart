@@ -14,6 +14,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:toggle_switch/toggle_switch.dart'; // Import ToggleSwitch
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 enum AccountViewType { assets, liabilities }
 
@@ -75,7 +80,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
       theme.colorScheme.errorContainer,
     ];
 
-    return Scaffold(
+    return BridgeScaffold(
       body: RefreshIndicator(
         onRefresh: () async {
           context.read<AccountListBloc>().add(
@@ -180,17 +185,17 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
               return const Center(
                 child: Padding(
                   padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(),
+                  child: BridgeCircularProgressIndicator(),
                 ),
               );
             }
             if (state is AccountListError) {
               return Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: context.space.allLg,
                 child: Center(
                   child: Text(
                     'Error loading accounts: ${state.message}',
-                    style: TextStyle(color: theme.colorScheme.error),
+                    style: BridgeTextStyle(color: theme.colorScheme.error),
                   ),
                 ),
               );
@@ -274,10 +279,10 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                     ),
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.add_circle_outline),
-                      label: const Text('Add Asset Account'),
+                      label: Text('Add Asset Account'),
                       onPressed: () => context.pushNamed(RouteNames.addAccount),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: context.space.vMd,
                         textStyle: theme.textTheme.labelLarge,
                         side: BorderSide(
                           color: theme.colorScheme.outlineVariant,
@@ -296,7 +301,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             return const Center(
               child: Padding(
                 padding: EdgeInsets.all(32.0),
-                child: CircularProgressIndicator(),
+                child: BridgeCircularProgressIndicator(),
               ),
             );
           },
@@ -351,13 +356,13 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             icon: Icon(Icons.add_circle_outline, color: theme.disabledColor),
             label: Text(
               'Add Liability Account',
-              style: TextStyle(color: theme.disabledColor),
+              style: BridgeTextStyle(color: theme.disabledColor),
             ),
             onPressed: () => _showLiabilityComingSoon(
               context,
             ), // Show message on button press too
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: context.space.vMd,
               textStyle: theme.textTheme.labelLarge,
               side: BorderSide(color: theme.disabledColor.withOpacity(0.5)),
               minimumSize: const Size.fromHeight(45),

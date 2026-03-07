@@ -8,6 +8,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class IncomeExpenseBarChart extends StatelessWidget {
   final List<IncomeExpensePeriodData> data;
@@ -26,7 +29,7 @@ class IncomeExpenseBarChart extends StatelessWidget {
     final theme = Theme.of(context);
     final settings = context.watch<SettingsBloc>().state;
     final currencySymbol = settings.currencySymbol;
-    final incomeColor = Colors.green.shade600; // Consistent Income color
+    final incomeColor = context.kit.colors.success; // Consistent Income color
     final expenseColor = theme.colorScheme.error;
     final prevIncomeColor = incomeColor.withOpacity(
       0.4,
@@ -137,7 +140,7 @@ class IncomeExpenseBarChart extends StatelessWidget {
                     ),
                   ),
                   // Optionally show net flow for the group in tooltip
-                  // TextSpan(text: '\nNet: ${CurrencyFormatter.format(item.currentNetFlow, currencySymbol)}', style: TextStyle(...))
+                  // TextSpan(text: '\nNet: ${CurrencyFormatter.format(item.currentNetFlow, currencySymbol)}', style: BridgeTextStyle(...))
                 ],
                 textAlign: TextAlign.left,
               );

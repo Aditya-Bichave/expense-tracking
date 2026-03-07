@@ -6,6 +6,13 @@ import 'package:expense_tracker/features/transactions/domain/entities/transactio
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
+import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
+import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class ReportFilterControls extends StatelessWidget {
   const ReportFilterControls({super.key});
@@ -30,7 +37,7 @@ class ReportFilterControls extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BridgeBorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
         // Provide the SAME Filter Bloc instance down to the sheet content
@@ -183,7 +190,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Date Range
-                      ListTile(
+                      BridgeListTile(
                         leading: const Icon(Icons.date_range_outlined),
                         title: const Text('Date Range'),
                         subtitle: Text(
@@ -193,7 +200,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                         onTap: () => _selectDateRange(context),
                         shape: RoundedRectangleBorder(
                           side: BorderSide(color: theme.dividerColor),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: context.kit.radii.small,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -258,9 +265,9 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                           buttonIcon: const Icon(
                             Icons.account_balance_wallet_outlined,
                           ),
-                          decoration: BoxDecoration(
+                          decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -271,7 +278,9 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                       else
                         Text(
                           "Error loading accounts",
-                          style: TextStyle(color: theme.colorScheme.error),
+                          style: BridgeTextStyle(
+                            color: theme.colorScheme.error,
+                          ),
                         ),
                       const SizedBox(height: 16),
 
@@ -287,10 +296,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedCategoryIds.length} Categories Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.category_outlined),
-                          decoration: BoxDecoration(
+                          buttonIcon: Icon(Icons.category_outlined),
+                          decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -301,7 +310,9 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                       else
                         Text(
                           "Error loading categories",
-                          style: TextStyle(color: theme.colorScheme.error),
+                          style: BridgeTextStyle(
+                            color: theme.colorScheme.error,
+                          ),
                         ),
                       const SizedBox(height: 16),
 
@@ -319,10 +330,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedBudgetIds.length} Budgets Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.pie_chart_outline),
-                          decoration: BoxDecoration(
+                          buttonIcon: Icon(Icons.pie_chart_outline),
+                          decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -333,7 +344,9 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                       else
                         Text(
                           "Error loading budgets",
-                          style: TextStyle(color: theme.colorScheme.error),
+                          style: BridgeTextStyle(
+                            color: theme.colorScheme.error,
+                          ),
                         ),
                       const SizedBox(height: 16),
 
@@ -349,10 +362,10 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                                 : "${_tempSelectedGoalIds.length} Goals Selected",
                             overflow: TextOverflow.ellipsis,
                           ),
-                          buttonIcon: const Icon(Icons.savings_outlined),
-                          decoration: BoxDecoration(
+                          buttonIcon: Icon(Icons.savings_outlined),
+                          decoration: BridgeDecoration(
                             border: Border.all(color: theme.dividerColor),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: context.kit.radii.small,
                           ),
                           chipDisplay: MultiSelectChipDisplay.none(),
                           onConfirm: (values) =>
@@ -363,7 +376,9 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                       else
                         Text(
                           "Error loading goals",
-                          style: TextStyle(color: theme.colorScheme.error),
+                          style: BridgeTextStyle(
+                            color: theme.colorScheme.error,
+                          ),
                         ),
                       const SizedBox(height: 24),
 
@@ -371,18 +386,18 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          TextButton(
+                          BridgeTextButton(
                             onPressed: _clearFilters,
                             child: const Text('Clear All'),
                           ),
                           Row(
                             children: [
-                              TextButton(
+                              BridgeTextButton(
                                 onPressed: () => Navigator.pop(context),
                                 child: const Text('Cancel'),
                               ),
                               const SizedBox(width: 8),
-                              ElevatedButton(
+                              BridgeElevatedButton(
                                 onPressed:
                                     state.optionsStatus ==
                                         FilterOptionsStatus.loaded

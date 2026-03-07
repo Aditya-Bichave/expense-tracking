@@ -9,6 +9,9 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class GoalCard extends StatelessWidget {
   final Goal goal;
@@ -77,7 +80,7 @@ class GoalCard extends StatelessWidget {
     final TextStyle centerTextStyle =
         (isQuantum ? theme.textTheme.labelSmall : theme.textTheme.titleSmall)
             ?.copyWith(fontWeight: FontWeight.bold, color: color) ??
-        TextStyle(color: color);
+        BridgeTextStyle(color: color);
 
     return CircularPercentIndicator(
       radius: radius,
@@ -106,11 +109,13 @@ class GoalCard extends StatelessWidget {
 
     final cardMargin =
         modeTheme?.cardOuterPadding ??
-        const EdgeInsets.symmetric(horizontal: 12, vertical: 5);
-    final cardPadding =
-        modeTheme?.cardInnerPadding ?? const EdgeInsets.all(12.0);
+        EdgeInsets.symmetric(
+          horizontal: context.space.md,
+          vertical: context.space.xs,
+        );
+    final cardPadding = modeTheme?.cardInnerPadding ?? context.space.allMd;
     final progressColor = goal.isAchieved
-        ? Colors.green.shade600
+        ? context.kit.colors.success
         : theme.colorScheme.primary;
 
     return AppCard(
@@ -151,7 +156,7 @@ class GoalCard extends StatelessWidget {
                       : theme.colorScheme.surfaceContainerHighest,
                   side: BorderSide.none,
                   visualDensity: VisualDensity.compact,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  padding: context.space.hXs,
                 ),
             ],
           ),
@@ -227,7 +232,7 @@ class GoalCard extends StatelessWidget {
                     : 'Remaining: ${CurrencyFormatter.format(goal.amountRemaining, currency)}',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: goal.isAchieved
-                      ? Colors.green
+                      ? context.kit.colors.success
                       : theme.colorScheme.primary,
                   fontWeight: FontWeight.w500,
                 ),

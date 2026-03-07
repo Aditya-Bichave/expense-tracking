@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart'
 import 'package:expense_tracker/features/goals/presentation/bloc/goal_list/goal_list_bloc.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/goals_sub_tab.dart';
 import 'package:expense_tracker/features/goals/presentation/widgets/goal_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,7 +49,7 @@ void main() {
         widget: buildTestWidget(),
         settle: false,
       );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
     });
 
     testWidgets('shows empty state and handles button tap', (tester) async {

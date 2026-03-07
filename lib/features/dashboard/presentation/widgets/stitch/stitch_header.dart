@@ -1,4 +1,8 @@
+// lib/features/dashboard/presentation/widgets/stitch/stitch_header.dart
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text.dart';
+import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 
 class StitchHeader extends StatelessWidget {
   final String userName;
@@ -13,10 +17,13 @@ class StitchHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final kit = context.kit;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: kit.spacing.lg,
+        vertical: kit.spacing.md,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -25,40 +32,40 @@ class StitchHeader extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: BridgeDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: kit.colors.primary.withOpacity(0.3),
                     width: 2,
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(2.0),
+                  padding: context.space.allXxs,
                   child: ClipOval(
                     child: Image.network(
                       userImageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
-                          Container(color: theme.colorScheme.primaryContainer),
+                          Container(color: kit.colors.primaryContainer),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              kit.spacing.gapMd,
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  BridgeText(
                     'Welcome back',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    style: kit.typography.labelSmall.copyWith(
+                      color: kit.colors.textSecondary,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
                   ),
-                  Text(
+                  BridgeText(
                     userName,
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: kit.typography.title.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -71,19 +78,17 @@ class StitchHeader extends StatelessWidget {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
+                decoration: BridgeDecoration(
                   shape: BoxShape.circle,
-                  color: theme.colorScheme.surfaceContainerHighest.withOpacity(
-                    0.5,
-                  ),
+                  color: kit.colors.surfaceContainer.withOpacity(0.5),
                 ),
                 child: IconButton(
                   icon: Icon(
                     Icons.notifications_outlined,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: kit.colors.textSecondary,
                   ),
                   onPressed: () {},
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.only(),
                 ),
               ),
               Positioned(
@@ -92,13 +97,10 @@ class StitchHeader extends StatelessWidget {
                 child: Container(
                   width: 10,
                   height: 10,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
+                  decoration: BridgeDecoration(
+                    color: kit.colors.primary,
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: theme.colorScheme.surface,
-                      width: 2,
-                    ),
+                    border: Border.all(color: kit.colors.surface, width: 2),
                   ),
                 ),
               ),

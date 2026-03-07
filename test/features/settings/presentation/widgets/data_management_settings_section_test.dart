@@ -22,8 +22,8 @@ void main() {
       ),
     );
 
-    // SectionHeader uppercases the title
-    expect(find.text('DATA MANAGEMENT'), findsOneWidget);
+    // AppSection uses Title Case "Data Management"
+    expect(find.text('Data Management'), findsOneWidget);
     expect(find.text('Backup Data'), findsOneWidget);
     expect(find.text('Restore Data'), findsOneWidget);
     expect(find.text('Clear All Data'), findsOneWidget);

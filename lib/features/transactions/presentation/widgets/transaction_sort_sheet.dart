@@ -1,6 +1,7 @@
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 typedef ApplySortCallback =
     void Function(TransactionSortBy sortBy, SortDirection sortDirection);
@@ -67,7 +68,7 @@ class TransactionSortSheet extends StatelessWidget {
     }).toList();
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      padding: context.space.vLg,
       child: Column(
         mainAxisSize: MainAxisSize.min, // Fit content
         crossAxisAlignment: CrossAxisAlignment.start,

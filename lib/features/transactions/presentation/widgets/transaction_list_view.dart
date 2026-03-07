@@ -15,6 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class TransactionListView extends StatelessWidget {
   final TransactionListState state;
@@ -47,15 +51,15 @@ class TransactionListView extends StatelessWidget {
     final theme = Theme.of(context);
 
     if (state.status == ListStatus.loading && state.transactions.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: BridgeCircularProgressIndicator());
     }
     if (state.status == ListStatus.error && state.transactions.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: context.space.allXl,
           child: Text(
             "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
-            style: TextStyle(color: theme.colorScheme.error),
+            style: BridgeTextStyle(color: theme.colorScheme.error),
             textAlign: TextAlign.center,
           ),
         ),
@@ -66,7 +70,7 @@ class TransactionListView extends StatelessWidget {
         state.status != ListStatus.reloading) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(30.0),
+          padding: const EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -234,7 +238,7 @@ class TransactionListView extends StatelessWidget {
             child: Align(
               alignment: Alignment.centerRight,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: context.space.hXl,
                 child: Icon(
                   Icons.delete_sweep_outlined,
                   color: theme.colorScheme.onErrorContainer,

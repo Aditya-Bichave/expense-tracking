@@ -3,6 +3,8 @@ import 'package:expense_tracker/core/widgets/app_card.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoryListItemWidget extends StatelessWidget {
   final Category category;
@@ -25,9 +27,12 @@ class CategoryListItemWidget extends StatelessWidget {
         availableIcons[category.iconName] ?? Icons.category_outlined;
 
     return AppCard(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      padding: EdgeInsets.zero, // Let ListTile handle padding
-      child: ListTile(
+      margin: EdgeInsets.symmetric(
+        horizontal: context.space.md,
+        vertical: context.space.xs,
+      ),
+      padding: const EdgeInsets.only(), // Let ListTile handle padding
+      child: BridgeListTile(
         leading: CircleAvatar(
           backgroundColor: category.displayColor.withOpacity(0.15),
           foregroundColor: category.displayColor.computeLuminance() > 0.5
@@ -48,7 +53,7 @@ class CategoryListItemWidget extends StatelessWidget {
                       icon: const Icon(Icons.edit_outlined),
                       iconSize: 20,
                       color: theme.colorScheme.secondary,
-                      padding: EdgeInsets.zero,
+                      padding: const EdgeInsets.only(),
                       tooltip: 'Edit Category',
                       onPressed: onEdit, // Use callback
                     ),
@@ -61,7 +66,7 @@ class CategoryListItemWidget extends StatelessWidget {
                       icon: const Icon(Icons.delete_outline),
                       iconSize: 20,
                       color: theme.colorScheme.error,
-                      padding: EdgeInsets.zero,
+                      padding: const EdgeInsets.only(),
                       tooltip: 'Delete Category',
                       onPressed: onDelete, // Use callback
                     ),
@@ -76,7 +81,7 @@ class CategoryListItemWidget extends StatelessWidget {
                   icon: const Icon(Icons.palette_outlined),
                   iconSize: 20,
                   color: theme.colorScheme.secondary,
-                  padding: EdgeInsets.zero,
+                  padding: const EdgeInsets.only(),
                   tooltip: 'Personalize Icon/Color (Coming Soon)',
                   onPressed: onPersonalize, // Use callback
                 ),

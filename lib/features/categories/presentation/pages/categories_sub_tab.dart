@@ -8,6 +8,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart'; // Import for themed padding
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoriesSubTab extends StatelessWidget {
   const CategoriesSubTab({super.key});
@@ -19,9 +22,12 @@ class CategoriesSubTab extends StatelessWidget {
         availableIcons[category.iconName] ?? Icons.category_outlined;
 
     return AppCard(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      padding: EdgeInsets.zero,
-      child: ListTile(
+      margin: EdgeInsets.symmetric(
+        horizontal: context.space.md,
+        vertical: context.space.xs,
+      ),
+      padding: const EdgeInsets.only(),
+      child: BridgeListTile(
         leading: CircleAvatar(
           backgroundColor: category.displayColor.withOpacity(0.15),
           foregroundColor: category.displayColor.computeLuminance() > 0.5
@@ -46,7 +52,7 @@ class CategoriesSubTab extends StatelessWidget {
     if (categories.isEmpty) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: context.space.allXl,
           child: Text(
             'No $title categories defined.',
             style: theme.textTheme.bodyMedium,
@@ -102,7 +108,7 @@ class CategoriesSubTab extends StatelessWidget {
               builder: (context, state) {
                 if (state.status == CategoryManagementStatus.initial ||
                     state.status == CategoryManagementStatus.loading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: BridgeCircularProgressIndicator());
                 }
                 if (state.status == CategoryManagementStatus.error) {
                   return Center(

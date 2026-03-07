@@ -74,4 +74,6 @@ extension AppKitThemeContextExtension on BuildContext {
     }
     return theme;
   }
+
+  AppSpacing get space => kit.spacing;
 }

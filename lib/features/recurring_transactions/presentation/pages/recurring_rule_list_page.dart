@@ -6,20 +6,23 @@ import 'package:expense_tracker/features/recurring_transactions/presentation/wid
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class RecurringRuleListPage extends StatelessWidget {
   const RecurringRuleListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BridgeScaffold(
       appBar: AppBar(title: const Text('Recurring Transactions')),
       body: BlocProvider(
         create: (context) => sl<RecurringListBloc>()..add(LoadRecurringRules()),
         child: BlocBuilder<RecurringListBloc, RecurringListState>(
           builder: (context, state) {
             if (state is RecurringListLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return const Center(child: BridgeCircularProgressIndicator());
             }
             if (state is RecurringListError) {
               return Center(child: Text('Error: ${state.message}'));
@@ -37,12 +40,12 @@ class RecurringRuleListPage extends StatelessWidget {
                     key: Key(rule.id),
                     direction: DismissDirection.endToStart,
                     background: Container(
-                      color: Theme.of(context).colorScheme.errorContainer,
+                      color: context.kit.colors.errorContainer,
                       alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      padding: context.space.hXl,
                       child: Icon(
                         Icons.delete_sweep_outlined,
-                        color: Theme.of(context).colorScheme.onErrorContainer,
+                        color: context.kit.colors.onErrorContainer,
                       ),
                     ),
                     confirmDismiss: (_) async {

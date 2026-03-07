@@ -4,7 +4,15 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_gap.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
+import 'package:expense_tracker/ui_kit/components/typography/app_text.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   final String phone;
@@ -18,6 +26,15 @@ class VerifyOtpPage extends StatefulWidget {
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
   final _tokenController = TextEditingController();
 
+  void _verify() {
+    final token = _tokenController.text.trim();
+    if (token.isNotEmpty) {
+      context.read<AuthBloc>().add(AuthVerifyOtpRequested(widget.phone, token));
+    } else {
+      AppToast.show(context, 'Please enter the OTP', type: AppToastType.error);
+    }
+  }
+
   @override
   void dispose() {
     _tokenController.dispose();
@@ -26,9 +43,11 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Verify OTP'),
+    final kit = context.kit;
+
+    return AppScaffold(
+      appBar: AppNavBar(
+        title: 'Verify OTP',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -45,38 +64,35 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
           if (state is AuthAuthenticated) {
             context.go('/'); // Navigate to home
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
+            AppToast.show(context, state.message, type: AppToastType.error);
           }
         },
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: kit.spacing.allMd,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('Enter OTP sent to ${widget.phone}'),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _tokenController,
-                decoration: const InputDecoration(labelText: 'OTP'),
-                keyboardType: TextInputType.number,
+              AppText(
+                'Enter OTP sent to ${widget.phone}',
+                style: AppTextStyle.bodyStrong,
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              AppGap.lg(context),
+              AppTextField(
+                controller: _tokenController,
+                label: 'OTP',
+                keyboardType: TextInputType.number,
+                textCapitalization: TextCapitalization.none,
+              ),
+              AppGap.md(context),
               BlocBuilder<AuthBloc, AuthState>(
                 builder: (context, state) {
+                  final isLoading = state is AuthLoading;
                   return AppButton(
                     label: 'Verify',
-                    isLoading: state is AuthLoading,
+                    onPressed: isLoading ? null : _verify,
+                    isLoading: isLoading,
                     isFullWidth: true,
-                    onPressed: () {
-                      final token = _tokenController.text.trim();
-                      if (token.isNotEmpty) {
-                        context.read<AuthBloc>().add(
-                          AuthVerifyOtpRequested(widget.phone, token),
-                        );
-                      }
-                    },
                   );
                 },
               ),

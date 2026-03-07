@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/goals/presentation/widgets/log_contribu
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class ContributionListItem extends StatelessWidget {
   final GoalContribution contribution;
@@ -23,7 +24,7 @@ class ContributionListItem extends StatelessWidget {
     final settings = context.watch<SettingsBloc>().state;
     final currency = settings.currencySymbol;
 
-    return ListTile(
+    return BridgeListTile(
       // Consider using AppCard as base later if needed
       leading: CircleAvatar(
         backgroundColor: theme.colorScheme.tertiaryContainer,

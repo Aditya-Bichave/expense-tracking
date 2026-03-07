@@ -8,6 +8,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
@@ -64,10 +67,7 @@ void main() {
       testWidgets('submits with default country code (+91)', (tester) async {
         await tester.pumpWidget(createWidgetUnderTest());
 
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Phone Number'),
-          '1234567890',
-        );
+        await tester.enterText(find.byType(AppTextField).first, '1234567890');
         await tester.tap(find.text('Send OTP'));
         await tester.pump();
 
@@ -79,10 +79,7 @@ void main() {
       testWidgets('strips leading zero from local number', (tester) async {
         await tester.pumpWidget(createWidgetUnderTest());
 
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Phone Number'),
-          '09876543210',
-        );
+        await tester.enterText(find.byType(AppTextField).first, '09876543210');
         await tester.tap(find.text('Send OTP'));
         await tester.pump();
 
@@ -94,16 +91,34 @@ void main() {
       testWidgets('uses manual plus code (+1) correctly', (tester) async {
         await tester.pumpWidget(createWidgetUnderTest());
 
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Phone Number'),
-          '+15551234567',
-        );
+        await tester.enterText(find.byType(AppTextField).first, '+15551234567');
         await tester.tap(find.text('Send OTP'));
         await tester.pump();
 
         verify(
           () => mockAuthBloc.add(const AuthLoginRequested('+15551234567')),
         ).called(1);
+      });
+
+      testWidgets('shows error toast for invalid phone number', (tester) async {
+        await tester.pumpWidget(createWidgetUnderTest());
+
+        // Enter invalid phone
+        await tester.enterText(find.byType(AppTextField).first, '12');
+        await tester.tap(find.text('Send OTP'));
+        await tester.pump();
+
+        // Verify no event added
+        verifyNever(
+          () => mockAuthBloc.add(any(that: isA<AuthLoginRequested>())),
+        );
+
+        // Verify Toast (SnackBar in AppToast implementation usually)
+        expect(find.byType(SnackBar), findsOneWidget);
+        expect(
+          find.textContaining('Please enter a valid phone number'),
+          findsOneWidget,
+        );
       });
     });
 
@@ -113,7 +128,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Email Address'),
+        find.byType(AppTextField).first,
         'test@example.com',
       );
       await tester.tap(find.text('Send Magic Link'));
@@ -126,6 +141,28 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('shows error toast for invalid email', (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.tap(find.text('Email'));
+      await tester.pumpAndSettle();
+
+      // Enter invalid email
+      await tester.enterText(find.byType(AppTextField).first, 'invalid-email');
+      await tester.tap(find.text('Send Magic Link'));
+      await tester.pump();
+
+      verifyNever(
+        () =>
+            mockAuthBloc.add(any(that: isA<AuthLoginWithMagicLinkRequested>())),
+      );
+
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(
+        find.textContaining('Please enter a valid email address'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets(
       'shows loading indicator and disables buttons when state is AuthLoading',
       (tester) async {
@@ -133,7 +170,9 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pump();
 
-        expect(find.byType(CircularProgressIndicator), findsWidgets);
+        // Check for CircularProgressIndicator which AppButton should show
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        expect(find.byType(AppButton), findsOneWidget);
       },
     );
 
@@ -151,7 +190,7 @@ void main() {
         (_) => Stream.value(const AuthMagicLinkSent('test@example.com')),
       );
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Magic link sent to test@example.com'), findsOneWidget);
     });
 

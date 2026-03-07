@@ -1,11 +1,28 @@
 import 'package:expense_tracker/features/settings/presentation/widgets/help_settings_section.dart';
-import 'package:expense_tracker/core/widgets/settings_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../../../../helpers/pump_app.dart';
 
 void main() {
+  const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+  final List<MethodCall> methodCalls = <MethodCall>[];
+
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(shareChannel, (MethodCall methodCall) async {
+          methodCalls.add(methodCall);
+          return null;
+        });
+    methodCalls.clear();
+  });
+
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(shareChannel, null);
+  });
+
   testWidgets('HelpSettingsSection renders tiles', (WidgetTester tester) async {
     await pumpWidgetWithProviders(
       tester: tester,
@@ -15,46 +32,27 @@ void main() {
       ),
     );
 
-    // SectionHeader uppercases the title
-    expect(find.text('HELP & FEEDBACK'), findsOneWidget);
-    expect(find.byType(SettingsListTile), findsAtLeastNWidgets(1));
+    expect(find.text('Help & Feedback'), findsOneWidget);
+    expect(find.text('Help Center'), findsOneWidget);
+    expect(find.text('Tell a Friend'), findsOneWidget);
+    expect(find.byType(AppListTile), findsNWidgets(2));
   });
 
-  testWidgets('HelpSettingsSection triggers Share.share on tap', (
+  testWidgets('HelpSettingsSection triggers share channel on tap', (
     WidgetTester tester,
   ) async {
-    const channel = MethodChannel('dev.fluttercommunity.plus/share');
-    final log = <MethodCall>[];
-
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
-      methodCall,
-    ) async {
-      log.add(methodCall);
-      return null;
-    });
-
     await pumpWidgetWithProviders(
       tester: tester,
-      widget: Scaffold(
-        body: HelpSettingsSection(
-          isLoading: false,
-          launchUrlCallback: (context, url) {},
-        ),
+      widget: HelpSettingsSection(
+        isLoading: false,
+        launchUrlCallback: (context, url) {},
       ),
     );
 
     await tester.tap(find.text('Tell a Friend'));
     await tester.pump();
 
-    expect(log, hasLength(1));
-    expect(log.first.method, 'share');
-    // Optionally check arguments
-    // expect(log.first.arguments['text'], contains('Spend Savvy'));
-
-    // Clean up
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      channel,
-      null,
-    );
+    expect(methodCalls, hasLength(1));
+    expect(methodCalls.first.method, 'share');
   });
 }

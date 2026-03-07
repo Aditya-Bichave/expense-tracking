@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/b
 import 'package:expense_tracker/features/budgets/presentation/pages/budget_detail_page.dart';
 import 'package:expense_tracker/features/transactions/domain/usecases/get_transactions_usecase.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -102,7 +103,7 @@ void main() {
       );
 
       // Starts in loading state
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
 
       // After loading, displays details
       await tester.pumpAndSettle();

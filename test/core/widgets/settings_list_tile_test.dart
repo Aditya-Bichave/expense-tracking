@@ -38,7 +38,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(ListTile));
+      await tester.tap(find.byType(InkWell));
       expect(tapped, true);
     });
 
@@ -57,7 +57,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(ListTile), warnIfMissed: false);
+      await tester.tap(find.byType(InkWell), warnIfMissed: false);
       expect(tapped, false);
     });
 
@@ -74,8 +74,9 @@ void main() {
         ),
       );
 
-      final listTile = tester.widget<ListTile>(find.byType(ListTile));
-      expect(listTile.enabled, false);
+      final tile =
+          tester.widget(find.byType(SettingsListTile)) as SettingsListTile;
+      expect(tile.enabled, false);
 
       // Checking actual text color is hard due to style inheritance logic in widget,
       // but inspecting listTile.enabled=false property is sufficient.

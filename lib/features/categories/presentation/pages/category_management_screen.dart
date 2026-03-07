@@ -9,6 +9,10 @@ import 'package:expense_tracker/features/categories/presentation/widgets/categor
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class CategoryManagementScreen extends StatelessWidget {
   const CategoryManagementScreen({super.key});
@@ -72,7 +76,7 @@ class CategoryManagementScreen extends StatelessWidget {
           sl<CategoryManagementBloc>()..add(const LoadCategories()),
       child: DefaultTabController(
         length: 2,
-        child: Scaffold(
+        child: BridgeScaffold(
           appBar: AppBar(
             title: const Text('Manage Categories'),
             bottom: TabBar(
@@ -80,8 +84,8 @@ class CategoryManagementScreen extends StatelessWidget {
                 Tab(icon: Icon(Icons.arrow_downward), text: 'Expenses'),
                 Tab(icon: Icon(Icons.arrow_upward), text: 'Income'),
               ],
-              indicatorColor: Theme.of(context).colorScheme.primary,
-              labelColor: Theme.of(context).colorScheme.primary,
+              indicatorColor: context.kit.colors.primary,
+              labelColor: context.kit.colors.primary,
               unselectedLabelColor: Theme.of(
                 context,
               ).colorScheme.onSurfaceVariant,
@@ -96,7 +100,7 @@ class CategoryManagementScreen extends StatelessWidget {
                   ..showSnackBar(
                     SnackBar(
                       content: Text("Error: ${state.errorMessage!}"),
-                      backgroundColor: Theme.of(context).colorScheme.error,
+                      backgroundColor: context.kit.colors.error,
                     ),
                   );
                 // Optionally clear error message via Bloc event
@@ -106,19 +110,17 @@ class CategoryManagementScreen extends StatelessWidget {
             builder: (context, state) {
               if (state.status == CategoryManagementStatus.initial ||
                   state.status == CategoryManagementStatus.loading) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: BridgeCircularProgressIndicator());
               }
               if (state.status == CategoryManagementStatus.error &&
                   state.predefinedExpenseCategories.isEmpty &&
                   state.customExpenseCategories.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: context.space.allXl,
                     child: Text(
                       "Error loading categories: ${state.errorMessage ?? 'Unknown error'}",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                      style: BridgeTextStyle(color: context.kit.colors.error),
                     ),
                   ),
                 );

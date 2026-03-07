@@ -6,6 +6,7 @@ import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 // Common widget to display either an Expense or Income in a ListTile format
 class TransactionListItem extends StatelessWidget {

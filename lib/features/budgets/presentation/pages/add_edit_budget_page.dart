@@ -7,6 +7,9 @@ import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
 class AddEditBudgetPage extends StatelessWidget {
   final Budget? initialBudget; // Passed via GoRouter extra
@@ -34,7 +37,7 @@ class AddEditBudgetPage extends StatelessWidget {
                   content: Text(
                     'Budget ${isEditing ? 'updated' : 'added'} successfully!',
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: context.kit.colors.success,
                 ),
               );
             // Use context.pop() which is safer with GoRouter shells
@@ -49,7 +52,7 @@ class AddEditBudgetPage extends StatelessWidget {
               ..showSnackBar(
                 SnackBar(
                   content: Text('Error: ${state.errorMessage}'),
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: context.kit.colors.error,
                 ),
               );
             // Clear error after showing
@@ -58,7 +61,7 @@ class AddEditBudgetPage extends StatelessWidget {
             );
           }
         },
-        child: Scaffold(
+        child: BridgeScaffold(
           appBar: AppBar(
             title: Text(isEditing ? 'Edit Budget' : 'Add Budget'),
             leading: IconButton(
@@ -73,7 +76,7 @@ class AddEditBudgetPage extends StatelessWidget {
               if (state.status == AddEditBudgetStatus.loading &&
                   state.availableCategories.isEmpty) {
                 // Show loading only if categories aren't loaded yet for the form
-                return const Center(child: CircularProgressIndicator());
+                return const Center(child: BridgeCircularProgressIndicator());
               }
               if (state.status == AddEditBudgetStatus.error &&
                   state.availableCategories.isEmpty) {

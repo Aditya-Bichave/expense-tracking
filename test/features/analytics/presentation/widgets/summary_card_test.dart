@@ -2,6 +2,7 @@ import 'package:expense_tracker/features/analytics/domain/entities/expense_summa
 import 'package:expense_tracker/features/analytics/presentation/bloc/summary_bloc.dart';
 import 'package:expense_tracker/features/analytics/presentation/widgets/summary_card.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,7 +34,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
   });
 
   testWidgets('SummaryCard renders loaded state with categories', (

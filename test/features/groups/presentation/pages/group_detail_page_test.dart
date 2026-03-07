@@ -12,6 +12,8 @@ import 'package:expense_tracker/features/groups/domain/entities/group_type.dart'
 import 'package:expense_tracker/features/groups/presentation/bloc/group_members_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_fab.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -114,6 +116,19 @@ void main() {
     expect(find.byType(TabBar), findsOneWidget);
   });
 
+  testWidgets('renders default group name when group not found in state', (
+    tester,
+  ) async {
+    when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded(const []));
+    when(() => mockGroupMembersBloc.state).thenReturn(GroupMembersInitial());
+    when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
+
+    await tester.pumpWidget(buildTestWidget());
+
+    expect(find.text('Group'), findsOneWidget); // Default name
+  });
+
   testWidgets('shows add expense FAB if user is not viewer', (tester) async {
     when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([tGroup]));
     when(
@@ -124,7 +139,7 @@ void main() {
 
     await tester.pumpWidget(buildTestWidget());
 
-    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.byType(AppFAB), findsOneWidget);
     expect(find.byIcon(Icons.add), findsOneWidget);
   });
 
@@ -138,7 +153,7 @@ void main() {
 
     await tester.pumpWidget(buildTestWidget());
 
-    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byType(AppFAB), findsNothing);
   });
 
   testWidgets('shows invite member icon if user is admin', (tester) async {
@@ -173,5 +188,21 @@ void main() {
     await tester.pumpWidget(buildTestWidget());
 
     expect(find.byIcon(Icons.person_add), findsNothing);
+  });
+
+  testWidgets('opens invite sheet when invite icon is tapped', (tester) async {
+    when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([tGroup]));
+    when(
+      () => mockGroupMembersBloc.state,
+    ).thenReturn(GroupMembersLoaded([tMemberAdmin]));
+    when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
+
+    await tester.pumpWidget(buildTestWidget());
+
+    await tester.tap(find.byIcon(Icons.person_add));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Invite Members'), findsOneWidget);
   });
 }

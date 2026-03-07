@@ -1,5 +1,6 @@
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/ui_bridge/bridge_text_button.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -82,7 +83,7 @@ void main() {
       await tester.tap(find.text('Show'));
       await tester.pumpAndSettle();
 
-      final confirmBtn = find.widgetWithText(TextButton, 'DELETE');
+      final confirmBtn = find.widgetWithText(BridgeTextButton, 'DELETE');
 
       // Button should be disabled initially (or doing nothing)
       // The implementation checks controller text in onPressed.
