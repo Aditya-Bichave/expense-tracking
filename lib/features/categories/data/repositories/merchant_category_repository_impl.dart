@@ -22,7 +22,7 @@ class MerchantCategoryRepositoryImpl implements MerchantCategoryRepository {
       );
       log.fine("[MerchantCategoryRepo] DataSource returned: $categoryId");
       return Right(categoryId);
-    } on CacheFailure catch (e, s) {
+    } on CacheFailure catch (e) {
       log.warning(
         "[MerchantCategoryRepo] CacheFailure during getDefaultCategoryId: ${e.message}",
       );

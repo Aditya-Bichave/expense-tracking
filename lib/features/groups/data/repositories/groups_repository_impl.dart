@@ -60,7 +60,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       }
 
       return Right(group);
-    } catch (e, s) {
+    } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -70,7 +70,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final models = _localDataSource.getGroups();
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e, s) {
+    } catch (e) {
       if (e is Failure) return Left(e);
       return Left(CacheFailure(e.toString()));
     }
@@ -97,7 +97,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e, s) {
+    } catch (e) {
       if (e is Failure) return Left(e);
       return Left(CacheFailure(e.toString()));
     }
@@ -153,14 +153,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
             if (staleMemberIds.isNotEmpty) {
               await _localDataSource.deleteMembers(staleMemberIds);
             }
-          } catch (e, s) {
+          } catch (e) {
             // Log error or ignore partial failure
           }
         }),
       );
 
       return const Right(null);
-    } catch (e, s) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -180,7 +180,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
         maxUses: maxUses,
       );
       return Right(url);
-    } catch (e, s) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -192,7 +192,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final data = await _remoteDataSource.acceptInvite(token);
       return Right(data);
-    } catch (e, s) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -209,7 +209,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final members = await _remoteDataSource.getGroupMembers(groupId);
       await _localDataSource.saveGroupMembers(members);
       return const Right(null);
-    } catch (e, s) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -241,7 +241,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       }
 
       return const Right(null);
-    } catch (e, s) {
+    } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
   }

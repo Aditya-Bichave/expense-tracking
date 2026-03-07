@@ -1,3 +1,4 @@
+import "package:collection/collection.dart";
 // lib/core/data/countries.dart
 
 // Renamed from CountryInfo to avoid conflict if imported directly elsewhere
@@ -104,7 +105,7 @@ abstract class AppCountries {
     try {
       return availableCountries.firstWhere(
         (c) => c.code == code,
-        orElse: () => defaultCountry,
+
       );
     } catch (e) {
       // Return default if not found? Or null? Returning null for now.

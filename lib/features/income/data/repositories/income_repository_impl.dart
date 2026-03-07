@@ -52,7 +52,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
         "[IncomeRepo] Add successful (ID: ${addedModel.id}). Hydrating category.",
       );
       return await _hydrateSingleModel(addedModel);
-    } on CacheFailure catch (e, s) {
+    } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error adding income$e$s");
@@ -74,7 +74,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
         "[IncomeRepo] Update successful (ID: ${updatedModel.id}). Hydrating category.",
       );
       return await _hydrateSingleModel(updatedModel);
-    } on CacheFailure catch (e, s) {
+    } on CacheFailure catch (e) {
       log.warning("[IncomeRepo] CacheFailure during update: ${e.message}");
       return Left(e);
     } catch (e, s) {
@@ -92,7 +92,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       if (model == null) return const Right(null);
       final hydrated = await _hydrateSingleModel(model);
       return hydrated.map((e) => e);
-    } catch (e, s) {
+    } catch (e) {
       log.severe("Error getting income by ID $id: $e");
       return Left(CacheFailure("Error getting income: $e"));
     }
@@ -122,7 +122,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       incomeModels.sort((a, b) => b.date.compareTo(a.date));
 
       return Right(incomeModels); // Return models
-    } on CacheFailure catch (e, s) {
+    } on CacheFailure catch (e) {
       log.warning(
         "[IncomeRepo] CacheFailure getting income models: ${e.message}",
       );
@@ -144,7 +144,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       await localDataSource.deleteIncome(id);
       log.info("[IncomeRepo] Delete successful for ID: $id.");
       return const Right(null);
-    } on CacheFailure catch (e, s) {
+    } on CacheFailure catch (e) {
       log.warning(
         "[IncomeRepo] CacheFailure deleting income ID $id: ${e.message}",
       );
@@ -232,7 +232,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
         "[IncomeRepo] Income categorization updated successfully for ID: $incomeId",
       );
       return const Right(null);
-    } on CacheFailure catch (e, s) {
+    } on CacheFailure catch (e) {
       log.warning(
         "[IncomeRepo] CacheFailure during updateIncomeCategorization ID $incomeId: ${e.message}",
       );
@@ -295,7 +295,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
         "[IncomeRepo] Successfully triggered updates for $updateCount incomes from '$oldCategoryId' to '$newCategoryId'.",
       );
       return Right(updateCount);
-    } on CacheFailure catch (e, s) {
+    } on CacheFailure catch (e) {
       log.warning(
         "[IncomeRepo] CacheFailure during reassignIncomesCategory: ${e.message}",
       );
