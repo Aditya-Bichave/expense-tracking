@@ -15,16 +15,24 @@ class ReportFilterControls extends StatelessWidget {
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
-      await filterBloc.stream.firstWhere(
-        (state) =>
-            state.optionsStatus == FilterOptionsStatus.loaded ||
-            state.optionsStatus == FilterOptionsStatus.error,
-      );
+      try {
+        await filterBloc.stream
+            .firstWhere(
+              (state) =>
+                  state.optionsStatus == FilterOptionsStatus.loaded ||
+                  state.optionsStatus == FilterOptionsStatus.error,
+            )
+            .timeout(const Duration(seconds: 10));
+      } catch (_) {
+        // Ignore timeout or state errors
+      }
       if (!context.mounted ||
           filterBloc.state.optionsStatus == FilterOptionsStatus.error) {
         return; // Don't show sheet if loading failed
       }
     }
+
+    if (!context.mounted) return;
 
     await showModalBottomSheet<void>(
       context: context,

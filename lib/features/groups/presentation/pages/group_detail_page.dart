@@ -60,6 +60,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
             try {
               final group = groupsState.groups.firstWhere(
                 (g) => g.id == widget.groupId,
+                orElse: () => throw StateError('Group not found'),
               );
               groupName = group.name;
             } catch (_) {}
@@ -90,6 +91,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     try {
                       final member = membersState.members.firstWhere(
                         (m) => m.userId == currentUser.id,
+                        orElse: () => throw StateError('Member not found'),
                       );
                       isAdmin = member.role == GroupRole.admin;
                       // Viewers cannot add, edit, or settle
