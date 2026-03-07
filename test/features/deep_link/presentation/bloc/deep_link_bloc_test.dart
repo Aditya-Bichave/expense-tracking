@@ -100,9 +100,7 @@ void main() {
           mockAuthRepository,
         );
       },
-      act: (bloc) => bloc.add(
-        const DeepLinkManualEntry(token: '123'),
-      ),
+      act: (bloc) => bloc.add(const DeepLinkManualEntry(token: '123')),
       expect: () => [
         isA<DeepLinkProcessing>(),
         isA<DeepLinkError>().having(
