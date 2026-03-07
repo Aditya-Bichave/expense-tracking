@@ -45,6 +45,8 @@ app.*.map.json
 /android/app/release
 
 coverage/
+artifacts/
+.copilot-tracking/
 ci/smoke/node_modules/
 ci/smoke/artifacts/
 ci/smoke/smoke-report.json
@@ -52,5 +54,6 @@ ci/smoke/routes.json
 # Environment variables
 .env
 .env.*
+!.env.example
+!*.env.example
 test_pid.txt
-*.txt

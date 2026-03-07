@@ -1,15 +1,8 @@
-# E2E CI test gitignore
-
-# Auth state (contains real tokens)
-storage/auth-state.json
-
-# Test artifacts
-test-results/
-playwright-report/
-artifacts/
-
-# Dependencies
+# E2E local artifacts and secrets
 node_modules/
-
-# Secrets
+playwright-report/
+test-results/
+artifacts/
+storage/
 .env
+!.env.example
