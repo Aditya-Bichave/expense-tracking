@@ -51,7 +51,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final connectivityResult = await _connectivity.checkConnectivity();
       if (connectivityResult.contains(ConnectivityResult.mobile) ||
           connectivityResult.contains(ConnectivityResult.wifi)) {
-        unawaited(_syncService.processOutbox());
+        unawaited(
+          _syncService.processOutbox().catchError((e, s) {
+            print("Failed to process outbox in background: $e");
+          }),
+        );
       }
 
       return Right(group);

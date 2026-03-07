@@ -188,7 +188,9 @@ class ReportRepositoryImpl implements ReportRepository {
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
       final currentData = currentDataEither.getOrElse(
-        () => throw StateError("Current data fetch failed"),
+        () => throw StateError(
+          "Current data fetch failed",
+        ), // Unreachable due to isLeft check above
       );
 
       // Process Previous Data
@@ -416,7 +418,9 @@ class ReportRepositoryImpl implements ReportRepository {
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
       final currentData = currentDataEither.getOrElse(
-        () => throw StateError("Current data calculation failed"),
+        () => throw StateError(
+          "Current data calculation failed",
+        ), // Unreachable due to isLeft check above
       );
 
       // Process Previous Data
@@ -611,7 +615,9 @@ class ReportRepositoryImpl implements ReportRepository {
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
       final currentData = currentDataEither.getOrElse(
-        () => throw StateError("Current data calculation failed"),
+        () => throw StateError(
+          "Current data calculation failed",
+        ), // Unreachable due to isLeft check above
       );
 
       // Process Previous Data
@@ -788,7 +794,9 @@ class ReportRepositoryImpl implements ReportRepository {
       final currentPerformanceEither = results[0];
       if (currentPerformanceEither.isLeft()) return currentPerformanceEither;
       final currentPerformanceReport = currentPerformanceEither.getOrElse(
-        () => throw StateError("Current data failed"),
+        () => throw StateError(
+          "Current data failed",
+        ), // Unreachable due to isLeft check above
       );
 
       // Process Previous Data
