@@ -103,7 +103,10 @@ abstract class AppCountries {
   static AppCountry? findCountryByCode(String? code) {
     if (code == null) return null;
     try {
-      return availableCountries.firstWhere((c) => c.code == code);
+      return availableCountries.firstWhere(
+        (c) => c.code == code,
+        orElse: () => defaultCountry,
+      );
     } catch (e) {
       // Return default if not found? Or null? Returning null for now.
       return null; // Or return defaultCountry;
