@@ -31,6 +31,14 @@
 
   <title>Financial OS</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    // E2E readiness hook
+    window.E2E_FLUTTER_READY = false;
+    window.setFlutterReady = function() {
+      window.E2E_FLUTTER_READY = true;
+      console.log('[E2E] Flutter app signals ready state');
+    };
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

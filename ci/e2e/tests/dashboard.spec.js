@@ -23,9 +23,7 @@ test.describe('Dashboard', () => {
             pageErrors.push(err.message);
         });
         await page.goto('/dashboard');
-        await page.waitForSelector('flt-glass-pane', { timeout: FLUTTER_READY_TIMEOUT });
-        // Let Flutter finish rendering the initial frame
-        await page.waitForTimeout(FLUTTER_RENDER_WAIT);
+        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
     });
 
     test('dashboard loads without fatal errors', async ({ page }) => {
@@ -62,8 +60,7 @@ test.describe('Dashboard', () => {
     for (const route of routes) {
         test(`navigating to ${route.path} works`, async ({ page }) => {
             await page.goto(route.path);
-            await page.waitForSelector('canvas', { timeout: FLUTTER_READY_TIMEOUT });
-            await page.waitForTimeout(1000);
+            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
 
             const url = page.url();
             expect(url).toContain(route.path);

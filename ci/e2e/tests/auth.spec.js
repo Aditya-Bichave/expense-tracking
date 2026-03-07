@@ -42,18 +42,16 @@ test.describe('Authentication', () => {
     test('navigating to /profile-setup renders a form, not blank', async ({ page }) => {
         // This tests the fix for the BlocProvider<ProfileBloc> missing issue.
         await page.goto('/dashboard');
-        await page.waitForSelector('flt-glass-pane', { timeout: FLUTTER_READY_TIMEOUT });
-
+        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
         // Force navigate to profile-setup
         await page.goto('/profile-setup');
-        await page.waitForSelector('flt-glass-pane', { timeout: 30000 });
+        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: 30000 });
 
         // Look for some text that would be on the profile setup page
         // Using a broad text check because Flutter renders everything in Shadow DOM or Canvas
         await expect(page.getByText(/Setup Your Profile/i).or(page.getByText(/Username/i))).toBeVisible({ timeout: 15000 });
 
-        // Wait long enough for Flutter to render (not blank)
-        await page.waitForTimeout(4000);
+        // Elements visible, safe to screenshot
 
         // Take a screenshot for visual inspection
         await page.screenshot({ path: 'test-results/profile-setup.png', fullPage: true });

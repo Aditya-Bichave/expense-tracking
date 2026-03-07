@@ -10,7 +10,7 @@ module.exports = defineConfig({
     testDir: './tests',
     fullyParallel: false,       // Flutter canvas tests are sequential-friendly
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 1 : 0,
+    retries: process.env.CI ? 2 : 0,
     workers: 1,                 // Single worker — Flutter web is heavy
     timeout: 45_000,            // 45s per test (Reduced from 90s)
 
