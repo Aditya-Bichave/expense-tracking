@@ -83,7 +83,7 @@ void main() {
       await tester.tap(find.text('Show'));
       await tester.pumpAndSettle();
 
-      final confirmBtn = find.widgetWithText(TextButton, 'DELETE');
+      final confirmBtn = find.widgetWithText(BridgeTextButton, 'DELETE');
 
       // Button should be disabled initially (or doing nothing)
       // The implementation checks controller text in onPressed.

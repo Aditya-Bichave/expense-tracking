@@ -14,6 +14,7 @@ import 'package:expense_tracker/features/groups/domain/entities/group_entity.dar
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_role.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -191,8 +192,8 @@ void main() {
       expect(find.text('Total percentage must be 100%'), findsOneWidget);
       expect(find.text('SAVE'), findsOneWidget);
       // Button should be disabled (onPressed is null)
-      final saveButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'SAVE'),
+      final saveButton = tester.widget<AppButton>(
+        find.widgetWithText(AppButton, 'SAVE'),
       );
       expect(saveButton.onPressed, isNull);
 
@@ -217,11 +218,11 @@ void main() {
       ).thenAnswer((_) async => const Right(null));
 
       // Tap 'SAVE'
-      final activeSaveButton = tester.widget<TextButton>(
-        find.widgetWithText(TextButton, 'SAVE'),
+      final activeSaveButton = tester.widget<AppButton>(
+        find.widgetWithText(AppButton, 'SAVE'),
       );
       expect(activeSaveButton.onPressed, isNotNull);
-      await tester.tap(find.widgetWithText(TextButton, 'SAVE'));
+      await tester.tap(find.widgetWithText(AppButton, 'SAVE'));
       await tester.pumpAndSettle();
 
       // Verify submission

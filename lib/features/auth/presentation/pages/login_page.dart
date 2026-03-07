@@ -114,6 +114,12 @@ class _LoginPageState extends State<LoginPage>
         listener: (context, state) {
           if (state is AuthOtpSent) {
             context.push('/verify-otp', extra: state.phone);
+          } else if (state is AuthMagicLinkSent) {
+            AppToast.show(
+              context,
+              'Magic link sent to ${state.email}',
+              type: AppToastType.success,
+            );
           } else if (state is AuthError) {
             AppToast.show(context, state.message, type: AppToastType.error);
           }

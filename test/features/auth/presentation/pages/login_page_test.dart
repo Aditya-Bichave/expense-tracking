@@ -190,7 +190,7 @@ void main() {
         (_) => Stream.value(const AuthMagicLinkSent('test@example.com')),
       );
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('Magic link sent to test@example.com'), findsOneWidget);
     });
 
