@@ -663,28 +663,36 @@ class TransactionListBloc
         log.info(
           "[TransactionListBloc] Categorization update successful for ${event.transactionId}. Updating state in-memory.",
         );
-        final updatedTransactions = state.transactions.map((t) {
-          if (t.id == event.transactionId) {
-            if (event.transactionType == TransactionType.expense &&
-                t.expense != null) {
-              final updated = t.expense!.copyWith(
-                category: event.selectedCategory,
-                status: CategorizationStatus.categorized,
-                confidenceScore: 1.0,
-              );
-              return TransactionEntity.fromExpense(updated);
-            } else if (event.transactionType == TransactionType.income &&
-                t.income != null) {
-              final updated = t.income!.copyWith(
-                category: event.selectedCategory,
-                status: CategorizationStatus.categorized,
-                confidenceScore: 1.0,
-              );
-              return TransactionEntity.fromIncome(updated);
-            }
+        // ⚡ Bolt Performance Optimization
+        // Problem: .map(...).toList() iterates and re-allocates over thousands of transactions just to update one
+        // Solution: Find the index and update the specific item
+        final index = state.transactions.indexWhere(
+          (t) => t.id == event.transactionId,
+        );
+        final List<TransactionEntity> updatedTransactions = List.of(
+          state.transactions,
+        );
+        if (index != -1) {
+          final t = updatedTransactions[index];
+          if (event.transactionType == TransactionType.expense &&
+              t.expense != null) {
+            final updated = t.expense!.copyWith(
+              category: event.selectedCategory,
+              status: CategorizationStatus.categorized,
+              confidenceScore: 1.0,
+            );
+            updatedTransactions[index] = TransactionEntity.fromExpense(updated);
+          } else if (event.transactionType == TransactionType.income &&
+              t.income != null) {
+            final updated = t.income!.copyWith(
+              category: event.selectedCategory,
+              status: CategorizationStatus.categorized,
+              confidenceScore: 1.0,
+            );
+            updatedTransactions[index] = TransactionEntity.fromIncome(updated);
           }
-          return t;
-        }).toList();
+        }
+
         emit(
           state.copyWith(
             transactions: updatedTransactions,

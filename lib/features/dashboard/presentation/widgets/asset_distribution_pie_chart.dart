@@ -92,9 +92,24 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     // --- End Quantum Mode Handling ---
 
     // Filter out accounts with zero or negative balance for the chart itself
-    final positiveBalances = Map.fromEntries(
-      widget.accountBalances.entries.where((entry) => entry.value > 0),
-    );
+    // ⚡ Bolt Performance Optimization
+    // Problem: Map.fromEntries, .where, .keys.toList(), .values.toList() and .fold create multiple intermediate objects
+    // Solution: Compute positiveBalances, accountNames, balances, totalPositiveBalance, and sectionColors in a single loop
+    final Map<String, double> positiveBalances = {};
+    final List<String> accountNames = [];
+    final List<double> balances = [];
+    final List<Color> sectionColors = [];
+    double totalPositiveBalance = 0.0;
+
+    for (final entry in widget.accountBalances.entries) {
+      if (entry.value > 0) {
+        positiveBalances[entry.key] = entry.value;
+        accountNames.add(entry.key);
+        balances.add(entry.value);
+        sectionColors.add(_colorCache[entry.key]!);
+        totalPositiveBalance += entry.value;
+      }
+    }
 
     log.info(
       "[PieChart] Filtered positive balances: ${positiveBalances.length} accounts.",
@@ -112,19 +127,6 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         ),
       );
     }
-
-    // Prepare data for the chart
-    final List<String> accountNames = positiveBalances.keys.toList();
-    final List<double> balances = positiveBalances.values.toList();
-    final double totalPositiveBalance = balances.fold(
-      0.0,
-      (sum, item) => sum + item,
-    );
-
-    // Get colors from cache
-    final List<Color> sectionColors = accountNames
-        .map((name) => _colorCache[name]!)
-        .toList();
 
     return AppCard(
       padding: kit.spacing.allLg,

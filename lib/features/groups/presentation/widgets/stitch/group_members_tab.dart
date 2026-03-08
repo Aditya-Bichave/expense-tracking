@@ -33,14 +33,12 @@ class GroupMembersTab extends StatelessWidget {
 
           final currentUser =
               (context.read<AuthBloc>().state as AuthAuthenticated).user;
-          // Use safe lookup or null if not found
-          final currentMember = state.members.cast<dynamic>().firstWhere(
-            (m) => m.userId == currentUser.id,
-            orElse: () => null,
-          );
+          // ⚡ Bolt Performance Optimization
+          // Problem: .cast<dynamic>() creates an unnecessary wrapper iterable and defeats type safety
+          // Solution: Use cast-free iteration safely
+          final currentMember = state.members.where((m) => m.userId == currentUser.id).firstOrNull;
 
-          final isAdmin =
-              currentMember != null && currentMember.role == GroupRole.admin;
+          final isAdmin = currentMember != null && currentMember.role == GroupRole.admin;
 
           return ListView.builder(
             itemCount: state.members.length,
