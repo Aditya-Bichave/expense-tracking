@@ -96,9 +96,13 @@ class AppRouter {
       sl<SettingsBloc>().stream,
     ]),
     redirect: (context, state) {
+      final location = state.uri.path;
+      if (const bool.fromEnvironment('E2E_MODE') == true && location == '/e2e-bypass') {
+        return null; // Exempt bypass page from all auth and profile guards
+      }
+
       final sessionState = sl<SessionCubit>().state;
       final settingsState = sl<SettingsBloc>().state;
-      final location = state.uri.path;
       final isLoggingIn =
           location == RouteNames.login ||
           location == RouteNames.initialSetup ||

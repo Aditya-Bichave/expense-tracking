@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/profile/data/models/profile_model.dart'
 import 'package:expense_tracker/features/profile/data/datasources/profile_local_data_source.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 class E2EBypassPage extends StatefulWidget {
   const E2EBypassPage({super.key});
@@ -34,16 +35,13 @@ class _E2EBypassPageState extends State<E2EBypassPage> {
         // Force cache it locally to instantly satisfy SessionCubit
         await sl<ProfileLocalDataSource>().cacheProfile(profile);
 
-        // Also ensure remote database has it (optional, but good for test parity)
-        await Supabase.instance.client.from('profiles').upsert({
-          'id': user.id,
-          'full_name': 'E2E Tester',
-          'currency': 'USD',
-          'timezone': 'UTC',
-        });
-
         // Notify SessionCubit to re-evaluate and emit SessionAuthenticated
-        sl<SessionCubit>().checkSession(background: false);
+        sl<SessionCubit>().checkSession();
+      }
+
+      if (mounted) {
+        // Safe redirect to dashboard
+        context.go('/dashboard');
       }
     } catch (e) {
       // Ignore
