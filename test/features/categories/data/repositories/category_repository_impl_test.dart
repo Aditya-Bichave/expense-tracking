@@ -51,24 +51,37 @@ void main() {
     isCustom: true,
   );
 
+  const tCategory2 = Category(
+    id: '2',
+    name: 'Apple',
+    iconName: 'apple',
+    colorHex: '#000000',
+    type: CategoryType.expense,
+    isCustom: true,
+  );
+
   group('getAllCategories', () {
-    test('should aggregate all sources', () async {
+    test('should aggregate all sources and sort', () async {
       when(
         () => mockExpenseDataSource.getPredefinedCategories(),
       ).thenAnswer((_) async => []);
       when(
         () => mockIncomeDataSource.getPredefinedCategories(),
       ).thenAnswer((_) async => []);
-      when(
-        () => mockLocalDataSource.getCustomCategories(),
-      ).thenAnswer((_) async => [CategoryModel.fromEntity(tCategory)]);
+      when(() => mockLocalDataSource.getCustomCategories()).thenAnswer(
+        (_) async => [
+          CategoryModel.fromEntity(tCategory),
+          CategoryModel.fromEntity(tCategory2),
+        ],
+      );
 
       final result = await repository.getAllCategories();
 
       expect(result.isRight(), true);
       result.fold((l) => null, (list) {
-        expect(list.length, 1);
-        expect(list.first.id, '1');
+        expect(list.length, 2);
+        // 'Apple' should come before 'Food' due to sorting
+        expect(list.first.id, '2');
       });
     });
 

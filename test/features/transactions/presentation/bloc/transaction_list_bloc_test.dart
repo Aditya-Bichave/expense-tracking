@@ -93,6 +93,10 @@ void main() {
         ).thenAnswer((_) async => Right([tTxnExpense]));
         return bloc;
       },
+      seed: () => const TransactionListState(
+        isInBatchEditMode: true,
+        selectedTransactionIds: {'1'},
+      ),
       act: (bloc) => bloc.add(const LoadTransactions()),
       expect: () => [
         isA<TransactionListState>().having(
@@ -102,7 +106,8 @@ void main() {
         ),
         isA<TransactionListState>()
             .having((s) => s.status, 'status', ListStatus.success)
-            .having((s) => s.transactions.length, 'transactions', 1),
+            .having((s) => s.transactions.length, 'transactions', 1)
+            .having((s) => s.selectedTransactionIds, 'selectedIds', {'1'}),
       ],
     );
 

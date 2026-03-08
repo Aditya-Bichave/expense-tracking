@@ -296,9 +296,15 @@ class TransactionListBloc
         log.info(
           "[TransactionListBloc] Load successful with ${transactions.length} transactions.",
         );
+
+        // ⚡ Bolt Performance Optimization
+        // Problem: .any() inside .where() creates an O(N*M) time complexity trap
+        // Solution: Precompute a Set of transaction IDs for O(1) lookups
+        // Impact: Reduces complexity to O(N+M), preventing UI freezes on large datasets
+        final transactionIds = transactions.map((t) => t.id).toSet();
         final validSelection = state.isInBatchEditMode
             ? state.selectedTransactionIds
-                  .where((id) => transactions.any((txn) => txn.id == id))
+                  .where((id) => transactionIds.contains(id))
                   .toSet()
             : <String>{};
 

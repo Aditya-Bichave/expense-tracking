@@ -164,6 +164,15 @@ class BudgetRepositoryImpl implements BudgetRepository {
     try {
       final models = await localDataSource.getBudgets();
       final entities = models.map((m) => m.toEntity()).toList();
+
+      // ⚡ Bolt Performance Optimization
+      // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
+      // Solution: Cache lowercased names outside the sort function
+      // Impact: Improves loading speed by reducing CPU cycles and garbage collection
+      final lowerCaseNames = {
+        for (var e in entities) e.id: e.name.toLowerCase(),
+      };
+
       // Default sort: Overall first, then by name
       entities.sort((a, b) {
         if (a.type == BudgetType.overall && b.type != BudgetType.overall) {
@@ -172,7 +181,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
         if (a.type != BudgetType.overall && b.type == BudgetType.overall) {
           return 1;
         }
-        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+        return lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!);
       });
       log.info("[BudgetRepo] Retrieved and sorted ${entities.length} budgets.");
       return Right(entities);

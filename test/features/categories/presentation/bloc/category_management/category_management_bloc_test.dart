@@ -88,6 +88,24 @@ void main() {
     type: CategoryType.income,
   );
 
+  final tCategoryExpense2 = Category(
+    id: '3',
+    name: 'Apple',
+    iconName: 'food',
+    colorHex: 'FFFFFF',
+    isCustom: true,
+    type: CategoryType.expense,
+  );
+
+  final tCategoryIncome2 = Category(
+    id: '4',
+    name: 'Bonus',
+    iconName: 'cash',
+    colorHex: 'FFFFFF',
+    isCustom: false,
+    type: CategoryType.income,
+  );
+
   group('CategoryManagementBloc', () {
     test('initial state is correct', () {
       expect(bloc.state.status, CategoryManagementStatus.initial);
@@ -96,9 +114,14 @@ void main() {
     blocTest<CategoryManagementBloc, CategoryManagementState>(
       'LoadCategories emits [loading, loaded] with sorted categories on success',
       setUp: () {
-        when(
-          () => mockGetCategoriesUseCase(any()),
-        ).thenAnswer((_) async => Right([tCategoryExpense, tCategoryIncome]));
+        when(() => mockGetCategoriesUseCase(any())).thenAnswer(
+          (_) async => Right([
+            tCategoryExpense,
+            tCategoryIncome,
+            tCategoryExpense2,
+            tCategoryIncome2,
+          ]),
+        );
       },
       build: () => bloc,
       act: (bloc) => bloc.add(const LoadCategories(forceReload: true)),
@@ -113,12 +136,12 @@ void main() {
             .having(
               (s) => s.customExpenseCategories.length,
               'custom expense count',
-              1,
+              2,
             )
             .having(
               (s) => s.predefinedIncomeCategories.length,
               'predefined income count',
-              1,
+              2,
             ),
       ],
     );

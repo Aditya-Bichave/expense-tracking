@@ -49,6 +49,16 @@ void main() {
     createdAt: DateTime.now(), // Fixed: DateTime.now() instead of null
   );
 
+  final tBudget2 = Budget(
+    id: '2',
+    name: 'Apple',
+    targetAmount: 500,
+    type: BudgetType.categorySpecific,
+    period: BudgetPeriodType.oneTime,
+    categoryIds: ['cat2'],
+    createdAt: DateTime.now(),
+  );
+
   group('addBudget', () {
     test(
       'should call localDataSource.saveBudget and return Right(Budget)',
@@ -82,16 +92,21 @@ void main() {
   });
 
   group('getBudgets', () {
-    test('should return list of budgets from local source', () async {
+    test('should return sorted list of budgets from local source', () async {
       final tBudgetModel = BudgetModel.fromEntity(tBudget);
+      final tBudgetModel2 = BudgetModel.fromEntity(tBudget2);
       when(
         () => mockLocalDataSource.getBudgets(),
-      ).thenAnswer((_) async => [tBudgetModel]);
+      ).thenAnswer((_) async => [tBudgetModel, tBudgetModel2]);
 
       final result = await repository.getBudgets();
 
       expect(result.isRight(), true);
-      result.fold((l) => null, (r) => expect(r.first.id, tBudget.id));
+      result.fold((l) => null, (r) {
+        expect(r.length, 2);
+        // 'Apple' should come before 'Food' due to sorting
+        expect(r.first.id, tBudget2.id);
+      });
     });
   });
 
