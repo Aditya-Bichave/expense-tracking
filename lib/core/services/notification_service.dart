@@ -1,7 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 import 'package:simple_logger/simple_logger.dart';
@@ -104,10 +104,10 @@ class NotificationService {
     if (kIsWeb) {
       final webBrowserInfo = await deviceInfo.webBrowserInfo;
       return webBrowserInfo.userAgent ?? 'unknown_web';
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       final iosInfo = await deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ?? 'unknown_ios';
-    } else if (Platform.isAndroid) {
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
       final androidInfo = await deviceInfo.androidInfo;
       return androidInfo.id;
     } else {
@@ -118,9 +118,9 @@ class NotificationService {
   String _getPlatform() {
     if (kIsWeb) {
       return 'web';
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       return 'ios';
-    } else if (Platform.isAndroid) {
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
       return 'android';
     } else {
       return 'web';
