@@ -114,9 +114,14 @@ void main() {
     blocTest<CategoryManagementBloc, CategoryManagementState>(
       'LoadCategories emits [loading, loaded] with sorted categories on success',
       setUp: () {
-        when(
-          () => mockGetCategoriesUseCase(any()),
-        ).thenAnswer((_) async => Right([tCategoryExpense, tCategoryIncome, tCategoryExpense2, tCategoryIncome2]));
+        when(() => mockGetCategoriesUseCase(any())).thenAnswer(
+          (_) async => Right([
+            tCategoryExpense,
+            tCategoryIncome,
+            tCategoryExpense2,
+            tCategoryIncome2,
+          ]),
+        );
       },
       build: () => bloc,
       act: (bloc) => bloc.add(const LoadCategories(forceReload: true)),

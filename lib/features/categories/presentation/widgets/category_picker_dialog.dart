@@ -60,7 +60,9 @@ class _CategoryPickerDialogContentState
     // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during dialog load
     // Solution: Cache lowercased names outside the sort function
     // Impact: Improves dialog open speed by reducing CPU cycles and garbage collection
-    final lowerCaseNames = {for (var c in widget.categories) c.id: c.name.toLowerCase()};
+    final lowerCaseNames = {
+      for (var c in widget.categories) c.id: c.name.toLowerCase(),
+    };
 
     _allCategories =
         widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(

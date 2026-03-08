@@ -95,7 +95,9 @@ class CategoryManagementBloc
         // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
         // Solution: Cache lowercased names outside the sort function
         // Impact: Improves loading speed by reducing CPU cycles and garbage collection overhead
-        final lowerCaseNames = {for (var c in allCategories) c.id: c.name.toLowerCase()};
+        final lowerCaseNames = {
+          for (var c in allCategories) c.id: c.name.toLowerCase(),
+        };
 
         customExpense.sort(
           (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),

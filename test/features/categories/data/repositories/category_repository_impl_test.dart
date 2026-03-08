@@ -68,12 +68,12 @@ void main() {
       when(
         () => mockIncomeDataSource.getPredefinedCategories(),
       ).thenAnswer((_) async => []);
-      when(
-        () => mockLocalDataSource.getCustomCategories(),
-      ).thenAnswer((_) async => [
-            CategoryModel.fromEntity(tCategory),
-            CategoryModel.fromEntity(tCategory2),
-          ]);
+      when(() => mockLocalDataSource.getCustomCategories()).thenAnswer(
+        (_) async => [
+          CategoryModel.fromEntity(tCategory),
+          CategoryModel.fromEntity(tCategory2),
+        ],
+      );
 
       final result = await repository.getAllCategories();
 

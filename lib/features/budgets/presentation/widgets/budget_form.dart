@@ -73,12 +73,12 @@ class _BudgetFormState extends State<BudgetForm> {
     // Problem: .any() inside .where() creates an O(N*M) time complexity loop
     // Solution: Precompute a Set of available category IDs for O(1) lookups
     // Impact: Faster form initialization, eliminating a potential UI bottleneck
-    final availableCategoryIds = widget.availableCategories.map((c) => c.id).toSet();
+    final availableCategoryIds = widget.availableCategories
+        .map((c) => c.id)
+        .toSet();
     _selectedCategoryIds =
         initial?.categoryIds
-            ?.where(
-              (id) => availableCategoryIds.contains(id),
-            )
+            ?.where((id) => availableCategoryIds.contains(id))
             .toList() ??
         [];
     log.info(

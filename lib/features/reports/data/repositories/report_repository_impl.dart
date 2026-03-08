@@ -1002,10 +1002,13 @@ class ReportRepositoryImpl implements ReportRepository {
     // Problem: a.budget.name.toLowerCase() inside .sort() allocates O(N log N) strings
     // Solution: Cache lowercased names outside the sort function
     // Impact: Faster report generation for users with many budgets
-    final lowerCaseNames = {for (var p in performanceList) p.budget.id: p.budget.name.toLowerCase()};
+    final lowerCaseNames = {
+      for (var p in performanceList) p.budget.id: p.budget.name.toLowerCase(),
+    };
 
     performanceList.sort(
-      (a, b) => lowerCaseNames[a.budget.id]!.compareTo(lowerCaseNames[b.budget.id]!),
+      (a, b) =>
+          lowerCaseNames[a.budget.id]!.compareTo(lowerCaseNames[b.budget.id]!),
     );
     log.fine(
       "[ReportRepo:_calculateBudgetPerformance] Calculated performance for ${performanceList.length} budgets.",
