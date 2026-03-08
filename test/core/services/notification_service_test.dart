@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
-import 'dart:io';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
@@ -45,22 +44,59 @@ void main() {
   );
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-        return {
-          'name': 'test',
-          'systemName': 'test',
-          'systemVersion': 'test',
-          'model': 'test',
-          'localizedModel': 'test',
-          'identifierForVendor': 'test-device-id',
-          'isPhysicalDevice': true,
-          'utsname': {
-            'sysname': 'test',
-            'nodename': 'test',
-            'release': 'test',
-            'version': 'test',
-            'machine': 'test',
-          },
-        };
+        if (methodCall.method == 'getDeviceInfo') {
+          if (defaultTargetPlatform == TargetPlatform.iOS) {
+            return {
+              'name': 'test',
+              'systemName': 'test',
+              'systemVersion': 'test',
+              'model': 'test',
+              'localizedModel': 'test',
+              'identifierForVendor': 'test-device-id',
+              'isPhysicalDevice': true,
+              'utsname': {
+                'sysname': 'test',
+                'nodename': 'test',
+                'release': 'test',
+                'version': 'test',
+                'machine': 'test',
+              },
+            };
+          } else if (defaultTargetPlatform == TargetPlatform.android) {
+            return {
+              'id': 'test-device-id',
+              'host': 'test',
+              'tags': 'test',
+              'type': 'test',
+              'model': 'test',
+              'board': 'test',
+              'brand': 'test',
+              'device': 'test',
+              'product': 'test',
+              'display': 'test',
+              'hardware': 'test',
+              'bootloader': 'test',
+              'manufacturer': 'test',
+              'fingerprint': 'test',
+              'isPhysicalDevice': true,
+              'systemFeatures': ['test'],
+              'serialNumber': 'test',
+              'version': {
+                'baseOS': 'test',
+                'codename': 'test',
+                'incremental': 'test',
+                'previewSdkInt': 1,
+                'release': 'test',
+                'securityPatch': 'test',
+                'sdkInt': 1,
+              },
+              'supported32BitAbis': ['test'],
+              'supported64BitAbis': ['test'],
+              'supportedAbis': ['test'],
+            };
+          }
+        }
+        return {};
       });
 
   late MockSupabaseClient mockSupabaseClient;
@@ -117,6 +153,97 @@ void main() {
   });
 
   group('NotificationService', () {
+    test('getDeviceId and getPlatform cover android', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'token');
+      when(
+        () => mockQueryBuilder.upsert(any()),
+      ).thenAnswer((_) => mockFilterBuilder);
+
+      await notificationService.syncDeviceToken();
+
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('getDeviceId and getPlatform cover iOS', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'token');
+      when(
+        () => mockQueryBuilder.upsert(any()),
+      ).thenAnswer((_) => mockFilterBuilder);
+
+      await notificationService.syncDeviceToken();
+
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('getDeviceId and getPlatform cover unknown platform', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'token');
+      when(
+        () => mockQueryBuilder.upsert(any()),
+      ).thenAnswer((_) => mockFilterBuilder);
+
+      await notificationService.syncDeviceToken();
+
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('syncDeviceToken handles token refresh', () async {
+      final streamController = StreamController<String>();
+      when(
+        () => mockFirebaseMessaging.onTokenRefresh,
+      ).thenAnswer((_) => streamController.stream);
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'initial-token');
+
+      await notificationService.syncDeviceToken();
+
+      // Simulate token refresh
+      streamController.add('new-token');
+      await Future.delayed(Duration.zero);
+
+      verify(() => mockSupabaseClient.from(any())).called(greaterThan(0));
+
+      await streamController.close();
+    });
+
+    test('syncDeviceToken handles token refresh error', () async {
+      final streamController = StreamController<String>();
+      when(
+        () => mockFirebaseMessaging.onTokenRefresh,
+      ).thenAnswer((_) => streamController.stream);
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'initial-token');
+
+      await notificationService.syncDeviceToken();
+
+      // Simulate token refresh error
+      streamController.addError(Exception('refresh error'));
+      await Future.delayed(Duration.zero);
+
+      await streamController.close();
+    });
+
+    test('syncDeviceToken handles upsert error', () async {
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'token');
+      when(
+        () => mockQueryBuilder.upsert(any()),
+      ).thenThrow(Exception('upsert error'));
+
+      await notificationService.syncDeviceToken();
+    });
+
     test('syncDeviceToken does nothing if user declines permission', () async {
       when(
         () => mockSettings.authorizationStatus,

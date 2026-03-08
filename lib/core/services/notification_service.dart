@@ -8,24 +8,28 @@ import 'package:simple_logger/simple_logger.dart';
 
 class NotificationService {
   final SupabaseClient _supabase;
-  final FirebaseMessaging _fcm;
+  final FirebaseMessaging? _fcmInstance;
   final SimpleLogger _log = SimpleLogger();
 
   NotificationService({SupabaseClient? supabase, FirebaseMessaging? fcm})
     : _supabase = supabase ?? Supabase.instance.client,
-      _fcm = fcm ?? FirebaseMessaging.instance;
+      _fcmInstance = fcm;
+
+  FirebaseMessaging _getFcm() {
+    return _fcmInstance ?? FirebaseMessaging.instance;
+  }
 
   Future<void> syncDeviceToken() async {
     try {
       // 1. Request Permission
-      NotificationSettings settings = await _fcm.requestPermission();
+      NotificationSettings settings = await _getFcm().requestPermission();
       if (settings.authorizationStatus != AuthorizationStatus.authorized) {
         _log.info('User declined or has not accepted notification permissions');
         return;
       }
 
       // 2. Get FCM Token
-      String? token = await _fcm.getToken();
+      String? token = await _getFcm().getToken();
       if (token == null) {
         _log.warning('Failed to get FCM token');
         return;
@@ -45,7 +49,7 @@ class NotificationService {
       await _upsertToken(currentUser.id, deviceId, token, platform);
 
       // 5. Listen for token refreshes
-      _fcm.onTokenRefresh
+      _getFcm().onTokenRefresh
           .listen((newToken) async {
             final user = _supabase.auth.currentUser;
             if (user != null) {
@@ -93,7 +97,7 @@ class NotificationService {
           .eq('device_id', deviceId);
 
       // Also delete the token locally from firebase messaging so it can regenerate properly next time
-      await _fcm.deleteToken();
+      await _getFcm().deleteToken();
     } catch (e, s) {
       _log.severe('Error deleting device token: $e\n$s');
     }
