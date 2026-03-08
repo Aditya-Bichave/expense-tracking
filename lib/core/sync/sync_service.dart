@@ -44,11 +44,7 @@ class SyncService {
       } else {
         // Online: Do not emit 'synced' here to avoid flicker.
         // processOutbox will emit 'syncing' then 'synced'/'error'.
-        unawaited(
-          processOutbox().catchError(
-            (e, s) => log.severe('Background task failed: $e\n$s'),
-          ),
-        );
+        unawaited(processOutbox());
       }
     });
   }
@@ -154,11 +150,7 @@ class SyncService {
 
       if (localMember == null) {
         _groupMemberBox.put(serverMember.id, serverMember);
-        unawaited(
-          _ensureGroupExists(
-            serverMember.groupId,
-          ).catchError((e, s) => log.severe('Background task failed: $e\n$s')),
-        );
+        unawaited(_ensureGroupExists(serverMember.groupId));
       } else {
         // Last-Write-Wins check for member
         if (serverMember.updatedAt.isAfter(localMember.updatedAt)) {

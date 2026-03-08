@@ -53,9 +53,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
       if (connectivityResult.contains(ConnectivityResult.mobile) ||
           connectivityResult.contains(ConnectivityResult.wifi)) {
         unawaited(
-          _syncService.processOutbox().catchError(
-            (e, s) => log.severe('Background task failed: $e\n$s'),
-          ),
+          _syncService.processOutbox().catchError((e, s) {
+            log.severe("Failed to process outbox in background: $e\n$s");
+          }),
         );
       }
 
