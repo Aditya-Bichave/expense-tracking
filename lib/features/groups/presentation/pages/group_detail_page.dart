@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
@@ -108,7 +109,9 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                       // Viewers cannot add, edit, or settle
                       canAddExpense = member.role != GroupRole.viewer;
                       canEdit = member.role != GroupRole.viewer;
-                    } catch (_) {}
+                    } catch (e, s) {
+                      log.severe('Silent failure: $e\n$s');
+                    }
                   }
                 }
 

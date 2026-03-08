@@ -2,6 +2,10 @@ import 'package:expense_tracker/features/recurring_transactions/domain/entities/
 import 'package:expense_tracker/features/recurring_transactions/domain/entities/recurring_rule_enums.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:expense_tracker/core/utils/currency_formatter.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:intl/intl.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
@@ -18,6 +22,7 @@ class RecurringRuleListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currency = context.watch<SettingsBloc>().state.currencySymbol;
     final theme = Theme.of(context);
     return BridgeCard(
       margin: EdgeInsets.symmetric(
@@ -63,7 +68,7 @@ class RecurringRuleListItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${rule.transactionType == TransactionType.expense ? '-' : '+'}${rule.amount.toStringAsFixed(2)}',
+                    '${rule.transactionType == TransactionType.expense ? '-' : '+'} ${CurrencyFormatter.format(rule.amount, currency)}',
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: rule.transactionType == TransactionType.expense
                           ? context.kit.colors.danger

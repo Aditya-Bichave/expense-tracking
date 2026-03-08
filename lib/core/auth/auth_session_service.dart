@@ -5,9 +5,10 @@ class AuthSessionService {
   final SupabaseClient _client;
   final StreamController<User?> _userController =
       StreamController<User?>.broadcast();
+  StreamSubscription<AuthState>? _authSubscription;
 
   AuthSessionService(this._client) {
-    _client.auth.onAuthStateChange.listen((data) {
+    _authSubscription = _client.auth.onAuthStateChange.listen((data) {
       _userController.add(data.session?.user);
     });
   }
@@ -23,6 +24,7 @@ class AuthSessionService {
   }
 
   void dispose() {
+    _authSubscription?.cancel();
     _userController.close();
   }
 }

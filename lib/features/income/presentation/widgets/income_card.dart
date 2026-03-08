@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
@@ -36,7 +37,9 @@ class IncomeCard extends StatelessWidget {
     IconData fallbackIcon = Icons.attach_money;
     try {
       fallbackIcon = _getElementalIncomeCategoryIcon(category.name);
-    } catch (_) {}
+    } catch (e, s) {
+      log.severe('Silent failure: $e\n$s');
+    }
     if (modeTheme != null) {
       String svgPath = modeTheme.assets.getCategoryIcon(
         category.iconName,

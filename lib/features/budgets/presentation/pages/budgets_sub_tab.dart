@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/budgets/presentation/pages/budgets_sub_tab.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
@@ -119,7 +120,9 @@ class BudgetsSubTab extends StatelessWidget {
                       orElse: () => state,
                     )
                     .timeout(const Duration(seconds: 3));
-              } catch (_) {}
+              } catch (e, s) {
+                log.severe('Silent failure: $e\n$s');
+              }
             },
             child: content,
           );

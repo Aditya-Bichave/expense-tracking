@@ -140,7 +140,6 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
               value: category.id,
               child: Row(
                 children: [
-                  // TODO(#1): Add category icon rendering here later
                   Icon(Icons.circle, color: category.displayColor, size: 12),
                   const SizedBox(width: 8),
                   Text(category.name, overflow: TextOverflow.ellipsis),
