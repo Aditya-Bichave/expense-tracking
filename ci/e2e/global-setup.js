@@ -85,6 +85,22 @@ module.exports = async function globalSetup() {
     const { session } = authData;
     console.log(`[E2E] ✅ Authenticated as: ${authData.user?.email}`);
 
+    // Ensure user has a profile so SessionCubit doesn't block routes with SessionNeedsProfileSetup
+    console.log(`[E2E] Upserting user profile to bypass /profile-setup redirect...`);
+    const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+            id: session.user.id,
+            full_name: 'E2E Tester',
+            currency: 'USD',
+            timezone: 'UTC'
+        });
+    if (profileError) {
+        console.warn(`[E2E] Failed to upsert profile: ${profileError.message}. This might cause /profile-setup redirects.`);
+    } else {
+        console.log(`[E2E] ✅ Profile upserted successfully.`);
+    }
+
     // Build the session JSON string that Supabase Flutter SDK stores in localStorage
     // The Flutter supabase_flutter package stores the full auth response JSON
     const sessionJson = JSON.stringify({

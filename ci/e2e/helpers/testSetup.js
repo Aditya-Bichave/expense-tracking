@@ -34,16 +34,17 @@ function setupErrorCollector(page, pageErrors) {
 
 /**
  * Perform client-side navigation within Flutter Web to avoid deep-link boot crashes.
+ * Uses Hash routing by default as `usePathUrlStrategy` is not enabled in main.dart.
  * @param {import('@playwright/test').Page} page
  * @param {string} path
  */
 async function navigateClientSide(page, path) {
     await page.evaluate(() => { window.E2E_FLUTTER_READY = false; });
     await page.evaluate((r) => {
-        window.history.pushState({}, '', r);
-        window.dispatchEvent(new Event('popstate'));
+        // Flutter web defaults to hash routing
+        window.location.hash = r.startsWith('/') ? r : '/' + r;
     }, path);
-    await page.waitForURL(`**${path}*`, { timeout: 10000 });
+    await page.waitForURL(`**/*#${path}*`, { timeout: 10000 });
     await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
     await page.waitForTimeout(FLUTTER_RENDER_WAIT);
 }
