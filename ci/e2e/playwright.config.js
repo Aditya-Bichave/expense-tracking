@@ -8,14 +8,16 @@ const PORT = 8080;
 
 module.exports = defineConfig({
     testDir: './tests',
-    fullyParallel: true,       // Flutter canvas tests are sequential-friendly
+    fullyParallel: true,       // Run tests in parallel but bounded by workers
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 4 : undefined,                 // Single worker — Flutter web is heavy
-    timeout: 30_000,            // 45s per test (Reduced from 90s)
+    // Limit workers on CI to prevent CPU/Memory starvation which causes Flutter web initialization to timeout
+    workers: process.env.CI ? 1 : undefined,
+    timeout: 60_000,            // 60s per test to allow Flutter engine to boot safely under load
 
     reporter: [
         ['list'],
+        ['./helpers/coverageReporter.js', { outputFile: './test-results/e2e-coverage.json' }],
         ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ],
 

@@ -39,7 +39,7 @@ class SessionCubit extends Cubit<SessionState> {
     return super.close();
   }
 
-  Future<void> checkSession() async {
+  Future<void> checkSession({bool background = false}) async {
     final userResult = _authRepository.getCurrentUser();
     await userResult.fold((failure) async => emit(SessionUnauthenticated()), (
       user,
@@ -57,18 +57,18 @@ class SessionCubit extends Cubit<SessionState> {
         return;
       }
 
-      await _loadProfile(user);
+      await _loadProfile(user, background: background);
     });
   }
 
-  Future<void> _loadProfile(User user) async {
+  Future<void> _loadProfile(User user, {bool background = false}) async {
     final localResult = await _profileRepository.getProfile(
       forceRefresh: false,
     );
 
     localResult.fold(
       (failure) async {
-        await _fetchRemoteProfile(user);
+        await _fetchRemoteProfile(user, background: background);
       },
       (profile) {
         _validateAndEmit(user, profile);
