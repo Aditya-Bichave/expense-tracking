@@ -2,8 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 const COVERAGE_FILE = process.argv[2] || 'ci/e2e/test-results/e2e-coverage.json';
+const OUTPUT_FILE = process.argv[3] || path.join(path.dirname(COVERAGE_FILE), 'e2e_coverage_summary.md');
 
-// Expected critical flows for FinancialOS
+// The EXPECTED_FLOWS array must be kept in sync with the @flow:xxx tags used in test files.
+// If a new test flow is introduced, it must be added to this list for proper coverage tracking.
+// TODO: Consider extracting this to a shared config if it grows larger.
 const EXPECTED_FLOWS = [
     'auth',
     'dashboard',
@@ -13,12 +16,13 @@ const EXPECTED_FLOWS = [
     'groups'
 ];
 
-if (!fs.existsSync(COVERAGE_FILE)) {
-    console.error(`Coverage file not found: ${COVERAGE_FILE}`);
+let data;
+try {
+    data = JSON.parse(fs.readFileSync(COVERAGE_FILE, 'utf8'));
+} catch (e) {
+    console.error(`Failed to read or parse coverage file at ${COVERAGE_FILE}:`, e);
     process.exit(1);
 }
-
-const data = JSON.parse(fs.readFileSync(COVERAGE_FILE, 'utf8'));
 
 let coveredFlows = 0;
 const flowDetails = [];
@@ -43,8 +47,14 @@ const markdown = `
 | --- | --- | --- |
 ${flowDetails.join('\n')}
 
-**Test Summary:** ${data.passedTests} passed, ${data.failedTests} failed.
+**Test Summary:** ${data.passedTests} passed, ${data.failedTests} failed, ${data.skippedTests || 0} skipped.
 `;
 
-fs.writeFileSync('e2e_coverage_summary.md', markdown.trim());
-console.log(`E2E Coverage Analysis complete. Coverage: ${coveragePct}%`);
+const resolvedOutputPath = path.resolve(OUTPUT_FILE);
+try {
+    fs.writeFileSync(resolvedOutputPath, markdown.trim());
+    console.log(`E2E Coverage Analysis complete. Coverage: ${coveragePct}%`);
+} catch (e) {
+    console.error(`Failed to write markdown summary to ${resolvedOutputPath}:`, e);
+    process.exit(1);
+}

@@ -1,5 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const { setupErrorCollector } = require('../helpers/testSetup');
 
 /**
  * Transaction tests — verifies the transaction list and add-expense wizard
@@ -28,11 +29,13 @@ const filterFatalErrors = (errors) => {
  * @param {string} path
  */
 async function navigateClientSide(page, path) {
+    await page.evaluate(() => { window.E2E_FLUTTER_READY = false; });
     await page.evaluate((r) => {
         window.history.pushState({}, '', r);
         window.dispatchEvent(new Event('popstate'));
     }, path);
     await page.waitForURL(`**${path}*`, { timeout: 10000 });
+    await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
     await page.waitForTimeout(FLUTTER_RENDER_WAIT);
 }
 
@@ -42,13 +45,7 @@ test.describe('Transactions @flow:transactions', () => {
 
     test.beforeEach(async ({ page }) => {
         pageErrors = [];
-        page.on('console', msg => {
-            console.log(`[BROWSER LOG] ${msg.text()}`);
-        });
-        page.on('pageerror', err => {
-            console.log(`[BROWSER FATAL] ${err.message}`);
-            pageErrors.push(err.message);
-        });
+        setupErrorCollector(page, pageErrors);
     });
 
     test('transactions list page loads without errors', async ({ page }) => {
@@ -89,13 +86,7 @@ test.describe('Reports @flow:reports', () => {
 
     test.beforeEach(async ({ page }) => {
         pageErrors = [];
-        page.on('console', msg => {
-            console.log(`[BROWSER LOG] ${msg.text()}`);
-        });
-        page.on('pageerror', err => {
-            console.log(`[BROWSER FATAL] ${err.message}`);
-            pageErrors.push(err.message);
-        });
+        setupErrorCollector(page, pageErrors);
     });
 
     for (const route of reportRoutes) {

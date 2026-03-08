@@ -9,6 +9,7 @@ class FlowCoverageReporter {
             totalTests: 0,
             passedTests: 0,
             failedTests: 0,
+            skippedTests: 0,
             flows: {},
             features: {}
         };
@@ -18,17 +19,20 @@ class FlowCoverageReporter {
         this.coverageData.totalTests++;
         if (result.status === 'passed') {
             this.coverageData.passedTests++;
-        } else {
+        } else if (result.status === 'failed') {
             this.coverageData.failedTests++;
+        } else {
+            this.coverageData.skippedTests++;
         }
 
-        // Extract tags like @flow:auth, @feature:add-expense
-        const titleAndTags = test.title + ' ' + (test.tags ? test.tags.join(' ') : '');
+        // Extract tags like @flow:auth, @feature:add-expense from the full title path
+        const titleAndTags = test.titlePath().join(' ') + ' ' + (test.tags ? test.tags.join(' ') : '');
         const flowMatches = titleAndTags.match(/@flow:([\w-]+)/g);
         const featureMatches = titleAndTags.match(/@feature:([\w-]+)/g);
 
         if (flowMatches) {
-            flowMatches.forEach(tag => {
+            // Use a Set to avoid double-counting if the tag appears in both describe and test title
+            [...new Set(flowMatches)].forEach(tag => {
                 const flowName = tag.replace('@flow:', '');
                 if (!this.coverageData.flows[flowName]) {
                     this.coverageData.flows[flowName] = { passed: 0, failed: 0, total: 0 };
@@ -36,14 +40,14 @@ class FlowCoverageReporter {
                 this.coverageData.flows[flowName].total++;
                 if (result.status === 'passed') {
                     this.coverageData.flows[flowName].passed++;
-                } else {
+                } else if (result.status === 'failed') {
                     this.coverageData.flows[flowName].failed++;
                 }
             });
         }
 
         if (featureMatches) {
-            featureMatches.forEach(tag => {
+            [...new Set(featureMatches)].forEach(tag => {
                 const featureName = tag.replace('@feature:', '');
                 if (!this.coverageData.features[featureName]) {
                     this.coverageData.features[featureName] = { passed: 0, failed: 0, total: 0 };
@@ -51,7 +55,7 @@ class FlowCoverageReporter {
                 this.coverageData.features[featureName].total++;
                 if (result.status === 'passed') {
                     this.coverageData.features[featureName].passed++;
-                } else {
+                } else if (result.status === 'failed') {
                     this.coverageData.features[featureName].failed++;
                 }
             });
@@ -60,15 +64,19 @@ class FlowCoverageReporter {
 
     async onEnd(result) {
         const outDir = path.dirname(this.outputFile);
-        if (!fs.existsSync(outDir)) {
-            fs.mkdirSync(outDir, { recursive: true });
-        }
+        try {
+            if (!fs.existsSync(outDir)) {
+                fs.mkdirSync(outDir, { recursive: true });
+            }
 
-        fs.writeFileSync(
-            this.outputFile,
-            JSON.stringify(this.coverageData, null, 2)
-        );
-        console.log(`[Coverage Reporter] Flow coverage written to ${this.outputFile}`);
+            fs.writeFileSync(
+                this.outputFile,
+                JSON.stringify(this.coverageData, null, 2)
+            );
+            console.log(`[Coverage Reporter] Flow coverage written to ${this.outputFile}`);
+        } catch (e) {
+            console.error(`[Coverage Reporter] Error writing flow coverage to ${this.outputFile}:`, e);
+        }
     }
 }
 

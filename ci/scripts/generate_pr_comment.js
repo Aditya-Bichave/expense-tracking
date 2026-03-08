@@ -150,7 +150,9 @@ function getE2ECoverage() {
         }
     });
   } else {
-    expectedFlows.forEach(flow => summary.push(`- **${flow}**: ❌ (0/0)`));
+    expectedFlows.forEach(flow => {
+        summary.push(`- **${flow}**: ❌ (0/0)`);
+    });
   }
 
   const coveragePct = Math.round((coveredFlows / expectedFlows.length) * 100);

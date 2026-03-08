@@ -1,5 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const { setupErrorCollector } = require('../helpers/testSetup');
 
 const FLUTTER_READY_TIMEOUT = 30_000;
 
@@ -18,13 +19,7 @@ test.describe('Budgets @flow:budget', () => {
 
     test.beforeEach(async ({ page }) => {
         pageErrors = [];
-        page.on('console', msg => {
-            console.log(`[BROWSER LOG] ${msg.text()}`);
-        });
-        page.on('pageerror', err => {
-            console.log(`[BROWSER FATAL] ${err.message}`);
-            pageErrors.push(err.message);
-        });
+        setupErrorCollector(page, pageErrors);
     });
 
     test('budgets list page loads without errors', async ({ page }) => {

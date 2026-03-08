@@ -1,5 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const { setupErrorCollector } = require('../helpers/testSetup');
 
 /**
  * Auth tests — verify that the globalSetup session injection works and
@@ -14,13 +15,7 @@ test.describe('Authentication @flow:auth', () => {
 
     test.beforeEach(async ({ page }) => {
         pageErrors = [];
-        page.on('console', msg => {
-            console.log(`[BROWSER LOG] ${msg.text()}`);
-        });
-        page.on('pageerror', err => {
-            console.log(`[BROWSER FATAL] ${err.message}`);
-            pageErrors.push(err.message);
-        });
+        setupErrorCollector(page, pageErrors);
     });
 
     test('authenticated user lands on dashboard (not login)', async ({ page }) => {
@@ -43,12 +38,14 @@ test.describe('Authentication @flow:auth', () => {
         // This tests the fix for the BlocProvider<ProfileBloc> missing issue.
         await page.goto('/dashboard');
         await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
-        // Force navigate to profile-setup
-        await page.goto('/profile-setup');
-        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: 30000 });
 
-        // Wait a bit to ensure rendering
-        await page.waitForTimeout(2000);
+        // Force navigate to profile-setup
+        await page.evaluate(() => { window.E2E_FLUTTER_READY = false; });
+        await page.goto('/profile-setup');
+        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+
+        // Wait explicitly for Flutter semantics host to attach, asserting the page rendered correctly
+        await expect(page.locator('flt-semantics-host')).toBeAttached({ timeout: 15000 });
 
         // Take a screenshot for visual inspection
         await page.screenshot({ path: 'test-results/profile-setup.png', fullPage: true });

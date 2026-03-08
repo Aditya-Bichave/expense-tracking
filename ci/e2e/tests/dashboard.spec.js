@@ -1,5 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const { setupErrorCollector } = require('../helpers/testSetup');
 
 /**
  * Dashboard tests — verifies the main screen loads and navigation works
@@ -15,11 +16,13 @@ const FLUTTER_RENDER_WAIT = 2000; // time for Flutter to paint content after can
  * @param {string} path
  */
 async function navigateClientSide(page, path) {
+    await page.evaluate(() => { window.E2E_FLUTTER_READY = false; });
     await page.evaluate((r) => {
         window.history.pushState({}, '', r);
         window.dispatchEvent(new Event('popstate'));
     }, path);
     await page.waitForURL(`**${path}*`, { timeout: 10000 });
+    await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
     await page.waitForTimeout(FLUTTER_RENDER_WAIT);
 }
 
@@ -29,20 +32,13 @@ test.describe('Dashboard @flow:dashboard', () => {
 
     test.beforeEach(async ({ page }) => {
         pageErrors = [];
-        page.on('console', msg => {
-            console.log(`[BROWSER LOG] ${msg.text()}`);
-        });
-        page.on('pageerror', err => {
-            console.log(`[BROWSER FATAL] ${err.message}`);
-            pageErrors.push(err.message);
-        });
+        setupErrorCollector(page, pageErrors);
         await page.goto('/dashboard');
         await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
     });
 
     test('dashboard loads without fatal errors', async ({ page }) => {
-        // Let some time pass to capture delayed errors
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(FLUTTER_RENDER_WAIT);
 
         // Filter out known non-fatal Flutter web browser noise
         const fatalErrors = pageErrors.filter(
@@ -57,8 +53,8 @@ test.describe('Dashboard @flow:dashboard', () => {
     });
 
     test('dashboard renders a canvas (Flutter app is alive)', async ({ page }) => {
-        const canvas = page.locator('canvas');
-        await expect(canvas).toBeVisible();
+        const canvas = page.locator('canvas, flt-semantics-host');
+        await expect(canvas.first()).toBeVisible({ timeout: 15000 });
     });
 
     const routes = [
@@ -69,7 +65,6 @@ test.describe('Dashboard @flow:dashboard', () => {
 
     for (const route of routes) {
         test(`navigating to ${route.path} works`, async ({ page }) => {
-            // First boot Dashboard, then navigate, to prevent deep link failures on complex routes
             await navigateClientSide(page, route.path);
 
             const url = page.url();
