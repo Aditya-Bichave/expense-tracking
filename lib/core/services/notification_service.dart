@@ -2,6 +2,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+
 import 'package:simple_logger/simple_logger.dart';
 
 class NotificationService {
@@ -99,19 +101,24 @@ class NotificationService {
 
   Future<String> _getDeviceId() async {
     final deviceInfo = DeviceInfoPlugin();
-    if (Platform.isIOS) {
+    if (kIsWeb) {
+      final webBrowserInfo = await deviceInfo.webBrowserInfo;
+      return webBrowserInfo.userAgent ?? 'unknown_web';
+    } else if (Platform.isIOS) {
       final iosInfo = await deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ?? 'unknown_ios';
     } else if (Platform.isAndroid) {
       final androidInfo = await deviceInfo.androidInfo;
       return androidInfo.id;
     } else {
-      return 'unknown_web_or_desktop';
+      return 'unknown_desktop';
     }
   }
 
   String _getPlatform() {
-    if (Platform.isIOS) {
+    if (kIsWeb) {
+      return 'web';
+    } else if (Platform.isIOS) {
       return 'ios';
     } else if (Platform.isAndroid) {
       return 'android';

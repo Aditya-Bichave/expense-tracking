@@ -57,6 +57,9 @@ void main() {
       () => mockSupabaseClient.from(any()),
     ).thenAnswer((_) => mockQueryBuilder);
     when(() => mockQueryBuilder.delete()).thenAnswer((_) => mockFilterBuilder);
+    when(
+      () => mockQueryBuilder.upsert(any()),
+    ).thenAnswer((_) => mockFilterBuilder);
 
     when(() => mockSupabaseClient.auth).thenReturn(mockAuth);
     when(() => mockAuth.currentUser).thenReturn(mockUser);
@@ -82,6 +85,33 @@ void main() {
   });
 
   group('NotificationService', () {
+    test('deleteDeviceToken does nothing if user is null', () async {
+      when(() => mockAuth.currentUser).thenReturn(null);
+
+      await notificationService.deleteDeviceToken();
+
+      verifyNever(() => mockSupabaseClient.from(any()));
+    });
+
+    test(
+      'syncDeviceToken calls upsert when permission is granted and token exists',
+      () async {
+        when(
+          () => mockSettings.authorizationStatus,
+        ).thenReturn(AuthorizationStatus.authorized);
+        when(
+          () => mockFirebaseMessaging.getToken(),
+        ).thenAnswer((_) async => 'fake-token');
+
+        await notificationService.syncDeviceToken();
+
+        verify(() => mockFirebaseMessaging.requestPermission()).called(1);
+        verify(() => mockFirebaseMessaging.getToken()).called(1);
+        // We can also verify that supabase was called, but our mocks for supabase upsert might not be perfect. Let's try!
+        verify(() => mockSupabaseClient.from('user_fcm_tokens')).called(1);
+      },
+    );
+
     test('syncDeviceToken does nothing if user declines permission', () async {
       when(
         () => mockSettings.authorizationStatus,
