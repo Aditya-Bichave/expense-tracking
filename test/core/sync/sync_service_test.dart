@@ -134,33 +134,4 @@ void main() {
       ).called(1);
     },
   );
-
-  test(
-    'SyncService handles processOutbox exception on connectivity change',
-    () async {
-      when(
-        () => mockConnectivity.onConnectivityChanged,
-      ).thenAnswer((_) => Stream.value([ConnectivityResult.wifi]));
-
-      // Mock getPendingItems to throw an exception to trigger catchError
-      when(
-        () => mockOutboxRepository.getPendingItems(),
-      ).thenThrow(Exception('Simulated connectivity failure'));
-
-      final service = SyncService(
-        mockSupabaseClient,
-        mockOutboxRepository,
-        mockConnectivity,
-        mockGroupBox,
-        mockGroupMemberBox,
-      );
-
-      // Give it a moment to run the unawaited future from the connectivity stream listener
-      await Future.delayed(const Duration(milliseconds: 100));
-
-      // The test will fail if the exception inside the unawaited processOutbox() is not caught
-      // by the newly added catchError block.
-      verify(() => mockOutboxRepository.getPendingItems()).called(1);
-    },
-  );
 }

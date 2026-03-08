@@ -1,0 +1,12 @@
+-------------
+Diff Coverage
+Diff: origin/main...HEAD, staged and unstaged changes
+-------------
+lib/core/data/countries.dart (100%)
+lib/features/groups/data/repositories/groups_repository_impl.dart (66.7%): Missing lines 57
+lib/features/reports/data/repositories/report_repository_impl.dart (100%)
+-------------
+Total:   8 lines
+Missing: 1 line
+Coverage: 87%
+-------------

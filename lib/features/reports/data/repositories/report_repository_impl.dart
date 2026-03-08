@@ -187,11 +187,7 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
-      final currentData = currentDataEither.getOrElse(
-        () => throw StateError(
-          "Current data fetch failed",
-        ), // Unreachable due to isLeft check above
-      );
+      final currentData = currentDataEither.fold((_) => throw StateError(""), (d) => d);
 
       // Process Previous Data
       Map<String, CategorySpendingData> previousCategoryMap = {};
@@ -417,11 +413,7 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
-      final currentData = currentDataEither.getOrElse(
-        () => throw StateError(
-          "Current data calculation failed",
-        ), // Unreachable due to isLeft check above
-      );
+      final currentData = currentDataEither.fold((_) => throw StateError(""), (d) => d);
 
       // Process Previous Data
       Map<DateTime, TimeSeriesDataPoint> previousDataMap = {};
@@ -614,11 +606,7 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
-      final currentData = currentDataEither.getOrElse(
-        () => throw StateError(
-          "Current data calculation failed",
-        ), // Unreachable due to isLeft check above
-      );
+      final currentData = currentDataEither.fold((_) => throw StateError(""), (d) => d);
 
       // Process Previous Data
       Map<DateTime, IncomeExpensePeriodData> previousDataMap = {};
@@ -793,11 +781,7 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentPerformanceEither = results[0];
       if (currentPerformanceEither.isLeft()) return currentPerformanceEither;
-      final currentPerformanceReport = currentPerformanceEither.getOrElse(
-        () => throw StateError(
-          "Current data failed",
-        ), // Unreachable due to isLeft check above
-      );
+      final currentPerformanceReport = currentPerformanceEither.fold((_) => throw StateError(""), (d) => d);
 
       // Process Previous Data
       Map<String, BudgetPerformanceData> previousDataMap = {};

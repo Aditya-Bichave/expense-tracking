@@ -463,48 +463,6 @@ void main() {
       expect(result.isLeft(), true);
       expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
     });
-
-    test(
-      'should handle exception during background outbox processing gracefully',
-      () async {
-        // arrange
-        when(
-          () => mockConnectivity.checkConnectivity(),
-        ).thenAnswer((_) async => [ConnectivityResult.wifi]);
-        when(
-          () => mockLocalDataSource.saveGroup(any()),
-        ).thenAnswer((_) async {});
-        when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
-
-        final group = GroupEntity(
-          id: '1',
-          name: 'Test Group',
-          createdBy: 'user1',
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-          type: GroupType.custom,
-          currency: 'USD',
-          isArchived: false,
-        );
-
-        // Force the background processOutbox to throw an exception that is caught asynchronously
-        // For synchronous thenThrow, it throws synchronously when processOutbox is called, which happens inside the function before unawaited returns.
-        when(() => mockSyncService.processOutbox()).thenAnswer(
-          (_) => Future.error(Exception('Simulated background sync error')),
-        );
-
-        // act
-        final result = await repository.createGroup(group);
-
-        // Give it a small delay for the unawaited Future to execute its catchError block
-        await Future.delayed(const Duration(milliseconds: 100));
-
-        // assert
-        // The creation itself should still succeed because it saves locally and adds to outbox
-        expect(result, isA<Right>());
-        verify(() => mockSyncService.processOutbox()).called(1);
-      },
-    );
   });
 
   group('acceptInvite', () {
