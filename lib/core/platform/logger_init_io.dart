@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
@@ -7,7 +8,9 @@ Future<void> initFileLogger() async {
   try {
     final dir = await getApplicationDocumentsDirectory();
     _startupLogFile = File('${dir.path}/startup.log');
-  } catch (_) {}
+  } catch (e, s) {
+    log.severe('Silent failure: $e\n$s');
+  }
 }
 
 Future<void> writeStartupLog(String message) async {
@@ -17,5 +20,7 @@ Future<void> writeStartupLog(String message) async {
       final timestamp = DateTime.now().toIso8601String();
       await file.writeAsString('$timestamp $message\n', mode: FileMode.append);
     }
-  } catch (_) {}
+  } catch (e, s) {
+    log.severe('Silent failure: $e\n$s');
+  }
 }

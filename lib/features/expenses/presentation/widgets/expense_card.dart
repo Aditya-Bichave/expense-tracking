@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/expenses/presentation/widgets/expense_card.dart
 // MODIFIED FILE (UI Kit Migration)
 
@@ -38,7 +39,9 @@ class ExpenseCard extends StatelessWidget {
     IconData fallbackIcon = Icons.label_outline;
     try {
       fallbackIcon = _getElementalCategoryIcon(category.name);
-    } catch (_) {}
+    } catch (e, s) {
+      log.severe('Silent failure: $e\n$s');
+    }
     if (modeTheme != null) {
       String svgPath = modeTheme.assets.getCategoryIcon(
         category.iconName,

@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/auth/data/datasources/auth_remote_data_source.dart';
@@ -74,7 +75,9 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         final storage = sl<SecureStorageService>();
         await storage.clearAll();
-      } catch (_) {}
+      } catch (e, s) {
+        log.severe('Silent failure: $e\n$s');
+      }
 
       return const Right(null);
     } catch (e) {

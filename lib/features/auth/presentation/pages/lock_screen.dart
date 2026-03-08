@@ -48,7 +48,9 @@ class _LockScreenState extends State<LockScreen> {
     try {
       final canCheck = await auth.canCheckBiometrics;
       if (mounted) setState(() => _canCheckBiometrics = canCheck);
-    } catch (_) {}
+    } catch (e, s) {
+      log.severe('Silent failure: $e\n$s');
+    }
   }
 
   Future<void> _loadPin() async {
