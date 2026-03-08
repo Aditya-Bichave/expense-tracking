@@ -1,30 +1,17 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { setupErrorCollector } = require('../helpers/testSetup');
+const {
+    setupErrorCollector,
+    navigateClientSide,
+    filterFatalErrors,
+    FLUTTER_READY_TIMEOUT,
+    FLUTTER_RENDER_WAIT
+} = require('../helpers/testSetup');
 
 /**
  * Dashboard tests — verifies the main screen loads and navigation works
  * for an authenticated user.
  */
-
-const FLUTTER_READY_TIMEOUT = 30_000;
-const FLUTTER_RENDER_WAIT = 2000; // time for Flutter to paint content after canvas appears
-
-/**
- * Perform client-side navigation within Flutter Web to avoid deep-link boot crashes.
- * @param {import('@playwright/test').Page} page
- * @param {string} path
- */
-async function navigateClientSide(page, path) {
-    await page.evaluate(() => { window.E2E_FLUTTER_READY = false; });
-    await page.evaluate((r) => {
-        window.history.pushState({}, '', r);
-        window.dispatchEvent(new Event('popstate'));
-    }, path);
-    await page.waitForURL(`**${path}*`, { timeout: 10000 });
-    await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
-    await page.waitForTimeout(FLUTTER_RENDER_WAIT);
-}
 
 test.describe('Dashboard @flow:dashboard', () => {
     /** @type {string[]} */
@@ -40,13 +27,8 @@ test.describe('Dashboard @flow:dashboard', () => {
     test('dashboard loads without fatal errors', async ({ page }) => {
         await page.waitForTimeout(FLUTTER_RENDER_WAIT);
 
-        // Filter out known non-fatal Flutter web browser noise
-        const fatalErrors = pageErrors.filter(
-            (e) =>
-                !e.includes('ERR_NAME_NOT_RESOLVED') &&
-                !e.includes('ERR_CONNECTION_REFUSED') &&
-                !e.includes('back/forward cache')
-        );
+        // Use shared error filter
+        const fatalErrors = filterFatalErrors(pageErrors);
 
         await page.screenshot({ path: 'test-results/dashboard-load.png', fullPage: true });
         expect(fatalErrors).toHaveLength(0);

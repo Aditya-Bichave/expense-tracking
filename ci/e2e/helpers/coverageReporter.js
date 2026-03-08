@@ -19,7 +19,7 @@ class FlowCoverageReporter {
         this.coverageData.totalTests++;
         if (result.status === 'passed') {
             this.coverageData.passedTests++;
-        } else if (result.status === 'failed') {
+        } else if (result.status === 'failed' || result.status === 'timedOut') {
             this.coverageData.failedTests++;
         } else {
             this.coverageData.skippedTests++;
@@ -40,7 +40,7 @@ class FlowCoverageReporter {
                 this.coverageData.flows[flowName].total++;
                 if (result.status === 'passed') {
                     this.coverageData.flows[flowName].passed++;
-                } else if (result.status === 'failed') {
+                } else if (result.status === 'failed' || result.status === 'timedOut') {
                     this.coverageData.flows[flowName].failed++;
                 }
             });
@@ -55,7 +55,7 @@ class FlowCoverageReporter {
                 this.coverageData.features[featureName].total++;
                 if (result.status === 'passed') {
                     this.coverageData.features[featureName].passed++;
-                } else if (result.status === 'failed') {
+                } else if (result.status === 'failed' || result.status === 'timedOut') {
                     this.coverageData.features[featureName].failed++;
                 }
             });

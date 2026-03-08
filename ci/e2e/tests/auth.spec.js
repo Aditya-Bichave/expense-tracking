@@ -1,13 +1,14 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { setupErrorCollector } = require('../helpers/testSetup');
+const {
+    setupErrorCollector,
+    FLUTTER_READY_TIMEOUT
+} = require('../helpers/testSetup');
 
 /**
  * Auth tests — verify that the globalSetup session injection works and
  * that the app correctly routes authenticated users to the dashboard.
  */
-
-const FLUTTER_READY_TIMEOUT = 30_000;
 
 test.describe('Authentication @flow:auth', () => {
     /** @type {string[]} */

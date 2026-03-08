@@ -1,10 +1,16 @@
 const fs = require('fs');
 const execSync = require('child_process').execSync;
 const path = require('path');
+const EXPECTED_FLOWS = require('./shared/expectedFlows');
 
 const HEAD_REF = process.env.GITHUB_HEAD_REF || "local";
 const BASE_REF = process.env.GITHUB_BASE_REF || "main";
-const RUN_URL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+let RUN_URL = "local-run";
+if (process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID) {
+    RUN_URL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+}
+
 const RUNNER_OS = process.env.RUNNER_OS || "Linux";
 const ARTIFACTS_DIR = process.env.ARTIFACTS_DIR || "artifacts";
 
@@ -134,12 +140,11 @@ function getE2ECoverage() {
   const covPath = path.join(ARTIFACTS_DIR, "e2e-results", "e2e-coverage.json");
   const data = safeJson(covPath);
 
-  const expectedFlows = ['auth', 'dashboard', 'transactions', 'budget', 'reports', 'groups'];
   let coveredFlows = 0;
   let summary = [];
 
   if (data && data.flows) {
-    expectedFlows.forEach(flow => {
+    EXPECTED_FLOWS.forEach(flow => {
         const flowData = data.flows[flow];
         if (flowData && flowData.total > 0) {
             coveredFlows++;
@@ -150,17 +155,17 @@ function getE2ECoverage() {
         }
     });
   } else {
-    expectedFlows.forEach(flow => {
+    EXPECTED_FLOWS.forEach(flow => {
         summary.push(`- **${flow}**: ❌ (0/0)`);
     });
   }
 
-  const coveragePct = Math.round((coveredFlows / expectedFlows.length) * 100);
+  const coveragePct = Math.round((coveredFlows / EXPECTED_FLOWS.length) * 100);
 
   return {
     pct: coveragePct,
     summary: summary,
-    hasData: !!data.flows
+    hasData: !!(data && data.flows)
   };
 }
 
