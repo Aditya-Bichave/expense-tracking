@@ -187,7 +187,10 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
-      final currentData = currentDataEither.fold((_) => throw StateError(""), (d) => d);
+      final currentData = currentDataEither.fold(
+        (_) => throw StateError(""),
+        (d) => d,
+      );
 
       // Process Previous Data
       Map<String, CategorySpendingData> previousCategoryMap = {};
@@ -413,7 +416,10 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
-      final currentData = currentDataEither.fold((_) => throw StateError(""), (d) => d);
+      final currentData = currentDataEither.fold(
+        (_) => throw StateError(""),
+        (d) => d,
+      );
 
       // Process Previous Data
       Map<DateTime, TimeSeriesDataPoint> previousDataMap = {};
@@ -606,7 +612,10 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentDataEither = results[0];
       if (currentDataEither.isLeft()) return currentDataEither;
-      final currentData = currentDataEither.fold((_) => throw StateError(""), (d) => d);
+      final currentData = currentDataEither.fold(
+        (_) => throw StateError(""),
+        (d) => d,
+      );
 
       // Process Previous Data
       Map<DateTime, IncomeExpensePeriodData> previousDataMap = {};
@@ -781,7 +790,10 @@ class ReportRepositoryImpl implements ReportRepository {
       // Process Current Data
       final currentPerformanceEither = results[0];
       if (currentPerformanceEither.isLeft()) return currentPerformanceEither;
-      final currentPerformanceReport = currentPerformanceEither.fold((_) => throw StateError(""), (d) => d);
+      final currentPerformanceReport = currentPerformanceEither.fold(
+        (_) => throw StateError(""),
+        (d) => d,
+      );
 
       // Process Previous Data
       Map<String, BudgetPerformanceData> previousDataMap = {};
