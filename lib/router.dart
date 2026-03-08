@@ -1,3 +1,4 @@
+import 'package:expense_tracker/features/auth/presentation/pages/e2e_bypass_page.dart';
 // lib/router.dart
 import 'dart:async';
 import 'package:expense_tracker/core/constants/route_names.dart';
@@ -150,6 +151,11 @@ class AppRouter {
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
+      if (const bool.fromEnvironment('E2E_MODE') == true)
+        GoRoute(
+          path: '/e2e-bypass',
+          builder: (context, state) => const E2EBypassPage(),
+        ),
       GoRoute(
         path: '/profile-setup',
         builder: (context, state) => BlocProvider<ProfileBloc>(
