@@ -51,9 +51,7 @@ class _E2EBypassPageState extends State<E2EBypassPage> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(
-        child: Text('E2E Bypass Hook Running...'),
-      ),
+      body: Center(child: Text('E2E Bypass Hook Running...')),
     );
   }
 }
