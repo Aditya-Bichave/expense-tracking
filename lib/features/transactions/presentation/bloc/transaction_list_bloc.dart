@@ -219,10 +219,16 @@ class TransactionListBloc
 
     // Determine current filters from state, potentially overridden by incoming filters
     DateTime? startDate = event.incomingFilters?['startDate'] != null
-        ? DateTime.tryParse(event.incomingFilters!['startDate'] as String)
+        ? (event.incomingFilters!['startDate'] is DateTime
+              ? event.incomingFilters!['startDate'] as DateTime
+              : DateTime.tryParse(
+                  event.incomingFilters!['startDate'] as String,
+                ))
         : state.startDate;
     DateTime? endDate = event.incomingFilters?['endDate'] != null
-        ? DateTime.tryParse(event.incomingFilters!['endDate'] as String)
+        ? (event.incomingFilters!['endDate'] is DateTime
+              ? event.incomingFilters!['endDate'] as DateTime
+              : DateTime.tryParse(event.incomingFilters!['endDate'] as String))
         : state.endDate;
     String? categoryId =
         event.incomingFilters?['categoryId'] as String? ?? state.categoryId;

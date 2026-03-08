@@ -44,9 +44,11 @@ class SyncService {
       } else {
         // Online: Do not emit 'synced' here to avoid flicker.
         // processOutbox will emit 'syncing' then 'synced'/'error'.
-        processOutbox().catchError((e, s) {
-          log.severe('processOutbox failed during connectivity change: $e\n$s');
-        });
+        unawaited(
+          processOutbox().catchError((e, s) {
+            log.severe("Failed to process outbox in background: $e\n$s");
+          }),
+        );
       }
     });
   }
@@ -152,9 +154,11 @@ class SyncService {
 
       if (localMember == null) {
         _groupMemberBox.put(serverMember.id, serverMember);
-        _ensureGroupExists(serverMember.groupId).catchError((e, s) {
-          log.severe('_ensureGroupExists failed for new member: $e\n$s');
-        });
+        unawaited(
+          _ensureGroupExists(serverMember.groupId).catchError((e, s) {
+            log.severe("Failed to ensure group exists in background: $e\n$s");
+          }),
+        );
       } else {
         // Last-Write-Wins check for member
         if (serverMember.updatedAt.isAfter(localMember.updatedAt)) {

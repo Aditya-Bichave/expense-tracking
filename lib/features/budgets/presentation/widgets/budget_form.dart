@@ -147,7 +147,6 @@ class _BudgetFormState extends State<BudgetForm> {
     final items = expenseCategories
         .map((category) => MultiSelectItem<String>(category.id, category.name))
         .toList();
-
     // ⚡ Bolt Performance Optimization
     // Problem: .any() inside .where() creates an O(N*M) time complexity loop during dialog opening
     // Solution: Precompute a Set of valid item values for O(1) lookups
