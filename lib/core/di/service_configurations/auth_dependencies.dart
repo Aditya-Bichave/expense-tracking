@@ -15,7 +15,9 @@ import 'package:expense_tracker/core/services/notification_service.dart';
 
 class AuthDependencies {
   static void register() {
-    sl.registerLazySingleton<NotificationService>(() => NotificationService());
+    sl.registerLazySingleton<NotificationService>(
+      () => NotificationService(prefs: sl()),
+    );
     sl.registerLazySingleton<AuthRemoteDataSource>(
       () => AuthRemoteDataSourceImpl(sl()),
     );

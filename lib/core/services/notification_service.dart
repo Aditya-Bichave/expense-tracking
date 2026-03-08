@@ -3,6 +3,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:simple_logger/simple_logger.dart';
 
@@ -10,10 +13,16 @@ class NotificationService {
   final SupabaseClient _supabase;
   final FirebaseMessaging? _fcmInstance;
   final SimpleLogger _log = SimpleLogger();
+  final SharedPreferences? _prefs;
+  StreamSubscription<String>? _tokenRefreshSub;
 
-  NotificationService({SupabaseClient? supabase, FirebaseMessaging? fcm})
-    : _supabase = supabase ?? Supabase.instance.client,
-      _fcmInstance = fcm;
+  NotificationService({
+    SupabaseClient? supabase,
+    FirebaseMessaging? fcm,
+    SharedPreferences? prefs,
+  }) : _supabase = supabase ?? Supabase.instance.client,
+       _fcmInstance = fcm,
+       _prefs = prefs;
 
   FirebaseMessaging _getFcm() {
     return _fcmInstance ?? FirebaseMessaging.instance;
@@ -49,16 +58,16 @@ class NotificationService {
       await _upsertToken(currentUser.id, deviceId, token, platform);
 
       // 5. Listen for token refreshes
-      _getFcm().onTokenRefresh
-          .listen((newToken) async {
-            final user = _supabase.auth.currentUser;
-            if (user != null) {
-              await _upsertToken(user.id, deviceId, newToken, platform);
-            }
-          })
-          .onError((e, s) {
-            _log.severe('Error on FCM token refresh: $e\n$s');
-          });
+      _tokenRefreshSub?.cancel();
+      _tokenRefreshSub = _getFcm().onTokenRefresh.listen((newToken) async {
+        final user = _supabase.auth.currentUser;
+        if (user != null) {
+          await _upsertToken(user.id, deviceId, newToken, platform);
+        }
+      });
+      _tokenRefreshSub?.onError((e, s) {
+        _log.severe('Error on FCM token refresh: $e\n$s');
+      });
     } catch (e, s) {
       _log.severe('Error syncing device token: $e\n$s');
     }
@@ -104,19 +113,18 @@ class NotificationService {
   }
 
   Future<String> _getDeviceId() async {
-    final deviceInfo = DeviceInfoPlugin();
-    if (kIsWeb) {
-      final webBrowserInfo = await deviceInfo.webBrowserInfo;
-      return webBrowserInfo.userAgent ?? 'unknown_web';
-    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
-      final iosInfo = await deviceInfo.iosInfo;
-      return iosInfo.identifierForVendor ?? 'unknown_ios';
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
-      final androidInfo = await deviceInfo.androidInfo;
-      return androidInfo.id;
-    } else {
-      return 'unknown_desktop';
+    const key = 'app_device_id';
+    if (_prefs != null) {
+      String? id = _prefs.getString(key);
+      if (id == null) {
+        id = const Uuid().v4();
+        await _prefs.setString(key, id);
+      }
+      return id;
     }
+
+    // Fallback for tests if _prefs is not injected
+    return 'fallback_device_id';
   }
 
   String _getPlatform() {
@@ -126,8 +134,18 @@ class NotificationService {
       return 'ios';
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       return 'android';
+    } else if (defaultTargetPlatform == TargetPlatform.linux) {
+      return 'linux';
+    } else if (defaultTargetPlatform == TargetPlatform.macOS) {
+      return 'macos';
+    } else if (defaultTargetPlatform == TargetPlatform.windows) {
+      return 'windows';
     } else {
-      return 'web';
+      return 'unknown';
     }
+  }
+
+  void dispose() {
+    _tokenRefreshSub?.cancel();
   }
 }

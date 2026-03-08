@@ -3,22 +3,17 @@ import 'package:mocktail/mocktail.dart';
 import 'package:expense_tracker/core/services/notification_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter/services.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
-
 class MockFirebaseMessaging extends Mock implements FirebaseMessaging {}
-
 class MockGoTrueClient extends Mock implements GoTrueClient {}
-
 class MockUser extends Mock implements User {}
-
 class MockNotificationSettings extends Mock implements NotificationSettings {}
-
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
+class MockSharedPreferences extends Mock implements SharedPreferences {}
 
 class FakePostgrestFilterBuilder extends Fake
     implements PostgrestFilterBuilder<dynamic> {
@@ -37,68 +32,6 @@ class FakePostgrestFilterBuilder extends Fake
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
-  const MethodChannel channel = MethodChannel(
-    'dev.fluttercommunity.plus/device_info',
-  );
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-      .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-        if (methodCall.method == 'getDeviceInfo') {
-          if (defaultTargetPlatform == TargetPlatform.iOS) {
-            return {
-              'name': 'test',
-              'systemName': 'test',
-              'systemVersion': 'test',
-              'model': 'test',
-              'localizedModel': 'test',
-              'identifierForVendor': 'test-device-id',
-              'isPhysicalDevice': true,
-              'utsname': {
-                'sysname': 'test',
-                'nodename': 'test',
-                'release': 'test',
-                'version': 'test',
-                'machine': 'test',
-              },
-            };
-          } else if (defaultTargetPlatform == TargetPlatform.android) {
-            return {
-              'id': 'test-device-id',
-              'host': 'test',
-              'tags': 'test',
-              'type': 'test',
-              'model': 'test',
-              'board': 'test',
-              'brand': 'test',
-              'device': 'test',
-              'product': 'test',
-              'display': 'test',
-              'hardware': 'test',
-              'bootloader': 'test',
-              'manufacturer': 'test',
-              'fingerprint': 'test',
-              'isPhysicalDevice': true,
-              'systemFeatures': ['test'],
-              'serialNumber': 'test',
-              'version': {
-                'baseOS': 'test',
-                'codename': 'test',
-                'incremental': 'test',
-                'previewSdkInt': 1,
-                'release': 'test',
-                'securityPatch': 'test',
-                'sdkInt': 1,
-              },
-              'supported32BitAbis': ['test'],
-              'supported64BitAbis': ['test'],
-              'supportedAbis': ['test'],
-            };
-          }
-        }
-        return {};
-      });
-
   late MockSupabaseClient mockSupabaseClient;
   late MockFirebaseMessaging mockFirebaseMessaging;
   late NotificationService notificationService;
@@ -107,6 +40,7 @@ void main() {
   late MockNotificationSettings mockSettings;
   late MockSupabaseQueryBuilder mockQueryBuilder;
   late FakePostgrestFilterBuilder mockFilterBuilder;
+  late MockSharedPreferences mockPrefs;
 
   setUp(() {
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
@@ -117,6 +51,7 @@ void main() {
     mockSettings = MockNotificationSettings();
     mockQueryBuilder = MockSupabaseQueryBuilder();
     mockFilterBuilder = FakePostgrestFilterBuilder();
+    mockPrefs = MockSharedPreferences();
 
     when(
       () => mockSupabaseClient.from(any()),
@@ -142,108 +77,22 @@ void main() {
       () => mockFirebaseMessaging.onTokenRefresh,
     ).thenAnswer((_) => const Stream.empty());
 
+    when(() => mockPrefs.getString('app_device_id')).thenReturn('test-device-id');
+    when(() => mockPrefs.setString('app_device_id', any())).thenAnswer((_) async => true);
+
     notificationService = NotificationService(
       supabase: mockSupabaseClient,
       fcm: mockFirebaseMessaging,
+      prefs: mockPrefs,
     );
   });
 
   tearDown(() {
     debugDefaultTargetPlatformOverride = null;
+    notificationService.dispose();
   });
 
   group('NotificationService', () {
-    test('getDeviceId and getPlatform cover android', () async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.android;
-      when(
-        () => mockFirebaseMessaging.getToken(),
-      ).thenAnswer((_) async => 'token');
-      when(
-        () => mockQueryBuilder.upsert(any()),
-      ).thenAnswer((_) => mockFilterBuilder);
-
-      await notificationService.syncDeviceToken();
-
-      debugDefaultTargetPlatformOverride = null;
-    });
-
-    test('getDeviceId and getPlatform cover iOS', () async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-      when(
-        () => mockFirebaseMessaging.getToken(),
-      ).thenAnswer((_) async => 'token');
-      when(
-        () => mockQueryBuilder.upsert(any()),
-      ).thenAnswer((_) => mockFilterBuilder);
-
-      await notificationService.syncDeviceToken();
-
-      debugDefaultTargetPlatformOverride = null;
-    });
-
-    test('getDeviceId and getPlatform cover unknown platform', () async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
-      when(
-        () => mockFirebaseMessaging.getToken(),
-      ).thenAnswer((_) async => 'token');
-      when(
-        () => mockQueryBuilder.upsert(any()),
-      ).thenAnswer((_) => mockFilterBuilder);
-
-      await notificationService.syncDeviceToken();
-
-      debugDefaultTargetPlatformOverride = null;
-    });
-
-    test('syncDeviceToken handles token refresh', () async {
-      final streamController = StreamController<String>();
-      when(
-        () => mockFirebaseMessaging.onTokenRefresh,
-      ).thenAnswer((_) => streamController.stream);
-      when(
-        () => mockFirebaseMessaging.getToken(),
-      ).thenAnswer((_) async => 'initial-token');
-
-      await notificationService.syncDeviceToken();
-
-      // Simulate token refresh
-      streamController.add('new-token');
-      await Future.delayed(Duration.zero);
-
-      verify(() => mockSupabaseClient.from(any())).called(greaterThan(0));
-
-      await streamController.close();
-    });
-
-    test('syncDeviceToken handles token refresh error', () async {
-      final streamController = StreamController<String>();
-      when(
-        () => mockFirebaseMessaging.onTokenRefresh,
-      ).thenAnswer((_) => streamController.stream);
-      when(
-        () => mockFirebaseMessaging.getToken(),
-      ).thenAnswer((_) async => 'initial-token');
-
-      await notificationService.syncDeviceToken();
-
-      // Simulate token refresh error
-      streamController.addError(Exception('refresh error'));
-      await Future.delayed(Duration.zero);
-
-      await streamController.close();
-    });
-
-    test('syncDeviceToken handles upsert error', () async {
-      when(
-        () => mockFirebaseMessaging.getToken(),
-      ).thenAnswer((_) async => 'token');
-      when(
-        () => mockQueryBuilder.upsert(any()),
-      ).thenThrow(Exception('upsert error'));
-
-      await notificationService.syncDeviceToken();
-    });
-
     test('syncDeviceToken does nothing if user declines permission', () async {
       when(
         () => mockSettings.authorizationStatus,
@@ -310,6 +159,123 @@ void main() {
       await notificationService.deleteDeviceToken();
 
       verifyNever(() => mockSupabaseClient.from(any()));
+    });
+
+    test('getDeviceId generates new UUID if not present in prefs', () async {
+      when(() => mockPrefs.getString('app_device_id')).thenReturn(null);
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+
+      await notificationService.syncDeviceToken();
+
+      verify(() => mockPrefs.setString('app_device_id', any())).called(1);
+    });
+
+    test('getDeviceId returns fallback if prefs is null', () async {
+      final serviceWithoutPrefs = NotificationService(
+        supabase: mockSupabaseClient,
+        fcm: mockFirebaseMessaging,
+        prefs: null,
+      );
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+
+      await serviceWithoutPrefs.syncDeviceToken();
+
+      verify(() => mockQueryBuilder.upsert(any(that: containsPair('device_id', 'fallback_device_id')))).called(1);
+    });
+
+    test('syncDeviceToken sends exact payload to supabase', () async {
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'test-fcm-token');
+
+      await notificationService.syncDeviceToken();
+
+      final expectedPayload = {
+        'user_id': 'user123',
+        'device_id': 'test-device-id',
+        'fcm_token': 'test-fcm-token',
+        'platform': 'macos',
+      };
+
+      verify(() => mockQueryBuilder.upsert(any(that: isA<Map<String, dynamic>>().having(
+        (m) => m.keys.contains('updated_at') &&
+               m['user_id'] == expectedPayload['user_id'] &&
+               m['device_id'] == expectedPayload['device_id'] &&
+               m['fcm_token'] == expectedPayload['fcm_token'] &&
+               m['platform'] == expectedPayload['platform'],
+        'matches expected payload',
+        true
+      )))).called(1);
+    });
+
+    test('syncDeviceToken handles token refresh', () async {
+      final streamController = StreamController<String>();
+      when(() => mockFirebaseMessaging.onTokenRefresh).thenAnswer((_) => streamController.stream);
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'initial-token');
+
+      await notificationService.syncDeviceToken();
+
+      // Simulate token refresh
+      streamController.add('new-token');
+      await Future.delayed(Duration.zero);
+
+      verify(() => mockQueryBuilder.upsert(any())).called(greaterThan(0));
+
+      await streamController.close();
+    });
+
+    test('syncDeviceToken handles token refresh error', () async {
+      final streamController = StreamController<String>();
+      when(() => mockFirebaseMessaging.onTokenRefresh).thenAnswer((_) => streamController.stream);
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'initial-token');
+
+      await notificationService.syncDeviceToken();
+
+      // Simulate token refresh error
+      streamController.addError(Exception('refresh error'));
+      await Future.delayed(Duration.zero);
+
+      await streamController.close();
+    });
+
+    test('syncDeviceToken handles upsert error', () async {
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+      when(() => mockQueryBuilder.upsert(any())).thenThrow(Exception('upsert error'));
+
+      await notificationService.syncDeviceToken();
+    });
+
+    test('getPlatform covers android', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+      await notificationService.syncDeviceToken();
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('getPlatform covers iOS', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+      await notificationService.syncDeviceToken();
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('getPlatform covers linux', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+      await notificationService.syncDeviceToken();
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('getPlatform covers windows', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+      await notificationService.syncDeviceToken();
+      debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('getPlatform covers unknown platform', () async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
+      when(() => mockFirebaseMessaging.getToken()).thenAnswer((_) async => 'token');
+      await notificationService.syncDeviceToken();
+      debugDefaultTargetPlatformOverride = null;
     });
   });
 }
