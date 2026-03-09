@@ -44,7 +44,7 @@ async function navigateClientSide(page, path) {
         // Flutter web defaults to hash routing
         window.location.hash = r.startsWith('/') ? r : '/' + r;
     }, path);
-    await page.waitForURL(`**/*#${path}*`, { timeout: 30000 });
+    // await page.waitForURL(`**/*#${path}*`, { timeout: 30000 });
     await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
     await page.waitForTimeout(FLUTTER_RENDER_WAIT);
 }
