@@ -12,11 +12,17 @@ class LoadRecurringRules extends RecurringListEvent {}
 class PauseResumeRule extends RecurringListEvent {
   final String ruleId;
   const PauseResumeRule(this.ruleId);
+
+  @override
+  List<Object> get props => [ruleId];
 }
 
 class DeleteRule extends RecurringListEvent {
   final String ruleId;
   const DeleteRule(this.ruleId);
+
+  @override
+  List<Object> get props => [ruleId];
 }
 
 class ResetState extends RecurringListEvent {
