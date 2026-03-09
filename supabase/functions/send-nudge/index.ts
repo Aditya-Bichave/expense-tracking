@@ -2,66 +2,114 @@ import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { create, getNumericDate } from "https://deno.land/x/djwt@v2.8/mod.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") || "").split(",");
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin");
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+  };
+  if (origin && allowedOrigins.includes(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
 
 // Helper to generate a Google OAuth2 token using djwt and the service account key
+
+let cachedAccessToken: string | null = null;
+let cachedAccessTokenExpiry: number | null = null;
+let tokenRefreshPromise: Promise<string> | null = null;
+
 async function getFirebaseAccessToken(serviceAccount: any): Promise<string> {
-  const iat = getNumericDate(0);
-  const exp = getNumericDate(3600); // 1 hour expiration
-
-  const jwt = await create(
-    { alg: "RS256", typ: "JWT" },
-    {
-      iss: serviceAccount.client_email,
-      sub: serviceAccount.client_email,
-      aud: "https://oauth2.googleapis.com/token",
-      exp,
-      iat,
-      scope: "https://www.googleapis.com/auth/firebase.messaging",
-    },
-    serviceAccount.private_key
-  );
-
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion: jwt,
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Failed to generate Google access token: ${text}`);
+  const now = Date.now();
+  if (
+    cachedAccessToken &&
+    cachedAccessTokenExpiry &&
+    now < cachedAccessTokenExpiry
+  ) {
+    return cachedAccessToken;
   }
 
-  const data = await response.json();
-  return data.access_token;
+  if (tokenRefreshPromise) {
+    return tokenRefreshPromise;
+  }
+
+  tokenRefreshPromise = (async () => {
+    try {
+      const iat = getNumericDate(0);
+      const exp = getNumericDate(3600); // 1 hour expiration
+
+      const jwt = await create(
+        { alg: "RS256", typ: "JWT" },
+        {
+          iss: serviceAccount.client_email,
+          sub: serviceAccount.client_email,
+          aud: "https://oauth2.googleapis.com/token",
+          exp,
+          iat,
+          scope: "https://www.googleapis.com/auth/firebase.messaging",
+        },
+        serviceAccount.private_key,
+      );
+
+      const response = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+          assertion: jwt,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Failed to generate Google access token: ${text}`);
+      }
+
+      const data = await response.json();
+      cachedAccessToken = data.access_token;
+      cachedAccessTokenExpiry = now + 50 * 60 * 1000; // 50 minutes TTL
+      return data.access_token;
+    } catch (e) {
+      cachedAccessToken = null;
+      cachedAccessTokenExpiry = null;
+      throw e;
+    } finally {
+      tokenRefreshPromise = null;
+    }
+  })();
+
+  return tokenRefreshPromise;
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(req) });
   }
 
   try {
-    const { to_user_id, group_id, amount_owed, currency, group_name } = await req.json();
+    const { to_user_id, group_id, amount_owed, currency, group_name } =
+      await req.json();
 
     if (!to_user_id || !group_id || amount_owed === undefined || !currency) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+            ...getCorsHeaders(req),
+          },
+        },
+      );
     }
 
     if (amount_owed <= 0) {
       return new Response(JSON.stringify({ error: "Invalid amount" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
       });
     }
 
@@ -70,7 +118,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error("Missing Supabase environment variables");
+      throw new Error("Missing Supabase environment variables");
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -78,7 +126,10 @@ serve(async (req) => {
     // 2. Get Caller ID from JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      return new Response("Unauthorized", {
+        status: 401,
+        headers: getCorsHeaders(req),
+      });
     }
 
     const {
@@ -87,15 +138,18 @@ serve(async (req) => {
     } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
 
     if (authError || !user) {
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      return new Response("Unauthorized", {
+        status: 401,
+        headers: getCorsHeaders(req),
+      });
     }
 
     const from_user_id = user.id;
 
     if (from_user_id === to_user_id) {
-       return new Response(JSON.stringify({ error: "Cannot nudge yourself" }), {
+      return new Response(JSON.stringify({ error: "Cannot nudge yourself" }), {
         status: 400,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
       });
     }
 
@@ -110,7 +164,7 @@ serve(async (req) => {
     if (senderError || !senderMember) {
       return new Response(JSON.stringify({ error: "Sender not in group" }), {
         status: 403,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
       });
     }
 
@@ -124,7 +178,7 @@ serve(async (req) => {
     if (targetError || !targetMember) {
       return new Response(JSON.stringify({ error: "Target not in group" }), {
         status: 403,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+        headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
       });
     }
 
@@ -139,6 +193,14 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
+    if (nudgeQueryError) {
+      console.error("Nudge Query Error:", nudgeQueryError);
+      return new Response(JSON.stringify({ error: "Internal server error" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
+      });
+    }
+
     if (lastNudge) {
       const hoursSinceNudge =
         (new Date().getTime() - new Date(lastNudge.created_at).getTime()) /
@@ -148,8 +210,11 @@ serve(async (req) => {
           JSON.stringify({ error: "Rate limit exceeded. Try again tomorrow." }),
           {
             status: 429,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
+            headers: {
+              "Content-Type": "application/json",
+              ...getCorsHeaders(req),
+            },
+          },
         );
       }
     }
@@ -169,19 +234,28 @@ serve(async (req) => {
         JSON.stringify({ error: "User has no registered devices." }),
         {
           status: 404,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+          headers: {
+            "Content-Type": "application/json",
+            ...getCorsHeaders(req),
+          },
+        },
       );
     }
 
     // 5. Generate Firebase Access Token
     const serviceAccountJsonStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
     if (!serviceAccountJsonStr) {
-       console.error("FIREBASE_SERVICE_ACCOUNT secret missing");
-       return new Response(JSON.stringify({ error: "Internal Configuration Error" }), {
+      console.error("FIREBASE_SERVICE_ACCOUNT secret missing");
+      return new Response(
+        JSON.stringify({ error: "Internal Configuration Error" }),
+        {
           status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-       });
+          headers: {
+            "Content-Type": "application/json",
+            ...getCorsHeaders(req),
+          },
+        },
+      );
     }
 
     const serviceAccount = JSON.parse(serviceAccountJsonStr);
@@ -213,8 +287,8 @@ serve(async (req) => {
 
     let successfulDispatch = false;
 
-    // 7. Dispatch to FCM (Loop through all user devices)
-    for (const t of tokens) {
+    // 7. Dispatch to FCM (Parallel)
+    const dispatchPromises = tokens.map(async (t: any) => {
       const payload = JSON.parse(JSON.stringify(fcmPayloadBase));
       payload.message.token = t.fcm_token;
 
@@ -227,32 +301,52 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       // 8. Hygiene: Delete dead tokens
       if (!response.ok) {
         const errorData = await response.json();
         const status = errorData.error?.status;
-        if (status === "UNREGISTERED" || status === "NOT_FOUND" || status === "INVALID_ARGUMENT") {
-           console.log(`Pruning invalid/dead token: ${t.fcm_token.substring(0, 10)}... (Status: ${status})`);
-           await supabase
-             .from("user_fcm_tokens")
-             .delete()
-             .eq("fcm_token", t.fcm_token);
+        if (
+          status === "UNREGISTERED" ||
+          status === "NOT_FOUND" ||
+          status === "INVALID_ARGUMENT"
+        ) {
+          console.log(
+            `Pruning invalid/dead token: ${t.fcm_token.substring(0, 10)}... (Status: ${status})`,
+          );
+          await supabase
+            .from("user_fcm_tokens")
+            .delete()
+            .eq("fcm_token", t.fcm_token);
         } else {
-           console.error(`FCM dispatch failed with status ${status}:`, errorData);
+          console.error(
+            `FCM dispatch failed with status ${status}:`,
+            errorData,
+          );
         }
-      } else {
-        successfulDispatch = true;
+        throw new Error("Dispatch failed");
       }
-    }
+      return true;
+    });
+
+    const results = await Promise.allSettled(dispatchPromises);
+    successfulDispatch = results.some((r) => r.status === "fulfilled");
 
     if (!successfulDispatch) {
-        return new Response(JSON.stringify({ error: "Failed to dispatch notification to any device." }), {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders }
-        });
+      return new Response(
+        JSON.stringify({
+          error: "Failed to dispatch notification to any device.",
+        }),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            ...getCorsHeaders(req),
+          },
+        },
+      );
     }
 
     // 9. Audit Log the Nudge
@@ -265,18 +359,18 @@ serve(async (req) => {
     });
 
     if (logError) {
-        console.error("Failed to insert nudge log:", logError);
+      console.error("Failed to insert nudge log:", logError);
     }
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
     });
   } catch (error: any) {
     console.error("Unexpected error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      headers: { "Content-Type": "application/json", ...getCorsHeaders(req) },
     });
   }
 });

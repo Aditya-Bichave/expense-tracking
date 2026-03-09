@@ -4,6 +4,8 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/login_with_magic_link_usecase.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/login_with_otp_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/verify_otp_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dart';
@@ -86,6 +88,12 @@ void main() {
 
       bloc.add(AuthCheckStatus());
       await future;
+
+      if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+        verify(() => mockNotificationService.syncDeviceToken()).called(1);
+      } else {
+        verifyNever(() => mockNotificationService.syncDeviceToken());
+      }
     });
 
     test(
@@ -115,6 +123,7 @@ void main() {
 
       bloc.add(AuthCheckStatus());
       await future;
+      verifyNever(() => mockNotificationService.syncDeviceToken());
     });
 
     test(
@@ -156,6 +165,7 @@ void main() {
           isA<AuthError>().having((s) => s.message, 'message', 'error'),
         ]),
       );
+      verifyNever(() => mockNotificationService.syncDeviceToken());
     });
 
     test('AuthLoginRequested emits loading then sent on right', () async {
@@ -190,6 +200,7 @@ void main() {
           isA<AuthError>().having((s) => s.message, 'message', 'error'),
         ]),
       );
+      verifyNever(() => mockNotificationService.syncDeviceToken());
     });
 
     test(
@@ -211,6 +222,12 @@ void main() {
         );
 
         verify(() => mockVerifyOtp(phone: '123', token: '456')).called(1);
+
+        if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+          verify(() => mockNotificationService.syncDeviceToken()).called(1);
+        } else {
+          verifyNever(() => mockNotificationService.syncDeviceToken());
+        }
       },
     );
 
@@ -238,6 +255,7 @@ void main() {
             ),
           ]),
         );
+        verifyNever(() => mockNotificationService.syncDeviceToken());
       },
     );
 
@@ -271,6 +289,11 @@ void main() {
       );
 
       verify(() => mockLogout()).called(1);
+      if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+        verify(() => mockNotificationService.deleteDeviceToken()).called(1);
+      } else {
+        verifyNever(() => mockNotificationService.deleteDeviceToken());
+      }
     });
   });
 }

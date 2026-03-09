@@ -51,29 +51,42 @@ class NotificationService {
       }
 
       // 3. Get Unique Device ID
-      String deviceId = await _getDeviceId();
       String platform = _getPlatform();
+      if (platform == 'desktop' || platform == 'unknown') {
+        _log.info('Skipping token sync on unsupported platform: $platform');
+        return;
+      }
+      String deviceId = await _getDeviceId();
 
       // 4. Upsert to Supabase
-      await _upsertToken(currentUser.id, deviceId, token, platform);
+      final success = await _upsertToken(
+        currentUser.id,
+        deviceId,
+        token,
+        platform,
+      );
+      if (!success) {
+        _log.warning('Failed initial token sync, will retry on refresh');
+      }
 
       // 5. Listen for token refreshes
-      _tokenRefreshSub?.cancel();
-      _tokenRefreshSub = _getFcm().onTokenRefresh.listen((newToken) async {
-        final user = _supabase.auth.currentUser;
-        if (user != null) {
-          await _upsertToken(user.id, deviceId, newToken, platform);
-        }
-      });
-      _tokenRefreshSub?.onError((e, s) {
-        _log.severe('Error on FCM token refresh: $e\n$s');
-      });
+      if (_tokenRefreshSub == null) {
+        _tokenRefreshSub = _getFcm().onTokenRefresh.listen((newToken) async {
+          final user = _supabase.auth.currentUser;
+          if (user != null) {
+            await _upsertToken(user.id, deviceId, newToken, platform);
+          }
+        });
+        _tokenRefreshSub?.onError((e, s) {
+          _log.severe('Error on FCM token refresh: $e\n$s');
+        });
+      }
     } catch (e, s) {
       _log.severe('Error syncing device token: $e\n$s');
     }
   }
 
-  Future<void> _upsertToken(
+  Future<bool> _upsertToken(
     String userId,
     String deviceId,
     String token,
@@ -87,8 +100,10 @@ class NotificationService {
         'platform': platform,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
+      return true;
     } catch (e, s) {
       _log.severe('Failed to upsert user_fcm_tokens: $e\n$s');
+      return false;
     }
   }
 
@@ -107,6 +122,8 @@ class NotificationService {
 
       // Also delete the token locally from firebase messaging so it can regenerate properly next time
       await _getFcm().deleteToken();
+      await _tokenRefreshSub?.cancel();
+      _tokenRefreshSub = null;
     } catch (e, s) {
       _log.severe('Error deleting device token: $e\n$s');
     }
@@ -134,12 +151,10 @@ class NotificationService {
       return 'ios';
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       return 'android';
-    } else if (defaultTargetPlatform == TargetPlatform.linux) {
-      return 'linux';
-    } else if (defaultTargetPlatform == TargetPlatform.macOS) {
-      return 'macos';
-    } else if (defaultTargetPlatform == TargetPlatform.windows) {
-      return 'windows';
+    } else if (defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.windows) {
+      return 'desktop';
     } else {
       return 'unknown';
     }
@@ -147,5 +162,6 @@ class NotificationService {
 
   void dispose() {
     _tokenRefreshSub?.cancel();
+    _tokenRefreshSub = null;
   }
 }
