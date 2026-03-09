@@ -82,6 +82,9 @@ void main() {
     when(
       () => mockFirebaseMessaging.onTokenRefresh,
     ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockFirebaseMessaging.getInitialMessage(),
+    ).thenAnswer((_) async => null);
 
     when(
       () => mockPrefs.getString('app_device_id'),
