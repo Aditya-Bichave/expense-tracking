@@ -4,10 +4,13 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/login_with_magic_link_usecase.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/login_with_otp_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/verify_otp_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:expense_tracker/features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'package:expense_tracker/core/services/notification_service.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:dartz/dartz.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -23,12 +26,15 @@ class MockLogoutUseCase extends Mock implements LogoutUseCase {}
 
 class MockGetCurrentUserUseCase extends Mock implements GetCurrentUserUseCase {}
 
+class MockNotificationService extends Mock implements NotificationService {}
+
 void main() {
   late MockLoginWithMagicLinkUseCase mockMagicLink;
   late MockLoginWithOtpUseCase mockLoginOtp;
   late MockVerifyOtpUseCase mockVerifyOtp;
   late MockLogoutUseCase mockLogout;
   late MockGetCurrentUserUseCase mockGetCurrentUser;
+  late MockNotificationService mockNotificationService;
   late AuthBloc bloc;
 
   final tUser = User(
@@ -45,6 +51,7 @@ void main() {
     mockVerifyOtp = MockVerifyOtpUseCase();
     mockLogout = MockLogoutUseCase();
     mockGetCurrentUser = MockGetCurrentUserUseCase();
+    mockNotificationService = MockNotificationService();
 
     bloc = AuthBloc(
       mockLoginOtp,
@@ -52,7 +59,14 @@ void main() {
       mockVerifyOtp,
       mockLogout,
       mockGetCurrentUser,
+      mockNotificationService,
     );
+    when(
+      () => mockNotificationService.syncDeviceToken(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.deleteDeviceToken(),
+    ).thenAnswer((_) async {});
   });
 
   tearDown(() async {
@@ -74,6 +88,12 @@ void main() {
 
       bloc.add(AuthCheckStatus());
       await future;
+
+      if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+        verify(() => mockNotificationService.syncDeviceToken()).called(1);
+      } else {
+        verifyNever(() => mockNotificationService.syncDeviceToken());
+      }
     });
 
     test(
@@ -103,6 +123,7 @@ void main() {
 
       bloc.add(AuthCheckStatus());
       await future;
+      verifyNever(() => mockNotificationService.syncDeviceToken());
     });
 
     test(
@@ -144,6 +165,7 @@ void main() {
           isA<AuthError>().having((s) => s.message, 'message', 'error'),
         ]),
       );
+      verifyNever(() => mockNotificationService.syncDeviceToken());
     });
 
     test('AuthLoginRequested emits loading then sent on right', () async {
@@ -178,6 +200,7 @@ void main() {
           isA<AuthError>().having((s) => s.message, 'message', 'error'),
         ]),
       );
+      verifyNever(() => mockNotificationService.syncDeviceToken());
     });
 
     test(
@@ -199,6 +222,12 @@ void main() {
         );
 
         verify(() => mockVerifyOtp(phone: '123', token: '456')).called(1);
+
+        if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+          verify(() => mockNotificationService.syncDeviceToken()).called(1);
+        } else {
+          verifyNever(() => mockNotificationService.syncDeviceToken());
+        }
       },
     );
 
@@ -226,6 +255,7 @@ void main() {
             ),
           ]),
         );
+        verifyNever(() => mockNotificationService.syncDeviceToken());
       },
     );
 
@@ -259,6 +289,11 @@ void main() {
       );
 
       verify(() => mockLogout()).called(1);
+      if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
+        verify(() => mockNotificationService.deleteDeviceToken()).called(1);
+      } else {
+        verifyNever(() => mockNotificationService.deleteDeviceToken());
+      }
     });
   });
 }
