@@ -46,11 +46,11 @@ test.describe('Transactions @flow:transactions', () => {
 
 test.describe('Reports @flow:reports', () => {
     const reportRoutes = [
-        '/dashboard/spending_category',
-        '/dashboard/spending_time',
-        '/dashboard/income_expense',
-        '/dashboard/budget_performance',
-        '/dashboard/goal_progress',
+        '/spending_category',
+        '/spending_time',
+        '/income_expense',
+        '/budget_performance',
+        '/goal_progress',
     ];
 
     /** @type {string[]} */
