@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../helpers/pump_app.dart';
+
 void main() {
   testWidgets('RecurringRuleListItem renders correctly', (tester) async {
     final rule = RecurringRule(
@@ -26,24 +28,22 @@ void main() {
 
     bool tapped = false;
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: RecurringRuleListItem(
-            rule: rule,
-            onTap: () {
-              tapped = true;
-            },
-          ),
-        ),
+    await pumpWidgetWithProviders(
+      tester: tester,
+      widget: RecurringRuleListItem(
+        rule: rule,
+        onTap: () {
+          tapped = true;
+        },
       ),
     );
 
     // Verify description
     expect(find.text('Test Rule'), findsOneWidget);
 
-    // Verify amount
-    expect(find.text('-100.00'), findsOneWidget);
+    // Verify amount - CurrencyFormatter.format(100.0, '$') returns '$100.00'
+    // With expense type, it prefix with '- '
+    expect(find.text('- \$100.00'), findsOneWidget);
 
     // Verify next date
     final formattedDate = DateFormat.yMd().format(rule.nextOccurrenceDate);
@@ -74,12 +74,9 @@ void main() {
       occurrencesGenerated: 0,
     );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: RecurringRuleListItem(rule: rule, onTap: () {}),
-        ),
-      ),
+    await pumpWidgetWithProviders(
+      tester: tester,
+      widget: RecurringRuleListItem(rule: rule, onTap: () {}),
     );
 
     expect(find.byIcon(Icons.pause_circle_filled), findsOneWidget);

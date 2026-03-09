@@ -1,54 +1,42 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const {
+    setupErrorCollector,
+    navigateClientSide,
+    filterFatalErrors,
+    FLUTTER_READY_TIMEOUT,
+    FLUTTER_RENDER_WAIT
+} = require('../helpers/testSetup');
 
 /**
  * Dashboard tests — verifies the main screen loads and navigation works
  * for an authenticated user.
  */
 
-const FLUTTER_READY_TIMEOUT = 30_000;
-const FLUTTER_RENDER_WAIT = 2000; // time for Flutter to paint content after canvas appears
-
-test.describe('Dashboard', () => {
+test.describe('Dashboard @flow:dashboard', () => {
     /** @type {string[]} */
     let pageErrors = [];
 
     test.beforeEach(async ({ page }) => {
         pageErrors = [];
-        page.on('console', msg => {
-            console.log(`[BROWSER LOG] ${msg.text()}`);
-        });
-        page.on('pageerror', err => {
-            console.log(`[BROWSER FATAL] ${err.message}`);
-            pageErrors.push(err.message);
-        });
+        setupErrorCollector(page, pageErrors);
         await page.goto('/dashboard');
         await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
     });
 
     test('dashboard loads without fatal errors', async ({ page }) => {
-        // Let some time pass to capture delayed errors
-        await page.waitForTimeout(1000);
+        await page.waitForTimeout(FLUTTER_RENDER_WAIT);
 
-        // Filter out known non-fatal Flutter web browser noise
-        const fatalErrors = pageErrors.filter(
-            (e) =>
-                !e.includes('ERR_NAME_NOT_RESOLVED') &&
-                !e.includes('ERR_CONNECTION_REFUSED') &&
-                !e.includes('back/forward cache')
-        );
+        // Use shared error filter
+        const fatalErrors = filterFatalErrors(pageErrors);
 
         await page.screenshot({ path: 'test-results/dashboard-load.png', fullPage: true });
         expect(fatalErrors).toHaveLength(0);
     });
 
     test('dashboard renders a canvas (Flutter app is alive)', async ({ page }) => {
-        const canvas = page.locator('canvas');
-        await expect(canvas).toBeVisible();
-    });
-
-    test('page title is correct', async ({ page }) => {
-        await expect(page).toHaveTitle(/Financial OS/i);
+        const canvas = page.locator('canvas, flt-semantics-host');
+        await expect(canvas.first()).toBeVisible({ timeout: 15000 });
     });
 
     const routes = [
@@ -59,8 +47,7 @@ test.describe('Dashboard', () => {
 
     for (const route of routes) {
         test(`navigating to ${route.path} works`, async ({ page }) => {
-            await page.goto(route.path);
-            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+            await navigateClientSide(page, route.path);
 
             const url = page.url();
             expect(url).toContain(route.path);

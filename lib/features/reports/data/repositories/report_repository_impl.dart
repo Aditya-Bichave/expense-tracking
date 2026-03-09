@@ -515,33 +515,33 @@ class ReportRepositoryImpl implements ReportRepository {
       // Assuming the transaction type is TransactionModel, adjust if different
       final txn = hiveObject as ExpenseModel;
 
-      // ⚡ Bolt Performance Optimization
-      // Problem: Multiple getter access on txn.date creates unnecessary overhead
-      // Solution: Cache txn.date in a local variable
-      final date = txn.date;
-
       final int cacheKey;
       switch (granularity) {
         case TimeSeriesGranularity.daily:
         case TimeSeriesGranularity
             .weekly: // Using daily cacheKey for weekly is ok since week calculation uses exact date
-          cacheKey = date.year * 10000 + date.month * 100 + date.day;
+          cacheKey =
+              txn.date.year * 10000 + txn.date.month * 100 + txn.date.day;
           break;
         case TimeSeriesGranularity.monthly:
-          cacheKey = date.year * 100 + date.month;
+          cacheKey = txn.date.year * 100 + txn.date.month;
           break;
       }
 
       final DateTime periodKey = dateCache.putIfAbsent(cacheKey, () {
         switch (granularity) {
           case TimeSeriesGranularity.daily:
-            return DateTime(date.year, date.month, date.day);
+            return DateTime(txn.date.year, txn.date.month, txn.date.day);
           case TimeSeriesGranularity.weekly:
             int daysToSubtract =
-                date.weekday - 1; // Assuming Monday is start of week (1)
-            return DateTime(date.year, date.month, date.day - daysToSubtract);
+                txn.date.weekday - 1; // Assuming Monday is start of week (1)
+            return DateTime(
+              txn.date.year,
+              txn.date.month,
+              txn.date.day - daysToSubtract,
+            );
           case TimeSeriesGranularity.monthly:
-            return DateTime(date.year, date.month, 1);
+            return DateTime(txn.date.year, txn.date.month, 1);
         }
       });
 
@@ -965,16 +965,12 @@ class ReportRepositoryImpl implements ReportRepository {
           .subtract(const Duration(microseconds: 1));
 
       // Filter expenses for *this* budget within the *effective* date range
-      // ⚡ Bolt Performance Optimization
-      // Problem: Using .where().fold() creates intermediate WhereIterable and invokes closures multiple times
-      // Solution: Use a single for loop to filter and accumulate
-      double spent = 0.0;
-      for (final exp in candidateExpenses) {
-        if (!exp.date.isBefore(effStart) &&
-            !exp.date.isAfter(endDateInclusive)) {
-          spent += exp.amount;
-        }
-      }
+      final double spent = candidateExpenses
+          .where((exp) {
+            return !exp.date.isBefore(effStart) &&
+                !exp.date.isAfter(endDateInclusive);
+          })
+          .fold(0.0, (sum, exp) => sum + exp.amount);
 
       final target = b.targetAmount;
       final variance = target - spent;
@@ -1093,13 +1089,9 @@ class ReportRepositoryImpl implements ReportRepository {
         );
       }
 
-      // ⚡ Bolt Performance Optimization
-      // Problem: DateTime(2100) is instantiated multiple times during sort
-      // Solution: Cache the fallback date outside the sort closure
-      final defaultDate = DateTime(2100);
       progressList.sort(
-        (a, b) => (a.goal.targetDate ?? defaultDate).compareTo(
-          b.goal.targetDate ?? defaultDate,
+        (a, b) => (a.goal.targetDate ?? DateTime(2100)).compareTo(
+          b.goal.targetDate ?? DateTime(2100),
         ),
       );
       log.info(
@@ -1261,25 +1253,24 @@ class ReportRepositoryImpl implements ReportRepository {
       }
       final allContributions = contribResult.getOrElse(() => []);
 
-      // ⚡ Bolt Performance Optimization
-      // Problem: .where(...).toList() followed by an iteration creates unnecessary intermediate lists
-      // Solution: Filter and aggregate in a single pass
-      // 2 & 3. Filter contributions by date range and aggregate by day
+      // 2. Filter contributions by date range
+      final contributionsInRange = allContributions.where((c) {
+        return !c.date.isBefore(startDate) && !c.date.isAfter(endDateEndOfDay);
+      }).toList();
+
+      // 3. Aggregate by day
       final Map<DateTime, double> aggregatedData = {};
-      for (final contribution in allContributions) {
-        if (!contribution.date.isBefore(startDate) &&
-            !contribution.date.isAfter(endDateEndOfDay)) {
-          DateTime periodKey = DateTime(
-            contribution.date.year,
-            contribution.date.month,
-            contribution.date.day,
-          );
-          aggregatedData.update(
-            periodKey,
-            (value) => value + contribution.amount,
-            ifAbsent: () => contribution.amount,
-          );
-        }
+      for (final contribution in contributionsInRange) {
+        DateTime periodKey = DateTime(
+          contribution.date.year,
+          contribution.date.month,
+          contribution.date.day,
+        );
+        aggregatedData.update(
+          periodKey,
+          (value) => value + contribution.amount,
+          ifAbsent: () => contribution.amount,
+        );
       }
 
       // 4. Fill missing days with 0 and create TimeSeriesDataPoints

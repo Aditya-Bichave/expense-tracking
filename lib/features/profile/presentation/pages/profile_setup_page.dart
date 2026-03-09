@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -63,7 +64,9 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
     try {
       final tz = await FlutterTimezone.getLocalTimezone();
       if (mounted) setState(() => _timezone = tz.toString());
-    } catch (_) {}
+    } catch (e, s) {
+      log.severe('Silent failure: $e\n$s');
+    }
   }
 
   Future<void> _pickImage() async {

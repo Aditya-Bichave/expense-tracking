@@ -1,3 +1,4 @@
+import 'package:expense_tracker/features/auth/presentation/pages/e2e_bypass_page.dart';
 // lib/router.dart
 import 'dart:async';
 import 'package:expense_tracker/core/constants/route_names.dart';
@@ -95,9 +96,14 @@ class AppRouter {
       sl<SettingsBloc>().stream,
     ]),
     redirect: (context, state) {
+      final location = state.uri.path;
+      if (const bool.fromEnvironment('E2E_MODE') == true &&
+          location == '/e2e-bypass') {
+        return null; // Exempt bypass page from all auth and profile guards
+      }
+
       final sessionState = sl<SessionCubit>().state;
       final settingsState = sl<SettingsBloc>().state;
-      final location = state.uri.path;
       final isLoggingIn =
           location == RouteNames.login ||
           location == RouteNames.initialSetup ||
@@ -150,6 +156,11 @@ class AppRouter {
             const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       GoRoute(path: '/lock', builder: (context, state) => const LockScreen()),
+      if (const bool.fromEnvironment('E2E_MODE') == true)
+        GoRoute(
+          path: '/e2e-bypass',
+          builder: (context, state) => const E2EBypassPage(),
+        ),
       GoRoute(
         path: '/profile-setup',
         builder: (context, state) => BlocProvider<ProfileBloc>(

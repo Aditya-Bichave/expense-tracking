@@ -106,7 +106,9 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
         positiveBalances[entry.key] = entry.value;
         accountNames.add(entry.key);
         balances.add(entry.value);
-        sectionColors.add(_colorCache[entry.key]!);
+        sectionColors.add(
+          _colorCache[entry.key] ?? Colors.grey,
+        ); // Safe fallback
         totalPositiveBalance += entry.value;
       }
     }

@@ -1,3 +1,5 @@
+import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
+import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
@@ -271,5 +273,140 @@ void main() {
         expect: () => [const TransactionListState()],
       );
     });
+  });
+
+  group('_onFetchTransactionById Edge Cases', () {
+    blocTest<TransactionListBloc, TransactionListState>(
+      'emits error when transaction not found in repositories',
+      build: () {
+        when(
+          () => mockExpenseRepository.getExpenseById('txn-123'),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockIncomeRepository.getIncomeById('txn-123'),
+        ).thenAnswer((_) async => const Right(null));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(const FetchTransactionById('txn-123')),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.errorMessage,
+          'errorMessage',
+          'Transaction not found',
+        ),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'clears selected transaction',
+      build: () => bloc,
+      act: (bloc) => bloc.add(const ClearSelectedTransaction()),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.selectedTransaction,
+          'selectedTransaction',
+          null,
+        ),
+      ],
+    );
+  });
+
+  group('_onFetchTransactionById Found Cases', () {
+    blocTest<TransactionListBloc, TransactionListState>(
+      'emits existing transaction if already in list',
+      build: () => bloc,
+      seed: () => TransactionListState(
+        status: ListStatus.success,
+        transactions: [
+          tTxnExpense,
+        ], // Make sure tTxnExpense exists or we dummy it
+      ),
+      act: (bloc) => bloc.add(FetchTransactionById(tTxnExpense.id)),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.selectedTransaction,
+          'selectedTransaction',
+          tTxnExpense,
+        ),
+      ],
+    );
+  });
+
+  group('_onFetchTransactionById Found from Repo Cases', () {
+    final fixedDate = DateTime(2020);
+    final testExpense = Expense(
+      id: 'txn-123',
+      title: 'test_desc',
+      amount: 10,
+      date: fixedDate,
+      accountId: 'acc1',
+    );
+    final testIncome = Income(
+      id: 'txn-123',
+      title: 'test_desc',
+      amount: 10,
+      date: fixedDate,
+      accountId: 'acc1',
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'emits transaction when found in expense repository',
+      build: () {
+        when(
+          () => mockExpenseRepository.getExpenseById('txn-123'),
+        ).thenAnswer((_) async => Right(testExpense));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(const FetchTransactionById('txn-123')),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.selectedTransaction?.id,
+          'id',
+          'txn-123',
+        ),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'emits transaction when found in income repository',
+      build: () {
+        when(
+          () => mockExpenseRepository.getExpenseById('txn-123'),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockIncomeRepository.getIncomeById('txn-123'),
+        ).thenAnswer((_) async => Right(testIncome));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(const FetchTransactionById('txn-123')),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.selectedTransaction?.id,
+          'id',
+          'txn-123',
+        ),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'handles fetch errors gracefully',
+      build: () {
+        when(
+          () => mockExpenseRepository.getExpenseById('txn-123'),
+        ).thenAnswer((_) async => const Left(CacheFailure('fail')));
+        when(
+          () => mockIncomeRepository.getIncomeById('txn-123'),
+        ).thenAnswer((_) async => const Left(CacheFailure('fail')));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(const FetchTransactionById('txn-123')),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.errorMessage,
+          'err',
+          'Transaction not found',
+        ),
+      ],
+    );
   });
 }

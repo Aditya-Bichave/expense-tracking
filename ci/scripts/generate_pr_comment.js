@@ -1,43 +1,32 @@
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
+const fs = require('fs');
+const execSync = require('child_process').execSync;
+const path = require('path');
+const EXPECTED_FLOWS = require('./shared/expectedFlows');
 
-const ARTIFACTS_DIR = process.env.ARTIFACTS_DIR || ".";
-const GITHUB_RUN_ID = process.env.GITHUB_RUN_ID || "";
-const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY || "";
-const SHA = process.env.GITHUB_SHA || "HEAD";
-const HEAD_REF = process.env.GITHUB_HEAD_REF || "current";
+const HEAD_REF = process.env.GITHUB_HEAD_REF || "local";
 const BASE_REF = process.env.GITHUB_BASE_REF || "main";
-const RUNNER_OS = process.env.RUNNER_OS || "Linux";
 
-const RUN_URL = GITHUB_RUN_ID ? `https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}` : "#";
+let RUN_URL = "local-run";
+if (process.env.GITHUB_SERVER_URL && process.env.GITHUB_REPOSITORY && process.env.GITHUB_RUN_ID) {
+    RUN_URL = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+}
+
+const RUNNER_OS = process.env.RUNNER_OS || "Linux";
+const ARTIFACTS_DIR = process.env.ARTIFACTS_DIR || "artifacts";
 
 // --- HELPERS ---
 
-function safeRead(filePath, fallback = "") {
-  try {
-    if (fs.existsSync(filePath)) return fs.readFileSync(filePath, "utf8");
-  } catch (e) { }
-  return fallback;
+function safeRead(filePath) {
+  try { return fs.readFileSync(filePath, "utf8"); }
+  catch (e) { return null; }
 }
 
-function safeJson(filePath, fallback = {}) {
-  try {
-    const content = safeRead(filePath);
-    return content ? JSON.parse(content) : fallback;
-  } catch (e) {
-    return fallback;
-  }
+function safeJson(filePath) {
+  try { return JSON.parse(fs.readFileSync(filePath, "utf8")); }
+  catch (e) { return {}; }
 }
 
 function getVersion(cmd) {
-  // Check if we have a version file in metadata artifact
-  const metaDir = path.join(ARTIFACTS_DIR, "metadata");
-  if (cmd.includes("flutter")) {
-    const flutterFile = path.join(metaDir, "flutter-version.txt");
-    if (fs.existsSync(flutterFile)) return fs.readFileSync(flutterFile, "utf8").trim();
-  }
-
   try {
     return execSync(cmd).toString().trim().split("\n")[0];
   } catch (e) {
@@ -47,15 +36,11 @@ function getVersion(cmd) {
 
 function getGitImpact() {
   try {
-    // Files changed, additions, deletions
     const stats = execSync(`git diff --shortstat origin/${BASE_REF}...HEAD`).toString().trim();
-    console.log(`[DEBUG] Git Shortstat: ${stats}`);
     const files = (stats.match(/(\d+) files? changed/) || [0, 0])[1];
     const adds = (stats.match(/(\d+) insertions?/) || [0, 0])[1];
     const dels = (stats.match(/(\d+) deletions?/) || [0, 0])[1];
 
-    // Tests Added (lines added to files containing 'test')
-    // We look for '+' at start of line in files with 'test' in name
     const testsOutput = execSync(`git diff --numstat origin/${BASE_REF}...HEAD`).toString().trim();
     let testsAdded = 0;
     testsOutput.split("\n").forEach(line => {
@@ -75,13 +60,9 @@ function getCoverage() {
   const lcovPath = path.join(ARTIFACTS_DIR, "coverage", "lcov.info");
   const diffPath = path.join(ARTIFACTS_DIR, "coverage", "diff-coverage.txt");
 
-  console.log(`[DEBUG] Reading coverage from: ${lcovPath}`);
-  console.log(`[DEBUG] Reading diff from: ${diffPath}`);
-
   let totalPct = 0;
   let diffPct = 0;
 
-  // Global Coverage
   const lcov = safeRead(lcovPath);
   if (lcov) {
     let lf = 0, lh = 0;
@@ -90,24 +71,14 @@ function getCoverage() {
       if (line.startsWith("LH:")) lh += parseInt(line.split(":")[1]);
     });
     totalPct = lf ? (lh / lf) * 100 : 0;
-    console.log(`[DEBUG] Total Coverage: ${totalPct.toFixed(2)}% (LF: ${lf}, LH: ${lh})`);
-  } else {
-    console.log(`[DEBUG] LCOV file not found or empty at ${lcovPath}`);
   }
 
-  // Diff Coverage
   const diffContent = safeRead(diffPath);
   if (diffContent) {
-    // Matches "Total: 85%", "Coverage: 85.0%", "Diff Coverage: 85%" etc.
     const match = diffContent.match(/(?:Total|Coverage|Diff Coverage):\s+(\d+(?:\.\d+)?)%/i);
     if (match) {
       diffPct = parseFloat(match[1]);
-      console.log(`[DEBUG] Found Diff Coverage: ${diffPct}%`);
-    } else {
-      console.log(`[DEBUG] Regex failed to match diff coverage in: ${diffContent.substring(0, 50)}...`);
     }
-  } else {
-    console.log(`[DEBUG] Diff coverage file not found at ${diffPath}`);
   }
 
   return {
@@ -147,7 +118,6 @@ function getSmokeTest() {
   const startup = data.startupTimeMs ? `${data.startupTimeMs}ms` : "N/A";
   const startupStatus = (data.startupTimeMs && data.startupTimeMs < 5000) ? "✅" : "⚠️";
 
-  // Flakiness Detector (Retries)
   let retries = 0;
   if (data.routes) {
     data.routes.forEach(r => { if (r.retry) retries += r.retry; });
@@ -163,6 +133,39 @@ function getSmokeTest() {
     consoleErrors: data.consoleErrors || [],
     failedRoutes: data.failedRoutes || [],
     flakiness: retries
+  };
+}
+
+function getE2ECoverage() {
+  const covPath = path.join(ARTIFACTS_DIR, "e2e-results", "e2e-coverage.json");
+  const data = safeJson(covPath);
+
+  let coveredFlows = 0;
+  let summary = [];
+
+  if (data && data.flows) {
+    EXPECTED_FLOWS.forEach(flow => {
+        const flowData = data.flows[flow];
+        if (flowData && flowData.total > 0) {
+            coveredFlows++;
+            const status = flowData.passed === flowData.total ? '✅' : '⚠️';
+            summary.push(`- **${flow}**: ${status} (${flowData.passed}/${flowData.total})`);
+        } else {
+            summary.push(`- **${flow}**: ❌ (0/0)`);
+        }
+    });
+  } else {
+    EXPECTED_FLOWS.forEach(flow => {
+        summary.push(`- **${flow}**: ❌ (0/0)`);
+    });
+  }
+
+  const coveragePct = Math.round((coveredFlows / EXPECTED_FLOWS.length) * 100);
+
+  return {
+    pct: coveragePct,
+    summary: summary,
+    hasData: !!(data && data.flows)
   };
 }
 
@@ -185,23 +188,26 @@ function getJobBreakdown() {
 
 // --- CALC QUALITY SCORE ---
 
-function calculateQualityScore(cov, smoke, bundle, jobs) {
+function calculateQualityScore(cov, smoke, bundle, jobs, e2e) {
   let score = 0;
 
-  // 1. Total Coverage (25)
-  score += Math.min((cov.total / 80) * 25, 25);
+  // Total Coverage (20)
+  score += Math.min((cov.total / 80) * 20, 20);
 
-  // 2. Diff Coverage (25)
-  score += Math.min((cov.diff / 80) * 25, 25);
+  // Diff Coverage (20)
+  score += Math.min((cov.diff / 80) * 20, 20);
 
-  // 3. Smoke Tests (30)
-  if (smoke.passed) score += 30;
-  else if (smoke.routesPass > 0) score += (smoke.routesPass / (smoke.routesPass + smoke.routesFail)) * 15;
+  // Smoke Tests (20)
+  if (smoke.passed) score += 20;
+  else if (smoke.routesPass > 0) score += (smoke.routesPass / (smoke.routesPass + smoke.routesFail)) * 10;
 
-  // 4. Bundle (10)
+  // E2E Flow Coverage (20)
+  score += Math.min((e2e.pct / 100) * 20, 20);
+
+  // Bundle (10)
   if (bundle.passed) score += 10;
 
-  // 5. Policy/Static (10)
+  // Policy/Static (10)
   if (process.env.STATIC_STATUS === 'success') score += 10;
 
   return Math.round(score);
@@ -221,14 +227,15 @@ const coverage = getCoverage();
 const bundle = getBundleSize();
 const smoke = getSmokeTest();
 const jobs = getJobBreakdown();
-const score = calculateQualityScore(coverage, smoke, bundle, jobs);
+const e2e = getE2ECoverage();
+const score = calculateQualityScore(coverage, smoke, bundle, jobs, e2e);
 
 const flutterVerRaw = getVersion("flutter --version");
 const flutterVer = flutterVerRaw.replace(/^Flutter\s+/i, '').split(' • ')[0];
 const nodeVer = getVersion("node -v");
 
 const hasFailures = jobs.static === "❌" || jobs.unit === "❌" || jobs.build === "❌" || jobs.smoke === "❌" || jobs.e2e === "❌";
-const hasWarnings = coverage.diff < 80 || (jobs.build === "✅" && !bundle.passed) || (jobs.smoke === "✅" && !smoke.passed);
+const hasWarnings = coverage.diff < 80 || (jobs.build === "✅" && !bundle.passed) || (jobs.smoke === "✅" && !smoke.passed) || (e2e.pct < 100);
 
 const overallStatus = computeOverallStatus(hasFailures, hasWarnings, score);
 const statusLabel = overallStatus === 'Success' ? 'Passing' : (overallStatus === 'Warning' ? 'Attention Needed' : 'Issues Found');
@@ -242,6 +249,7 @@ if (jobs.static === "❌") topIssues.push("🛡️ **Static Analysis Failed**: P
 if (jobs.unit === "❌") topIssues.push("🧪 **Unit Tests Failed**: Check test logs for specific failures.");
 if (smoke.routesFail > 0) topIssues.push(`💨 **Smoke Test Failures**: \`${smoke.failedRoutes[0]}\` and ${smoke.routesFail - 1} more routes.`);
 if (coverage.diff < 80) topIssues.push(`🧪 **Low Diff Coverage**: PR coverage is only **${coverage.diff}%** (target 80%).`);
+if (e2e.pct < 100) topIssues.push(`🎭 **Incomplete E2E Flow Coverage**: Only **${e2e.pct}%** of flows covered.`);
 if (smoke.consoleErrors && smoke.consoleErrors.length > 0) topIssues.push(`🚫 **Console Errors Detected**: ${smoke.consoleErrors.length} errors found during smoke tests.`);
 if (jobs.build === "✅" && !bundle.passed) topIssues.push("📦 **Bundle Size Exceeded**: Main JS bundle is over the 5MB threshold.");
 
@@ -256,7 +264,7 @@ const body = `<!-- ci-summary-bot -->
 > **Quality Score:** **${score}/100** ${score >= 90 ? '🏆' : (score >= 70 ? '⚖️' : '💔')}
 > [View Full Logs](${RUN_URL})
 >
-> **Run:** \`${SHA.substring(0, 7)}\` • **Branch:** \`${HEAD_REF}\` → \`${BASE_REF}\`
+> **Run:** \`${process.env.GITHUB_SHA ? process.env.GITHUB_SHA.substring(0, 7) : 'local'}\` • **Branch:** \`${HEAD_REF}\` → \`${BASE_REF}\`
 > **Env:** Flutter \`${flutterVer.split(' • ')[0]}\` • Node \`${nodeVer}\` • Runner \`${RUNNER_OS}\`
 
 ---
@@ -272,10 +280,16 @@ const body = `<!-- ci-summary-bot -->
 | :--- | :--- | :--- | :---: | :---: |
 | 🧪 **Testing** | Total Coverage | **${coverage.total.toFixed(2)}%** | — | ${coverage.status} |
 | 🧩 **Diff Coverage** | PR Diff Coverage | **${coverage.diff}%** | — | ${coverage.diffStatus} |
+| 🎭 **E2E Flows** | Flow Coverage | **${e2e.pct}%** | — | ${e2e.pct >= 100 ? "✅" : "⚠️"} |
 | 📦 **Bundle** | Main JS | **${bundle.main}** | — | ${bundle.status} |
 | 🗜️ **Bundle** | Gzip | **${bundle.gzip}** | — | ${bundle.status} |
 | ⚡ **UX & Stability** | Startup Time | **${smoke.startup}** | — | ${smoke.startupStatus} |
 | 💨 **Smoke** | Routes Checked | **${smoke.routesPass} succ, ${smoke.routesFail} fail** | — | ${smoke.status} |
+
+---
+
+### 🎭 E2E Flow Coverage Summary
+${e2e.summary.join('\n')}
 
 ---
 

@@ -36,9 +36,12 @@ class GroupMembersTab extends StatelessWidget {
           // ⚡ Bolt Performance Optimization
           // Problem: .cast<dynamic>() creates an unnecessary wrapper iterable and defeats type safety
           // Solution: Use cast-free iteration safely
-          final currentMember = state.members.where((m) => m.userId == currentUser.id).firstOrNull;
+          final currentMember = state.members
+              .where((m) => m.userId == currentUser.id)
+              .firstOrNull;
 
-          final isAdmin = currentMember != null && currentMember.role == GroupRole.admin;
+          final isAdmin =
+              currentMember != null && currentMember.role == GroupRole.admin;
 
           return ListView.builder(
             itemCount: state.members.length,

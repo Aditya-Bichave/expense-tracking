@@ -331,7 +331,9 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
           if (file.path.endsWith('.hive') || file.path.endsWith('.lock')) {
             try {
               await file.delete();
-            } catch (_) {}
+            } catch (e, s) {
+              log.severe('Silent failure: $e\n$s');
+            }
           }
         }),
       );

@@ -177,7 +177,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --release
+        run: flutter build web --release --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} --dart-define=E2E_MODE=true
 
       - name: Check Bundle Size
         run: node ci/scripts/bundle_size.js
