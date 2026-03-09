@@ -47,6 +47,7 @@ class GroupExpense extends Equatable {
   final DateTime occurredAt;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String? categoryId;
 
   final List<ExpensePayer> payers;
   final List<ExpenseSplit> splits;
@@ -61,6 +62,7 @@ class GroupExpense extends Equatable {
     required this.occurredAt,
     required this.createdAt,
     required this.updatedAt,
+    this.categoryId,
     this.payers = const [],
     this.splits = const [],
   });
@@ -76,6 +78,7 @@ class GroupExpense extends Equatable {
     occurredAt,
     createdAt,
     updatedAt,
+    categoryId,
     payers,
     splits,
   ];

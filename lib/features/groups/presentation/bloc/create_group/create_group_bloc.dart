@@ -4,6 +4,8 @@ import 'package:expense_tracker/features/groups/domain/usecases/create_group.dar
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_event.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_state.dart';
 import 'package:uuid/uuid.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
   final CreateGroup _createGroup;
@@ -22,11 +24,32 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
   ) async {
     emit(CreateGroupLoading());
 
+    String? photoUrl;
+    final groupId = _uuid.v4();
+
+    if (event.photoFile != null) {
+      try {
+        final fileName =
+            '$groupId-${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final response = await Supabase.instance.client.storage
+            .from('group-avatars')
+            .upload(fileName, event.photoFile!);
+
+        photoUrl = Supabase.instance.client.storage
+            .from('group-avatars')
+            .getPublicUrl(fileName);
+      } catch (e) {
+        log.warning('Failed to upload group photo: $e');
+        // We continue anyway, just without a photo
+      }
+    }
+
     final newGroup = GroupEntity(
-      id: _uuid.v4(),
+      id: groupId,
       name: event.name,
       type: event.type,
       currency: event.currency,
+      photoUrl: photoUrl,
       createdBy: event.userId,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

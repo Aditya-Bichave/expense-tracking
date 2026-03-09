@@ -132,6 +132,7 @@ class _GroupListPageState extends State<GroupListPage> {
                 return AppListTile(
                   leading: AppAvatar(
                     initials: _getInitialsForGroup(group.name),
+                    imageUrl: group.photoUrl,
                     backgroundColor: kit.colors.primaryContainer,
                     foregroundColor: kit.colors.onPrimaryContainer,
                   ),
