@@ -328,18 +328,19 @@ void main() {
   });
 
   group('_onFetchTransactionById Found from Repo Cases', () {
+    final fixedDate = DateTime(2020);
     final testExpense = Expense(
       id: 'txn-123',
       title: 'test_desc',
       amount: 10,
-      date: DateTime.now(),
+      date: fixedDate,
       accountId: 'acc1',
     );
     final testIncome = Income(
       id: 'txn-123',
       title: 'test_desc',
       amount: 10,
-      date: DateTime.now(),
+      date: fixedDate,
       accountId: 'acc1',
     );
 

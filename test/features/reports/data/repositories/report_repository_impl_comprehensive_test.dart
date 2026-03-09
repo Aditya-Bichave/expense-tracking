@@ -737,67 +737,70 @@ void main() {
   });
 
   group('getSpendingByCategory Edge Cases', () {
-    test('returns Left when previous data fetch fails', () async {
-      final start = DateTime(2023, 10, 1);
-      final end = DateTime(2023, 10, 31);
+    test(
+      'returns Right and empty data when previous data fetch fails',
+      () async {
+        final start = DateTime(2023, 10, 1);
+        final end = DateTime(2023, 10, 31);
 
-      // Current data succeeds
-      when(
-        () => mockExpenseRepository.getExpenses(
+        // Current data succeeds
+        when(
+          () => mockExpenseRepository.getExpenses(
+            startDate: start,
+            endDate: end,
+            accountId: null,
+            categoryId: null,
+          ),
+        ).thenAnswer((_) async => const Right([]));
+        when(
+          () => mockIncomeRepository.getIncomes(
+            startDate: start,
+            endDate: end,
+            accountId: null,
+            categoryId: null,
+          ),
+        ).thenAnswer((_) async => const Right([]));
+        when(
+          () => mockCategoryRepository.getAllCategories(),
+        ).thenAnswer((_) async => const Right([]));
+
+        // Previous data fails
+        final prevEnd = start.subtract(const Duration(microseconds: 1));
+        final prevStart = prevEnd.subtract(end.difference(start));
+
+        when(
+          () => mockExpenseRepository.getExpenses(
+            startDate: prevStart,
+            endDate: prevEnd,
+            accountId: null,
+            categoryId: null,
+          ),
+        ).thenAnswer(
+          (_) async => const Left(CacheFailure('Previous fetch failed')),
+        );
+        when(
+          () => mockIncomeRepository.getIncomes(
+            startDate: prevStart,
+            endDate: prevEnd,
+            accountId: null,
+            categoryId: null,
+          ),
+        ).thenAnswer((_) async => const Right([]));
+
+        final result = await repository.getSpendingByCategory(
           startDate: start,
           endDate: end,
-          accountId: null,
-          categoryId: null,
-        ),
-      ).thenAnswer((_) async => const Right([]));
-      when(
-        () => mockIncomeRepository.getIncomes(
-          startDate: start,
-          endDate: end,
-          accountId: null,
-          categoryId: null,
-        ),
-      ).thenAnswer((_) async => const Right([]));
-      when(
-        () => mockCategoryRepository.getAllCategories(),
-      ).thenAnswer((_) async => const Right([]));
+          compareToPrevious: true,
+        );
 
-      // Previous data fails
-      final prevEnd = start.subtract(const Duration(microseconds: 1));
-      final prevStart = prevEnd.subtract(end.difference(start));
-
-      when(
-        () => mockExpenseRepository.getExpenses(
-          startDate: prevStart,
-          endDate: prevEnd,
-          accountId: null,
-          categoryId: null,
-        ),
-      ).thenAnswer(
-        (_) async => const Left(CacheFailure('Previous fetch failed')),
-      );
-      when(
-        () => mockIncomeRepository.getIncomes(
-          startDate: prevStart,
-          endDate: prevEnd,
-          accountId: null,
-          categoryId: null,
-        ),
-      ).thenAnswer((_) async => const Right([]));
-
-      final result = await repository.getSpendingByCategory(
-        startDate: start,
-        endDate: end,
-        compareToPrevious: true,
-      );
-
-      expect(result.isRight(), true);
-      result.fold(
-        (l) => fail('Should not fail overall if previous fetch fails'),
-        (r) {
-          expect(r.spendingByCategory, isEmpty);
-        },
-      );
-    });
+        expect(result.isRight(), true);
+        result.fold(
+          (l) => fail('Should not fail overall if previous fetch fails'),
+          (r) {
+            expect(r.spendingByCategory, isEmpty);
+          },
+        );
+      },
+    );
   });
 }
