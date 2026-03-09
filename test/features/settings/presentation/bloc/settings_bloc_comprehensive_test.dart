@@ -370,7 +370,7 @@ void main() {
       expect: () => [
         isA<SettingsState>().having(
           (s) => s.errorMessage,
-          'error',
+          'errorMessage',
           'Country Error',
         ),
       ],
@@ -392,7 +392,9 @@ void main() {
           'status',
           SettingsStatus.loading,
         ),
-        isA<SettingsState>().having((s) => s.isAppLockEnabled, 'lock', true),
+        isA<SettingsState>()
+            .having((s) => s.isAppLockEnabled, 'lock', true)
+            .having((s) => s.status, 'status', SettingsStatus.loaded),
       ],
     );
 
@@ -411,11 +413,9 @@ void main() {
           'status',
           SettingsStatus.loading,
         ),
-        isA<SettingsState>().having(
-          (s) => s.errorMessage,
-          'error',
-          'Lock Error',
-        ),
+        isA<SettingsState>()
+            .having((s) => s.errorMessage, 'errorMessage', 'Lock Error')
+            .having((s) => s.status, 'status', SettingsStatus.error),
       ],
     );
 
@@ -455,6 +455,29 @@ void main() {
       expect: () => [
         isA<SettingsState>().having((s) => s.setupSkipped, 'skip', true),
       ],
+    );
+  });
+
+  group('SettingsState copyWith edge cases', () {
+    test(
+      'clears packageInfoError properly when clearAllMessages is true and new error is provided',
+      () {
+        const state = SettingsState(packageInfoError: 'old error');
+        final newState = state.copyWith(
+          clearAllMessages: true,
+          packageInfoError: () => 'new error',
+        );
+        expect(newState.packageInfoError, 'new error');
+      },
+    );
+
+    test(
+      'clears packageInfoError when clearAllMessages is true and no new error is provided',
+      () {
+        const state = SettingsState(packageInfoError: 'old error');
+        final newState = state.copyWith(clearAllMessages: true);
+        expect(newState.packageInfoError, null);
+      },
     );
   });
 }

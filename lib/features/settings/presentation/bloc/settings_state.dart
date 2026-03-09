@@ -83,7 +83,7 @@ class SettingsState extends Equatable {
       selectedCountryCode: selectedCountryCode ?? this.selectedCountryCode,
       isAppLockEnabled: isAppLockEnabled ?? this.isAppLockEnabled,
       errorMessage: clearAllMessages
-          ? null
+          ? (errorMessage != null ? errorMessage() : null)
           : errorMessage != null
           ? errorMessage()
           : this.errorMessage,
@@ -92,7 +92,7 @@ class SettingsState extends Equatable {
       packageInfoStatus: packageInfoStatus ?? this.packageInfoStatus,
       appVersion: appVersion != null ? appVersion() : this.appVersion,
       packageInfoError: clearAllMessages
-          ? null
+          ? (packageInfoError != null ? packageInfoError() : null)
           : packageInfoError != null
           ? packageInfoError()
           : this.packageInfoError,
