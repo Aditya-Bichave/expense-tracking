@@ -19,6 +19,11 @@ class SummaryCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return BlocBuilder<SummaryBloc, SummaryState>(
+      buildWhen: (previous, current) =>
+          previous.runtimeType != current.runtimeType ||
+          (previous is SummaryLoaded &&
+              current is SummaryLoaded &&
+              previous.summary != current.summary),
       builder: (context, state) {
         log.info(
           "[SummaryCard] BlocBuilder running for state: ${state.runtimeType}",
