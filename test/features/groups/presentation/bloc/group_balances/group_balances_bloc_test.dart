@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'dart:async';
 
 import 'package:bloc_test/bloc_test.dart';
@@ -23,7 +24,7 @@ void main() {
   late MockSupabaseClient mockSupabase;
   late MockFunctionsClient mockFunctions;
   late MockAuthSessionService mockAuthSessionService;
-  late StreamController<dynamic> mockDataChangeController;
+  late StreamController<DataChangedEvent> mockDataChangeController;
   late GroupBalancesBloc bloc;
   late MockUser mockUser;
 
@@ -31,7 +32,7 @@ void main() {
     mockSupabase = MockSupabaseClient();
     mockFunctions = MockFunctionsClient();
     mockAuthSessionService = MockAuthSessionService();
-    mockDataChangeController = StreamController<dynamic>.broadcast();
+    mockDataChangeController = StreamController<DataChangedEvent>.broadcast();
     mockUser = MockUser();
 
     when(() => mockSupabase.functions).thenReturn(mockFunctions);

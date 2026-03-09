@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -14,8 +15,8 @@ import 'group_balances_state.dart';
 class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
   final SupabaseClient supabase;
   final AuthSessionService authSessionService;
-  final Stream<dynamic>? dataChangeStream;
-  StreamSubscription<dynamic>? _dataChangeSubscription;
+  final Stream<DataChangedEvent>? dataChangeStream;
+  StreamSubscription<DataChangedEvent>? _dataChangeSubscription;
   final _log = Logger('GroupBalancesBloc');
   String? _currentGroupId;
 
@@ -31,9 +32,8 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
 
     if (dataChangeStream != null) {
       _dataChangeSubscription = dataChangeStream!.listen((event) {
-        if ((event.table == 'settlements') ||
-            (event.table == 'expenses') ||
-            (event.table == 'group_expenses')) {
+        if (event.type == DataChangeType.expense ||
+            event.type == DataChangeType.system) {
           add(const BalancesRealtimeUpdated());
         }
       });

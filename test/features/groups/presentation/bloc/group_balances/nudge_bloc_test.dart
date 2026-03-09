@@ -8,6 +8,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockFunctionsClient extends Mock implements FunctionsClient {}
 
 void main() {
@@ -42,56 +43,69 @@ void main() {
     blocTest<NudgeBloc, NudgeState>(
       'emits [NudgeSending, NudgeSuccess] on success',
       build: () {
-        when(() => mockFunctions.invoke('send-nudge', body: any(named: 'body')))
-            .thenAnswer((_) async => FunctionResponse(status: 200));
+        when(
+          () => mockFunctions.invoke('send-nudge', body: any(named: 'body')),
+        ).thenAnswer((_) async => FunctionResponse(status: 200));
         return bloc;
       },
       act: (bloc) => bloc.add(const SendNudge(groupId: 'group1', debt: debt)),
-      expect: () => [
-        const NudgeSending('user1'),
-        const NudgeSuccess('user1'),
-      ],
+      expect: () => [const NudgeSending('user1'), const NudgeSuccess('user1')],
     );
 
     blocTest<NudgeBloc, NudgeState>(
       'emits [NudgeSending, NudgeFailure] on rate limit',
       build: () {
-        when(() => mockFunctions.invoke('send-nudge', body: any(named: 'body')))
-            .thenThrow(FunctionException(status: 429));
+        when(
+          () => mockFunctions.invoke('send-nudge', body: any(named: 'body')),
+        ).thenThrow(FunctionException(status: 429));
         return bloc;
       },
       act: (bloc) => bloc.add(const SendNudge(groupId: 'group1', debt: debt)),
       expect: () => [
         const NudgeSending('user1'),
-        isA<NudgeFailure>().having((s) => s.message, 'message', contains('every few minutes')),
+        isA<NudgeFailure>().having(
+          (s) => s.message,
+          'message',
+          contains('every few minutes'),
+        ),
       ],
     );
 
     blocTest<NudgeBloc, NudgeState>(
       'emits [NudgeSending, NudgeFailure] on no devices',
       build: () {
-        when(() => mockFunctions.invoke('send-nudge', body: any(named: 'body')))
-            .thenThrow(FunctionException(status: 404));
+        when(
+          () => mockFunctions.invoke('send-nudge', body: any(named: 'body')),
+        ).thenThrow(FunctionException(status: 404));
         return bloc;
       },
       act: (bloc) => bloc.add(const SendNudge(groupId: 'group1', debt: debt)),
       expect: () => [
         const NudgeSending('user1'),
-        isA<NudgeFailure>().having((s) => s.message, 'message', contains('registered devices')),
+        isA<NudgeFailure>().having(
+          (s) => s.message,
+          'message',
+          contains('registered devices'),
+        ),
       ],
     );
 
     blocTest<NudgeBloc, NudgeState>(
       'emits [NudgeSending, NudgeFailure] on general error',
       build: () {
-        when(() => mockFunctions.invoke('send-nudge', body: any(named: 'body')))
-            .thenThrow(Exception('Unknown error'));
+        when(
+          () => mockFunctions.invoke('send-nudge', body: any(named: 'body')),
+        ).thenThrow(Exception('Unknown error'));
         return bloc;
       },
       act: (bloc) => bloc.add(const SendNudge(groupId: 'group1', debt: debt)),
       expect: () => [
         const NudgeSending('user1'),
-        isA<NudgeFailure>().having((s) => s.message, 'message', contains('Unknown error')),
+        isA<NudgeFailure>().having(
+          (s) => s.message,
+          'message',
+          contains('Unknown error'),
+        ),
       ],
     );
   });
