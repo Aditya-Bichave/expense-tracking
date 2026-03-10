@@ -27,7 +27,6 @@ import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.
 import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
-import 'package:collection/collection.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
