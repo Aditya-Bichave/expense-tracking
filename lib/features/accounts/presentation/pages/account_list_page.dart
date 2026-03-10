@@ -163,9 +163,6 @@ class AccountListPage extends StatelessWidget {
                 // Avoid showing empty state during reload flicker
                 bodyContent = _buildEmptyState(context);
               } else {
-                final childIndexMap = {
-                  for (var i = 0; i < accounts.length; i++) accounts[i].id: i,
-                };
                 bodyContent = RefreshIndicator(
                   onRefresh: () async {
                     context.read<AccountListBloc>().add(
@@ -180,16 +177,10 @@ class AccountListPage extends StatelessWidget {
                         modeTheme?.pagePadding.copyWith(top: 8, bottom: 80) ??
                         const EdgeInsets.only(top: 8.0, bottom: 80.0),
                     itemCount: accounts.length,
-                    findChildIndexCallback: (Key key) {
-                      if (key is ValueKey<String>) {
-                        return childIndexMap[key.value];
-                      }
-                      return null;
-                    },
                     itemBuilder: (ctx, index) {
                       final account = accounts[index];
                       return Dismissible(
-                        key: ValueKey(account.id),
+                        key: Key('account_dismiss_${account.id}'),
                         direction: DismissDirection.endToStart,
                         background: Container(
                           /* ... background ... */

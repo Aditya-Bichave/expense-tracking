@@ -90,11 +90,6 @@ class BudgetsSubTab extends StatelessWidget {
             );
           } else {
             // Display the list of budgets
-            final childIndexMap = {
-              for (var i = 0; i < state.budgetsWithStatus.length; i++)
-                state.budgetsWithStatus[i].budget.id: i,
-            };
-
             content = ListView.builder(
               padding:
                   modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
@@ -103,16 +98,9 @@ class BudgetsSubTab extends StatelessWidget {
                     bottom: 90.0,
                   ), // Padding for potential FAB
               itemCount: state.budgetsWithStatus.length,
-              findChildIndexCallback: (Key key) {
-                if (key is ValueKey<String>) {
-                  return childIndexMap[key.value];
-                }
-                return null;
-              },
               itemBuilder: (ctx, index) {
                 final budgetStatus = state.budgetsWithStatus[index];
                 return BudgetCard(
-                      key: ValueKey(budgetStatus.budget.id),
                       budgetStatus: budgetStatus,
                       onTap: () {
                         // Navigate to detail view

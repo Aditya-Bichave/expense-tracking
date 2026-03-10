@@ -258,31 +258,16 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                       ),
                     )
                   else
-                    Builder(
-                      builder: (context) {
-                        final childIndexMap = {
-                          for (var i = 0; i < accounts.length; i++)
-                            accounts[i].id: i,
-                        };
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: accounts.length,
-                          findChildIndexCallback: (Key key) {
-                            if (key is ValueKey<String>) {
-                              return childIndexMap[key.value];
-                            }
-                            return null;
-                          },
-                          itemBuilder: (ctx, index) {
-                            final account = accounts[index];
-                            return AccountCard(
-                              key: ValueKey(account.id),
-                              account: account,
-                              onTap: () =>
-                                  _navigateToAccountDetail(context, account),
-                            );
-                          },
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: accounts.length,
+                      itemBuilder: (ctx, index) {
+                        final account = accounts[index];
+                        return AccountCard(
+                          account: account,
+                          onTap: () =>
+                              _navigateToAccountDetail(context, account),
                         );
                       },
                     ),
