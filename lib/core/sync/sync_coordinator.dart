@@ -27,15 +27,17 @@ class SyncCoordinator {
     ) {
       if (results.contains(ConnectivityResult.mobile) ||
           results.contains(ConnectivityResult.wifi)) {
-        log.info('Network connected. Processing outbox...');
-        _syncService.processOutbox();
+        _syncService.processOutbox().catchError((e, s) {
+          log.severe("Error in processOutbox connectivity listener: $e\n$s");
+        });
       }
     });
 
     _authSubscription = _client.auth.onAuthStateChange.listen((data) {
       if (data.session != null) {
-        log.info('User logged in. Initializing sync and realtime...');
-        _syncService.processOutbox();
+        _syncService.processOutbox().catchError((e, s) {
+          log.severe("Error in processOutbox auth listener: $e\n$s");
+        });
         _syncService.initializeRealtime();
       } else {
         log.info('User logged out. Disposing sync services...');
@@ -46,8 +48,9 @@ class SyncCoordinator {
 
     // Check if already logged in
     if (_client.auth.currentSession != null) {
-      log.info('Existing session found. Initializing sync and realtime...');
-      _syncService.processOutbox();
+      _syncService.processOutbox().catchError((e, s) {
+        log.severe("Error in processOutbox initial session check: $e\n$s");
+      });
       _syncService.initializeRealtime();
     }
   }
