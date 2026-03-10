@@ -18,6 +18,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/group_balances_bloc.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/group_balances_event.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/group_balances_state.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/nudge_bloc.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/nudge_event.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/nudge_state.dart';
 
 class MockGroupsBloc extends MockBloc<GroupsEvent, GroupsState>
     implements GroupsBloc {}
@@ -32,24 +38,53 @@ class MockGroupExpensesBloc
 
 class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
+class MockGroupBalancesBloc
+    extends MockBloc<GroupBalancesEvent, GroupBalancesState>
+    implements GroupBalancesBloc {}
+
+class MockNudgeBloc extends MockBloc<NudgeEvent, NudgeState>
+    implements NudgeBloc {}
+
 void main() {
   late MockGroupsBloc mockGroupsBloc;
   late MockGroupMembersBloc mockGroupMembersBloc;
   late MockGroupExpensesBloc mockGroupExpensesBloc;
   late MockAuthBloc mockAuthBloc;
+  late MockGroupBalancesBloc mockGroupBalancesBloc;
+  late MockNudgeBloc mockNudgeBloc;
 
   setUp(() {
     mockGroupsBloc = MockGroupsBloc();
     mockGroupMembersBloc = MockGroupMembersBloc();
     mockGroupExpensesBloc = MockGroupExpensesBloc();
     mockAuthBloc = MockAuthBloc();
+    mockGroupBalancesBloc = MockGroupBalancesBloc();
+    mockNudgeBloc = MockNudgeBloc();
 
     if (sl.isRegistered<GroupExpensesBloc>())
       sl.unregister<GroupExpensesBloc>();
     if (sl.isRegistered<GroupMembersBloc>()) sl.unregister<GroupMembersBloc>();
+    if (sl.isRegistered<GroupBalancesBloc>())
+      sl.unregister<GroupBalancesBloc>();
+    if (sl.isRegistered<NudgeBloc>()) sl.unregister<NudgeBloc>();
 
     sl.registerFactory<GroupExpensesBloc>(() => mockGroupExpensesBloc);
     sl.registerFactory<GroupMembersBloc>(() => mockGroupMembersBloc);
+    sl.registerFactory<GroupBalancesBloc>(() => mockGroupBalancesBloc);
+    sl.registerFactory<NudgeBloc>(() => mockNudgeBloc);
+
+    when(() => mockGroupsBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockGroupMembersBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockGroupExpensesBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockGroupBalancesBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
+    when(() => mockNudgeBloc.stream).thenAnswer((_) => const Stream.empty());
   });
 
   tearDown(() {
@@ -108,6 +143,10 @@ void main() {
     when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([tGroup]));
     when(() => mockGroupMembersBloc.state).thenReturn(GroupMembersInitial());
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(
+      () => mockGroupBalancesBloc.state,
+    ).thenReturn(const GroupBalancesLoading());
+    when(() => mockNudgeBloc.state).thenReturn(NudgeInitial());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
 
     await tester.pumpWidget(buildTestWidget());
@@ -122,6 +161,10 @@ void main() {
     when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded(const []));
     when(() => mockGroupMembersBloc.state).thenReturn(GroupMembersInitial());
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(
+      () => mockGroupBalancesBloc.state,
+    ).thenReturn(const GroupBalancesLoading());
+    when(() => mockNudgeBloc.state).thenReturn(NudgeInitial());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
 
     await tester.pumpWidget(buildTestWidget());
@@ -135,6 +178,10 @@ void main() {
       () => mockGroupMembersBloc.state,
     ).thenReturn(GroupMembersLoaded([tMemberAdmin]));
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(
+      () => mockGroupBalancesBloc.state,
+    ).thenReturn(const GroupBalancesLoading());
+    when(() => mockNudgeBloc.state).thenReturn(NudgeInitial());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
 
     await tester.pumpWidget(buildTestWidget());
@@ -149,6 +196,10 @@ void main() {
       () => mockGroupMembersBloc.state,
     ).thenReturn(GroupMembersLoaded([tMemberViewer]));
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(
+      () => mockGroupBalancesBloc.state,
+    ).thenReturn(const GroupBalancesLoading());
+    when(() => mockNudgeBloc.state).thenReturn(NudgeInitial());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
 
     await tester.pumpWidget(buildTestWidget());
@@ -162,6 +213,10 @@ void main() {
       () => mockGroupMembersBloc.state,
     ).thenReturn(GroupMembersLoaded([tMemberAdmin]));
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(
+      () => mockGroupBalancesBloc.state,
+    ).thenReturn(const GroupBalancesLoading());
+    when(() => mockNudgeBloc.state).thenReturn(NudgeInitial());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
 
     await tester.pumpWidget(buildTestWidget());
@@ -183,6 +238,10 @@ void main() {
       () => mockGroupMembersBloc.state,
     ).thenReturn(GroupMembersLoaded([tMemberRegular]));
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(
+      () => mockGroupBalancesBloc.state,
+    ).thenReturn(const GroupBalancesLoading());
+    when(() => mockNudgeBloc.state).thenReturn(NudgeInitial());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
 
     await tester.pumpWidget(buildTestWidget());
@@ -196,6 +255,10 @@ void main() {
       () => mockGroupMembersBloc.state,
     ).thenReturn(GroupMembersLoaded([tMemberAdmin]));
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
+    when(
+      () => mockGroupBalancesBloc.state,
+    ).thenReturn(const GroupBalancesLoading());
+    when(() => mockNudgeBloc.state).thenReturn(NudgeInitial());
     when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
 
     await tester.pumpWidget(buildTestWidget());

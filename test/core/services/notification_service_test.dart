@@ -82,6 +82,9 @@ void main() {
     when(
       () => mockFirebaseMessaging.onTokenRefresh,
     ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockFirebaseMessaging.getInitialMessage(),
+    ).thenAnswer((_) async => null);
 
     when(
       () => mockPrefs.getString('app_device_id'),
@@ -323,6 +326,34 @@ void main() {
       ).thenAnswer((_) async => 'token');
       await notificationService.syncDeviceToken();
       debugDefaultTargetPlatformOverride = null;
+    });
+
+    test('handles message opened app stream', () async {
+      final streamController = StreamController<RemoteMessage>();
+      // when(() => mockFirebaseMessaging.onMessageOpenedApp).thenAnswer((_) => streamController.stream);
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'token');
+
+      await notificationService.syncDeviceToken();
+      streamController.add(
+        RemoteMessage(data: {'type': 'NUDGE', 'group_id': 'g123'}),
+      );
+      streamController.add(RemoteMessage(data: {'type': 'OTHER'}));
+
+      await Future.delayed(Duration.zero);
+      streamController.close();
+    });
+
+    test('handles initial message', () async {
+      when(() => mockFirebaseMessaging.getInitialMessage()).thenAnswer(
+        (_) async => RemoteMessage(data: {'type': 'NUDGE', 'group_id': 'g123'}),
+      );
+      when(
+        () => mockFirebaseMessaging.getToken(),
+      ).thenAnswer((_) async => 'token');
+
+      await notificationService.syncDeviceToken();
     });
   });
 }

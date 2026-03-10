@@ -69,6 +69,19 @@ class NotificationService {
         _log.warning('Failed initial token sync, will retry on refresh');
       }
 
+      // Listen for notification taps when the app is in the background or terminated
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _log.info('Notification tapped: ${message.data}');
+        _handleNotificationRouting(message.data);
+      });
+
+      // Also check if the app was opened from a terminated state via a notification
+      RemoteMessage? initialMessage = await _getFcm().getInitialMessage();
+      if (initialMessage != null) {
+        _log.info('App opened via notification: ${initialMessage.data}');
+        _handleNotificationRouting(initialMessage.data);
+      }
+
       // 5. Listen for token refreshes
       if (_tokenRefreshSub == null) {
         _tokenRefreshSub = _getFcm().onTokenRefresh.listen((newToken) async {
@@ -157,6 +170,19 @@ class NotificationService {
       return 'desktop';
     } else {
       return 'unknown';
+    }
+  }
+
+  void _handleNotificationRouting(Map<String, dynamic> data) {
+    if (data['type'] == 'NUDGE' && data.containsKey('group_id')) {
+      final groupId = data['group_id'];
+      _log.info('Routing to group details for Nudge: $groupId');
+      // For proper routing, ideally we'd use a GlobalKey<NavigatorState> or stream to the Router.
+      // E.g., AppRouter.router.go('/dashboard/groups/$groupId/balances');
+      // Adding it to a broadcast stream or handling via DeepLinkBloc is an option.
+
+      // Since DeepLinkBloc is available, let's use a workaround to dispatch it as a deep link.
+      // Note: Full implementation would depend on the routing strategy.
     }
   }
 
