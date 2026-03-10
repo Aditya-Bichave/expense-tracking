@@ -12,7 +12,7 @@ void main() {
         userId: 'u1',
       );
 
-      expect(event.props, ['Test', GroupType.trip, 'USD', 'u1']);
+      expect(event.props, ['Test', GroupType.trip, 'USD', 'u1', null]);
     });
 
     test('CreateGroupSubmitted equality should work', () {
