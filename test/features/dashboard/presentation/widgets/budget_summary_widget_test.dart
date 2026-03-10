@@ -3,6 +3,7 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.da
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/dashboard/presentation/widgets/budget_summary_widget.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -65,6 +66,33 @@ void main() {
       // US country code should result in $ symbol via CurrencyFormatter/SettingsState
       expect(find.textContaining('Spent: \$250.00 / \$500.00'), findsOneWidget);
       expect(find.text('50%'), findsOneWidget);
+    });
+
+    testWidgets('renders sparklines when recentSpendingData is provided', (
+      tester,
+    ) async {
+      final sparklineData = [
+        TimeSeriesDataPoint(
+          date: DateTime.now(),
+          amount: const ComparisonValue(currentValue: 100),
+        ),
+        TimeSeriesDataPoint(
+          date: DateTime.now(),
+          amount: const ComparisonValue(currentValue: 200),
+        ),
+      ];
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        settingsState: const SettingsState(selectedCountryCode: 'US'),
+        widget: BudgetSummaryWidget(
+          budgets: [tBudgetWithStatus],
+          recentSpendingData: sparklineData,
+          disableAnimations: true,
+        ),
+      );
+
+      expect(find.text('Groceries'), findsOneWidget);
     });
 
     testWidgets('shows "View All" button when there are 3 or more budgets', (
