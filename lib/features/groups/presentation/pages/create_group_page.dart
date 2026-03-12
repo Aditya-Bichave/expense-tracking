@@ -6,6 +6,8 @@ import 'package:expense_tracker/features/groups/presentation/bloc/create_group/c
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_event.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_state.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -31,6 +33,17 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
   GroupType _selectedType = GroupType.trip;
   String _selectedCurrency = 'USD'; // Default fallback
   bool _isInitialized = false;
+  File? _selectedPhoto;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedPhoto = File(pickedFile.path);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -79,6 +92,23 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
               key: _formKey,
               child: Column(
                 children: [
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: CircleAvatar(
+                      radius: 40,
+                      backgroundColor: kit.colors.bg,
+                      backgroundImage: _selectedPhoto != null
+                          ? FileImage(_selectedPhoto!)
+                          : null,
+                      child: _selectedPhoto == null
+                          ? Icon(
+                              Icons.add_a_photo,
+                              color: kit.colors.textSecondary,
+                            )
+                          : null,
+                    ),
+                  ),
+                  kit.spacing.gapLg,
                   AppTextField(
                     controller: _nameController,
                     label: 'Group Name',
@@ -153,6 +183,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                                         type: _selectedType,
                                         currency: _selectedCurrency,
                                         userId: authState.user.id,
+                                        photoFile: _selectedPhoto,
                                       ),
                                     );
                                   } else {

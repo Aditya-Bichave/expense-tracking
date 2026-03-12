@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -56,6 +57,30 @@ void main() {
       createdAt: dateTime,
       updatedAt: dateTime,
       isArchived: false,
+    );
+
+    blocTest<CreateGroupBloc, CreateGroupState>(
+      'emits [CreateGroupLoading, CreateGroupSuccess] when createGroup is successful with photoFile',
+      setUp: () {
+        when(() => mockUuid.v4()).thenReturn('mock-uuid');
+        when(
+          () => mockCreateGroup(any()),
+        ).thenAnswer((_) async => Right(groupEntity));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(
+        CreateGroupSubmitted(
+          name: 'Test Group',
+          type: GroupType.trip,
+          currency: 'USD',
+          userId: 'u1',
+          photoFile: File('dummy.jpg'),
+        ),
+      ),
+      expect: () => [
+        isA<CreateGroupLoading>(),
+        CreateGroupSuccess(groupEntity),
+      ],
     );
 
     blocTest<CreateGroupBloc, CreateGroupState>(

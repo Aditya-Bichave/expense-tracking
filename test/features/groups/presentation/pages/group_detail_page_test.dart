@@ -14,6 +14,10 @@ import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.da
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_fab.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
+
+import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
+import 'package:expense_tracker/features/groups/presentation/widgets/group_balance_card.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -141,7 +145,9 @@ void main() {
 
   testWidgets('renders group name from GroupsBloc', (tester) async {
     when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([tGroup]));
-    when(() => mockGroupMembersBloc.state).thenReturn(GroupMembersInitial());
+    when(
+      () => mockGroupMembersBloc.state,
+    ).thenReturn(GroupMembersLoaded([tMemberAdmin]));
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
     when(
       () => mockGroupBalancesBloc.state,
@@ -159,7 +165,9 @@ void main() {
     tester,
   ) async {
     when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded(const []));
-    when(() => mockGroupMembersBloc.state).thenReturn(GroupMembersInitial());
+    when(
+      () => mockGroupMembersBloc.state,
+    ).thenReturn(GroupMembersLoaded([tMemberAdmin]));
     when(() => mockGroupExpensesBloc.state).thenReturn(GroupExpensesInitial());
     when(
       () => mockGroupBalancesBloc.state,
@@ -267,5 +275,43 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Invite Members'), findsOneWidget);
+  });
+
+  testWidgets('renders GroupBalanceCard and expenses', (tester) async {
+    when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([tGroup]));
+    when(
+      () => mockGroupMembersBloc.state,
+    ).thenReturn(GroupMembersLoaded([tMemberAdmin]));
+    when(() => mockAuthBloc.state).thenReturn(AuthAuthenticated(tUser));
+
+    when(() => mockGroupExpensesBloc.state).thenReturn(
+      GroupExpensesLoaded([
+        GroupExpense(
+          id: '1',
+          groupId: 'g1',
+          createdBy: 'u1',
+          title: 'Lunch',
+          amount: 100,
+          currency: 'USD',
+          occurredAt: DateTime.now(),
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          payers: [],
+          splits: [],
+        ),
+      ]),
+    );
+
+    await tester.pumpWidget(buildTestWidget());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(GroupBalanceCard), findsOneWidget);
+    expect(find.text('Lunch'), findsOneWidget);
+
+    // Tap on the expense to show the dialog
+    await tester.tap(find.text('Lunch'));
+    await tester.pump();
+
+    expect(find.text('Edit Expense'), findsOneWidget);
   });
 }

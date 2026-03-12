@@ -105,6 +105,7 @@ void main() {
           'splits': [
             {'userId': 'u1', 'amount': 50.0, 'splitTypeValue': 'equal'},
           ],
+          'category_id': null,
         };
         expect(decoded, expectedMap);
       },

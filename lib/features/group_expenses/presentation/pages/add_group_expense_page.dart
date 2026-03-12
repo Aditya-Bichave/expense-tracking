@@ -1,7 +1,13 @@
 import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category.dart';
+import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
+import 'package:expense_tracker/features/categories/presentation/widgets/category_picker_dialog.dart';
+import 'package:expense_tracker/core/widgets/category_selector_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+
 import 'package:uuid/uuid.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
@@ -21,7 +27,9 @@ class AddGroupExpensePage extends StatefulWidget {
 class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
+
   final _uuid = const Uuid();
+  Category? _selectedCategory;
 
   @override
   void dispose() {
@@ -43,6 +51,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
               controller: _titleController,
               decoration: const InputDecoration(labelText: 'Title'),
             ),
+
             TextField(
               key: const Key('group_expense_amount_field'),
               controller: _amountController,
@@ -51,6 +60,33 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
                 decimal: true,
               ),
             ),
+            const SizedBox(height: 16),
+            BlocBuilder<CategoryManagementBloc, CategoryManagementState>(
+              builder: (context, catState) {
+                final categories =
+                    catState.status == CategoryManagementStatus.loaded
+                    ? catState.allExpenseCategories
+                    : <Category>[];
+                return CategorySelectorTile(
+                  selectedCategory: _selectedCategory,
+                  uncategorizedCategory: Category.uncategorized,
+                  onTap: () async {
+                    final category = await showModalBottomSheet<Category?>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (ctx) => CategoryPickerDialogContent(
+                        categoryType: CategoryTypeFilter.expense,
+                        categories: categories,
+                      ),
+                    );
+                    if (category != null && mounted) {
+                      setState(() => _selectedCategory = category);
+                    }
+                  },
+                );
+              },
+            ),
+
             const SizedBox(height: 16),
             BridgeElevatedButton(
               onPressed: () {
@@ -71,6 +107,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
                       occurredAt: DateTime.now(),
                       createdAt: DateTime.now(),
                       updatedAt: DateTime.now(),
+                      categoryId: _selectedCategory?.id,
                       payers: [
                         ExpensePayer(userId: authState.user.id, amount: amount),
                       ],

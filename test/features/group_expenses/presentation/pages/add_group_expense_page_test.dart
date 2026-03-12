@@ -1,5 +1,9 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+
+import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
+
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
@@ -11,6 +15,10 @@ import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockAuthBloc extends Mock implements AuthBloc {}
+
+class MockCategoryManagementBloc
+    extends MockBloc<CategoryManagementEvent, CategoryManagementState>
+    implements CategoryManagementBloc {}
 
 class MockGroupExpensesBloc extends Mock implements GroupExpensesBloc {}
 
@@ -42,6 +50,8 @@ void main() {
   late MockAuthBloc mockAuthBloc;
   late MockGroupExpensesBloc mockGroupExpensesBloc;
 
+  late MockCategoryManagementBloc mockCategoryManagementBloc;
+
   setUpAll(() {
     registerFallbackValue(FakeAddGroupExpenseRequested());
     registerFallbackValue(FakeGroupExpensesEvent());
@@ -50,6 +60,11 @@ void main() {
   setUp(() {
     mockAuthBloc = MockAuthBloc();
     mockGroupExpensesBloc = MockGroupExpensesBloc();
+
+    mockCategoryManagementBloc = MockCategoryManagementBloc();
+    when(() => mockCategoryManagementBloc.state).thenReturn(
+      CategoryManagementState(status: CategoryManagementStatus.loaded),
+    );
 
     when(() => mockAuthBloc.stream).thenAnswer((_) => const Stream.empty());
     when(() => mockAuthBloc.state).thenReturn(AuthInitial());
@@ -66,6 +81,9 @@ void main() {
         providers: [
           BlocProvider<AuthBloc>.value(value: mockAuthBloc),
           BlocProvider<GroupExpensesBloc>.value(value: mockGroupExpensesBloc),
+          BlocProvider<CategoryManagementBloc>.value(
+            value: mockCategoryManagementBloc,
+          ),
         ],
         child: const AddGroupExpensePage(groupId: 'g1'),
       ),

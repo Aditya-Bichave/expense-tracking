@@ -83,6 +83,8 @@ class GroupExpenseModel extends HiveObject {
   final List<ExpensePayerModel> payers;
   @HiveField(10)
   final List<ExpenseSplitModel> splits;
+  @HiveField(11)
+  final String? categoryId;
 
   GroupExpenseModel({
     required this.id,
@@ -96,6 +98,7 @@ class GroupExpenseModel extends HiveObject {
     required this.updatedAt,
     this.payers = const [],
     this.splits = const [],
+    this.categoryId,
   });
 
   factory GroupExpenseModel.fromEntity(GroupExpense entity) {
@@ -112,6 +115,7 @@ class GroupExpenseModel extends HiveObject {
       payers: entity.payers
           .map((e) => ExpensePayerModel.fromEntity(e))
           .toList(),
+      categoryId: entity.categoryId,
       splits: entity.splits
           .map((e) => ExpenseSplitModel.fromEntity(e))
           .toList(),
@@ -131,6 +135,7 @@ class GroupExpenseModel extends HiveObject {
       updatedAt: updatedAt,
       payers: payers.map((e) => e.toEntity()).toList(),
       splits: splits.map((e) => e.toEntity()).toList(),
+      categoryId: categoryId,
     );
   }
 

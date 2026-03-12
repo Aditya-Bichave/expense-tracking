@@ -109,13 +109,14 @@ class GroupExpenseModelAdapter extends TypeAdapter<GroupExpenseModel> {
       splits: fields[10] == null
           ? const []
           : (fields[10] as List).cast<ExpenseSplitModel>(),
+      categoryId: fields[11] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, GroupExpenseModel obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -137,7 +138,9 @@ class GroupExpenseModelAdapter extends TypeAdapter<GroupExpenseModel> {
       ..writeByte(9)
       ..write(obj.payers)
       ..writeByte(10)
-      ..write(obj.splits);
+      ..write(obj.splits)
+      ..writeByte(11)
+      ..write(obj.categoryId);
   }
 
   @override
@@ -200,6 +203,7 @@ GroupExpenseModel _$GroupExpenseModelFromJson(
           ?.map((e) => ExpenseSplitModel.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  categoryId: json['category_id'] as String?,
 );
 
 Map<String, dynamic> _$GroupExpenseModelToJson(GroupExpenseModel instance) =>
@@ -215,4 +219,5 @@ Map<String, dynamic> _$GroupExpenseModelToJson(GroupExpenseModel instance) =>
       'updated_at': instance.updatedAt.toIso8601String(),
       'payers': instance.payers,
       'splits': instance.splits,
+      'category_id': instance.categoryId,
     };
