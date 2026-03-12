@@ -114,5 +114,64 @@ void main() {
         verifyNever(() => mockGroupsRepository.acceptInvite(any()));
       },
     );
+
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'accepts a valid invite, syncs groups, and emits success for authenticated users',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Right(mockUser));
+        when(() => mockGroupsRepository.acceptInvite('123')).thenAnswer(
+          (_) async =>
+              const Right({'group_id': 'g1', 'group_name': 'Trip Mates'}),
+        );
+        when(
+          () => mockGroupsRepository.syncGroups(),
+        ).thenAnswer((_) async => const Right(null));
+        return DeepLinkBloc(
+          mockAppLinks,
+          mockGroupsRepository,
+          mockAuthRepository,
+        );
+      },
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('123')),
+      expect: () => [
+        isA<DeepLinkProcessing>(),
+        const DeepLinkSuccess(groupId: 'g1', groupName: 'Trip Mates'),
+      ],
+      verify: (_) {
+        verify(() => mockGroupsRepository.acceptInvite('123')).called(1);
+        verify(() => mockGroupsRepository.syncGroups()).called(1);
+      },
+    );
+
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'emits DeepLinkError when invite acceptance fails',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Right(mockUser));
+        when(
+          () => mockGroupsRepository.acceptInvite('bad-token'),
+        ).thenAnswer((_) async => const Left(ServerFailure('Invite expired')));
+        return DeepLinkBloc(
+          mockAppLinks,
+          mockGroupsRepository,
+          mockAuthRepository,
+        );
+      },
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('bad-token')),
+      expect: () => [
+        isA<DeepLinkProcessing>(),
+        const DeepLinkError('Invite expired'),
+      ],
+      verify: (_) {
+        verifyNever(() => mockGroupsRepository.syncGroups());
+      },
+    );
   });
 }

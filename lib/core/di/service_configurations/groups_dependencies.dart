@@ -1,4 +1,5 @@
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
@@ -6,13 +7,18 @@ import 'package:expense_tracker/features/groups/data/models/group_member_model.d
 import 'package:expense_tracker/features/groups/data/repositories/groups_repository_impl.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:expense_tracker/features/groups/domain/usecases/create_group.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/delete_group.dart';
 import 'package:expense_tracker/features/groups/domain/usecases/join_group.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/leave_group.dart';
 import 'package:expense_tracker/features/groups/domain/usecases/sync_groups.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/update_group.dart';
 import 'package:expense_tracker/features/groups/domain/usecases/watch_groups.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_members_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/group_balances_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/nudge_bloc.dart';
+import 'package:expense_tracker/features/group_expenses/data/datasources/group_expenses_local_data_source.dart';
 import 'package:expense_tracker/core/services/image_compression_service.dart';
 import 'package:hive_ce/hive.dart';
 
@@ -35,21 +41,30 @@ class GroupsDependencies {
         outboxRepository: sl(),
         syncService: sl(),
         connectivity: sl(),
+        groupExpensesLocalDataSource: sl<GroupExpensesLocalDataSource>(),
       ),
     );
 
     // Usecases
     sl.registerLazySingleton(() => WatchGroups(sl()));
     sl.registerLazySingleton(() => CreateGroup(sl()));
+    sl.registerLazySingleton(() => UpdateGroup(sl()));
+    sl.registerLazySingleton(() => DeleteGroup(sl()));
+    sl.registerLazySingleton(() => LeaveGroup(sl()));
     sl.registerLazySingleton(() => SyncGroups(sl()));
     sl.registerLazySingleton(() => JoinGroup(sl()));
 
     // Blocs
+    sl.registerFactory(() => GroupsBloc(watchGroups: sl(), syncGroups: sl()));
+    sl.registerFactory(() => GroupMembersBloc(sl()));
     sl.registerFactory(
-      () => GroupsBloc(watchGroups: sl(), syncGroups: sl(), joinGroup: sl()),
+      () => CreateGroupBloc(
+        createGroup: sl(),
+        updateGroup: sl(),
+        uuid: sl(),
+        supabaseClient: SupabaseClientProvider.client,
+      ),
     );
-
-    sl.registerFactory(() => CreateGroupBloc(createGroup: sl(), uuid: sl()));
 
     // Agent 4B Additions: Balances, Nudges & Settlements
     if (!sl.isRegistered<GroupBalancesBloc>()) {

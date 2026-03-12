@@ -1,20 +1,25 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker/features/groups/presentation/bloc/group_members_bloc.dart';
+import 'package:collection/collection.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_role.dart';
-import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
-import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
-import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
-import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
-import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
-import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
-import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_members_bloc.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_members_event.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_members_state.dart';
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
+import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/buttons/app_icon_button.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_avatar.dart';
+import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
+import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class GroupMembersTab extends StatelessWidget {
-  const GroupMembersTab({super.key});
+  final String groupId;
+
+  const GroupMembersTab({super.key, required this.groupId});
 
   @override
   Widget build(BuildContext context) {
@@ -22,63 +27,98 @@ class GroupMembersTab extends StatelessWidget {
 
     return BlocBuilder<GroupMembersBloc, GroupMembersState>(
       builder: (context, state) {
-        if (state is GroupMembersLoading) {
+        if (state.isInitialLoadInProgress) {
           return const AppLoadingIndicator();
-        } else if (state is GroupMembersLoaded) {
-          if (state.members.isEmpty) {
-            return Center(
-              child: Text('No members loaded', style: kit.typography.body),
-            );
-          }
+        }
 
-          final currentUser =
-              (context.read<AuthBloc>().state as AuthAuthenticated).user;
-          // Use safe lookup or null if not found
-          final currentMember = state.members
-              .where((m) => m.userId == currentUser.id)
-              .firstOrNull;
-
-          final isAdmin =
-              currentMember != null && currentMember.role == GroupRole.admin;
-
-          return ListView.builder(
-            itemCount: state.members.length,
-            itemBuilder: (context, index) {
-              final member = state.members[index];
-              final isMe = member.userId == currentUser.id;
-
-              return AppListTile(
-                leading: AppAvatar(
-                  initials: member.userId.substring(0, 2).toUpperCase(),
-                  backgroundColor: kit.colors.primaryContainer,
-                  foregroundColor: kit.colors.onPrimaryContainer,
-                ),
-                title: Text('${member.role.name} ${isMe ? '(You)' : ''}'),
-                subtitle: Text(member.userId),
-                trailing: (isAdmin && !isMe)
-                    ? AppIconButton(
-                        icon: const Icon(Icons.more_vert),
-                        onPressed: () => _showMemberOptions(
-                          context,
-                          member.groupId,
-                          member.userId,
-                          member.role.name,
-                        ),
-                      )
-                    : null,
-              );
-            },
-          );
-        } else if (state is GroupMembersError) {
+        if (state.hasBlockingError) {
           return Center(
-            child: Text(
-              'Error: ${state.message}',
-              style: kit.typography.body.copyWith(color: kit.colors.error),
+            child: Padding(
+              padding: kit.spacing.allLg,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Error: ${state.message ?? 'Failed to load members'}',
+                    textAlign: TextAlign.center,
+                    style: kit.typography.body.copyWith(
+                      color: kit.colors.error,
+                    ),
+                  ),
+                  kit.spacing.gapLg,
+                  ElevatedButton(
+                    onPressed: () {
+                      context.read<GroupMembersBloc>().add(
+                        LoadGroupMembers(groupId),
+                      );
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           );
         }
-        return Center(
-          child: Text('No members loaded', style: kit.typography.body),
+
+        if (state.members.isEmpty) {
+          return Center(
+            child: Text('No members loaded', style: kit.typography.body),
+          );
+        }
+
+        final authState = context.read<AuthBloc>().state;
+        if (authState is! AuthAuthenticated) {
+          return Center(
+            child: Text(
+              'Please log in to view members.',
+              style: kit.typography.body,
+            ),
+          );
+        }
+
+        final currentUser = authState.user;
+        final currentMember = state.members
+            .where((member) => member.userId == currentUser.id)
+            .firstOrNull;
+        final isAdmin = currentMember?.role == GroupRole.admin;
+
+        return Column(
+          children: [
+            if (state.isBusy) const LinearProgressIndicator(minHeight: 2),
+            Expanded(
+              child: ListView.builder(
+                itemCount: state.members.length,
+                itemBuilder: (context, index) {
+                  final member = state.members[index];
+                  final isMe = member.userId == currentUser.id;
+
+                  return AppListTile(
+                    key: ValueKey('tile_groupMember_${member.userId}'),
+                    leading: AppAvatar(
+                      initials: member.userId.substring(0, 2).toUpperCase(),
+                      backgroundColor: kit.colors.primaryContainer,
+                      foregroundColor: kit.colors.onPrimaryContainer,
+                    ),
+                    title: Text('${member.role.name} ${isMe ? '(You)' : ''}'),
+                    subtitle: Text(member.userId),
+                    trailing: (isAdmin && !isMe)
+                        ? AppIconButton(
+                            icon: const Icon(Icons.more_vert),
+                            onPressed: state.isBusy
+                                ? null
+                                : () => _showMemberOptions(
+                                    context,
+                                    member.groupId,
+                                    member.userId,
+                                    member.role.name,
+                                  ),
+                          )
+                        : null,
+                  );
+                },
+              ),
+            ),
+          ],
         );
       },
     );
@@ -170,21 +210,24 @@ class GroupMembersTab extends StatelessWidget {
     );
   }
 
-  void _confirmKickMember(BuildContext context, String groupId, String userId) {
-    AppDialog.show(
-      context: context,
+  void _confirmKickMember(
+    BuildContext context,
+    String groupId,
+    String userId,
+  ) async {
+    final confirmed = await AppDialogs.showConfirmation(
+      context,
       title: 'Remove Member?',
       content:
           'Are you sure you want to remove this member? This action cannot be undone.',
-      isDestructive: true,
-      confirmLabel: 'Remove',
-      cancelLabel: 'Cancel',
-      onConfirm: () {
-        context.read<GroupMembersBloc>().add(
-          KickMember(groupId: groupId, userId: userId),
-        );
-        Navigator.pop(context);
-      },
+      confirmText: 'Remove',
+      confirmColor: Theme.of(context).colorScheme.error,
+    );
+    if (confirmed != true) {
+      return;
+    }
+    context.read<GroupMembersBloc>().add(
+      KickMember(groupId: groupId, userId: userId),
     );
   }
 }

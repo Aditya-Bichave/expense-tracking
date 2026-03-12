@@ -91,5 +91,72 @@ void main() {
       act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
       expect: () => [GroupExpensesError('Error')],
     );
+
+    blocTest<GroupExpensesBloc, GroupExpensesState>(
+      'emits refreshed expenses after sync changes local data',
+      setUp: () {
+        var readCount = 0;
+        when(() => mockRepository.getExpenses('g1')).thenAnswer((_) async {
+          readCount += 1;
+          if (readCount == 1) {
+            return Right([tExpense]);
+          }
+          return Right([
+            GroupExpense(
+              id: tExpense.id,
+              groupId: tExpense.groupId,
+              createdBy: tExpense.createdBy,
+              title: 'Dinner Updated',
+              amount: tExpense.amount,
+              currency: tExpense.currency,
+              occurredAt: tExpense.occurredAt,
+              createdAt: tExpense.createdAt,
+              updatedAt: DateTime(2023, 10, 28),
+              payers: tExpense.payers,
+              splits: tExpense.splits,
+            ),
+          ]);
+        });
+        when(
+          () => mockRepository.syncExpenses(any()),
+        ).thenAnswer((_) async => const Right(null));
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(LoadGroupExpenses('g1')),
+      expect: () => [
+        GroupExpensesLoading(),
+        GroupExpensesLoaded([tExpense]),
+        isA<GroupExpensesLoaded>().having(
+          (state) => state.expenses.single.title,
+          'updated title',
+          'Dinner Updated',
+        ),
+      ],
+    );
+
+    blocTest<GroupExpensesBloc, GroupExpensesState>(
+      'reloads expenses after a successful add',
+      setUp: () {
+        when(
+          () => mockRepository.addExpense(any()),
+        ).thenAnswer((_) async => Right(tExpense));
+        when(
+          () => mockRepository.getExpenses(any()),
+        ).thenAnswer((_) async => Right([tExpense]));
+        when(
+          () => mockRepository.syncExpenses(any()),
+        ).thenAnswer((_) => Completer<Either<Failure, void>>().future);
+      },
+      build: () => bloc,
+      act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
+      expect: () => [
+        GroupExpensesLoading(),
+        GroupExpensesLoaded([tExpense]),
+      ],
+      verify: (_) {
+        verify(() => mockRepository.addExpense(tExpense)).called(1);
+        verify(() => mockRepository.getExpenses('g1')).called(1);
+      },
+    );
   });
 }

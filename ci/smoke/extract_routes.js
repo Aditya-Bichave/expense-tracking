@@ -51,7 +51,8 @@ function extractRoutes() {
       '/dashboard/spending_time',
       '/dashboard/income_expense',
       '/dashboard/budget_performance',
-      '/dashboard/goal_progress'
+      '/dashboard/goal_progress',
+      '/groups/create'
     ];
 
     for (const r of manualRoutes) {

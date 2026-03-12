@@ -19,6 +19,7 @@ import 'package:expense_tracker/features/categories/presentation/pages/category_
 import 'package:expense_tracker/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/add_edit_goal_page.dart';
 import 'package:expense_tracker/features/goals/presentation/pages/goal_detail_page.dart';
 import 'package:expense_tracker/features/income/domain/entities/income.dart';
@@ -50,6 +51,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:expense_tracker/features/auth/presentation/pages/login_page.dart';
+import 'package:expense_tracker/features/groups/presentation/pages/create_group_page.dart';
 import 'package:expense_tracker/features/auth/presentation/pages/verify_otp_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_list_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
@@ -274,10 +276,27 @@ class AppRouter {
                     const NoTransitionPage(child: GroupListPage()),
                 routes: [
                   GoRoute(
+                    path: 'create',
+                    name: RouteNames.groupCreate,
+                    builder: (context, state) => const CreateGroupPage(),
+                  ),
+                  GoRoute(
                     path: ':id',
                     name: RouteNames.groupDetail,
                     builder: (context, state) =>
                         GroupDetailPage(groupId: state.pathParameters['id']!),
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        name: RouteNames.groupEdit,
+                        builder: (context, state) => CreateGroupPage(
+                          groupId: state.pathParameters['id']!,
+                          initialGroup: state.extra is GroupEntity
+                              ? state.extra as GroupEntity
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

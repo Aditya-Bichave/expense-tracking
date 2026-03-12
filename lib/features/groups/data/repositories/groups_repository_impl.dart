@@ -1,19 +1,21 @@
-import "package:expense_tracker/core/utils/logger.dart";
-import 'dart:convert';
+import 'dart:async';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:expense_tracker/features/group_expenses/data/datasources/group_expenses_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
+import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:rxdart/rxdart.dart';
-import 'dart:async'; // For unawaited
 
 class GroupsRepositoryImpl implements GroupsRepository {
   final GroupsLocalDataSource _localDataSource;
@@ -21,6 +23,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
   final OutboxRepository _outboxRepository;
   final SyncService _syncService;
   final Connectivity _connectivity;
+  final GroupExpensesLocalDataSource _groupExpensesLocalDataSource;
 
   GroupsRepositoryImpl({
     required GroupsLocalDataSource localDataSource,
@@ -28,34 +31,30 @@ class GroupsRepositoryImpl implements GroupsRepository {
     required OutboxRepository outboxRepository,
     required SyncService syncService,
     required Connectivity connectivity,
+    required GroupExpensesLocalDataSource groupExpensesLocalDataSource,
   }) : _localDataSource = localDataSource,
        _remoteDataSource = remoteDataSource,
        _outboxRepository = outboxRepository,
        _syncService = syncService,
-       _connectivity = connectivity;
+       _connectivity = connectivity,
+       _groupExpensesLocalDataSource = groupExpensesLocalDataSource;
 
   @override
   Future<Either<Failure, GroupEntity>> createGroup(GroupEntity group) async {
     try {
       final model = GroupModel.fromEntity(group);
       await _localDataSource.saveGroup(model);
-
-      final outboxItem = SyncMutationModel(
-        id: group.id,
-        table: 'groups',
-        operation: OpType.create,
-        payload: model.toJson(),
-        createdAt: DateTime.now(),
+      await _localDataSource.saveGroupMembers([_buildLocalAdminMember(group)]);
+      await _outboxRepository.add(
+        SyncMutationModel(
+          id: group.id,
+          table: 'groups',
+          operation: OpType.create,
+          payload: model.toJson(),
+          createdAt: DateTime.now(),
+        ),
       );
-      await _outboxRepository.add(outboxItem);
-
-      final connectivityResult = await _connectivity.checkConnectivity();
-      if (connectivityResult.contains(ConnectivityResult.mobile) ||
-          connectivityResult.contains(ConnectivityResult.wifi)) {
-        _syncService.processOutbox().catchError((e, s) {
-          log.severe("Failed to process outbox in background: $e\n$s");
-        });
-      }
+      await _syncIfConnected();
 
       return Right(group);
     } catch (e) {
@@ -64,12 +63,78 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   @override
+  Future<Either<Failure, GroupEntity>> updateGroup(GroupEntity group) async {
+    try {
+      final model = GroupModel.fromEntity(group);
+      await _localDataSource.saveGroup(model);
+      await _outboxRepository.add(
+        SyncMutationModel(
+          id: group.id,
+          table: 'groups',
+          operation: OpType.update,
+          payload: model.toUpdateJson(),
+          createdAt: DateTime.now(),
+        ),
+      );
+      await _syncIfConnected();
+
+      return Right(group);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteGroup(String groupId) async {
+    try {
+      await _cleanupGroupLocally(groupId);
+      await _outboxRepository.add(
+        SyncMutationModel(
+          id: groupId,
+          table: 'groups',
+          operation: OpType.delete,
+          payload: {'id': groupId},
+          createdAt: DateTime.now(),
+        ),
+      );
+      await _syncIfConnected();
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> leaveGroup(
+    String groupId,
+    String userId,
+  ) async {
+    try {
+      await _cleanupGroupLocally(groupId);
+      await _outboxRepository.add(
+        SyncMutationModel(
+          id: '$groupId:$userId',
+          table: 'group_members',
+          operation: OpType.delete,
+          payload: {'group_id': groupId, 'user_id': userId},
+          createdAt: DateTime.now(),
+        ),
+      );
+      await _syncIfConnected();
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<GroupEntity>>> getGroups() async {
     try {
-      final models = _localDataSource.getGroups();
-      return Right(models.map((e) => e.toEntity()).toList());
+      return Right(_mapAndSortGroups(_localDataSource.getGroups()));
     } catch (e) {
-      if (e is Failure) return Left(e);
+      if (e is Failure) {
+        return Left(e);
+      }
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -78,14 +143,12 @@ class GroupsRepositoryImpl implements GroupsRepository {
   Stream<Either<Failure, List<GroupEntity>>> watchGroups() {
     return _localDataSource
         .watchGroups()
-        .map<Either<Failure, List<GroupEntity>>>((models) {
-          return Right(models.map((e) => e.toEntity()).toList());
-        })
-        .onErrorReturnWith((error, stackTrace) {
-          return Left<Failure, List<GroupEntity>>(
-            CacheFailure(error.toString()),
-          );
-        });
+        .map<Either<Failure, List<GroupEntity>>>(
+          (models) => Right(_mapAndSortGroups(models)),
+        )
+        .onErrorReturnWith(
+          (error, stackTrace) => Left(CacheFailure(error.toString())),
+        );
   }
 
   @override
@@ -94,9 +157,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
-      return Right(models.map((e) => e.toEntity()).toList());
+      return Right(models.map((model) => model.toEntity()).toList());
     } catch (e) {
-      if (e is Failure) return Left(e);
+      if (e is Failure) {
+        return Left(e);
+      }
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -117,45 +182,25 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final remoteGroups = await _remoteDataSource.getGroups();
       await _localDataSource.saveGroups(remoteGroups);
 
-      // Cleanup stale groups
-      // ⚡ Bolt Optimization: Batch deletion
-      // Reduces N+1 local db delete calls to a single batch delete, significantly improving performance for sync.
-      final remoteGroupIds = remoteGroups.map((g) => g.id).toSet();
-      final localGroups = _localDataSource.getGroups();
-      final staleGroupIds = localGroups
-          .where((lg) => !remoteGroupIds.contains(lg.id))
-          .map((lg) => lg.id)
+      final remoteGroupIds = remoteGroups.map((group) => group.id).toSet();
+      final staleGroupIds = _localDataSource
+          .getGroups()
+          .where((group) => !remoteGroupIds.contains(group.id))
+          .map((group) => group.id)
           .toList();
       if (staleGroupIds.isNotEmpty) {
         await _localDataSource.deleteGroups(staleGroupIds);
+        await Future.wait(
+          staleGroupIds.map(_localDataSource.deleteGroupMembers),
+        );
+        await Future.wait(
+          staleGroupIds.map(
+            _groupExpensesLocalDataSource.deleteExpensesForGroup,
+          ),
+        );
       }
 
-      // Fetch members for each group in parallel
-      await Future.wait(
-        remoteGroups.map((group) async {
-          try {
-            final remoteMembers = await _remoteDataSource.getGroupMembers(
-              group.id,
-            );
-            await _localDataSource.saveGroupMembers(remoteMembers);
-
-            // Cleanup stale members
-            // ⚡ Bolt Optimization: Batch deletion
-            // Avoids O(N) single deletions, grouping them in a single fast I/O call.
-            final remoteMemberIds = remoteMembers.map((m) => m.id).toSet();
-            final localMembers = _localDataSource.getGroupMembers(group.id);
-            final staleMemberIds = localMembers
-                .where((lm) => !remoteMemberIds.contains(lm.id))
-                .map((lm) => lm.id)
-                .toList();
-            if (staleMemberIds.isNotEmpty) {
-              await _localDataSource.deleteMembers(staleMemberIds);
-            }
-          } catch (e) {
-            // Log error or ignore partial failure
-          }
-        }),
-      );
+      await Future.wait(remoteGroups.map(_syncRemoteMembersForGroup));
 
       return const Right(null);
     } catch (e) {
@@ -203,9 +248,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       await _remoteDataSource.updateMemberRole(groupId, userId, role);
-      // Refresh members for this group to keep UI in sync
-      final members = await _remoteDataSource.getGroupMembers(groupId);
-      await _localDataSource.saveGroupMembers(members);
+      await _syncRemoteMembersForGroupById(groupId);
       return const Right(null);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
@@ -219,28 +262,73 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       await _remoteDataSource.removeMember(groupId, userId);
-      // Refresh members for this group to keep UI in sync
-      // Since removeMember removes from DB, getGroupMembers won't return it.
-      // We need to cleanup local cache.
-      final members = await _remoteDataSource.getGroupMembers(groupId);
-      await _localDataSource.saveGroupMembers(members);
+      await _syncRemoteMembersForGroupById(groupId);
+      return const Right(null);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 
-      // Cleanup stale members
-      // ⚡ Bolt Optimization: Replace loop-based deletes with single batch `deleteAll`
-      // Greatly improves cleanup performance.
-      final remoteMemberIds = members.map((m) => m.id).toSet();
-      final localMembers = _localDataSource.getGroupMembers(groupId);
-      final staleMemberIds = localMembers
-          .where((lm) => !remoteMemberIds.contains(lm.id))
-          .map((lm) => lm.id)
+  List<GroupEntity> _mapAndSortGroups(List<GroupModel> models) {
+    final groups = models.map((model) => model.toEntity()).toList();
+    groups.sort((left, right) => right.updatedAt.compareTo(left.updatedAt));
+    return groups;
+  }
+
+  GroupMemberModel _buildLocalAdminMember(GroupEntity group) {
+    final now = DateTime.now();
+    return GroupMemberModel(
+      id: '${group.id}:${group.createdBy}:local-admin',
+      groupId: group.id,
+      userId: group.createdBy,
+      roleValue: 'admin',
+      joinedAt: now,
+      updatedAt: now,
+    );
+  }
+
+  Future<void> _cleanupGroupLocally(String groupId) async {
+    await _localDataSource.deleteGroup(groupId);
+    await _localDataSource.deleteGroupMembers(groupId);
+    await _groupExpensesLocalDataSource.deleteExpensesForGroup(groupId);
+  }
+
+  Future<void> _syncRemoteMembersForGroup(GroupModel group) {
+    return _syncRemoteMembersForGroupById(group.id);
+  }
+
+  Future<void> _syncRemoteMembersForGroupById(String groupId) async {
+    try {
+      final remoteMembers = await _remoteDataSource.getGroupMembers(groupId);
+      await _localDataSource.saveGroupMembers(remoteMembers);
+
+      final remoteMemberIds = remoteMembers.map((member) => member.id).toSet();
+      final staleMemberIds = _localDataSource
+          .getGroupMembers(groupId)
+          .where((member) => !remoteMemberIds.contains(member.id))
+          .map((member) => member.id)
           .toList();
       if (staleMemberIds.isNotEmpty) {
         await _localDataSource.deleteMembers(staleMemberIds);
       }
+    } catch (error, stackTrace) {
+      log.warning(
+        'Failed to refresh members for group $groupId: $error\n$stackTrace',
+      );
+    }
+  }
 
-      return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+  Future<void> _syncIfConnected() async {
+    final connectivityResult = await _connectivity.checkConnectivity();
+    if (connectivityResult.contains(ConnectivityResult.mobile) ||
+        connectivityResult.contains(ConnectivityResult.wifi)) {
+      unawaited(
+        _syncService.processOutbox().catchError((error, stackTrace) {
+          log.severe(
+            'Failed to process outbox in background: $error\n$stackTrace',
+          );
+        }),
+      );
     }
   }
 }

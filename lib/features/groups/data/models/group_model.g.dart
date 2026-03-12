@@ -76,8 +76,8 @@ GroupModel _$GroupModelFromJson(Map<String, dynamic> json) => GroupModel(
   updatedAt: DateTime.parse(json['updated_at'] as String),
   typeValue: json['type'] as String? ?? 'custom',
   currency: json['currency'] as String? ?? 'USD',
-  photoUrl: json['photoUrl'] as String?,
-  isArchived: json['isArchived'] as bool? ?? false,
+  photoUrl: json['photo_url'] as String?,
+  isArchived: json['is_archived'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$GroupModelToJson(GroupModel instance) =>
@@ -89,6 +89,6 @@ Map<String, dynamic> _$GroupModelToJson(GroupModel instance) =>
       'updated_at': instance.updatedAt.toIso8601String(),
       'type': instance.typeValue,
       'currency': instance.currency,
-      'photoUrl': instance.photoUrl,
-      'isArchived': instance.isArchived,
+      'photo_url': instance.photoUrl,
+      'is_archived': instance.isArchived,
     };

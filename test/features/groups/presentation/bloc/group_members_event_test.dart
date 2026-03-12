@@ -1,4 +1,4 @@
-import 'package:expense_tracker/features/groups/presentation/bloc/group_members_bloc.dart';
+import 'package:expense_tracker/features/groups/presentation/bloc/group_members_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -78,6 +78,28 @@ void main() {
       expect(
         const KickMember(groupId: '1', userId: 'user1'),
         isNot(equals(const KickMember(groupId: '2', userId: 'user1'))),
+      );
+    });
+
+    test('LeaveCurrentGroup supports value comparisons', () {
+      expect(
+        const LeaveCurrentGroup(groupId: '1', userId: 'user1'),
+        equals(const LeaveCurrentGroup(groupId: '1', userId: 'user1')),
+      );
+      expect(
+        const LeaveCurrentGroup(groupId: '1', userId: 'user1'),
+        isNot(equals(const LeaveCurrentGroup(groupId: '2', userId: 'user1'))),
+      );
+    });
+
+    test('DeleteCurrentGroup supports value comparisons', () {
+      expect(
+        const DeleteCurrentGroup(groupId: '1'),
+        equals(const DeleteCurrentGroup(groupId: '1')),
+      );
+      expect(
+        const DeleteCurrentGroup(groupId: '1'),
+        isNot(equals(const DeleteCurrentGroup(groupId: '2'))),
       );
     });
   });

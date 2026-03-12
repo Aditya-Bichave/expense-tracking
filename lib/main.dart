@@ -13,6 +13,8 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/storage/hive_adapters.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/core/theme/app_theme.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
@@ -199,52 +201,7 @@ class AppInitializer {
   }
 
   static void _registerHiveAdapters() {
-    // Check if registered to avoid errors in hot restart or multiple inits
-    if (!Hive.isAdapterRegistered(ExpenseModelAdapter().typeId)) {
-      Hive.registerAdapter(ExpenseModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(AssetAccountModelAdapter().typeId)) {
-      Hive.registerAdapter(AssetAccountModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(IncomeModelAdapter().typeId)) {
-      Hive.registerAdapter(IncomeModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(CategoryModelAdapter().typeId)) {
-      Hive.registerAdapter(CategoryModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(UserHistoryRuleModelAdapter().typeId)) {
-      Hive.registerAdapter(UserHistoryRuleModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(BudgetModelAdapter().typeId)) {
-      Hive.registerAdapter(BudgetModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(GoalModelAdapter().typeId)) {
-      Hive.registerAdapter(GoalModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(GoalContributionModelAdapter().typeId)) {
-      Hive.registerAdapter(GoalContributionModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(RecurringRuleModelAdapter().typeId)) {
-      Hive.registerAdapter(RecurringRuleModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(RecurringRuleAuditLogModelAdapter().typeId)) {
-      Hive.registerAdapter(RecurringRuleAuditLogModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(SyncMutationModelAdapter().typeId)) {
-      Hive.registerAdapter(SyncMutationModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(GroupModelAdapter().typeId)) {
-      Hive.registerAdapter(GroupModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(GroupMemberModelAdapter().typeId)) {
-      Hive.registerAdapter(GroupMemberModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(GroupExpenseModelAdapter().typeId)) {
-      Hive.registerAdapter(GroupExpenseModelAdapter());
-    }
-    if (!Hive.isAdapterRegistered(ProfileModelAdapter().typeId)) {
-      Hive.registerAdapter(ProfileModelAdapter());
-    }
+    HiveAdapters.registerAll();
   }
 }
 
@@ -514,7 +471,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           signalE2EReady();
         });
-        return child!;
+        return BlocListener<DeepLinkBloc, DeepLinkState>(
+          listener: (context, state) {
+            if (state is DeepLinkSuccess) {
+              final groupName = state.groupName ?? 'group';
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Joined $groupName')));
+              AppRouter.router.go('${RouteNames.groups}/${state.groupId}');
+            } else if (state is DeepLinkError) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+            }
+          },
+          child: child!,
+        );
       },
     );
   }

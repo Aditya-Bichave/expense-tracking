@@ -1,48 +1,88 @@
-part of 'group_members_bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 
-abstract class GroupMembersState extends Equatable {
-  const GroupMembersState();
+enum GroupMembersStatus { initial, loading, loaded, error }
 
-  @override
-  List<Object?> get props => [];
+enum GroupMembersAction {
+  none,
+  generatingInvite,
+  inviteGenerated,
+  updatingRole,
+  memberRoleUpdated,
+  removingMember,
+  memberRemoved,
+  leavingGroup,
+  leftGroup,
+  deletingGroup,
+  deletedGroup,
+  failed,
 }
 
-class GroupMembersInitial extends GroupMembersState {}
-
-class GroupMembersLoading extends GroupMembersState {}
-
-class GroupMembersLoaded extends GroupMembersState {
+class GroupMembersState extends Equatable {
+  final GroupMembersStatus status;
+  final GroupMembersAction action;
   final List<GroupMember> members;
+  final String? groupId;
+  final String? message;
+  final String? inviteUrl;
 
-  const GroupMembersLoaded(this.members);
+  const GroupMembersState({
+    required this.status,
+    required this.action,
+    required this.members,
+    this.groupId,
+    this.message,
+    this.inviteUrl,
+  });
+
+  factory GroupMembersState.initial() {
+    return const GroupMembersState(
+      status: GroupMembersStatus.initial,
+      action: GroupMembersAction.none,
+      members: <GroupMember>[],
+    );
+  }
+
+  bool get isInitialLoadInProgress =>
+      status == GroupMembersStatus.loading && members.isEmpty;
+
+  bool get hasBlockingError =>
+      status == GroupMembersStatus.error && members.isEmpty;
+
+  bool get isBusy =>
+      action == GroupMembersAction.generatingInvite ||
+      action == GroupMembersAction.updatingRole ||
+      action == GroupMembersAction.removingMember ||
+      action == GroupMembersAction.leavingGroup ||
+      action == GroupMembersAction.deletingGroup;
+
+  GroupMembersState copyWith({
+    GroupMembersStatus? status,
+    GroupMembersAction? action,
+    List<GroupMember>? members,
+    String? groupId,
+    String? message,
+    String? inviteUrl,
+    bool clearMessage = false,
+    bool clearInviteUrl = false,
+  }) {
+    return GroupMembersState(
+      status: status ?? this.status,
+      action: action ?? this.action,
+      members: members ?? this.members,
+      groupId: groupId ?? this.groupId,
+      message: clearMessage ? null : (message ?? this.message),
+      inviteUrl: clearInviteUrl ? null : (inviteUrl ?? this.inviteUrl),
+    );
+  }
 
   @override
-  List<Object?> get props => [members];
-}
-
-class GroupMembersError extends GroupMembersState {
-  final String message;
-
-  const GroupMembersError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class GroupInviteGenerated extends GroupMembersState {
-  final String url;
-
-  const GroupInviteGenerated(this.url);
-
-  @override
-  List<Object?> get props => [url];
-}
-
-class GroupInviteGenerationError extends GroupMembersState {
-  final String message;
-
-  const GroupInviteGenerationError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [
+    status,
+    action,
+    members,
+    groupId,
+    message,
+    inviteUrl,
+  ];
 }

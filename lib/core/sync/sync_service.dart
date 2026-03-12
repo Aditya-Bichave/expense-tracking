@@ -250,7 +250,7 @@ class SyncService {
 
   Future<void> _processItem(SyncMutationModel item) async {
     final table = item.table;
-    var payload = Map<String, dynamic>.from(item.payload);
+    final payload = Map<String, dynamic>.from(item.payload);
 
     // 1. Handle Receipt Upload if needed
     if (payload.containsKey('x_local_receipt_path')) {
@@ -298,7 +298,12 @@ class SyncService {
 
     switch (item.operation) {
       case OpType.create:
-        await _client.from(table).upsert(payload);
+        if (table == 'expenses' &&
+            (payload.containsKey('payers') || payload.containsKey('splits'))) {
+          await _createExpenseWithRelations(payload, item.id);
+        } else {
+          await _client.from(table).upsert(payload);
+        }
         break;
       case OpType.update:
         final response = await _client
@@ -317,8 +322,67 @@ class SyncService {
         }
         break;
       case OpType.delete:
-        await _client.from(table).delete().eq('id', item.id);
+        if (table == 'group_members' &&
+            payload.containsKey('group_id') &&
+            payload.containsKey('user_id')) {
+          await _client
+              .from(table)
+              .delete()
+              .eq('group_id', payload['group_id'])
+              .eq('user_id', payload['user_id']);
+        } else {
+          await _client.from(table).delete().eq('id', item.id);
+        }
         break;
+    }
+  }
+
+  Future<void> _createExpenseWithRelations(
+    Map<String, dynamic> payload,
+    String expenseId,
+  ) async {
+    final expensePayload = Map<String, dynamic>.from(payload)
+      ..remove('payers')
+      ..remove('splits');
+    expensePayload['id'] ??= expenseId;
+
+    await _client.from('expenses').upsert(expensePayload);
+
+    final payers = (payload['payers'] as List<dynamic>? ?? const <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .map(
+          (payer) => {
+            'expense_id': expensePayload['id'],
+            'payer_user_id': payer['userId'],
+            'amount': payer['amount'],
+          },
+        )
+        .toList();
+    if (payers.isNotEmpty) {
+      await _client
+          .from('expense_payers')
+          .delete()
+          .eq('expense_id', expensePayload['id']);
+      await _client.from('expense_payers').insert(payers);
+    }
+
+    final splits = (payload['splits'] as List<dynamic>? ?? const <dynamic>[])
+        .whereType<Map<String, dynamic>>()
+        .map(
+          (split) => {
+            'expense_id': expensePayload['id'],
+            'user_id': split['userId'],
+            'amount': split['amount'],
+            'split_type': split['splitTypeValue'],
+          },
+        )
+        .toList();
+    if (splits.isNotEmpty) {
+      await _client
+          .from('expense_splits')
+          .delete()
+          .eq('expense_id', expensePayload['id']);
+      await _client.from('expense_splits').insert(splits);
     }
   }
 }

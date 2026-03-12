@@ -1,13 +1,11 @@
 import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/create_group_page.dart';
-import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
@@ -32,14 +30,11 @@ class _GroupListPageState extends State<GroupListPage> {
   @override
   void initState() {
     super.initState();
-    context.read<GroupsBloc>().add(LoadGroups());
     _syncStatusStream = sl<SyncService>().statusStream;
   }
 
   void _navigateToCreateGroup(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const CreateGroupPage()));
+    context.goNamed(RouteNames.groupCreate);
   }
 
   String _getInitialsForGroup(String name) {
@@ -105,54 +100,89 @@ class _GroupListPageState extends State<GroupListPage> {
             return const AppLoadingIndicator();
           } else if (state is GroupsLoaded) {
             if (state.groups.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              return RefreshIndicator(
+                onRefresh: () async {
+                  context.read<GroupsBloc>().add(const RefreshGroups());
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.18),
                     Icon(
                       Icons.group_off,
                       size: 64,
                       color: kit.colors.textSecondary,
                     ),
                     kit.spacing.gapLg,
-                    Text('No groups yet.', style: kit.typography.body),
-                    AppButton(
-                      onPressed: () => _navigateToCreateGroup(context),
-                      label: 'Create one',
-                      variant: AppButtonVariant.ghost,
+                    Center(
+                      child: Text('No groups yet.', style: kit.typography.body),
+                    ),
+                    Center(
+                      child: AppButton(
+                        onPressed: () => _navigateToCreateGroup(context),
+                        label: 'Create one',
+                        variant: AppButtonVariant.ghost,
+                      ),
                     ),
                   ],
                 ),
               );
             }
-            return ListView.builder(
-              itemCount: state.groups.length,
-              itemBuilder: (context, index) {
-                final group = state.groups[index];
-                return AppListTile(
-                  leading: AppAvatar(
-                    initials: _getInitialsForGroup(group.name),
-                    imageUrl: group.photoUrl,
-                    backgroundColor: kit.colors.primaryContainer,
-                    foregroundColor: kit.colors.onPrimaryContainer,
-                  ),
-                  title: Text(group.name),
-                  subtitle: Text(group.type.value.toUpperCase()),
-                  trailing: Icon(
-                    Icons.chevron_right,
-                    color: kit.colors.textSecondary,
-                  ),
-                  onTap: () {
-                    context.push('/groups/${group.id}');
-                  },
-                );
+            return RefreshIndicator(
+              onRefresh: () async {
+                context.read<GroupsBloc>().add(const RefreshGroups());
               },
+              child: ListView.builder(
+                itemCount: state.groups.length,
+                itemBuilder: (context, index) {
+                  final group = state.groups[index];
+                  return AppListTile(
+                    key: ValueKey('tile_group_${group.id}'),
+                    leading: AppAvatar(
+                      initials: _getInitialsForGroup(group.name),
+                      imageUrl: group.photoUrl,
+                      backgroundColor: kit.colors.primaryContainer,
+                      foregroundColor: kit.colors.onPrimaryContainer,
+                    ),
+                    title: Text(group.name),
+                    subtitle: Text(group.type.value.toUpperCase()),
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: kit.colors.textSecondary,
+                    ),
+                    onTap: () {
+                      context.go('${RouteNames.groups}/${group.id}');
+                    },
+                  );
+                },
+              ),
             );
           } else if (state is GroupsError) {
             return Center(
-              child: Text(
-                'Error: ${state.message}',
-                style: kit.typography.body.copyWith(color: kit.colors.error),
+              child: Padding(
+                padding: kit.spacing.allLg,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Error: ${state.message}',
+                      textAlign: TextAlign.center,
+                      style: kit.typography.body.copyWith(
+                        color: kit.colors.error,
+                      ),
+                    ),
+                    kit.spacing.gapLg,
+                    AppButton(
+                      key: const ValueKey('button_groupList_retry'),
+                      onPressed: () {
+                        context.read<GroupsBloc>().add(
+                          const RefreshGroups(showLoading: true),
+                        );
+                      },
+                      label: 'Retry',
+                    ),
+                  ],
+                ),
               ),
             );
           }

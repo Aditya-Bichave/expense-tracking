@@ -4,6 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class GroupsRemoteDataSource {
   Future<GroupModel> createGroup(GroupModel group);
+  Future<GroupModel> updateGroup(GroupModel group);
+  Future<void> deleteGroup(String groupId);
+  Future<void> leaveGroup(String groupId, String userId);
   Future<List<GroupModel>> getGroups();
   Future<List<GroupMemberModel>> getGroupMembers(String groupId);
   Future<String> createInvite(
@@ -30,6 +33,31 @@ class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
         .select()
         .single();
     return GroupModel.fromJson(response);
+  }
+
+  @override
+  Future<GroupModel> updateGroup(GroupModel group) async {
+    final response = await _client
+        .from('groups')
+        .update(group.toUpdateJson())
+        .eq('id', group.id)
+        .select()
+        .single();
+    return GroupModel.fromJson(response);
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId) async {
+    await _client.from('groups').delete().eq('id', groupId);
+  }
+
+  @override
+  Future<void> leaveGroup(String groupId, String userId) async {
+    await _client
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId)
+        .eq('user_id', userId);
   }
 
   @override
@@ -63,7 +91,7 @@ class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
         'max_uses': maxUses,
       },
     );
-    if (response.status != 200) {
+    if (response.status < 200 || response.status >= 300) {
       throw Exception(
         'Failed to create invite: ${response.status} ${response.data}',
       );
@@ -77,7 +105,7 @@ class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
       'join_group_via_invite',
       body: {'token': token},
     );
-    if (response.status != 200) {
+    if (response.status < 200 || response.status >= 300) {
       throw Exception(
         'Failed to accept invite: ${response.status} ${response.data}',
       );

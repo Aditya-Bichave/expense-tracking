@@ -74,4 +74,34 @@ void main() {
       expect(result, [tExpense]);
     });
   });
+
+  group('deleteExpensesForGroup', () {
+    test('should delete all matching expense ids', () async {
+      final tExpense2 = GroupExpenseModel(
+        id: '2',
+        groupId: 'g2',
+        createdBy: 'c1',
+        title: 'Lunch',
+        amount: 50,
+        currency: 'USD',
+        occurredAt: DateTime(2023, 10, 27),
+        createdAt: DateTime(2023, 10, 27),
+        updatedAt: DateTime(2023, 10, 27),
+      );
+      when(() => mockBox.values).thenReturn([tExpense, tExpense2]);
+      when(() => mockBox.deleteAll(any())).thenAnswer((_) async {});
+
+      await dataSource.deleteExpensesForGroup('g1');
+
+      verify(() => mockBox.deleteAll(['1'])).called(1);
+    });
+
+    test('should do nothing when the group has no local expenses', () async {
+      when(() => mockBox.values).thenReturn(const <GroupExpenseModel>[]);
+
+      await dataSource.deleteExpensesForGroup('missing');
+
+      verifyNever(() => mockBox.deleteAll(any()));
+    });
+  });
 }

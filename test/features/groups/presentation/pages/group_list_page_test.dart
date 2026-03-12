@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
@@ -10,6 +11,7 @@ import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGroupsBloc extends MockBloc<GroupsEvent, GroupsState>
@@ -49,6 +51,38 @@ void main() {
         child: const GroupListPage(),
       ),
     );
+  }
+
+  Widget buildRouterTestWidget({String initialLocation = '/groups'}) {
+    final router = GoRouter(
+      initialLocation: initialLocation,
+      routes: [
+        GoRoute(
+          path: '/groups',
+          name: RouteNames.groups,
+          builder: (context, state) => BlocProvider<GroupsBloc>.value(
+            value: mockGroupsBloc,
+            child: const GroupListPage(),
+          ),
+          routes: [
+            GoRoute(
+              path: 'create',
+              name: RouteNames.groupCreate,
+              builder: (context, state) =>
+                  const Scaffold(body: Text('Create Group Route')),
+            ),
+            GoRoute(
+              path: ':id',
+              name: RouteNames.groupDetail,
+              builder: (context, state) =>
+                  Scaffold(body: Text('Group ${state.pathParameters['id']}')),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    return MaterialApp.router(routerConfig: router);
   }
 
   final tGroup = GroupEntity(
@@ -116,5 +150,31 @@ void main() {
     syncStatusController.add(SyncServiceStatus.error);
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.error_outline), findsOneWidget);
+  });
+
+  testWidgets('empty state create action navigates to create route', (
+    tester,
+  ) async {
+    when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded(const []));
+
+    await tester.pumpWidget(buildRouterTestWidget());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Create one'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Create Group Route'), findsOneWidget);
+  });
+
+  testWidgets('group tile navigates to detail route', (tester) async {
+    when(() => mockGroupsBloc.state).thenReturn(GroupsLoaded([tGroup]));
+
+    await tester.pumpWidget(buildRouterTestWidget());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('tile_group_grp1')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Group grp1'), findsOneWidget);
   });
 }

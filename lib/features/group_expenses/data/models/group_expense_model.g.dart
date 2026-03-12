@@ -217,7 +217,7 @@ Map<String, dynamic> _$GroupExpenseModelToJson(GroupExpenseModel instance) =>
       'occurred_at': instance.occurredAt.toIso8601String(),
       'created_at': instance.createdAt.toIso8601String(),
       'updated_at': instance.updatedAt.toIso8601String(),
-      'payers': instance.payers,
-      'splits': instance.splits,
+      'payers': instance.payers.map((e) => e.toJson()).toList(),
+      'splits': instance.splits.map((e) => e.toJson()).toList(),
       'category_id': instance.categoryId,
     };

@@ -26,8 +26,6 @@ class GroupExpensesDependencies {
       ),
     );
 
-    sl.registerFactoryParam<GroupExpensesBloc, String, void>(
-      (groupId, _) => GroupExpensesBloc(sl())..add(LoadGroupExpenses(groupId)),
-    );
+    sl.registerFactory(() => GroupExpensesBloc(sl()));
   }
 }

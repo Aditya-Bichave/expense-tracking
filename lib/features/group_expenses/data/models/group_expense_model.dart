@@ -4,7 +4,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'group_expense_model.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 @HiveType(typeId: 17)
 class ExpensePayerModel {
   @HiveField(0)
@@ -24,7 +24,7 @@ class ExpensePayerModel {
   Map<String, dynamic> toJson() => _$ExpensePayerModelToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 @HiveType(typeId: 18)
 class ExpenseSplitModel {
   @HiveField(0)
@@ -58,7 +58,7 @@ class ExpenseSplitModel {
   Map<String, dynamic> toJson() => _$ExpenseSplitModelToJson(this);
 }
 
-@JsonSerializable(fieldRename: FieldRename.snake)
+@JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
 @HiveType(typeId: 15)
 class GroupExpenseModel extends HiveObject {
   @HiveField(0)
