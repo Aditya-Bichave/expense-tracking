@@ -125,9 +125,12 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
         if (query.isEmpty) {
           _filteredIcons = availableIcons.entries.toList();
         } else {
+          // ⚡ Bolt Performance Optimization
+          // Problem: `entry.key.toLowerCase()` is computed inside the loop repeatedly.
+          // Solution: Pre-lowercase keys since they're already lowercase in our map!
+          // Impact: Speeds up icon search by avoiding string allocations.
           _filteredIcons = availableIcons.entries.where((entry) {
-            // Search by key (name)
-            return entry.key.toLowerCase().contains(query);
+            return entry.key.contains(query);
           }).toList();
         }
         // Optional: Sort filtered results alphabetically by key

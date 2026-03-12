@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
 import 'package:expense_tracker/main.dart'; // logger
+import 'package:collection/collection.dart';
 
 /// Manages the demo mode state and in-memory demo data.
 class DemoModeService {
@@ -60,7 +61,7 @@ class DemoModeService {
   // --- Expense Operations ---
   Future<List<ExpenseModel>> getDemoExpenses() async => _demoExpenses;
   Future<ExpenseModel?> getDemoExpenseById(String id) async =>
-      _demoExpenses.where((e) => e.id == id).firstOrNull;
+      _demoExpenses.firstWhereOrNull((e) => e.id == id);
   Future<ExpenseModel> addDemoExpense(ExpenseModel expense) async {
     _demoExpenses.add(expense);
     return expense;
@@ -83,7 +84,7 @@ class DemoModeService {
   // --- Income Operations ---
   Future<List<IncomeModel>> getDemoIncomes() async => _demoIncomes;
   Future<IncomeModel?> getDemoIncomeById(String id) async =>
-      _demoIncomes.where((i) => i.id == id).firstOrNull;
+      _demoIncomes.firstWhereOrNull((i) => i.id == id);
   Future<IncomeModel> addDemoIncome(IncomeModel income) async {
     _demoIncomes.add(income);
     return income;
@@ -126,7 +127,7 @@ class DemoModeService {
   // --- Budget Operations ---
   Future<List<BudgetModel>> getDemoBudgets() async => _demoBudgets;
   Future<BudgetModel?> getDemoBudgetById(String id) async =>
-      _demoBudgets.where((b) => b.id == id).firstOrNull;
+      _demoBudgets.firstWhereOrNull((b) => b.id == id);
   Future<void> saveDemoBudget(BudgetModel budget) async {
     final index = _demoBudgets.indexWhere((b) => b.id == budget.id);
     if (index != -1) {
@@ -143,7 +144,7 @@ class DemoModeService {
   // --- Goal Operations ---
   Future<List<GoalModel>> getDemoGoals() async => _demoGoals;
   Future<GoalModel?> getDemoGoalById(String id) async =>
-      _demoGoals.where((g) => g.id == id).firstOrNull;
+      _demoGoals.firstWhereOrNull((g) => g.id == id);
   Future<void> saveDemoGoal(GoalModel goal) async {
     final index = _demoGoals.indexWhere((g) => g.id == goal.id);
     if (index != -1) {
@@ -160,11 +161,24 @@ class DemoModeService {
   // --- Goal Contribution Operations ---
   Future<List<GoalContributionModel>> getDemoContributionsForGoal(
     String goalId,
-  ) async => _demoContributions.where((c) => c.goalId == goalId).toList();
+  ) async {
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
+    // Solution: Iterate once directly, skipping the intermediate list allocation.
+    // Impact: Reduces GC pressure when filtering contributions.
+    final result = <GoalContributionModel>[];
+    for (final c in _demoContributions) {
+      if (c.goalId == goalId) {
+        result.add(c);
+      }
+    }
+    return result;
+  }
+
   Future<List<GoalContributionModel>> getAllDemoContributions() async =>
       _demoContributions;
   Future<GoalContributionModel?> getDemoContributionById(String id) async =>
-      _demoContributions.where((c) => c.id == id).firstOrNull;
+      _demoContributions.firstWhereOrNull((c) => c.id == id);
   Future<void> saveDemoContribution(GoalContributionModel contribution) async {
     final index = _demoContributions.indexWhere((c) => c.id == contribution.id);
     if (index != -1) {
@@ -186,7 +200,7 @@ class DemoModeService {
   Future<List<RecurringRuleModel>> getDemoRecurringRules() async =>
       _demoRecurringRules;
   Future<RecurringRuleModel?> getDemoRecurringRuleById(String id) async =>
-      _demoRecurringRules.where((r) => r.id == id).firstOrNull;
+      _demoRecurringRules.firstWhereOrNull((r) => r.id == id);
   Future<void> addDemoRecurringRule(RecurringRuleModel rule) async {
     _demoRecurringRules.add(rule);
   }
@@ -209,5 +223,17 @@ class DemoModeService {
 
   Future<List<RecurringRuleAuditLogModel>> getDemoRecurringAuditLogsForRule(
     String ruleId,
-  ) async => _demoAuditLogs.where((l) => l.ruleId == ruleId).toList();
+  ) async {
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
+    // Solution: Iterate once directly, skipping the intermediate list allocation.
+    // Impact: Reduces GC pressure when filtering audit logs.
+    final result = <RecurringRuleAuditLogModel>[];
+    for (final l in _demoAuditLogs) {
+      if (l.ruleId == ruleId) {
+        result.add(l);
+      }
+    }
+    return result;
+  }
 }

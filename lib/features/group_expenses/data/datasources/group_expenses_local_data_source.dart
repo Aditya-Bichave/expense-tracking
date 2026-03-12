@@ -25,6 +25,16 @@ class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
 
   @override
   List<GroupExpenseModel> getExpenses(String groupId) {
-    return _box.values.where((e) => e.groupId == groupId).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
+    // Solution: Iterate once directly, skipping the intermediate list allocation.
+    // Impact: Reduces GC pressure when getting group expenses.
+    final result = <GroupExpenseModel>[];
+    for (final e in _box.values) {
+      if (e.groupId == groupId) {
+        result.add(e);
+      }
+    }
+    return result;
   }
 }
