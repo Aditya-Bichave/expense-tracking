@@ -154,7 +154,7 @@ class GetFinancialOverviewUseCase
       );
       return Right(overview);
     } catch (e, s) {
-      log.severe("[GetFinancialOverviewUseCase] Unexpected error$e$s");
+      log.severe("[GetFinancialOverviewUseCase] Unexpected error: $e\n$s");
       return Left(
         UnexpectedFailure(
           'Failed to generate financial overview: ${e.toString()}',

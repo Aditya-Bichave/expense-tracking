@@ -11,6 +11,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 enum SyncServiceStatus { synced, syncing, offline, error }
 
+// REQUIRES HUMAN REVIEW - DO NOT AUTO-MERGE
 class SyncService {
   final SupabaseClient _client;
   final OutboxRepository _outboxRepository;
@@ -86,8 +87,8 @@ class SyncService {
             )
             .subscribe();
       }
-    } catch (e) {
-      log.severe('Failed to initialize realtime: $e');
+    } catch (e, s) {
+      log.severe('Failed to initialize realtime: $e\n$s');
     }
   }
 
@@ -129,8 +130,8 @@ class SyncService {
           _groupBox.put(serverGroup.id, serverGroup);
         }
       }
-    } catch (e) {
-      log.severe('Error handling group realtime payload: $e');
+    } catch (e, s) {
+      log.severe('Error handling group realtime payload: $e\n$s');
     }
   }
 
@@ -167,8 +168,8 @@ class SyncService {
           log.info('Ignoring stale update for group member ${serverMember.id}');
         }
       }
-    } catch (e) {
-      log.severe('Error handling group member realtime payload: $e');
+    } catch (e, s) {
+      log.severe('Error handling group member realtime payload: $e\n$s');
     }
   }
 
@@ -183,8 +184,8 @@ class SyncService {
             .single();
         final group = GroupModel.fromJson(groupData);
         await _groupBox.put(group.id, group);
-      } catch (e) {
-        log.warning('Failed to fetch missing group $groupId: $e');
+      } catch (e, s) {
+        log.warning('Failed to fetch missing group $groupId: $e\n$s');
       }
     }
   }
@@ -288,8 +289,10 @@ class SyncService {
               .from('receipts')
               .getPublicUrl(uploadPath);
           payload['p_receipt_url'] = publicUrl;
-        } catch (e) {
-          log.warning('Failed to upload receipt: $e. Continuing without it.');
+        } catch (e, s) {
+          log.warning(
+            'Failed to upload receipt: $e. Continuing without it.\n$s',
+          );
         }
       }
       // Remove the local-only key before sending to Supabase

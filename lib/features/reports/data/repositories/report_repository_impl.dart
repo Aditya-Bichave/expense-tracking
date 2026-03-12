@@ -242,7 +242,7 @@ class ReportRepositoryImpl implements ReportRepository {
         ),
       );
     } catch (e, s) {
-      log.severe("[ReportRepo] Error in getSpendingByCategory$e$s");
+      log.severe("[ReportRepo] Error in getSpendingByCategory: $e\n$s");
       return Left(
         UnexpectedFailure("Failed to generate category spending report: $e"),
       );
@@ -461,7 +461,7 @@ class ReportRepositoryImpl implements ReportRepository {
         ),
       );
     } catch (e, s) {
-      log.severe("[ReportRepo] Error in getSpendingOverTime$e$s");
+      log.severe("[ReportRepo] Error in getSpendingOverTime: $e\n$s");
       return Left(
         UnexpectedFailure("Failed to generate spending over time report: $e"),
       );
@@ -669,7 +669,7 @@ class ReportRepositoryImpl implements ReportRepository {
         ),
       );
     } catch (e, s) {
-      log.severe("[ReportRepo] Error in getIncomeVsExpense$e$s");
+      log.severe("[ReportRepo] Error in getIncomeVsExpense: $e\n$s");
       return Left(
         UnexpectedFailure("Failed to generate income vs expense report: $e"),
       );
@@ -871,7 +871,7 @@ class ReportRepositoryImpl implements ReportRepository {
         ),
       );
     } catch (e, s) {
-      log.severe("[ReportRepo] Error in getBudgetPerformance$e$s");
+      log.severe("[ReportRepo] Error in getBudgetPerformance: $e\n$s");
       return Left(
         UnexpectedFailure("Failed to generate budget performance report: $e"),
       );
@@ -1108,7 +1108,7 @@ class ReportRepositoryImpl implements ReportRepository {
       );
       return Right(GoalProgressReportData(progressData: progressList));
     } catch (e, s) {
-      log.severe("[ReportRepo] Error in getGoalProgress$e$s");
+      log.severe("[ReportRepo] Error in getGoalProgress: $e\n$s");
       return Left(
         UnexpectedFailure("Failed to generate goal progress report: $e"),
       );
@@ -1219,7 +1219,7 @@ class ReportRepositoryImpl implements ReportRepository {
         return Right(filledData);
       });
     } catch (e, s) {
-      log.severe("[ReportRepo] Error in getRecentDailySpending$e$s");
+      log.severe("[ReportRepo] Error in getRecentDailySpending: $e\n$s");
       return Left(UnexpectedFailure("Failed to get recent spending data: $e"));
     }
   }
@@ -1294,7 +1294,7 @@ class ReportRepositoryImpl implements ReportRepository {
       );
       return Right(filledData);
     } catch (e, s) {
-      log.severe("[ReportRepo] Error in getRecentDailyContributions$e$s");
+      log.severe("[ReportRepo] Error in getRecentDailyContributions: $e\n$s");
       return Left(
         UnexpectedFailure("Failed to get recent contribution data: $e"),
       );

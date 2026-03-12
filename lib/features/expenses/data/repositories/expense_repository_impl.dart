@@ -57,7 +57,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       log.warning("[ExpenseRepo] CacheFailure adding expense: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[ExpenseRepo] Unexpected error adding expense$e$s");
+      log.severe("[ExpenseRepo] Unexpected error adding expense: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error adding expense: ${e.toString()}'),
       );
@@ -76,7 +76,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       log.warning("[ExpenseRepo] CacheFailure updating expense: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[ExpenseRepo] Unexpected error updating expense$e$s");
+      log.severe("[ExpenseRepo] Unexpected error updating expense: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error updating expense: ${e.toString()}'),
       );
@@ -90,8 +90,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       if (model == null) return const Right(null);
       final hydratedResult = await _hydrateSingleModel(model);
       return hydratedResult;
-    } catch (e) {
-      log.severe("Error getting expense by ID $id: $e");
+    } catch (e, s) {
+      log.severe("Error getting expense by ID $id: $e\n$s");
       return Left(CacheFailure("Error getting expense: $e"));
     }
   }
@@ -119,7 +119,9 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("[ExpenseRepo] Unexpected error getting expense models$e$s");
+      log.severe(
+        "[ExpenseRepo] Unexpected error getting expense models: $e\n$s",
+      );
       return Left(
         UnexpectedFailure(
           'Unexpected error getting expense models: ${e.toString()}',

@@ -76,8 +76,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       String? packageInfoLoadError;
       try {
         packageInfo = await PackageInfo.fromPlatform();
-      } catch (e) {
-        log.warning("[SettingsBloc] Failed to load package info: $e");
+      } catch (e, s) {
+        log.warning("[SettingsBloc] Failed to load package info: $e\n$s");
         packageInfoLoadError = "Failed to load app version";
       }
 
@@ -148,7 +148,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       );
       log.info("[SettingsBloc] Emitted final loaded/error state.");
     } catch (e, s) {
-      log.severe("[SettingsBloc] Unexpected error loading settings$e$s");
+      log.severe("[SettingsBloc] Unexpected error loading settings: $e\n$s");
       emit(
         state.copyWith(
           status: SettingsStatus.error,

@@ -74,7 +74,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
             "[RestoreUseCase] File content read and decoded (${jsonString.length} chars).",
           );
         } catch (e, s) {
-          log.severe("[RestoreUseCase] Error decoding file bytes$e$s");
+          log.severe("[RestoreUseCase] Error decoding file bytes: $e\n$s");
           return Left(
             RestoreFailure("Failed to decode file content: ${e.toString()}"),
           );
@@ -86,8 +86,8 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
       Map<String, dynamic> payload;
       try {
         payload = jsonDecode(jsonString) as Map<String, dynamic>;
-      } catch (e) {
-        log.warning("[RestoreUseCase] Payload JSON decoding error: $e");
+      } catch (e, s) {
+        log.warning("[RestoreUseCase] Payload JSON decoding error: $e\n$s");
         return const Left(
           RestoreFailure("Invalid backup file format (not valid JSON)."),
         );
@@ -99,8 +99,8 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
           payload,
           params.password,
         );
-      } catch (e) {
-        log.warning("[RestoreUseCase] Decryption failed: $e");
+      } catch (e, s) {
+        log.warning("[RestoreUseCase] Decryption failed: $e\n$s");
         return const Left(
           RestoreFailure("Incorrect password or corrupted backup."),
         );
@@ -109,8 +109,8 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
       Map<String, dynamic> decodedJson;
       try {
         decodedJson = jsonDecode(decryptedJsonString) as Map<String, dynamic>;
-      } catch (e) {
-        log.warning("[RestoreUseCase] Decrypted JSON decoding error: $e");
+      } catch (e, s) {
+        log.warning("[RestoreUseCase] Decrypted JSON decoding error: $e\n$s");
         return const Left(
           RestoreFailure("Invalid decrypted backup structure."),
         );
@@ -150,7 +150,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
         allData = AllData.fromJson(dataMap); // fromJson uses constants now
         log.info("[RestoreUseCase] Deserialization successful.");
       } catch (e, s) {
-        log.severe("[RestoreUseCase] Error during deserialization$e$s");
+        log.severe("[RestoreUseCase] Error during deserialization: $e\n$s");
         return Left(
           RestoreFailure(
             "Failed to parse backup data content: ${e.toString()}",
@@ -175,14 +175,18 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
         },
       );
     } on PlatformException catch (e, s) {
-      log.severe("[RestoreUseCase] PlatformException during file picking$e$s");
+      log.severe(
+        "[RestoreUseCase] PlatformException during file picking: $e\n$s",
+      );
       return Left(
         RestoreFailure(
           "Could not pick file: ${e.message ?? 'Unknown'} (${e.code})",
         ),
       );
     } catch (e, s) {
-      log.severe("[RestoreUseCase] Unexpected error in restore process$e$s");
+      log.severe(
+        "[RestoreUseCase] Unexpected error in restore process: $e\n$s",
+      );
       return Left(
         RestoreFailure(
           "An unexpected error occurred during restore: ${e.toString()}",

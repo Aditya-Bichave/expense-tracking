@@ -106,16 +106,27 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
     }
 
     emit(const GroupsLoading());
+
+    // Trigger sync in background but handle errors to prevent silent failures
+    if (!E2EMode.enabled) {
+      _syncGroups()
+          .then((result) {
+            result.fold(
+              (failure) => log.warning("Group sync failed: ${failure.message}"),
+              (_) => log.info("Group sync completed successfully."),
+            );
+          })
+          .catchError((e, s) {
+            log.severe("Group sync threw exception: $e\n$s");
+          });
+    }
+
     _groupsSubscription = _watchGroups().listen(
       (result) => add(_GroupsUpdated(result)),
       onError: (Object error, StackTrace stackTrace) {
         add(_GroupsStreamFailed(error.toString()));
       },
     );
-
-    if (!E2EMode.enabled) {
-      await _triggerSync();
-    }
   }
 
   Future<void> _onRefreshGroups(

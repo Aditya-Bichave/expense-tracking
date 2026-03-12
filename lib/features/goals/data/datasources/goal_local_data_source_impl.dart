@@ -16,7 +16,7 @@ class HiveGoalLocalDataSource implements GoalLocalDataSource {
       final count = await goalBox.clear();
       log.info("[GoalDS] Cleared goals box ($count items).");
     } catch (e, s) {
-      log.severe("[GoalDS] Failed to clear goals cache$e$s");
+      log.severe("[GoalDS] Failed to clear goals cache: $e\n$s");
       throw CacheFailure('Failed to clear goals cache: ${e.toString()}');
     }
   }
@@ -27,7 +27,7 @@ class HiveGoalLocalDataSource implements GoalLocalDataSource {
       await goalBox.delete(id);
       log.info("[GoalDS] Deleted goal (ID: $id).");
     } catch (e, s) {
-      log.severe("[GoalDS] Failed to delete goal (ID: $id)$e$s");
+      log.severe("[GoalDS] Failed to delete goal (ID: $id): $e\n$s");
       throw CacheFailure('Failed to delete goal: ${e.toString()}');
     }
   }
@@ -43,7 +43,7 @@ class HiveGoalLocalDataSource implements GoalLocalDataSource {
       );
       return goal;
     } catch (e, s) {
-      log.severe("[GoalDS] Failed to get goal by ID $id$e$s");
+      log.severe("[GoalDS] Failed to get goal by ID $id: $e\n$s");
       throw CacheFailure('Failed to get goal by ID: ${e.toString()}');
     }
   }
@@ -55,7 +55,7 @@ class HiveGoalLocalDataSource implements GoalLocalDataSource {
       log.info("[GoalDS] Retrieved ${goals.length} goals.");
       return goals;
     } catch (e, s) {
-      log.severe("[GoalDS] Failed to get goals$e$s");
+      log.severe("[GoalDS] Failed to get goals: $e\n$s");
       throw CacheFailure('Failed to get goals: ${e.toString()}');
     }
   }

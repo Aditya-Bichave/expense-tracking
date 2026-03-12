@@ -83,7 +83,7 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
       );
       return null; // Not found
     } catch (e, s) {
-      log.severe("Failed to query user history rules from cache$e$s");
+      log.severe("Failed to query user history rules from cache: $e\n$s");
       throw CacheFailure('Failed to find history rule: ${e.toString()}');
     }
   }
@@ -95,7 +95,7 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
       log.info("Retrieved ${rules.length} user history rules from Hive.");
       return rules;
     } catch (e, s) {
-      log.severe("Failed to get all user history rules from cache$e$s");
+      log.severe("Failed to get all user history rules from cache: $e\n$s");
       throw CacheFailure('Failed to get history rules: ${e.toString()}');
     }
   }
@@ -126,7 +126,7 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
         "Cleared user history rules box in Hive ($count items removed).",
       );
     } catch (e, s) {
-      log.severe("Failed to clear user history rules cache$e$s");
+      log.severe("Failed to clear user history rules cache: $e\n$s");
       throw CacheFailure(
         'Failed to clear history rules cache: ${e.toString()}',
       );

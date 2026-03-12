@@ -90,8 +90,8 @@ class AppInitializer {
     // Initialize Firebase
     try {
       await Firebase.initializeApp();
-    } catch (e) {
-      log.warning('Firebase initialization failed: $e');
+    } catch (e, s) {
+      log.warning('Firebase initialization failed: $e\n$s');
     }
 
     // 1. Initialize Hive
@@ -438,8 +438,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused) {
       _pausedTime = DateTime.now();
     } else if (state == AppLifecycleState.resumed) {
-      if (_pausedTime != null) {
-        final diff = DateTime.now().difference(_pausedTime!);
+      final paused = _pausedTime;
+      if (paused != null) {
+        final diff = DateTime.now().difference(paused);
         if (diff.inSeconds >= 60) {
           context.read<SessionCubit>().checkSession();
         }
@@ -471,6 +472,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           signalE2EReady();
         });
+        if (child == null) {
+          log.severe('Error: child route is null.');
+          return const Scaffold(
+            body: Center(child: Text('Error: Route failed to build.')),
+          );
+        }
+
         return BlocListener<DeepLinkBloc, DeepLinkState>(
           listener: (context, state) {
             if (state is DeepLinkSuccess) {
@@ -485,7 +493,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
-          child: child!,
+          child: child,
         );
       },
     );
