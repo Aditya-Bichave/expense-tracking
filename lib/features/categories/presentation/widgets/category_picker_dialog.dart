@@ -54,6 +54,7 @@ class _CategoryPickerDialogContentState
   List<Category> _allCategories = [];
   List<Category> _filteredCategories = [];
   Timer? _debounce;
+  Map<String, String> _lowerCaseNames = {};
 
   @override
   void initState() {
@@ -64,15 +65,19 @@ class _CategoryPickerDialogContentState
     // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during dialog load
     // Solution: Cache lowercased names outside the sort function
     // Impact: Improves dialog open speed by reducing CPU cycles and garbage collection
-    final lowerCaseNames = {
+    _lowerCaseNames = {
       for (var c in widget.categories) c.id: c.name.toLowerCase(),
     };
 
     _allCategories =
         widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(
-          (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
+          (a, b) => _lowerCaseNames[a.id]!.compareTo(_lowerCaseNames[b.id]!),
         );
-    _filteredCategories = List.from(_allCategories);
+    // ⚡ Bolt Performance Optimization
+    // Problem: List.from creates a full clone which is unnecessary when we just need a reference to the sorted list
+    // Solution: Assign the reference directly. _filterCategories reassings _filteredCategories instead of mutating.
+    // Impact: Avoids unnecessary O(N) memory allocation and copy.
+    _filteredCategories = _allCategories;
     _searchController.addListener(_filterCategories);
   }
 
@@ -93,8 +98,12 @@ class _CategoryPickerDialogContentState
     _debounce = Timer(const Duration(milliseconds: 300), () {
       final query = _searchController.text.toLowerCase();
       setState(() {
+        // ⚡ Bolt Performance Optimization
+        // Problem: `category.name.toLowerCase()` allocates strings during the search loop
+        // Solution: Use the cached _lowerCaseNames map we already computed!
+        // Impact: Further reduces lag when searching categories
         _filteredCategories = _allCategories
-            .where((category) => category.name.toLowerCase().contains(query))
+            .where((category) => _lowerCaseNames[category.id]!.contains(query))
             .toList();
       });
     });

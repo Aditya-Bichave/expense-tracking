@@ -56,7 +56,17 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
 
   @override
   List<GroupMemberModel> getGroupMembers(String groupId) {
-    return _memberBox.values.where((m) => m.groupId == groupId).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
+    // Solution: Iterate once directly, skipping the intermediate list allocation.
+    // Impact: Reduces GC pressure when getting group members.
+    final result = <GroupMemberModel>[];
+    for (final m in _memberBox.values) {
+      if (m.groupId == groupId) {
+        result.add(m);
+      }
+    }
+    return result;
   }
 
   @override

@@ -254,33 +254,40 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   ) async {
     try {
       final all = await localDataSource.getExpenses();
-      final toUpdate = all.where((m) => m.categoryId == oldId).toList();
-      if (toUpdate.isEmpty) return const Right(0);
-
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
+      // Solution: Iterate once directly, skipping the intermediate list allocation.
+      // Impact: Reduces GC pressure and improves speed of category reassignment.
+      int updatedCount = 0;
       List<Future<void>> futures = [];
-      for (var m in toUpdate) {
-        final updated = ExpenseModel(
-          id: m.id,
-          title: m.title,
-          amount: m.amount,
-          date: m.date,
-          accountId: m.accountId,
-          categoryId: newId,
-          categorizationStatusValue: CategorizationStatus.categorized.value,
-          confidenceScoreValue: null,
-          isRecurring: m.isRecurring,
-          merchantId: m.merchantId,
-          groupId: m.groupId,
-          createdBy: m.createdBy,
-          currency: m.currency,
-          notes: m.notes,
-          payers: m.payers,
-          splits: m.splits,
-        );
-        futures.add(localDataSource.updateExpense(updated));
+      for (var m in all) {
+        if (m.categoryId == oldId) {
+          final updated = ExpenseModel(
+            id: m.id,
+            title: m.title,
+            amount: m.amount,
+            date: m.date,
+            accountId: m.accountId,
+            categoryId: newId,
+            categorizationStatusValue: CategorizationStatus.categorized.value,
+            confidenceScoreValue: null,
+            isRecurring: m.isRecurring,
+            merchantId: m.merchantId,
+            groupId: m.groupId,
+            createdBy: m.createdBy,
+            currency: m.currency,
+            notes: m.notes,
+            payers: m.payers,
+            splits: m.splits,
+          );
+          futures.add(localDataSource.updateExpense(updated));
+          updatedCount++;
+        }
       }
+      if (updatedCount == 0) return const Right(0);
+
       await Future.wait(futures);
-      return Right(toUpdate.length);
+      return Right(updatedCount);
     } catch (e) {
       return Left(UnexpectedFailure(e.toString()));
     }
