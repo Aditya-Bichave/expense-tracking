@@ -48,8 +48,8 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
       if (initialUri != null) {
         add(DeepLinkReceived(initialUri));
       }
-    } catch (e) {
-      log.warning("Failed to get initial link: $e");
+    } catch (e, s) {
+      log.warning("Failed to get initial link: $e\n$s");
     }
 
     // 3. Handle stream for runtime links
@@ -77,8 +77,8 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
         log.info("Supabase session obtained from URL");
         // No need to emit a state here, as AuthBloc/SessionCubit should listen to Supabase auth changes
         return;
-      } catch (e) {
-        log.severe("Failed to get Supabase session from URL: $e");
+      } catch (e, s) {
+        log.severe("Failed to get Supabase session from URL: $e\n$s");
         emit(DeepLinkError("Authentication failed: $e"));
         return;
       }

@@ -23,7 +23,7 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
       final count = await budgetBox.clear();
       log.info("[BudgetDS] Cleared budgets box ($count items).");
     } catch (e, s) {
-      log.severe("[BudgetDS] Failed to clear budgets cache$e$s");
+      log.severe("[BudgetDS] Failed to clear budgets cache$e$s\n$s");
       throw CacheFailure('Failed to clear budgets cache: ${e.toString()}');
     }
   }
@@ -34,7 +34,7 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
       await budgetBox.delete(id);
       log.info("[BudgetDS] Deleted budget (ID: $id).");
     } catch (e, s) {
-      log.severe("[BudgetDS] Failed to delete budget (ID: $id)$e$s");
+      log.severe("[BudgetDS] Failed to delete budget (ID: $id)$e$s\n$s");
       throw CacheFailure('Failed to delete budget: ${e.toString()}');
     }
   }
@@ -50,7 +50,7 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
       );
       return budget;
     } catch (e, s) {
-      log.severe("[BudgetDS] Failed to get budget by ID $id$e$s");
+      log.severe("[BudgetDS] Failed to get budget by ID $id$e$s\n$s");
       throw CacheFailure('Failed to get budget by ID: ${e.toString()}');
     }
   }
@@ -62,7 +62,7 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
       log.info("[BudgetDS] Retrieved ${budgets.length} budgets.");
       return budgets;
     } catch (e, s) {
-      log.severe("[BudgetDS] Failed to get budgets$e$s");
+      log.severe("[BudgetDS] Failed to get budgets$e$s\n$s");
       throw CacheFailure('Failed to get budgets: ${e.toString()}');
     }
   }

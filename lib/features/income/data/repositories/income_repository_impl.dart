@@ -55,7 +55,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
     } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error adding income$e$s");
+      log.severe("[IncomeRepo] Unexpected error adding income$e$s\n$s");
       return Left(
         UnexpectedFailure('Unexpected error adding income: ${e.toString()}'),
       );
@@ -78,7 +78,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       log.warning("[IncomeRepo] CacheFailure during update: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error updating income$e$s");
+      log.severe("[IncomeRepo] Unexpected error updating income$e$s\n$s");
       return Left(
         UnexpectedFailure('Unexpected error updating income: ${e.toString()}'),
       );
@@ -92,8 +92,8 @@ class IncomeRepositoryImpl implements IncomeRepository {
       if (model == null) return const Right(null);
       final hydrated = await _hydrateSingleModel(model);
       return hydrated.map((e) => e);
-    } catch (e) {
-      log.severe("Error getting income by ID $id: $e");
+    } catch (e, s) {
+      log.severe("Error getting income by ID $id: $e\n$s");
       return Left(CacheFailure("Error getting income: $e"));
     }
   }
@@ -128,7 +128,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error getting income models$e$s");
+      log.severe("[IncomeRepo] Unexpected error getting income models$e$s\n$s");
       return Left(
         UnexpectedFailure(
           'Unexpected error getting income models: ${e.toString()}',
@@ -150,7 +150,9 @@ class IncomeRepositoryImpl implements IncomeRepository {
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error deleting income ID $id$e$s");
+      log.severe(
+        "[IncomeRepo] Unexpected error deleting income ID $id$e$s\n$s",
+      );
       return Left(
         UnexpectedFailure('Unexpected error deleting income: ${e.toString()}'),
       );

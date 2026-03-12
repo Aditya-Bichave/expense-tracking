@@ -17,7 +17,9 @@ class HiveContributionLocalDataSource
       final count = await contributionBox.clear();
       log.info("[ContributionDS] Cleared contributions box ($count items).");
     } catch (e, s) {
-      log.severe("[ContributionDS] Failed to clear contributions cache$e$s");
+      log.severe(
+        "[ContributionDS] Failed to clear contributions cache$e$s\n$s",
+      );
       throw CacheFailure(
         'Failed to clear contributions cache: ${e.toString()}',
       );
@@ -61,7 +63,7 @@ class HiveContributionLocalDataSource
       );
       return contributions;
     } catch (e, s) {
-      log.severe("[ContributionDS] Failed to get all contributions$e$s");
+      log.severe("[ContributionDS] Failed to get all contributions$e$s\n$s");
       throw CacheFailure('Failed to get all contributions: ${e.toString()}');
     }
   }
@@ -77,7 +79,9 @@ class HiveContributionLocalDataSource
       );
       return contribution;
     } catch (e, s) {
-      log.severe("[ContributionDS] Failed to get contribution by ID $id$e$s");
+      log.severe(
+        "[ContributionDS] Failed to get contribution by ID $id$e$s\n$s",
+      );
       throw CacheFailure('Failed to get contribution by ID: ${e.toString()}');
     }
   }

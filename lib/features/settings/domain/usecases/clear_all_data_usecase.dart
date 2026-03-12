@@ -23,7 +23,7 @@ class ClearAllDataUseCase implements UseCase<void, NoParams> {
       );
       return result;
     } catch (e, s) {
-      log.severe("[ClearAllDataUseCase] Unexpected error$e$s");
+      log.severe("[ClearAllDataUseCase] Unexpected error$e$s\n$s");
       return Left(
         ClearDataFailure(
           "An unexpected error occurred while clearing data: ${e.toString()}",

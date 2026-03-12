@@ -34,7 +34,7 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("[UserHistoryRepo] Unexpected error in findRule$e$s");
+      log.severe("[UserHistoryRepo] Unexpected error in findRule$e$s\n$s");
       return Left(CacheFailure("Failed to find history rule: ${e.toString()}"));
     }
   }
@@ -68,7 +68,7 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("[UserHistoryRepo] Unexpected error in saveRule$e$s");
+      log.severe("[UserHistoryRepo] Unexpected error in saveRule$e$s\n$s");
       return Left(CacheFailure("Failed to save history rule: ${e.toString()}"));
     }
   }

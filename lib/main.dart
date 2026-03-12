@@ -90,8 +90,8 @@ class AppInitializer {
     // Initialize Firebase
     try {
       await Firebase.initializeApp();
-    } catch (e) {
-      log.warning('Firebase initialization failed: $e');
+    } catch (e, s) {
+      log.warning('Firebase initialization failed: $e\n$s');
     }
 
     // 1. Initialize Hive
@@ -439,7 +439,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       _pausedTime = DateTime.now();
     } else if (state == AppLifecycleState.resumed) {
       if (_pausedTime != null) {
-        final diff = DateTime.now().difference(_pausedTime!);
+        final diff = DateTime.now().difference(_pausedTime ?? DateTime.now());
         if (diff.inSeconds >= 60) {
           context.read<SessionCubit>().checkSession();
         }
@@ -485,7 +485,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
-          child: child!,
+          child: child ?? const SizedBox.shrink(),
         );
       },
     );

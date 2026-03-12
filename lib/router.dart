@@ -177,8 +177,9 @@ class AppRouter {
       ),
       GoRoute(
         path: RouteNames.verifyOtp,
-        builder: (context, state) =>
-            VerifyOtpPage(phone: (state.extra as String?) ?? ''),
+        builder: (context, state) => VerifyOtpPage(
+          phone: state.extra is String ? state.extra as String : '',
+        ),
       ),
 
       GoRoute(
@@ -237,10 +238,13 @@ class AppRouter {
                           state.uri.queryParameters['merchantId'];
                       String? merchantIdFromExtra;
                       if (state.extra is String) {
-                        merchantIdFromExtra = state.extra as String;
+                        merchantIdFromExtra = state.extra is String
+                            ? state.extra as String
+                            : "";
                       } else if (state.extra is Map) {
-                        merchantIdFromExtra =
-                            (state.extra as Map)['merchantId'];
+                        merchantIdFromExtra = (state.extra is Map
+                            ? state.extra as Map
+                            : {})['merchantId'];
                       }
                       return AddEditTransactionPage(
                         merchantId: merchantId ?? merchantIdFromExtra,
@@ -558,7 +562,11 @@ class AppRouter {
     final id = state.pathParameters[RouteNames.paramTransactionId];
     TransactionEntity? transaction;
     if (state.extra is TransactionEntity) {
-      transaction = state.extra as TransactionEntity;
+      transaction = state.extra is TransactionEntity
+          ? state.extra as TransactionEntity
+          : throw Exception(
+              "Transaction ID required",
+            ); // Fallback not possible since its required
     } else {
       log.warning(
         "[AppRouter] Txn Detail route received 'extra' of unexpected type or null. Extra: ${state.extra?.runtimeType}",
@@ -631,10 +639,12 @@ class AppRouter {
   ) {
     final categoryId = state.pathParameters[RouteNames.paramId];
     Category? category = state.extra is Category
-        ? state.extra as Category
+        ? (state.extra is Category ? state.extra as Category : null)
         : null;
     final Map<String, dynamic>? extraMap = state.extra is Map<String, dynamic>
-        ? state.extra as Map<String, dynamic>
+        ? (state.extra is Map<String, dynamic>
+              ? state.extra as Map<String, dynamic>
+              : null)
         : null;
     final CategoryType? initialType = extraMap?['initialType'] as CategoryType?;
 
@@ -663,7 +673,7 @@ class AppRouter {
   ) {
     final accountId = state.pathParameters[RouteNames.paramAccountId];
     AssetAccount? account = state.extra is AssetAccount
-        ? state.extra as AssetAccount
+        ? (state.extra is AssetAccount ? state.extra as AssetAccount : null)
         : null;
     if (accountId == null) {
       log.severe("[AppRouter] Edit Account route called without ID!");

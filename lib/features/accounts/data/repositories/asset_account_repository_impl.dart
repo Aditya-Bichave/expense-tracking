@@ -250,7 +250,9 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       );
       return Right(accounts);
     } on CacheFailure catch (e, s) {
-      log.severe("[AssetAccountRepo] CacheFailure getting asset accounts$e$s");
+      log.severe(
+        "[AssetAccountRepo] CacheFailure getting asset accounts$e$s\n$s",
+      );
       return Left(e);
     } catch (e, s) {
       log.severe(

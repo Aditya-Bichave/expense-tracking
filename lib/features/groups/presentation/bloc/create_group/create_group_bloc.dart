@@ -78,8 +78,8 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
       return _supabaseClient.storage
           .from('group-avatars')
           .getPublicUrl(fileName);
-    } catch (e) {
-      log.warning('Failed to upload group photo: $e');
+    } catch (e, s) {
+      log.warning('Failed to upload group photo: $e\n$s');
       return fallbackUrl;
     }
   }
