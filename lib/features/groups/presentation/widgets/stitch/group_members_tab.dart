@@ -34,10 +34,9 @@ class GroupMembersTab extends StatelessWidget {
           final currentUser =
               (context.read<AuthBloc>().state as AuthAuthenticated).user;
           // Use safe lookup or null if not found
-          final currentMember = state.members.cast<dynamic>().firstWhere(
-            (m) => m.userId == currentUser.id,
-            orElse: () => null,
-          );
+          final currentMember = state.members
+              .where((m) => m.userId == currentUser.id)
+              .firstOrNull;
 
           final isAdmin =
               currentMember != null && currentMember.role == GroupRole.admin;

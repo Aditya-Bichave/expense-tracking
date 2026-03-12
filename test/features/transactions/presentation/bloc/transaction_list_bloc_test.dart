@@ -139,6 +139,79 @@ void main() {
     );
 
     blocTest<TransactionListBloc, TransactionListState>(
+      'handles DateTime and String correctly in incomingFilters for startDate and endDate',
+      build: () {
+        when(
+          () => mockGetTransactionsUseCase(any()),
+        ).thenAnswer((_) async => Right([tTxnExpense]));
+        return bloc;
+      },
+      act: (bloc) => bloc.add(
+        LoadTransactions(
+          incomingFilters: {
+            'startDate': DateTime(2023, 1, 1),
+            'endDate': '2023-12-31T23:59:59.000',
+          },
+        ),
+      ),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'status',
+          ListStatus.loading,
+        ),
+        isA<TransactionListState>()
+            .having((s) => s.status, 'status', ListStatus.success)
+            .having((s) => s.startDate, 'startDate', DateTime(2023, 1, 1))
+            .having(
+              (s) => s.endDate,
+              'endDate',
+              DateTime.parse('2023-12-31T23:59:59.000'),
+            ),
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
+      'filters selectedTransactionIds correctly in batch edit mode (O(N*M) fix)',
+      build: () {
+        when(
+          () => mockGetTransactionsUseCase(any()),
+        ).thenAnswer((_) async => Right([tTxnExpense]));
+
+        final stateWithSelection = TransactionListState(
+          status: ListStatus.initial,
+          transactions: const [],
+          selectedTransactionIds: const {'1', 'invalid_id'},
+          isInBatchEditMode: true,
+        );
+
+        return TransactionListBloc(
+          getTransactionsUseCase: mockGetTransactionsUseCase,
+          deleteExpenseUseCase: mockDeleteExpenseUseCase,
+          deleteIncomeUseCase: mockDeleteIncomeUseCase,
+          applyCategoryToBatchUseCase: mockApplyCategoryToBatchUseCase,
+          saveUserHistoryUseCase: mockSaveUserHistoryUseCase,
+          expenseRepository: mockExpenseRepository,
+          incomeRepository: mockIncomeRepository,
+          dataChangeStream: dataChangeController.stream,
+        )..emit(stateWithSelection);
+      },
+      act: (bloc) => bloc.add(const LoadTransactions(forceReload: true)),
+      expect: () => [
+        isA<TransactionListState>().having(
+          (s) => s.status,
+          'status',
+          ListStatus.loading,
+        ),
+        isA<TransactionListState>()
+            .having((s) => s.status, 'status', ListStatus.success)
+            .having((s) => s.selectedTransactionIds, 'selected IDs', {
+              '1',
+            }), // 'invalid_id' is filtered out
+      ],
+    );
+
+    blocTest<TransactionListBloc, TransactionListState>(
       'FilterChanged triggers LoadTransactions',
       build: () {
         when(
