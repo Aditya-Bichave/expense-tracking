@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/auth/domain/repositories/auth_repositor
 import 'package:expense_tracker/features/profile/domain/repositories/profile_repository.dart';
 import 'package:expense_tracker/features/profile/domain/entities/user_profile.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:expense_tracker/core/utils/e2e_mode.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -31,6 +32,10 @@ class SessionCubit extends Cubit<SessionState> {
         checkSession();
       }
     });
+
+    if (E2EMode.enabled) {
+      unawaited(checkSession());
+    }
   }
 
   @override
@@ -40,6 +45,11 @@ class SessionCubit extends Cubit<SessionState> {
   }
 
   Future<void> checkSession({bool background = false}) async {
+    if (E2EMode.enabled) {
+      await _loadLocalE2EProfile();
+      return;
+    }
+
     final userResult = _authRepository.getCurrentUser();
     await userResult.fold((failure) async => emit(SessionUnauthenticated()), (
       user,
@@ -75,6 +85,19 @@ class SessionCubit extends Cubit<SessionState> {
         _fetchRemoteProfile(user, background: true);
       },
     );
+  }
+
+  Future<void> _loadLocalE2EProfile() async {
+    final localResult = await _profileRepository.getProfile(
+      forceRefresh: false,
+    );
+    localResult.fold((failure) => emit(SessionUnauthenticated()), (profile) {
+      if (profile.fullName == null || (profile.fullName?.isEmpty ?? true)) {
+        emit(SessionUnauthenticated());
+      } else {
+        emit(SessionAuthenticated(profile));
+      }
+    });
   }
 
   Future<void> _fetchRemoteProfile(User user, {bool background = false}) async {

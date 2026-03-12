@@ -2,9 +2,9 @@
 const { test, expect } = require('@playwright/test');
 const {
     setupErrorCollector,
+    gotoFlutterRoute,
     navigateClientSide,
     filterFatalErrors,
-    FLUTTER_READY_TIMEOUT
 } = require('../helpers/testSetup');
 
 test.describe('Groups @flow:groups', () => {
@@ -16,8 +16,7 @@ test.describe('Groups @flow:groups', () => {
     });
 
     test('groups list page loads without errors', async ({ page }) => {
-        await page.goto('/dashboard');
-        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+        await gotoFlutterRoute(page, '/dashboard');
         await navigateClientSide(page, '/groups');
 
         await page.screenshot({ path: 'test-results/groups-list.png', fullPage: true });

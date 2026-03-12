@@ -177,7 +177,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Web
-        run: flutter build web --release --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} --dart-define=SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} --dart-define=E2E_MODE=true
+        run: flutter build web --release --pwa-strategy=none --dart-define=E2E_MODE=true
 
       - name: Check Bundle Size
         run: node ci/scripts/bundle_size.js
@@ -282,10 +282,6 @@ jobs:
 
       - name: Run E2E Tests
         env:
-          E2E_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          E2E_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
           APP_BASE_URL: http://localhost:8080
           BUILD_DIR: build/web
         run: ./run_e2e.sh --skip-build

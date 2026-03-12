@@ -1,41 +1,38 @@
 # E2E Test Suite
 
-Playwright-based E2E tests for FinancialOS. Uses email+password auth to bypass magic links — **no email credits consumed**.
+Playwright-based E2E tests for FinancialOS. The suite runs the Flutter web app in deterministic `E2E_MODE`, seeds local Hive state on startup, and avoids live auth/session dependencies.
 
 ## How it works
 
-`globalSetup.js` runs once before tests:
+1. Flutter is built with `--dart-define=E2E_MODE=true`.
+2. App bootstrap seeds a known local dataset and authenticated session state.
+3. Playwright serves the built web bundle with the local static server in `helpers/server.js`.
+4. Tests navigate through the app using stable hash routes and the app's explicit ready signal.
 
-1. Signs in to Supabase using credentials from environment variables (`E2E_TEST_EMAIL` and `E2E_TEST_PASSWORD`)
-2. Injects the session into browser `localStorage` under Flutter's session key
-3. Saves the state to `storage/auth-state.json`
-4. All tests start pre-authenticated — no login page shown
+No Supabase secrets, test credentials, or pre-generated browser storage are required for the E2E suite.
 
-## Setup (one-time)
+## Setup
 
-### 1. Create `.env`
+### 1. Optional `.env`
 
-Copy `.env.example` to `.env` and fill in your Supabase project's URL and anon key:
+Copy `.env.example` to `.env` only if you need to override the local server URL or build directory:
 
 ```bash
 cp .env.example .env
-# then edit .env with your SUPABASE_URL and SUPABASE_ANON_KEY
 ```
 
-### 2. Build the Flutter web app
+### 2. Run through the unified runner
 
 ```bash
-# From the app root (apps/mobile/expense_tracking)
-flutter build web --release \
-  --dart-define=SUPABASE_URL=<your-url> \
-  --dart-define=SUPABASE_ANON_KEY=<your-anon-key>
+# From the repository root
+./run_e2e.sh
 ```
 
-### 3. Install dependencies (already done on first setup)
+### 3. Windows runner
 
-```bash
-npm install
-npx playwright install chromium
+```bat
+cd ci\e2e
+run_e2e.bat
 ```
 
 ## Running Tests
@@ -47,7 +44,7 @@ npm run e2e
 # Headed (watch the browser)
 npm run e2e:headed
 
-# Interactive UI mode (best for debugging)
+# Interactive UI mode
 npm run e2e:ui
 
 # Single spec
@@ -61,31 +58,28 @@ npm run e2e:report
 
 | Spec | What it tests |
 |------|--------------|
-| `auth.spec.js` | Session injection works, auth redirects, profile-setup page renders |
-| `dashboard.spec.js` | Dashboard loads, nav routes work, page title correct |
-| `transactions.spec.js` | Transactions list, add-expense wizard, all 5 report pages |
+| `auth.spec.js` | Seeded auth bootstrap and initial dashboard landing |
+| `budgets.spec.js` | Plan tab loads from the seeded dashboard session |
+| `dashboard.spec.js` | Dashboard loads and shell navigation works |
+| `groups.spec.js` | Groups tab loads without fatal browser errors |
+| `transactions.spec.js` | Transactions list, add-expense wizard, and report routes |
 
 ## CI Usage
 
-In GitHub Actions, add secrets `E2E_SUPABASE_URL`, `E2E_SUPABASE_ANON_KEY` and run:
+GitHub Actions should build the web app in `E2E_MODE` and then invoke the root runner:
 
 ```yaml
+- name: Build Web
+  run: flutter build web --release --pwa-strategy=none --dart-define=E2E_MODE=true
+
 - name: Run E2E Tests
   env:
-    E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
-    E2E_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
-    E2E_TEST_EMAIL: test@financialos.co
-    E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-    BUILD_DIR: ../../build/web
-  run: |
-    cd ci/e2e
-    npm ci
-    npx playwright install chromium --with-deps
-    npm run e2e
+    APP_BASE_URL: http://localhost:8080
+    BUILD_DIR: build/web
+  run: ./run_e2e.sh --skip-build
 ```
 
 ## Artifacts
 
-- `test-results/` — screenshots on failure + per-route screenshots
-- `playwright-report/` — full HTML report (`npm run e2e:report` to open)
-- `storage/auth-state.json` — saved session (gitignored, regenerated each run)
+- `test-results/` - screenshots, traces, and coverage output
+- `playwright-report/` - full HTML report (`npm run e2e:report` to open)

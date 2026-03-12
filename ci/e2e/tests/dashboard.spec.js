@@ -2,10 +2,9 @@
 const { test, expect } = require('@playwright/test');
 const {
     setupErrorCollector,
+    gotoFlutterRoute,
     navigateClientSide,
     filterFatalErrors,
-    FLUTTER_READY_TIMEOUT,
-    FLUTTER_RENDER_WAIT
 } = require('../helpers/testSetup');
 
 /**
@@ -20,13 +19,10 @@ test.describe('Dashboard @flow:dashboard', () => {
     test.beforeEach(async ({ page }) => {
         pageErrors = [];
         setupErrorCollector(page, pageErrors);
-        await page.goto('/dashboard');
-        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+        await gotoFlutterRoute(page, '/dashboard');
     });
 
     test('dashboard loads without fatal errors', async ({ page }) => {
-        await page.waitForTimeout(FLUTTER_RENDER_WAIT);
-
         // Use shared error filter
         const fatalErrors = filterFatalErrors(pageErrors);
 
@@ -53,7 +49,7 @@ test.describe('Dashboard @flow:dashboard', () => {
             expect(url).toContain(route.path);
 
             if (route.screenshot) {
-                await page.screenshot({ path: `test-results${route.path.replace(/\//g, '-')}-page.png`, fullPage: true });
+                await page.screenshot({ path: `test-results/${route.path.replace(/\//g, '-')}-page.png`, fullPage: true });
             }
         });
     }

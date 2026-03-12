@@ -2,9 +2,9 @@
 const { test, expect } = require('@playwright/test');
 const {
     setupErrorCollector,
+    gotoFlutterRoute,
     navigateClientSide,
     filterFatalErrors,
-    FLUTTER_READY_TIMEOUT
 } = require('../helpers/testSetup');
 
 test.describe('Budgets @flow:budget', () => {
@@ -16,14 +16,13 @@ test.describe('Budgets @flow:budget', () => {
     });
 
     test('budgets list page loads without errors', async ({ page }) => {
-        await page.goto('/dashboard');
-        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
-        await navigateClientSide(page, '/budgets');
+        await gotoFlutterRoute(page, '/dashboard');
+        await navigateClientSide(page, '/plan');
 
         await page.screenshot({ path: 'test-results/budgets-list.png', fullPage: true });
 
         const fatal = filterFatalErrors(pageErrors);
         expect(fatal).toHaveLength(0);
-        expect(page.url()).toContain('/budgets');
+        expect(page.url()).toContain('/plan');
     });
 });

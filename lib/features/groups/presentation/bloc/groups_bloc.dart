@@ -6,6 +6,7 @@ import 'package:expense_tracker/features/groups/domain/usecases/sync_groups.dart
 import 'package:expense_tracker/features/groups/domain/usecases/join_group.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/core/utils/e2e_mode.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 
 // Events
@@ -64,16 +65,18 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
   ) async {
     emit(GroupsLoading());
     // Trigger sync in background but handle errors to prevent silent failures
-    _syncGroups()
-        .then((result) {
-          result.fold(
-            (failure) => log.warning("Group sync failed: ${failure.message}"),
-            (_) => log.info("Group sync completed successfully."),
-          );
-        })
-        .catchError((e) {
-          log.severe("Group sync threw exception: $e");
-        });
+    if (!E2EMode.enabled) {
+      _syncGroups()
+          .then((result) {
+            result.fold(
+              (failure) => log.warning("Group sync failed: ${failure.message}"),
+              (_) => log.info("Group sync completed successfully."),
+            );
+          })
+          .catchError((e) {
+            log.severe("Group sync threw exception: $e");
+          });
+    }
 
     await emit.forEach<Either<Failure, List<GroupEntity>>>(
       _watchGroups(),

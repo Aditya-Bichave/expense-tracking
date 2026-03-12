@@ -3,6 +3,7 @@ import 'package:expense_tracker/core/network/supabase_config.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
+import 'package:expense_tracker/core/utils/e2e_mode.dart';
 import 'package:expense_tracker/core/network/web_local_storage.dart';
 
 class SecureLocalStorage extends LocalStorage {
@@ -61,7 +62,8 @@ class SupabaseClientProvider {
   static Future<void> initialize() async {
     try {
       log.fine('Initializing Supabase...');
-      if (!SupabaseConfig.isValid) {
+      final useLocalE2EConfig = E2EMode.enabled && !SupabaseConfig.isValid;
+      if (!useLocalE2EConfig && !SupabaseConfig.isValid) {
         // SECURITY FIX: Do not initialize with placeholders in production.
         // It's better to crash/fail initialization than to leak confusing "placeholder" states
         // or risk connecting to unsecured endpoints.
@@ -69,6 +71,13 @@ class SupabaseClientProvider {
           'Supabase configuration is invalid. Please check your build configuration.',
         );
       }
+
+      final url = useLocalE2EConfig
+          ? E2EMode.supabaseUrl
+          : SupabaseConfig.supabaseUrl;
+      final anonKey = useLocalE2EConfig
+          ? E2EMode.supabaseAnonKey
+          : SupabaseConfig.supabaseAnonKey;
 
       const secureStorage = FlutterSecureStorage(
         aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -83,8 +92,8 @@ class SupabaseClientProvider {
           : SecureLocalStorage(secureStorage);
 
       await Supabase.initialize(
-        url: SupabaseConfig.supabaseUrl,
-        anonKey: SupabaseConfig.supabaseAnonKey,
+        url: url,
+        anonKey: anonKey,
         authOptions: FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
           localStorage: localStorage,

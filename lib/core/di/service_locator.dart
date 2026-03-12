@@ -63,6 +63,7 @@ import 'package:expense_tracker/features/goals/data/datasources/goal_local_data_
 import 'package:expense_tracker/features/goals/data/datasources/goal_contribution_local_data_source.dart';
 
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:expense_tracker/core/utils/e2e_mode.dart';
 
 final sl = GetIt.instance;
 
@@ -213,7 +214,7 @@ Future<void> initLocator({
     AddExpenseDependencies.register();
   }
 
-  if (sl.isRegistered<SyncCoordinator>()) {
+  if (!E2EMode.enabled && sl.isRegistered<SyncCoordinator>()) {
     sl<SyncCoordinator>().initialize();
   }
 
