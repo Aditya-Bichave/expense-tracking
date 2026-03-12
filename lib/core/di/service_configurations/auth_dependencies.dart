@@ -11,13 +11,9 @@ import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:app_links/app_links.dart';
 import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
-import 'package:expense_tracker/core/services/notification_service.dart';
 
 class AuthDependencies {
   static void register() {
-    sl.registerLazySingleton<NotificationService>(
-      () => NotificationService(prefs: sl()),
-    );
     sl.registerLazySingleton<AuthRemoteDataSource>(
       () => AuthRemoteDataSourceImpl(sl()),
     );
@@ -30,7 +26,7 @@ class AuthDependencies {
     sl.registerLazySingleton(() => LogoutUseCase(sl()));
     sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
 
-    sl.registerFactory(() => AuthBloc(sl(), sl(), sl(), sl(), sl(), sl()));
+    sl.registerFactory(() => AuthBloc(sl(), sl(), sl(), sl(), sl()));
 
     sl.registerLazySingleton(() => SessionCubit(sl(), sl(), sl()));
 

@@ -83,11 +83,12 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
     return BridgeScaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          final bloc = context.read<AccountListBloc>();
-          bloc.add(const LoadAccounts(forceReload: true));
-          await bloc.stream.firstWhere(
-            (state) => state is! AccountListLoading || !state.isReloading,
+          context.read<AccountListBloc>().add(
+            const LoadAccounts(forceReload: true),
           );
+          final bloc = context.read<AccountListBloc>(); await bloc.stream.firstWhere(
+            (state) => state is! AccountListLoading || !state.isReloading,
+          ).timeout(const Duration(seconds: 3)).catchError((_) => bloc.state);
         },
         child: ListView(
           padding:

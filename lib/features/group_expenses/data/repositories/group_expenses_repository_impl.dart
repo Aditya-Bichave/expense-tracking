@@ -1,4 +1,3 @@
-import 'package:expense_tracker/core/utils/logger.dart';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
@@ -47,10 +46,9 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       await _outboxRepository.add(outboxItem);
 
       final connectivityResult = await _connectivity.checkConnectivity();
-      if (!connectivityResult.contains(ConnectivityResult.none)) {
-        _syncService.processOutbox().catchError((e, s) {
-          log.severe("Failed to process outbox in background: $e\n$s");
-        });
+      if (connectivityResult.contains(ConnectivityResult.mobile) ||
+          connectivityResult.contains(ConnectivityResult.wifi)) {
+        _syncService.processOutbox();
       }
 
       return Right(expense);

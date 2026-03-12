@@ -6,9 +6,6 @@ import 'package:expense_tracker/features/auth/domain/usecases/logout_usecase.dar
 import 'package:expense_tracker/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
-import 'package:expense_tracker/core/services/notification_service.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginWithOtpUseCase _loginWithOtpUseCase;
@@ -16,7 +13,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final VerifyOtpUseCase _verifyOtpUseCase;
   final LogoutUseCase _logoutUseCase;
   final GetCurrentUserUseCase _getCurrentUserUseCase;
-  final NotificationService _notificationService;
 
   AuthBloc(
     this._loginWithOtpUseCase,
@@ -24,7 +20,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     this._verifyOtpUseCase,
     this._logoutUseCase,
     this._getCurrentUserUseCase,
-    this._notificationService,
   ) : super(AuthInitial()) {
     on<AuthCheckStatus>(_onCheckStatus);
     on<AuthLoginRequested>(_onLoginRequested);
@@ -38,9 +33,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold((failure) => emit(AuthUnauthenticated()), (user) {
       if (user != null) {
         emit(AuthAuthenticated(user));
-        if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
-          _notificationService.syncDeviceToken();
-        }
       } else {
         emit(AuthUnauthenticated());
       }
@@ -83,9 +75,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold((failure) => emit(AuthError(failure.message)), (response) {
       if (response.user != null) {
         emit(AuthAuthenticated(response.user!));
-        if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
-          _notificationService.syncDeviceToken();
-        }
       } else {
         emit(const AuthError("Login failed: No user returned"));
       }
@@ -97,9 +86,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-    if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
-      await _notificationService.deleteDeviceToken();
-    }
     await _logoutUseCase();
     emit(AuthUnauthenticated());
   }

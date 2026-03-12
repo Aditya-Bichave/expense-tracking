@@ -24,7 +24,6 @@ import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.
 import 'package:expense_tracker/ui_kit/components/feedback/app_dialog.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
-import 'package:collection/collection.dart';
 
 class GroupDetailPage extends StatefulWidget {
   final String groupId;
@@ -70,11 +69,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
           final groupsState = context.watch<GroupsBloc>().state;
           String groupName = 'Group';
           if (groupsState is GroupsLoaded) {
-            final group = groupsState.groups.firstWhereOrNull(
-              (g) => g.id == widget.groupId,
-            );
-            if (group != null) {
+            try {
+              final group = groupsState.groups.firstWhere(
+                (g) => g.id == widget.groupId,
+              );
               groupName = group.name;
+            } catch (_) {
+              // Group not found or error, fallback to default name
             }
           }
 
@@ -100,18 +101,16 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                   final authState = context.read<AuthBloc>().state;
                   if (authState is AuthAuthenticated) {
                     final currentUser = authState.user;
-                    final member = membersState.members.firstWhereOrNull(
-                      (m) => m.userId == currentUser.id,
-                    );
-                    if (member != null) {
+                    try {
+                      final member = membersState.members.firstWhere(
+                        (m) => m.userId == currentUser.id,
+                      );
                       isAdmin = member.role == GroupRole.admin;
                       // Viewers cannot add, edit, or settle
                       canAddExpense = member.role != GroupRole.viewer;
                       canEdit = member.role != GroupRole.viewer;
-                    } else {
-                      log.severe(
-                        'Silent failure: current user not found in group members',
-                      );
+                    } catch (e, s) {
+                      log.severe('Silent failure: $e\n$s');
                     }
                   }
                 }

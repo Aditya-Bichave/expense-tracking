@@ -9,7 +9,7 @@ begin
       and gm.user_id = auth.uid()
   );
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer;
 
 create or replace function public.is_group_admin(group_id uuid)
 returns boolean as $$
@@ -22,7 +22,7 @@ begin
       and gm.role = 'admin'
   );
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer;
 
 create or replace function public.is_expense_member(expense_id uuid)
 returns boolean as $$
@@ -35,17 +35,14 @@ begin
   end if;
   return public.is_group_member(v_group_id);
 end;
-$$ language plpgsql security definer set search_path = public;
+$$ language plpgsql security definer;
 
 -- Drop existing inefficient policies
 drop policy if exists "Members can view groups" on public.groups;
 drop policy if exists "Admins can update groups" on public.groups;
-drop policy if exists "Users can view joined groups" on public.groups;
 drop policy if exists "Members can view other members" on public.group_members;
 drop policy if exists "Admins can add members" on public.group_members;
 drop policy if exists "Admins can update members" on public.group_members;
-drop policy if exists "Users can view members of their groups" on public.group_members;
-drop policy if exists "Admins can update member roles" on public.group_members;
 
 -- Create optimized group policies
 create policy "Members can view groups" on public.groups for select using (public.is_group_member(id));

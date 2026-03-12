@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/expenses/data/repositories/expense_repo
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense_payer.dart';
 import 'package:expense_tracker/features/expenses/domain/entities/expense_split.dart';
+import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -13,6 +14,8 @@ class MockExpenseLocalDataSource extends Mock
     implements ExpenseLocalDataSource {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class FakeExpenseModel extends Fake implements ExpenseModel {}
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
@@ -38,6 +41,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(<String, dynamic>{});
+    registerFallbackValue(FakeExpenseModel());
   });
 
   setUp(() {
@@ -146,6 +150,64 @@ void main() {
 
       // Assert
       expect(result.isLeft(), true);
+    });
+  });
+  group('getExpenses', () {
+    test('should return right from localDataSource', () async {
+      when(() => mockLocalDataSource.getExpenses(accountId: 'acc1'))
+          .thenAnswer((_) async => []);
+
+      final result = await repository.getExpenses(accountId: 'acc1');
+
+      expect(result.isRight(), true);
+      verify(() => mockLocalDataSource.getExpenses(accountId: 'acc1')).called(1);
+    });
+  });
+
+  group('getExpenseById', () {
+    test('should return right from localDataSource', () async {
+      final mockExpenseModel = ExpenseModel(
+        id: '1', title: 'test', amount: 10, currency: 'USD',
+        date: DateTime.now(), accountId: 'acc1',
+
+      );
+
+      when(() => mockLocalDataSource.getExpenseById('1'))
+          .thenAnswer((_) async => mockExpenseModel);
+
+      final result = await repository.getExpenseById('1');
+
+      expect(result.isRight(), true);
+      verify(() => mockLocalDataSource.getExpenseById('1')).called(1);
+    });
+  });
+
+  group('updateExpense', () {
+    test('should call localDataSource and update expense', () async {
+      final tExpense = Expense(
+        id: '1', title: 'Dinner', amount: 100, currency: 'USD',
+        date: DateTime.now(), accountId: 'acc1',
+      );
+
+      when(() => mockLocalDataSource.updateExpense(any()))
+          .thenAnswer((_) async => FakeExpenseModel());
+
+      final result = await repository.updateExpense(tExpense);
+
+      expect(result.isRight(), true);
+      verify(() => mockLocalDataSource.updateExpense(any())).called(1);
+    });
+  });
+
+  group('deleteExpense', () {
+    test('should call localDataSource to delete expense', () async {
+      when(() => mockLocalDataSource.deleteExpense('1'))
+          .thenAnswer((_) async => FakeExpenseModel());
+
+      final result = await repository.deleteExpense('1');
+
+      expect(result.isRight(), true);
+      verify(() => mockLocalDataSource.deleteExpense('1')).called(1);
     });
   });
 }

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/core/utils/e2e_ready.dart';
 import 'package:flutter/services.dart';
@@ -82,13 +81,6 @@ void main(List<String> args) async {
 class AppInitializer {
   static Future<void> init() async {
     Bloc.observer = SimpleBlocObserver();
-
-    // Initialize Firebase
-    try {
-      await Firebase.initializeApp();
-    } catch (e) {
-      log.warning('Firebase initialization failed: $e');
-    }
 
     // 1. Initialize Hive
     await Hive.initFlutter();
