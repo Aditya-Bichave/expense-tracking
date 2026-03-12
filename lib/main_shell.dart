@@ -1,5 +1,6 @@
 // lib/main_shell.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/utils/e2e_ready.dart';
 import 'package:expense_tracker/core/widgets/demo_indicator_widget.dart'; // Import Demo Indicator
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -87,6 +88,10 @@ class MainShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      signalE2EReady();
+    });
+
     final theme = Theme.of(context);
     final kit = context.kit;
     final navTheme = theme.bottomNavigationBarTheme;

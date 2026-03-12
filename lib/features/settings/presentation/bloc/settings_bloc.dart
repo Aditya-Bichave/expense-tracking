@@ -41,11 +41,20 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<EnterDemoMode>(_onEnterDemoMode);
     on<ExitDemoMode>(_onExitDemoMode);
     on<SkipSetup>(_onSkipSetup);
+    on<ResetSkipSetupFlag>(_onResetSkipSetupFlag);
   }
 
   void _onSkipSetup(SkipSetup event, Emitter<SettingsState> emit) {
     log.info("[SettingsBloc] Skipping setup (marking as completed).");
     emit(state.copyWith(setupSkipped: true));
+  }
+
+  void _onResetSkipSetupFlag(
+    ResetSkipSetupFlag event,
+    Emitter<SettingsState> emit,
+  ) {
+    log.info("[SettingsBloc] Resetting skip setup flag.");
+    emit(state.copyWith(setupSkipped: false));
   }
 
   Future<void> _onLoadSettings(

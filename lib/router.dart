@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/screens/initial_setup_screen.dart';
+import 'package:expense_tracker/core/utils/e2e_ready.dart';
 import 'package:expense_tracker/features/accounts/domain/entities/asset_account.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/add_edit_account_page.dart';
 import 'package:expense_tracker/features/accounts/presentation/pages/accounts_tab_page.dart';
@@ -741,6 +742,12 @@ class AppRouter {
 }
 
 class GoRouterObserver extends NavigatorObserver {
+  void _signalRouteSettled() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      signalE2EReady();
+    });
+  }
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     final String pushedRoute =
@@ -751,6 +758,7 @@ class GoRouterObserver extends NavigatorObserver {
         previousRoute?.settings.name ??
         _sanitizeArgs(previousRoute?.settings.arguments);
     log.fine('GoRouter Pushed: ${previousRouteName ?? 'null'} -> $pushedRoute');
+    _signalRouteSettled();
   }
 
   @override
@@ -765,6 +773,7 @@ class GoRouterObserver extends NavigatorObserver {
     log.fine(
       'GoRouter Popped: $poppedRoute -> Returning to ${previousRouteName ?? 'null'}',
     );
+    _signalRouteSettled();
   }
 
   @override
@@ -779,6 +788,7 @@ class GoRouterObserver extends NavigatorObserver {
     log.fine(
       'GoRouter Removed: $removedRoute (Previous was: ${previousRouteName ?? 'null'})',
     );
+    _signalRouteSettled();
   }
 
   @override
@@ -792,6 +802,7 @@ class GoRouterObserver extends NavigatorObserver {
         _sanitizeArgs(newRoute?.settings.arguments) ??
         'null';
     log.fine('GoRouter Replaced: $oldRouteName with $newRouteName');
+    _signalRouteSettled();
   }
 
   String? _sanitizeArgs(Object? args) {

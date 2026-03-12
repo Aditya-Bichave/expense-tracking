@@ -1,7 +1,6 @@
 // @ts-check
 
 const FLUTTER_READY_TIMEOUT = 30_000;
-const FLUTTER_RENDER_WAIT = 2000;
 
 const IGNORABLE_ERRORS = [
     'ERR_NAME_NOT_RESOLVED',
@@ -32,6 +31,42 @@ function setupErrorCollector(page, pageErrors) {
     });
 }
 
+function normalizeRoute(path) {
+    if (!path || path === '/') {
+        return '/';
+    }
+
+    return path.startsWith('/') ? path : `/${path}`;
+}
+
+/**
+ * Wait for the Flutter app to signal readiness and attach its render host.
+ * @param {import('@playwright/test').Page} page
+ */
+async function waitForFlutterReady(page) {
+    await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, {
+        timeout: FLUTTER_READY_TIMEOUT,
+    });
+    await page.locator('canvas, flt-semantics-host').first().waitFor({
+        state: 'attached',
+        timeout: FLUTTER_READY_TIMEOUT,
+    });
+}
+
+/**
+ * Navigate to a Flutter hash route and wait for the app to finish rendering it.
+ * @param {import('@playwright/test').Page} page
+ * @param {string} path
+ */
+async function gotoFlutterRoute(page, path) {
+    const normalizedRoute = normalizeRoute(path);
+    await page.goto(`/#${normalizedRoute}`, {
+        waitUntil: 'domcontentloaded',
+        timeout: FLUTTER_READY_TIMEOUT,
+    });
+    await waitForFlutterReady(page);
+}
+
 /**
  * Perform client-side navigation within Flutter Web to avoid deep-link boot crashes.
  * Uses Hash routing by default as `usePathUrlStrategy` is not enabled in main.dart.
@@ -44,16 +79,15 @@ async function navigateClientSide(page, path) {
         // Flutter web defaults to hash routing
         window.location.hash = r.startsWith('/') ? r : '/' + r;
     }, path);
-    // await page.waitForURL(`**/*#${path}*`, { timeout: 30000 });
-    await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
-    await page.waitForTimeout(FLUTTER_RENDER_WAIT);
+    await waitForFlutterReady(page);
 }
 
 module.exports = {
     setupErrorCollector,
+    waitForFlutterReady,
+    gotoFlutterRoute,
     navigateClientSide,
     filterFatalErrors,
     IGNORABLE_ERRORS,
-    FLUTTER_READY_TIMEOUT,
-    FLUTTER_RENDER_WAIT
+    FLUTTER_READY_TIMEOUT
 };

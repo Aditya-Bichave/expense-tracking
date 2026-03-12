@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:expense_tracker/core/utils/e2e_bootstrap.dart';
+import 'package:expense_tracker/core/utils/e2e_mode.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/core/utils/e2e_ready.dart';
 import 'package:flutter/services.dart';
@@ -190,6 +192,10 @@ class AppInitializer {
       groupExpenseBox: groupExpenseBox,
       profileBox: profileBox,
     );
+
+    if (E2EMode.enabled) {
+      await E2EBootstrap.seedLocalState();
+    }
   }
 
   static void _registerHiveAdapters() {

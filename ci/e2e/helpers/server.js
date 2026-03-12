@@ -1,6 +1,6 @@
 /**
  * Reusable static file server for Flutter web build.
- * Used by globalSetup to serve the app during E2E tests.
+ * Used by Playwright's webServer hook to serve the app during E2E tests.
  */
 
 const http = require('http');

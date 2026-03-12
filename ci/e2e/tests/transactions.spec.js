@@ -2,9 +2,9 @@
 const { test, expect } = require('@playwright/test');
 const {
     setupErrorCollector,
+    gotoFlutterRoute,
     navigateClientSide,
     filterFatalErrors,
-    FLUTTER_READY_TIMEOUT
 } = require('../helpers/testSetup');
 
 /**
@@ -21,8 +21,7 @@ test.describe('Transactions @flow:transactions', () => {
     });
 
     test('transactions list page loads without errors', async ({ page }) => {
-        await page.goto('/dashboard');
-        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+        await gotoFlutterRoute(page, '/dashboard');
         await navigateClientSide(page, '/transactions');
 
         await page.screenshot({ path: 'test-results/transactions-list.png', fullPage: true });
@@ -33,8 +32,7 @@ test.describe('Transactions @flow:transactions', () => {
     });
 
     test('add expense wizard page loads', async ({ page }) => {
-        await page.goto('/dashboard');
-        await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+        await gotoFlutterRoute(page, '/dashboard');
         await navigateClientSide(page, '/add-expense-wizard');
 
         await page.screenshot({ path: 'test-results/add-expense-wizard.png', fullPage: true });
@@ -46,11 +44,11 @@ test.describe('Transactions @flow:transactions', () => {
 
 test.describe('Reports @flow:reports', () => {
     const reportRoutes = [
-        '/report/spending_category',
-        '/report/spending_time',
-        '/report/income_expense',
-        '/report/budget_performance',
-        '/report/goal_progress',
+        '/dashboard/spending_category',
+        '/dashboard/spending_time',
+        '/dashboard/income_expense',
+        '/dashboard/budget_performance',
+        '/dashboard/goal_progress',
     ];
 
     /** @type {string[]} */
@@ -63,8 +61,7 @@ test.describe('Reports @flow:reports', () => {
 
     for (const route of reportRoutes) {
         test(`report page loads: ${route}`, async ({ page }) => {
-            await page.goto('/dashboard');
-            await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, { timeout: FLUTTER_READY_TIMEOUT });
+            await gotoFlutterRoute(page, '/dashboard');
             await navigateClientSide(page, route);
 
             const screenshotName = route.replace(/\//g, '_').replace(/^_/, '');
