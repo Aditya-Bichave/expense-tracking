@@ -241,7 +241,8 @@ class AppRouter {
                         merchantIdFromExtra = state.extra as String;
                       } else if (state.extra is Map) {
                         final map = state.extra as Map;
-                        if (map.containsKey('merchantId') && map['merchantId'] is String) {
+                        if (map.containsKey('merchantId') &&
+                            map['merchantId'] is String) {
                           merchantIdFromExtra = map['merchantId'] as String;
                         }
                       }
@@ -672,7 +673,7 @@ class AppRouter {
   ) {
     final accountId = state.pathParameters[RouteNames.paramAccountId];
     AssetAccount? account = state.extra is AssetAccount
-        ? (state.extra is AssetAccount ? state.extra as AssetAccount : null)
+        ? state.extra as AssetAccount
         : null;
     if (accountId == null) {
       log.severe("[AppRouter] Edit Account route called without ID!");

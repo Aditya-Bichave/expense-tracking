@@ -29,7 +29,7 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       log.info("Added expense '${expense.title}' (ID: ${expense.id}) to Hive.");
       return expense;
     } catch (e, s) {
-      log.severe("Failed to add expense '${expense.title}' to cache$e$s");
+      log.severe("Failed to add expense '${expense.title}' to cache: $e\n$s");
       throw CacheFailure('Failed to add expense: ${e.toString()}');
     }
   }
@@ -106,7 +106,7 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       if (expense != null) {
         log.fine("Retrieved expense by ID $id from Hive.");
       } else {
-        log.warning("Expense with ID $id not found in Hive.");
+        log.info("Expense with ID $id not found in Hive.");
       }
       return expense; // Returns null if not found
     } catch (e, s) {
@@ -130,7 +130,9 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       );
       return expense;
     } catch (e, s) {
-      log.severe("Failed to update expense '${expense.title}' in cache$e$s");
+      log.severe(
+        "Failed to update expense '${expense.title}' in cache: $e\n$s",
+      );
       throw CacheFailure('Failed to update expense: ${e.toString()}');
     }
   }

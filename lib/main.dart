@@ -475,9 +475,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         if (child == null) {
           log.severe('Error: child route is null.');
           return const Scaffold(
-            body: Center(
-              child: Text('Error: Route failed to build.'),
-            ),
+            body: Center(child: Text('Error: Route failed to build.')),
           );
         }
 

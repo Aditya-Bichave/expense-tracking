@@ -29,7 +29,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       log.info("Added income '${income.title}' (ID: ${income.id}) to Hive.");
       return income;
     } catch (e, s) {
-      log.severe("Failed to add income '${income.title}' to cache$e$s");
+      log.severe("Failed to add income '${income.title}' to cache: $e\n$s");
       throw CacheFailure('Failed to add income: ${e.toString()}');
     }
   }
@@ -128,7 +128,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       log.info("Updated income '${income.title}' (ID: ${income.id}) in Hive.");
       return income;
     } catch (e, s) {
-      log.severe("Failed to update income '${income.title}' in cache$e$s");
+      log.severe("Failed to update income '${income.title}' in cache: $e\n$s");
       throw CacheFailure('Failed to update income: ${e.toString()}');
     }
   }

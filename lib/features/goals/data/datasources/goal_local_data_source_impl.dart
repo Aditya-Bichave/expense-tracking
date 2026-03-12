@@ -27,7 +27,7 @@ class HiveGoalLocalDataSource implements GoalLocalDataSource {
       await goalBox.delete(id);
       log.info("[GoalDS] Deleted goal (ID: $id).");
     } catch (e, s) {
-      log.severe("[GoalDS] Failed to delete goal (ID: $id)$e$s\n$s");
+      log.severe("[GoalDS] Failed to delete goal (ID: $id): $e\n$s");
       throw CacheFailure('Failed to delete goal: ${e.toString()}');
     }
   }

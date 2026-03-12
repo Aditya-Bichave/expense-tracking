@@ -34,7 +34,7 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
       await budgetBox.delete(id);
       log.info("[BudgetDS] Deleted budget (ID: $id).");
     } catch (e, s) {
-      log.severe("[BudgetDS] Failed to delete budget (ID: $id)$e$s\n$s");
+      log.severe("[BudgetDS] Failed to delete budget (ID: $id): $e\n$s");
       throw CacheFailure('Failed to delete budget: ${e.toString()}');
     }
   }
