@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -53,6 +54,7 @@ class FakePostgrestFilterBuilder extends Fake
 class FakePostgrestTransformBuilderMap extends Fake
     implements PostgrestTransformBuilder<Map<String, dynamic>> {
   final Map<String, dynamic> _result;
+
   FakePostgrestTransformBuilderMap(this._result);
 
   @override
@@ -96,6 +98,7 @@ void main() {
     updatedAt: tDate,
     typeValue: 'custom',
     currency: 'USD',
+    photoUrl: 'https://example.com/group.png',
   );
 
   final tGroupJson = {
@@ -106,15 +109,16 @@ void main() {
     'updated_at': tDate.toIso8601String(),
     'type': 'custom',
     'currency': 'USD',
+    'photo_url': 'https://example.com/group.png',
+    'is_archived': false,
   };
 
   group('GroupsRemoteDataSource', () {
-    test('createGroup should return GroupModel', () async {
+    test('createGroup returns GroupModel', () async {
       final fakeBuilder = FakePostgrestFilterBuilder(
-        [],
+        const [],
         singleResult: tGroupJson,
       );
-
       when(() => mockQueryBuilder.insert(any())).thenAnswer((_) => fakeBuilder);
 
       final result = await dataSource.createGroup(tGroupModel);
@@ -124,7 +128,44 @@ void main() {
       verify(() => mockQueryBuilder.insert(any())).called(1);
     });
 
-    test('getGroups should return list of groups', () async {
+    test('updateGroup returns GroupModel from the edited row', () async {
+      final fakeBuilder = FakePostgrestFilterBuilder(
+        const [],
+        singleResult: {...tGroupJson, 'name': 'Edited Group'},
+      );
+      when(() => mockQueryBuilder.update(any())).thenAnswer((_) => fakeBuilder);
+
+      final result = await dataSource.updateGroup(
+        GroupModel.fromEntity(
+          tGroupModel.toEntity().copyWith(name: 'Edited Group'),
+        ),
+      );
+
+      expect(result.name, 'Edited Group');
+      verify(() => mockQueryBuilder.update(any())).called(1);
+    });
+
+    test('deleteGroup deletes by id', () async {
+      final fakeBuilder = FakePostgrestFilterBuilder(const []);
+      when(() => mockQueryBuilder.delete()).thenAnswer((_) => fakeBuilder);
+
+      await dataSource.deleteGroup('1');
+
+      verify(() => mockClient.from('groups')).called(1);
+      verify(() => mockQueryBuilder.delete()).called(1);
+    });
+
+    test('leaveGroup deletes the matching group_member row', () async {
+      final fakeBuilder = FakePostgrestFilterBuilder(const []);
+      when(() => mockQueryBuilder.delete()).thenAnswer((_) => fakeBuilder);
+
+      await dataSource.leaveGroup('g1', 'u1');
+
+      verify(() => mockClient.from('group_members')).called(1);
+      verify(() => mockQueryBuilder.delete()).called(1);
+    });
+
+    test('getGroups returns a list of groups', () async {
       final fakeBuilder = FakePostgrestFilterBuilder([tGroupJson]);
       when(() => mockQueryBuilder.select()).thenAnswer((_) => fakeBuilder);
 
@@ -134,23 +175,46 @@ void main() {
       expect(result.first.id, tGroupModel.id);
     });
 
-    test('createInvite should return invite url', () async {
-      when(
-        () => mockFunctionsClient.invoke(
-          'create-invite',
-          headers: any(named: 'headers'),
-          body: any(named: 'body'),
-          method: any(named: 'method'),
-        ),
-      ).thenAnswer(
-        (_) async => FunctionResponse(data: {'invite_url': 'url'}, status: 200),
-      );
+    test(
+      'createInvite accepts any 2xx response and returns invite url',
+      () async {
+        when(
+          () => mockFunctionsClient.invoke(
+            'create-invite',
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            method: any(named: 'method'),
+          ),
+        ).thenAnswer(
+          (_) async =>
+              FunctionResponse(data: {'invite_url': 'url'}, status: 201),
+        );
 
-      final result = await dataSource.createInvite('1');
-      expect(result, 'url');
-    });
+        final result = await dataSource.createInvite('1');
 
-    test('acceptInvite should return response data', () async {
+        expect(result, 'url');
+      },
+    );
+
+    test(
+      'createInvite throws when the edge function returns a non-2xx status',
+      () async {
+        when(
+          () => mockFunctionsClient.invoke(
+            'create-invite',
+            headers: any(named: 'headers'),
+            body: any(named: 'body'),
+            method: any(named: 'method'),
+          ),
+        ).thenAnswer(
+          (_) async => FunctionResponse(data: {'error': 'boom'}, status: 500),
+        );
+
+        expect(() => dataSource.createInvite('1'), throwsException);
+      },
+    );
+
+    test('acceptInvite returns response data for 2xx responses', () async {
       when(
         () => mockFunctionsClient.invoke(
           'join_group_via_invite',
@@ -159,11 +223,16 @@ void main() {
           method: any(named: 'method'),
         ),
       ).thenAnswer(
-        (_) async => FunctionResponse(data: {'success': true}, status: 200),
+        (_) async => FunctionResponse(
+          data: {'success': true, 'group_id': '1'},
+          status: 202,
+        ),
       );
 
       final result = await dataSource.acceptInvite('token');
+
       expect(result['success'], true);
+      expect(result['group_id'], '1');
     });
   });
 }

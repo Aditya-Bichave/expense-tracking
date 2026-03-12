@@ -35,10 +35,11 @@ class GroupModel extends HiveObject {
   final String currency;
 
   @HiveField(7)
+  @JsonKey(name: 'photo_url')
   final String? photoUrl;
 
   @HiveField(8, defaultValue: false)
-  @JsonKey(defaultValue: false)
+  @JsonKey(name: 'is_archived', defaultValue: false)
   final bool isArchived;
 
   GroupModel({
@@ -85,4 +86,15 @@ class GroupModel extends HiveObject {
       _$GroupModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$GroupModelToJson(this);
+
+  Map<String, dynamic> toUpdateJson() {
+    return {
+      'name': name,
+      'type': typeValue,
+      'currency': currency,
+      'photo_url': photoUrl,
+      'updated_at': updatedAt.toIso8601String(),
+      'is_archived': isArchived,
+    };
+  }
 }

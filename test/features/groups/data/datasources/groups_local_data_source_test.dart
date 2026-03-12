@@ -96,5 +96,67 @@ void main() {
       expect(result, equals([tGroupMemberModel]));
       expect(result, isNot(contains(otherMember)));
     });
+
+    test('deleteGroup should remove a single group', () async {
+      when(() => mockGroupBox.delete(any())).thenAnswer((_) async {});
+
+      await dataSource.deleteGroup('1');
+
+      verify(() => mockGroupBox.delete('1')).called(1);
+    });
+
+    test('deleteGroups should remove all provided groups', () async {
+      when(() => mockGroupBox.deleteAll(any())).thenAnswer((_) async {});
+
+      await dataSource.deleteGroups(['1', '2']);
+
+      verify(() => mockGroupBox.deleteAll(['1', '2'])).called(1);
+    });
+
+    test('deleteGroupMembers should delete only matching member ids', () async {
+      final otherMember = GroupMemberModel(
+        id: 'm2',
+        groupId: '2',
+        userId: 'user2',
+        roleValue: 'member',
+        joinedAt: tDate,
+        updatedAt: tDate,
+      );
+      when(
+        () => mockMemberBox.values,
+      ).thenReturn([tGroupMemberModel, otherMember]);
+      when(() => mockMemberBox.deleteAll(any())).thenAnswer((_) async {});
+
+      await dataSource.deleteGroupMembers('1');
+
+      verify(() => mockMemberBox.deleteAll(['m1'])).called(1);
+    });
+
+    test(
+      'deleteGroupMembers is a no-op when group has no local members',
+      () async {
+        when(() => mockMemberBox.values).thenReturn(const <GroupMemberModel>[]);
+
+        await dataSource.deleteGroupMembers('missing');
+
+        verifyNever(() => mockMemberBox.deleteAll(any()));
+      },
+    );
+
+    test('deleteMember should remove a single member', () async {
+      when(() => mockMemberBox.delete(any())).thenAnswer((_) async {});
+
+      await dataSource.deleteMember('m1');
+
+      verify(() => mockMemberBox.delete('m1')).called(1);
+    });
+
+    test('deleteMembers should remove all provided members', () async {
+      when(() => mockMemberBox.deleteAll(any())).thenAnswer((_) async {});
+
+      await dataSource.deleteMembers(['m1', 'm2']);
+
+      verify(() => mockMemberBox.deleteAll(['m1', 'm2'])).called(1);
+    });
   });
 }

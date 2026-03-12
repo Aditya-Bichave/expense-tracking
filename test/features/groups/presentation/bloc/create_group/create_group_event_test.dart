@@ -12,7 +12,19 @@ void main() {
         userId: 'u1',
       );
 
-      expect(event.props, ['Test', GroupType.trip, 'USD', 'u1', null]);
+      expect(event.isEdit, isFalse);
+      expect(event.props, [
+        'Test',
+        GroupType.trip,
+        'USD',
+        'u1',
+        null,
+        null,
+        null,
+        null,
+        false,
+        null,
+      ]);
     });
 
     test('CreateGroupSubmitted equality should work', () {
@@ -39,6 +51,18 @@ void main() {
 
       expect(event1, equals(event2));
       expect(event1, isNot(equals(event3)));
+    });
+
+    test('CreateGroupSubmitted reports edit mode when groupId is provided', () {
+      const event = CreateGroupSubmitted(
+        name: 'Test',
+        type: GroupType.trip,
+        currency: 'USD',
+        userId: 'u1',
+        groupId: 'g1',
+      );
+
+      expect(event.isEdit, isTrue);
     });
   });
 }

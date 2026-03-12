@@ -9,17 +9,21 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:expense_tracker/features/groups/domain/usecases/create_group.dart';
+import 'package:expense_tracker/features/groups/domain/usecases/update_group.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_event.dart';
 import 'package:expense_tracker/features/groups/presentation/bloc/create_group/create_group_state.dart';
 
 class MockCreateGroup extends Mock implements CreateGroup {}
 
+class MockUpdateGroup extends Mock implements UpdateGroup {}
+
 class MockUuid extends Mock implements Uuid {}
 
 void main() {
   late CreateGroupBloc bloc;
   late MockCreateGroup mockCreateGroup;
+  late MockUpdateGroup mockUpdateGroup;
   late MockUuid mockUuid;
 
   setUpAll(() {
@@ -38,8 +42,13 @@ void main() {
 
   setUp(() {
     mockCreateGroup = MockCreateGroup();
+    mockUpdateGroup = MockUpdateGroup();
     mockUuid = MockUuid();
-    bloc = CreateGroupBloc(createGroup: mockCreateGroup, uuid: mockUuid);
+    bloc = CreateGroupBloc(
+      createGroup: mockCreateGroup,
+      updateGroup: mockUpdateGroup,
+      uuid: mockUuid,
+    );
   });
 
   group('CreateGroupBloc', () {
@@ -60,7 +69,7 @@ void main() {
     );
 
     blocTest<CreateGroupBloc, CreateGroupState>(
-      'emits [CreateGroupLoading, CreateGroupSuccess] when createGroup is successful with photoFile',
+      'emits [CreateGroupLoading, CreateGroupSuccess] when createGroup succeeds',
       setUp: () {
         when(() => mockUuid.v4()).thenReturn('mock-uuid');
         when(
@@ -81,32 +90,44 @@ void main() {
         isA<CreateGroupLoading>(),
         CreateGroupSuccess(groupEntity),
       ],
+      verify: (_) {
+        verify(() => mockCreateGroup(any())).called(1);
+        verifyNever(() => mockUpdateGroup(any()));
+      },
     );
 
     blocTest<CreateGroupBloc, CreateGroupState>(
-      'emits [CreateGroupLoading, CreateGroupSuccess] when createGroup is successful',
+      'emits [CreateGroupLoading, CreateGroupSuccess] when edit mode updates the group',
       setUp: () {
-        when(() => mockUuid.v4()).thenReturn('mock-uuid');
+        final updatedGroup = groupEntity.copyWith(name: 'Renamed Group');
         when(
-          () => mockCreateGroup(any()),
-        ).thenAnswer((_) async => Right(groupEntity));
+          () => mockUpdateGroup(any()),
+        ).thenAnswer((_) async => Right(updatedGroup));
       },
       build: () => bloc,
       act: (bloc) => bloc.add(
-        const CreateGroupSubmitted(
-          name: 'Test Group',
+        CreateGroupSubmitted(
+          name: 'Renamed Group',
           type: GroupType.trip,
           currency: 'USD',
           userId: 'u1',
+          groupId: 'mock-uuid',
+          createdBy: 'u1',
+          createdAt: dateTime,
+          existingPhotoUrl: 'https://example.com/photo.jpg',
         ),
       ),
       expect: () => [
         isA<CreateGroupLoading>(),
-        CreateGroupSuccess(groupEntity),
+        isA<CreateGroupSuccess>().having(
+          (state) => state.group.name,
+          'updated name',
+          'Renamed Group',
+        ),
       ],
       verify: (_) {
-        verify(() => mockUuid.v4()).called(1);
-        verify(() => mockCreateGroup(any())).called(1);
+        verify(() => mockUpdateGroup(any())).called(1);
+        verifyNever(() => mockCreateGroup(any()));
       },
     );
 

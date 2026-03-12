@@ -58,8 +58,8 @@ void main() {
         'updated_at': dateTime.toIso8601String(),
         'type': 'trip',
         'currency': 'USD',
-        'photoUrl': 'http://example.com/photo.jpg',
-        'isArchived': false,
+        'photo_url': 'http://example.com/photo.jpg',
+        'is_archived': false,
       };
 
       final result = GroupModel.fromJson(jsonMap);
@@ -84,13 +84,26 @@ void main() {
         'updated_at': dateTime.toIso8601String(),
         'type': 'trip',
         'currency': 'USD',
-        'photoUrl': 'http://example.com/photo.jpg',
-        'isArchived': false,
+        'photo_url': 'http://example.com/photo.jpg',
+        'is_archived': false,
       };
 
       final result = tGroupModel.toJson();
 
       expect(result, expectedMap);
+    });
+
+    test('toUpdateJson returns only editable snake_case fields', () {
+      final result = tGroupModel.toUpdateJson();
+
+      expect(result, {
+        'name': 'Test Group',
+        'type': 'trip',
+        'currency': 'USD',
+        'photo_url': 'http://example.com/photo.jpg',
+        'updated_at': dateTime.toIso8601String(),
+        'is_archived': false,
+      });
     });
   });
 }

@@ -6,12 +6,13 @@ const path = require('path');
 // --- Configuration ---
 const BUILD_DIR = path.resolve(__dirname, '../../build/web');
 const PORT = 8080;
-const TIMEOUT = 60000; // 60s timeout
-const MAX_STARTUP_TIME_MS = 45000; // Budget
+const TIMEOUT = 60000;
+const MAX_STARTUP_TIME_MS = 45000;
 const ARTIFACTS_DIR = path.join(__dirname, 'artifacts');
 const REPORT_FILE = path.join(__dirname, 'smoke-report.json');
 const ROUTES_FILE = path.join(__dirname, 'routes.json');
 const RETRIES = 1;
+const BASE_URL = `http://localhost:${PORT}`;
 
 // --- Load Routes ---
 let ROUTES = [];
@@ -56,22 +57,103 @@ async function saveTrace(context, name) {
   }
 }
 
+async function waitForFlutterReady(page) {
+  await page.waitForFunction(() => window.E2E_FLUTTER_READY === true, {
+    timeout: TIMEOUT
+  });
+  await page.locator('canvas, flt-semantics-host').first().waitFor({
+    state: 'attached',
+    timeout: TIMEOUT
+  });
+}
+
+async function gotoFlutterRoute(page, route) {
+  await page.goto(`${BASE_URL}/#${route}`, {
+    waitUntil: 'domcontentloaded',
+    timeout: TIMEOUT
+  });
+  await waitForFlutterReady(page);
+}
+
+async function navigateFlutterRoute(page, route) {
+  await page.evaluate(targetRoute => {
+    window.E2E_FLUTTER_READY = false;
+    window.location.hash = targetRoute.startsWith('/') ? targetRoute : `/${targetRoute}`;
+  }, route);
+  await waitForFlutterReady(page);
+}
+
+async function enableAccessibilitySemantics(page) {
+  const activation = await page.evaluate(() => {
+    const host = document.querySelector('flt-semantics-host');
+    if (host && host.querySelectorAll('flt-semantics').length > 0) {
+      return { placeholderFound: true, semanticsAlreadyEnabled: true };
+    }
+
+    const placeholder = document.querySelector('flt-semantics-placeholder');
+    if (!placeholder) {
+      return { placeholderFound: false };
+    }
+
+    placeholder.focus();
+    placeholder.dispatchEvent(
+      new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+    );
+    placeholder.dispatchEvent(
+      new MouseEvent('mouseup', { bubbles: true, cancelable: true })
+    );
+    placeholder.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+    placeholder.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        bubbles: true,
+        cancelable: true
+      })
+    );
+    placeholder.dispatchEvent(
+      new KeyboardEvent('keyup', {
+        key: 'Enter',
+        code: 'Enter',
+        bubbles: true,
+        cancelable: true
+      })
+    );
+
+    return { placeholderFound: true, semanticsAlreadyEnabled: false };
+  });
+
+  if (!activation.placeholderFound) {
+    return false;
+  }
+
+  try {
+    await page.waitForFunction(() => {
+      const host = document.querySelector('flt-semantics-host');
+      return !!host && host.querySelectorAll('flt-semantics').length > 0;
+    }, {
+      timeout: 10000
+    });
+    return true;
+  } catch (e) {
+    console.warn(`  Accessibility semantics did not become available: ${e.message}`);
+    return false;
+  }
+}
+
 // --- Custom Static Server with /log support ---
 const server = http.createServer((req, res) => {
-  // Handle POST /log
   if (req.method === 'POST' && req.url === '/log') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true }));
     return;
   }
 
-  // Handle Static Files
   let filePath = path.join(BUILD_DIR, req.url === '/' ? 'index.html' : req.url);
-
-  // Strip query parameters
   filePath = filePath.split('?')[0];
 
-  // Basic security check to prevent directory traversal
   if (!filePath.startsWith(BUILD_DIR)) {
     res.writeHead(403);
     res.end('Forbidden');
@@ -80,12 +162,10 @@ const server = http.createServer((req, res) => {
 
   fs.stat(filePath, (err, stats) => {
     if (err || !stats.isFile()) {
-      // Fallback to index.html for SPA routing (if file not found)
-      // But only if it's not a static asset (heuristic: no extension)
       if (path.extname(filePath) === '') {
         const index = path.join(BUILD_DIR, 'index.html');
-        fs.readFile(index, (err, data) => {
-          if (err) {
+        fs.readFile(index, (readErr, data) => {
+          if (readErr) {
             res.writeHead(404);
             res.end('Not Found');
           } else {
@@ -100,8 +180,6 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // Determine Content-Type
-    // Simple mapping for common flutter web types since mime-types might not be installed
     const ext = path.extname(filePath).toLowerCase();
     let contentType = 'application/octet-stream';
     const mimeTypes = {
@@ -128,8 +206,8 @@ const server = http.createServer((req, res) => {
       contentType = mimeTypes[ext];
     }
 
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
+    fs.readFile(filePath, (readErr, data) => {
+      if (readErr) {
         res.writeHead(500);
         res.end('Server Error');
         return;
@@ -142,17 +220,16 @@ const server = http.createServer((req, res) => {
 
 // --- Main Execution ---
 async function run() {
-  console.log('🚀 Starting Smoke Tests...');
+  console.log('Starting smoke tests...');
   ensureArtifactsDir();
 
   server.listen(PORT);
-  console.log(`Server started on http://localhost:${PORT}`);
+  console.log(`Server started on ${BASE_URL}`);
 
   let browser;
   let context;
   let page;
 
-  // Results Container
   const results = {
     startupTimeMs: 0,
     passed: true,
@@ -165,20 +242,14 @@ async function run() {
   try {
     browser = await chromium.launch();
     context = await browser.newContext();
-
-    // Start tracing
     await context.tracing.start({ screenshots: true, snapshots: true });
 
     page = await context.newPage();
 
-    // 1. Monitor Errors
     page.on('console', msg => {
       if (msg.type() === 'error') {
         const text = msg.text();
-        console.error(`  Console Error: ${text}`);
-
-        // Ignore 405 errors if they sneak through (though server should handle it now)
-        // Ignore ERR_NAME_NOT_RESOLVED or ERR_CONNECTION_REFUSED caused by placeholder Supabase URLs in CI
+        console.error(`  Console error: ${text}`);
         if (!text.includes('status of 405') &&
           !text.includes('ERR_NAME_NOT_RESOLVED') &&
           !text.includes('ERR_CONNECTION_REFUSED')) {
@@ -189,71 +260,53 @@ async function run() {
 
     page.on('pageerror', err => {
       const text = err.toString();
-      console.error(`  Page Error: ${text}`);
+      console.error(`  Page error: ${text}`);
       results.pageErrors.push(text);
     });
 
-    // 2. Measure Startup Time
-    console.log('⏱️  Measuring startup time...');
+    console.log('Measuring startup time...');
     const startTime = Date.now();
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: TIMEOUT });
+    await waitForFlutterReady(page);
 
-    // Navigate to root
-    await page.goto(`http://localhost:${PORT}`, { waitUntil: 'networkidle' });
-
-    // --- CHECK FOR EARLY ERRORS ---
     if (results.pageErrors.length > 0) {
-      console.error('❌ Critical page errors detected immediately after navigation.');
+      console.error('Critical page errors detected immediately after navigation.');
       await takeScreenshot(page, 'startup_critical_failure');
       results.passed = false;
-      throw new Error('Critical Page Errors during startup: ' + results.pageErrors.join(', '));
-    }
-
-    // Wait for Flutter to render. Canvas is the reliable indicator for Wasm/CanvasKit if flt-glass-pane is hidden.
-    try {
-      await page.waitForSelector('canvas', { timeout: TIMEOUT });
-      console.log('✅ Flutter app detected (canvas).');
-    } catch (e) {
-      console.error('Failed to detect Flutter app startup (timeout waiting for canvas).');
-      await takeScreenshot(page, 'startup_failure');
-      results.passed = false;
-      throw e;
+      throw new Error(`Critical page errors during startup: ${results.pageErrors.join(', ')}`);
     }
 
     const startupTime = Date.now() - startTime;
-    console.log(`✅ Startup time: ${startupTime}ms`);
+    console.log(`Startup time: ${startupTime}ms`);
     results.startupTimeMs = startupTime;
 
     if (startupTime > MAX_STARTUP_TIME_MS) {
-      console.error(`❌ Startup time exceeded budget of ${MAX_STARTUP_TIME_MS}ms`);
-      // Optional: results.passed = false;
+      console.error(`Startup time exceeded budget of ${MAX_STARTUP_TIME_MS}ms`);
     }
 
-    // 3. Initial Setup Bypass
-    console.log('🔓 Attempting to bypass Initial Setup...');
+    console.log('Seeding deterministic E2E session...');
     try {
-      const skipButton = page.getByRole('button', { name: 'Skip for Now' });
-      if (await skipButton.isVisible({ timeout: 5000 })) {
-        console.log('  Found Skip button. Clicking...');
-        await skipButton.click();
-        await page.waitForURL('**/dashboard', { timeout: TIMEOUT });
-        console.log('  Navigated to Dashboard.');
-      } else {
-        console.log('  Skip button not found. Assuming app is already initialized.');
-      }
+      await gotoFlutterRoute(page, '/e2e-bypass');
+      await page.waitForURL(`${BASE_URL}/#/dashboard`, { timeout: TIMEOUT });
+      console.log('  Navigated to dashboard.');
     } catch (e) {
-      console.error('Failed to bypass setup:', e.message);
+      console.error(`Failed to bypass setup: ${e.message}`);
       await takeScreenshot(page, 'setup_bypass_failure');
     }
 
-    // 4. Test Routes
-    console.log(`🌍 Testing ${ROUTES.length} routes...`);
+    console.log('Enabling accessibility semantics...');
+    if (await enableAccessibilitySemantics(page)) {
+      console.log('  Accessibility semantics enabled.');
+    } else {
+      console.log('  Accessibility semantics unavailable.');
+    }
 
+    console.log(`Testing ${ROUTES.length} routes...`);
     for (const route of ROUTES) {
       if (route.includes(':')) continue;
 
       console.log(`  Checking ${route}...`);
-
-      let routeResult = {
+      const routeResult = {
         path: route,
         passed: false,
         error: null,
@@ -262,10 +315,9 @@ async function run() {
 
       for (let attempt = 1; attempt <= RETRIES + 1; attempt++) {
         try {
-          const targetUrl = `http://localhost:${PORT}${route}`;
-          await page.goto(targetUrl, { waitUntil: 'networkidle', timeout: TIMEOUT });
+          await navigateFlutterRoute(page, route);
           routeResult.passed = true;
-          break; // Success
+          break;
         } catch (e) {
           console.error(`    Attempt ${attempt} failed: ${e.message}`);
           routeResult.error = e.message;
@@ -279,7 +331,54 @@ async function run() {
       results.routes.push(routeResult);
     }
 
-    // 5. Finalize
+    console.log('Verifying Groups create flow and form validation...');
+    const groupsCreateResult = {
+      path: '/groups#create-flow-validation',
+      passed: false,
+      error: null,
+      screenshot: null
+    };
+
+    try {
+      await gotoFlutterRoute(page, '/groups');
+      const semanticsEnabled = await enableAccessibilitySemantics(page);
+      if (!semanticsEnabled) {
+        throw new Error('Flutter accessibility semantics did not enable for the Groups flow.');
+      }
+
+      const createOneButton = page.getByRole('button', { name: 'Create one' });
+      await createOneButton.waitFor({ timeout: TIMEOUT });
+      await createOneButton.focus();
+      await page.keyboard.press('Enter');
+
+      await page.waitForFunction(() => window.location.hash === '#/groups/create', {
+        timeout: TIMEOUT
+      });
+      await waitForFlutterReady(page);
+
+      await page.getByRole('heading', { name: 'Create New Group' }).waitFor({
+        timeout: TIMEOUT
+      });
+      const submitButton = page.getByRole('button', { name: 'Create Group' });
+      await submitButton.focus();
+      await page.keyboard.press('Enter');
+      await page.getByText('Please enter a name', { exact: true }).first().waitFor({
+        timeout: TIMEOUT
+      });
+
+      groupsCreateResult.passed = true;
+    } catch (e) {
+      console.error(`  Groups validation check failed: ${e.message}`);
+      groupsCreateResult.error = e.message;
+      groupsCreateResult.screenshot = await takeScreenshot(
+        page,
+        'fail_groups_create_validation'
+      );
+      results.failedRoutes.push(groupsCreateResult.path);
+    }
+
+    results.routes.push(groupsCreateResult);
+
     if (results.failedRoutes.length > 0) results.passed = false;
     if (results.consoleErrors.length > 0) results.passed = false;
     if (results.pageErrors.length > 0) results.passed = false;
@@ -289,18 +388,17 @@ async function run() {
     }
 
     fs.writeFileSync(REPORT_FILE, JSON.stringify(results, null, 2));
-    console.log(`📝 Report saved to ${REPORT_FILE}`);
+    console.log(`Report saved to ${REPORT_FILE}`);
 
     if (results.passed) {
-      console.log('✅ Smoke tests passed!');
+      console.log('Smoke tests passed.');
       process.exit(0);
     } else {
-      console.error('❌ Smoke tests failed.');
+      console.error('Smoke tests failed.');
       process.exit(1);
     }
-
   } catch (err) {
-    console.error('🔥 Fatal error:', err);
+    console.error('Fatal error:', err);
     process.exit(1);
   } finally {
     if (browser) await browser.close();

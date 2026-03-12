@@ -11,6 +11,8 @@ abstract class RouteNames {
   static const String recurring = '/recurring';
   static const String groups = '/groups';
   static const String groupDetail = 'group_detail';
+  static const String groupCreate = 'group_create';
+  static const String groupEdit = 'group_edit';
   static const String addRecurring = 'add_recurring';
   static const String editRecurring = 'edit_recurring';
   static const String addTransaction = 'add';

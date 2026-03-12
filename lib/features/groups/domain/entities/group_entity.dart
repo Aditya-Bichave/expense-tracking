@@ -24,6 +24,32 @@ class GroupEntity extends Equatable {
     this.isArchived = false,
   });
 
+  GroupEntity copyWith({
+    String? id,
+    String? name,
+    GroupType? type,
+    String? currency,
+    Object? photoUrl = _sentinel,
+    String? createdBy,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isArchived,
+  }) {
+    return GroupEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      type: type ?? this.type,
+      currency: currency ?? this.currency,
+      photoUrl: identical(photoUrl, _sentinel)
+          ? this.photoUrl
+          : photoUrl as String?,
+      createdBy: createdBy ?? this.createdBy,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isArchived: isArchived ?? this.isArchived,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -37,3 +63,5 @@ class GroupEntity extends Equatable {
     isArchived,
   ];
 }
+
+const Object _sentinel = Object();

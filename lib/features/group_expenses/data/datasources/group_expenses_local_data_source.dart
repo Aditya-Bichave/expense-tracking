@@ -5,6 +5,7 @@ abstract class GroupExpensesLocalDataSource {
   Future<void> saveExpense(GroupExpenseModel expense);
   Future<void> saveExpenses(List<GroupExpenseModel> expenses);
   List<GroupExpenseModel> getExpenses(String groupId);
+  Future<void> deleteExpensesForGroup(String groupId);
 }
 
 class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
@@ -36,5 +37,17 @@ class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
       }
     }
     return result;
+  }
+
+  @override
+  Future<void> deleteExpensesForGroup(String groupId) async {
+    final expenseIds = _box.values
+        .where((expense) => expense.groupId == groupId)
+        .map((expense) => expense.id)
+        .toList();
+    if (expenseIds.isEmpty) {
+      return;
+    }
+    await _box.deleteAll(expenseIds);
   }
 }

@@ -5,6 +5,9 @@ import 'package:expense_tracker/features/groups/domain/entities/group_member.dar
 
 abstract class GroupsRepository {
   Future<Either<Failure, GroupEntity>> createGroup(GroupEntity group);
+  Future<Either<Failure, GroupEntity>> updateGroup(GroupEntity group);
+  Future<Either<Failure, void>> deleteGroup(String groupId);
+  Future<Either<Failure, void>> leaveGroup(String groupId, String userId);
   Future<Either<Failure, List<GroupEntity>>> getGroups();
   Stream<Either<Failure, List<GroupEntity>>> watchGroups();
   Future<Either<Failure, List<GroupMember>>> getGroupMembers(String groupId);

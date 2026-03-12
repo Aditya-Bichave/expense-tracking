@@ -4,6 +4,7 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
+import 'package:expense_tracker/features/group_expenses/data/datasources/group_expenses_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_local_data_source.dart';
 import 'package:expense_tracker/features/groups/data/datasources/groups_remote_data_source.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
@@ -25,6 +26,9 @@ class MockSyncService extends Mock implements SyncService {}
 
 class MockConnectivity extends Mock implements Connectivity {}
 
+class MockGroupExpensesLocalDataSource extends Mock
+    implements GroupExpensesLocalDataSource {}
+
 class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
 
 class FakeGroupModel extends Fake implements GroupModel {}
@@ -36,6 +40,22 @@ void main() {
   late MockOutboxRepository mockOutboxRepository;
   late MockSyncService mockSyncService;
   late MockConnectivity mockConnectivity;
+  late MockGroupExpensesLocalDataSource mockGroupExpensesLocalDataSource;
+
+  final now = DateTime(2024, 1, 1);
+  final tGroup = GroupEntity(
+    id: 'g1',
+    name: 'Test Group',
+    type: GroupType.trip,
+    currency: 'USD',
+    createdBy: 'user1',
+    createdAt: now,
+    updatedAt: now,
+    photoUrl: 'https://example.com/group.jpg',
+    isArchived: false,
+  );
+
+  final tGroupModel = GroupModel.fromEntity(tGroup);
 
   setUpAll(() {
     registerFallbackValue(FakeSyncMutationModel());
@@ -50,33 +70,27 @@ void main() {
     mockOutboxRepository = MockOutboxRepository();
     mockSyncService = MockSyncService();
     mockConnectivity = MockConnectivity();
+    mockGroupExpensesLocalDataSource = MockGroupExpensesLocalDataSource();
+
     repository = GroupsRepositoryImpl(
       localDataSource: mockLocalDataSource,
       remoteDataSource: mockRemoteDataSource,
       outboxRepository: mockOutboxRepository,
       syncService: mockSyncService,
       connectivity: mockConnectivity,
+      groupExpensesLocalDataSource: mockGroupExpensesLocalDataSource,
     );
   });
 
   group('createGroup', () {
-    final tGroup = GroupEntity(
-      id: '1',
-      name: 'Test Group',
-      type: GroupType.trip,
-      currency: 'USD',
-      createdBy: 'user1',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      isArchived: false,
-    );
-
     test(
-      'should save locally, add to outbox, and trigger sync if connected',
+      'saves locally, creates a local admin member, queues an outbox mutation, and triggers sync when online',
       () async {
-        // Arrange
         when(
           () => mockLocalDataSource.saveGroup(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockLocalDataSource.saveGroupMembers(any()),
         ).thenAnswer((_) async {});
         when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
         when(
@@ -84,480 +98,327 @@ void main() {
         ).thenAnswer((_) async => [ConnectivityResult.wifi]);
         when(() => mockSyncService.processOutbox()).thenAnswer((_) async {});
 
-        // Act
         final result = await repository.createGroup(tGroup);
 
-        // Assert
-        expect(result.isRight(), true);
+        expect(result.isRight(), isTrue);
         verify(() => mockLocalDataSource.saveGroup(any())).called(1);
-        verify(() => mockOutboxRepository.add(any())).called(1);
+
+        final savedMembers =
+            verify(
+                  () => mockLocalDataSource.saveGroupMembers(captureAny()),
+                ).captured.single
+                as List<GroupMemberModel>;
+        expect(savedMembers, hasLength(1));
+        expect(savedMembers.single.groupId, tGroup.id);
+        expect(savedMembers.single.userId, tGroup.createdBy);
+        expect(savedMembers.single.roleValue, 'admin');
+
+        final mutation =
+            verify(() => mockOutboxRepository.add(captureAny())).captured.single
+                as SyncMutationModel;
+        expect(mutation.table, 'groups');
+        expect(mutation.operation, OpType.create);
+        expect(mutation.payload, containsPair('photo_url', tGroup.photoUrl));
+        expect(mutation.payload, containsPair('is_archived', false));
         verify(() => mockSyncService.processOutbox()).called(1);
       },
     );
 
-    test('should return CacheFailure if local save fails', () async {
-      // Arrange
+    test('returns CacheFailure when a local write fails', () async {
       when(
         () => mockLocalDataSource.saveGroup(any()),
-      ).thenThrow(Exception('Cache Error'));
+      ).thenThrow(Exception('disk exploded'));
 
-      // Act
       final result = await repository.createGroup(tGroup);
 
-      // Assert
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<CacheFailure>());
-    });
-  });
-
-  group('getGroups', () {
-    final tGroupModel = GroupModel(
-      id: '1',
-      name: 'Test Group',
-      typeValue: 'trip',
-      currency: 'USD',
-      createdBy: 'user1',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      isArchived: false,
-    );
-
-    test('should return groups from local source', () async {
-      // Arrange
-      when(() => mockLocalDataSource.getGroups()).thenReturn([tGroupModel]);
-
-      // Act
-      final result = await repository.getGroups();
-
-      // Assert
-      expect(result.isRight(), true);
-      result.fold(
-        (_) => fail('Should be right'),
-        (groups) => expect(groups.length, 1),
+      expect(result.isLeft(), isTrue);
+      expect(
+        result.fold((failure) => failure, (_) => null),
+        isA<CacheFailure>(),
       );
     });
-
-    test('should return CacheFailure on exception', () async {
-      // Arrange
-      when(() => mockLocalDataSource.getGroups()).thenThrow(Exception('Error'));
-
-      // Act
-      final result = await repository.getGroups();
-
-      // Assert
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<CacheFailure>());
-    });
   });
 
-  group('watchGroups', () {
-    final tGroupModel = GroupModel(
-      id: '1',
-      name: 'Test Group',
-      typeValue: 'trip',
-      currency: 'USD',
-      createdBy: 'user1',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      isArchived: false,
-    );
-
-    test('should return a stream of Right(List<GroupEntity>)', () {
-      when(
-        () => mockLocalDataSource.watchGroups(),
-      ).thenAnswer((_) => Stream.value([tGroupModel]));
-      final stream = repository.watchGroups();
-      expect(stream, emits(isA<Right<Failure, List<GroupEntity>>>()));
-    });
-
-    test('should return a stream with Left(CacheFailure) on error', () {
-      when(
-        () => mockLocalDataSource.watchGroups(),
-      ).thenAnswer((_) => Stream.error(Exception('Error')));
-      final stream = repository.watchGroups();
-      expect(stream, emits(isA<Left<Failure, List<GroupEntity>>>()));
-    });
-  });
-
-  group('getGroupMembers', () {
-    final tModel = GroupMemberModel(
-      id: 'm1',
-      groupId: 'g1',
-      userId: 'u1',
-      roleValue: 'admin',
-      joinedAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
-
-    test('should return members from local source', () async {
-      when(
-        () => mockLocalDataSource.getGroupMembers('g1'),
-      ).thenReturn([tModel]);
-      final result = await repository.getGroupMembers('g1');
-      expect(result.isRight(), true);
-      result.fold(
-        (l) => fail('Should be right'),
-        (members) => expect(members.length, 1),
+  group('updateGroup', () {
+    test('saves locally and queues a snake_case update mutation', () async {
+      final updatedGroup = tGroup.copyWith(
+        name: 'Edited Group',
+        currency: 'INR',
       );
-    });
 
-    test('should return CacheFailure on exception', () async {
-      when(
-        () => mockLocalDataSource.getGroupMembers('g1'),
-      ).thenThrow(Exception('Error'));
-      final result = await repository.getGroupMembers('g1');
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<CacheFailure>());
-    });
-  });
-
-  group('syncGroups (and refreshGroupsFromServer)', () {
-    final tGroupModel = GroupModel(
-      id: '1',
-      name: 'Test Group',
-      typeValue: 'trip',
-      currency: 'USD',
-      createdBy: 'user1',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      isArchived: false,
-    );
-
-    test('should fetch from remote and save to local when connected', () async {
-      // Arrange
+      when(() => mockLocalDataSource.saveGroup(any())).thenAnswer((_) async {});
+      when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
       when(
         () => mockConnectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
-      when(
-        () => mockRemoteDataSource.getGroups(),
-      ).thenAnswer((_) async => [tGroupModel]);
-      when(
-        () => mockLocalDataSource.saveGroups(any()),
-      ).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.getGroups()).thenReturn([tGroupModel]);
-      when(
-        () => mockRemoteDataSource.getGroupMembers(any()),
-      ).thenAnswer((_) async => []);
-      when(
-        () => mockLocalDataSource.saveGroupMembers(any()),
-      ).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
+      ).thenAnswer((_) async => [ConnectivityResult.none]);
 
-      // Act
-      final result = await repository.syncGroups();
+      final result = await repository.updateGroup(updatedGroup);
 
-      // Assert
-      expect(result.isRight(), true);
-      verify(() => mockRemoteDataSource.getGroups()).called(1);
-      verify(() => mockLocalDataSource.saveGroups([tGroupModel])).called(1);
-      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
+      expect(result.isRight(), isTrue);
+      final mutation =
+          verify(() => mockOutboxRepository.add(captureAny())).captured.single
+              as SyncMutationModel;
+      expect(mutation.operation, OpType.update);
+      expect(mutation.payload, containsPair('name', 'Edited Group'));
+      expect(mutation.payload, containsPair('currency', 'INR'));
+      expect(mutation.payload, containsPair('photo_url', tGroup.photoUrl));
+      verifyNever(() => mockSyncService.processOutbox());
     });
+  });
 
-    test('should delete stale groups locally', () async {
-      // Arrange
-      final remoteGroup = GroupModel(
-        id: '1',
-        name: 'Remote',
-        createdBy: 'u1',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        typeValue: 'trip',
-        currency: 'USD',
-      );
-      final localGroup1 = GroupModel(
-        id: '1',
-        name: 'Remote',
-        createdBy: 'u1',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        typeValue: 'trip',
-        currency: 'USD',
-      );
-      final localGroup2 = GroupModel(
-        id: '2',
-        name: 'Stale',
-        createdBy: 'u1',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        typeValue: 'trip',
-        currency: 'USD',
-      );
-
-      when(
-        () => mockConnectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
-      when(
-        () => mockRemoteDataSource.getGroups(),
-      ).thenAnswer((_) async => [remoteGroup]);
-      when(
-        () => mockLocalDataSource.saveGroups(any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockLocalDataSource.getGroups(),
-      ).thenReturn([localGroup1, localGroup2]);
+  group('deleteGroup', () {
+    test('cleans local group state and queues a delete mutation', () async {
       when(
         () => mockLocalDataSource.deleteGroup(any()),
       ).thenAnswer((_) async {});
       when(
-        () => mockRemoteDataSource.getGroupMembers(any()),
-      ).thenAnswer((_) async => []);
-      when(
-        () => mockLocalDataSource.saveGroupMembers(any()),
+        () => mockLocalDataSource.deleteGroupMembers(any()),
       ).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
-
-      // Act
-      await repository.syncGroups();
-
-      // Assert
-      verify(
-        () => mockLocalDataSource.deleteGroups(any(that: equals(['2']))),
-      ).called(1);
-      verifyNever(
-        () => mockLocalDataSource.deleteGroups(any(that: equals(['1']))),
-      );
-    });
-
-    test('should delete stale members locally', () async {
-      // Arrange
-      final remoteMember = GroupMemberModel(
-        id: 'm1',
-        groupId: 'g1',
-        userId: 'u1',
-        roleValue: 'admin',
-        joinedAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      final localMember1 = GroupMemberModel(
-        id: 'm1',
-        groupId: 'g1',
-        userId: 'u1',
-        roleValue: 'admin',
-        joinedAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      final localMember2 = GroupMemberModel(
-        id: 'm2',
-        groupId: 'g1',
-        userId: 'u2',
-        roleValue: 'member',
-        joinedAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      final group = GroupModel(
-        id: 'g1',
-        name: 'Group',
-        createdBy: 'u1',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        typeValue: 'trip',
-        currency: 'USD',
-      );
-
+      when(
+        () => mockGroupExpensesLocalDataSource.deleteExpensesForGroup(any()),
+      ).thenAnswer((_) async {});
+      when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
       when(
         () => mockConnectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
-      when(
-        () => mockRemoteDataSource.getGroups(),
-      ).thenAnswer((_) async => [group]);
-      when(
-        () => mockLocalDataSource.saveGroups(any()),
-      ).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.getGroups()).thenReturn([group]);
+      ).thenAnswer((_) async => [ConnectivityResult.none]);
 
-      when(
-        () => mockRemoteDataSource.getGroupMembers('g1'),
-      ).thenAnswer((_) async => [remoteMember]);
-      when(
-        () => mockLocalDataSource.saveGroupMembers(any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockLocalDataSource.getGroupMembers('g1'),
-      ).thenReturn([localMember1, localMember2]);
-      when(
-        () => mockLocalDataSource.deleteMembers(any()),
-      ).thenAnswer((_) async {});
+      final result = await repository.deleteGroup('g1');
 
-      // Act
-      await repository.syncGroups();
-
-      // Assert
+      expect(result.isRight(), isTrue);
+      verify(() => mockLocalDataSource.deleteGroup('g1')).called(1);
+      verify(() => mockLocalDataSource.deleteGroupMembers('g1')).called(1);
       verify(
-        () => mockLocalDataSource.deleteMembers(any(that: equals(['m2']))),
+        () => mockGroupExpensesLocalDataSource.deleteExpensesForGroup('g1'),
       ).called(1);
-      verifyNever(
-        () => mockLocalDataSource.deleteMembers(any(that: equals(['m1']))),
+
+      final mutation =
+          verify(() => mockOutboxRepository.add(captureAny())).captured.single
+              as SyncMutationModel;
+      expect(mutation.table, 'groups');
+      expect(mutation.operation, OpType.delete);
+      expect(mutation.payload, {'id': 'g1'});
+    });
+  });
+
+  group('leaveGroup', () {
+    test(
+      'cleans local state and queues a composite member delete mutation',
+      () async {
+        when(
+          () => mockLocalDataSource.deleteGroup(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockLocalDataSource.deleteGroupMembers(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockGroupExpensesLocalDataSource.deleteExpensesForGroup(any()),
+        ).thenAnswer((_) async {});
+        when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
+        when(
+          () => mockConnectivity.checkConnectivity(),
+        ).thenAnswer((_) async => [ConnectivityResult.none]);
+
+        final result = await repository.leaveGroup('g1', 'user1');
+
+        expect(result.isRight(), isTrue);
+        final mutation =
+            verify(() => mockOutboxRepository.add(captureAny())).captured.single
+                as SyncMutationModel;
+        expect(mutation.table, 'group_members');
+        expect(mutation.operation, OpType.delete);
+        expect(mutation.id, 'g1:user1');
+        expect(mutation.payload, {'group_id': 'g1', 'user_id': 'user1'});
+      },
+    );
+  });
+
+  group('getGroups and watchGroups', () {
+    test('returns groups sorted by updatedAt descending', () async {
+      final newerGroup = GroupModel.fromEntity(
+        tGroup.copyWith(
+          id: 'g2',
+          name: 'Newest',
+          updatedAt: now.add(const Duration(days: 1)),
+        ),
+      );
+      when(
+        () => mockLocalDataSource.getGroups(),
+      ).thenReturn([tGroupModel, newerGroup]);
+
+      final result = await repository.getGroups();
+
+      expect(result.isRight(), isTrue);
+      result.fold(
+        (_) => fail('expected groups'),
+        (groups) => expect(groups.map((group) => group.id), ['g2', 'g1']),
       );
     });
 
+    test('maps local stream values into sorted group entities', () async {
+      when(
+        () => mockLocalDataSource.watchGroups(),
+      ).thenAnswer((_) => Stream.value([tGroupModel]));
+
+      expect(
+        repository.watchGroups(),
+        emits(
+          predicate<Either<Failure, List<GroupEntity>>>(
+            (result) =>
+                result.fold((_) => false, (groups) => groups.single.id == 'g1'),
+          ),
+        ),
+      );
+    });
+  });
+
+  group('refreshGroupsFromServer', () {
     test(
-      'should return ServerFailure on exception during remote fetch',
+      'removes stale groups and cleans related members and expenses',
       () async {
+        final staleGroup = GroupModel(
+          id: 'stale',
+          name: 'Stale Group',
+          createdBy: 'user2',
+          createdAt: now,
+          updatedAt: now,
+          typeValue: 'home',
+          currency: 'INR',
+        );
+
         when(
           () => mockConnectivity.checkConnectivity(),
         ).thenAnswer((_) async => [ConnectivityResult.wifi]);
         when(
           () => mockRemoteDataSource.getGroups(),
-        ).thenThrow(Exception('Error'));
-
-        final result = await repository.syncGroups();
-
-        expect(result.isLeft(), true);
-        expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
-      },
-    );
-
-    test('should do nothing when offline', () async {
-      // Arrange
-      when(
-        () => mockConnectivity.checkConnectivity(),
-      ).thenAnswer((_) async => [ConnectivityResult.none]);
-
-      // Act
-      final result = await repository.syncGroups();
-
-      // Assert
-      expect(result.isRight(), true);
-      verifyNever(() => mockRemoteDataSource.getGroups());
-    });
-  });
-
-  group('createInvite', () {
-    test('should call remoteDataSource.createInvite', () async {
-      when(
-        () => mockRemoteDataSource.createInvite(
-          any(),
-          role: any(named: 'role'),
-          expiryDays: any(named: 'expiryDays'),
-          maxUses: any(named: 'maxUses'),
-        ),
-      ).thenAnswer((_) async => 'https://link.com');
-
-      final result = await repository.createInvite('1');
-
-      expect(result.isRight(), true);
-      result.fold((l) => null, (r) => expect(r, 'https://link.com'));
-      verify(
-        () => mockRemoteDataSource.createInvite(
-          '1',
-          role: 'member',
-          expiryDays: 7,
-          maxUses: 0,
-        ),
-      ).called(1);
-    });
-
-    test('should return ServerFailure on exception', () async {
-      when(
-        () => mockRemoteDataSource.createInvite(
-          any(),
-          role: any(named: 'role'),
-          expiryDays: any(named: 'expiryDays'),
-          maxUses: any(named: 'maxUses'),
-        ),
-      ).thenThrow(Exception('Error'));
-
-      final result = await repository.createInvite('1');
-
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
-    });
-  });
-
-  group('acceptInvite', () {
-    test('should call remoteDataSource.acceptInvite', () async {
-      when(
-        () => mockRemoteDataSource.acceptInvite(any()),
-      ).thenAnswer((_) async => {'group_id': '1'});
-
-      final result = await repository.acceptInvite('token');
-
-      expect(result.isRight(), true);
-      verify(() => mockRemoteDataSource.acceptInvite('token')).called(1);
-    });
-
-    test('should return ServerFailure on exception', () async {
-      when(
-        () => mockRemoteDataSource.acceptInvite(any()),
-      ).thenThrow(Exception('Error'));
-
-      final result = await repository.acceptInvite('token');
-
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
-    });
-  });
-
-  group('updateMemberRole', () {
-    test(
-      'should call remoteDataSource.updateMemberRole and refresh members',
-      () async {
+        ).thenAnswer((_) async => [tGroupModel]);
         when(
-          () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
+          () => mockLocalDataSource.saveGroups(any()),
         ).thenAnswer((_) async {});
         when(
-          () => mockRemoteDataSource.getGroupMembers(any()),
+          () => mockLocalDataSource.getGroups(),
+        ).thenReturn([tGroupModel, staleGroup]);
+        when(
+          () => mockLocalDataSource.deleteGroups(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockLocalDataSource.deleteGroupMembers(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockGroupExpensesLocalDataSource.deleteExpensesForGroup(any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockRemoteDataSource.getGroupMembers('g1'),
         ).thenAnswer((_) async => []);
         when(
           () => mockLocalDataSource.saveGroupMembers(any()),
         ).thenAnswer((_) async {});
-        when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
+        when(() => mockLocalDataSource.getGroupMembers('g1')).thenReturn([]);
 
-        final result = await repository.updateMemberRole('1', 'u1', 'admin');
+        final result = await repository.refreshGroupsFromServer();
 
-        expect(result.isRight(), true);
+        expect(result.isRight(), isTrue);
+        verify(() => mockLocalDataSource.deleteGroups(['stale'])).called(1);
+        verify(() => mockLocalDataSource.deleteGroupMembers('stale')).called(1);
         verify(
-          () => mockRemoteDataSource.updateMemberRole('1', 'u1', 'admin'),
+          () =>
+              mockGroupExpensesLocalDataSource.deleteExpensesForGroup('stale'),
         ).called(1);
-        verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
+        verify(() => mockRemoteDataSource.getGroupMembers('g1')).called(1);
       },
     );
 
-    test('should return ServerFailure on exception', () async {
+    test('returns Right(null) without remote work when offline', () async {
       when(
-        () => mockRemoteDataSource.updateMemberRole(any(), any(), any()),
-      ).thenThrow(Exception('Error'));
+        () => mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.none]);
 
-      final result = await repository.updateMemberRole('1', 'u1', 'admin');
+      final result = await repository.refreshGroupsFromServer();
 
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+      expect(result, const Right(null));
+      verifyNever(() => mockRemoteDataSource.getGroups());
     });
   });
 
-  group('removeMember', () {
-    test('should call remoteDataSource.removeMember and cleanup', () async {
+  group('remote invite and member actions', () {
+    test(
+      'createInvite forwards the full contract to the remote data source',
+      () async {
+        when(
+          () => mockRemoteDataSource.createInvite(
+            any(),
+            role: any(named: 'role'),
+            expiryDays: any(named: 'expiryDays'),
+            maxUses: any(named: 'maxUses'),
+          ),
+        ).thenAnswer((_) async => 'https://spendos.app/join?token=abc');
+
+        final result = await repository.createInvite(
+          'g1',
+          role: 'viewer',
+          expiryDays: 3,
+          maxUses: 1,
+        );
+
+        expect(result, const Right('https://spendos.app/join?token=abc'));
+        verify(
+          () => mockRemoteDataSource.createInvite(
+            'g1',
+            role: 'viewer',
+            expiryDays: 3,
+            maxUses: 1,
+          ),
+        ).called(1);
+      },
+    );
+
+    test('acceptInvite returns the remote join payload', () async {
       when(
-        () => mockRemoteDataSource.removeMember(any(), any()),
+        () => mockRemoteDataSource.acceptInvite('token'),
+      ).thenAnswer((_) async => {'group_id': 'g1', 'group_name': 'Trip'});
+
+      final result = await repository.acceptInvite('token');
+
+      expect(result.isRight(), isTrue);
+      result.fold(
+        (_) => fail('expected a successful join payload'),
+        (payload) => expect(payload['group_name'], 'Trip'),
+      );
+    });
+
+    test('updateMemberRole refreshes members after success', () async {
+      when(
+        () => mockRemoteDataSource.updateMemberRole('g1', 'user1', 'viewer'),
       ).thenAnswer((_) async {});
       when(
-        () => mockRemoteDataSource.getGroupMembers(any()),
+        () => mockRemoteDataSource.getGroupMembers('g1'),
       ).thenAnswer((_) async => []);
       when(
         () => mockLocalDataSource.saveGroupMembers(any()),
       ).thenAnswer((_) async {});
-      when(() => mockLocalDataSource.getGroupMembers(any())).thenReturn([]);
-      when(
-        () => mockLocalDataSource.deleteMembers(any()),
-      ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.getGroupMembers('g1')).thenReturn([]);
 
-      final result = await repository.removeMember('1', 'u1');
+      final result = await repository.updateMemberRole('g1', 'user1', 'viewer');
 
-      expect(result.isRight(), true);
-      verify(() => mockRemoteDataSource.removeMember('1', 'u1')).called(1);
-      verify(() => mockRemoteDataSource.getGroupMembers('1')).called(1);
+      expect(result, const Right(null));
+      verify(() => mockRemoteDataSource.getGroupMembers('g1')).called(1);
     });
 
-    test('should return ServerFailure on exception', () async {
+    test('removeMember refreshes members after success', () async {
       when(
-        () => mockRemoteDataSource.removeMember(any(), any()),
-      ).thenThrow(Exception('Error'));
+        () => mockRemoteDataSource.removeMember('g1', 'user2'),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockRemoteDataSource.getGroupMembers('g1'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockLocalDataSource.saveGroupMembers(any()),
+      ).thenAnswer((_) async {});
+      when(() => mockLocalDataSource.getGroupMembers('g1')).thenReturn([]);
 
-      final result = await repository.removeMember('1', 'u1');
+      final result = await repository.removeMember('g1', 'user2');
 
-      expect(result.isLeft(), true);
-      expect(result.fold((l) => l, (r) => null), isA<ServerFailure>());
+      expect(result, const Right(null));
+      verify(() => mockRemoteDataSource.getGroupMembers('g1')).called(1);
     });
   });
 }

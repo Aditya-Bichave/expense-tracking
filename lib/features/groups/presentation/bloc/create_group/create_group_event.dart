@@ -15,6 +15,11 @@ class CreateGroupSubmitted extends CreateGroupEvent {
   final GroupType type;
   final String currency;
   final String userId;
+  final String? groupId;
+  final String? createdBy;
+  final DateTime? createdAt;
+  final String? existingPhotoUrl;
+  final bool isArchived;
   final File? photoFile;
 
   const CreateGroupSubmitted({
@@ -22,9 +27,27 @@ class CreateGroupSubmitted extends CreateGroupEvent {
     required this.type,
     required this.currency,
     required this.userId,
+    this.groupId,
+    this.createdBy,
+    this.createdAt,
+    this.existingPhotoUrl,
+    this.isArchived = false,
     this.photoFile,
   });
 
+  bool get isEdit => groupId != null;
+
   @override
-  List<Object?> get props => [name, type, currency, userId, photoFile];
+  List<Object?> get props => [
+    name,
+    type,
+    currency,
+    userId,
+    groupId,
+    createdBy,
+    createdAt,
+    existingPhotoUrl,
+    isArchived,
+    photoFile,
+  ];
 }

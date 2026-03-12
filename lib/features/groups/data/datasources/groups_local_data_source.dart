@@ -12,6 +12,7 @@ abstract class GroupsLocalDataSource {
   List<GroupMemberModel> getGroupMembers(String groupId);
   Future<void> deleteGroup(String groupId);
   Future<void> deleteGroups(List<String> groupIds);
+  Future<void> deleteGroupMembers(String groupId);
   Future<void> deleteMember(String memberId);
   Future<void> deleteMembers(List<String> memberIds);
 }
@@ -77,6 +78,18 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
   @override
   Future<void> deleteGroups(List<String> groupIds) async {
     await _groupBox.deleteAll(groupIds);
+  }
+
+  @override
+  Future<void> deleteGroupMembers(String groupId) async {
+    final memberIds = _memberBox.values
+        .where((member) => member.groupId == groupId)
+        .map((member) => member.id)
+        .toList();
+    if (memberIds.isEmpty) {
+      return;
+    }
+    await _memberBox.deleteAll(memberIds);
   }
 
   @override

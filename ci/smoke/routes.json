@@ -1,6 +1,7 @@
 [
   "/accounts",
   "/accounts/add_account",
+  "/add-expense-wizard",
   "/dashboard",
   "/dashboard/budget_performance",
   "/dashboard/goal_progress",
@@ -8,6 +9,7 @@
   "/dashboard/spending_category",
   "/dashboard/spending_time",
   "/groups",
+  "/groups/create",
   "/login",
   "/plan",
   "/plan/add_budget",

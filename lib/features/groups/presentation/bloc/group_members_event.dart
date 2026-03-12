@@ -1,4 +1,4 @@
-part of 'group_members_bloc.dart';
+import 'package:equatable/equatable.dart';
 
 abstract class GroupMembersEvent extends Equatable {
   const GroupMembersEvent();
@@ -56,4 +56,23 @@ class KickMember extends GroupMembersEvent {
 
   @override
   List<Object?> get props => [groupId, userId];
+}
+
+class LeaveCurrentGroup extends GroupMembersEvent {
+  final String groupId;
+  final String userId;
+
+  const LeaveCurrentGroup({required this.groupId, required this.userId});
+
+  @override
+  List<Object?> get props => [groupId, userId];
+}
+
+class DeleteCurrentGroup extends GroupMembersEvent {
+  final String groupId;
+
+  const DeleteCurrentGroup({required this.groupId});
+
+  @override
+  List<Object?> get props => [groupId];
 }
