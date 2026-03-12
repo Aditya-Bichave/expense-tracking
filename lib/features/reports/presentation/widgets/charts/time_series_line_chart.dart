@@ -182,6 +182,8 @@ class TimeSeriesLineChart extends StatelessWidget {
                 );
                 final dateStr = _formatTooltipDate(date, granularity);
 
+                if (spots.isEmpty) return null; // map callback
+
                 final currentSpot = spots.firstWhere(
                   (s) => s.barIndex == 0,
                   orElse: () => spots.first,
