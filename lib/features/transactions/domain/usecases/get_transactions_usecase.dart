@@ -209,13 +209,18 @@ class GetTransactionsUseCase
       );
 
       // Apply Search Term Filter (Client-side)
+      // Cache lowercased values to avoid O(N log N) string creations
+      final lowercaseCache = <String, String>{};
+      String getLower(String key) =>
+          lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
+
+      // Apply Search Term Filter (Client-side)
       List<TransactionEntity> filteredList = combinedList;
       if (params.searchTerm != null && params.searchTerm!.isNotEmpty) {
-        final searchTermLower = params.searchTerm!.toLowerCase();
+        final searchTermLower = getLower(params.searchTerm!);
         filteredList = combinedList.where((txn) {
-          return txn.title.toLowerCase().contains(searchTermLower) ||
-              (txn.category?.name.toLowerCase().contains(searchTermLower) ??
-                  false) ||
+          return getLower(txn.title).contains(searchTermLower) ||
+              (txn.category != null && getLower(txn.category!.name).contains(searchTermLower)) ||
               txn.amount.toStringAsFixed(2).contains(searchTermLower);
         }).toList();
         log.info(
@@ -228,11 +233,6 @@ class GetTransactionsUseCase
       // Problem: toLowerCase() is called repeatedly during sorting which is O(N log N)
       // Solution: Pre-compute lowercase values before the sort loop
       // Impact: Significantly faster sorting on large lists by reducing string allocations
-
-      // Cache lowercased values to avoid O(N log N) string creations
-      final lowercaseCache = <String, String>{};
-      String getLower(String key) =>
-          lowercaseCache.putIfAbsent(key, () => key.toLowerCase());
 
       filteredList.sort((a, b) {
         int comparison;
