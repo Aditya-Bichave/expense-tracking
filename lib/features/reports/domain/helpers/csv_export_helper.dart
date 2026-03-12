@@ -123,7 +123,7 @@ class CsvExportHelper {
           ),
         );
       }
-      throw ExportFailure("File Picker Error: ${e.message}");
+      throw ExportFailure("File Picker Error: ${e.message ?? 'Unknown'}");
     } catch (e, s) {
       log.severe("[CsvExportHelper] Error saving CSV file: $e\n$s");
       if (context.mounted) {

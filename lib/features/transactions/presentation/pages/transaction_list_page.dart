@@ -160,7 +160,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
       categories,
     );
 
-    if (selectedCategory != null && context.mounted) {
+    if (!context.mounted) return;
+
+    if (selectedCategory != null) {
       log.info(
         "[TxnListPage] Category '${selectedCategory.name}' selected from picker.",
       );

@@ -126,7 +126,9 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
         } on PlatformException catch (e, s) {
           log.severe("[BackupUseCase] PlatformException during saveFile$e$s");
           return Left(
-            BackupFailure("Could not save file: ${e.message} (${e.code})"),
+            BackupFailure(
+              "Could not save file: ${e.message ?? 'Unknown'} (${e.code})",
+            ),
           );
         } on FileSystemException catch (e, s) {
           log.severe("[BackupUseCase] FileSystemException writing file$e$s");

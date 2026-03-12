@@ -177,7 +177,9 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
     } on PlatformException catch (e, s) {
       log.severe("[RestoreUseCase] PlatformException during file picking$e$s");
       return Left(
-        RestoreFailure("Could not pick file: ${e.message} (${e.code})"),
+        RestoreFailure(
+          "Could not pick file: ${e.message ?? 'Unknown'} (${e.code})",
+        ),
       );
     } catch (e, s) {
       log.severe("[RestoreUseCase] Unexpected error in restore process$e$s");

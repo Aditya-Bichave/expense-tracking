@@ -34,7 +34,7 @@ class SecureStorageService {
       // If we can't read the key due to platform error (e.g. keystore corrupted),
       // we treat it as corruption so the app can prompt for reset.
       throw HiveKeyCorruptionException(
-        "Secure Storage Error: ${e.message} (Code: ${e.code})",
+        "Secure Storage Error: ${e.message ?? 'Unknown'} (Code: ${e.code})",
       );
     } catch (e, s) {
       _logger.severe("Unexpected error reading Hive key: $e\n$s");
