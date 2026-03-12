@@ -40,7 +40,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       await incomeBox.delete(id);
       log.info("Deleted income (ID: $id) from Hive.");
     } catch (e, s) {
-      log.severe("Failed to delete income (ID: $id) from cache$e$s\n$s");
+      log.severe("Failed to delete income (ID: $id) from cache: $e\n$s");
       throw CacheFailure('Failed to delete income: ${e.toString()}');
     }
   }
@@ -93,7 +93,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       );
       return results;
     } catch (e, s) {
-      log.severe("Failed to get incomes from cache$e$s\n$s");
+      log.severe("Failed to get incomes from cache: $e\n$s");
       throw CacheFailure('Failed to get incomes: ${e.toString()}');
     }
   }
@@ -106,11 +106,11 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       if (income != null) {
         log.fine("Retrieved income by ID $id from Hive.");
       } else {
-        log.warning("Income with ID $id not found in Hive.");
+        log.info("Income with ID $id not found in Hive.");
       }
       return income; // Returns null if not found
     } catch (e, s) {
-      log.severe("Failed to get income by ID $id from cache$e$s\n$s");
+      log.severe("Failed to get income by ID $id from cache: $e\n$s");
       throw CacheFailure('Failed to get income by ID: ${e.toString()}');
     }
   }
@@ -139,7 +139,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       final count = await incomeBox.clear();
       log.info("Cleared income box in Hive ($count items removed).");
     } catch (e, s) {
-      log.severe("Failed to clear income cache$e$s\n$s");
+      log.severe("Failed to clear income cache: $e\n$s");
       throw CacheFailure('Failed to clear income cache: ${e.toString()}');
     }
   }

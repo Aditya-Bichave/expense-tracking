@@ -90,7 +90,7 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
           );
           return const Right('Download started');
         } catch (e, s) {
-          log.severe("[BackupUseCase] Error during web download$e$s\n$s");
+          log.severe("[BackupUseCase] Error during web download: $e\n$s");
           return Left(
             BackupFailure("Failed to initiate download: ${e.toString()}"),
           );
@@ -125,7 +125,7 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
           return Right(finalPath);
         } on PlatformException catch (e, s) {
           log.severe(
-            "[BackupUseCase] PlatformException during saveFile$e$s\n$s",
+            "[BackupUseCase] PlatformException during saveFile: $e\n$s",
           );
           return Left(
             BackupFailure(
@@ -134,18 +134,18 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
           );
         } on FileSystemException catch (e, s) {
           log.severe(
-            "[BackupUseCase] FileSystemException writing file$e$s\n$s",
+            "[BackupUseCase] FileSystemException writing file: $e\n$s",
           );
           return Left(FileSystemFailure("File system error: ${e.message}"));
         } catch (e, s) {
-          log.severe("[BackupUseCase] Unexpected error writing file$e$s\n$s");
+          log.severe("[BackupUseCase] Unexpected error writing file: $e\n$s");
           return Left(
             BackupFailure("Failed to write backup file: ${e.toString()}"),
           );
         }
       }
     } catch (e, s) {
-      log.severe("[BackupUseCase] Unexpected error in backup process$e$s\n$s");
+      log.severe("[BackupUseCase] Unexpected error in backup process: $e\n$s");
       return Left(
         BackupFailure(
           "An unexpected error occurred during backup: ${e.toString()}",

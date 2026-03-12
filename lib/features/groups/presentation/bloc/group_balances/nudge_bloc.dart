@@ -29,7 +29,7 @@ class NudgeBloc extends Bloc<NudgeEvent, NudgeState> {
 
       emit(NudgeSuccess(targetUserId));
     } catch (e, s) {
-      _log.severe('Failed to send nudge', e, s);
+      _log.severe('Failed to send nudge: $e\n$s');
 
       String message = 'Could not send nudge.';
       if (e is FunctionException) {

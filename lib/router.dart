@@ -238,13 +238,12 @@ class AppRouter {
                           state.uri.queryParameters['merchantId'];
                       String? merchantIdFromExtra;
                       if (state.extra is String) {
-                        merchantIdFromExtra = state.extra is String
-                            ? state.extra as String
-                            : "";
+                        merchantIdFromExtra = state.extra as String;
                       } else if (state.extra is Map) {
-                        merchantIdFromExtra = (state.extra is Map
-                            ? state.extra as Map
-                            : {})['merchantId'];
+                        final map = state.extra as Map;
+                        if (map.containsKey('merchantId') && map['merchantId'] is String) {
+                          merchantIdFromExtra = map['merchantId'] as String;
+                        }
                       }
                       return AddEditTransactionPage(
                         merchantId: merchantId ?? merchantIdFromExtra,

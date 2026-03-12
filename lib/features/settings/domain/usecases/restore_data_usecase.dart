@@ -74,7 +74,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
             "[RestoreUseCase] File content read and decoded (${jsonString.length} chars).",
           );
         } catch (e, s) {
-          log.severe("[RestoreUseCase] Error decoding file bytes$e$s\n$s");
+          log.severe("[RestoreUseCase] Error decoding file bytes: $e\n$s");
           return Left(
             RestoreFailure("Failed to decode file content: ${e.toString()}"),
           );
@@ -150,7 +150,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
         allData = AllData.fromJson(dataMap); // fromJson uses constants now
         log.info("[RestoreUseCase] Deserialization successful.");
       } catch (e, s) {
-        log.severe("[RestoreUseCase] Error during deserialization$e$s\n$s");
+        log.severe("[RestoreUseCase] Error during deserialization: $e\n$s");
         return Left(
           RestoreFailure(
             "Failed to parse backup data content: ${e.toString()}",
@@ -176,7 +176,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
       );
     } on PlatformException catch (e, s) {
       log.severe(
-        "[RestoreUseCase] PlatformException during file picking$e$s\n$s",
+        "[RestoreUseCase] PlatformException during file picking: $e\n$s",
       );
       return Left(
         RestoreFailure(
@@ -185,7 +185,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
       );
     } catch (e, s) {
       log.severe(
-        "[RestoreUseCase] Unexpected error in restore process$e$s\n$s",
+        "[RestoreUseCase] Unexpected error in restore process: $e\n$s",
       );
       return Left(
         RestoreFailure(

@@ -438,8 +438,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused) {
       _pausedTime = DateTime.now();
     } else if (state == AppLifecycleState.resumed) {
-      if (_pausedTime != null) {
-        final diff = DateTime.now().difference(_pausedTime ?? DateTime.now());
+      final paused = _pausedTime;
+      if (paused != null) {
+        final diff = DateTime.now().difference(paused);
         if (diff.inSeconds >= 60) {
           context.read<SessionCubit>().checkSession();
         }
@@ -471,6 +472,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           signalE2EReady();
         });
+        if (child == null) {
+          log.severe('Error: child route is null.');
+          return const Scaffold(
+            body: Center(
+              child: Text('Error: Route failed to build.'),
+            ),
+          );
+        }
+
         return BlocListener<DeepLinkBloc, DeepLinkState>(
           listener: (context, state) {
             if (state is DeepLinkSuccess) {
@@ -485,7 +495,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               ).showSnackBar(SnackBar(content: Text(state.message)));
             }
           },
-          child: child ?? const SizedBox.shrink(),
+          child: child,
         );
       },
     );

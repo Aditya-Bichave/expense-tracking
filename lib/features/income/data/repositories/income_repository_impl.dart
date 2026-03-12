@@ -55,7 +55,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
     } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error adding income$e$s\n$s");
+      log.severe("[IncomeRepo] Unexpected error adding income: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error adding income: ${e.toString()}'),
       );
@@ -78,7 +78,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       log.warning("[IncomeRepo] CacheFailure during update: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error updating income$e$s\n$s");
+      log.severe("[IncomeRepo] Unexpected error updating income: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error updating income: ${e.toString()}'),
       );
@@ -128,7 +128,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("[IncomeRepo] Unexpected error getting income models$e$s\n$s");
+      log.severe("[IncomeRepo] Unexpected error getting income models: $e\n$s");
       return Left(
         UnexpectedFailure(
           'Unexpected error getting income models: ${e.toString()}',
@@ -151,7 +151,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[IncomeRepo] Unexpected error deleting income ID $id$e$s\n$s",
+        "[IncomeRepo] Unexpected error deleting income ID $id: $e\n$s",
       );
       return Left(
         UnexpectedFailure('Unexpected error deleting income: ${e.toString()}'),

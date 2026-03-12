@@ -31,7 +31,7 @@ class GoalRepositoryImpl implements GoalRepository {
       log.info("[GoalRepo] Goal added successfully: ${goal.id}");
       return Right(model.toEntity()); // Return entity reflecting saved state
     } catch (e, s) {
-      log.severe("[GoalRepo] Error adding goal$e$s\n$s");
+      log.severe("[GoalRepo] Error adding goal: $e\n$s");
       return Left(CacheFailure("Failed to add goal: ${e.toString()}"));
     }
   }
@@ -62,7 +62,7 @@ class GoalRepositoryImpl implements GoalRepository {
       log.info("[GoalRepo] Goal archived successfully: $id");
       return Right(updatedModel.toEntity()); // Return updated entity
     } catch (e, s) {
-      log.severe("[GoalRepo] Error archiving goal $id$e$s\n$s");
+      log.severe("[GoalRepo] Error archiving goal $id: $e\n$s");
       return Left(CacheFailure("Failed to archive goal: ${e.toString()}"));
     }
   }
@@ -91,7 +91,7 @@ class GoalRepositoryImpl implements GoalRepository {
       log.info("[GoalRepo] Goal permanently deleted: $id");
       return const Right(null);
     } catch (e, s) {
-      log.severe("[GoalRepo] Error deleting goal $id$e$s\n$s");
+      log.severe("[GoalRepo] Error deleting goal $id: $e\n$s");
       return Left(CacheFailure("Failed to delete goal: ${e.toString()}"));
     }
   }
@@ -107,7 +107,7 @@ class GoalRepositoryImpl implements GoalRepository {
         return const Right(null);
       }
     } catch (e, s) {
-      log.severe("[GoalRepo] Error getting goal by ID $id$e$s\n$s");
+      log.severe("[GoalRepo] Error getting goal by ID $id: $e\n$s");
       return Left(CacheFailure("Failed to get goal details: ${e.toString()}"));
     }
   }
@@ -143,7 +143,7 @@ class GoalRepositoryImpl implements GoalRepository {
       log.info("[GoalRepo] Retrieved and sorted ${entities.length} goals.");
       return Right(entities);
     } catch (e, s) {
-      log.severe("[GoalRepo] Error getting goals$e$s\n$s");
+      log.severe("[GoalRepo] Error getting goals: $e\n$s");
       return Left(CacheFailure("Failed to load goals: ${e.toString()}"));
     }
   }
@@ -197,7 +197,7 @@ class GoalRepositoryImpl implements GoalRepository {
       // Return the entity reflecting the saved state (including the PRESERVED totalSaved)
       return Right(modelToSave.toEntity());
     } catch (e, s) {
-      log.severe("[GoalRepo] Error updating goal$e$s\n$s");
+      log.severe("[GoalRepo] Error updating goal: $e\n$s");
       return Left(CacheFailure("Failed to update goal: ${e.toString()}"));
     }
   }

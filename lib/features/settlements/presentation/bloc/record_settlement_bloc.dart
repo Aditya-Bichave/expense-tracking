@@ -98,7 +98,7 @@ class RecordSettlementBloc
                 .getPublicUrl(path);
           }
         } catch (e, s) {
-          _log.severe('Failed to compress or upload image', e, s);
+          _log.severe('Failed to compress or upload image: $e\n$s');
         }
       }
 
@@ -115,7 +115,7 @@ class RecordSettlementBloc
 
       emit(state.copyWith(status: FormStatus.success));
     } catch (e, s) {
-      _log.severe('Failed to record settlement', e, s);
+      _log.severe('Failed to record settlement: $e\n$s');
       emit(
         state.copyWith(status: FormStatus.failure, errorMessage: e.toString()),
       );

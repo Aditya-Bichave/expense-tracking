@@ -11,6 +11,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 enum SyncServiceStatus { synced, syncing, offline, error }
 
+// REQUIRES HUMAN REVIEW - DO NOT AUTO-MERGE
 class SyncService {
   final SupabaseClient _client;
   final OutboxRepository _outboxRepository;

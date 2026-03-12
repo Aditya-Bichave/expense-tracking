@@ -58,7 +58,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       log.info("[BudgetRepo] Budget added successfully: ${budget.id}");
       return Right(budget); // Return original entity
     } catch (e, s) {
-      log.severe("[BudgetRepo] Error adding budget$e$s\n$s");
+      log.severe("[BudgetRepo] Error adding budget: $e\n$s");
       return Left(CacheFailure("Failed to add budget: ${e.toString()}"));
     }
   }
@@ -120,7 +120,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
         },
       );
     } catch (e, s) {
-      log.severe("[BudgetRepo] Error calculating amount spent$e$s\n$s");
+      log.severe("[BudgetRepo] Error calculating amount spent: $e\n$s");
       return Left(
         CacheFailure("Failed to calculate budget spending: ${e.toString()}"),
       );
@@ -135,7 +135,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       log.info("[BudgetRepo] Budget deleted successfully: $id");
       return const Right(null);
     } catch (e, s) {
-      log.severe("[BudgetRepo] Error deleting budget $id$e$s\n$s");
+      log.severe("[BudgetRepo] Error deleting budget $id: $e\n$s");
       return Left(CacheFailure("Failed to delete budget: ${e.toString()}"));
     }
   }
@@ -151,7 +151,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
         return const Right(null); // Not found is not a Failure here
       }
     } catch (e, s) {
-      log.severe("[BudgetRepo] Error getting budget by ID $id$e$s\n$s");
+      log.severe("[BudgetRepo] Error getting budget by ID $id: $e\n$s");
       return Left(
         CacheFailure("Failed to get budget details: ${e.toString()}"),
       );
@@ -186,7 +186,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       log.info("[BudgetRepo] Retrieved and sorted ${entities.length} budgets.");
       return Right(entities);
     } catch (e, s) {
-      log.severe("[BudgetRepo] Error getting budgets$e$s\n$s");
+      log.severe("[BudgetRepo] Error getting budgets: $e\n$s");
       return Left(CacheFailure("Failed to load budgets: ${e.toString()}"));
     }
   }
@@ -232,7 +232,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
       log.info("[BudgetRepo] Budget updated successfully: ${budget.id}");
       return Right(budget);
     } catch (e, s) {
-      log.severe("[BudgetRepo] Error updating budget$e$s\n$s");
+      log.severe("[BudgetRepo] Error updating budget: $e\n$s");
       return Left(CacheFailure("Failed to update budget: ${e.toString()}"));
     }
   }

@@ -36,7 +36,7 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
       await accountBox.delete(id);
       log.info("Deleted asset account (ID: $id) from Hive.");
     } catch (e, s) {
-      log.severe("Failed to delete asset account (ID: $id) from cache$e$s\n$s");
+      log.severe("Failed to delete asset account (ID: $id) from cache: $e\n$s");
       throw CacheFailure('Failed to delete account: ${e.toString()}');
     }
   }
@@ -48,7 +48,7 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
       log.info("Retrieved ${accounts.length} asset accounts from Hive.");
       return accounts;
     } catch (e, s) {
-      log.severe("Failed to get asset accounts from cache$e$s\n$s");
+      log.severe("Failed to get asset accounts from cache: $e\n$s");
       throw CacheFailure('Failed to get accounts: ${e.toString()}');
     }
   }
@@ -77,7 +77,7 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
       final count = await accountBox.clear();
       log.info("Cleared asset accounts box in Hive ($count items removed).");
     } catch (e, s) {
-      log.severe("Failed to clear asset accounts cache$e$s\n$s");
+      log.severe("Failed to clear asset accounts cache: $e\n$s");
       throw CacheFailure('Failed to clear accounts cache: ${e.toString()}');
     }
   }

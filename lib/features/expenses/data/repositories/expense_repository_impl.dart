@@ -57,7 +57,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       log.warning("[ExpenseRepo] CacheFailure adding expense: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[ExpenseRepo] Unexpected error adding expense$e$s\n$s");
+      log.severe("[ExpenseRepo] Unexpected error adding expense: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error adding expense: ${e.toString()}'),
       );
@@ -76,7 +76,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       log.warning("[ExpenseRepo] CacheFailure updating expense: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("[ExpenseRepo] Unexpected error updating expense$e$s\n$s");
+      log.severe("[ExpenseRepo] Unexpected error updating expense: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error updating expense: ${e.toString()}'),
       );
@@ -120,7 +120,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[ExpenseRepo] Unexpected error getting expense models$e$s\n$s",
+        "[ExpenseRepo] Unexpected error getting expense models: $e\n$s",
       );
       return Left(
         UnexpectedFailure(

@@ -96,7 +96,7 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
         throw Exception('Invalid response format');
       }
     } catch (e, s) {
-      _log.severe('Failed to fetch group balances', e, s);
+      _log.severe('Failed to fetch group balances: $e\n$s');
       _log.info('Falling back to mock data');
       _emitMockData(emit);
     }
@@ -192,7 +192,7 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
               }
             })
             .catchError((e, s) {
-              _log.severe('Error dispatching optimistic refresh', e, s);
+              _log.severe('Error dispatching optimistic refresh: $e\n$s');
             });
       }
     }

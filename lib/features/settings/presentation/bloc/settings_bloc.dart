@@ -148,7 +148,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       );
       log.info("[SettingsBloc] Emitted final loaded/error state.");
     } catch (e, s) {
-      log.severe("[SettingsBloc] Unexpected error loading settings$e$s\n$s");
+      log.severe("[SettingsBloc] Unexpected error loading settings: $e\n$s");
       emit(
         state.copyWith(
           status: SettingsStatus.error,
