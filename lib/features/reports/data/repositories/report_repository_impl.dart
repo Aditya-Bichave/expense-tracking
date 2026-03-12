@@ -294,8 +294,8 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final filteredExpenses = transactionResult
-        .getOrElse(() => [])
-        .cast<ExpenseModel>();
+        .getOrElse(() => const [])
+        .whereType<ExpenseModel>();
 
     if (filteredExpenses.isEmpty) {
       log.fine(
@@ -495,9 +495,10 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final transactions = transactionResult.getOrElse(() => []);
-    final filteredTxns = (typeToFetch == TransactionType.income)
-        ? transactions.whereType<IncomeModel>().toList()
-        : transactions.whereType<ExpenseModel>().toList();
+    final Iterable<dynamic> filteredTxns =
+        (typeToFetch == TransactionType.income)
+        ? transactions.whereType<IncomeModel>()
+        : transactions.whereType<ExpenseModel>();
 
     if (filteredTxns.isEmpty) {
       log.fine(
@@ -512,43 +513,47 @@ class ReportRepositoryImpl implements ReportRepository {
     final Map<int, DateTime> dateCache = {};
 
     for (final hiveObject in filteredTxns) {
-      // Assuming the transaction type is TransactionModel, adjust if different
-      final txn = hiveObject as ExpenseModel;
+      final DateTime txnDate = (hiveObject as dynamic).date;
+      final double txnAmount = (hiveObject as dynamic).amount;
 
       final int cacheKey;
       switch (granularity) {
         case TimeSeriesGranularity.daily:
         case TimeSeriesGranularity
             .weekly: // Using daily cacheKey for weekly is ok since week calculation uses exact date
-          cacheKey =
-              txn.date.year * 10000 + txn.date.month * 100 + txn.date.day;
+          cacheKey = txnDate.year * 10000 + txnDate.month * 100 + txnDate.day;
           break;
         case TimeSeriesGranularity.monthly:
-          cacheKey = txn.date.year * 100 + txn.date.month;
+          cacheKey = txnDate.year * 100 + txnDate.month;
           break;
       }
 
-      final DateTime periodKey = dateCache.putIfAbsent(cacheKey, () {
+      DateTime? periodKey = dateCache[cacheKey];
+      if (periodKey == null) {
         switch (granularity) {
           case TimeSeriesGranularity.daily:
-            return DateTime(txn.date.year, txn.date.month, txn.date.day);
+            periodKey = DateTime(txnDate.year, txnDate.month, txnDate.day);
+            break;
           case TimeSeriesGranularity.weekly:
             int daysToSubtract =
-                txn.date.weekday - 1; // Assuming Monday is start of week (1)
-            return DateTime(
-              txn.date.year,
-              txn.date.month,
-              txn.date.day - daysToSubtract,
+                txnDate.weekday - 1; // Assuming Monday is start of week (1)
+            periodKey = DateTime(
+              txnDate.year,
+              txnDate.month,
+              txnDate.day - daysToSubtract,
             );
+            break;
           case TimeSeriesGranularity.monthly:
-            return DateTime(txn.date.year, txn.date.month, 1);
+            periodKey = DateTime(txnDate.year, txnDate.month, 1);
+            break;
         }
-      });
+        dateCache[cacheKey] = periodKey;
+      }
 
       aggregatedData.update(
         periodKey,
-        (value) => value + txn.amount,
-        ifAbsent: () => txn.amount,
+        (value) => value + txnAmount,
+        ifAbsent: () => txnAmount,
       );
     }
 
@@ -720,11 +725,13 @@ class ReportRepositoryImpl implements ReportRepository {
           ? date.year * 100 + date.month
           : date.year;
 
-      final DateTime periodKeyDate = dateCache.putIfAbsent(cacheKey, () {
-        return periodType == IncomeExpensePeriodType.monthly
+      DateTime? periodKeyDate = dateCache[cacheKey];
+      if (periodKeyDate == null) {
+        periodKeyDate = periodType == IncomeExpensePeriodType.monthly
             ? DateTime(date.year, date.month, 1)
             : DateTime(date.year, 1, 1);
-      });
+        dateCache[cacheKey] = periodKeyDate;
+      }
 
       final current =
           aggregatedData[periodKeyDate] ?? (income: 0.0, expense: 0.0);
@@ -965,12 +972,13 @@ class ReportRepositoryImpl implements ReportRepository {
           .subtract(const Duration(microseconds: 1));
 
       // Filter expenses for *this* budget within the *effective* date range
-      final double spent = candidateExpenses
-          .where((exp) {
-            return !exp.date.isBefore(effStart) &&
-                !exp.date.isAfter(endDateInclusive);
-          })
-          .fold(0.0, (sum, exp) => sum + exp.amount);
+      double spent = 0.0;
+      for (final exp in candidateExpenses) {
+        if (!exp.date.isBefore(effStart) &&
+            !exp.date.isAfter(endDateInclusive)) {
+          spent += exp.amount;
+        }
+      }
 
       final target = b.targetAmount;
       final variance = target - spent;
@@ -1089,9 +1097,10 @@ class ReportRepositoryImpl implements ReportRepository {
         );
       }
 
+      final fallbackDate = DateTime(2100);
       progressList.sort(
-        (a, b) => (a.goal.targetDate ?? DateTime(2100)).compareTo(
-          b.goal.targetDate ?? DateTime(2100),
+        (a, b) => (a.goal.targetDate ?? fallbackDate).compareTo(
+          b.goal.targetDate ?? fallbackDate,
         ),
       );
       log.info(
@@ -1197,11 +1206,7 @@ class ReportRepositoryImpl implements ReportRepository {
         };
         final List<TimeSeriesDataPoint> filledData = [];
         for (int i = 0; i < days; i++) {
-          final date = DateTime(
-            startDate.year,
-            startDate.month,
-            startDate.day + i,
-          );
+          final date = startDate.add(Duration(days: i));
           filledData.add(
             TimeSeriesDataPoint(
               date: date,
@@ -1253,34 +1258,28 @@ class ReportRepositoryImpl implements ReportRepository {
       }
       final allContributions = contribResult.getOrElse(() => []);
 
-      // 2. Filter contributions by date range
-      final contributionsInRange = allContributions.where((c) {
-        return !c.date.isBefore(startDate) && !c.date.isAfter(endDateEndOfDay);
-      }).toList();
-
-      // 3. Aggregate by day
+      // 2 & 3. Filter contributions by date range and Aggregate by day
       final Map<DateTime, double> aggregatedData = {};
-      for (final contribution in contributionsInRange) {
-        DateTime periodKey = DateTime(
-          contribution.date.year,
-          contribution.date.month,
-          contribution.date.day,
-        );
-        aggregatedData.update(
-          periodKey,
-          (value) => value + contribution.amount,
-          ifAbsent: () => contribution.amount,
-        );
+      for (final contribution in allContributions) {
+        if (!contribution.date.isBefore(startDate) &&
+            !contribution.date.isAfter(endDateEndOfDay)) {
+          DateTime periodKey = DateTime(
+            contribution.date.year,
+            contribution.date.month,
+            contribution.date.day,
+          );
+          aggregatedData.update(
+            periodKey,
+            (value) => value + contribution.amount,
+            ifAbsent: () => contribution.amount,
+          );
+        }
       }
 
       // 4. Fill missing days with 0 and create TimeSeriesDataPoints
       final List<TimeSeriesDataPoint> filledData = [];
       for (int i = 0; i < days; i++) {
-        final date = DateTime(
-          startDate.year,
-          startDate.month,
-          startDate.day + i,
-        );
+        final date = startDate.add(Duration(days: i));
         filledData.add(
           TimeSeriesDataPoint(
             date: date,
