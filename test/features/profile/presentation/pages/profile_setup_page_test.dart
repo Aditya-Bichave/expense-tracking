@@ -43,7 +43,9 @@ void main() {
     );
   }
 
-  testWidgets('ProfileSetupPage has mounted check on _pickImage', (tester) async {
+  testWidgets('ProfileSetupPage has mounted check on _pickImage', (
+    tester,
+  ) async {
     whenListen(
       mockProfileBloc,
       Stream.fromIterable([

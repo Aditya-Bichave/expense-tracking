@@ -38,4 +38,36 @@ void main() {
 
     expect(find.text('No data to display'), findsOneWidget);
   });
+
+  testWidgets('TimeSeriesLineChart renders with data', (tester) async {
+    await tester.pumpWidget(
+      BlocProvider<SettingsBloc>.value(
+        value: mockSettingsBloc,
+        child: MaterialApp(
+          home: Scaffold(
+            body: TimeSeriesLineChart(
+              data: [
+                TimeSeriesDataPoint(
+                  date: DateTime(2023, 1, 1),
+                  amount: const ComparisonValue(currentValue: 100.0),
+                ),
+                TimeSeriesDataPoint(
+                  date: DateTime(2023, 1, 2),
+                  amount: const ComparisonValue(currentValue: 150.0),
+                ),
+              ],
+              granularity: TimeSeriesGranularity.daily,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Give the chart time to render its animations
+    await tester.pumpAndSettle();
+
+    // We can't easily assert pixel canvas drawing from standard finders,
+    // but ensuring it doesn't crash when provided with valid data is a good start.
+    expect(find.byType(TimeSeriesLineChart), findsOneWidget);
+  });
 }

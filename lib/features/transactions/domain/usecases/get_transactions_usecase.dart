@@ -220,7 +220,8 @@ class GetTransactionsUseCase
         final searchTermLower = getLower(params.searchTerm!);
         filteredList = combinedList.where((txn) {
           return getLower(txn.title).contains(searchTermLower) ||
-              (txn.category != null && getLower(txn.category!.name).contains(searchTermLower)) ||
+              (txn.category != null &&
+                  getLower(txn.category!.name).contains(searchTermLower)) ||
               txn.amount.toStringAsFixed(2).contains(searchTermLower);
         }).toList();
         log.info(

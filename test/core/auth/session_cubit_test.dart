@@ -5,6 +5,7 @@ import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:expense_tracker/core/auth/session_state.dart';
 import 'package:expense_tracker/core/error/failure.dart';
+import 'package:expense_tracker/core/utils/e2e_mode.dart';
 import 'package:expense_tracker/features/auth/domain/repositories/auth_repository.dart';
 import 'package:expense_tracker/features/profile/domain/entities/user_profile.dart';
 import 'package:expense_tracker/features/profile/domain/repositories/profile_repository.dart';
