@@ -495,7 +495,8 @@ class ReportRepositoryImpl implements ReportRepository {
     }
 
     final transactions = transactionResult.getOrElse(() => []);
-    final Iterable<dynamic> filteredTxns = (typeToFetch == TransactionType.income)
+    final Iterable<dynamic> filteredTxns =
+        (typeToFetch == TransactionType.income)
         ? transactions.whereType<IncomeModel>()
         : transactions.whereType<ExpenseModel>();
 
@@ -974,7 +975,8 @@ class ReportRepositoryImpl implements ReportRepository {
       // Filter expenses for *this* budget within the *effective* date range
       double spent = 0.0;
       for (final exp in candidateExpenses) {
-        if (!exp.date.isBefore(effStart) && !exp.date.isAfter(endDateInclusive)) {
+        if (!exp.date.isBefore(effStart) &&
+            !exp.date.isAfter(endDateInclusive)) {
           spent += exp.amount;
         }
       }
@@ -1260,7 +1262,8 @@ class ReportRepositoryImpl implements ReportRepository {
       // 2 & 3. Filter contributions by date range and Aggregate by day
       final Map<DateTime, double> aggregatedData = {};
       for (final contribution in allContributions) {
-        if (!contribution.date.isBefore(startDate) && !contribution.date.isAfter(endDateEndOfDay)) {
+        if (!contribution.date.isBefore(startDate) &&
+            !contribution.date.isAfter(endDateEndOfDay)) {
           DateTime periodKey = DateTime(
             contribution.date.year,
             contribution.date.month,
