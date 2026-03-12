@@ -521,8 +521,7 @@ class ReportRepositoryImpl implements ReportRepository {
         case TimeSeriesGranularity.daily:
         case TimeSeriesGranularity
             .weekly: // Using daily cacheKey for weekly is ok since week calculation uses exact date
-          cacheKey =
-              txnDate.year * 10000 + txnDate.month * 100 + txnDate.day;
+          cacheKey = txnDate.year * 10000 + txnDate.month * 100 + txnDate.day;
           break;
         case TimeSeriesGranularity.monthly:
           cacheKey = txnDate.year * 100 + txnDate.month;
