@@ -13,7 +13,7 @@ import 'package:expense_tracker/features/groups/domain/entities/group_entity.dar
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'package:expense_tracker/features/groups/domain/repositories/groups_repository.dart';
 import 'package:rxdart/rxdart.dart';
-import 'dart:async'; // For unawaited
+// removed unawaited import
 
 class GroupsRepositoryImpl implements GroupsRepository {
   final GroupsLocalDataSource _localDataSource;
@@ -53,7 +53,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       if (connectivityResult.contains(ConnectivityResult.mobile) ||
           connectivityResult.contains(ConnectivityResult.wifi)) {
         _syncService.processOutbox().catchError((e, s) {
-          log.severe("Failed to process outbox in background: $e\n$s");
+          log.severe("Error in processOutbox background sync: $e\n$s");
         });
       }
 
