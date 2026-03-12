@@ -513,8 +513,8 @@ class ReportRepositoryImpl implements ReportRepository {
     final Map<int, DateTime> dateCache = {};
 
     for (final hiveObject in filteredTxns) {
-      // Assuming the transaction type is TransactionModel, adjust if different
-      final txn = hiveObject as ExpenseModel;
+      final DateTime txnDate = (hiveObject as dynamic).date;
+      final double txnAmount = (hiveObject as dynamic).amount;
 
       final int cacheKey;
       switch (granularity) {
@@ -522,10 +522,10 @@ class ReportRepositoryImpl implements ReportRepository {
         case TimeSeriesGranularity
             .weekly: // Using daily cacheKey for weekly is ok since week calculation uses exact date
           cacheKey =
-              txn.date.year * 10000 + txn.date.month * 100 + txn.date.day;
+              txnDate.year * 10000 + txnDate.month * 100 + txnDate.day;
           break;
         case TimeSeriesGranularity.monthly:
-          cacheKey = txn.date.year * 100 + txn.date.month;
+          cacheKey = txnDate.year * 100 + txnDate.month;
           break;
       }
 
@@ -533,19 +533,19 @@ class ReportRepositoryImpl implements ReportRepository {
       if (periodKey == null) {
         switch (granularity) {
           case TimeSeriesGranularity.daily:
-            periodKey = DateTime(txn.date.year, txn.date.month, txn.date.day);
+            periodKey = DateTime(txnDate.year, txnDate.month, txnDate.day);
             break;
           case TimeSeriesGranularity.weekly:
             int daysToSubtract =
-                txn.date.weekday - 1; // Assuming Monday is start of week (1)
+                txnDate.weekday - 1; // Assuming Monday is start of week (1)
             periodKey = DateTime(
-              txn.date.year,
-              txn.date.month,
-              txn.date.day - daysToSubtract,
+              txnDate.year,
+              txnDate.month,
+              txnDate.day - daysToSubtract,
             );
             break;
           case TimeSeriesGranularity.monthly:
-            periodKey = DateTime(txn.date.year, txn.date.month, 1);
+            periodKey = DateTime(txnDate.year, txnDate.month, 1);
             break;
         }
         dateCache[cacheKey] = periodKey;
@@ -553,8 +553,8 @@ class ReportRepositoryImpl implements ReportRepository {
 
       aggregatedData.update(
         periodKey,
-        (value) => value + txn.amount,
-        ifAbsent: () => txn.amount,
+        (value) => value + txnAmount,
+        ifAbsent: () => txnAmount,
       );
     }
 
