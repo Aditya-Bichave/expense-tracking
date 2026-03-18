@@ -1,3 +1,5 @@
+# Tasks
+
 | id | task | status | notes |
 | --- | --- | --- | --- |
 | 1 | Inspect .agents and activate capabilities | complete | Activated `single-flow-task-execution` |

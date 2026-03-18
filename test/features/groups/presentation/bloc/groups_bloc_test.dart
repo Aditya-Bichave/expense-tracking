@@ -169,7 +169,7 @@ void main() {
         when(
           () => mockWatchGroups(),
         ).thenAnswer((_) => Stream.value(Right([tGroup])));
-        when(() => mockSyncGroups()).thenThrow(Exception('sync boom'));
+        when(() => mockSyncGroups()).thenAnswer((_) async => Left(ServerFailure('sync boom')));
       },
       build: buildBloc,
       act: (bloc) => bloc.add(const LoadGroups()),
