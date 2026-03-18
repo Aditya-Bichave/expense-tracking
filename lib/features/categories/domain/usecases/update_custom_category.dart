@@ -58,14 +58,17 @@ class UpdateCustomCategoryUseCase
     }
     final allCategories = allCategoriesResult.getOrElse(() => []);
     final trimmedName = category.name.trim();
+    final lowerTrimmedName = trimmedName.toLowerCase();
 
-    final isDuplicate = allCategories.any(
-      (cat) =>
-          cat.id != category.id && // Exclude the category itself
-          cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
-          cat.type == category.type &&
-          cat.parentCategoryId == category.parentCategoryId,
-    );
+    final isDuplicate = allCategories
+        .where(
+          (cat) =>
+              cat.id != category.id && // Exclude the category itself
+              cat.name.trim().toLowerCase() == lowerTrimmedName &&
+              cat.type == category.type &&
+              cat.parentCategoryId == category.parentCategoryId,
+        )
+        .isNotEmpty;
 
     if (isDuplicate) {
       log.warning(

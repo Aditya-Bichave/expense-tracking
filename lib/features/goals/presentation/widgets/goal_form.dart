@@ -73,7 +73,7 @@ class _GoalFormState extends State<GoalForm> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && mounted) {
+    if (picked != null && context.mounted) {
       setState(
         () => _selectedTargetDate = DateTime(
           picked.year,
@@ -90,7 +90,7 @@ class _GoalFormState extends State<GoalForm> {
       context,
       _selectedIconName ?? 'savings_outlined',
     );
-    if (selectedIcon != null && mounted) {
+    if (selectedIcon != null && context.mounted) {
       setState(() => _selectedIconName = selectedIcon);
       log.info("[GoalForm] Icon selected: $_selectedIconName");
     }

@@ -88,7 +88,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
 
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile == null || !mounted) {
+    if (pickedFile == null || !context.mounted) {
       return;
     }
 

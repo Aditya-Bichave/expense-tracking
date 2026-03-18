@@ -99,7 +99,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
                           categories: categories,
                         ),
                       );
-                      if (category != null && mounted) {
+                      if (category != null && context.mounted) {
                         setState(() => _selectedCategory = category);
                       }
                     },

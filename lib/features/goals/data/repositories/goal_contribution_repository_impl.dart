@@ -228,14 +228,16 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
     log.info("[ContributionRepo] Auditing cached totals for all goals");
     try {
       final goals = await goalDataSource.getGoals();
-      for (final goal in goals) {
-        final result = await _updateGoalTotalSavedCache(goal.id);
-        if (result.isLeft()) {
-          log.warning(
-            "[ContributionRepo] Failed to sync total saved cache for goal ${goal.id}",
-          );
-        }
-      }
+      final futures = goals.map(
+        (goal) => _updateGoalTotalSavedCache(goal.id).then((result) {
+          if (result.isLeft()) {
+            log.warning(
+              "[ContributionRepo] Failed to sync total saved cache for goal ${goal.id}",
+            );
+          }
+        }),
+      );
+      await Future.wait(futures);
       return const Right(null);
     } catch (e, s) {
       log.severe(

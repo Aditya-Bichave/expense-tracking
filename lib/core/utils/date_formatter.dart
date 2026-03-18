@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class DateFormatter {
   static final Map<String?, DateFormat> _dateTimeFormatters = {};
@@ -19,7 +20,8 @@ class DateFormatter {
     try {
       final format = _getDateTimeFormatter(locale);
       return format.format(dateTime);
-    } catch (e) {
+    } catch (e, s) {
+      log.warning('DateTime format error: $e\n$s');
       return dateTime.toIso8601String();
     }
   }
@@ -28,7 +30,8 @@ class DateFormatter {
     try {
       final format = _getDateFormatter(locale);
       return format.format(dateTime);
-    } catch (e) {
+    } catch (e, s) {
+      log.warning('Date format error: $e\n$s');
       return "${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}";
     }
   }

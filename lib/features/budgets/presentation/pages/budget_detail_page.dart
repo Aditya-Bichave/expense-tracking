@@ -71,13 +71,9 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   }
 
   void _handleBudgetStateChange(BudgetListState state) {
-    if (!mounted || _isLoading) return;
+    if (!context.mounted || _isLoading) return;
 
-    final shouldReload = state.budgetsWithStatus.any(
-      (bws) => bws.budget.id == widget.budgetId,
-    );
-
-    if (shouldReload) {
+    if (state.status == BudgetListStatus.success) {
       log.fine(
         "[BudgetDetail] Relevant Bloc update detected, reloading detail data.",
       );
@@ -86,7 +82,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   }
 
   Future<void> _loadData() async {
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (!_isLoading) {
       log.fine("[BudgetDetail] _loadData potentially refreshing.");
     }
@@ -107,7 +103,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       log.severe(
         "[BudgetDetail] Cannot load details: Budget ID ${widget.budgetId} not found in loaded state.",
       );
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _isLoading = false;
           _error = "Budget not found.";
@@ -162,7 +158,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       overLimitColor: overLimitColor,
     );
 
-    if (mounted) {
+    if (context.mounted) {
       setState(() {
         _budgetWithStatus = calculatedStatus;
         _relevantTransactions = foundTransactions;

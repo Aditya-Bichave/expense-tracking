@@ -57,7 +57,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
       );
     // IMPORTANT: Reset toggle back to Assets immediately AFTER showing snackbar
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _selectedView = AccountViewType.assets;
         });

@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/utils/logger.dart' as logger;
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/datasources/recurring_transaction_local_data_source.dart';
 import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
@@ -19,7 +20,8 @@ class RecurringTransactionRepositoryImpl
       final ruleModel = RecurringRuleModel.fromEntity(rule);
       await localDataSource.addRecurringRule(ruleModel);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      logger.log.severe("Recurring Transaction Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -30,7 +32,8 @@ class RecurringTransactionRepositoryImpl
       final ruleModels = await localDataSource.getRecurringRules();
       final rules = ruleModels.map((model) => model.toEntity()).toList();
       return Right(rules);
-    } catch (e) {
+    } catch (e, s) {
+      logger.log.severe("Recurring Transaction Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -42,7 +45,8 @@ class RecurringTransactionRepositoryImpl
       return Right(ruleModel.toEntity());
     } on NotFoundFailure catch (e) {
       return Left(e);
-    } catch (e) {
+    } catch (e, s) {
+      logger.log.severe("Recurring Transaction Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -53,7 +57,8 @@ class RecurringTransactionRepositoryImpl
       final ruleModel = RecurringRuleModel.fromEntity(rule);
       await localDataSource.updateRecurringRule(ruleModel);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      logger.log.severe("Recurring Transaction Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -63,7 +68,8 @@ class RecurringTransactionRepositoryImpl
     try {
       await localDataSource.deleteRecurringRule(id);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      logger.log.severe("Recurring Transaction Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -74,7 +80,8 @@ class RecurringTransactionRepositoryImpl
       final logModel = RecurringRuleAuditLogModel.fromEntity(log);
       await localDataSource.addAuditLog(logModel);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      logger.log.severe("Recurring Transaction Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -87,7 +94,8 @@ class RecurringTransactionRepositoryImpl
       final logModels = await localDataSource.getAuditLogsForRule(ruleId);
       final logs = logModels.map((model) => model.toEntity()).toList();
       return Right(logs);
-    } catch (e) {
+    } catch (e, s) {
+      logger.log.severe("Recurring Transaction Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }

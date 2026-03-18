@@ -97,7 +97,7 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && mounted) {
+    if (picked != null && context.mounted) {
       setState(() {
         _tempStartDate = picked.start;
         _tempEndDate = picked.end;

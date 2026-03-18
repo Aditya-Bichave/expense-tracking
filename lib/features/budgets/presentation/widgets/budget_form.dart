@@ -73,8 +73,6 @@ class _BudgetFormState extends State<BudgetForm> {
     _selectedEndDate = initial?.endDate;
 
     // ⚡ Bolt Performance Optimization
-    // Problem: .any() inside .where() creates an O(N*M) time complexity loop
-    // Solution: Precompute a Set of available category IDs for O(1) lookups
     // Impact: Faster form initialization, eliminating a potential UI bottleneck
     final availableCategoryIds = widget.availableCategories
         .map((c) => c.id)
@@ -106,7 +104,7 @@ class _BudgetFormState extends State<BudgetForm> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null && mounted) {
+    if (picked != null && context.mounted) {
       setState(() {
         if (isStartDate) {
           _selectedStartDate = DateTime(picked.year, picked.month, picked.day);
@@ -148,8 +146,6 @@ class _BudgetFormState extends State<BudgetForm> {
         .map((category) => MultiSelectItem<String>(category.id, category.name))
         .toList();
     // ⚡ Bolt Performance Optimization
-    // Problem: .any() inside .where() creates an O(N*M) time complexity loop during dialog opening
-    // Solution: Precompute a Set of valid item values for O(1) lookups
     // Impact: Prevents UI jank when opening the MultiSelect dialog with many categories
     final validItemValues = items.map((i) => i.value).toSet();
     final validInitialValue = _selectedCategoryIds

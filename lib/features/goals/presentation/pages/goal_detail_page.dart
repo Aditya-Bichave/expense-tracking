@@ -79,7 +79,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
 
   // In _GoalDetailPageState
   void _handleBlocStateChange(GoalListState state) {
-    if (mounted && _isLoadingGoal) {
+    if (context.mounted && _isLoadingGoal) {
       // Find the updated goal directly from the new state
       final updatedGoal = state.goals.firstWhereOrNull(
         (g) => g.id == widget.goalId,
@@ -100,7 +100,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
 
   Future<void> _loadData() async {
     // ... (goal loading logic remains the same) ...
-    if (!mounted) return;
+    if (!context.mounted) return;
     bool wasLoadingBefore = _isLoadingGoal || _isLoadingContributions;
     if (!wasLoadingBefore) {
       log.fine("[GoalDetail] _loadData potentially refreshing.");
@@ -123,7 +123,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
         log.severe(
           "[GoalDetail] Failed to load goal details: ${failure.message}",
         );
-        if (mounted) {
+        if (context.mounted) {
           setState(() {
             _error = "Failed to load goal details.";
             _isLoadingGoal = false;
@@ -134,7 +134,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
       (goal) async {
         if (goal == null) {
           log.severe("[GoalDetail] Goal ${widget.goalId} not found.");
-          if (mounted) {
+          if (context.mounted) {
             setState(() {
               _error = "Goal not found.";
               _isLoadingGoal = false;
@@ -143,7 +143,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
           }
         } else {
           loadedGoal = goal;
-          if (mounted) {
+          if (context.mounted) {
             setState(() {
               _currentGoal = loadedGoal;
               _isLoadingGoal = false;
@@ -176,7 +176,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
     final contributionsResult = await _getContributionsUseCase(
       GetContributionsParams(goalId: widget.goalId),
     );
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     contributionsResult.fold(
       (failure) {

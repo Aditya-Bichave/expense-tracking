@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/auth/domain/repositories/auth_repository.dart';
 import 'package:expense_tracker/features/profile/data/datasources/profile_local_data_source.dart';
@@ -41,7 +42,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         await _localDataSource.cacheProfile(remoteProfile);
         return Right(remoteProfile);
       });
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Profile Repository Error: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -53,7 +55,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
       await _remoteDataSource.updateProfile(model);
       await _localDataSource.cacheProfile(model);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Profile Repository Error: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -72,7 +75,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
         );
         return Right(url);
       });
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Profile Repository Error: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -82,7 +86,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
     try {
       await _localDataSource.clearProfile();
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Profile Repository Error: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }

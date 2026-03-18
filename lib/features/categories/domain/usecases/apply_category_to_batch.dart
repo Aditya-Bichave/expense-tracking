@@ -132,9 +132,9 @@ class ApplyCategoryToBatchUseCase
         "[ApplyCategoryBatchUseCase] All ${updateFutures.length} batch updates successful.",
       );
       return const Right(null); // Overall success
-    } catch (e) {
+    } catch (e, s) {
       log.severe(
-        "[ApplyCategoryBatchUseCase] Unexpected error during batch update execution",
+        "[ApplyCategoryBatchUseCase] Unexpected error during batch update execution: $e\n$s",
       );
       return Left(
         UnexpectedFailure(

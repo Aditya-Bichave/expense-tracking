@@ -23,7 +23,7 @@ class _InitialSetupScreenState extends State<InitialSetupScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
+      if (context.mounted) {
         context.read<SettingsBloc>().add(const ResetSkipSetupFlag());
       }
     });

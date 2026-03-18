@@ -184,7 +184,8 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Failed to generate CSV: $e\n$s");
       return Right(
         ExportFailure("Failed to generate Category Spending CSV: $e"),
       );
@@ -223,7 +224,8 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Failed to generate CSV: $e\n$s");
       return Right(
         ExportFailure("Failed to generate Spending Over Time CSV: $e"),
       );
@@ -278,7 +280,8 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Failed to generate CSV: $e\n$s");
       return Right(
         ExportFailure("Failed to generate Income vs Expense CSV: $e"),
       );
@@ -343,7 +346,8 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Failed to generate CSV: $e\n$s");
       return Right(
         ExportFailure("Failed to generate Budget Performance CSV: $e"),
       );
@@ -398,7 +402,8 @@ class CsvExportHelper {
       }).toList();
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Failed to generate CSV: $e\n$s");
       return Right(ExportFailure("Failed to generate Goal Progress CSV: $e"));
     }
   }

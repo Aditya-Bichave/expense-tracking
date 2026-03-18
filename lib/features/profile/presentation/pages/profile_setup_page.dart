@@ -63,7 +63,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
   Future<void> _initTimezone() async {
     try {
       final tz = await FlutterTimezone.getLocalTimezone();
-      if (mounted) setState(() => _timezone = tz.toString());
+      if (context.mounted) setState(() => _timezone = tz.toString());
     } catch (e, s) {
       log.severe('Silent failure: $e\n$s');
     }
@@ -74,12 +74,12 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       final picked = await _picker.pickImage(source: ImageSource.gallery);
       if (picked != null) {
         setState(() => _avatarFile = File(picked.path));
-        if (mounted) {
+        if (context.mounted) {
           context.read<ProfileBloc>().add(UploadAvatar(_avatarFile!));
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         AppToast.show(
           context,
           'Failed to pick image',

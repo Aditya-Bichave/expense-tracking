@@ -51,7 +51,9 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
                 .where((rule) => rule.status == RuleStatus.active)
                 .toList();
 
-            for (var rule in activeRules) {
+            final futures = activeRules.map<Future<Either<Failure, void>>>((
+              rule,
+            ) async {
               var currentRule = rule;
               while (currentRule.nextOccurrenceDate.isBefore(today) ||
                   currentRule.nextOccurrenceDate.isAtSameMomentAs(today)) {
@@ -60,11 +62,22 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
                 if (result.isLeft()) {
                   return result.fold(
                     (failure) => Left(failure),
-                    (_) => const Right(null), // Unreachable due to isLeft check
+                    (_) => const Right(null),
                   );
                 }
                 currentRule = result.getOrElse(() => currentRule);
                 if (currentRule.status == RuleStatus.completed) break;
+              }
+              return const Right(null);
+            });
+
+            final results = await Future.wait(futures);
+            for (final result in results) {
+              if (result.isLeft()) {
+                return result.fold(
+                  (failure) => Left(failure),
+                  (_) => const Right(null),
+                );
               }
             }
             return const Right(null);

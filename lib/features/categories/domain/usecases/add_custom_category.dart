@@ -50,13 +50,16 @@ class AddCustomCategoryUseCase
     }
     final allCategories = allCategoriesResult.getOrElse(() => []);
     final trimmedName = params.name.trim();
+    final lowerTrimmedName = trimmedName.toLowerCase();
 
-    final isDuplicate = allCategories.any(
-      (cat) =>
-          cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
-          cat.type == params.type &&
-          cat.parentCategoryId == params.parentCategoryId,
-    );
+    final isDuplicate = allCategories
+        .where(
+          (cat) =>
+              cat.name.trim().toLowerCase() == lowerTrimmedName &&
+              cat.type == params.type &&
+              cat.parentCategoryId == params.parentCategoryId,
+        )
+        .isNotEmpty;
 
     if (isDuplicate) {
       log.warning(

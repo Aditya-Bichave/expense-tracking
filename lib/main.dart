@@ -326,7 +326,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
         ).showSnackBar(SnackBar(content: Text("Reset failed: $e")));
       }
     } finally {
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _isResetting = false;
         });

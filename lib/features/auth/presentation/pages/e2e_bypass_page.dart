@@ -23,7 +23,7 @@ class _E2EBypassPageState extends State<E2EBypassPage> {
       await E2EBootstrap.seedLocalState();
       await sl<SessionCubit>().checkSession();
 
-      if (mounted) {
+      if (context.mounted) {
         // Safe redirect to dashboard
         context.go('/dashboard');
       }

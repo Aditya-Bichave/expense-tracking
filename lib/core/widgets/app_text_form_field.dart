@@ -84,7 +84,7 @@ class _AppTextFormFieldState extends State<AppTextFormField> {
   }
 
   void _handleTextChange() {
-    if (mounted) {
+    if (context.mounted) {
       final shouldShow = widget.controller.text.isNotEmpty && !widget.readOnly;
       if (_showClearButton != shouldShow) {
         setState(() {

@@ -206,23 +206,25 @@ class SyncService {
 
       log.info('Syncing ${pendingItems.length} items...');
 
-      for (final item in pendingItems) {
+      final futures = pendingItems.map((item) async {
         if (item.retryCount >= _maxRetries) {
           await _outboxRepository.markAsFailed(item, 'Max retries exceeded.');
-          // Treated as processed (failed permanently), so effectively "synced" regarding queue blocking,
-          // but arguably an error state. For now, following established pattern of continuing.
-          continue;
+          return false; // Not a new error this run, but failed.
         }
 
         try {
           await _processItem(item);
           await _outboxRepository.markAsSent(item);
+          return false; // success
         } catch (e) {
           log.warning('Failed to sync item ${item.id}: $e');
           await _outboxRepository.markAsFailed(item, e.toString());
-          hadError = true;
+          return true; // had error
         }
-      }
+      });
+
+      final results = await Future.wait(futures);
+      hadError = results.any((err) => err);
 
       // Check queue status logic
       if (hadError) {

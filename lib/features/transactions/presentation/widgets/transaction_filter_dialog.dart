@@ -62,10 +62,13 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
     _selectedTransactionType = widget.initialTransactionType;
     _selectedAccountId = widget.initialAccountId;
 
-    final isValidCategory = widget.availableCategories.any(
-      (c) =>
-          c.id == widget.initialCategoryId && c.id != Category.uncategorized.id,
-    );
+    final isValidCategory = widget.availableCategories
+        .where(
+          (c) =>
+              c.id == widget.initialCategoryId &&
+              c.id != Category.uncategorized.id,
+        )
+        .isNotEmpty;
     _selectedCategoryId = isValidCategory ? widget.initialCategoryId : null;
   }
 
@@ -78,7 +81,7 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101), // Adjust range as needed
     );
-    if (picked != null && mounted) {
+    if (picked != null && context.mounted) {
       setState(() {
         if (isStartDate) {
           _selectedStartDate = DateTime(

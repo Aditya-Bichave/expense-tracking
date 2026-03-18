@@ -41,13 +41,15 @@ class _LockScreenState extends State<LockScreen> {
   void initState() {
     super.initState();
     _checkBiometrics();
-    _loadPin().then((_) => _authenticate());
+    _loadPin()
+        .then((_) => _authenticate())
+        .catchError((e, s) => log.severe('Error in initState auth: $e\n$s'));
   }
 
   Future<void> _checkBiometrics() async {
     try {
       final canCheck = await auth.canCheckBiometrics;
-      if (mounted) setState(() => _canCheckBiometrics = canCheck);
+      if (context.mounted) setState(() => _canCheckBiometrics = canCheck);
     } catch (e, s) {
       log.severe('Silent failure: $e\n$s');
     }
@@ -55,11 +57,11 @@ class _LockScreenState extends State<LockScreen> {
 
   Future<void> _loadPin() async {
     savedPin = await storage.getPin();
-    if (mounted) setState(() => _pinLoaded = true);
+    if (context.mounted) setState(() => _pinLoaded = true);
   }
 
   Future<void> _authenticate() async {
-    if (!mounted) return;
+    if (!context.mounted) return;
     try {
       final authenticated = await auth.authenticate(
         localizedReason: 'Authenticate to unlock',
@@ -68,7 +70,7 @@ class _LockScreenState extends State<LockScreen> {
           biometricOnly: false,
         ),
       );
-      if (authenticated && mounted) {
+      if (authenticated && context.mounted) {
         context.read<SessionCubit>().unlock();
       }
     } catch (e) {

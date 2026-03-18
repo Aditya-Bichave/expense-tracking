@@ -89,7 +89,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       "[AddEditTxnPage] Showing suggestion dialog for '${suggestedCategory.name}'.",
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       AppDialogs.showConfirmation(
         context,
         title: "Suggestion",
@@ -98,7 +98,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         cancelText: "No, pick myself",
         barrierDismissible: false,
       ).then((confirmed) {
-        if (!mounted) return;
+        if (!context.mounted) return;
         if (confirmed == true) {
           log.info("[AddEditTxnPage] Suggestion accepted.");
           _bloc.add(AcceptCategorySuggestion(suggestedCategory));
@@ -115,7 +115,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       "[AddEditTxnPage] Asking user if they want to create a custom category.",
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       AppDialogs.showConfirmation(
         context,
         title: "Choose Category",
@@ -125,7 +125,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
         cancelText: "Select Existing",
         barrierDismissible: false,
       ).then((create) {
-        if (!mounted) return;
+        if (!context.mounted) return;
         if (create == true) {
           log.info("[AddEditTxnPage] User chose to create a new category.");
           final formState = _formKey.currentState;
@@ -188,7 +188,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
       ),
     );
 
-    if (!mounted) return;
+    if (!context.mounted) return;
 
     if (result != null) {
       log.info(
@@ -252,9 +252,9 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                 ),
               );
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted && context.canPop()) {
+              if (context.mounted && context.canPop()) {
                 context.pop();
-              } else if (mounted) {
+              } else if (context.mounted) {
                 context.go(RouteNames.transactionsList);
               }
             });
@@ -275,7 +275,7 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
                 ),
               );
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _bloc.add(const ClearMessages());
+              if (context.mounted) _bloc.add(const ClearMessages());
             });
           }
 

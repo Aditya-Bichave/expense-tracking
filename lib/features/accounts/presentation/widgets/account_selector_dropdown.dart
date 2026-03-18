@@ -57,7 +57,7 @@ class AccountSelectorDropdown extends StatelessWidget {
         // Safeguard: Ensure the selected value exists in the list.
         String? displayValue = selectedAccountId;
         if (selectedAccountId != null &&
-            !accounts.any((acc) => acc.id == selectedAccountId)) {
+            accounts.where((acc) => acc.id == selectedAccountId).isEmpty) {
           log.warning(
             "[AccountSelector] Selected ID '$selectedAccountId' is not in the current list of accounts. Displaying as null.",
           );

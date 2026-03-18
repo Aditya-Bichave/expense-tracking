@@ -31,25 +31,25 @@ class _SecuritySettingsSectionState extends State<SecuritySettingsSection> {
 
   Future<void> _loadState() async {
     final enabled = await _storage.isBiometricEnabled();
-    if (mounted) setState(() => _biometricEnabled = enabled);
+    if (context.mounted) setState(() => _biometricEnabled = enabled);
   }
 
   Future<void> _toggleBiometric(bool value) async {
     if (value) {
       final pin = await _storage.getPin();
-      if (!mounted) return;
+      if (!context.mounted) return;
       if (pin == null) {
         final pinSet = await AppDialog.show<bool>(
           context: context,
           title: 'Set PIN',
           contentWidget: const PinSetupContent(),
         );
-        if (!mounted) return;
+        if (!context.mounted) return;
         if (pinSet != true) return;
       }
     }
     await _storage.setBiometricEnabled(value);
-    if (mounted) setState(() => _biometricEnabled = value);
+    if (context.mounted) setState(() => _biometricEnabled = value);
   }
 
   Future<void> _changePin() async {

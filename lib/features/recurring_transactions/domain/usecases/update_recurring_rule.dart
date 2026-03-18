@@ -29,9 +29,8 @@ class UpdateRecurringRule implements UseCase<void, RecurringRule> {
 
     return oldRuleOrFailure.fold((failure) => Left(failure), (oldRule) async {
       final logs = _createAuditLogs(oldRule, newRule);
-      for (var log in logs) {
-        await addAuditLog(log);
-      }
+      final logFutures = logs.map((log) => addAuditLog(log));
+      await Future.wait(logFutures);
       return repository.updateRecurringRule(newRule);
     });
   }
