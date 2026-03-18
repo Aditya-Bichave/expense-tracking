@@ -4,6 +4,8 @@ import 'package:expense_tracker/features/group_expenses/domain/entities/group_ex
 
 abstract class GroupExpensesRepository {
   Future<Either<Failure, GroupExpense>> addExpense(GroupExpense expense);
+  Future<Either<Failure, GroupExpense>> updateExpense(GroupExpense expense);
+  Future<Either<Failure, void>> deleteExpense(String expenseId);
   Future<Either<Failure, List<GroupExpense>>> getExpenses(String groupId);
   Future<Either<Failure, void>> syncExpenses(String groupId);
 }

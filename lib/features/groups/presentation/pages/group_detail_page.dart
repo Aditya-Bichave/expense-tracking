@@ -5,6 +5,8 @@ import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_event.dart';
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_state.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/pages/add_group_expense_page.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
@@ -119,7 +121,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                               value: context.read<GroupExpensesBloc>(),
                               child: AddGroupExpensePage(
                                 groupId: widget.groupId,
-                                groupCurrency: group?.currency ?? 'USD',
+                                currency: group?.currency ?? 'USD',
                               ),
                             ),
                           ),
@@ -254,9 +256,13 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                           ),
                           onTap: canEditExpenses
                               ? () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Edit expense coming soon'),
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => AddGroupExpensePage(
+                                        groupId: group?.id ?? "",
+                                        currency: group?.currency ?? "USD",
+                                        initialExpense: expense,
+                                      ),
                                     ),
                                   );
                                 }

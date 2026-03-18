@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class GroupExpensesRemoteDataSource {
   Future<GroupExpenseModel> createExpense(GroupExpenseModel expense);
+  Future<GroupExpenseModel> updateExpense(GroupExpenseModel expense);
+  Future<void> deleteExpense(String expenseId);
   Future<List<GroupExpenseModel>> getExpenses(String groupId);
 }
 
@@ -48,6 +50,55 @@ class GroupExpensesRemoteDataSourceImpl
     }
 
     return expense;
+  }
+
+  @override
+  Future<GroupExpenseModel> updateExpense(GroupExpenseModel expense) async {
+    final expenseData = expense.toJson();
+    expenseData.remove('payers');
+    expenseData.remove('splits');
+    expenseData.remove('created_at'); // don't update created_at
+    expenseData['updated_at'] = DateTime.now().toUtc().toIso8601String();
+
+    await _client.from('expenses').update(expenseData).eq('id', expense.id);
+
+    // Recreate payers
+    await _client.from('expense_payers').delete().eq('expense_id', expense.id);
+    if (expense.payers.isNotEmpty) {
+      final payersData = expense.payers
+          .map(
+            (p) => {
+              'expense_id': expense.id,
+              'payer_user_id': p.userId,
+              'amount': p.amount,
+            },
+          )
+          .toList();
+      await _client.from('expense_payers').insert(payersData);
+    }
+
+    // Recreate splits
+    await _client.from('expense_splits').delete().eq('expense_id', expense.id);
+    if (expense.splits.isNotEmpty) {
+      final splitsData = expense.splits
+          .map(
+            (s) => {
+              'expense_id': expense.id,
+              'user_id': s.userId,
+              'amount': s.amount,
+              'split_type': s.splitTypeValue,
+            },
+          )
+          .toList();
+      await _client.from('expense_splits').insert(splitsData);
+    }
+
+    return expense;
+  }
+
+  @override
+  Future<void> deleteExpense(String expenseId) async {
+    await _client.from('expenses').delete().eq('id', expenseId);
   }
 
   @override
