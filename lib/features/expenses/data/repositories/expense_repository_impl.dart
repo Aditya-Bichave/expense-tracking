@@ -12,16 +12,26 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:collection/collection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/features/expenses/domain/utils/split_engine.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/sync_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseLocalDataSource localDataSource;
   final CategoryRepository categoryRepository;
   final SupabaseClient supabaseClient;
+  final OutboxRepository outboxRepository;
+  final SyncService syncService;
+  final Connectivity connectivity;
 
   ExpenseRepositoryImpl({
     required this.localDataSource,
     required this.categoryRepository,
     required this.supabaseClient,
+    required this.outboxRepository,
+    required this.syncService,
+    required this.connectivity,
   });
 
   Future<Either<Failure, Expense>> _hydrateSingleModel(
@@ -322,20 +332,34 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       final model = ExpenseModel.fromEntity(expense);
       final payload = model.toRpcJson();
 
-      // 3. Call RPC
-      log.info("[ExpenseRepo] Calling create_expense_transaction RPC...");
-      final String expenseId = await supabaseClient.rpc(
-        'create_expense_transaction',
-        params: payload,
+      // 3. Create Outbox Item
+      log.info("[ExpenseRepo] Queuing create_expense_transaction mutation...");
+
+      final String expenseId = expense.id;
+      final outboxItem = SyncMutationModel(
+        table: 'expenses',
+        id: expenseId,
+        payload: payload,
+        operation: OpType.create,
+        createdAt: DateTime.now(),
       );
 
-      log.info("[ExpenseRepo] RPC success. New ID: $expenseId");
+      await outboxRepository.add(outboxItem);
 
-      // 4. Return updated expense
+      // 4. Optionally process sync if online
+      final connectivityResult = await connectivity.checkConnectivity();
+      if (connectivityResult.contains(ConnectivityResult.mobile) ||
+          connectivityResult.contains(ConnectivityResult.wifi)) {
+        syncService.processOutbox(); // don't await, let it run in background
+      }
+
+      log.info("[ExpenseRepo] Mutation queued. Assumed ID: $expenseId");
+
+      // 5. Return updated expense (locally updated, will sync later)
       final updatedExpense = expense.copyWith(id: expenseId);
 
-      // Optionally save to local?
-      // await localDataSource.addExpense(ExpenseModel.fromEntity(updatedExpense));
+      // Actually save it locally so UI updates immediately
+      await localDataSource.addExpense(ExpenseModel.fromEntity(updatedExpense));
 
       return Right(updatedExpense);
     } on PostgrestException catch (e) {

@@ -192,11 +192,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
       return const Right(null);
     } catch (e, s) {
-      log.severe("Category Repository Error: $e\n$s");
-      invalidateCache(); // Also invalidate on error? Maybe not.
-      log.warning(
-        "[CategoryRepo] Error during addCustomCategory: ${e.toString()}",
-      );
+      invalidateCache();
+      log.severe("[CategoryRepo] Error during addCustomCategory: $e\n$s");
       return Left(CacheFailure("Failed to add category: ${e.toString()}"));
     }
   }
@@ -221,11 +218,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
       return const Right(null);
     } catch (e, s) {
-      log.severe("Category Repository Error: $e\n$s");
-      invalidateCache(); // Invalidate on error?
-      log.warning(
-        "[CategoryRepo] Error during updateCategory: ${e.toString()}",
-      );
+      invalidateCache();
+      log.severe("[CategoryRepo] Error during updateCategory: $e\n$s");
       return Left(CacheFailure("Failed to update category: ${e.toString()}"));
     }
   }
@@ -247,11 +241,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
       return const Right(null);
     } catch (e, s) {
-      log.severe("Category Repository Error: $e\n$s");
-      invalidateCache(); // Invalidate on error?
-      log.warning(
-        "[CategoryRepo] Error during deleteCustomCategory: ${e.toString()}",
-      );
+      invalidateCache();
+      log.severe("[CategoryRepo] Error during deleteCustomCategory: $e\n$s");
       return Left(CacheFailure("Failed to delete category: ${e.toString()}"));
     }
   }

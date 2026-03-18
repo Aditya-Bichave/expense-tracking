@@ -62,7 +62,7 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
                 if (result.isLeft()) {
                   return result.fold(
                     (failure) => Left(failure),
-                    (_) => const Right(null),
+                    (_) => throw Exception("Unreachable"),
                   );
                 }
                 currentRule = result.getOrElse(() => currentRule);
@@ -76,7 +76,7 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
               if (result.isLeft()) {
                 return result.fold(
                   (failure) => Left(failure),
-                  (_) => const Right(null),
+                  (_) => throw Exception("Unreachable"),
                 );
               }
             }

@@ -73,7 +73,11 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
   void _handleBudgetStateChange(BudgetListState state) {
     if (!context.mounted || _isLoading) return;
 
-    if (state.status == BudgetListStatus.success) {
+    final shouldReload = state.budgetsWithStatus.any(
+      (bws) => bws.budget.id == widget.budgetId,
+    );
+
+    if (shouldReload && state.status == BudgetListStatus.success) {
       log.fine(
         "[BudgetDetail] Relevant Bloc update detected, reloading detail data.",
       );

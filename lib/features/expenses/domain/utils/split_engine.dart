@@ -30,7 +30,7 @@ class SplitEngine {
 
     // Detect strategy from first split
     final type = splits.first.shareType;
-    if (splits.where((s) => s.shareType != type).isNotEmpty) {
+    if (splits.any((s) => s.shareType != type)) {
       throw ValidationException('Mixed split types are not supported');
     }
 

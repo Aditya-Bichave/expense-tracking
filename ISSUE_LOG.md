@@ -1,6 +1,7 @@
 # Issue Log
 
 ## Issue 1: `mounted` check bypass in async operations
+
 **Category**: Runtime errors
 **Secondary Category**: UI / UX behavior issues
 **Severity**: High
@@ -12,6 +13,7 @@
 **Status**: Fixed
 
 ## Issue 2: Swallowed exceptions without StackTrace in Repositories
+
 **Category**: Error Handling
 **Secondary Category**: Maintainability
 **Severity**: Medium
@@ -23,6 +25,7 @@
 **Status**: Fixed
 
 ## Issue 3: Unhandled Futures in `.then()` chains
+
 **Category**: Concurrency / race condition issues
 **Secondary Category**: Unawaited async calls
 **Severity**: Medium
@@ -34,6 +37,7 @@
 **Status**: Fixed
 
 ## Issue 4: N+1 sequential awaits in loops
+
 **Category**: Performance issues
 **Secondary Category**: Concurrency
 **Severity**: Medium
@@ -45,6 +49,7 @@
 **Status**: Fixed
 
 ## Issue 5: O(N*M) lookup inside `where` closures
+
 **Category**: Performance issues
 **Secondary Category**: UI / UX behavior issues
 **Severity**: Medium

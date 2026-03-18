@@ -19,8 +19,9 @@ class AuthRepositoryImpl implements AuthRepository {
       await _remoteDataSource.signInWithOtp(phone: phone);
       return const Right(null);
     } catch (e, s) {
-      log.severe("Auth Repository Error: $e\n$s");
-      return Left(ServerFailure(e.toString()));
+      log.severe("AuthRepositoryImpl.signInWithOtp failed: ${e.runtimeType}");
+      log.fine("Detailed stack trace for signInWithOtp: $e\n$s");
+      return const Left(ServerFailure("Authentication failed"));
     }
   }
 
@@ -30,8 +31,11 @@ class AuthRepositoryImpl implements AuthRepository {
       await _remoteDataSource.signInWithMagicLink(email: email);
       return const Right(null);
     } catch (e, s) {
-      log.severe("Auth Repository Error: $e\n$s");
-      return Left(ServerFailure(e.toString()));
+      log.severe(
+        "AuthRepositoryImpl.signInWithMagicLink failed: ${e.runtimeType}",
+      );
+      log.fine("Detailed stack trace for signInWithMagicLink: $e\n$s");
+      return const Left(ServerFailure("Authentication failed"));
     }
   }
 
@@ -41,8 +45,11 @@ class AuthRepositoryImpl implements AuthRepository {
       final response = await _remoteDataSource.signInAnonymously();
       return Right(response);
     } catch (e, s) {
-      log.severe("Auth Repository Error: $e\n$s");
-      return Left(ServerFailure(e.toString()));
+      log.severe(
+        "AuthRepositoryImpl.signInAnonymously failed: ${e.runtimeType}",
+      );
+      log.fine("Detailed stack trace for signInAnonymously: $e\n$s");
+      return const Left(ServerFailure("Authentication failed"));
     }
   }
 
@@ -58,8 +65,9 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Right(response);
     } catch (e, s) {
-      log.severe("Auth Repository Error: $e\n$s");
-      return Left(ServerFailure(e.toString()));
+      log.severe("AuthRepositoryImpl.verifyOtp failed: ${e.runtimeType}");
+      log.fine("Detailed stack trace for verifyOtp: $e\n$s");
+      return const Left(ServerFailure("Authentication failed"));
     }
   }
 
@@ -85,8 +93,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return const Right(null);
     } catch (e, s) {
-      log.severe("Auth Repository Error: $e\n$s");
-      return Left(ServerFailure(e.toString()));
+      log.severe("AuthRepositoryImpl.signOut failed: ${e.runtimeType}");
+      log.fine("Detailed stack trace for signOut: $e\n$s");
+      return const Left(ServerFailure("Authentication failed"));
     }
   }
 
@@ -95,8 +104,9 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       return Right(_remoteDataSource.getCurrentUser());
     } catch (e, s) {
-      log.severe("Auth Repository Error: $e\n$s");
-      return Left(CacheFailure(e.toString()));
+      log.severe("AuthRepositoryImpl.getCurrentUser failed: ${e.runtimeType}");
+      log.fine("Detailed stack trace for getCurrentUser: $e\n$s");
+      return const Left(CacheFailure("Authentication failed"));
     }
   }
 

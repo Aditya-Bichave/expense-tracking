@@ -6,6 +6,9 @@ import 'package:expense_tracker/features/expenses/data/repositories/expense_repo
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/sync_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockExpenseLocalDataSource extends Mock
@@ -14,6 +17,9 @@ class MockExpenseLocalDataSource extends Mock
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+class MockOutboxRepository extends Mock implements OutboxRepository {}
+class MockSyncService extends Mock implements SyncService {}
+class MockConnectivity extends Mock implements Connectivity {}
 
 void main() {
   late MockExpenseLocalDataSource mockDataSource;
@@ -25,10 +31,17 @@ void main() {
     mockDataSource = MockExpenseLocalDataSource();
     mockCategoryRepository = MockCategoryRepository();
     mockSupabaseClient = MockSupabaseClient();
+    final mockOutboxRepository = MockOutboxRepository();
+    final mockSyncService = MockSyncService();
+    final mockConnectivity = MockConnectivity();
+
     repository = ExpenseRepositoryImpl(
       localDataSource: mockDataSource,
       categoryRepository: mockCategoryRepository,
       supabaseClient: mockSupabaseClient,
+      outboxRepository: mockOutboxRepository,
+      syncService: mockSyncService,
+      connectivity: mockConnectivity,
     );
   });
 

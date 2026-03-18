@@ -23,7 +23,10 @@ class ExpensesDependencies {
       () => ExpenseRepositoryImpl(
         localDataSource: sl(),
         categoryRepository: sl(),
-        supabaseClient: sl<SupabaseClient>(), // Inject SupabaseClient
+        supabaseClient: sl<SupabaseClient>(),
+        outboxRepository: sl(),
+        syncService: sl(),
+        connectivity: sl(),
       ),
     );
 

@@ -91,22 +91,26 @@ class _AddEditTransactionPageState extends State<AddEditTransactionPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
       AppDialogs.showConfirmation(
-        context,
-        title: "Suggestion",
-        content: "Did you mean '${suggestedCategory.name}'?",
-        confirmText: "Yes, use it",
-        cancelText: "No, pick myself",
-        barrierDismissible: false,
-      ).then((confirmed) {
-        if (!context.mounted) return;
-        if (confirmed == true) {
-          log.info("[AddEditTxnPage] Suggestion accepted.");
-          _bloc.add(AcceptCategorySuggestion(suggestedCategory));
-        } else {
-          log.info("[AddEditTxnPage] Suggestion rejected.");
-          _bloc.add(const RejectCategorySuggestion());
-        }
-      });
+            context,
+            title: "Suggestion",
+            content: "Did you mean '${suggestedCategory.name}'?",
+            confirmText: "Yes, use it",
+            cancelText: "No, pick myself",
+            barrierDismissible: false,
+          )
+          .then((confirmed) {
+            if (!context.mounted) return;
+            if (confirmed == true) {
+              log.info("[AddEditTxnPage] Suggestion accepted.");
+              _bloc.add(AcceptCategorySuggestion(suggestedCategory));
+            } else {
+              log.info("[AddEditTxnPage] Suggestion rejected.");
+              _bloc.add(const RejectCategorySuggestion());
+            }
+          })
+          .catchError((e, s) {
+            log.severe("[AddEditTxnPage] Suggestion dialog failed: $e\n$s");
+          });
     });
   }
 

@@ -79,7 +79,7 @@ class _GoalDetailPageState extends State<GoalDetailPage> {
 
   // In _GoalDetailPageState
   void _handleBlocStateChange(GoalListState state) {
-    if (context.mounted && _isLoadingGoal) {
+    if (context.mounted && !_isLoadingGoal) {
       // Find the updated goal directly from the new state
       final updatedGoal = state.goals.firstWhereOrNull(
         (g) => g.id == widget.goalId,
