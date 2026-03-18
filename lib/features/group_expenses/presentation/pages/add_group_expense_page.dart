@@ -101,7 +101,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
       final totalPayer = _payerAmounts.values.fold(0.0, (a, b) => a + b);
       if ((totalPayer - amount).abs() > 0.01) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payer amounts do not equal total amount')),
+          const SnackBar(
+            content: Text('Payer amounts do not equal total amount'),
+          ),
         );
         return;
       }
@@ -116,7 +118,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
       final totalSplit = _splitAmounts.values.fold(0.0, (a, b) => a + b);
       if ((totalSplit - amount).abs() > 0.01) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Split amounts do not equal total amount')),
+          const SnackBar(
+            content: Text('Split amounts do not equal total amount'),
+          ),
         );
         return;
       }
@@ -133,12 +137,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
       createdAt: widget.initialExpense?.createdAt ?? DateTime.now(),
       updatedAt: DateTime.now(),
       payers: _payerAmounts.entries
-          .map(
-            (e) => ExpensePayer(
-              userId: e.key,
-              amount: e.value,
-            ),
-          )
+          .map((e) => ExpensePayer(userId: e.key, amount: e.value))
           .toList(),
       splits: _splitAmounts.entries
           .map(
@@ -152,7 +151,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     );
 
     if (widget.initialExpense != null) {
-      context.read<GroupExpensesBloc>().add(UpdateGroupExpenseRequested(expense));
+      context.read<GroupExpensesBloc>().add(
+        UpdateGroupExpenseRequested(expense),
+      );
     } else {
       context.read<GroupExpensesBloc>().add(AddGroupExpenseRequested(expense));
     }
@@ -162,7 +163,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
 
   void _deleteExpense() {
     if (widget.initialExpense != null) {
-      context.read<GroupExpensesBloc>().add(DeleteGroupExpenseRequested(widget.initialExpense!.id));
+      context.read<GroupExpensesBloc>().add(
+        DeleteGroupExpenseRequested(widget.initialExpense!.id),
+      );
       Navigator.of(context).pop();
     }
   }
@@ -234,7 +237,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
               kit.spacing.gapXl,
               AppButton(
                 onPressed: _submit,
-                label: widget.initialExpense != null ? 'Save Changes' : 'Save Expense',
+                label: widget.initialExpense != null
+                    ? 'Save Changes'
+                    : 'Save Expense',
                 isFullWidth: true,
               ),
             ],
@@ -248,8 +253,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     final membersState = context.watch<GroupMembersBloc>().state;
     final members = membersState.members;
     final authState = context.read<AuthBloc>().state;
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : null;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
 
     if (members.isEmpty) {
       return const Text('Loading members...');
@@ -296,8 +302,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     final membersState = context.watch<GroupMembersBloc>().state;
     final members = membersState.members;
     final authState = context.read<AuthBloc>().state;
-    final currentUserId =
-        authState is AuthAuthenticated ? authState.user.id : null;
+    final currentUserId = authState is AuthAuthenticated
+        ? authState.user.id
+        : null;
 
     return Column(
       children: members.map((member) {

@@ -68,14 +68,10 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
 
     result.fold(
       (failure) => emit(
-        GroupExpensesLoaded(
-          currentState.expenses,
-          syncError: failure.message,
-        ),
+        GroupExpensesLoaded(currentState.expenses, syncError: failure.message),
       ),
-      (expense) => emit(
-        GroupExpensesLoaded([expense, ...currentState.expenses]),
-      ),
+      (expense) =>
+          emit(GroupExpensesLoaded([expense, ...currentState.expenses])),
     );
   }
 
@@ -92,10 +88,7 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
 
     result.fold(
       (failure) => emit(
-        GroupExpensesLoaded(
-          currentState.expenses,
-          syncError: failure.message,
-        ),
+        GroupExpensesLoaded(currentState.expenses, syncError: failure.message),
       ),
       (updatedExpense) {
         final newExpenses = currentState.expenses.map((e) {
@@ -119,10 +112,7 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
 
     result.fold(
       (failure) => emit(
-        GroupExpensesLoaded(
-          currentState.expenses,
-          syncError: failure.message,
-        ),
+        GroupExpensesLoaded(currentState.expenses, syncError: failure.message),
       ),
       (_) {
         final newExpenses = currentState.expenses
