@@ -210,15 +210,19 @@ class _GroupDetailPageState extends State<GroupDetailPage>
 
         double netBalance = 0;
         if (currentUser != null) {
+          final currentUserId = currentUser.id;
           for (final expense in state.expenses) {
-            if (expense.createdBy == currentUser.id) {
+            if (expense.createdBy == currentUserId) {
               netBalance += expense.amount;
             }
-            final userSplit = expense.splits.firstWhereOrNull(
-              (split) => split.userId == currentUser.id,
-            );
-            if (userSplit != null) {
-              netBalance -= userSplit.amount;
+            final splits = expense.splits;
+            final splitsLength = splits.length;
+            for (var i = 0; i < splitsLength; i++) {
+              final split = splits[i];
+              if (split.userId == currentUserId) {
+                netBalance -= split.amount;
+                break;
+              }
             }
           }
         }
