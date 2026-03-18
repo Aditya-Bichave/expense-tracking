@@ -1,0 +1,23 @@
+--- lib/features/budgets/presentation/widgets/budget_card.dart
++++ lib/features/budgets/presentation/widgets/budget_card.dart
+@@ -34,14 +34,14 @@
+     List<Widget> iconWidgets = [];
+
+     if (categoryState.status == CategoryManagementStatus.loaded) {
+-      final allCategories = [
+-        ...categoryState.allExpenseCategories,
+-        ...categoryState
+-            .allIncomeCategories, // Include income just in case for lookup, though budget uses expense
+-      ];
++      final allCategoriesMap = {
++        for (final c in categoryState.allExpenseCategories) c.id: c,
++        // Include income just in case for lookup, though budget uses expense
++        for (final c in categoryState.allIncomeCategories) c.id: c,
++      };
+       int count = 0;
+       for (String id in budget.categoryIds!) {
+         if (count >= 3) break; // Limit to 3 icons
+-        final category = allCategories.firstWhereOrNull((c) => c.id == id);
++        final category = allCategoriesMap[id];
+         // Use the uncategorized helper method with the correct type
+         if (category != null && category.id != Category.uncategorized.id) {
