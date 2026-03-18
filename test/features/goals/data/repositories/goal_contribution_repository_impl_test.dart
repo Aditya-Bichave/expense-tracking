@@ -61,9 +61,14 @@ void main() {
 
   group('addContribution', () {
     test('should save contribution and update goal cache', () async {
-      when(() => mockContributionDataSource.saveContribution(any())).thenAnswer((_) async {});
-      when(() => mockContributionDataSource.getContributionsForGoal('g1'))
-          .thenAnswer((_) async => [GoalContributionModel.fromEntity(tContributionValid)]);
+      when(
+        () => mockContributionDataSource.saveContribution(any()),
+      ).thenAnswer((_) async {});
+      when(
+        () => mockContributionDataSource.getContributionsForGoal('g1'),
+      ).thenAnswer(
+        (_) async => [GoalContributionModel.fromEntity(tContributionValid)],
+      );
       when(() => mockGoalDataSource.getGoalById('g1')).thenAnswer(
         (_) async => GoalModel(
           id: 'g1',
@@ -79,7 +84,9 @@ void main() {
       final result = await repository.addContribution(tContributionValid);
 
       expect(result.isRight(), true);
-      verify(() => mockContributionDataSource.saveContribution(any())).called(1);
+      verify(
+        () => mockContributionDataSource.saveContribution(any()),
+      ).called(1);
       verify(() => mockGoalDataSource.saveGoal(any())).called(1);
     });
   });
@@ -87,52 +94,158 @@ void main() {
   group('auditGoalTotals', () {
     test('should fetch all goals and update cache concurrently', () async {
       final goals = [
-        GoalModel(id: 'g1', name: 'G1', targetAmount: 100, statusIndex: 0, totalSavedCache: 0, createdAt: DateTime.now()),
-        GoalModel(id: 'g2', name: 'G2', targetAmount: 200, statusIndex: 0, totalSavedCache: 0, createdAt: DateTime.now()),
+        GoalModel(
+          id: 'g1',
+          name: 'G1',
+          targetAmount: 100,
+          statusIndex: 0,
+          totalSavedCache: 0,
+          createdAt: DateTime.now(),
+        ),
+        GoalModel(
+          id: 'g2',
+          name: 'G2',
+          targetAmount: 200,
+          statusIndex: 0,
+          totalSavedCache: 0,
+          createdAt: DateTime.now(),
+        ),
       ];
 
       when(() => mockGoalDataSource.getGoals()).thenAnswer((_) async => goals);
 
-      when(() => mockContributionDataSource.getContributionsForGoal('g1'))
-          .thenAnswer((_) async => [GoalContributionModel(id: 'c1', goalId: 'g1', amount: 50, date: DateTime.now(), createdAt: DateTime.now())]);
+      when(
+        () => mockContributionDataSource.getContributionsForGoal('g1'),
+      ).thenAnswer(
+        (_) async => [
+          GoalContributionModel(
+            id: 'c1',
+            goalId: 'g1',
+            amount: 50,
+            date: DateTime.now(),
+            createdAt: DateTime.now(),
+          ),
+        ],
+      );
 
-      when(() => mockContributionDataSource.getContributionsForGoal('g2'))
-          .thenAnswer((_) async => [GoalContributionModel(id: 'c2', goalId: 'g2', amount: 150, date: DateTime.now(), createdAt: DateTime.now())]);
+      when(
+        () => mockContributionDataSource.getContributionsForGoal('g2'),
+      ).thenAnswer(
+        (_) async => [
+          GoalContributionModel(
+            id: 'c2',
+            goalId: 'g2',
+            amount: 150,
+            date: DateTime.now(),
+            createdAt: DateTime.now(),
+          ),
+        ],
+      );
 
       when(() => mockGoalDataSource.getGoalById(any())).thenAnswer((inv) async {
         final id = inv.positionalArguments[0] as String;
         return goals.firstWhere((g) => g.id == id);
       });
 
-      when(() => mockGoalDataSource.saveGoal(any())).thenAnswer((_) async {});
+      final capturedGoals = <GoalModel>[];
+      when(() => mockGoalDataSource.saveGoal(any())).thenAnswer((inv) async {
+        capturedGoals.add(inv.positionalArguments[0] as GoalModel);
+      });
 
       final result = await repository.auditGoalTotals();
 
       expect(result.isRight(), true);
       verify(() => mockGoalDataSource.getGoals()).called(1);
-      verify(() => mockContributionDataSource.getContributionsForGoal('g1')).called(1);
-      verify(() => mockContributionDataSource.getContributionsForGoal('g2')).called(1);
+      verify(
+        () => mockContributionDataSource.getContributionsForGoal('g1'),
+      ).called(1);
+      verify(
+        () => mockContributionDataSource.getContributionsForGoal('g2'),
+      ).called(1);
       verify(() => mockGoalDataSource.saveGoal(any())).called(2);
+
+      // Assert totalSavedCache values
+      final Map<String, double> expectedTotals = {'g1': 50.0, 'g2': 150.0};
+
+      for (final savedGoal in capturedGoals) {
+        expect(savedGoal.totalSavedCache, expectedTotals[savedGoal.id]);
+      }
     });
 
-    test('should log warning when goal cache update fails but continue auditing', () async {
-      final goals = [
-        GoalModel(id: 'g1', name: 'G1', targetAmount: 100, statusIndex: 0, totalSavedCache: 0, createdAt: DateTime.now()),
-      ];
+    test(
+      'should log warning when goal cache update fails but continue auditing',
+      () async {
+        final goals = [
+          GoalModel(
+            id: 'g1',
+            name: 'G1',
+            targetAmount: 100,
+            statusIndex: 0,
+            totalSavedCache: 0,
+            createdAt: DateTime.now(),
+          ),
+          GoalModel(
+            id: 'g2',
+            name: 'G2',
+            targetAmount: 200,
+            statusIndex: 0,
+            totalSavedCache: 0,
+            createdAt: DateTime.now(),
+          ),
+        ];
 
-      when(() => mockGoalDataSource.getGoals()).thenAnswer((_) async => goals);
+        when(
+          () => mockGoalDataSource.getGoals(),
+        ).thenAnswer((_) async => goals);
 
-      when(() => mockContributionDataSource.getContributionsForGoal('g1'))
-          .thenThrow(Exception('Simulated error'));
+        // Setup g1 to fail
+        when(
+          () => mockContributionDataSource.getContributionsForGoal('g1'),
+        ).thenThrow(Exception('Simulated error'));
 
-      final result = await repository.auditGoalTotals();
+        // Setup g2 to succeed
+        when(
+          () => mockContributionDataSource.getContributionsForGoal('g2'),
+        ).thenAnswer(
+          (_) async => [
+            GoalContributionModel(
+              id: 'c2',
+              goalId: 'g2',
+              amount: 150,
+              date: DateTime.now(),
+              createdAt: DateTime.now(),
+            ),
+          ],
+        );
 
-      expect(result.isRight(), true);
-      verify(() => mockGoalDataSource.getGoals()).called(1);
-    });
+        when(() => mockGoalDataSource.getGoalById(any())).thenAnswer((
+          inv,
+        ) async {
+          final id = inv.positionalArguments[0] as String;
+          return goals.firstWhere((g) => g.id == id);
+        });
+
+        when(() => mockGoalDataSource.saveGoal(any())).thenAnswer((_) async {});
+
+        final result = await repository.auditGoalTotals();
+
+        expect(result.isRight(), true);
+        verify(() => mockGoalDataSource.getGoals()).called(1);
+
+        // Verify g2 was still processed and saved successfully despite g1 failing
+        verify(
+          () => mockContributionDataSource.getContributionsForGoal('g2'),
+        ).called(1);
+        verify(
+          () => mockGoalDataSource.saveGoal(any()),
+        ).called(1); // Only g2 is saved
+      },
+    );
 
     test('should return CacheFailure when getting goals throws', () async {
-      when(() => mockGoalDataSource.getGoals()).thenThrow(Exception('Failed to get goals'));
+      when(
+        () => mockGoalDataSource.getGoals(),
+      ).thenThrow(Exception('Failed to get goals'));
 
       final result = await repository.auditGoalTotals();
 

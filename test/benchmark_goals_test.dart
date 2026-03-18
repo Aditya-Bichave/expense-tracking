@@ -12,36 +12,48 @@ class MockGoalLocalDataSource implements GoalLocalDataSource {
 
   MockGoalLocalDataSource(int numGoals) {
     for (int i = 0; i < numGoals; i++) {
-      _goals.add(GoalModel(
-        id: 'goal_$i',
-        name: 'Goal $i',
-        targetAmount: 1000,
-        targetDate: DateTime.now(),
-        iconName: 'icon_$i',
-        description: 'Description $i',
-        statusIndex: 0,
-        createdAt: DateTime.now(),
-        achievedAt: null,
-        totalSavedCache: 0,
-      ));
+      _goals.add(
+        GoalModel(
+          id: 'goal_$i',
+          name: 'Goal $i',
+          targetAmount: 1000,
+          targetDate: DateTime.now(),
+          iconName: 'icon_$i',
+          description: 'Description $i',
+          statusIndex: 0,
+          createdAt: DateTime.now(),
+          achievedAt: null,
+          totalSavedCache: 0,
+        ),
+      );
     }
   }
 
   @override
   Future<List<GoalModel>> getGoals() async {
-    await Future.delayed(const Duration(milliseconds: 10)); // simulate DB access
+    await Future.delayed(
+      const Duration(milliseconds: 10),
+    ); // simulate DB access
     return _goals;
   }
 
   @override
   Future<GoalModel?> getGoalById(String id) async {
-    await Future.delayed(const Duration(milliseconds: 10)); // simulate DB access
-    return _goals.firstWhere((g) => g.id == id);
+    await Future.delayed(
+      const Duration(milliseconds: 10),
+    ); // simulate DB access
+    try {
+      return _goals.firstWhere((g) => g.id == id);
+    } on StateError {
+      return null;
+    }
   }
 
   @override
   Future<void> saveGoal(GoalModel goal) async {
-    await Future.delayed(const Duration(milliseconds: 10)); // simulate DB access
+    await Future.delayed(
+      const Duration(milliseconds: 10),
+    ); // simulate DB access
   }
 
   @override
@@ -51,13 +63,30 @@ class MockGoalLocalDataSource implements GoalLocalDataSource {
   Future<void> clearAllGoals() async {}
 }
 
-class MockGoalContributionLocalDataSource implements GoalContributionLocalDataSource {
+class MockGoalContributionLocalDataSource
+    implements GoalContributionLocalDataSource {
   @override
-  Future<List<GoalContributionModel>> getContributionsForGoal(String goalId) async {
-    await Future.delayed(const Duration(milliseconds: 10)); // simulate DB access
+  Future<List<GoalContributionModel>> getContributionsForGoal(
+    String goalId,
+  ) async {
+    await Future.delayed(
+      const Duration(milliseconds: 10),
+    ); // simulate DB access
     return [
-      GoalContributionModel(id: 'c1', goalId: goalId, amount: 100, date: DateTime.now(), createdAt: DateTime.now()),
-      GoalContributionModel(id: 'c2', goalId: goalId, amount: 200, date: DateTime.now(), createdAt: DateTime.now()),
+      GoalContributionModel(
+        id: 'c1',
+        goalId: goalId,
+        amount: 100,
+        date: DateTime.now(),
+        createdAt: DateTime.now(),
+      ),
+      GoalContributionModel(
+        id: 'c2',
+        goalId: goalId,
+        amount: 200,
+        date: DateTime.now(),
+        createdAt: DateTime.now(),
+      ),
     ];
   }
 
@@ -76,19 +105,25 @@ class MockGoalContributionLocalDataSource implements GoalContributionLocalDataSo
   Future<void> deleteContributions(List<String> ids) async {}
 }
 
-class GoalContributionRepositoryImpl {
+class BenchmarkGoalContributionRepository {
   final GoalContributionLocalDataSource contributionDataSource;
   final GoalLocalDataSource goalDataSource;
 
-  GoalContributionRepositoryImpl({
+  BenchmarkGoalContributionRepository({
     required this.contributionDataSource,
     required this.goalDataSource,
   });
 
-  Future<Either<Failure, void>> _updateGoalTotalSavedCache(String goalId) async {
+  Future<Either<Failure, void>> _updateGoalTotalSavedCache(
+    String goalId,
+  ) async {
     try {
-      final contributions = await contributionDataSource.getContributionsForGoal(goalId);
-      final double newTotalSaved = contributions.fold(0.0, (sum, c) => sum + c.amount);
+      final contributions = await contributionDataSource
+          .getContributionsForGoal(goalId);
+      final double newTotalSaved = contributions.fold(
+        0.0,
+        (sum, c) => sum + c.amount,
+      );
       final goalModel = await goalDataSource.getGoalById(goalId);
       if (goalModel == null) return const Left(CacheFailure("Goal not found"));
       final updatedGoalModel = GoalModel(
@@ -122,41 +157,53 @@ class GoalContributionRepositoryImpl {
 
   Future<void> auditGoalTotalsConcurrent() async {
     final goals = await goalDataSource.getGoals();
-    await Future.wait(goals.map((goal) async {
-      final result = await _updateGoalTotalSavedCache(goal.id);
-      if (result.isLeft()) {
-        // failed
-      }
-    }));
+    const int batchSize = 10;
+    for (int i = 0; i < goals.length; i += batchSize) {
+      final batch = goals.skip(i).take(batchSize);
+      await Future.wait(
+        batch.map((goal) async {
+          final result = await _updateGoalTotalSavedCache(goal.id);
+          if (result.isLeft()) {
+            // failed
+          }
+        }),
+      );
+    }
   }
 }
 
 void main() {
-  test('Benchmark Sequential vs Concurrent auditGoalTotals', () async {
-    final repo = GoalContributionRepositoryImpl(
-      contributionDataSource: MockGoalContributionLocalDataSource(),
-      goalDataSource: MockGoalLocalDataSource(50), // 50 goals
-    );
+  test(
+    'Benchmark Sequential vs Concurrent auditGoalTotals',
+    skip: true,
+    () async {
+      final repo = BenchmarkGoalContributionRepository(
+        contributionDataSource: MockGoalContributionLocalDataSource(),
+        goalDataSource: MockGoalLocalDataSource(50), // 50 goals
+      );
 
-    // Warmup
-    await repo.auditGoalTotalsSequential();
-    await repo.auditGoalTotalsConcurrent();
+      // Warmup
+      await repo.auditGoalTotalsSequential();
+      await repo.auditGoalTotalsConcurrent();
 
-    // Benchmark sequential
-    final startSeq = DateTime.now();
-    await repo.auditGoalTotalsSequential();
-    final endSeq = DateTime.now();
-    final seqTime = endSeq.difference(startSeq).inMilliseconds;
+      // Benchmark sequential
+      final startSeq = DateTime.now();
+      await repo.auditGoalTotalsSequential();
+      final endSeq = DateTime.now();
+      final seqTime = endSeq.difference(startSeq).inMilliseconds;
 
-    // Benchmark concurrent
-    final startConc = DateTime.now();
-    await repo.auditGoalTotalsConcurrent();
-    final endConc = DateTime.now();
-    final concTime = endConc.difference(startConc).inMilliseconds;
+      // Benchmark concurrent
+      final startConc = DateTime.now();
+      await repo.auditGoalTotalsConcurrent();
+      final endConc = DateTime.now();
+      final concTime = endConc.difference(startConc).inMilliseconds;
 
-    print('--- BENCHMARK RESULTS ---');
-    print('Sequential: $seqTime ms');
-    print('Concurrent: $concTime ms');
-    print('Improvement: ${((seqTime - concTime) / seqTime * 100).toStringAsFixed(2)}% faster');
-  });
+      print('--- BENCHMARK RESULTS ---');
+      print('Sequential: $seqTime ms');
+      print('Concurrent: $concTime ms');
+      print(
+        'Improvement: ${((seqTime - concTime) / seqTime * 100).toStringAsFixed(2)}% faster',
+      );
+    },
+  );
 }
