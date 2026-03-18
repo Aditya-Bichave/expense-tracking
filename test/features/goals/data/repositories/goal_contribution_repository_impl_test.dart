@@ -50,8 +50,8 @@ void main() {
     id: '1',
     goalId: 'g1',
     amount: 50,
-    date: DateTime.now(), // Fixed: Non-null
-    createdAt: DateTime.now(), // Fixed: Non-null
+    date: DateTime.now(),
+    createdAt: DateTime.now(),
   );
 
   final tContributionValid = tContribution.copyWith(
@@ -61,19 +61,9 @@ void main() {
 
   group('addContribution', () {
     test('should save contribution and update goal cache', () async {
-      // 1. Save Contribution success
-      when(
-        () => mockContributionDataSource.saveContribution(any()),
-      ).thenAnswer((_) async {});
-
-      // 2. _updateGoalTotalSavedCache mocks
-      // Get contributions
-      when(
-        () => mockContributionDataSource.getContributionsForGoal('g1'),
-      ).thenAnswer(
-        (_) async => [GoalContributionModel.fromEntity(tContributionValid)],
-      );
-      // Get Goal
+      when(() => mockContributionDataSource.saveContribution(any())).thenAnswer((_) async {});
+      when(() => mockContributionDataSource.getContributionsForGoal('g1'))
+          .thenAnswer((_) async => [GoalContributionModel.fromEntity(tContributionValid)]);
       when(() => mockGoalDataSource.getGoalById('g1')).thenAnswer(
         (_) async => GoalModel(
           id: 'g1',
@@ -84,18 +74,69 @@ void main() {
           createdAt: DateTime.now(),
         ),
       );
-      // Save Goal
       when(() => mockGoalDataSource.saveGoal(any())).thenAnswer((_) async {});
 
       final result = await repository.addContribution(tContributionValid);
 
       expect(result.isRight(), true);
-      verify(
-        () => mockContributionDataSource.saveContribution(any()),
-      ).called(1);
-      verify(
-        () => mockGoalDataSource.saveGoal(any()),
-      ).called(1); // Cache update
+      verify(() => mockContributionDataSource.saveContribution(any())).called(1);
+      verify(() => mockGoalDataSource.saveGoal(any())).called(1);
+    });
+  });
+
+  group('auditGoalTotals', () {
+    test('should fetch all goals and update cache concurrently', () async {
+      final goals = [
+        GoalModel(id: 'g1', name: 'G1', targetAmount: 100, statusIndex: 0, totalSavedCache: 0, createdAt: DateTime.now()),
+        GoalModel(id: 'g2', name: 'G2', targetAmount: 200, statusIndex: 0, totalSavedCache: 0, createdAt: DateTime.now()),
+      ];
+
+      when(() => mockGoalDataSource.getGoals()).thenAnswer((_) async => goals);
+
+      when(() => mockContributionDataSource.getContributionsForGoal('g1'))
+          .thenAnswer((_) async => [GoalContributionModel(id: 'c1', goalId: 'g1', amount: 50, date: DateTime.now(), createdAt: DateTime.now())]);
+
+      when(() => mockContributionDataSource.getContributionsForGoal('g2'))
+          .thenAnswer((_) async => [GoalContributionModel(id: 'c2', goalId: 'g2', amount: 150, date: DateTime.now(), createdAt: DateTime.now())]);
+
+      when(() => mockGoalDataSource.getGoalById(any())).thenAnswer((inv) async {
+        final id = inv.positionalArguments[0] as String;
+        return goals.firstWhere((g) => g.id == id);
+      });
+
+      when(() => mockGoalDataSource.saveGoal(any())).thenAnswer((_) async {});
+
+      final result = await repository.auditGoalTotals();
+
+      expect(result.isRight(), true);
+      verify(() => mockGoalDataSource.getGoals()).called(1);
+      verify(() => mockContributionDataSource.getContributionsForGoal('g1')).called(1);
+      verify(() => mockContributionDataSource.getContributionsForGoal('g2')).called(1);
+      verify(() => mockGoalDataSource.saveGoal(any())).called(2);
+    });
+
+    test('should log warning when goal cache update fails but continue auditing', () async {
+      final goals = [
+        GoalModel(id: 'g1', name: 'G1', targetAmount: 100, statusIndex: 0, totalSavedCache: 0, createdAt: DateTime.now()),
+      ];
+
+      when(() => mockGoalDataSource.getGoals()).thenAnswer((_) async => goals);
+
+      when(() => mockContributionDataSource.getContributionsForGoal('g1'))
+          .thenThrow(Exception('Simulated error'));
+
+      final result = await repository.auditGoalTotals();
+
+      expect(result.isRight(), true);
+      verify(() => mockGoalDataSource.getGoals()).called(1);
+    });
+
+    test('should return CacheFailure when getting goals throws', () async {
+      when(() => mockGoalDataSource.getGoals()).thenThrow(Exception('Failed to get goals'));
+
+      final result = await repository.auditGoalTotals();
+
+      expect(result.isLeft(), true);
     });
   });
 }
