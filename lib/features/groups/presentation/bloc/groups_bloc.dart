@@ -109,16 +109,15 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
 
     // Trigger sync in background but handle errors to prevent silent failures
     if (!E2EMode.enabled) {
-      _syncGroups()
-          .then((result) {
-            result.fold(
-              (failure) => log.warning("Group sync failed: ${failure.message}"),
-              (_) => log.info("Group sync completed successfully."),
-            );
-          })
-          .catchError((e, s) {
-            log.severe("Group sync threw exception: $e\n$s");
-          });
+      try {
+        final result = await _syncGroups();
+        result.fold(
+          (failure) => log.warning("Group sync failed: ${failure.message}"),
+          (_) => log.info("Group sync completed successfully."),
+        );
+      } catch (e, s) {
+        log.severe("Group sync threw exception: $e\n$s");
+      }
     }
 
     _groupsSubscription = _watchGroups().listen(
@@ -126,6 +125,8 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
       onError: (Object error, StackTrace stackTrace) {
         add(_GroupsStreamFailed(error.toString()));
       },
+      cancelOnError:
+          false, // Ensure subscription stays active even if watch throws
     );
   }
 

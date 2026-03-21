@@ -525,9 +525,15 @@ class _TransactionListPageState extends State<TransactionListPage> {
 
   TransactionType? _getDominantTransactionType(TransactionListState state) {
     if (state.selectedTransactionIds.isEmpty) return null;
+
+    final transactionMap = <String, TransactionEntity>{};
+    for (final txn in state.transactions) {
+      transactionMap[txn.id] = txn;
+    }
+
     TransactionType? type;
     for (final id in state.selectedTransactionIds) {
-      final txn = state.transactions.firstWhereOrNull((t) => t.id == id);
+      final txn = transactionMap[id];
       if (txn == null) {
         log.warning(
           "[TxnListPage] Selected ID $id not found in state during dominant type check.",
