@@ -1,3 +1,5 @@
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_event.dart';
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_state.dart';
 import 'package:collection/collection.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -5,8 +7,6 @@ import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
-import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_event.dart';
-import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_state.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/pages/add_group_expense_page.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
@@ -258,12 +258,18 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                               ? () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
-                                      builder: (_) => AddGroupExpensePage(
-                                        groupId: group?.id ?? "",
-                                        currency: group?.currency ?? "USD",
-                                        initialExpense: expense,
+                                      builder: (_) => BlocProvider.value(
+                                        value: context
+                                            .read<GroupExpensesBloc>(),
+                                        child: AddGroupExpensePage(
+                                          groupId: widget.groupId,
+                                          currency: group?.currency ?? 'USD',
+                                          initialExpense: expense,
+                                        ),
                                       ),
                                     ),
+
+                                    //
                                   );
                                 }
                               : null,

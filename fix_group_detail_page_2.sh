@@ -1,0 +1,2 @@
+sed -i "s|const SnackBar(|MaterialPageRoute(builder: (_) => BlocProvider.value(value: context.read<GroupExpensesBloc>(), child: AddGroupExpensePage(groupId: widget.groupId, currency: group?.currency ?? 'USD', initialExpense: expense)))|g" lib/features/groups/presentation/pages/group_detail_page.dart
+sed -i "s|content: Text('Edit expense coming soon'),||g" lib/features/groups/presentation/pages/group_detail_page.dart

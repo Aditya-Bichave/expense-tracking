@@ -133,16 +133,24 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       }
 
       final remoteExpenses = await _remoteDataSource.getExpenses(groupId);
-
       final currentLocalExpenses = _localDataSource
           .getExpenses(groupId)
           .map((e) => e.id)
           .toSet();
       final remoteExpenseIds = remoteExpenses.map((e) => e.id).toSet();
 
-      final staleIds = currentLocalExpenses.difference(remoteExpenseIds);
-      for (final id in staleIds) {
-        await _localDataSource.deleteExpense(id);
+      final outboxPendingItems = _outboxRepository.getPendingItems();
+
+      final outboxIds = outboxPendingItems.map((e) => e.id).toSet();
+
+      final staleIds = currentLocalExpenses
+          .difference(remoteExpenseIds)
+          .difference(outboxIds);
+
+      if (staleIds.isNotEmpty) {
+        for (final id in staleIds) {
+          await _localDataSource.deleteExpense(id);
+        }
       }
 
       await _localDataSource.saveExpenses(remoteExpenses);

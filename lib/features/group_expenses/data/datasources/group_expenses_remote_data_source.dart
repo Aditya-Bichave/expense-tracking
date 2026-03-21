@@ -1,5 +1,6 @@
 import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:convert';
 
 abstract class GroupExpensesRemoteDataSource {
   Future<GroupExpenseModel> createExpense(GroupExpenseModel expense);
@@ -55,43 +56,35 @@ class GroupExpensesRemoteDataSourceImpl
   @override
   Future<GroupExpenseModel> updateExpense(GroupExpenseModel expense) async {
     final expenseData = expense.toJson();
+    expenseData.remove('id');
+    expenseData.remove('created_at');
     expenseData.remove('payers');
     expenseData.remove('splits');
-    expenseData.remove('created_at'); // don't update created_at
-    expenseData['updated_at'] = DateTime.now().toUtc().toIso8601String();
 
-    await _client.from('expenses').update(expenseData).eq('id', expense.id);
+    final payersData = expense.payers
+        .map((p) => {'payer_user_id': p.userId, 'amount': p.amount})
+        .toList();
 
-    // Recreate payers
-    await _client.from('expense_payers').delete().eq('expense_id', expense.id);
-    if (expense.payers.isNotEmpty) {
-      final payersData = expense.payers
-          .map(
-            (p) => {
-              'expense_id': expense.id,
-              'payer_user_id': p.userId,
-              'amount': p.amount,
-            },
-          )
-          .toList();
-      await _client.from('expense_payers').insert(payersData);
-    }
+    final splitsData = expense.splits
+        .map(
+          (s) => {
+            'user_id': s.userId,
+            'amount': s.amount,
+            'split_type': s.splitTypeValue,
+          },
+        )
+        .toList();
 
-    // Recreate splits
-    await _client.from('expense_splits').delete().eq('expense_id', expense.id);
-    if (expense.splits.isNotEmpty) {
-      final splitsData = expense.splits
-          .map(
-            (s) => {
-              'expense_id': expense.id,
-              'user_id': s.userId,
-              'amount': s.amount,
-              'split_type': s.splitTypeValue,
-            },
-          )
-          .toList();
-      await _client.from('expense_splits').insert(splitsData);
-    }
+    // Call the RPC function to atomically update relations and expense data
+    await _client.rpc(
+      'update_expense_with_relations',
+      params: {
+        'p_expense_id': expense.id,
+        'p_expense_data': expenseData,
+        'p_payers': payersData,
+        'p_splits': splitsData,
+      },
+    );
 
     return expense;
   }
