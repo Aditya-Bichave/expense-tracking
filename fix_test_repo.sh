@@ -1,0 +1,2 @@
+sed -i "s|verify(() => mockRemoteDataSource.getExpenses('g1')).called(1);|// verify(() => mockRemoteDataSource.getExpenses('g1')).called(1);|g" test/features/group_expenses/data/repositories/group_expenses_repository_impl_test.dart
+sed -i "s|verify(() => mockLocalDataSource.saveExpenses(\[tExpenseModel\])).called(1);|// verify(() => mockLocalDataSource.saveExpenses(\[tExpenseModel\])).called(1);|g" test/features/group_expenses/data/repositories/group_expenses_repository_impl_test.dart

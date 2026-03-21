@@ -58,9 +58,7 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
   }
 
   @override
-  Future<Either<Failure, GroupExpense>> updateExpense(
-    GroupExpense expense,
-  ) async {
+  Future<Either<Failure, GroupExpense>> updateExpense(GroupExpense expense) async {
     try {
       final model = GroupExpenseModel.fromEntity(expense);
       await _localDataSource.saveExpense(model);
@@ -133,16 +131,20 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       }
 
       final remoteExpenses = await _remoteDataSource.getExpenses(groupId);
-
-      final currentLocalExpenses = _localDataSource
-          .getExpenses(groupId)
-          .map((e) => e.id)
-          .toSet();
+      final currentLocalExpenses = _localDataSource.getExpenses(groupId).map((e) => e.id).toSet();
       final remoteExpenseIds = remoteExpenses.map((e) => e.id).toSet();
 
-      final staleIds = currentLocalExpenses.difference(remoteExpenseIds);
-      for (final id in staleIds) {
-        await _localDataSource.deleteExpense(id);
+      final outboxPendingItems = await _outboxRepository.getPendingItems();
+
+      final outboxIds = outboxPendingItems.map((e) => e.id).toSet();
+
+
+      final staleIds = currentLocalExpenses.difference(remoteExpenseIds).difference(outboxIds);
+
+      if (staleIds.isNotEmpty) {
+        for (final id in staleIds) {
+          await _localDataSource.deleteExpense(id);
+        }
       }
 
       await _localDataSource.saveExpenses(remoteExpenses);

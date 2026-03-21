@@ -7,6 +7,7 @@ import 'package:expense_tracker/features/groups/domain/entities/group_member.dar
 import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_event.dart';
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_state.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_nav_bar.dart';
@@ -14,6 +15,7 @@ import 'package:expense_tracker/ui_kit/components/inputs/app_text_field.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
 
 class AddGroupExpensePage extends StatefulWidget {
   final String groupId;
@@ -35,6 +37,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
 
+  final Map<String, TextEditingController> _payerControllers = {};
+  final Map<String, TextEditingController> _splitControllers = {};
+
   final Map<String, double> _payerAmounts = {};
   final Map<String, double> _splitAmounts = {};
 
@@ -49,10 +54,12 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
 
       for (var payer in widget.initialExpense!.payers) {
         _payerAmounts[payer.userId] = payer.amount;
+        _getPayerController(payer.userId, payer.amount);
       }
 
       for (var split in widget.initialExpense!.splits) {
         _splitAmounts[split.userId] = split.amount;
+        _getSplitController(split.userId, split.amount);
         if (split.splitType.value != 'equal') {
           _isSplitEqually = false;
         }
@@ -60,10 +67,34 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     }
   }
 
+  TextEditingController _getPayerController(String userId, double? amount) {
+    if (!_payerControllers.containsKey(userId)) {
+      _payerControllers[userId] = TextEditingController(
+        text: amount?.toStringAsFixed(2) ?? '',
+      );
+    }
+    return _payerControllers[userId]!;
+  }
+
+  TextEditingController _getSplitController(String userId, double? amount) {
+    if (!_splitControllers.containsKey(userId)) {
+      _splitControllers[userId] = TextEditingController(
+        text: amount?.toStringAsFixed(2) ?? '',
+      );
+    }
+    return _splitControllers[userId]!;
+  }
+
   @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    for (var controller in _payerControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _splitControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -94,6 +125,13 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
 
     final membersState = context.read<GroupMembersBloc>().state;
     final members = membersState.members;
+
+    if (members.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No members found in the group')),
+      );
+      return;
+    }
 
     if (_payerAmounts.isEmpty) {
       _payerAmounts[currentUser.id] = amount;
@@ -157,16 +195,22 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     } else {
       context.read<GroupExpensesBloc>().add(AddGroupExpenseRequested(expense));
     }
-
-    Navigator.of(context).pop();
   }
 
-  void _deleteExpense() {
+  void _deleteExpense() async {
     if (widget.initialExpense != null) {
-      context.read<GroupExpensesBloc>().add(
-        DeleteGroupExpenseRequested(widget.initialExpense!.id),
+      final confirmed = await AppDialogs.showConfirmation(
+        context,
+        title: 'Delete Expense?',
+        content: 'Are you sure you want to delete this expense?',
+        confirmText: 'Delete',
+        confirmColor: Theme.of(context).colorScheme.error,
       );
-      Navigator.of(context).pop();
+      if (confirmed == true && mounted) {
+        context.read<GroupExpensesBloc>().add(
+          DeleteGroupExpenseRequested(widget.initialExpense!.id),
+        );
+      }
     }
   }
 
@@ -174,82 +218,100 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
   Widget build(BuildContext context) {
     final kit = context.kit;
 
-    return AppScaffold(
-      appBar: AppNavBar(
-        title: widget.initialExpense != null ? 'Edit Expense' : 'Add Expense',
-        actions: [
-          if (widget.initialExpense != null)
-            IconButton(
-              icon: Icon(Icons.delete, color: kit.colors.error),
-              onPressed: _deleteExpense,
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: kit.spacing.allMd,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppTextField(
-                controller: _titleController,
-                label: 'What was this for?',
-                hint: 'e.g., Dinner, Taxi',
+    return BlocListener<GroupExpensesBloc, GroupExpensesState>(
+      listener: (context, state) {
+        if (state is GroupExpenseOperationSucceeded) {
+          Navigator.of(context).pop();
+        } else if (state is GroupExpensesOperationFailed) {
+          AppDialogs.showErrorDialog(context, state.message);
+        }
+      },
+      child: AppScaffold(
+        appBar: AppNavBar(
+          title: widget.initialExpense != null ? 'Edit Expense' : 'Add Expense',
+          actions: [
+            if (widget.initialExpense != null)
+              IconButton(
+                icon: Icon(Icons.delete, color: kit.colors.error),
+                onPressed: _deleteExpense,
               ),
-              kit.spacing.gapLg,
-              AppTextField(
-                controller: _amountController,
-                label: 'Amount (${widget.currency})',
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-              ),
-              kit.spacing.gapXl,
-              Text('Paid by', style: kit.typography.title),
-              kit.spacing.gapMd,
-              _buildPayersList(),
-              kit.spacing.gapXl,
-              Text('Split', style: kit.typography.title),
-              kit.spacing.gapMd,
-              Row(
-                children: [
-                  Expanded(
-                    child: RadioListTile<bool>(
-                      title: Text('Equally', style: kit.typography.body),
-                      value: true,
-                      groupValue: _isSplitEqually,
-                      onChanged: (val) {
-                        setState(() => _isSplitEqually = val!);
-                      },
+          ],
+        ),
+        body: SafeArea(
+          child: BlocBuilder<GroupExpensesBloc, GroupExpensesState>(
+            builder: (context, state) {
+              final isLoading = state is GroupExpensesLoading;
+
+              return SingleChildScrollView(
+                padding: kit.spacing.allMd,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppTextField(
+                      controller: _titleController,
+                      label: 'What was this for?',
+                      hint: 'e.g., Dinner, Taxi',
+                      readOnly: isLoading,
                     ),
-                  ),
-                  Expanded(
-                    child: RadioListTile<bool>(
-                      title: Text('Exact Amounts', style: kit.typography.body),
-                      value: false,
-                      groupValue: _isSplitEqually,
-                      onChanged: (val) {
-                        setState(() => _isSplitEqually = val!);
-                      },
+                    kit.spacing.gapLg,
+                    AppTextField(
+                      controller: _amountController,
+                      label: 'Amount (${widget.currency})',
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      readOnly: isLoading,
                     ),
-                  ),
-                ],
-              ),
-              if (!_isSplitEqually) _buildExactSplitsList(),
-              kit.spacing.gapXl,
-              AppButton(
-                onPressed: _submit,
-                label: widget.initialExpense != null
-                    ? 'Save Changes'
-                    : 'Save Expense',
-                isFullWidth: true,
-              ),
-            ],
+                    kit.spacing.gapXl,
+                    Text('Paid by', style: kit.typography.title),
+                    kit.spacing.gapMd,
+                    _buildPayersList(isLoading),
+                    kit.spacing.gapXl,
+                    Text('Split', style: kit.typography.title),
+                    kit.spacing.gapMd,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            title: Text('Equally', style: kit.typography.body),
+                            value: true,
+                            groupValue: _isSplitEqually,
+                            onChanged: isLoading ? null : (val) {
+                              setState(() => _isSplitEqually = val!);
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            title: Text('Exact Amounts', style: kit.typography.body),
+                            value: false,
+                            groupValue: _isSplitEqually,
+                            onChanged: isLoading ? null : (val) {
+                              setState(() => _isSplitEqually = val!);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!_isSplitEqually) _buildExactSplitsList(isLoading),
+                    kit.spacing.gapXl,
+                    AppButton(
+                      onPressed: isLoading ? null : _submit,
+                      label: widget.initialExpense != null
+                          ? 'Save Changes'
+                          : 'Save Expense',
+                      isLoading: isLoading,
+                      isFullWidth: true,
+                    ),
+                  ],
+                ),
+              );
+            }
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPayersList() {
+  Widget _buildPayersList(bool isLoading) {
     final membersState = context.watch<GroupMembersBloc>().state;
     final members = membersState.members;
     final authState = context.read<AuthBloc>().state;
@@ -261,15 +323,12 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
       return const Text('Loading members...');
     }
 
-    if (_payerAmounts.isEmpty && currentUserId != null) {
-      // By default, current user pays the whole amount. We can't easily sync this with the amount field dynamically
-      // without complex listeners, so we'll just leave it and auto-calculate on submit if only one payer is selected.
-    }
-
     return Column(
       children: members.map((member) {
         final isMe = member.userId == currentUserId;
-        final name = isMe ? 'You' : member.userId.substring(0, 6); // Mock name
+        final name = isMe ? 'You' : member.userId;
+
+        final controller = _getPayerController(member.userId, _payerAmounts[member.userId]);
 
         return AppListTile(
           title: Text(name),
@@ -278,9 +337,8 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
             child: TextField(
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(hintText: '0.00'),
-              controller: TextEditingController(
-                text: _payerAmounts[member.userId]?.toStringAsFixed(2) ?? '',
-              ),
+              controller: controller,
+              readOnly: isLoading,
               onChanged: (val) {
                 final amt = double.tryParse(val) ?? 0.0;
                 setState(() {
@@ -298,7 +356,7 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     );
   }
 
-  Widget _buildExactSplitsList() {
+  Widget _buildExactSplitsList(bool isLoading) {
     final membersState = context.watch<GroupMembersBloc>().state;
     final members = membersState.members;
     final authState = context.read<AuthBloc>().state;
@@ -309,7 +367,9 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
     return Column(
       children: members.map((member) {
         final isMe = member.userId == currentUserId;
-        final name = isMe ? 'You' : member.userId.substring(0, 6);
+        final name = isMe ? 'You' : member.userId;
+
+        final controller = _getSplitController(member.userId, _splitAmounts[member.userId]);
 
         return AppListTile(
           title: Text(name),
@@ -318,9 +378,8 @@ class _AddGroupExpensePageState extends State<AddGroupExpensePage> {
             child: TextField(
               keyboardType: TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(hintText: '0.00'),
-              controller: TextEditingController(
-                text: _splitAmounts[member.userId]?.toStringAsFixed(2) ?? '',
-              ),
+              controller: controller,
+              readOnly: isLoading,
               onChanged: (val) {
                 final amt = double.tryParse(val) ?? 0.0;
                 setState(() {

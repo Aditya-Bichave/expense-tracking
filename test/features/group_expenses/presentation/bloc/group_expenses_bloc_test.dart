@@ -113,7 +113,8 @@ void main() {
       act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
       expect: () => [
         const GroupExpensesLoading(),
-        const GroupExpensesLoaded([], syncError: 'Error'),
+        const GroupExpensesOperationFailed('Error', []),
+        const GroupExpensesLoaded([]),
       ],
     );
 
@@ -129,6 +130,7 @@ void main() {
       act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
       expect: () => [
         const GroupExpensesLoading(),
+        GroupExpenseOperationSucceeded(tExpense),
         GroupExpensesLoaded([tExpense]),
       ],
       verify: (_) {
@@ -148,7 +150,8 @@ void main() {
       act: (bloc) => bloc.add(UpdateGroupExpenseRequested(tUpdatedExpense)),
       expect: () => [
         const GroupExpensesLoading(),
-        GroupExpensesLoaded([tExpense], syncError: 'Error'),
+        GroupExpensesOperationFailed('Error', [tExpense]),
+        GroupExpensesLoaded([tExpense]),
       ],
     );
 
@@ -164,6 +167,7 @@ void main() {
       act: (bloc) => bloc.add(UpdateGroupExpenseRequested(tUpdatedExpense)),
       expect: () => [
         const GroupExpensesLoading(),
+        GroupExpenseOperationSucceeded(tUpdatedExpense),
         GroupExpensesLoaded([tUpdatedExpense]),
       ],
       verify: (_) {
@@ -183,7 +187,8 @@ void main() {
       act: (bloc) => bloc.add(const DeleteGroupExpenseRequested('1')),
       expect: () => [
         const GroupExpensesLoading(),
-        GroupExpensesLoaded([tExpense], syncError: 'Error'),
+        GroupExpensesOperationFailed('Error', [tExpense]),
+        GroupExpensesLoaded([tExpense]),
       ],
     );
 
@@ -199,6 +204,7 @@ void main() {
       act: (bloc) => bloc.add(const DeleteGroupExpenseRequested('1')),
       expect: () => [
         const GroupExpensesLoading(),
+        const GroupExpenseOperationSucceeded(null),
         const GroupExpensesLoaded([]),
       ],
       verify: (_) {

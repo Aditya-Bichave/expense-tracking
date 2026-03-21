@@ -34,3 +34,22 @@ class GroupExpensesError extends GroupExpensesState {
   @override
   List<Object?> get props => [message];
 }
+
+class GroupExpensesOperationFailed extends GroupExpensesState {
+  final String message;
+  final List<GroupExpense> previousExpenses;
+
+  const GroupExpensesOperationFailed(this.message, this.previousExpenses);
+
+  @override
+  List<Object?> get props => [message, previousExpenses];
+}
+
+class GroupExpenseOperationSucceeded extends GroupExpensesState {
+  final GroupExpense? expense;
+
+  const GroupExpenseOperationSucceeded(this.expense);
+
+  @override
+  List<Object?> get props => [expense];
+}

@@ -8,6 +8,9 @@ import 'group_expenses_state.dart';
 class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
   final GroupExpensesRepository _repository;
 
+  // Pending mutations queue to re-evaluate when we get a loaded state.
+  final List<GroupExpensesEvent> _pendingMutations = [];
+
   GroupExpensesBloc(this._repository) : super(const GroupExpensesInitial()) {
     on<LoadGroupExpenses>(_onLoadExpenses);
     on<AddGroupExpenseRequested>(_onAddExpense);
@@ -36,6 +39,8 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
       },
     );
 
+    _processPendingMutations();
+
     if (!hasLocalData) {
       return;
     }
@@ -49,10 +54,23 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
         final syncedResult = await _repository.getExpenses(event.groupId);
         syncedResult.fold(
           (failure) => emit(GroupExpensesError(failure.message)),
-          (syncedExpenses) => emit(GroupExpensesLoaded(syncedExpenses)),
+          (syncedExpenses) {
+            emit(GroupExpensesLoaded(syncedExpenses));
+            _processPendingMutations();
+          },
         );
       },
     );
+  }
+
+  void _processPendingMutations() {
+    if (state is GroupExpensesLoaded && _pendingMutations.isNotEmpty) {
+      final eventsToProcess = List<GroupExpensesEvent>.from(_pendingMutations);
+      _pendingMutations.clear();
+      for (final event in eventsToProcess) {
+        add(event);
+      }
+    }
   }
 
   Future<void> _onAddExpense(
@@ -60,18 +78,24 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
     Emitter<GroupExpensesState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! GroupExpensesLoaded) return;
+    if (currentState is! GroupExpensesLoaded) {
+      _pendingMutations.add(event);
+      return;
+    }
 
     emit(const GroupExpensesLoading());
 
     final result = await _repository.addExpense(event.expense);
 
     result.fold(
-      (failure) => emit(
-        GroupExpensesLoaded(currentState.expenses, syncError: failure.message),
-      ),
-      (expense) =>
-          emit(GroupExpensesLoaded([expense, ...currentState.expenses])),
+      (failure) {
+        emit(GroupExpensesOperationFailed(failure.message, currentState.expenses));
+        emit(GroupExpensesLoaded(currentState.expenses));
+      },
+      (expense) {
+        emit(GroupExpenseOperationSucceeded(expense));
+        emit(GroupExpensesLoaded([expense, ...currentState.expenses]));
+      },
     );
   }
 
@@ -80,20 +104,25 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
     Emitter<GroupExpensesState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! GroupExpensesLoaded) return;
+    if (currentState is! GroupExpensesLoaded) {
+      _pendingMutations.add(event);
+      return;
+    }
 
     emit(const GroupExpensesLoading());
 
     final result = await _repository.updateExpense(event.expense);
 
     result.fold(
-      (failure) => emit(
-        GroupExpensesLoaded(currentState.expenses, syncError: failure.message),
-      ),
+      (failure) {
+        emit(GroupExpensesOperationFailed(failure.message, currentState.expenses));
+        emit(GroupExpensesLoaded(currentState.expenses));
+      },
       (updatedExpense) {
         final newExpenses = currentState.expenses.map((e) {
           return e.id == updatedExpense.id ? updatedExpense : e;
         }).toList();
+        emit(GroupExpenseOperationSucceeded(updatedExpense));
         emit(GroupExpensesLoaded(newExpenses));
       },
     );
@@ -104,20 +133,25 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
     Emitter<GroupExpensesState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! GroupExpensesLoaded) return;
+    if (currentState is! GroupExpensesLoaded) {
+      _pendingMutations.add(event);
+      return;
+    }
 
     emit(const GroupExpensesLoading());
 
     final result = await _repository.deleteExpense(event.expenseId);
 
     result.fold(
-      (failure) => emit(
-        GroupExpensesLoaded(currentState.expenses, syncError: failure.message),
-      ),
+      (failure) {
+        emit(GroupExpensesOperationFailed(failure.message, currentState.expenses));
+        emit(GroupExpensesLoaded(currentState.expenses));
+      },
       (_) {
         final newExpenses = currentState.expenses
             .where((e) => e.id != event.expenseId)
             .toList();
+        emit(const GroupExpenseOperationSucceeded(null));
         emit(GroupExpensesLoaded(newExpenses));
       },
     );
