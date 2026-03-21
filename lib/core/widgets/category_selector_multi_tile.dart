@@ -4,7 +4,6 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/categories/presentation/widgets/icon_picker_dialog.dart'; // For icons
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:collection/collection.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
@@ -29,12 +28,15 @@ class CategorySelectorMultiTile extends StatelessWidget {
 
   // Helper to get display icons (similar to BudgetCard)
   List<Widget> _getDisplayIcons(BuildContext context, int maxIcons) {
+    if (selectedCategoryIds.isEmpty) return [];
+
     final modeTheme = context.modeTheme;
+    final categoryMap = {for (var c in availableCategories) c.id: c};
     List<Widget> iconWidgets = [];
     int count = 0;
     for (String id in selectedCategoryIds) {
       if (count >= maxIcons) break;
-      final category = availableCategories.firstWhereOrNull((c) => c.id == id);
+      final category = categoryMap[id];
       if (category != null) {
         final iconColor = category.displayColor;
         Widget iconWidget;
