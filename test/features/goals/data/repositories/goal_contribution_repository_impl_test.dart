@@ -252,4 +252,103 @@ void main() {
       expect(result.isLeft(), true);
     });
   });
+
+  group('auditGoalTotals', () {
+    test('should execute updates for all goals concurrently', () async {
+      final tGoalModel = GoalModel(
+        id: 'g1',
+        name: 'g1',
+        targetAmount: 100,
+        targetDate: null,
+        statusIndex: 0,
+        totalSavedCache: 0,
+        createdAt: DateTime.now(),
+        iconName: 'icon',
+      );
+      final tGoalModel2 = GoalModel(
+        id: 'g2',
+        name: 'g2',
+        targetAmount: 100,
+        targetDate: null,
+        statusIndex: 0,
+        totalSavedCache: 0,
+        createdAt: DateTime.now(),
+        iconName: 'icon',
+      );
+      final tContributionModel = GoalContributionModel(
+        id: 'c1',
+        amount: 50.0,
+        date: DateTime.now(),
+        goalId: 'g1',
+        createdAt: DateTime.now(),
+      );
+
+      when(
+        () => mockGoalDataSource.getGoals(),
+      ).thenAnswer((_) async => [tGoalModel, tGoalModel2]);
+      when(
+        () => mockGoalDataSource.getGoalById('g1'),
+      ).thenAnswer((_) async => tGoalModel);
+      when(
+        () => mockGoalDataSource.getGoalById('g2'),
+      ).thenAnswer((_) async => tGoalModel2);
+      when(
+        () => mockContributionDataSource.getContributionsForGoal('g1'),
+      ).thenAnswer((_) async => [tContributionModel]);
+      when(
+        () => mockContributionDataSource.getContributionsForGoal('g2'),
+      ).thenAnswer((_) async => []);
+      when(
+        () => mockGoalDataSource.saveGoal(any()),
+      ).thenAnswer((_) async => {});
+
+      final result = await repository.auditGoalTotals();
+      expect(result.isRight(), isTrue);
+      verify(() => mockGoalDataSource.saveGoal(any())).called(2);
+    });
+
+    test('should log warning if an update fails but return Right', () async {
+      final tGoalModel = GoalModel(
+        id: 'g1',
+        name: 'g1',
+        targetAmount: 100,
+        targetDate: null,
+        statusIndex: 0,
+        totalSavedCache: 0,
+        createdAt: DateTime.now(),
+        iconName: 'icon',
+      );
+      final tContributionModel = GoalContributionModel(
+        id: 'c1',
+        amount: 50.0,
+        date: DateTime.now(),
+        goalId: 'g1',
+        createdAt: DateTime.now(),
+      );
+
+      when(
+        () => mockGoalDataSource.getGoals(),
+      ).thenAnswer((_) async => [tGoalModel]);
+      when(
+        () => mockGoalDataSource.getGoalById('g1'),
+      ).thenAnswer((_) async => tGoalModel);
+      when(
+        () => mockContributionDataSource.getContributionsForGoal('g1'),
+      ).thenAnswer((_) async => [tContributionModel]);
+      when(
+        () => mockGoalDataSource.saveGoal(any()),
+      ).thenThrow(Exception('Update error'));
+
+      final result = await repository.auditGoalTotals();
+      expect(result.isRight(), isTrue);
+    });
+
+    test('should return Left on overall exception', () async {
+      when(
+        () => mockGoalDataSource.getGoals(),
+      ).thenThrow(Exception('Overall error'));
+      final result = await repository.auditGoalTotals();
+      expect(result.isLeft(), isTrue);
+    });
+  });
 }
