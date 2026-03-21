@@ -246,20 +246,30 @@ class GetFinancialOverviewUseCase
       includeArchived: false,
     ); // Only active goals
     goalsResult.fold((failure) => goalError = failure, (activeGoals) {
-      // Sort by most complete first, then soonest target date
-      final mutableGoals = List<Goal>.from(activeGoals);
+      // Precompute sort keys to avoid redundant calculations in sort loop
       final defaultDate = DateTime(2100);
-      mutableGoals.sort((a, b) {
-        int comparison = b.percentageComplete.compareTo(a.percentageComplete);
+      final goalSortData = activeGoals
+          .map(
+            (goal) => (
+              goal: goal,
+              percentage: goal.percentageComplete,
+              targetDate: goal.targetDate ?? defaultDate,
+            ),
+          )
+          .toList();
+
+      // Sort by most complete first, then soonest target date
+      goalSortData.sort((a, b) {
+        int comparison = b.percentage.compareTo(a.percentage);
         if (comparison == 0) {
-          comparison = (a.targetDate ?? defaultDate).compareTo(
-            b.targetDate ?? defaultDate,
-          );
+          comparison = a.targetDate.compareTo(b.targetDate);
         }
         return comparison;
       });
-      goalSummary = mutableGoals
+
+      goalSummary = goalSortData
           .take(3)
+          .map((item) => item.goal)
           .toList(); // Take top 3 most complete / closest target
     });
     if (goalError != null) {
