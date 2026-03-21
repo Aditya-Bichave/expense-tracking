@@ -191,7 +191,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
         "[CategoryRepo] Custom category '${category.name}' added successfully.",
       );
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       invalidateCache(); // Also invalidate on error? Maybe not.
       log.warning(
         "[CategoryRepo] Error during addCustomCategory: ${e.toString()}",
@@ -219,7 +220,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
         "[CategoryRepo] Custom category '${category.name}' updated successfully.",
       );
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       invalidateCache(); // Invalidate on error?
       log.warning(
         "[CategoryRepo] Error during updateCategory: ${e.toString()}",
@@ -244,7 +246,8 @@ class CategoryRepositoryImpl implements CategoryRepository {
         "[CategoryRepo] Custom category (ID: $categoryId) deleted successfully from local source.",
       );
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       invalidateCache(); // Invalidate on error?
       log.warning(
         "[CategoryRepo] Error during deleteCustomCategory: ${e.toString()}",

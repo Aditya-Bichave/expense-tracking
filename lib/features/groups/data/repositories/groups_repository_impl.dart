@@ -131,7 +131,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
   Future<Either<Failure, List<GroupEntity>>> getGroups() async {
     try {
       return Right(_mapAndSortGroups(_localDataSource.getGroups()));
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
         return Left(e);
       }
@@ -158,7 +159,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
       return Right(models.map((model) => model.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
         return Left(e);
       }
