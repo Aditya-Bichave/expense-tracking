@@ -1,3 +1,5 @@
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_event.dart';
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_state.dart';
 import 'package:collection/collection.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -119,7 +121,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                               value: context.read<GroupExpensesBloc>(),
                               child: AddGroupExpensePage(
                                 groupId: widget.groupId,
-                                groupCurrency: group?.currency ?? 'USD',
+                                currency: group?.currency ?? 'USD',
                               ),
                             ),
                           ),
@@ -254,10 +256,10 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                           ),
                           onTap: canEditExpenses
                               ? () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Edit expense coming soon'),
-                                    ),
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => BlocProvider.value(value: context.read<GroupExpensesBloc>(), child: AddGroupExpensePage(groupId: widget.groupId, currency: group?.currency ?? 'USD', initialExpense: expense)))
+
+//
                                   );
                                 }
                               : null,

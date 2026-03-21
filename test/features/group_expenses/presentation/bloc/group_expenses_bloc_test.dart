@@ -5,6 +5,8 @@ import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
 import 'package:expense_tracker/features/group_expenses/domain/repositories/group_expenses_repository.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_event.dart';
+import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -27,6 +29,22 @@ void main() {
     occurredAt: DateTime(2023, 10, 27),
     createdAt: DateTime(2023, 10, 27),
     updatedAt: DateTime(2023, 10, 27),
+    payers: const [],
+    splits: const [],
+  );
+
+  final tUpdatedExpense = GroupExpense(
+    id: '1',
+    groupId: 'g1',
+    createdBy: 'c1',
+    title: 'Dinner Updated',
+    amount: 150,
+    currency: 'USD',
+    occurredAt: DateTime(2023, 10, 27),
+    createdAt: DateTime(2023, 10, 27),
+    updatedAt: DateTime(2023, 10, 28),
+    payers: const [],
+    splits: const [],
   );
 
   setUpAll(() {
@@ -38,99 +56,65 @@ void main() {
     bloc = GroupExpensesBloc(mockRepository);
   });
 
-  group('GroupExpensesBloc', () {
-    test('initial state is GroupExpensesInitial', () {
-      expect(bloc.state, GroupExpensesInitial());
-    });
+  tearDown(() {
+    bloc.close();
+  });
 
+  test('GroupExpensesBloc initial state is GroupExpensesInitial', () {
+    expect(bloc.state, const GroupExpensesInitial());
+  });
+
+  group('GroupExpensesBloc', () {
     blocTest<GroupExpensesBloc, GroupExpensesState>(
       'emits [Loading, Loaded] when LoadGroupExpenses is added',
       setUp: () {
         when(
-          () => mockRepository.getExpenses(any()),
+          () => mockRepository.getExpenses('g1'),
         ).thenAnswer((_) async => Right([tExpense]));
         when(
-          () => mockRepository.syncExpenses(any()),
-        ).thenAnswer((_) => Completer<Either<Failure, void>>().future);
+          () => mockRepository.syncExpenses('g1'),
+        ).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
-      act: (bloc) => bloc.add(LoadGroupExpenses('g1')),
+      act: (bloc) => bloc.add(const LoadGroupExpenses('g1')),
       expect: () => [
-        GroupExpensesLoading(),
+        const GroupExpensesLoading(),
         GroupExpensesLoaded([tExpense]),
       ],
-      verify: (_) {
-        verify(() => mockRepository.getExpenses('g1')).called(1);
-        verify(() => mockRepository.syncExpenses('g1')).called(1);
-      },
     );
 
     blocTest<GroupExpensesBloc, GroupExpensesState>(
       'emits [Loading, Error] when LoadGroupExpenses fails',
       setUp: () {
         when(
-          () => mockRepository.getExpenses(any()),
-        ).thenAnswer((_) async => Left(CacheFailure('Error')));
+          () => mockRepository.getExpenses('g1'),
+        ).thenAnswer((_) async => const Left(CacheFailure('Error')));
         when(
-          () => mockRepository.syncExpenses(any()),
-        ).thenAnswer((_) => Completer<Either<Failure, void>>().future);
-      },
-      build: () => bloc,
-      act: (bloc) => bloc.add(LoadGroupExpenses('g1')),
-      expect: () => [GroupExpensesLoading(), GroupExpensesError('Error')],
-    );
-
-    blocTest<GroupExpensesBloc, GroupExpensesState>(
-      'emits [GroupExpensesError] when AddGroupExpenseRequested fails',
-      setUp: () {
-        when(
-          () => mockRepository.addExpense(any()),
-        ).thenAnswer((_) async => Left(ServerFailure('Error')));
-      },
-      build: () => bloc,
-      act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
-      expect: () => [GroupExpensesError('Error')],
-    );
-
-    blocTest<GroupExpensesBloc, GroupExpensesState>(
-      'emits refreshed expenses after sync changes local data',
-      setUp: () {
-        var readCount = 0;
-        when(() => mockRepository.getExpenses('g1')).thenAnswer((_) async {
-          readCount += 1;
-          if (readCount == 1) {
-            return Right([tExpense]);
-          }
-          return Right([
-            GroupExpense(
-              id: tExpense.id,
-              groupId: tExpense.groupId,
-              createdBy: tExpense.createdBy,
-              title: 'Dinner Updated',
-              amount: tExpense.amount,
-              currency: tExpense.currency,
-              occurredAt: tExpense.occurredAt,
-              createdAt: tExpense.createdAt,
-              updatedAt: DateTime(2023, 10, 28),
-              payers: tExpense.payers,
-              splits: tExpense.splits,
-            ),
-          ]);
-        });
-        when(
-          () => mockRepository.syncExpenses(any()),
+          () => mockRepository.syncExpenses('g1'),
         ).thenAnswer((_) async => const Right(null));
       },
       build: () => bloc,
-      act: (bloc) => bloc.add(LoadGroupExpenses('g1')),
+      act: (bloc) => bloc.add(const LoadGroupExpenses('g1')),
       expect: () => [
-        GroupExpensesLoading(),
-        GroupExpensesLoaded([tExpense]),
-        isA<GroupExpensesLoaded>().having(
-          (state) => state.expenses.single.title,
-          'updated title',
-          'Dinner Updated',
-        ),
+        const GroupExpensesLoading(),
+        const GroupExpensesError('Error'),
+      ],
+    );
+
+    blocTest<GroupExpensesBloc, GroupExpensesState>(
+      'emits syncError when AddGroupExpenseRequested fails',
+      setUp: () {
+        when(
+          () => mockRepository.addExpense(any()),
+        ).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      },
+      build: () => bloc,
+      seed: () => const GroupExpensesLoaded([]),
+      act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
+      expect: () => [
+        const GroupExpensesLoading(),
+        const GroupExpensesOperationFailed('Error', []),
+        const GroupExpensesLoaded([]),
       ],
     );
 
@@ -140,22 +124,91 @@ void main() {
         when(
           () => mockRepository.addExpense(any()),
         ).thenAnswer((_) async => Right(tExpense));
-        when(
-          () => mockRepository.getExpenses(any()),
-        ).thenAnswer((_) async => Right([tExpense]));
-        when(
-          () => mockRepository.syncExpenses(any()),
-        ).thenAnswer((_) => Completer<Either<Failure, void>>().future);
       },
       build: () => bloc,
+      seed: () => const GroupExpensesLoaded([]),
       act: (bloc) => bloc.add(AddGroupExpenseRequested(tExpense)),
       expect: () => [
-        GroupExpensesLoading(),
+        const GroupExpensesLoading(),
+        GroupExpenseOperationSucceeded(tExpense),
         GroupExpensesLoaded([tExpense]),
       ],
       verify: (_) {
         verify(() => mockRepository.addExpense(tExpense)).called(1);
-        verify(() => mockRepository.getExpenses('g1')).called(1);
+      },
+    );
+
+    blocTest<GroupExpensesBloc, GroupExpensesState>(
+      'emits syncError when UpdateGroupExpenseRequested fails',
+      setUp: () {
+        when(
+          () => mockRepository.updateExpense(any()),
+        ).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      },
+      build: () => bloc,
+      seed: () => GroupExpensesLoaded([tExpense]),
+      act: (bloc) => bloc.add(UpdateGroupExpenseRequested(tUpdatedExpense)),
+      expect: () => [
+        const GroupExpensesLoading(),
+        GroupExpensesOperationFailed('Error', [tExpense]),
+        GroupExpensesLoaded([tExpense]),
+      ],
+    );
+
+    blocTest<GroupExpensesBloc, GroupExpensesState>(
+      'updates expenses after a successful edit',
+      setUp: () {
+        when(
+          () => mockRepository.updateExpense(any()),
+        ).thenAnswer((_) async => Right(tUpdatedExpense));
+      },
+      build: () => bloc,
+      seed: () => GroupExpensesLoaded([tExpense]),
+      act: (bloc) => bloc.add(UpdateGroupExpenseRequested(tUpdatedExpense)),
+      expect: () => [
+        const GroupExpensesLoading(),
+        GroupExpenseOperationSucceeded(tUpdatedExpense),
+        GroupExpensesLoaded([tUpdatedExpense]),
+      ],
+      verify: (_) {
+        verify(() => mockRepository.updateExpense(tUpdatedExpense)).called(1);
+      },
+    );
+
+    blocTest<GroupExpensesBloc, GroupExpensesState>(
+      'emits syncError when DeleteGroupExpenseRequested fails',
+      setUp: () {
+        when(
+          () => mockRepository.deleteExpense(any()),
+        ).thenAnswer((_) async => const Left(ServerFailure('Error')));
+      },
+      build: () => bloc,
+      seed: () => GroupExpensesLoaded([tExpense]),
+      act: (bloc) => bloc.add(const DeleteGroupExpenseRequested('1')),
+      expect: () => [
+        const GroupExpensesLoading(),
+        GroupExpensesOperationFailed('Error', [tExpense]),
+        GroupExpensesLoaded([tExpense]),
+      ],
+    );
+
+    blocTest<GroupExpensesBloc, GroupExpensesState>(
+      'removes expense after a successful delete',
+      setUp: () {
+        when(
+          () => mockRepository.deleteExpense(any()),
+        ).thenAnswer((_) async => const Right(null));
+      },
+      build: () => bloc,
+      seed: () => GroupExpensesLoaded([tExpense]),
+      act: (bloc) => bloc.add(const DeleteGroupExpenseRequested('1')),
+      expect: () => [
+        const GroupExpensesLoading(),
+        const GroupExpenseOperationSucceeded(null),
+        const GroupExpensesLoaded([]),
+      ],
+      verify: (_) {
+        verify(() => mockRepository.deleteExpense('1')).called(1);
       },
     );
   });

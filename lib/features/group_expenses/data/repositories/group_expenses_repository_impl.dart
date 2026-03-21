@@ -58,6 +58,59 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
   }
 
   @override
+  Future<Either<Failure, GroupExpense>> updateExpense(GroupExpense expense) async {
+    try {
+      final model = GroupExpenseModel.fromEntity(expense);
+      await _localDataSource.saveExpense(model);
+
+      final outboxItem = SyncMutationModel(
+        id: expense.id,
+        table: 'expenses',
+        operation: OpType.update,
+        payload: model.toJson(),
+        createdAt: DateTime.now(),
+      );
+      await _outboxRepository.add(outboxItem);
+
+      final connectivityResult = await _connectivity.checkConnectivity();
+      if (connectivityResult.contains(ConnectivityResult.mobile) ||
+          connectivityResult.contains(ConnectivityResult.wifi)) {
+        _syncService.processOutbox();
+      }
+
+      return Right(expense);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteExpense(String expenseId) async {
+    try {
+      await _localDataSource.deleteExpense(expenseId);
+
+      final outboxItem = SyncMutationModel(
+        id: expenseId,
+        table: 'expenses',
+        operation: OpType.delete,
+        payload: {'id': expenseId},
+        createdAt: DateTime.now(),
+      );
+      await _outboxRepository.add(outboxItem);
+
+      final connectivityResult = await _connectivity.checkConnectivity();
+      if (connectivityResult.contains(ConnectivityResult.mobile) ||
+          connectivityResult.contains(ConnectivityResult.wifi)) {
+        _syncService.processOutbox();
+      }
+
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<GroupExpense>>> getExpenses(
     String groupId,
   ) async {
@@ -78,6 +131,22 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       }
 
       final remoteExpenses = await _remoteDataSource.getExpenses(groupId);
+      final currentLocalExpenses = _localDataSource.getExpenses(groupId).map((e) => e.id).toSet();
+      final remoteExpenseIds = remoteExpenses.map((e) => e.id).toSet();
+
+      final outboxPendingItems = await _outboxRepository.getPendingItems();
+
+      final outboxIds = outboxPendingItems.map((e) => e.id).toSet();
+
+
+      final staleIds = currentLocalExpenses.difference(remoteExpenseIds).difference(outboxIds);
+
+      if (staleIds.isNotEmpty) {
+        for (final id in staleIds) {
+          await _localDataSource.deleteExpense(id);
+        }
+      }
+
       await _localDataSource.saveExpenses(remoteExpenses);
 
       return const Right(null);
