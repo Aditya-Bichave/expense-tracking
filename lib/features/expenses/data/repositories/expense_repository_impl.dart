@@ -53,7 +53,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       await localDataSource.addExpense(model);
       log.info("[ExpenseRepo] Expense added locally.");
       return await _hydrateSingleModel(model);
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       log.warning("[ExpenseRepo] CacheFailure adding expense: ${e.message}");
       return Left(e);
     } catch (e, s) {
@@ -72,7 +73,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       await localDataSource.updateExpense(model);
       log.info("[ExpenseRepo] Update successful (ID: ${model.id}).");
       return await _hydrateSingleModel(model);
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       log.warning("[ExpenseRepo] CacheFailure updating expense: ${e.message}");
       return Left(e);
     } catch (e, s) {
@@ -113,7 +115,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       expenseModels.sort((a, b) => b.date.compareTo(a.date));
       return Right(expenseModels);
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[ExpenseRepo] CacheFailure getting expense models: ${e.message}",
       );
@@ -135,9 +138,11 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     try {
       await localDataSource.deleteExpense(id);
       return const Right(null);
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(e);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -158,7 +163,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         double total = models.fold(0.0, (sum, item) => sum + item.amount);
         return Right(total);
       });
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -206,7 +212,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Right(
         ExpenseSummary(totalExpenses: total, categoryBreakdown: sorted),
       );
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -244,7 +251,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       await localDataSource.updateExpense(updated);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -290,7 +298,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
       await Future.wait(futures);
       return Right(updatedCount);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -333,10 +342,12 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       // await localDataSource.addExpense(ExpenseModel.fromEntity(updatedExpense));
 
       return Right(updatedExpense);
-    } on PostgrestException catch (e) {
+    } on PostgrestException catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       log.severe("[ExpenseRepo] RPC Failed: ${e.message}");
       return Left(ServerFailure('Supabase Error: ${e.message}'));
-    } on ValidationException catch (e) {
+    } on ValidationException catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       log.warning("[ExpenseRepo] Validation Failed: ${e.message}");
       return Left(ValidationFailure(e.message));
     } catch (e, s) {

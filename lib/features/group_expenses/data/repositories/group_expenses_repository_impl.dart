@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dartz/dartz.dart';
@@ -52,7 +53,8 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       }
 
       return Right(expense);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -64,7 +66,8 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
     try {
       final models = _localDataSource.getExpenses(groupId);
       return Right(models.map((e) => e.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -81,7 +84,8 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
       await _localDataSource.saveExpenses(remoteExpenses);
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
