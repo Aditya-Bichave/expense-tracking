@@ -52,8 +52,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
         "[IncomeRepo] Add successful (ID: ${addedModel.id}). Hydrating category.",
       );
       return await _hydrateSingleModel(addedModel);
-    } on CacheFailure catch (e, s) {
-      log.severe("Exception in repository: $e\n$s");
+    } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error adding income: $e\n$s");
