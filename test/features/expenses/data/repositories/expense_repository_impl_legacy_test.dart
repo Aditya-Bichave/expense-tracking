@@ -17,8 +17,11 @@ class MockExpenseLocalDataSource extends Mock
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockOutboxRepository extends Mock implements OutboxRepository {}
+
 class MockSyncService extends Mock implements SyncService {}
+
 class MockConnectivity extends Mock implements Connectivity {}
 
 void main() {

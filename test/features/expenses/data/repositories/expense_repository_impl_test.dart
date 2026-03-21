@@ -7,6 +7,8 @@ import 'package:expense_tracker/features/expenses/domain/entities/expense_split.
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/core/sync/sync_service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -18,8 +20,11 @@ class MockExpenseLocalDataSource extends Mock
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockOutboxRepository extends Mock implements OutboxRepository {}
+
 class MockSyncService extends Mock implements SyncService {}
+
 class MockConnectivity extends Mock implements Connectivity {}
 
 class FakePostgrestFilterBuilder<T> extends Fake
@@ -36,11 +41,22 @@ class FakePostgrestFilterBuilder<T> extends Fake
   }
 }
 
+class FakeSyncMutationModel extends Fake implements SyncMutationModel {}
+
+class FakeExpenseModel extends Fake implements ExpenseModel {}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(FakeSyncMutationModel());
+    registerFallbackValue(FakeExpenseModel());
+  });
   late ExpenseRepositoryImpl repository;
   late MockExpenseLocalDataSource mockLocalDataSource;
   late MockCategoryRepository mockCategoryRepository;
   late MockSupabaseClient mockSupabaseClient;
+  late MockOutboxRepository mockOutboxRepository;
+  late MockSyncService mockSyncService;
+  late MockConnectivity mockConnectivity;
 
   setUpAll(() {
     registerFallbackValue(<String, dynamic>{});
@@ -50,9 +66,9 @@ void main() {
     mockLocalDataSource = MockExpenseLocalDataSource();
     mockCategoryRepository = MockCategoryRepository();
     mockSupabaseClient = MockSupabaseClient();
-    final mockOutboxRepository = MockOutboxRepository();
-    final mockSyncService = MockSyncService();
-    final mockConnectivity = MockConnectivity();
+    mockOutboxRepository = MockOutboxRepository();
+    mockSyncService = MockSyncService();
+    mockConnectivity = MockConnectivity();
 
     repository = ExpenseRepositoryImpl(
       localDataSource: mockLocalDataSource,
@@ -61,6 +77,26 @@ void main() {
       outboxRepository: mockOutboxRepository,
       syncService: mockSyncService,
       connectivity: mockConnectivity,
+    );
+
+    when(() => mockOutboxRepository.add(any())).thenAnswer((_) async {});
+    when(
+      () => mockConnectivity.checkConnectivity(),
+    ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+    when(() => mockSyncService.processOutbox()).thenAnswer((_) async {});
+    when(() => mockLocalDataSource.addExpense(any())).thenAnswer(
+      (_) async => ExpenseModel(
+        id: 'temp-id',
+        title: 't',
+        amount: 100,
+        date: DateTime.now(),
+        accountId: 'a1',
+        categoryId: 'c1',
+        isRecurring: false,
+        notes: null,
+        payers: [],
+        splits: [],
+      ),
     );
   });
 
@@ -106,17 +142,12 @@ void main() {
         final result = await repository.createExpenseTransaction(tExpense);
 
         // Assert
-        verify(
-          () => mockSupabaseClient.rpc<String>(
-            'create_expense_transaction',
-            params: any(named: 'params'),
-          ),
-        ).called(1);
+        verify(() => mockOutboxRepository.add(any())).called(1);
 
         expect(result.isRight(), true);
         result.fold(
           (l) => fail('Should be Right but got $l'),
-          (r) => expect(r.id, 'new-uuid'),
+          (r) => expect(r.id, 'temp-id'),
         );
       },
     );
@@ -145,14 +176,11 @@ void main() {
       );
     });
 
-    test('should return Failure when RPC fails', () async {
+    test('should return Failure when outbox add fails', () async {
       // Arrange
       when(
-        () => mockSupabaseClient.rpc<String>(
-          'create_expense_transaction',
-          params: any(named: 'params'),
-        ),
-      ).thenThrow(const PostgrestException(message: 'RPC Error'));
+        () => mockOutboxRepository.add(any()),
+      ).thenThrow(Exception('RPC Error'));
 
       // Act
       final result = await repository.createExpenseTransaction(tExpense);
