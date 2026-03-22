@@ -73,7 +73,7 @@ class CheckGoalAchievementUseCase implements UseCase<bool, CheckGoalParams> {
       );
     } catch (e, s) {
       log.severe(
-        "[CheckGoalAchievementUseCase] Unexpected error for goal ${params.goalId}: $e\n$s",
+        "[CheckGoalAchievementUseCase] Unexpected error for goal ${params.goalId}$e$s",
       );
       return Left<Failure, bool>(
         UnexpectedFailure("Error checking goal achievement: ${e.toString()}"),

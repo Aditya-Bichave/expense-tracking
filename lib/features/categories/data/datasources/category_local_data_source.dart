@@ -68,7 +68,7 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
       );
     } catch (e, s) {
       log.severe(
-        "Failed to save custom category '${category.name}' to cache: $e\n$s",
+        "Failed to save custom category '${category.name}' to cache$e$s",
       );
       throw CacheFailure('Failed to save category: ${e.toString()}');
     }
@@ -97,7 +97,7 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
       );
     } catch (e, s) {
       log.severe(
-        "Failed to update custom category '${category.name}' in cache: $e\n$s",
+        "Failed to update custom category '${category.name}' in cache$e$s",
       );
       throw CacheFailure('Failed to update category: ${e.toString()}');
     }

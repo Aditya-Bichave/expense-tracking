@@ -60,12 +60,12 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       );
     } on CacheFailure catch (e, s) {
       log.severe(
-        "[AssetAccountRepo] CacheFailure during add for '${account.name}': $e\n$s",
+        "[AssetAccountRepo] CacheFailure during add for '${account.name}'$e$s",
       );
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[AssetAccountRepo] Unexpected error during add for '${account.name}': $e\n$s",
+        "[AssetAccountRepo] Unexpected error during add for '${account.name}'$e$s",
       );
       return Left(CacheFailure('Failed to add account: ${e.toString()}'));
     }
@@ -111,12 +111,12 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       );
     } on CacheFailure catch (e, s) {
       log.severe(
-        "[AssetAccountRepo] CacheFailure during update for '${account.name}': $e\n$s",
+        "[AssetAccountRepo] CacheFailure during update for '${account.name}'$e$s",
       );
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[AssetAccountRepo] Unexpected error during update for '${account.name}': $e\n$s",
+        "[AssetAccountRepo] Unexpected error during update for '${account.name}'$e$s",
       );
       return Left(CacheFailure('Failed to update account: ${e.toString()}'));
     }
@@ -179,12 +179,12 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       return const Right(null);
     } on CacheFailure catch (e, s) {
       log.severe(
-        "[AssetAccountRepo] CacheFailure during delete for ID $id: $e\n$s",
+        "[AssetAccountRepo] CacheFailure during delete for ID $id$e$s",
       );
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[AssetAccountRepo] Unexpected error during delete for ID $id: $e\n$s",
+        "[AssetAccountRepo] Unexpected error during delete for ID $id$e$s",
       );
       return Left(CacheFailure('Failed to delete account: ${e.toString()}'));
     }
@@ -256,7 +256,7 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[AssetAccountRepo] Unexpected error getting asset accounts: $e\n$s",
+        "[AssetAccountRepo] Unexpected error getting asset accounts$e$s",
       );
       return Left(CacheFailure('Failed to get accounts: ${e.toString()}'));
     }
@@ -345,7 +345,7 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       return Right(finalBalance);
     } catch (e, s) {
       log.severe(
-        "[$runtimeType] CRITICAL ERROR in _calculateBalance for account $accountId: $e\n$s",
+        "[$runtimeType] CRITICAL ERROR in _calculateBalance for account $accountId$e$s",
       );
       return Left(
         CacheFailure(

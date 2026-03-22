@@ -67,7 +67,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       return const Right(null);
     } catch (e, s) {
       log.severe(
-        "[ContributionRepo] Error updating total saved cache for goal $goalId: $e\n$s",
+        "[ContributionRepo] Error updating total saved cache for goal $goalId$e$s",
       );
       return Left(
         CacheFailure(
@@ -138,7 +138,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       return const Right(null);
     } catch (e, s) {
       log.severe(
-        "[ContributionRepo] Error deleting contribution $contributionId: $e\n$s",
+        "[ContributionRepo] Error deleting contribution $contributionId$e$s",
       );
       return Left(
         CacheFailure("Failed to delete contribution: ${e.toString()}"),
@@ -164,7 +164,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       return Right(entities);
     } catch (e, s) {
       log.severe(
-        "[ContributionRepo] Error getting contributions for goal $goalId: $e\n$s",
+        "[ContributionRepo] Error getting contributions for goal $goalId$e$s",
       );
       return Left(
         CacheFailure("Failed to load contributions: ${e.toString()}"),
@@ -215,7 +215,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       return Right(contribution);
     } catch (e, s) {
       log.severe(
-        "[ContributionRepo] Error updating contribution ${contribution.id}: $e\n$s",
+        "[ContributionRepo] Error updating contribution ${contribution.id}$e$s",
       );
       return Left(
         CacheFailure("Failed to update contribution: ${e.toString()}"),
@@ -245,7 +245,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       return const Right(null);
     } catch (e, s) {
       log.severe(
-        "[ContributionRepo] Error auditing goal total saved caches: $e\n$s",
+        "[ContributionRepo] Error auditing goal total saved caches$e$s",
       );
       return Left(
         CacheFailure(

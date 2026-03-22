@@ -124,11 +124,9 @@ class BudgetsSubTab extends StatelessWidget {
               final bloc = context.read<BudgetListBloc>();
               bloc.add(const LoadBudgets(forceReload: true));
               // Wait until the loading state completes
-              try {
-                await bloc.stream.firstWhere(
-                  (s) => s.status != BudgetListStatus.loading,
-                );
-              } catch (_) {}
+              await bloc.stream.firstWhere(
+                (s) => s.status != BudgetListStatus.loading,
+              );
             },
             child: content,
           );

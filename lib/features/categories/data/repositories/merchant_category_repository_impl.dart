@@ -29,7 +29,7 @@ class MerchantCategoryRepositoryImpl implements MerchantCategoryRepository {
       return Left(e); // Propagate specific failure
     } catch (e, s) {
       log.severe(
-        "[MerchantCategoryRepo] Unexpected error in getDefaultCategoryId: $e\n$s",
+        "[MerchantCategoryRepo] Unexpected error in getDefaultCategoryId$e$s",
       );
       return Left(
         CacheFailure("Failed to lookup merchant category: ${e.toString()}"),
