@@ -46,7 +46,7 @@ class HiveContributionLocalDataSource
       log.info("[ContributionDS] Batch deleted ${ids.length} contributions.");
     } catch (e, s) {
       log.severe(
-        "[ContributionDS] Failed to batch delete contributions: ${ids.length} items.: $e\n$s",
+        "[ContributionDS] Failed to batch delete contributions: ${ids.length} items: $e\n$s",
       );
       throw CacheFailure(
         'Failed to batch delete contributions: ${e.toString()}',
