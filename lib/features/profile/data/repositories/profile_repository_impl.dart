@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/auth/domain/repositories/auth_repository.dart';

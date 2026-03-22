@@ -28,7 +28,8 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
         log.fine("[UserHistoryRepo] No rule found.");
         return const Right(null); // Explicitly return null if not found
       }
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[UserHistoryRepo] CacheFailure during findRule: ${e.message}",
       );
@@ -62,7 +63,8 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
       await localDataSource.saveRule(model);
       log.info("[UserHistoryRepo] Rule saved successfully.");
       return const Right(null);
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[UserHistoryRepo] CacheFailure during saveRule: ${e.message}",
       );
