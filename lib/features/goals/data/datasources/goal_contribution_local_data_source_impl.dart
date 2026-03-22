@@ -33,7 +33,7 @@ class HiveContributionLocalDataSource
       log.info("[ContributionDS] Deleted contribution (ID: $id).");
     } catch (e, s) {
       log.severe(
-        "[ContributionDS] Failed to delete contribution (ID: $id)$e$s",
+        "[ContributionDS] Failed to delete contribution (ID: $id): $e\n$s",
       );
       throw CacheFailure('Failed to delete contribution: ${e.toString()}');
     }
@@ -46,7 +46,7 @@ class HiveContributionLocalDataSource
       log.info("[ContributionDS] Batch deleted ${ids.length} contributions.");
     } catch (e, s) {
       log.severe(
-        "[ContributionDS] Failed to batch delete contributions: ${ids.length} items.$e$s",
+        "[ContributionDS] Failed to batch delete contributions: ${ids.length} items.: $e\n$s",
       );
       throw CacheFailure(
         'Failed to batch delete contributions: ${e.toString()}',
@@ -101,7 +101,7 @@ class HiveContributionLocalDataSource
       return filtered;
     } catch (e, s) {
       log.severe(
-        "[ContributionDS] Failed to get contributions for goal $goalId$e$s",
+        "[ContributionDS] Failed to get contributions for goal $goalId: $e\n$s",
       );
       throw CacheFailure(
         'Failed to get contributions for goal: ${e.toString()}',
@@ -118,7 +118,7 @@ class HiveContributionLocalDataSource
       );
     } catch (e, s) {
       log.severe(
-        "[ContributionDS] Failed to save contribution ${contribution.id}$e$s",
+        "[ContributionDS] Failed to save contribution ${contribution.id}: $e\n$s",
       );
       throw CacheFailure('Failed to save contribution: ${e.toString()}');
     }

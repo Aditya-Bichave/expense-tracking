@@ -54,7 +54,7 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
       log.info("Deleted user history rule (ID: $ruleId) from Hive.");
     } catch (e, s) {
       log.severe(
-        "Failed to delete user history rule (ID: $ruleId) from cache$e$s",
+        "Failed to delete user history rule (ID: $ruleId) from cache: $e\n$s",
       );
       throw CacheFailure('Failed to delete history rule: ${e.toString()}');
     }
@@ -111,7 +111,7 @@ class HiveUserHistoryLocalDataSource implements UserHistoryLocalDataSource {
       );
     } catch (e, s) {
       log.severe(
-        "Failed to save user history rule (ID: ${rule.ruleId}) to cache$e$s",
+        "Failed to save user history rule (ID: ${rule.ruleId}) to cache: $e\n$s",
       );
       throw CacheFailure('Failed to save history rule: ${e.toString()}');
     }

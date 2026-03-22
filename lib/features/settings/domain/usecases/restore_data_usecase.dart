@@ -60,7 +60,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
             jsonString = await file.readAsString(); // Read as string directly
           } catch (e, s) {
             log.severe(
-              "[RestoreUseCase] Failed to read from path fallback.$e$s",
+              "[RestoreUseCase] Failed to read from path fallback.: $e\n$s",
             );
             return const Left(RestoreFailure("Could not read file content."));
           }

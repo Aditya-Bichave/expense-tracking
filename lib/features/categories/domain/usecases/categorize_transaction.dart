@@ -98,7 +98,7 @@ class CategorizeTransactionUseCase
       return Right(_keywordCategoryMap!);
     } catch (e, s) {
       log.severe(
-        "[CategorizeUseCase] Failed to load keywords from asset '$_keywordAssetPath'$e$s",
+        "[CategorizeUseCase] Failed to load keywords from asset '$_keywordAssetPath': $e\n$s",
       );
       _keywordCategoryMap = {}; // Cache empty map on error
       return Left(
@@ -261,7 +261,7 @@ class CategorizeTransactionUseCase
       return Right(CategorizationResult.uncategorized());
     } catch (e, s) {
       log.severe(
-        "[CategorizeUseCase] Unexpected error during categorization$e$s",
+        "[CategorizeUseCase] Unexpected error during categorization: $e\n$s",
       );
       return Left(
         UnexpectedFailure("Error during categorization: ${e.toString()}"),

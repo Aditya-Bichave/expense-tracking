@@ -54,7 +54,7 @@ class AssetExpenseCategoryDataSource implements CategoryPredefinedDataSource {
       return _cachedCategories!;
     } on FormatException catch (e, s) {
       log.severe(
-        "Failed to parse predefined expense categories JSON from asset '$_assetPath'$e$s",
+        "Failed to parse predefined expense categories JSON from asset '$_assetPath': $e\n$s",
       );
       _cachedCategories = []; // Return empty on format error
       throw const CacheFailure(
@@ -62,7 +62,7 @@ class AssetExpenseCategoryDataSource implements CategoryPredefinedDataSource {
       );
     } catch (e, s) {
       log.severe(
-        "Failed to load predefined expense categories from asset '$_assetPath'$e$s",
+        "Failed to load predefined expense categories from asset '$_assetPath': $e\n$s",
       );
       _cachedCategories = []; // Return empty on other errors
       throw CacheFailure(
@@ -117,7 +117,7 @@ class AssetIncomeCategoryDataSource implements CategoryPredefinedDataSource {
       return _cachedCategories!;
     } on FormatException catch (e, s) {
       log.severe(
-        "Failed to parse predefined income categories JSON from asset '$_assetPath'$e$s",
+        "Failed to parse predefined income categories JSON from asset '$_assetPath': $e\n$s",
       );
       _cachedCategories = [];
       throw const CacheFailure(
@@ -125,7 +125,7 @@ class AssetIncomeCategoryDataSource implements CategoryPredefinedDataSource {
       );
     } catch (e, s) {
       log.severe(
-        "Failed to load predefined income categories from asset '$_assetPath'$e$s",
+        "Failed to load predefined income categories from asset '$_assetPath': $e\n$s",
       );
       _cachedCategories = [];
       throw CacheFailure(

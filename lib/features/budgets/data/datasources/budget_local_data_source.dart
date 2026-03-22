@@ -75,7 +75,7 @@ class HiveBudgetLocalDataSource implements BudgetLocalDataSource {
         "[BudgetDS] Saved/Updated budget '${budget.name}' (ID: ${budget.id}).",
       );
     } catch (e, s) {
-      log.severe("[BudgetDS] Failed to save budget '${budget.name}'$e$s");
+      log.severe("[BudgetDS] Failed to save budget '${budget.name}': $e\n$s");
       throw CacheFailure('Failed to save budget: ${e.toString()}');
     }
   }

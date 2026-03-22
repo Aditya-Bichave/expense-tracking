@@ -23,7 +23,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       final themeMode = await localDataSource.getThemeMode();
       return Right(themeMode);
     } catch (e, s) {
-      log.log(Level.SEVERE, '[SettingsRepo] Error getting theme mode$e$s');
+      log.log(Level.SEVERE, '[SettingsRepo] Error getting theme mode: $e\n$s');
       return Left(
         SettingsFailure('Failed to load theme setting: ${e.toString()}'),
       );
@@ -38,7 +38,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] Theme mode saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      log.log(Level.SEVERE, '[SettingsRepo] Error saving theme mode$e$s');
+      log.log(Level.SEVERE, '[SettingsRepo] Error saving theme mode: $e\n$s');
       return Left(
         SettingsFailure('Failed to save theme setting: ${e.toString()}'),
       );
@@ -53,7 +53,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(
         Level.SEVERE,
-        '[SettingsRepo] Error getting palette identifier$e$s',
+        '[SettingsRepo] Error getting palette identifier: $e\n$s',
       );
       return Left(
         SettingsFailure('Failed to load palette identifier: ${e.toString()}'),
@@ -71,7 +71,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(
         Level.SEVERE,
-        '[SettingsRepo] Error saving palette identifier$e$s',
+        '[SettingsRepo] Error saving palette identifier: $e\n$s',
       );
       return Left(
         SettingsFailure('Failed to save palette identifier: ${e.toString()}'),
@@ -85,7 +85,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       final uiMode = await localDataSource.getUIMode();
       return Right(uiMode);
     } catch (e, s) {
-      log.log(Level.SEVERE, '[SettingsRepo] Error getting UI mode$e$s');
+      log.log(Level.SEVERE, '[SettingsRepo] Error getting UI mode: $e\n$s');
       return Left(
         SettingsFailure('Failed to load UI mode setting: ${e.toString()}'),
       );
@@ -100,7 +100,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] UI mode saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      log.log(Level.SEVERE, '[SettingsRepo] Error saving UI mode$e$s');
+      log.log(Level.SEVERE, '[SettingsRepo] Error saving UI mode: $e\n$s');
       return Left(
         SettingsFailure('Failed to save UI mode setting: ${e.toString()}'),
       );
@@ -115,7 +115,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(
         Level.SEVERE,
-        '[SettingsRepo] Error getting selected country code$e$s',
+        '[SettingsRepo] Error getting selected country code: $e\n$s',
       );
       return Left(
         SettingsFailure('Failed to load country setting: ${e.toString()}'),
@@ -135,7 +135,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(
         Level.SEVERE,
-        '[SettingsRepo] Error saving selected country code$e$s',
+        '[SettingsRepo] Error saving selected country code: $e\n$s',
       );
       return Left(
         SettingsFailure('Failed to save country setting: ${e.toString()}'),
@@ -166,7 +166,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
     } catch (e, s) {
       log.log(
         Level.SEVERE,
-        '[SettingsRepo] Unexpected error deriving currency symbol$e$s',
+        '[SettingsRepo] Unexpected error deriving currency symbol: $e\n$s',
       );
       return Left(
         SettingsFailure(
@@ -182,7 +182,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
       final isEnabled = await localDataSource.getAppLockEnabled();
       return Right(isEnabled);
     } catch (e, s) {
-      log.log(Level.SEVERE, '[SettingsRepo] Error getting app lock status$e$s');
+      log.log(
+        Level.SEVERE,
+        '[SettingsRepo] Error getting app lock status: $e\n$s',
+      );
       return Left(
         SettingsFailure('Failed to load app lock setting: ${e.toString()}'),
       );
@@ -197,7 +200,10 @@ class SettingsRepositoryImpl implements SettingsRepository {
       log.info("[SettingsRepo] App lock status saved successfully.");
       return const Right(null);
     } catch (e, s) {
-      log.log(Level.SEVERE, '[SettingsRepo] Error saving app lock status$e$s');
+      log.log(
+        Level.SEVERE,
+        '[SettingsRepo] Error saving app lock status: $e\n$s',
+      );
       return Left(
         SettingsFailure('Failed to save app lock setting: ${e.toString()}'),
       );

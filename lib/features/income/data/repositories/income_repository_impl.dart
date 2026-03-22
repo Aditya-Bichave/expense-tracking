@@ -192,7 +192,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       );
     } catch (e, s) {
       log.severe(
-        "[IncomeRepo] Unexpected error calculating total income for account '$accountId'$e$s",
+        "[IncomeRepo] Unexpected error calculating total income for account '$accountId': $e\n$s",
       );
       return Left(
         UnexpectedFailure('Failed to calculate total income: ${e.toString()}'),
@@ -241,7 +241,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[IncomeRepo] Unexpected error in updateIncomeCategorization ID $incomeId$e$s",
+        "[IncomeRepo] Unexpected error in updateIncomeCategorization ID $incomeId: $e\n$s",
       );
       return Left(
         CacheFailure("Failed to update income categorization: ${e.toString()}"),
@@ -304,7 +304,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[IncomeRepo] Unexpected error during reassignIncomesCategory$e$s",
+        "[IncomeRepo] Unexpected error during reassignIncomesCategory: $e\n$s",
       );
       return Left(
         CacheFailure("Failed to reassign income categories: ${e.toString()}"),

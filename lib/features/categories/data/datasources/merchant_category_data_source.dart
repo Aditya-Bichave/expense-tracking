@@ -49,7 +49,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
       return _cachedDb!;
     } on FormatException catch (e, s) {
       log.severe(
-        "Failed to parse merchant categories JSON from asset '$_assetPath'$e$s",
+        "Failed to parse merchant categories JSON from asset '$_assetPath': $e\n$s",
       );
       _cachedDb = {}; // Set empty cache on error to prevent retries
       throw const CacheFailure(
@@ -57,7 +57,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
       );
     } catch (e, s) {
       log.severe(
-        "Failed to load merchant categories from asset '$_assetPath'$e$s",
+        "Failed to load merchant categories from asset '$_assetPath': $e\n$s",
       );
       _cachedDb = {}; // Set empty cache on error
       throw CacheFailure('Could not load merchant categories: ${e.toString()}');

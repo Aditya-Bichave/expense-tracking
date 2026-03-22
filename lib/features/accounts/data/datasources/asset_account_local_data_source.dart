@@ -25,7 +25,9 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
       );
       return account;
     } catch (e, s) {
-      log.severe("Failed to add asset account '${account.name}' to cache$e$s");
+      log.severe(
+        "Failed to add asset account '${account.name}' to cache: $e\n$s",
+      );
       throw CacheFailure('Failed to add account: ${e.toString()}');
     }
   }
@@ -65,7 +67,7 @@ class HiveAssetAccountLocalDataSource implements AssetAccountLocalDataSource {
       return account;
     } catch (e, s) {
       log.severe(
-        "Failed to update asset account '${account.name}' in cache$e$s",
+        "Failed to update asset account '${account.name}' in cache: $e\n$s",
       );
       throw CacheFailure('Failed to update account: ${e.toString()}');
     }

@@ -66,7 +66,7 @@ class HiveGoalLocalDataSource implements GoalLocalDataSource {
       await goalBox.put(goal.id, goal);
       log.info("[GoalDS] Saved/Updated goal '${goal.name}' (ID: ${goal.id}).");
     } catch (e, s) {
-      log.severe("[GoalDS] Failed to save goal '${goal.name}'$e$s");
+      log.severe("[GoalDS] Failed to save goal '${goal.name}': $e\n$s");
       throw CacheFailure('Failed to save goal: ${e.toString()}');
     }
   }

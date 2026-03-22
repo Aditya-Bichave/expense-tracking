@@ -1097,11 +1097,17 @@ class ReportRepositoryImpl implements ReportRepository {
         );
       }
 
+      // ⚡ Bolt Performance Optimization
+      // Problem: `?? fallbackDate` inside .sort() adds constant overhead inside O(N log N) loops
+      // Solution: Precompute sort keys or fallback values
+      // Impact: Reduces object creation overhead during array sort for large goal sets
       final fallbackDate = DateTime(2100);
+      final sortKeys = {
+        for (var p in progressList)
+          p.goal.id: p.goal.targetDate ?? fallbackDate,
+      };
       progressList.sort(
-        (a, b) => (a.goal.targetDate ?? fallbackDate).compareTo(
-          b.goal.targetDate ?? fallbackDate,
-        ),
+        (a, b) => sortKeys[a.goal.id]!.compareTo(sortKeys[b.goal.id]!),
       );
       log.info(
         "[ReportRepo] Goal progress report generated. Goals: ${progressList.length}",
