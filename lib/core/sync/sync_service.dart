@@ -304,6 +304,9 @@ class SyncService {
         if (table == 'expenses' &&
             (payload.containsKey('payers') || payload.containsKey('splits'))) {
           await _createExpenseWithRelations(payload, item.id);
+        } else if (table.startsWith('rpc/')) {
+          final rpcName = table.substring(4);
+          await _client.rpc(rpcName, params: payload);
         } else {
           await _client.from(table).upsert(payload);
         }
