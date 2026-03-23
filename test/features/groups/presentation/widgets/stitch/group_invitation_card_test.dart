@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('pass', () {
+  testWidgets('pass', (WidgetTester tester) async {
     expect(true, isTrue);
   });
 }
