@@ -28,8 +28,8 @@ class ReportFilterControls extends StatelessWidget {
             state.optionsStatus == FilterOptionsStatus.error,
       );
       if (!context.mounted ||
-          filterBloc.state.optionsStatus == FilterOptionsStatus.error) {
-        return; // Don't show sheet if loading failed
+          filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
+        return; // Don't show sheet if loading failed or stream closed early
       }
     }
 
