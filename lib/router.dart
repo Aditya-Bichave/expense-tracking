@@ -218,7 +218,9 @@ class AppRouter {
                   final Map<String, dynamic> queryParams =
                       state.uri.queryParameters;
                   final Map<String, dynamic>? extra =
-                      state.extra is Map<String, dynamic> ? state.extra as Map<String, dynamic> : null;
+                      state.extra is Map<String, dynamic>
+                      ? state.extra as Map<String, dynamic>
+                      : null;
                   Map<String, dynamic>? filtersFromExtra =
                       extra?['filters'] as Map<String, dynamic>?;
 
@@ -327,7 +329,9 @@ class AppRouter {
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) {
                           final Map<String, dynamic>? extra =
-                              state.extra is Map<String, dynamic> ? state.extra as Map<String, dynamic> : null;
+                              state.extra is Map<String, dynamic>
+                              ? state.extra as Map<String, dynamic>
+                              : null;
                           final CategoryType? initialType =
                               extra?['initialType'] as CategoryType?;
                           return AddEditCategoryScreen(
@@ -634,7 +638,9 @@ class AppRouter {
     GoRouterState state,
   ) {
     final categoryId = state.pathParameters[RouteNames.paramId];
-    Category? category = state.extra is Category ? state.extra as Category : null;
+    Category? category = state.extra is Category
+        ? state.extra as Category
+        : null;
     final Map<String, dynamic>? extraMap = state.extra is Map<String, dynamic>
         ? state.extra as Map<String, dynamic>
         : null;
