@@ -17,6 +17,7 @@ import 'package:expense_tracker/features/groups/presentation/bloc/group_members_
 import 'package:expense_tracker/features/groups/presentation/bloc/groups_bloc.dart';
 import 'package:expense_tracker/features/groups/presentation/widgets/group_balance_card.dart';
 import 'package:expense_tracker/features/groups/presentation/widgets/stitch/group_members_tab.dart';
+import 'package:expense_tracker/features/groups/presentation/widgets/stitch/group_balances_tab.dart';
 import 'package:expense_tracker/features/groups/presentation/widgets/stitch/invite_generation_sheet.dart';
 import 'package:expense_tracker/ui_bridge/bridge_bottom_sheet.dart';
 import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
@@ -49,7 +50,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -136,6 +137,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                     controller: _tabController,
                     tabs: const [
                       Tab(text: 'Expenses'),
+                      Tab(text: 'Balances'),
                       Tab(text: 'Members'),
                     ],
                     labelColor: kit.colors.primary,
@@ -147,6 +149,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                       controller: _tabController,
                       children: [
                         _buildExpensesTab(context, group, canEditExpenses),
+                        GroupBalancesTab(groupId: widget.groupId),
                         GroupMembersTab(groupId: widget.groupId),
                       ],
                     ),

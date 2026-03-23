@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
-import 'package:expense_tracker/ui_kit/components/foundations/app_card.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
-import 'package:expense_tracker/ui_bridge/bridge_card.dart';
+import 'package:expense_tracker/features/deep_link/presentation/bloc/deep_link_bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class GroupInvitationCard extends StatelessWidget {
-  const GroupInvitationCard({super.key});
+  final String token;
+
+  const GroupInvitationCard({super.key, required this.token});
 
   @override
   Widget build(BuildContext context) {
@@ -45,23 +47,35 @@ class GroupInvitationCard extends StatelessWidget {
                         ),
                         kit.spacing.gapLg,
                         Text(
-                          'Europe Tour',
+                          'Join Group',
                           style: kit.typography.headline.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         kit.spacing.gapLg,
                         Text(
-                          'Join your friends to plan the ultimate summer adventure across the continent.',
+                          'Join your friends to plan the ultimate adventure together.',
                           textAlign: TextAlign.center,
                           style: kit.typography.body,
                         ),
                         kit.spacing.gapXxl,
-                        AppButton(
-                          onPressed: () {},
-                          label: 'Join Group',
-                          isFullWidth: true,
-                          size: AppButtonSize.large,
+                        BlocBuilder<DeepLinkBloc, DeepLinkState>(
+                          builder: (context, state) {
+                            return AppButton(
+                              onPressed: state is DeepLinkProcessing
+                                  ? null
+                                  : () {
+                                      context.read<DeepLinkBloc>().add(
+                                        DeepLinkManualEntry(token),
+                                      );
+                                    },
+                              label: state is DeepLinkProcessing
+                                  ? 'Joining...'
+                                  : 'Join Group',
+                              isFullWidth: true,
+                              size: AppButtonSize.large,
+                            );
+                          },
                         ),
                       ],
                     ),

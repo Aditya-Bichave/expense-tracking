@@ -95,7 +95,7 @@ void main() {
     );
 
     blocTest<GroupBalancesBloc, GroupBalancesState>(
-      'emits mock data on FetchBalances if edge function fails',
+      'emits error on FetchBalances if edge function fails',
       build: () {
         when(
           () => mockFunctions.invoke(
@@ -108,12 +108,8 @@ void main() {
       act: (bloc) => bloc.add(const FetchBalances(groupId)),
       expect: () => [
         isA<GroupBalancesLoading>(),
-        isA<GroupBalancesLoaded>(), // Mock data fallback
+        isA<GroupBalancesError>(),
       ],
-      verify: (_) {
-        final state = bloc.state as GroupBalancesLoaded;
-        expect(state.balances.myNetBalance, -700.0);
-      },
     );
 
     blocTest<GroupBalancesBloc, GroupBalancesState>(

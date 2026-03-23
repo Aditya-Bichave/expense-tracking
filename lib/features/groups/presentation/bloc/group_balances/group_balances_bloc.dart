@@ -97,44 +97,8 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
       }
     } catch (e, s) {
       _log.severe('Failed to fetch group balances', e, s);
-      _log.info('Falling back to mock data');
-      _emitMockData(emit);
+      emit(GroupBalancesError('Failed to fetch group balances: $e'));
     }
-  }
-
-  void _emitMockData(Emitter<GroupBalancesState> emit) {
-    final currentUser = authSessionService.currentUser;
-    final currentUserId = currentUser?.id ?? 'me';
-
-    final mockBalances = GroupBalances(
-      myNetBalance: -700.0,
-      simplifiedDebts: [
-        SimplifiedDebt(
-          fromUserId: currentUserId,
-          toUserId: 'user-ravi',
-          amount: 1500.0,
-          fromUserName: 'You',
-          toUserName: 'Ravi',
-          toUserUpi: 'ravi@okicici',
-        ),
-        SimplifiedDebt(
-          fromUserId: 'user-amit',
-          toUserId: currentUserId,
-          amount: 800.0,
-          fromUserName: 'Amit',
-          toUserName: 'You',
-        ),
-        SimplifiedDebt(
-          fromUserId: 'user-zack',
-          toUserId: 'user-cody',
-          amount: 300.0,
-          fromUserName: 'Zack',
-          toUserName: 'Cody',
-        ),
-      ],
-    );
-
-    emit(GroupBalancesLoaded(mockBalances));
   }
 
   void _onApplyOptimisticSettlement(
