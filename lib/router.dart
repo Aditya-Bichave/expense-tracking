@@ -52,6 +52,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:expense_tracker/features/auth/presentation/pages/login_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/create_group_page.dart';
+import 'package:expense_tracker/features/groups/presentation/pages/group_invitation_page.dart';
 import 'package:expense_tracker/features/auth/presentation/pages/verify_otp_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_list_page.dart';
 import 'package:expense_tracker/features/groups/presentation/pages/group_detail_page.dart';
@@ -273,6 +274,15 @@ class AppRouter {
           ),
           StatefulShellBranch(
             routes: [
+              GoRoute(
+                path: RouteNames.groupInvite,
+                name: RouteNames.groupInvite,
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: GroupInvitationPage(
+                    token: state.uri.queryParameters['token'],
+                  ),
+                ),
+              ),
               GoRoute(
                 path: RouteNames.groups,
                 name: RouteNames.groups,
