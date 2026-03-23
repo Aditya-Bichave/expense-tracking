@@ -31,7 +31,7 @@ void main() {
       () async {
         when(
           () => mockStorage.containsKey(key: testKey),
-        ).thenThrow(Exception('Storage Error'));
+        ).thenAnswer((_) async => throw Exception('Storage Error'));
         expect(await secureLocalStorage.hasAccessToken(), isFalse);
       },
     );
@@ -46,7 +46,7 @@ void main() {
     test('accessToken returns null when storage throws exception', () async {
       when(
         () => mockStorage.read(key: testKey),
-      ).thenThrow(Exception('Read Error'));
+      ).thenAnswer((_) async => throw Exception('Read Error'));
       expect(await secureLocalStorage.accessToken(), isNull);
     });
 
@@ -59,7 +59,7 @@ void main() {
     test('removePersistedSession suppresses exceptions', () async {
       when(
         () => mockStorage.delete(key: testKey),
-      ).thenThrow(Exception('Delete Error'));
+      ).thenAnswer((_) async => throw Exception('Delete Error'));
       await secureLocalStorage.removePersistedSession();
       verify(() => mockStorage.delete(key: testKey)).called(1);
     });
@@ -75,7 +75,7 @@ void main() {
     test('persistSession suppresses exceptions', () async {
       when(
         () => mockStorage.write(key: testKey, value: testValue),
-      ).thenThrow(Exception('Write Error'));
+      ).thenAnswer((_) async => throw Exception('Write Error'));
       await secureLocalStorage.persistSession(testValue);
       verify(() => mockStorage.write(key: testKey, value: testValue)).called(1);
     });
