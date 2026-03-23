@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:intl/intl.dart';
 
 class CurrencyFormatter {
@@ -36,9 +37,9 @@ class CurrencyFormatter {
       }
 
       return currencyFormat.format(amount);
-    } catch (e) {
+    } catch (e, s) {
       // Fallback in case of intl error (e.g., invalid locale)
-      // Consider logging this error
+      log.severe('Error formatting currency: $e\n$s');
       return "$symbolToUse${amount.toStringAsFixed(2)}";
     }
   }
