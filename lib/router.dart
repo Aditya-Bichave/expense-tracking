@@ -218,7 +218,9 @@ class AppRouter {
                   final Map<String, dynamic> queryParams =
                       state.uri.queryParameters;
                   final Map<String, dynamic>? extra =
-                      state.extra as Map<String, dynamic>?;
+                      state.extra is Map<String, dynamic>
+                      ? state.extra as Map<String, dynamic>
+                      : null;
                   Map<String, dynamic>? filtersFromExtra =
                       extra?['filters'] as Map<String, dynamic>?;
 
@@ -327,7 +329,9 @@ class AppRouter {
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) {
                           final Map<String, dynamic>? extra =
-                              state.extra as Map<String, dynamic>?;
+                              state.extra is Map<String, dynamic>
+                              ? state.extra as Map<String, dynamic>
+                              : null;
                           final CategoryType? initialType =
                               extra?['initialType'] as CategoryType?;
                           return AddEditCategoryScreen(
@@ -562,11 +566,7 @@ class AppRouter {
     final id = state.pathParameters[RouteNames.paramTransactionId];
     TransactionEntity? transaction;
     if (state.extra is TransactionEntity) {
-      transaction = state.extra is TransactionEntity
-          ? state.extra as TransactionEntity
-          : throw Exception(
-              "Transaction ID required",
-            ); // Fallback not possible since its required
+      transaction = state.extra as TransactionEntity;
     } else {
       log.warning(
         "[AppRouter] Txn Detail route received 'extra' of unexpected type or null. Extra: ${state.extra?.runtimeType}",
@@ -639,12 +639,10 @@ class AppRouter {
   ) {
     final categoryId = state.pathParameters[RouteNames.paramId];
     Category? category = state.extra is Category
-        ? (state.extra is Category ? state.extra as Category : null)
+        ? state.extra as Category
         : null;
     final Map<String, dynamic>? extraMap = state.extra is Map<String, dynamic>
-        ? (state.extra is Map<String, dynamic>
-              ? state.extra as Map<String, dynamic>
-              : null)
+        ? state.extra as Map<String, dynamic>
         : null;
     final CategoryType? initialType = extraMap?['initialType'] as CategoryType?;
 

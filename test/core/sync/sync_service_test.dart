@@ -24,6 +24,8 @@ class MockStorageFileApi extends Mock implements StorageFileApi {}
 
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
+class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder {}
+
 void main() {
   late MockSupabaseClient mockSupabaseClient;
   late MockOutboxRepository mockOutboxRepository;
@@ -33,6 +35,7 @@ void main() {
   late MockSupabaseStorageClient mockStorageClient;
   late MockStorageFileApi mockStorageFileApi;
   late MockSupabaseQueryBuilder mockQueryBuilder;
+  late MockPostgrestFilterBuilder mockFilterBuilder;
 
   setUpAll(() {
     registerFallbackValue(File(''));
@@ -57,6 +60,7 @@ void main() {
     mockStorageClient = MockSupabaseStorageClient();
     mockStorageFileApi = MockStorageFileApi();
     mockQueryBuilder = MockSupabaseQueryBuilder();
+    mockFilterBuilder = MockPostgrestFilterBuilder();
 
     // Use thenAnswer for methods returning Future-like objects (e.g. SupabaseQueryBuilder)
     when(() => mockSupabaseClient.storage).thenReturn(mockStorageClient);
@@ -64,6 +68,9 @@ void main() {
     when(
       () => mockSupabaseClient.from(any()),
     ).thenAnswer((_) => mockQueryBuilder);
+    when(
+      () => mockSupabaseClient.rpc(any(), params: any(named: 'params')),
+    ).thenAnswer((_) => mockFilterBuilder as dynamic);
   });
 
   test(
