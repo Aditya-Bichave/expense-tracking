@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -32,13 +33,15 @@ class UpiService {
       if (!launched) {
         if (context.mounted) _handleNoUpiApp(context, upiId);
       }
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e, s) {
+      log.severe('Payment Error: $e\n$s');
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Payment Error: ${e.message}')));
       }
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Unknown Error in launchUpiPayment: $e\n$s');
       if (context.mounted) _handleNoUpiApp(context, upiId);
     }
   }
