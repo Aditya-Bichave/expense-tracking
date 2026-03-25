@@ -5,21 +5,16 @@ class ColorUtils {
   /// Converts a hex color string (like "#FF00FF" or "FF00FF") to a Color object.
   /// Defaults to Colors.grey if parsing fails or input is invalid.
   static Color fromHex(String? hexString) {
-    try {
-      if (hexString == null) return Colors.grey;
-      String cleanHex = hexString.replaceFirst('#', '');
-      final buffer = StringBuffer();
-      if (cleanHex.length == 6) buffer.write('ff');
-      buffer.write(cleanHex);
-      if (buffer.length == 8) {
-        int? val = int.tryParse(buffer.toString(), radix: 16);
-        if (val != null) {
-          return Color(val);
-        }
+    if (hexString == null) return Colors.grey;
+    String cleanHex = hexString.replaceFirst('#', '');
+    final buffer = StringBuffer();
+    if (cleanHex.length == 6) buffer.write('ff');
+    buffer.write(cleanHex);
+    if (buffer.length == 8) {
+      int? val = int.tryParse(buffer.toString(), radix: 16);
+      if (val != null) {
+        return Color(val);
       }
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      // Log error if needed
     }
     return Colors.grey; // Default fallback color
   }
