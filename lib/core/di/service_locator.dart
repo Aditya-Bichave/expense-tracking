@@ -233,7 +233,6 @@ void publishDataChangedEvent({
         instanceName: 'dataChangeController',
       ).add(DataChangedEvent(type: type, reason: reason));
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Error publishing DataChangedEvent: $e\n$s");
     }
   }

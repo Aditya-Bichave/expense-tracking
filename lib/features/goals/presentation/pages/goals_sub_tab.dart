@@ -121,7 +121,6 @@ class GoalsSubTab extends StatelessWidget {
                     )
                     .timeout(const Duration(seconds: 3));
               } catch (e, s) {
-      log.severe("Msg: $e\n$s");
                 log.severe('Silent failure: $e\n$s');
               }
             },

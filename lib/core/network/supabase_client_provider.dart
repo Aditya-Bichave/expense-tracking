@@ -21,7 +21,6 @@ class SecureLocalStorage extends LocalStorage {
         key: SupabaseConfig.supabasePersistSessionKey,
       );
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.warning('SecureLocalStorage: Error checking access token: $e\n$s');
       return false;
     }
@@ -32,7 +31,6 @@ class SecureLocalStorage extends LocalStorage {
     try {
       return await storage.read(key: SupabaseConfig.supabasePersistSessionKey);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.warning('SecureLocalStorage: Error reading access token: $e\n$s');
       return null;
     }
@@ -43,7 +41,6 @@ class SecureLocalStorage extends LocalStorage {
     try {
       await storage.delete(key: SupabaseConfig.supabasePersistSessionKey);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.warning('SecureLocalStorage: Error deleting session: $e\n$s');
     }
   }
@@ -56,7 +53,6 @@ class SecureLocalStorage extends LocalStorage {
         value: persistSessionString,
       );
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.warning('SecureLocalStorage: Error persisting session: $e\n$s');
     }
   }
@@ -105,7 +101,6 @@ class SupabaseClientProvider {
       );
       log.info('Supabase initialized successfully.');
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe('Failed to initialize Supabase: $e\n$s');
       // Rethrow to ensure main.dart catches it and shows InitializationErrorApp
       rethrow;

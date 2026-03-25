@@ -98,7 +98,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
       return Right(_cachedAllCategories!);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[CategoryRepo] Error during getAllCategories: $e\n$s");
       invalidateCache(); // Use public method
       return Left(
@@ -193,7 +192,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
       return const Right(null);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       invalidateCache(); // Also invalidate on error? Maybe not.
       log.warning(
@@ -223,7 +221,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
       return const Right(null);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       invalidateCache(); // Invalidate on error?
       log.warning(
@@ -250,7 +247,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
       return const Right(null);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       invalidateCache(); // Invalidate on error?
       log.warning(

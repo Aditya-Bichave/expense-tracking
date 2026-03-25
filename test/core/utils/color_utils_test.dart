@@ -28,12 +28,9 @@ void main() {
       expect(ColorUtils.fromHex(null), Colors.grey);
     });
 
-    test(
-      'fromHex returns Colors.grey for empty string',
-      () {
-        expect(ColorUtils.fromHex(''), Colors.grey);
-      },
-    );
+    test('fromHex returns Colors.grey for empty string', () {
+      expect(ColorUtils.fromHex(''), Colors.grey);
+    });
 
     test('toHex converts Color to hex string correctly', () {
       expect(ColorUtils.toHex(const Color(0xFF0000FF)), '#0000FF');

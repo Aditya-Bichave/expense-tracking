@@ -135,7 +135,6 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
         },
       );
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[SummaryBloc] Unexpected error in _onLoadSummary: $e\n$s");
       emit(
         SummaryError(

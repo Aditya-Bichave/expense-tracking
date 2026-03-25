@@ -130,7 +130,6 @@ class _TransactionListPageState extends State<TransactionListPage> {
       context.pushNamed(routeName, pathParameters: params, extra: transaction);
       log.info("[TxnListPage] pushNamed executed.");
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[TxnListPage] Error executing pushNamed: $e\n$s");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

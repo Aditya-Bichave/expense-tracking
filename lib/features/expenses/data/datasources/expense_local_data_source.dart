@@ -29,7 +29,6 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       log.info("Added expense '${expense.title}' (ID: ${expense.id}) to Hive.");
       return expense;
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Failed to add expense '${expense.title}' to cache: $e\n$s");
       throw CacheFailure('Failed to add expense: ${e.toString()}');
     }
@@ -41,7 +40,6 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       await expenseBox.delete(id);
       log.info("Deleted expense (ID: $id) from Hive.");
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Failed to delete expense (ID: $id) from cache: $e\n$s");
       throw CacheFailure('Failed to delete expense: ${e.toString()}');
     }
@@ -95,7 +93,6 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       );
       return results;
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Failed to get expenses from cache: $e\n$s");
       throw CacheFailure('Failed to get expenses: ${e.toString()}');
     }
@@ -113,7 +110,6 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       }
       return expense; // Returns null if not found
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Failed to get expense by ID $id from cache: $e\n$s");
       throw CacheFailure('Failed to get expense by ID: ${e.toString()}');
     }
@@ -134,7 +130,6 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       );
       return expense;
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to update expense '${expense.title}' in cache: $e\n$s",
       );
@@ -148,7 +143,6 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
       final count = await expenseBox.clear();
       log.info("Cleared expenses box in Hive ($count items removed).");
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Failed to clear expenses cache: $e\n$s");
       throw CacheFailure('Failed to clear expenses cache: ${e.toString()}');
     }

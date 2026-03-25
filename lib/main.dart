@@ -91,7 +91,6 @@ class AppInitializer {
     try {
       await Firebase.initializeApp();
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.warning('Firebase initialization failed: $e\n$s');
     }
 
@@ -304,7 +303,6 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
             try {
               await file.delete();
             } catch (e, s) {
-      log.severe("Msg: $e\n$s");
               log.severe('Silent failure: $e\n$s');
             }
           }
@@ -321,8 +319,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
           ),
         );
       }
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

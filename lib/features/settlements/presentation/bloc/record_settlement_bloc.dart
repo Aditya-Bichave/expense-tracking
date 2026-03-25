@@ -1,4 +1,3 @@
-import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker/core/auth/auth_session_service.dart';
 import 'package:expense_tracker/core/services/image_compression_service.dart';
@@ -99,7 +98,6 @@ class RecordSettlementBloc
                 .getPublicUrl(path);
           }
         } catch (e, s) {
-      log.severe("Msg: $e\n$s");
           _log.severe('Failed to compress or upload image: $e\n$s');
         }
       }
@@ -117,7 +115,6 @@ class RecordSettlementBloc
 
       emit(state.copyWith(status: FormStatus.success));
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       _log.severe('Failed to record settlement: $e\n$s');
       emit(
         state.copyWith(status: FormStatus.failure, errorMessage: e.toString()),

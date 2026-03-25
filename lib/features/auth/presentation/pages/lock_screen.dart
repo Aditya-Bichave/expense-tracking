@@ -49,7 +49,6 @@ class _LockScreenState extends State<LockScreen> {
       final canCheck = await auth.canCheckBiometrics;
       if (mounted) setState(() => _canCheckBiometrics = canCheck);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe('Silent failure: $e\n$s');
     }
   }
@@ -72,8 +71,7 @@ class _LockScreenState extends State<LockScreen> {
       if (authenticated && mounted) {
         context.read<SessionCubit>().unlock();
       }
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       // Fallback
     }
   }

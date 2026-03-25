@@ -88,7 +88,6 @@ class SyncService {
             .subscribe();
       }
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe('Failed to initialize realtime: $e\n$s');
     }
   }
@@ -132,7 +131,6 @@ class SyncService {
         }
       }
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe('Error handling group realtime payload: $e\n$s');
     }
   }
@@ -171,7 +169,6 @@ class SyncService {
         }
       }
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe('Error handling group member realtime payload: $e\n$s');
     }
   }
@@ -188,7 +185,6 @@ class SyncService {
         final group = GroupModel.fromJson(groupData);
         await _groupBox.put(group.id, group);
       } catch (e, s) {
-      log.severe("Msg: $e\n$s");
         log.warning('Failed to fetch missing group $groupId: $e\n$s');
       }
     }
@@ -221,8 +217,7 @@ class SyncService {
         try {
           await _processItem(item);
           await _outboxRepository.markAsSent(item);
-        } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+        } catch (e) {
           log.warning('Failed to sync item ${item.id}: $e');
           await _outboxRepository.markAsFailed(item, e.toString());
           hadError = true;
@@ -241,8 +236,7 @@ class SyncService {
           _safeAddStatus(SyncServiceStatus.synced);
         }
       }
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       _safeAddStatus(SyncServiceStatus.error);
     } finally {
       _isSyncing = false;
@@ -296,7 +290,6 @@ class SyncService {
               .getPublicUrl(uploadPath);
           payload['p_receipt_url'] = publicUrl;
         } catch (e, s) {
-      log.severe("Msg: $e\n$s");
           log.warning(
             'Failed to upload receipt: $e. Continuing without it.\n$s',
           );

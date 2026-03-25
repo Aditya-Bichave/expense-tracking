@@ -123,8 +123,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
           emit(AccountListLoaded(accounts: accounts));
         },
       );
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       log.severe("[AccountListBloc] Unexpected error in _onLoadAccounts");
       emit(
         AccountListError(
@@ -186,8 +185,7 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
             );
           },
         );
-      } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+      } catch (e) {
         log.severe(
           "[AccountListBloc] Unexpected error in _onDeleteAccountRequested for ID ${event.accountId}",
         );

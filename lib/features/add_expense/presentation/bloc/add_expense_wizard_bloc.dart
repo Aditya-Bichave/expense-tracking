@@ -270,8 +270,7 @@ class AddExpenseWizardBloc
       emit(
         state.copyWith(isUploadingReceipt: false, receiptCloudUrl: publicUrl),
       );
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       log.severe('Receipt upload failed: $e');
       emit(state.copyWith(isUploadingReceipt: false));
     }
@@ -447,8 +446,7 @@ class AddExpenseWizardBloc
 
       await repository.createExpense(finalState);
       emit(finalState.copyWith(status: FormStatus.success));
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       log.severe("Submit failed: $e");
       emit(
         state.copyWith(status: FormStatus.error, errorMessage: e.toString()),

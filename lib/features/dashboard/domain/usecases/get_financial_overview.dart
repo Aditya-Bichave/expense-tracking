@@ -154,7 +154,6 @@ class GetFinancialOverviewUseCase
       );
       return Right(overview);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[GetFinancialOverviewUseCase] Unexpected error: $e\n$s");
       return Left(
         UnexpectedFailure(

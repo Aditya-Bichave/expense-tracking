@@ -1,4 +1,3 @@
-import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -96,7 +95,6 @@ class NotificationService {
         });
       }
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       _log.severe('Error syncing device token: $e\n$s');
     }
   }
@@ -117,7 +115,6 @@ class NotificationService {
       });
       return true;
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       _log.severe('Failed to upsert user_fcm_tokens: $e\n$s');
       return false;
     }
@@ -141,7 +138,6 @@ class NotificationService {
       await _tokenRefreshSub?.cancel();
       _tokenRefreshSub = null;
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       _log.severe('Error deleting device token: $e\n$s');
     }
   }

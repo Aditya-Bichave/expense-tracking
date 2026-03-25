@@ -53,7 +53,6 @@ class AssetExpenseCategoryDataSource implements CategoryPredefinedDataSource {
       );
       return _cachedCategories!;
     } on FormatException catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to parse predefined expense categories JSON from asset '$_assetPath'$e$s",
       );
@@ -62,7 +61,6 @@ class AssetExpenseCategoryDataSource implements CategoryPredefinedDataSource {
         'Invalid format in predefined expense categories asset file.',
       );
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to load predefined expense categories from asset '$_assetPath'$e$s",
       );
@@ -118,7 +116,6 @@ class AssetIncomeCategoryDataSource implements CategoryPredefinedDataSource {
       );
       return _cachedCategories!;
     } on FormatException catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to parse predefined income categories JSON from asset '$_assetPath'$e$s",
       );
@@ -127,7 +124,6 @@ class AssetIncomeCategoryDataSource implements CategoryPredefinedDataSource {
         'Invalid format in predefined income categories asset file.',
       );
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to load predefined income categories from asset '$_assetPath'$e$s",
       );

@@ -9,7 +9,6 @@ Future<void> initFileLogger() async {
     final dir = await getApplicationDocumentsDirectory();
     _startupLogFile = File('${dir.path}/startup.log');
   } catch (e, s) {
-      log.severe("Msg: $e\n$s");
     log.severe('Silent failure: $e\n$s');
   }
 }
@@ -22,7 +21,6 @@ Future<void> writeStartupLog(String message) async {
       await file.writeAsString('$timestamp $message\n', mode: FileMode.append);
     }
   } catch (e, s) {
-      log.severe("Msg: $e\n$s");
     log.severe('Silent failure: $e\n$s');
   }
 }

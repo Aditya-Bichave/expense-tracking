@@ -65,7 +65,6 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       final tz = await FlutterTimezone.getLocalTimezone();
       if (mounted) setState(() => _timezone = tz.toString());
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe('Silent failure: $e\n$s');
     }
   }
@@ -77,8 +76,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
         setState(() => _avatarFile = File(picked.path));
         context.read<ProfileBloc>().add(UploadAvatar(_avatarFile!));
       }
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       if (mounted) {
         AppToast.show(
           context,

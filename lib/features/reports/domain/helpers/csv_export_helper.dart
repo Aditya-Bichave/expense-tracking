@@ -35,7 +35,6 @@ class CsvExportHelper {
       String csv = const ListToCsvConverter().convert(csvData);
       return csv;
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Error generating CSV string: $e\n$s");
       throw ExportFailure("CSV Generation Error: $e");
     }
@@ -63,7 +62,6 @@ class CsvExportHelper {
       );
       log.info("[CsvExportHelper] Web CSV download initiated for '$fileName'.");
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[CsvExportHelper] Error saving CSV on Web: $e\n$s");
       throw ExportFailure("Web Download Error: $e");
     }
@@ -117,8 +115,6 @@ class CsvExportHelper {
         );
       }
     } on PlatformException catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      log.severe("Msg: $e\n$s");
       log.severe("[CsvExportHelper] PlatformException saving CSV: $e\n$s");
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +125,6 @@ class CsvExportHelper {
       }
       throw ExportFailure("File Picker Error: ${e.message ?? 'Unknown'}");
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[CsvExportHelper] Error saving CSV file: $e\n$s");
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -189,8 +184,7 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       return Right(
         ExportFailure("Failed to generate Category Spending CSV: $e"),
       );
@@ -229,8 +223,7 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       return Right(
         ExportFailure("Failed to generate Spending Over Time CSV: $e"),
       );
@@ -285,8 +278,7 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       return Right(
         ExportFailure("Failed to generate Income vs Expense CSV: $e"),
       );
@@ -351,8 +343,7 @@ class CsvExportHelper {
 
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       return Right(
         ExportFailure("Failed to generate Budget Performance CSV: $e"),
       );
@@ -407,8 +398,7 @@ class CsvExportHelper {
       }).toList();
       final csvString = await _generateCsv(rows, headers);
       return Left(csvString);
-    } catch (e, s) {
-      log.severe("Msg: $e\n$s");
+    } catch (e) {
       return Right(ExportFailure("Failed to generate Goal Progress CSV: $e"));
     }
   }

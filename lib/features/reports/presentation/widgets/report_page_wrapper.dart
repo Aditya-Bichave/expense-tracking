@@ -84,7 +84,6 @@ class ReportPageWrapper extends StatelessWidget {
             ),
           );
         } catch (e, s) {
-      log.severe("Msg: $e\n$s");
           log.severe("[ReportWrapper] Error saving CSV file: $e\n$s");
           if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(

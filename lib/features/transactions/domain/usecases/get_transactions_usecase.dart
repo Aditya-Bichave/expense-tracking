@@ -263,7 +263,6 @@ class GetTransactionsUseCase
 
       return Right(filteredList);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "[GetTransactionsUseCase] Unexpected error during processing: $e\n$s",
       );

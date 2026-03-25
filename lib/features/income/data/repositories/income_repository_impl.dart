@@ -52,12 +52,9 @@ class IncomeRepositoryImpl implements IncomeRepository {
         "[IncomeRepo] Add successful (ID: ${addedModel.id}). Hydrating category.",
       );
       return await _hydrateSingleModel(addedModel);
-    } on CacheFailure catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      log.severe("Msg: $e\n$s");
+    } on CacheFailure catch (e) {
       return Left(e);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[IncomeRepo] Unexpected error adding income: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error adding income: ${e.toString()}'),
@@ -78,13 +75,10 @@ class IncomeRepositoryImpl implements IncomeRepository {
       );
       return await _hydrateSingleModel(updatedModel);
     } on CacheFailure catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       log.warning("[IncomeRepo] CacheFailure during update: ${e.message}");
       return Left(e);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[IncomeRepo] Unexpected error updating income: $e\n$s");
       return Left(
         UnexpectedFailure('Unexpected error updating income: ${e.toString()}'),
@@ -100,7 +94,6 @@ class IncomeRepositoryImpl implements IncomeRepository {
       final hydrated = await _hydrateSingleModel(model);
       return hydrated.map((e) => e);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("Error getting income by ID $id: $e\n$s");
       return Left(CacheFailure("Error getting income: $e"));
     }
@@ -131,15 +124,12 @@ class IncomeRepositoryImpl implements IncomeRepository {
 
       return Right(incomeModels); // Return models
     } on CacheFailure catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[IncomeRepo] CacheFailure getting income models: ${e.message}",
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe("[IncomeRepo] Unexpected error getting income models: $e\n$s");
       return Left(
         UnexpectedFailure(
@@ -157,15 +147,12 @@ class IncomeRepositoryImpl implements IncomeRepository {
       log.info("[IncomeRepo] Delete successful for ID: $id.");
       return const Right(null);
     } on CacheFailure catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[IncomeRepo] CacheFailure deleting income ID $id: ${e.message}",
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "[IncomeRepo] Unexpected error deleting income ID $id: $e\n$s",
       );
@@ -207,7 +194,6 @@ class IncomeRepositoryImpl implements IncomeRepository {
         },
       );
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "[IncomeRepo] Unexpected error calculating total income for account '$accountId'$e$s",
       );
@@ -252,15 +238,12 @@ class IncomeRepositoryImpl implements IncomeRepository {
       );
       return const Right(null);
     } on CacheFailure catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[IncomeRepo] CacheFailure during updateIncomeCategorization ID $incomeId: ${e.message}",
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "[IncomeRepo] Unexpected error in updateIncomeCategorization ID $incomeId$e$s",
       );
@@ -319,15 +302,12 @@ class IncomeRepositoryImpl implements IncomeRepository {
       );
       return Right(updateCount);
     } on CacheFailure catch (e, s) {
-      log.severe("Msg: $e\n$s");
-      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[IncomeRepo] CacheFailure during reassignIncomesCategory: ${e.message}",
       );
       return Left(e);
     } catch (e, s) {
-      log.severe("Msg: $e\n$s");
       log.severe(
         "[IncomeRepo] Unexpected error during reassignIncomesCategory$e$s",
       );
