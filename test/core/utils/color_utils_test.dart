@@ -24,10 +24,13 @@ void main() {
       expect(ColorUtils.fromHex('ZZZZZZ'), Colors.grey);
     });
 
+    test('fromHex returns Colors.grey for null input', () {
+      expect(ColorUtils.fromHex(null), Colors.grey);
+    });
+
     test(
-      'fromHex returns Colors.grey for null-ish input (though param is non-nullable String)',
+      'fromHex returns Colors.grey for empty string',
       () {
-        // In Dart, String can't be null here, but empty string?
         expect(ColorUtils.fromHex(''), Colors.grey);
       },
     );
