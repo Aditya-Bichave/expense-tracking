@@ -18,7 +18,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.signInWithOtp(phone: phone);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -28,7 +29,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.signInWithMagicLink(email: email);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -38,7 +40,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _remoteDataSource.signInAnonymously();
       return Right(response);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -54,7 +57,8 @@ class AuthRepositoryImpl implements AuthRepository {
         token: token,
       );
       return Right(response);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -76,11 +80,13 @@ class AuthRepositoryImpl implements AuthRepository {
         final storage = sl<SecureStorageService>();
         await storage.clearAll();
       } catch (e, s) {
+      log.severe("Msg: $e\n$s");
         log.severe('Silent failure: $e\n$s');
       }
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -89,7 +95,8 @@ class AuthRepositoryImpl implements AuthRepository {
   Either<Failure, User?> getCurrentUser() {
     try {
       return Right(_remoteDataSource.getCurrentUser());
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }

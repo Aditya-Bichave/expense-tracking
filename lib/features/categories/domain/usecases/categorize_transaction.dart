@@ -97,6 +97,7 @@ class CategorizeTransactionUseCase
       );
       return Right(_keywordCategoryMap!);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[CategorizeUseCase] Failed to load keywords from asset '$_keywordAssetPath'$e$s",
       );
@@ -260,6 +261,7 @@ class CategorizeTransactionUseCase
       );
       return Right(CategorizationResult.uncategorized());
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[CategorizeUseCase] Unexpected error during categorization$e$s",
       );

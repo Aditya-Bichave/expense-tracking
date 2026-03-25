@@ -116,6 +116,7 @@ class GroupsBloc extends Bloc<GroupsEvent, GroupsState> {
           (_) => log.info("Group sync completed successfully."),
         );
       } catch (e, s) {
+      log.severe("Msg: $e\n$s");
         log.severe("Group sync threw exception: $e\n$s");
       }
     }

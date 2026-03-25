@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 
 class ColorUtils {
@@ -11,7 +12,8 @@ class ColorUtils {
       if (buffer.length == 8) {
         return Color(int.parse(buffer.toString(), radix: 16));
       }
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       // Log error if needed
     }
     return Colors.grey; // Default fallback color

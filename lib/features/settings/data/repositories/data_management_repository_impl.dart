@@ -85,6 +85,7 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
         ),
       );
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[DataMgmtRepo] Error in getAllDataForBackup: $e\n$s");
       return Left(
         CacheFailure("Failed to retrieve data for backup: ${e.toString()}"),
@@ -119,6 +120,7 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
       );
       return const Right(null);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[DataMgmtRepo] Error in clearAllData: $e\n$s");
       return Left(ClearDataFailure("Failed to clear data: ${e.toString()}"));
     }
@@ -172,6 +174,7 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
       log.info("[DataMgmtRepo] Restore completed successfully.");
       return const Right(null);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[DataMgmtRepo] Error during restoreData population: $e\n$s");
       return Left(RestoreFailure("Failed to restore data: ${e.toString()}"));
     }

@@ -59,11 +59,14 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
         },
       );
     } on CacheFailure catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] CacheFailure during add for '${account.name}'$e$s",
       );
       return Left(e);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] Unexpected error during add for '${account.name}'$e$s",
       );
@@ -110,11 +113,14 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
         },
       );
     } on CacheFailure catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] CacheFailure during update for '${account.name}'$e$s",
       );
       return Left(e);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] Unexpected error during update for '${account.name}'$e$s",
       );
@@ -178,11 +184,14 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       );
       return const Right(null);
     } on CacheFailure catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] CacheFailure during delete for ID $id$e$s",
       );
       return Left(e);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] Unexpected error during delete for ID $id$e$s",
       );
@@ -250,11 +259,14 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       );
       return Right(accounts);
     } on CacheFailure catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] CacheFailure getting asset accounts: $e\n$s",
       );
       return Left(e);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[AssetAccountRepo] Unexpected error getting asset accounts$e$s",
       );
@@ -344,6 +356,7 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       );
       return Right(finalBalance);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[$runtimeType] CRITICAL ERROR in _calculateBalance for account $accountId$e$s",
       );

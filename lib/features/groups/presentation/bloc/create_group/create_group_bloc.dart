@@ -79,6 +79,7 @@ class CreateGroupBloc extends Bloc<CreateGroupEvent, CreateGroupState> {
           .from('group-avatars')
           .getPublicUrl(fileName);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.warning('Failed to upload group photo: $e\n$s');
       return fallbackUrl;
     }

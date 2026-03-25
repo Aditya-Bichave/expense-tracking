@@ -40,6 +40,7 @@ class ExpenseCard extends StatelessWidget {
     try {
       fallbackIcon = _getElementalCategoryIcon(category.name);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe('Silent failure: $e\n$s');
     }
     if (modeTheme != null) {

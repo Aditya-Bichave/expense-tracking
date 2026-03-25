@@ -237,6 +237,7 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
       context.pushNamed(routeName, pathParameters: params, extra: transaction);
       log.info("[BudgetDetail] pushNamed executed.");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[BudgetDetail] Error executing pushNamed: $e\n$s");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

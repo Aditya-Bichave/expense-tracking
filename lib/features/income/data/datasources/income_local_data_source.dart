@@ -29,6 +29,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       log.info("Added income '${income.title}' (ID: ${income.id}) to Hive.");
       return income;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to add income '${income.title}' to cache: $e\n$s");
       throw CacheFailure('Failed to add income: ${e.toString()}');
     }
@@ -40,6 +41,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       await incomeBox.delete(id);
       log.info("Deleted income (ID: $id) from Hive.");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to delete income (ID: $id) from cache: $e\n$s");
       throw CacheFailure('Failed to delete income: ${e.toString()}');
     }
@@ -93,6 +95,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       );
       return results;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to get incomes from cache: $e\n$s");
       throw CacheFailure('Failed to get incomes: ${e.toString()}');
     }
@@ -110,6 +113,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       }
       return income; // Returns null if not found
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to get income by ID $id from cache: $e\n$s");
       throw CacheFailure('Failed to get income by ID: ${e.toString()}');
     }
@@ -128,6 +132,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       log.info("Updated income '${income.title}' (ID: ${income.id}) in Hive.");
       return income;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to update income '${income.title}' in cache: $e\n$s");
       throw CacheFailure('Failed to update income: ${e.toString()}');
     }
@@ -139,6 +144,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
       final count = await incomeBox.clear();
       log.info("Cleared income box in Hive ($count items removed).");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to clear income cache: $e\n$s");
       throw CacheFailure('Failed to clear income cache: ${e.toString()}');
     }

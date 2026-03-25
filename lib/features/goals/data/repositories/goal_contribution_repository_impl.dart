@@ -66,6 +66,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       );
       return const Right(null);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionRepo] Error updating total saved cache for goal $goalId$e$s",
       );
@@ -101,6 +102,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       }
       return Right(contribution);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[ContributionRepo] Error adding contribution: $e\n$s");
       return Left(CacheFailure("Failed to add contribution: ${e.toString()}"));
     }
@@ -137,6 +139,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       }
       return const Right(null);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionRepo] Error deleting contribution $contributionId$e$s",
       );
@@ -163,6 +166,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       );
       return Right(entities);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionRepo] Error getting contributions for goal $goalId$e$s",
       );
@@ -185,6 +189,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       );
       return Right(entities);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[ContributionRepo] Error getting all contributions: $e\n$s");
       return Left(
         CacheFailure("Failed to load contributions: ${e.toString()}"),
@@ -214,6 +219,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       }
       return Right(contribution);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionRepo] Error updating contribution ${contribution.id}$e$s",
       );
@@ -244,6 +250,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       }
       return const Right(null);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionRepo] Error auditing goal total saved caches$e$s",
       );

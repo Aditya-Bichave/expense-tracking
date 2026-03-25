@@ -56,7 +56,8 @@ class _DashboardPageState extends State<DashboardPage> {
           )
           .timeout(const Duration(seconds: 10));
       log.info("[DashboardPage] Refresh stream finished or timed out.");
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.warning(
         "[DashboardPage] Error or timeout waiting for refresh stream: $e",
       );

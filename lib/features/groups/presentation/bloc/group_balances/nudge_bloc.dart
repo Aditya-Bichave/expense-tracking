@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -29,6 +30,7 @@ class NudgeBloc extends Bloc<NudgeEvent, NudgeState> {
 
       emit(NudgeSuccess(targetUserId));
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       _log.severe('Failed to send nudge: $e\n$s');
 
       String message = 'Could not send nudge.';

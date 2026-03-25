@@ -17,6 +17,7 @@ class HiveContributionLocalDataSource
       final count = await contributionBox.clear();
       log.info("[ContributionDS] Cleared contributions box ($count items).");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionDS] Failed to clear contributions cache: $e\n$s",
       );
@@ -32,6 +33,7 @@ class HiveContributionLocalDataSource
       await contributionBox.delete(id);
       log.info("[ContributionDS] Deleted contribution (ID: $id).");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionDS] Failed to delete contribution (ID: $id): $e\n$s",
       );
@@ -45,6 +47,7 @@ class HiveContributionLocalDataSource
       await contributionBox.deleteAll(ids);
       log.info("[ContributionDS] Batch deleted ${ids.length} contributions.");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionDS] Failed to batch delete contributions: ${ids.length} items: $e\n$s",
       );
@@ -63,6 +66,7 @@ class HiveContributionLocalDataSource
       );
       return contributions;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[ContributionDS] Failed to get all contributions: $e\n$s");
       throw CacheFailure('Failed to get all contributions: ${e.toString()}');
     }
@@ -79,6 +83,7 @@ class HiveContributionLocalDataSource
       );
       return contribution;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionDS] Failed to get contribution by ID $id: $e\n$s",
       );
@@ -100,6 +105,7 @@ class HiveContributionLocalDataSource
       );
       return filtered;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionDS] Failed to get contributions for goal $goalId: $e\n$s",
       );
@@ -117,6 +123,7 @@ class HiveContributionLocalDataSource
         "[ContributionDS] Saved/Updated contribution (ID: ${contribution.id}) for Goal ID: ${contribution.goalId}.",
       );
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "[ContributionDS] Failed to save contribution ${contribution.id}: $e\n$s",
       );

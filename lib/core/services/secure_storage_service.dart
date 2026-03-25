@@ -30,6 +30,8 @@ class SecureStorageService {
     try {
       keyString = await _storage.read(key: _hiveKeyKey);
     } on PlatformException catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
       _logger.severe("Failed to read Hive key from secure storage: $e\n$s");
       // If we can't read the key due to platform error (e.g. keystore corrupted),
       // we treat it as corruption so the app can prompt for reset.
@@ -37,6 +39,7 @@ class SecureStorageService {
         "Secure Storage Error: ${e.message ?? 'Unknown'} (Code: ${e.code})",
       );
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       _logger.severe("Unexpected error reading Hive key: $e\n$s");
       throw HiveKeyCorruptionException("Unexpected Storage Error: $e");
     }
@@ -47,6 +50,7 @@ class SecureStorageService {
       try {
         return base64Url.decode(keyString);
       } on FormatException catch (e, s) {
+      log.severe("Msg: $e\n$s");
         final snippet = keyString.length > 4
             ? keyString.substring(0, 4)
             : keyString;
@@ -64,6 +68,7 @@ class SecureStorageService {
           'Hive encryption key is corrupted and cannot be decoded.',
         );
       } catch (e, s) {
+      log.severe("Msg: $e\n$s");
         _logger.severe('Unexpected error decoding Hive key: $e\n$s');
         throw HiveKeyCorruptionException(
           'Unexpected error decoding Hive key: $e',

@@ -29,12 +29,15 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
         return const Right(null); // Explicitly return null if not found
       }
     } on CacheFailure catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[UserHistoryRepo] CacheFailure during findRule: ${e.message}",
       );
       return Left(e);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[UserHistoryRepo] Unexpected error in findRule: $e\n$s");
       return Left(CacheFailure("Failed to find history rule: ${e.toString()}"));
     }
@@ -64,12 +67,15 @@ class UserHistoryRepositoryImpl implements UserHistoryRepository {
       log.info("[UserHistoryRepo] Rule saved successfully.");
       return const Right(null);
     } on CacheFailure catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       log.warning(
         "[UserHistoryRepo] CacheFailure during saveRule: ${e.message}",
       );
       return Left(e);
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[UserHistoryRepo] Unexpected error in saveRule: $e\n$s");
       return Left(CacheFailure("Failed to save history rule: ${e.toString()}"));
     }

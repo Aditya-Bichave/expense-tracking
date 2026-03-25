@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/core/events/data_change_event.dart';
 import 'dart:async';
 
@@ -96,6 +97,7 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
         throw Exception('Invalid response format');
       }
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       _log.severe('Failed to fetch group balances', e, s);
       _log.info('Falling back to mock data');
       _emitMockData(emit);

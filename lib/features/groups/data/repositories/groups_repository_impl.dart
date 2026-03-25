@@ -57,7 +57,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _syncIfConnected();
 
       return Right(group);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -79,7 +80,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _syncIfConnected();
 
       return Right(group);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -99,7 +101,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       );
       await _syncIfConnected();
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -122,7 +125,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       );
       await _syncIfConnected();
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -132,6 +136,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       return Right(_mapAndSortGroups(_localDataSource.getGroups()));
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
         return Left(e);
@@ -160,6 +165,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
       final models = _localDataSource.getGroupMembers(groupId);
       return Right(models.map((model) => model.toEntity()).toList());
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
         return Left(e);
@@ -205,7 +211,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await Future.wait(remoteGroups.map(_syncRemoteMembersForGroup));
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -225,7 +232,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
         maxUses: maxUses,
       );
       return Right(url);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -237,7 +245,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final data = await _remoteDataSource.acceptInvite(token);
       return Right(data);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -252,7 +261,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _remoteDataSource.updateMemberRole(groupId, userId, role);
       await _syncRemoteMembersForGroupById(groupId);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -266,7 +276,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _remoteDataSource.removeMember(groupId, userId);
       await _syncRemoteMembersForGroupById(groupId);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       return Left(ServerFailure(e.toString()));
     }
   }

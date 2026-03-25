@@ -51,6 +51,7 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
         final packageInfo = await PackageInfo.fromPlatform();
         appVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
       } catch (e, s) {
+      log.severe("Msg: $e\n$s");
         log.warning("[BackupUseCase] Could not get package info: $e\n$s");
       }
       log.info("[BackupUseCase] App version: $appVersion");
@@ -90,6 +91,7 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
           );
           return const Right('Download started');
         } catch (e, s) {
+      log.severe("Msg: $e\n$s");
           log.severe("[BackupUseCase] Error during web download: $e\n$s");
           return Left(
             BackupFailure("Failed to initiate download: ${e.toString()}"),
@@ -124,6 +126,8 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
           log.info("[BackupUseCase] File written successfully.");
           return Right(finalPath);
         } on PlatformException catch (e, s) {
+      log.severe("Msg: $e\n$s");
+      log.severe("Msg: $e\n$s");
           log.severe(
             "[BackupUseCase] PlatformException during saveFile: $e\n$s",
           );
@@ -133,11 +137,13 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
             ),
           );
         } on FileSystemException catch (e, s) {
+      log.severe("Msg: $e\n$s");
           log.severe(
             "[BackupUseCase] FileSystemException writing file: $e\n$s",
           );
           return Left(FileSystemFailure("File system error: ${e.message}"));
         } catch (e, s) {
+      log.severe("Msg: $e\n$s");
           log.severe("[BackupUseCase] Unexpected error writing file: $e\n$s");
           return Left(
             BackupFailure("Failed to write backup file: ${e.toString()}"),
@@ -145,6 +151,7 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
         }
       }
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[BackupUseCase] Unexpected error in backup process: $e\n$s");
       return Left(
         BackupFailure(

@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
@@ -27,7 +28,8 @@ class _E2EBypassPageState extends State<E2EBypassPage> {
         // Safe redirect to dashboard
         context.go('/dashboard');
       }
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       // Ignore
     }
   }

@@ -27,6 +27,7 @@ class GetAssetAccountsUseCase implements UseCase<List<AssetAccount>, NoParams> {
       );
       return result;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("[GetAssetAccountsUseCase] Unexpected error: $e\n$s");
       return Left(UnexpectedFailure("Unexpected error getting accounts: $e"));
     }

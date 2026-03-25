@@ -48,6 +48,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
       );
       return _cachedDb!;
     } on FormatException catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to parse merchant categories JSON from asset '$_assetPath'$e$s",
       );
@@ -56,6 +57,7 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
         'Invalid format in merchant categories asset file.',
       );
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to load merchant categories from asset '$_assetPath'$e$s",
       );
@@ -87,7 +89,8 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
         );
       }
       return categoryId;
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       // Errors during loading are handled in _loadDb, but catch potential future issues
       log.severe(
         "Error looking up default category for '$merchantIdentifier': $e",

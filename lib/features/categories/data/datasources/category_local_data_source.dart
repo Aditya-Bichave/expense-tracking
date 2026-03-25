@@ -32,6 +32,7 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
       await categoryBox.delete(id);
       log.info("Deleted custom category (ID: $id) from Hive.");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to delete custom category (ID: $id) from cache: $e\n$s",
       );
@@ -48,6 +49,7 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
       );
       return customCategories;
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to get custom categories from cache: $e\n$s");
       throw CacheFailure('Failed to get categories: ${e.toString()}');
     }
@@ -67,6 +69,7 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
         "Saved custom category '${category.name}' (ID: ${category.id}) to Hive.",
       );
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to save custom category '${category.name}' to cache$e$s",
       );
@@ -96,6 +99,7 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
         "Updated custom category '${category.name}' (ID: ${category.id}) in Hive.",
       );
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe(
         "Failed to update custom category '${category.name}' in cache$e$s",
       );
@@ -109,6 +113,7 @@ class HiveCategoryLocalDataSource implements CategoryLocalDataSource {
       final count = await categoryBox.clear();
       log.info("Cleared custom categories box in Hive ($count items removed).");
     } catch (e, s) {
+      log.severe("Msg: $e\n$s");
       log.severe("Failed to clear custom categories cache: $e\n$s");
       throw CacheFailure('Failed to clear categories cache: ${e.toString()}');
     }
