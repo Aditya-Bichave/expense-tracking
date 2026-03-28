@@ -90,5 +90,69 @@ void main() {
 
       expect(firstCategoryPos.dy < secondCategoryPos.dy, isTrue);
     });
+
+    testWidgets('updates list when categories change', (tester) async {
+      final initialCategories = [
+        const Category(
+          id: '1',
+          name: 'Z Category',
+          iconName: 'test',
+          colorHex: '#111111',
+          type: CategoryType.expense,
+          isCustom: true,
+        ),
+      ];
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: Material(
+          child: CategoryListSectionWidget(
+            categories: initialCategories,
+            emptyMessage: '',
+            onEditCategory: mockCallbacks.onEdit,
+            onDeleteCategory: mockCallbacks.onDelete,
+            onPersonalizeCategory: mockCallbacks.onPersonalize,
+          ),
+        ),
+      );
+
+      expect(find.text('Z Category'), findsOneWidget);
+
+      final updatedCategories = [
+        ...initialCategories,
+        const Category(
+          id: '2',
+          name: 'A Category',
+          iconName: 'test',
+          colorHex: '#222222',
+          type: CategoryType.expense,
+          isCustom: true,
+        ),
+      ];
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: Material(
+          child: CategoryListSectionWidget(
+            categories: updatedCategories,
+            emptyMessage: '',
+            onEditCategory: mockCallbacks.onEdit,
+            onDeleteCategory: mockCallbacks.onDelete,
+            onPersonalizeCategory: mockCallbacks.onPersonalize,
+          ),
+        ),
+      );
+
+      expect(find.text('A Category'), findsOneWidget);
+      expect(find.text('Z Category'), findsOneWidget);
+
+      final aText = tester.widget<Text>(find.text('A Category'));
+      final zText = tester.widget<Text>(find.text('Z Category'));
+
+      final aPos = tester.getTopLeft(find.byWidget(aText));
+      final zPos = tester.getTopLeft(find.byWidget(zText));
+
+      expect(aPos.dy < zPos.dy, isTrue);
+    });
   });
 }
