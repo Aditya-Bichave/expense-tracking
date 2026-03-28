@@ -91,7 +91,9 @@ void main() {
       expect(firstCategoryPos.dy < secondCategoryPos.dy, isTrue);
     });
 
-    testWidgets('updates list when categories change using didUpdateWidget', (tester) async {
+    testWidgets('updates list when categories change using didUpdateWidget', (
+      tester,
+    ) async {
       final initialCategories = [
         const Category(
           id: '1',
