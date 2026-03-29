@@ -40,9 +40,15 @@ void main() {
     expect(find.byType(ReportFilterControls), findsOneWidget);
   });
 
-  testWidgets('showFilterSheet triggers timeout handling correctly', (tester) async {
+  testWidgets('showFilterSheet triggers timeout handling correctly', (
+    tester,
+  ) async {
     // We want the bloc state to NOT be loaded so it tries to load options and wait.
-    when(() => mockBloc.state).thenReturn(ReportFilterState.initial().copyWith(optionsStatus: FilterOptionsStatus.initial));
+    when(() => mockBloc.state).thenReturn(
+      ReportFilterState.initial().copyWith(
+        optionsStatus: FilterOptionsStatus.initial,
+      ),
+    );
     // Stream never emits, causing timeout
     when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
 
@@ -71,7 +77,9 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
 
     // Check that LoadFilterOptions was called
-    verify(() => mockBloc.add(const LoadFilterOptions(forceReload: true))).called(1);
+    verify(
+      () => mockBloc.add(const LoadFilterOptions(forceReload: true)),
+    ).called(1);
 
     // Ensure we don't have errors and the dialog doesn't show up if it's still loading
     expect(find.byType(ReportFilterSheetContent), findsNothing);

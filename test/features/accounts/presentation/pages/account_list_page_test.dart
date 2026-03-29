@@ -147,9 +147,13 @@ void main() {
       expect(router.routerDelegate.currentConfiguration.uri.toString(), '/add');
     });
 
-    testWidgets('pull to refresh triggers timeout handling correctly', (tester) async {
+    testWidgets('pull to refresh triggers timeout handling correctly', (
+      tester,
+    ) async {
       // Provide a state with items so it renders a ListView instead of an empty state indicator
-      when(() => mockBloc.state).thenReturn(AccountListLoaded(accounts: mockAccounts));
+      when(
+        () => mockBloc.state,
+      ).thenReturn(AccountListLoaded(accounts: mockAccounts));
       when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
       whenListen(
         mockBloc,
@@ -180,8 +184,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify LoadAccounts event was added
-      verify(() => mockBloc.add(const LoadAccounts(forceReload: true))).called(1);
+      verify(
+        () => mockBloc.add(const LoadAccounts(forceReload: true)),
+      ).called(1);
     });
-
   }, skip: true);
 }

@@ -41,16 +41,20 @@ void main() {
     expect(find.byType(BudgetsSubTab), findsOneWidget);
   });
 
-  testWidgets('BudgetsSubTab pull to refresh triggers timeout handling correctly', (tester) async {
+  testWidgets('BudgetsSubTab pull to refresh triggers timeout handling correctly', (
+    tester,
+  ) async {
     // When budgetsWithStatus is empty, the RefreshIndicator wraps a Center.
     // Flinging the RefreshIndicator widget directly should work.
     when(() => mockBudgetListBloc.state).thenReturn(
       const BudgetListState(
         status: BudgetListStatus.success,
         budgetsWithStatus: [],
-      )
+      ),
     );
-    when(() => mockBudgetListBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockBudgetListBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
 
     await tester.pumpWidget(
       MaterialApp(
@@ -63,7 +67,8 @@ void main() {
         ),
       ),
     );
-    await tester.pump(); // Use pump instead of pumpAndSettle to not wait indefinitely for animations/refresh
+    await tester
+        .pump(); // Use pump instead of pumpAndSettle to not wait indefinitely for animations/refresh
 
     // Wait for the UI to settle (if any animations)
     await tester.pumpAndSettle();
@@ -92,6 +97,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify LoadBudgets event was added
-    verify(() => mockBudgetListBloc.add(const LoadBudgets(forceReload: true))).called(1);
+    verify(
+      () => mockBudgetListBloc.add(const LoadBudgets(forceReload: true)),
+    ).called(1);
   });
 }

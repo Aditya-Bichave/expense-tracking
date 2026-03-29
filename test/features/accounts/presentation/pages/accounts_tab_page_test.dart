@@ -51,11 +51,17 @@ void main() {
     // expect(find.text('Accounts'), findsOneWidget);
   });
 
-  testWidgets('pull to refresh triggers timeout handling correctly', (tester) async {
+  testWidgets('pull to refresh triggers timeout handling correctly', (
+    tester,
+  ) async {
     // Return a stream that never emits to trigger the timeout
-    when(() => mockAccountListBloc.stream).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockAccountListBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
     // Simulate loading state so ListView is rendered instead of a loading spinner
-    when(() => mockAccountListBloc.state).thenReturn(const AccountListLoaded(accounts: []));
+    when(
+      () => mockAccountListBloc.state,
+    ).thenReturn(const AccountListLoaded(accounts: []));
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump();
@@ -72,6 +78,8 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
 
     // Verify LoadAccounts was triggered
-    verify(() => mockAccountListBloc.add(const LoadAccounts(forceReload: true))).called(1);
+    verify(
+      () => mockAccountListBloc.add(const LoadAccounts(forceReload: true)),
+    ).called(1);
   });
 }
