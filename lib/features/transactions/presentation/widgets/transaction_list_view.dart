@@ -78,10 +78,12 @@ class _TransactionListViewState extends State<TransactionListView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (widget.state.status == ListStatus.loading && widget.state.transactions.isEmpty) {
+    if (widget.state.status == ListStatus.loading &&
+        widget.state.transactions.isEmpty) {
       return const Center(child: BridgeCircularProgressIndicator());
     }
-    if (widget.state.status == ListStatus.error && widget.state.transactions.isEmpty) {
+    if (widget.state.status == ListStatus.error &&
+        widget.state.transactions.isEmpty) {
       return Center(
         child: Padding(
           padding: context.space.allXl,
@@ -127,7 +129,8 @@ class _TransactionListViewState extends State<TransactionListView> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              if (!widget.state
+              if (!widget
+                  .state
                   .filtersApplied) // Show add button only if no filters applied
                 ElevatedButton.icon(
                   key: const ValueKey('button_listView_addFirst'),
@@ -167,7 +170,8 @@ class _TransactionListViewState extends State<TransactionListView> {
 
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
-        final accountName = widget.accountNameMap[transaction.accountId] ?? 'Deleted';
+        final accountName =
+            widget.accountNameMap[transaction.accountId] ?? 'Deleted';
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,

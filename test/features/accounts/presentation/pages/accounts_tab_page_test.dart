@@ -50,4 +50,28 @@ void main() {
     // Might have "Accounts" header
     // expect(find.text('Accounts'), findsOneWidget);
   });
+
+  testWidgets('pull to refresh triggers timeout handling correctly', (tester) async {
+    // Return a stream that never emits to trigger the timeout
+    when(() => mockAccountListBloc.stream).thenAnswer((_) => const Stream.empty());
+    // Simulate loading state so ListView is rendered instead of a loading spinner
+    when(() => mockAccountListBloc.state).thenReturn(const AccountListLoaded(accounts: []));
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump();
+
+    // Find the RefreshIndicator (by finding a ListView which is a child of RefreshIndicator)
+    final listView = find.byType(ListView);
+    expect(listView, findsWidgets);
+
+    // Perform the pull-down gesture to trigger onRefresh
+    await tester.fling(listView.first, const Offset(0, 300), 1000);
+    await tester.pump();
+
+    // Fast-forward past the 3-second timeout duration
+    await tester.pump(const Duration(seconds: 4));
+
+    // Verify LoadAccounts was triggered
+    verify(() => mockAccountListBloc.add(const LoadAccounts(forceReload: true))).called(1);
+  });
 }

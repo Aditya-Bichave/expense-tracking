@@ -115,7 +115,8 @@ class _GoalProgressPageState extends State<GoalProgressPage> {
                   );
                 }
 
-                if (_childIndexMap.isEmpty && reportData.progressData.isNotEmpty) {
+                if (_childIndexMap.isEmpty &&
+                    reportData.progressData.isNotEmpty) {
                   _recomputeChildIndexMap(state);
                 }
 
