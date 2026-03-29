@@ -115,6 +115,40 @@ void main() {
     expect(find.text('Test Goal'), findsOneWidget);
   });
 
+  testWidgets('updates childIndexMap when state changes (listener coverage)', (
+    tester,
+  ) async {
+    // We will test the didUpdateWidget listener directly by pumping the widget
+    // twice with different streamed states using whenListen and resetting the block state.
+
+    // Start with empty state
+    final state1 = const GoalProgressReportLoaded(
+      GoalProgressReportData(progressData: []),
+      isComparisonEnabled: false,
+    );
+
+    // Transition to loaded state
+    final state2 = GoalProgressReportLoaded(
+      tReportData,
+      isComparisonEnabled: false,
+    );
+
+    when(() => mockBloc.state).thenReturn(state1);
+    whenListen(mockBloc, Stream.fromIterable([state2]), initialState: state1);
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pump(); // Pump initial state
+
+    // Note: `whenListen` with `Stream.fromIterable([state2])` emits state2 immediately
+    // upon listening. So the widget transitions to state2 right away.
+    expect(find.byType(ListView), findsOneWidget);
+    expect(find.text('Test Goal'), findsOneWidget);
+
+    // To ensure the map logic is fully exercised, we can verify that scrolling or interacting doesn't crash
+    await tester.drag(find.byType(ListView), const Offset(0, -50));
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('renders loading state', (tester) async {
     when(() => mockBloc.state).thenReturn(GoalProgressReportLoading());
 

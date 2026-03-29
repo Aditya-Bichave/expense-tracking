@@ -146,5 +146,47 @@ void main() {
       await tester.pumpAndSettle();
       expect(router.routerDelegate.currentConfiguration.uri.toString(), '/add');
     });
+
+    testWidgets('pull to refresh triggers timeout handling correctly', (
+      tester,
+    ) async {
+      // Provide a state with items so it renders a ListView instead of an empty state indicator
+      when(
+        () => mockBloc.state,
+      ).thenReturn(AccountListLoaded(accounts: mockAccounts));
+      when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
+      whenListen(
+        mockBloc,
+        const Stream<AccountListState>.empty(),
+        initialState: AccountListLoaded(accounts: mockAccounts),
+      );
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        router: router,
+        widget: const AccountListPage(),
+        accountListBloc: mockBloc,
+      );
+      await tester.pumpAndSettle();
+
+      // Find the RefreshIndicator
+      final refreshIndicator = find.byType(RefreshIndicator);
+      expect(refreshIndicator, findsOneWidget);
+
+      // Fling down to trigger refresh
+      await tester.fling(refreshIndicator, const Offset(0.0, 300.0), 1000);
+      await tester.pump();
+
+      // Fast-forward past the 3-second timeout duration for firstWhere
+      await tester.pump(const Duration(seconds: 4));
+
+      // Wait for the mock list bloc to process the pull to refresh
+      await tester.pumpAndSettle();
+
+      // Verify LoadAccounts event was added
+      verify(
+        () => mockBloc.add(const LoadAccounts(forceReload: true)),
+      ).called(1);
+    });
   }, skip: true);
 }

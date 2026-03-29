@@ -240,5 +240,44 @@ void main() {
         () => mockCallbacks.confirmDeletion(any(), mockTransactions.first),
       ).called(1);
     });
+
+    testWidgets(
+      'updates index map when transactions change (didUpdateWidget)',
+      (tester) async {
+        // Start with empty list
+        final state1 = TransactionListState(
+          status: ListStatus.success,
+          transactions: [],
+        );
+
+        final state2 = TransactionListState(
+          status: ListStatus.success,
+          transactions: mockTransactions,
+        );
+
+        // Use a ValueNotifier to force a rebuild with new state
+        final stateNotifier = ValueNotifier<TransactionListState>(state1);
+
+        await pumpWidgetWithProviders(
+          tester: tester,
+          widget: ValueListenableBuilder<TransactionListState>(
+            valueListenable: stateNotifier,
+            builder: (context, state, _) {
+              return buildTestWidget(state);
+            },
+          ),
+          settle: false,
+        );
+        await tester.pump();
+
+        expect(find.byType(ExpenseCard), findsNothing);
+
+        // Update state, triggering didUpdateWidget
+        stateNotifier.value = state2;
+        await tester.pumpAndSettle();
+
+        expect(find.byType(ExpenseCard), findsOneWidget);
+      },
+    );
   });
 }
