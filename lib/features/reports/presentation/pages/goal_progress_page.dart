@@ -40,6 +40,17 @@ class _GoalProgressPageState extends State<GoalProgressPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize the map if the bloc is already loaded when the widget is created
+    final state = context.read<GoalProgressReportBloc>().state;
+    if (state is GoalProgressReportLoaded &&
+        state.reportData.progressData.isNotEmpty) {
+      _recomputeChildIndexMap(state);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final kit = context.kit;
     final settingsState = context.watch<SettingsBloc>().state;
@@ -113,11 +124,6 @@ class _GoalProgressPageState extends State<GoalProgressPage> {
                       color: kit.colors.textSecondary,
                     ),
                   );
-                }
-
-                if (_childIndexMap.isEmpty &&
-                    reportData.progressData.isNotEmpty) {
-                  _recomputeChildIndexMap(state);
                 }
 
                 return ListView.builder(

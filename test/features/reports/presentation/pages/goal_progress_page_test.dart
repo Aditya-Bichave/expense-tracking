@@ -115,53 +115,32 @@ void main() {
     expect(find.text('Test Goal'), findsOneWidget);
   });
 
-  testWidgets('updates childIndexMap when state changes (listener coverage)', (tester) async {
+  testWidgets('updates childIndexMap when state changes (listener coverage)', (
+    tester,
+  ) async {
     // We will test the didUpdateWidget listener directly by pumping the widget
     // twice with different streamed states using whenListen and resetting the block state.
 
     // Start with empty state
     final state1 = const GoalProgressReportLoaded(
       GoalProgressReportData(progressData: []),
-      isComparisonEnabled: false
+      isComparisonEnabled: false,
     );
 
     // Transition to loaded state
-    final state2 = GoalProgressReportLoaded(tReportData, isComparisonEnabled: false);
+    final state2 = GoalProgressReportLoaded(
+      tReportData,
+      isComparisonEnabled: false,
+    );
 
     when(() => mockBloc.state).thenReturn(state1);
-    whenListen(
-      mockBloc,
-      Stream.fromIterable([state2]),
-      initialState: state1,
-    );
+    whenListen(mockBloc, Stream.fromIterable([state2]), initialState: state1);
 
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.pump(); // Pump initial state
 
-    // Test Goal is found anyway if there's no active goals because empty state renders 'No active goals found.'
-    // Wait, if state is empty, 'Test Goal' should not be found.
-    // Ah, 'GoalProgressPage' has a title of 'Goal Progress' but where does 'Test Goal' come from?
-    // It's the goal name. If it's empty, it shouldn't be there. Let's make sure our state overrides actually work.
-
-    // Use the proper mock setup since we are calling createWidgetUnderTest
-    // Note: the test setup uses `mockBloc.state` before `createWidgetUnderTest()`.
-
-    // Oh, since state1 has no progressData, why is 'Test Goal' found?
-    // Wait, the global state mock `when(() => mockBloc.state).thenReturn(...)` might be returning state2 because of a shared test state?
-    // In our `testWidgets` we did `when(() => mockBloc.state).thenReturn(state1);`.
-    // And `createWidgetUnderTest` uses `mockBloc`.
-    // Ah, `GoalProgressPage` only checks `state is GoalProgressReportLoaded` and `reportData.progressData.isEmpty`.
-    // It should render empty state. But it's rendering 'Test Goal'. Why?
-    // Maybe `state1`'s `isComparisonEnabled` is true, so it matches some logic? No.
-    // The previous test `uses findChildIndexCallback in goal progress list` set `mockBloc.state` to `GoalProgressReportLoaded(tReportData...)`.
-    // Maybe `createWidgetUnderTest` caches the bloc provider somewhere or the stream replay is immediate?
-
-    // In `whenListen(mockBloc, Stream.fromIterable([state2]), initialState: state1)`
-    // The stream immediately emits state2 as soon as someone listens to it!
-    // So the widget transitions to state2 BEFORE our first `pump()` finishes!
-    // That's why 'Test Goal' is already there! The listener fires immediately.
-
-    // Let's just verify it reached state2 and rendered the ListView correctly!
+    // Note: `whenListen` with `Stream.fromIterable([state2])` emits state2 immediately
+    // upon listening. So the widget transitions to state2 right away.
     expect(find.byType(ListView), findsOneWidget);
     expect(find.text('Test Goal'), findsOneWidget);
 

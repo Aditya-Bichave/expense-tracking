@@ -44,8 +44,6 @@ void main() {
   testWidgets('BudgetsSubTab pull to refresh triggers timeout handling correctly', (
     tester,
   ) async {
-    // When budgetsWithStatus is empty, the RefreshIndicator wraps a Center.
-    // Flinging the RefreshIndicator widget directly should work.
     when(() => mockBudgetListBloc.state).thenReturn(
       const BudgetListState(
         status: BudgetListStatus.success,
@@ -77,16 +75,7 @@ void main() {
     final refreshIndicator = find.byType(RefreshIndicator);
     expect(refreshIndicator, findsOneWidget);
 
-    // Fling down to trigger refresh
-    // The Scrollable widget inside RefreshIndicator might need to be flinged instead
-    // since the RefreshIndicator itself isn't scrollable directly, but its child is.
-    // The child is a singleChildScrollView via Center? No, RefreshIndicator only works
-    // if its child has a scroll physics that supports pull to refresh.
-    // We can simulate the onRefresh callback directly if flinging fails, but
-    // let's try calling it through tester to get coverage on the actual widget closure.
-
-    // Since flinging isn't reliable with a Center widget as child of RefreshIndicator,
-    // we'll get the RefreshIndicator state and call its show() method to trigger onRefresh.
+    // Get the RefreshIndicator state and call its show() method to trigger onRefresh directly.
     final RefreshIndicatorState state = tester.state(refreshIndicator);
     state.show();
 
