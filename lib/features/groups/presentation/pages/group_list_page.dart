@@ -102,7 +102,17 @@ class _GroupListPageState extends State<GroupListPage> {
             if (state.groups.isEmpty) {
               return RefreshIndicator(
                 onRefresh: () async {
-                  context.read<GroupsBloc>().add(const RefreshGroups());
+                  final bloc = context.read<GroupsBloc>();
+                  bloc.add(const RefreshGroups(showLoading: true));
+                  try {
+                    await bloc.stream
+                        .firstWhere(
+                          (s) => s is GroupsLoaded || s is GroupsError,
+                        )
+                        .timeout(const Duration(seconds: 3));
+                  } catch (_) {
+                    // Prevent unhandled errors or timeouts
+                  }
                 },
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -130,7 +140,15 @@ class _GroupListPageState extends State<GroupListPage> {
             }
             return RefreshIndicator(
               onRefresh: () async {
-                context.read<GroupsBloc>().add(const RefreshGroups());
+                final bloc = context.read<GroupsBloc>();
+                bloc.add(const RefreshGroups(showLoading: true));
+                try {
+                  await bloc.stream
+                      .firstWhere((s) => s is GroupsLoaded || s is GroupsError)
+                      .timeout(const Duration(seconds: 3));
+                } catch (_) {
+                  // Prevent unhandled errors or timeouts
+                }
               },
               child: ListView.builder(
                 itemCount: state.groups.length,

@@ -59,7 +59,8 @@ class _GroupBalancesTabState extends State<GroupBalancesTab> {
                 await bloc.stream
                     .firstWhere(
                       (s) =>
-                          s is GroupBalancesLoaded && !s.isRefreshing ||
+                          s is GroupBalancesLoaded &&
+                              !(s as GroupBalancesLoaded).isRefreshing ||
                           s is GroupBalancesError,
                     )
                     .timeout(const Duration(seconds: 3));
