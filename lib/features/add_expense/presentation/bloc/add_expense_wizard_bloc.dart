@@ -377,13 +377,17 @@ class AddExpenseWizardBloc
     final index = state.payers.indexWhere((p) => p.userId == event.userId);
 
     if (index >= 0) {
-      currentPayers = state.payers.toList(); // Only clone when we need to mutate
+      currentPayers = state.payers
+          .toList(); // Only clone when we need to mutate
       currentPayers[index] = PayerModel(
         userId: event.userId,
         amountPaid: event.amount,
       );
     } else {
-      currentPayers = [...state.payers, PayerModel(userId: event.userId, amountPaid: event.amount)];
+      currentPayers = [
+        ...state.payers,
+        PayerModel(userId: event.userId, amountPaid: event.amount),
+      ];
     }
     emit(state.copyWith(payers: currentPayers));
   }

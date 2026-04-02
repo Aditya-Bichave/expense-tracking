@@ -235,26 +235,27 @@ class TimeSeriesLineChart extends StatelessWidget {
             },
           ),
           handleBuiltInTouches: true,
-          touchCallback:
-              (FlTouchEvent event, LineTouchResponse? touchResponse) {
-                if (onTapSpot != null &&
-                    event is FlTapUpEvent &&
-                    touchResponse != null &&
-                    touchResponse.lineBarSpots != null &&
-                    touchResponse.lineBarSpots!.isNotEmpty) {
-                  // Get index from the *current data* spot (barIndex 0)
-                  // ⚡ Bolt Performance Optimization
-                  // Problem: `firstWhere` creates an iterator and scans. If the first item matches, we can avoid that overhead.
-                  // Solution: Fast path checking the first element, falling back to `firstWhere`.
-                  final spots = touchResponse.lineBarSpots!;
-                  final currentSpot = spots.first.barIndex == 0 ? spots.first : spots.firstWhere(
-                    (spot) => spot.barIndex == 0,
-                    orElse: () => spots[0],
-                  );
-                  final spotIndex = currentSpot.spotIndex;
-                  onTapSpot!(spotIndex);
-                }
-              },
+          touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
+            if (onTapSpot != null &&
+                event is FlTapUpEvent &&
+                touchResponse != null &&
+                touchResponse.lineBarSpots != null &&
+                touchResponse.lineBarSpots!.isNotEmpty) {
+              // Get index from the *current data* spot (barIndex 0)
+              // ⚡ Bolt Performance Optimization
+              // Problem: `firstWhere` creates an iterator and scans. If the first item matches, we can avoid that overhead.
+              // Solution: Fast path checking the first element, falling back to `firstWhere`.
+              final spots = touchResponse.lineBarSpots!;
+              final currentSpot = spots.first.barIndex == 0
+                  ? spots.first
+                  : spots.firstWhere(
+                      (spot) => spot.barIndex == 0,
+                      orElse: () => spots[0],
+                    );
+              final spotIndex = currentSpot.spotIndex;
+              onTapSpot!(spotIndex);
+            }
+          },
         ),
       ),
     );
