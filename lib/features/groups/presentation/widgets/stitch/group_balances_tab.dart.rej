@@ -1,0 +1,11 @@
+--- group_balances_tab.dart
++++ group_balances_tab.dart
+@@ -57,7 +57,7 @@
+               bloc.add(RefreshBalances(widget.groupId));
+               try {
+                 await bloc.stream.firstWhere(
+-                  (s) => s is GroupBalancesLoaded && !(s as GroupBalancesLoaded).isRefreshing || s is GroupBalancesError,
++                  (s) => s is GroupBalancesLoaded && !s.isRefreshing || s is GroupBalancesError,
+                 ).timeout(const Duration(seconds: 3));
+               } catch (_) {
+                 // Prevent unhandled errors or timeouts
