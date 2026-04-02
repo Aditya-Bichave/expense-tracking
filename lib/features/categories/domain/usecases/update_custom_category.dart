@@ -59,15 +59,10 @@ class UpdateCustomCategoryUseCase
     final allCategories = allCategoriesResult.getOrElse(() => []);
     final trimmedName = category.name.trim();
 
-    // ⚡ Bolt Performance Optimization
-    // Problem: `trimmedName.toLowerCase()` is calculated repeatedly inside the loop.
-    // Solution: Pre-calculate the lowercased name before the loop.
-    // Impact: Avoids unnecessary O(N) string allocations during duplicate check.
-    final lowerCaseName = trimmedName.toLowerCase();
     final isDuplicate = allCategories.any(
       (cat) =>
           cat.id != category.id && // Exclude the category itself
-          cat.name.trim().toLowerCase() == lowerCaseName &&
+          cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
           cat.type == category.type &&
           cat.parentCategoryId == category.parentCategoryId,
     );

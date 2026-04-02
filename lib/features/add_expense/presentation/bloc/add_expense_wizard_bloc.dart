@@ -370,24 +370,17 @@ class AddExpenseWizardBloc
     PayerChanged event,
     Emitter<AddExpenseWizardState> emit,
   ) {
-    // ⚡ Bolt Performance Optimization
-    // Problem: List.from creates a full clone which is unnecessary if we only want to update one item.
-    // Solution: Map over the existing list or create a new one directly, avoiding intermediate cloning.
-    List<PayerModel> currentPayers;
-    final index = state.payers.indexWhere((p) => p.userId == event.userId);
-
+    List<PayerModel> currentPayers = List.from(state.payers);
+    final index = currentPayers.indexWhere((p) => p.userId == event.userId);
     if (index >= 0) {
-      currentPayers = state.payers
-          .toList(); // Only clone when we need to mutate
       currentPayers[index] = PayerModel(
         userId: event.userId,
         amountPaid: event.amount,
       );
     } else {
-      currentPayers = [
-        ...state.payers,
+      currentPayers.add(
         PayerModel(userId: event.userId, amountPaid: event.amount),
-      ];
+      );
     }
     emit(state.copyWith(payers: currentPayers));
   }

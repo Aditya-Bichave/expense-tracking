@@ -11,20 +11,10 @@ class OutboxRepository {
   }
 
   List<SyncMutationModel> getPendingItems() {
-    // ⚡ Bolt Performance Optimization
-    // Problem: `where(...).toList()..sort(...)` creates an intermediate Iterable before materializing the list.
-    // Solution: Just directly materialize the filtered list and sort it.
-    final pendingItems = _box.values
-        .where((item) {
-          return item.status == SyncStatus.pending ||
-              item.status == SyncStatus.failed;
-        })
-        .toList(
-          growable: false,
-        ); // Growable is false because we don't add to it here. But sort needs it to be modifiable, so we leave it default.
-
-    pendingItems.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-    return pendingItems;
+    return _box.values.where((item) {
+      return item.status == SyncStatus.pending ||
+          item.status == SyncStatus.failed;
+    }).toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
   }
 
   Future<void> markAsSent(SyncMutationModel item) async {
