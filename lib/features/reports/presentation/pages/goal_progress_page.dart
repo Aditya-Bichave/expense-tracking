@@ -22,8 +22,26 @@ import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/ui_bridge/bridge_card.dart';
 
-class GoalProgressPage extends StatelessWidget {
+class GoalProgressPage extends StatefulWidget {
   const GoalProgressPage({super.key});
+
+  @override
+  State<GoalProgressPage> createState() => _GoalProgressPageState();
+}
+
+class _GoalProgressPageState extends State<GoalProgressPage> {
+  Map<String, int> _childIndexMap = {};
+  GoalProgressReportData? _previousData;
+
+  void _updateIndexMap(GoalProgressReportData data) {
+    if (_previousData != data) {
+      _childIndexMap = {
+        for (var i = 0; i < data.progressData.length; i++)
+          data.progressData[i].goal.id: i,
+      };
+      _previousData = data;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,16 +118,13 @@ class GoalProgressPage extends StatelessWidget {
                 // Problem: ListView.builder creates a standard scroll view which can be janky with many items
                 // Solution: Add findChildIndexCallback for O(1) tracking via precomputed map
                 // Impact: Improves scrolling performance and reduces widget rebuilds
-                final childIndexMap = {
-                  for (var i = 0; i < reportData.progressData.length; i++)
-                    reportData.progressData[i].goal.id: i,
-                };
+                _updateIndexMap(reportData);
 
                 return ListView.builder(
                   itemCount: reportData.progressData.length,
                   findChildIndexCallback: (Key key) {
                     if (key is ValueKey<String>) {
-                      return childIndexMap[key.value];
+                      return _childIndexMap[key.value];
                     }
                     return null;
                   },

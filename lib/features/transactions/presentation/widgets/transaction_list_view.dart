@@ -20,7 +20,7 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-class TransactionListView extends StatelessWidget {
+class TransactionListView extends StatefulWidget {
   final TransactionListState state;
   final SettingsState settings;
   final Map<String, String> accountNameMap;
@@ -47,7 +47,32 @@ class TransactionListView extends StatelessWidget {
   });
 
   @override
+  State<TransactionListView> createState() => _TransactionListViewState();
+}
+
+class _TransactionListViewState extends State<TransactionListView> {
+  Map<String, int> _childIndexMap = {};
+  List<TransactionEntity>? _previousData;
+
+  void _updateIndexMap(List<TransactionEntity> data) {
+    if (_previousData != data) {
+      _childIndexMap = {
+        for (var i = 0; i < data.length; i++) "${data[i].id}_dismissible": i,
+      };
+      _previousData = data;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final state = widget.state;
+    final settings = widget.settings;
+    final accountNameMap = widget.accountNameMap;
+    final currencySymbol = widget.currencySymbol;
+    final navigateToDetailOrEdit = widget.navigateToDetailOrEdit;
+    final handleChangeCategoryRequest = widget.handleChangeCategoryRequest;
+    final confirmDeletion = widget.confirmDeletion;
+    final enableAnimations = widget.enableAnimations;
     final theme = Theme.of(context);
 
     if (state.status == ListStatus.loading && state.transactions.isEmpty) {
@@ -123,10 +148,7 @@ class TransactionListView extends StatelessWidget {
     // Problem: ListView.builder creates a standard scroll view which can be janky with many items
     // Solution: Add findChildIndexCallback for O(1) tracking using a precomputed map
     // Impact: Improves scrolling performance and reduces widget rebuilds for long transaction lists
-    final childIndexMap = {
-      for (var i = 0; i < state.transactions.length; i++)
-        "${state.transactions[i].id}_dismissible": i,
-    };
+    _updateIndexMap(state.transactions);
 
     return ListView.builder(
       padding: const EdgeInsets.only(
@@ -136,7 +158,7 @@ class TransactionListView extends StatelessWidget {
       itemCount: state.transactions.length,
       findChildIndexCallback: (Key key) {
         if (key is ValueKey<String>) {
-          return childIndexMap[key.value];
+          return _childIndexMap[key.value];
         }
         return null;
       },

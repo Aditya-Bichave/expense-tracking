@@ -12,8 +12,15 @@ import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-class CategoriesSubTab extends StatelessWidget {
+class CategoriesSubTab extends StatefulWidget {
   const CategoriesSubTab({super.key});
+
+  @override
+  State<CategoriesSubTab> createState() => _CategoriesSubTabState();
+}
+
+class _CategoriesSubTabState extends State<CategoriesSubTab> {
+  List<Category>? _previousCategories;
 
   // Reusable list item builder (no actions needed here)
   Widget _buildCategoryItem(BuildContext context, Category category) {
@@ -64,14 +71,17 @@ class CategoriesSubTab extends StatelessWidget {
     // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
     // Solution: Cache lowercased names outside the sort function
     // Impact: Improves loading speed by reducing CPU cycles and garbage collection
-    final lowerCaseNames = {
-      for (var c in categories) c.id: c.name.toLowerCase(),
-    };
+    if (_previousCategories != categories) {
+      final lowerCaseNames = {
+        for (var c in categories) c.id: c.name.toLowerCase(),
+      };
 
-    // Sort list before displaying
-    categories.sort(
-      (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
-    );
+      // Sort list before displaying
+      categories.sort(
+        (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
+      );
+      _previousCategories = categories;
+    }
     return ListView.builder(
       // --- MODIFIED: Apply themed padding OR a default, including bottom padding for FAB ---
       padding:

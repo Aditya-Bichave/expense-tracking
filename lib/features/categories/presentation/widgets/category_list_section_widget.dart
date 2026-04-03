@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-class CategoryListSectionWidget extends StatelessWidget {
+class CategoryListSectionWidget extends StatefulWidget {
   final List<Category> categories;
   final String emptyMessage;
   final Function(Category) onEditCategory;
@@ -22,7 +22,20 @@ class CategoryListSectionWidget extends StatelessWidget {
   });
 
   @override
+  State<CategoryListSectionWidget> createState() =>
+      _CategoryListSectionWidgetState();
+}
+
+class _CategoryListSectionWidgetState extends State<CategoryListSectionWidget> {
+  List<Category>? _previousCategories;
+
+  @override
   Widget build(BuildContext context) {
+    final categories = widget.categories;
+    final emptyMessage = widget.emptyMessage;
+    final onEditCategory = widget.onEditCategory;
+    final onDeleteCategory = widget.onDeleteCategory;
+    final onPersonalizeCategory = widget.onPersonalizeCategory;
     final theme = Theme.of(context);
     if (categories.isEmpty) {
       return Center(
@@ -36,14 +49,17 @@ class CategoryListSectionWidget extends StatelessWidget {
     // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during widget build
     // Solution: Cache lowercased names outside the sort function
     // Impact: Improves UI rendering speed by avoiding tight-loop allocations
-    final lowerCaseNames = {
-      for (var c in categories) c.id: c.name.toLowerCase(),
-    };
+    if (_previousCategories != categories) {
+      final lowerCaseNames = {
+        for (var c in categories) c.id: c.name.toLowerCase(),
+      };
 
-    // Sort combined list for consistent display
-    categories.sort(
-      (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
-    );
+      // Sort combined list for consistent display
+      categories.sort(
+        (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
+      );
+      _previousCategories = categories;
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8.0, bottom: 90.0), // Padding for FAB
