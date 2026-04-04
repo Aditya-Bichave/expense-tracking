@@ -77,9 +77,9 @@ class RecurringTransactionRepositoryImpl
   }
 
   @override
-  Future<Either<Failure, void>> addAuditLog(RecurringRuleAuditLog log) async {
+  Future<Either<Failure, void>> addAuditLog(RecurringRuleAuditLog auditLog) async {
     try {
-      final logModel = RecurringRuleAuditLogModel.fromEntity(log);
+      final logModel = RecurringRuleAuditLogModel.fromEntity(auditLog);
       await localDataSource.addAuditLog(logModel);
       return const Right(null);
     } catch (e, s) {
