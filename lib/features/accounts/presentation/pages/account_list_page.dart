@@ -1,5 +1,6 @@
 // ... other imports ...
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
@@ -174,7 +175,7 @@ class AccountListPage extends StatelessWidget {
                           )
                           .timeout(const Duration(seconds: 3));
                     } catch (e, s) {
-                      debugPrint(
+                      log.severe(
                         "Timeout or error waiting for account list: $e\n$s",
                       );
                     }

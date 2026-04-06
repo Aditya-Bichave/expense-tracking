@@ -1,5 +1,6 @@
 // lib/features/reports/presentation/widgets/report_filter_controls.dart
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Added
@@ -31,7 +32,7 @@ class ReportFilterControls extends StatelessWidget {
             )
             .timeout(const Duration(seconds: 3));
       } catch (e, s) {
-        debugPrint("Timeout or error waiting for FilterOptionsStatus: $e\n$s");
+        log.severe("Timeout or error waiting for FilterOptionsStatus: $e\n$s");
       }
       if (!context.mounted ||
           filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {

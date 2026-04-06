@@ -2,6 +2,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
@@ -92,7 +93,7 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                 )
                 .timeout(const Duration(seconds: 3));
           } catch (e, s) {
-            debugPrint("Timeout or error waiting for account tab: $e\n$s");
+            log.severe("Timeout or error waiting for account tab: $e\n$s");
           }
         },
         child: ListView(
