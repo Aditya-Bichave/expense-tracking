@@ -29,7 +29,11 @@ class SessionCubit extends Cubit<SessionState> {
         emit(SessionUnauthenticated());
       } else if (authState.event == AuthChangeEvent.signedIn ||
           authState.event == AuthChangeEvent.initialSession) {
-        checkSession();
+        unawaited(
+          checkSession().catchError(
+            (e, s) => log.severe("Silent failure in checkSession: $e\n$s"),
+          ),
+        );
       }
     });
 
@@ -147,6 +151,10 @@ class SessionCubit extends Cubit<SessionState> {
   }
 
   void profileSetupCompleted() {
-    checkSession();
+    unawaited(
+      checkSession().catchError(
+        (e, s) => log.severe("Silent failure in checkSession: $e\n$s"),
+      ),
+    );
   }
 }

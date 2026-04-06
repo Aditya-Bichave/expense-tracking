@@ -2,6 +2,7 @@
 // ignore_for_file: deprecated_member_use
 
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/core/utils/currency_formatter.dart';
 import 'package:expense_tracker/core/widgets/section_header.dart';
@@ -85,9 +86,15 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         onRefresh: () async {
           final bloc = context.read<AccountListBloc>();
           bloc.add(const LoadAccounts(forceReload: true));
-          await bloc.stream.firstWhere(
-            (state) => state is! AccountListLoading || !state.isReloading,
-          );
+          try {
+            await bloc.stream
+                .firstWhere(
+                  (state) => state is! AccountListLoading || !state.isReloading,
+                )
+                .timeout(const Duration(seconds: 3));
+          } catch (e, s) {
+            log.severe("Timeout or error waiting for account tab: $e\n$s");
+          }
         },
         child: ListView(
           padding:

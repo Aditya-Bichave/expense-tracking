@@ -1,5 +1,6 @@
 // lib/features/reports/presentation/widgets/report_filter_controls.dart
 import 'package:expense_tracker/core/utils/date_formatter.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Added
@@ -22,11 +23,17 @@ class ReportFilterControls extends StatelessWidget {
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
-      await filterBloc.stream.firstWhere(
-        (state) =>
-            state.optionsStatus == FilterOptionsStatus.loaded ||
-            state.optionsStatus == FilterOptionsStatus.error,
-      );
+      try {
+        await filterBloc.stream
+            .firstWhere(
+              (state) =>
+                  state.optionsStatus == FilterOptionsStatus.loaded ||
+                  state.optionsStatus == FilterOptionsStatus.error,
+            )
+            .timeout(const Duration(seconds: 3));
+      } catch (e, s) {
+        log.severe("Timeout or error waiting for FilterOptionsStatus: $e\n$s");
+      }
       if (!context.mounted ||
           filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
         return; // Don't show sheet if loading failed or stream closed early
