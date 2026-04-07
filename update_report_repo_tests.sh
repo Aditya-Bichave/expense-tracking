@@ -1,3 +1,5 @@
+#!/bin/bash
+cat << 'INNER_EOF' > test/features/reports/data/repositories/report_repository_impl_test.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
@@ -10,33 +12,24 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
-import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
+import 'package:expense_tracker/features/reports/domain/entities/report_enums.dart';
 import 'package:expense_tracker/features/reports/data/repositories/report_repository_impl.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockExpenseRepository extends Mock implements ExpenseRepository {}
-
 class MockIncomeRepository extends Mock implements IncomeRepository {}
-
 class MockCategoryRepository extends Mock implements CategoryRepository {}
-
-class MockAssetAccountRepository extends Mock
-    implements AssetAccountRepository {}
-
+class MockAssetAccountRepository extends Mock implements AssetAccountRepository {}
 class MockBudgetRepository extends Mock implements BudgetRepository {}
-
 class MockGoalRepository extends Mock implements GoalRepository {}
-
-class MockGoalContributionRepository extends Mock
-    implements GoalContributionRepository {}
+class MockGoalContributionRepository extends Mock implements GoalContributionRepository {}
 
 void main() {
   late ReportRepositoryImpl repository;
@@ -82,28 +75,17 @@ void main() {
 
   test('getSpendingByCategory returns correct data', () async {
     final expense = ExpenseModel(
-      id: '1',
-      amount: 100,
-      date: now,
-      categoryId: tCategoryId,
-      accountId: 'acc1',
-      title: 'Lunch',
+      id: '1', amount: 100, date: now, categoryId: tCategoryId, accountId: 'acc1', title: 'Lunch'
     );
-    when(
-      () => mockExpenseRepository.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        accountId: any(named: 'accountId'),
-        categoryId: any(named: 'categoryId'),
-      ),
-    ).thenAnswer((_) async => Right([expense]));
-    when(
-      () => mockCategoryRepository.getAllCategories(),
-    ).thenAnswer((_) async => const Right([tCategory]));
+    when(() => mockExpenseRepository.getExpenses(
+      startDate: any(named: 'startDate'), endDate: any(named: 'endDate'),
+      accountId: any(named: 'accountId'), categoryId: any(named: 'categoryId')
+    )).thenAnswer((_) async => Right([expense]));
+    when(() => mockCategoryRepository.getAllCategories())
+        .thenAnswer((_) async => const Right([tCategory]));
 
     final result = await repository.getSpendingByCategory(
-      startDate: now.subtract(const Duration(days: 1)),
-      endDate: now,
+      startDate: now.subtract(const Duration(days: 1)), endDate: now,
       transactionType: TransactionType.expense,
     );
 
@@ -112,25 +94,15 @@ void main() {
 
   test('getSpendingOverTime returns data', () async {
     final expense = ExpenseModel(
-      id: '1',
-      amount: 100,
-      date: now,
-      categoryId: tCategoryId,
-      accountId: 'acc1',
-      title: 'Lunch',
+      id: '1', amount: 100, date: now, categoryId: tCategoryId, accountId: 'acc1', title: 'Lunch'
     );
-    when(
-      () => mockExpenseRepository.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        accountId: any(named: 'accountId'),
-        categoryId: any(named: 'categoryId'),
-      ),
-    ).thenAnswer((_) async => Right([expense]));
+    when(() => mockExpenseRepository.getExpenses(
+      startDate: any(named: 'startDate'), endDate: any(named: 'endDate'),
+      accountId: any(named: 'accountId'), categoryId: any(named: 'categoryId')
+    )).thenAnswer((_) async => Right([expense]));
 
     final result = await repository.getSpendingOverTime(
-      startDate: now.subtract(const Duration(days: 7)),
-      endDate: now,
+      startDate: now.subtract(const Duration(days: 7)), endDate: now,
       granularity: TimeSeriesGranularity.daily,
       transactionType: TransactionType.expense,
     );
@@ -140,44 +112,25 @@ void main() {
 
   test('getIncomeVsExpense returns data', () async {
     final expense = ExpenseModel(
-      id: '1',
-      amount: 100,
-      date: now,
-      categoryId: tCategoryId,
-      accountId: 'acc1',
-      title: 'Lunch',
+      id: '1', amount: 100, date: now, categoryId: tCategoryId, accountId: 'acc1', title: 'Lunch'
     );
     final income = IncomeModel(
-      id: '2',
-      amount: 200,
-      date: now,
-      categoryId: tCategoryId,
-      accountId: 'acc1',
-      title: 'Salary',
+      id: '2', amount: 200, date: now, categoryId: tCategoryId, accountId: 'acc1', title: 'Salary'
     );
 
-    when(
-      () => mockExpenseRepository.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        accountId: any(named: 'accountId'),
-        categoryId: any(named: 'categoryId'),
-      ),
-    ).thenAnswer((_) async => Right([expense]));
+    when(() => mockExpenseRepository.getExpenses(
+      startDate: any(named: 'startDate'), endDate: any(named: 'endDate'),
+      accountId: any(named: 'accountId'), categoryId: any(named: 'categoryId')
+    )).thenAnswer((_) async => Right([expense]));
 
-    when(
-      () => mockIncomeRepository.getIncomes(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        accountId: any(named: 'accountId'),
-        categoryId: any(named: 'categoryId'),
-      ),
-    ).thenAnswer((_) async => Right([income]));
+    when(() => mockIncomeRepository.getIncomes(
+      startDate: any(named: 'startDate'), endDate: any(named: 'endDate'),
+      accountId: any(named: 'accountId'), categoryId: any(named: 'categoryId')
+    )).thenAnswer((_) async => Right([income]));
 
     final result = await repository.getIncomeVsExpense(
-      startDate: now.subtract(const Duration(days: 7)),
-      endDate: now,
-      periodType: IncomeExpensePeriodType.monthly,
+      startDate: now.subtract(const Duration(days: 7)), endDate: now,
+      periodType: ReportPeriodType.thisMonth,
     );
 
     expect(result.isRight(), true);
@@ -185,58 +138,34 @@ void main() {
 
   test('getBudgetPerformance returns data', () async {
     final budget = Budget(
-      id: 'b1',
-      name: 'Groceries',
-      targetAmount: 500,
-      period: BudgetPeriodType.recurringMonthly,
-      startDate: now.subtract(const Duration(days: 10)),
-      type: BudgetType.categorySpecific,
-      categoryIds: [tCategoryId],
-      createdAt: now,
+      id: 'b1', name: 'Groceries', limitAmount: 500, period: BudgetPeriod.monthly,
+      startDate: now.subtract(const Duration(days: 10)), type: BudgetType.categoryLimit,
+      categoryIds: [tCategoryId], status: BudgetStatus.active, createdAt: now, updatedAt: now,
     );
     final expense = ExpenseModel(
-      id: '1',
-      amount: 100,
-      date: now,
-      categoryId: tCategoryId,
-      accountId: 'acc1',
-      title: 'Lunch',
+      id: '1', amount: 100, date: now, categoryId: tCategoryId, accountId: 'acc1', title: 'Lunch'
     );
-    when(
-      () => mockBudgetRepository.getBudgets(),
-    ).thenAnswer((_) async => Right([budget]));
-    when(
-      () => mockExpenseRepository.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        accountId: any(named: 'accountId'),
-        categoryId: any(named: 'categoryId'),
-      ),
-    ).thenAnswer((_) async => Right([expense]));
+    when(() => mockBudgetRepository.getBudgets())
+        .thenAnswer((_) async => Right([budget]));
+    when(() => mockExpenseRepository.getExpenses(
+      startDate: any(named: 'startDate'), endDate: any(named: 'endDate'),
+      accountId: any(named: 'accountId'), categoryId: any(named: 'categoryId')
+    )).thenAnswer((_) async => Right([expense]));
 
-    final result = await repository.getBudgetPerformance(
-      startDate: now.subtract(const Duration(days: 7)),
-      endDate: now,
-    );
+    final result = await repository.getBudgetPerformance(endDate: now);
     expect(result.isRight(), true);
   });
 
   test('getGoalProgress returns data', () async {
     final goal = Goal(
-      id: 'g1',
-      name: 'Car',
-      targetAmount: 1000,
-      totalSaved: 200,
-      status: GoalStatus.active,
+      id: 'g1', name: 'Car', targetAmount: 1000, totalSaved: 200,
       createdAt: now.subtract(const Duration(days: 10)),
-      iconName: 'car',
+      colorHex: '#000000', iconName: 'car'
     );
-    when(
-      () => mockGoalRepository.getGoals(includeArchived: false),
-    ).thenAnswer((_) async => Right([goal]));
-    when(
-      () => mockGoalContributionRepository.getAllContributions(),
-    ).thenAnswer((_) async => const Right([]));
+    when(() => mockGoalRepository.getGoals(includeArchived: false))
+        .thenAnswer((_) async => Right([goal]));
+    when(() => mockGoalContributionRepository.getAllContributions())
+        .thenAnswer((_) async => const Right([]));
 
     final result = await repository.getGoalProgress();
     expect(result.isRight(), true);
@@ -244,23 +173,16 @@ void main() {
 
   test('getRecentDailySpending returns data', () async {
     final expense = ExpenseModel(
-      id: '1',
-      amount: 100,
-      date: now,
-      categoryId: tCategoryId,
-      accountId: 'acc1',
-      title: 'Lunch',
+      id: '1', amount: 100, date: now, categoryId: tCategoryId, accountId: 'acc1', title: 'Lunch'
     );
-    when(
-      () => mockExpenseRepository.getExpenses(
-        startDate: any(named: 'startDate'),
-        endDate: any(named: 'endDate'),
-        accountId: any(named: 'accountId'),
-        categoryId: any(named: 'categoryId'),
-      ),
-    ).thenAnswer((_) async => Right([expense]));
+    when(() => mockExpenseRepository.getExpenses(
+      startDate: any(named: 'startDate'), endDate: any(named: 'endDate'),
+      accountId: any(named: 'accountId'), categoryId: any(named: 'categoryId')
+    )).thenAnswer((_) async => Right([expense]));
 
     final result = await repository.getRecentDailySpending();
     expect(result.isRight(), true);
   });
 }
+INNER_EOF
+flutter test test/features/reports/data/repositories/report_repository_impl_test.dart
