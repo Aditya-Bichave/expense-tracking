@@ -34,9 +34,14 @@ void main() {
   });
 
   group('AppTheme Tests', () {
-    testWidgets('buildTheme creates expected ThemeData for Elemental', (tester) async {
+    testWidgets('buildTheme creates expected ThemeData for Elemental', (
+      tester,
+    ) async {
       GoogleFonts.config.allowRuntimeFetching = false; // Just in case
-      final pair = AppTheme.buildTheme(UIMode.elemental, AppTheme.elementalPalette1);
+      final pair = AppTheme.buildTheme(
+        UIMode.elemental,
+        AppTheme.elementalPalette1,
+      );
       expect(pair, isNotNull);
       expect(pair.light.brightness, Brightness.light);
       expect(pair.dark.brightness, Brightness.dark);
@@ -47,19 +52,28 @@ void main() {
       expect(extDark, isNotNull);
     });
 
-    testWidgets('buildTheme creates expected ThemeData for Quantum', (tester) async {
-      final pair = AppTheme.buildTheme(UIMode.quantum, AppTheme.quantumPalette1);
+    testWidgets('buildTheme creates expected ThemeData for Quantum', (
+      tester,
+    ) async {
+      final pair = AppTheme.buildTheme(
+        UIMode.quantum,
+        AppTheme.quantumPalette1,
+      );
       expect(pair.light.brightness, Brightness.light);
       expect(pair.dark.brightness, Brightness.dark);
     });
 
-    testWidgets('buildTheme creates expected ThemeData for Aether', (tester) async {
+    testWidgets('buildTheme creates expected ThemeData for Aether', (
+      tester,
+    ) async {
       final pair = AppTheme.buildTheme(UIMode.aether, AppTheme.aetherPalette1);
       expect(pair.light.brightness, Brightness.light);
       expect(pair.dark.brightness, Brightness.dark);
     });
 
-    testWidgets('buildTheme creates expected ThemeData for Stitch', (tester) async {
+    testWidgets('buildTheme creates expected ThemeData for Stitch', (
+      tester,
+    ) async {
       final pair = AppTheme.buildTheme(UIMode.stitch, AppTheme.stitchPalette1);
       expect(pair.light.brightness, Brightness.light);
       expect(pair.dark.brightness, Brightness.dark);

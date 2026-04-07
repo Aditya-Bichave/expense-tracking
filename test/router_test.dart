@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/settings/presentation/bloc/settings_blo
 import 'package:mocktail/mocktail.dart';
 
 class MockSessionCubit extends Mock implements SessionCubit {}
+
 class MockSettingsBloc extends Mock implements SettingsBloc {}
 
 void main() {
