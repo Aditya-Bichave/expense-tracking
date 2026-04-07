@@ -1,0 +1,12 @@
+test/core/sync/sync_service_test.dart
+test/core/services/upi_service_test.dart
+test/core/services/secure_storage_service_test.dart
+test/core/services/system_clock_test.dart
+test/core/services/downloader_service_test.dart
+test/core/services/clock_test.dart
+test/core/services/notification_service_test.dart
+test/core/services/demo_mode_service_test.dart
+test/core/services/image_compression_service_test.dart
+test/core/services/file_picker_service_test.dart
+test/core/currency/currency_converter_service_test.dart
+test/recurring_transactions/weekday_names_test.dart

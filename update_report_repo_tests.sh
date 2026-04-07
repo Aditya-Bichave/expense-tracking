@@ -1,3 +1,5 @@
+#!/bin/bash
+cat << 'INNER_EOF' > test/features/reports/data/repositories/report_repository_impl_test.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
@@ -10,13 +12,12 @@ import 'package:expense_tracker/features/categories/domain/repositories/category
 import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
 import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal.dart';
-import 'package:expense_tracker/features/goals/domain/entities/goal_status.dart';
 import 'package:expense_tracker/features/goals/domain/entities/goal_contribution.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_contribution_repository.dart';
 import 'package:expense_tracker/features/goals/domain/repositories/goal_repository.dart';
 import 'package:expense_tracker/features/income/data/models/income_model.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
-import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
+import 'package:expense_tracker/features/reports/domain/entities/report_enums.dart';
 import 'package:expense_tracker/features/reports/data/repositories/report_repository_impl.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -129,7 +130,7 @@ void main() {
 
     final result = await repository.getIncomeVsExpense(
       startDate: now.subtract(const Duration(days: 7)), endDate: now,
-      periodType: IncomeExpensePeriodType.monthly,
+      periodType: ReportPeriodType.thisMonth,
     );
 
     expect(result.isRight(), true);
@@ -137,9 +138,9 @@ void main() {
 
   test('getBudgetPerformance returns data', () async {
     final budget = Budget(
-      id: 'b1', name: 'Groceries', targetAmount: 500, period: BudgetPeriodType.recurringMonthly,
-      startDate: now.subtract(const Duration(days: 10)), type: BudgetType.categorySpecific,
-      categoryIds: [tCategoryId], createdAt: now,
+      id: 'b1', name: 'Groceries', limitAmount: 500, period: BudgetPeriod.monthly,
+      startDate: now.subtract(const Duration(days: 10)), type: BudgetType.categoryLimit,
+      categoryIds: [tCategoryId], status: BudgetStatus.active, createdAt: now, updatedAt: now,
     );
     final expense = ExpenseModel(
       id: '1', amount: 100, date: now, categoryId: tCategoryId, accountId: 'acc1', title: 'Lunch'
@@ -151,17 +152,15 @@ void main() {
       accountId: any(named: 'accountId'), categoryId: any(named: 'categoryId')
     )).thenAnswer((_) async => Right([expense]));
 
-    final result = await repository.getBudgetPerformance(
-      startDate: now.subtract(const Duration(days: 7)), endDate: now
-    );
+    final result = await repository.getBudgetPerformance(endDate: now);
     expect(result.isRight(), true);
   });
 
   test('getGoalProgress returns data', () async {
     final goal = Goal(
-      id: 'g1', name: 'Car', targetAmount: 1000, totalSaved: 200, status: GoalStatus.active,
+      id: 'g1', name: 'Car', targetAmount: 1000, totalSaved: 200,
       createdAt: now.subtract(const Duration(days: 10)),
-      iconName: 'car'
+      colorHex: '#000000', iconName: 'car'
     );
     when(() => mockGoalRepository.getGoals(includeArchived: false))
         .thenAnswer((_) async => Right([goal]));
@@ -185,3 +184,5 @@ void main() {
     expect(result.isRight(), true);
   });
 }
+INNER_EOF
+flutter test test/features/reports/data/repositories/report_repository_impl_test.dart

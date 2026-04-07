@@ -1,3 +1,5 @@
+#!/bin/bash
+cat << 'INNER_EOF' > test/features/reports/data/repositories/report_repository_impl_test.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/accounts/domain/repositories/asset_account_repository.dart';
@@ -185,3 +187,5 @@ void main() {
     expect(result.isRight(), true);
   });
 }
+INNER_EOF
+flutter test test/features/reports/data/repositories/report_repository_impl_test.dart
