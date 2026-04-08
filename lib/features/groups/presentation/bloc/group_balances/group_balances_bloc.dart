@@ -185,15 +185,17 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
       emit(GroupBalancesLoaded(newBalances));
 
       if (_currentGroupId != null) {
-        Future.delayed(const Duration(milliseconds: 500))
-            .then((_) {
-              if (!isClosed) {
-                add(RefreshBalances(_currentGroupId!));
-              }
-            })
-            .catchError((e, s) {
-              _log.severe('Error dispatching optimistic refresh: $e\n$s');
-            });
+        unawaited(
+          Future.delayed(const Duration(milliseconds: 500))
+              .then((_) {
+                if (!isClosed) {
+                  add(RefreshBalances(_currentGroupId!));
+                }
+              })
+              .catchError((e, s) {
+                _log.severe('Error dispatching optimistic refresh: $e\n$s');
+              }),
+        );
       }
     }
   }
