@@ -39,4 +39,26 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ReportFilterControls), findsOneWidget);
   });
+
+  testWidgets('calls showFilterSheet and waits when stream is not loaded', (tester) async {
+    whenListen(
+      mockBloc,
+      Stream.fromIterable([
+        ReportFilterState.initial().copyWith(optionsStatus: FilterOptionsStatus.loading),
+        ReportFilterState.initial().copyWith(optionsStatus: FilterOptionsStatus.loaded),
+      ]),
+      initialState: ReportFilterState.initial().copyWith(optionsStatus: FilterOptionsStatus.loading),
+    );
+
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+
+    final filterButton = find.byIcon(Icons.filter_list);
+    expect(filterButton, findsOneWidget);
+
+    await tester.tap(filterButton);
+    await tester.pumpAndSettle();
+
+    verify(() => mockBloc.add(const LoadFilterOptions(forceReload: true))).called(1);
+  });
 }

@@ -96,6 +96,30 @@ void main() {
       expect(router.routerDelegate.currentConfiguration.uri.toString(), '/add');
     });
 
+    testWidgets('handles refresh correctly', (tester) async {
+      whenListen(
+        mockBloc,
+        Stream.fromIterable([
+          const AccountListLoading(),
+          const AccountListLoaded(accounts: []),
+        ]),
+        initialState: const AccountListLoaded(accounts: []),
+      );
+      await pumpWidgetWithProviders(
+        tester: tester,
+        widget: const AccountListPage(),
+        accountListBloc: mockBloc,
+      );
+
+      expect(find.byType(RefreshIndicator), findsOneWidget);
+
+      await tester.fling(find.byType(ListView), const Offset(0.0, 300.0), 1000.0);
+      await tester.pump();
+
+      verify(() => mockBloc.add(const LoadAccounts(forceReload: true))).called(1);
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('shows error state and retries', (tester) async {
       whenListen(
         mockBloc,
