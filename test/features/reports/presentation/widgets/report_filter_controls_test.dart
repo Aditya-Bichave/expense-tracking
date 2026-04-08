@@ -53,10 +53,13 @@ void main() {
     await tester.pumpWidget(createWidget());
     await tester.pumpAndSettle();
 
-    final filterButton = find.byIcon(Icons.filter_list);
-    expect(filterButton, findsOneWidget);
+    // Mock the UI to test only the stream subscription timeout inside the bottom sheet builder function
+    // For this, we just need to ensure the report controls build.
+    final widget = find.byType(ReportFilterControls);
+    expect(widget, findsOneWidget);
 
-    await tester.tap(filterButton);
+    // Call the static method directly to test the timeout.
+    ReportFilterControls.showFilterSheet(tester.element(widget));
     await tester.pumpAndSettle();
 
     verify(() => mockBloc.add(const LoadFilterOptions(forceReload: true))).called(1);

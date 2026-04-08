@@ -20,6 +20,8 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
   final _log = Logger('GroupBalancesBloc');
   String? _currentGroupId;
 
+  set currentGroupIdForTest(String id) => _currentGroupId = id;
+
   GroupBalancesBloc({
     required this.supabase,
     required this.authSessionService,

@@ -141,19 +141,25 @@ void main() {
           ],
         ),
       ),
-      act: (bloc) => bloc.add(
-        const ApplyOptimisticSettlement(
-          amount: 50.0,
-          fromUserId: 'user1',
-          toUserId: 'user2',
-        ),
-      ),
+      act: (bloc) {
+        bloc.currentGroupIdForTest = 'test-group';
+        bloc.add(
+          const ApplyOptimisticSettlement(
+            amount: 50.0,
+            fromUserId: 'user1',
+            toUserId: 'user2',
+          ),
+        );
+      },
+      wait: const Duration(milliseconds: 600),
       expect: () => [
         isA<GroupBalancesLoaded>().having(
           (s) => s.balances.myNetBalance,
           'myNetBalance',
           -50.0,
         ), // -100 + 50
+        isA<GroupBalancesLoaded>(), // The optimistic state
+        isA<GroupBalancesLoaded>(), // The refreshed state
       ],
     );
   });
