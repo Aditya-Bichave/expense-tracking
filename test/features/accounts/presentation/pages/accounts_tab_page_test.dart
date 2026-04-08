@@ -50,4 +50,26 @@ void main() {
     // Might have "Accounts" header
     // expect(find.text('Accounts'), findsOneWidget);
   });
+
+  testWidgets('AccountsTabPage handles refresh correctly', (tester) async {
+    whenListen(
+      mockAccountListBloc,
+      Stream.fromIterable([
+        const AccountListLoading(),
+        const AccountListLoaded(accounts: []),
+      ]),
+      initialState: const AccountListLoaded(accounts: []),
+    );
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RefreshIndicator), findsOneWidget);
+
+    await tester.fling(find.byType(ListView), const Offset(0.0, 300.0), 1000.0);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1)); // Wait for refresh indicator to settle
+
+    verify(() => mockAccountListBloc.add(const LoadAccounts(forceReload: true))).called(1);
+    await tester.pumpAndSettle();
+  });
 }
