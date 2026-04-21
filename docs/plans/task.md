@@ -1,5 +1,7 @@
-# Task Plan
 | id | task | status | notes |
 | --- | --- | --- | --- |
-| validate-1 | Fix tests | done | All missing logic properly covered via `GroupExpensesBloc` tests and `GroupExpensesRepositoryImpl` tests. UI logic bypasses widget testing correctly. |
-| validate-2 | Run pre_commit_instructions | done | Tested format/analyze/test with coverage. |
+| cov-1 | Baseline coverage calculated | pending | |
+| cov-2 | Write tests for income.dart cov-2 | Write tests for income.dart & settlement_model.dart | pending settlement_model.dart | done | |
+| cov-3 | Write tests for budget_local_data_source_proxy.dart | done | |
+| cov-4 | Write tests for app_slide_fade.dart | done | |
+| cov-5 | Verification cov-5 | Verification & Submit | pending Submit | done | |
