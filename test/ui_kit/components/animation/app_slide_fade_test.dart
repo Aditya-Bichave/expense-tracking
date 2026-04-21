@@ -4,13 +4,13 @@ import 'package:expense_tracker/ui_kit/components/animation/app_slide_fade.dart'
 
 void main() {
   group('AppSlideFade', () {
-    testWidgets('renders child and animates properly', (WidgetTester tester) async {
+    testWidgets('renders child and animates properly', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: AppSlideFade(
-              child: const Text('Animated Text'),
-            ),
+            body: AppSlideFade(child: const Text('Animated Text')),
           ),
         ),
       );
@@ -25,7 +25,9 @@ void main() {
       expect(find.text('Animated Text'), findsOneWidget);
     });
 
-    testWidgets('respects custom delay and duration', (WidgetTester tester) async {
+    testWidgets('respects custom delay and duration', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

@@ -5,7 +5,9 @@ import 'package:expense_tracker/features/budgets/data/datasources/budget_local_d
 import 'package:expense_tracker/core/services/demo_mode_service.dart';
 import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
 
-class MockHiveBudgetLocalDataSource extends Mock implements HiveBudgetLocalDataSource {}
+class MockHiveBudgetLocalDataSource extends Mock
+    implements HiveBudgetLocalDataSource {}
+
 class MockDemoModeService extends Mock implements DemoModeService {}
 
 void main() {
@@ -13,7 +15,16 @@ void main() {
   late MockHiveBudgetLocalDataSource mockHiveDataSource;
   late MockDemoModeService mockDemoModeService;
   setUpAll(() {
-    registerFallbackValue(BudgetModel(id: "fb", name: "fb", budgetTypeIndex: 0, targetAmount: 0, periodTypeIndex: 0, createdAt: DateTime.now()));
+    registerFallbackValue(
+      BudgetModel(
+        id: "fb",
+        name: "fb",
+        budgetTypeIndex: 0,
+        targetAmount: 0,
+        periodTypeIndex: 0,
+        createdAt: DateTime.now(),
+      ),
+    );
   });
 
   setUp(() {
@@ -39,7 +50,9 @@ void main() {
   group('getBudgets', () {
     test('should return demo budgets when demo mode is active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.getDemoBudgets()).thenAnswer((_) async => tBudgetList);
+      when(
+        () => mockDemoModeService.getDemoBudgets(),
+      ).thenAnswer((_) async => tBudgetList);
 
       final result = await dataSource.getBudgets();
 
@@ -51,7 +64,9 @@ void main() {
 
     test('should return hive budgets when demo mode is not active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.getBudgets()).thenAnswer((_) async => tBudgetList);
+      when(
+        () => mockHiveDataSource.getBudgets(),
+      ).thenAnswer((_) async => tBudgetList);
 
       final result = await dataSource.getBudgets();
 
@@ -65,7 +80,9 @@ void main() {
   group('getBudgetById', () {
     test('should return demo budget when demo mode is active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.getDemoBudgetById(any())).thenAnswer((_) async => tBudgetModel);
+      when(
+        () => mockDemoModeService.getDemoBudgetById(any()),
+      ).thenAnswer((_) async => tBudgetModel);
 
       final result = await dataSource.getBudgetById('1');
 
@@ -76,7 +93,9 @@ void main() {
 
     test('should return hive budget when demo mode is not active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.getBudgetById(any())).thenAnswer((_) async => tBudgetModel);
+      when(
+        () => mockHiveDataSource.getBudgetById(any()),
+      ).thenAnswer((_) async => tBudgetModel);
 
       final result = await dataSource.getBudgetById('1');
 
@@ -89,7 +108,9 @@ void main() {
   group('saveBudget', () {
     test('should save demo budget when demo mode is active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.saveDemoBudget(any())).thenAnswer((_) async => Future<void>.value());
+      when(
+        () => mockDemoModeService.saveDemoBudget(any()),
+      ).thenAnswer((_) async => Future<void>.value());
 
       await dataSource.saveBudget(tBudgetModel);
 
@@ -99,7 +120,9 @@ void main() {
 
     test('should save hive budget when demo mode is not active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.saveBudget(any())).thenAnswer((_) async => Future<void>.value());
+      when(
+        () => mockHiveDataSource.saveBudget(any()),
+      ).thenAnswer((_) async => Future<void>.value());
 
       await dataSource.saveBudget(tBudgetModel);
 
@@ -111,7 +134,9 @@ void main() {
   group('deleteBudget', () {
     test('should delete demo budget when demo mode is active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(true);
-      when(() => mockDemoModeService.deleteDemoBudget(any())).thenAnswer((_) async => Future<void>.value());
+      when(
+        () => mockDemoModeService.deleteDemoBudget(any()),
+      ).thenAnswer((_) async => Future<void>.value());
 
       await dataSource.deleteBudget('1');
 
@@ -121,7 +146,9 @@ void main() {
 
     test('should delete hive budget when demo mode is not active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.deleteBudget(any())).thenAnswer((_) async => Future<void>.value());
+      when(
+        () => mockHiveDataSource.deleteBudget(any()),
+      ).thenAnswer((_) async => Future<void>.value());
 
       await dataSource.deleteBudget('1');
 
@@ -141,7 +168,9 @@ void main() {
 
     test('should clear hive budgets when demo mode is not active', () async {
       when(() => mockDemoModeService.isDemoActive).thenReturn(false);
-      when(() => mockHiveDataSource.clearAllBudgets()).thenAnswer((_) async => Future<void>.value());
+      when(
+        () => mockHiveDataSource.clearAllBudgets(),
+      ).thenAnswer((_) async => Future<void>.value());
 
       await dataSource.clearAllBudgets();
 

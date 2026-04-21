@@ -105,24 +105,27 @@ void main() {
         expect(updatedIncome, tIncome);
       });
 
-      test('should correctly nullify optional properties when explicitly requested via ValueGetter', () {
-        final updatedIncome = tIncome.copyWith(
-          categoryOrNull: () => null,
-          notesOrNull: () => null,
-          confidenceScoreOrNull: () => null,
-          merchantIdOrNull: () => null,
-        );
+      test(
+        'should correctly nullify optional properties when explicitly requested via ValueGetter',
+        () {
+          final updatedIncome = tIncome.copyWith(
+            categoryOrNull: () => null,
+            notesOrNull: () => null,
+            confidenceScoreOrNull: () => null,
+            merchantIdOrNull: () => null,
+          );
 
-        expect(updatedIncome.category, isNull);
-        expect(updatedIncome.notes, isNull);
-        expect(updatedIncome.confidenceScore, isNull);
-        expect(updatedIncome.merchantId, isNull);
+          expect(updatedIncome.category, isNull);
+          expect(updatedIncome.notes, isNull);
+          expect(updatedIncome.confidenceScore, isNull);
+          expect(updatedIncome.merchantId, isNull);
 
-        // Other properties should remain unchanged
-        expect(updatedIncome.id, '1');
-        expect(updatedIncome.title, 'Monthly Salary');
-        expect(updatedIncome.amount, 5000.0);
-      });
+          // Other properties should remain unchanged
+          expect(updatedIncome.id, '1');
+          expect(updatedIncome.title, 'Monthly Salary');
+          expect(updatedIncome.amount, 5000.0);
+        },
+      );
     });
   });
 }
