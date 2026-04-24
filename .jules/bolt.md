@@ -1,3 +1,3 @@
-## 2024-05-24 - Exploring opportunities
-**Learning:** Found several documented performance opportunities already implemented in the code (e.g. caching `toLowerCase` before sorting, avoiding `List.from` clones). Need to find new ones.
-**Action:** Let's look for new optimization opportunities since the previously identified ones were already implemented.
+## 2024-05-24 - [Avoid `findChildIndexCallback` precomputation in `build()`]
+**Learning:** Do not precompute a full ID-to-index Map inside `build()` for `ListView.builder`'s `findChildIndexCallback`, as iterating all items on every render negates the O(V) lazy rendering benefit and causes a performance regression.
+**Action:** Instead, convert the widget to a `StatefulWidget` and cache the map in `initState` and `didUpdateWidget`.
