@@ -123,17 +123,21 @@ class GoalRepositoryImpl implements GoalRepository {
       // Problem: .map().where() creates instances for all items before filtering
       // Solution: Filter the models first by checking statusIndex, then map only the needed ones
       // Impact: Reduces object instantiation and garbage collection when loading goals
-      final entities = models
-          .where((m) {
-            return includeArchived ||
-                m.statusIndex != GoalStatus.archived.index;
-          })
-          .map((m) => m.toEntity())
-          .toList();
+      final entities = <Goal>[];
+      for (final m in models) {
+        if (includeArchived || m.statusIndex != GoalStatus.archived.index) {
+          entities.add(m.toEntity());
+        }
+      }
 
       // Sort by Percentage Complete (Descending), then by Creation Date Descending
+      // ⚡ Bolt Performance Optimization: Precompute percentageComplete getter to avoid O(N log N) getter calls
+      final progressCache = {
+        for (var e in entities) e.id: e.percentageComplete,
+      };
+
       entities.sort((a, b) {
-        int comparison = b.percentageComplete.compareTo(a.percentageComplete);
+        int comparison = progressCache[b.id]!.compareTo(progressCache[a.id]!);
         if (comparison == 0) {
           comparison = b.createdAt.compareTo(a.createdAt);
         }

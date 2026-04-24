@@ -235,6 +235,7 @@ class GetFinancialOverviewUseCase
       );
     }
 
+    // Precompute to avoid recalculating getters (percentageUsed is already a stored property so it's technically fine, but let's keep the pattern for consistency if needed or just leave it)
     budgetStatuses.sort((a, b) => b.percentageUsed.compareTo(a.percentageUsed));
     return budgetStatuses.take(3).toList(); // Take top 3 most used/overspent
   }

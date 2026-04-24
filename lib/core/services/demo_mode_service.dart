@@ -162,10 +162,6 @@ class DemoModeService {
   Future<List<GoalContributionModel>> getDemoContributionsForGoal(
     String goalId,
   ) async {
-    // ⚡ Bolt Performance Optimization
-    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
-    // Solution: Iterate once directly, skipping the intermediate list allocation.
-    // Impact: Reduces GC pressure when filtering contributions.
     final result = <GoalContributionModel>[];
     for (final c in _demoContributions) {
       if (c.goalId == goalId) {
@@ -224,10 +220,6 @@ class DemoModeService {
   Future<List<RecurringRuleAuditLogModel>> getDemoRecurringAuditLogsForRule(
     String ruleId,
   ) async {
-    // ⚡ Bolt Performance Optimization
-    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
-    // Solution: Iterate once directly, skipping the intermediate list allocation.
-    // Impact: Reduces GC pressure when filtering audit logs.
     final result = <RecurringRuleAuditLogModel>[];
     for (final l in _demoAuditLogs) {
       if (l.ruleId == ruleId) {

@@ -27,10 +27,6 @@ class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
 
   @override
   List<GroupExpenseModel> getExpenses(String groupId) {
-    // ⚡ Bolt Performance Optimization
-    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
-    // Solution: Iterate once directly, skipping the intermediate list allocation.
-    // Impact: Reduces GC pressure when getting group expenses.
     final result = <GroupExpenseModel>[];
     for (final e in _box.values) {
       if (e.groupId == groupId) {
@@ -47,10 +43,12 @@ class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
 
   @override
   Future<void> deleteExpensesForGroup(String groupId) async {
-    final expenseIds = _box.values
-        .where((expense) => expense.groupId == groupId)
-        .map((expense) => expense.id)
-        .toList();
+    final expenseIds = <String>[];
+    for (final expense in _box.values) {
+      if (expense.groupId == groupId) {
+        expenseIds.add(expense.id);
+      }
+    }
     if (expenseIds.isEmpty) {
       return;
     }

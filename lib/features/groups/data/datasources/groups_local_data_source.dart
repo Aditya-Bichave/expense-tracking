@@ -57,10 +57,6 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
 
   @override
   List<GroupMemberModel> getGroupMembers(String groupId) {
-    // ⚡ Bolt Performance Optimization
-    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
-    // Solution: Iterate once directly, skipping the intermediate list allocation.
-    // Impact: Reduces GC pressure when getting group members.
     final result = <GroupMemberModel>[];
     for (final m in _memberBox.values) {
       if (m.groupId == groupId) {
@@ -82,10 +78,12 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
 
   @override
   Future<void> deleteGroupMembers(String groupId) async {
-    final memberIds = _memberBox.values
-        .where((member) => member.groupId == groupId)
-        .map((member) => member.id)
-        .toList();
+    final memberIds = <String>[];
+    for (final member in _memberBox.values) {
+      if (member.groupId == groupId) {
+        memberIds.add(member.id);
+      }
+    }
     if (memberIds.isEmpty) {
       return;
     }

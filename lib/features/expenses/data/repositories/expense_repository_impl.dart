@@ -259,10 +259,6 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   ) async {
     try {
       final all = await localDataSource.getExpenses();
-      // ⚡ Bolt Performance Optimization
-      // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
-      // Solution: Iterate once directly, skipping the intermediate list allocation.
-      // Impact: Reduces GC pressure and improves speed of category reassignment.
       int updatedCount = 0;
       List<Future<void>> futures = [];
       for (var m in all) {
