@@ -30,17 +30,14 @@ class GoalProgressPage extends StatefulWidget {
 }
 
 class _GoalProgressPageState extends State<GoalProgressPage> {
-  Map<String, int> _childIndexMap = {};
-  List<GoalProgressData> _previousProgressData = [];
+  late Map<String, int> _childIndexMap;
+  List<dynamic> _previousProgressData = [];
 
-  void _updateIndexMapIfNeeded(List<GoalProgressData> currentProgressData) {
-    if (_previousProgressData != currentProgressData) {
-      _childIndexMap = {
-        for (var i = 0; i < currentProgressData.length; i++)
-          currentProgressData[i].goal.id: i,
-      };
-      _previousProgressData = currentProgressData;
-    }
+  void _updateChildIndexMap(List<dynamic> progressData) {
+    _childIndexMap = {
+      for (var i = 0; i < progressData.length; i++) progressData[i].goal.id: i,
+    };
+    _previousProgressData = progressData;
   }
 
   @override
@@ -118,8 +115,9 @@ class _GoalProgressPageState extends State<GoalProgressPage> {
                 // Problem: ListView.builder creates a standard scroll view which can be janky with many items
                 // Solution: Add findChildIndexCallback for O(1) tracking via precomputed map
                 // Impact: Improves scrolling performance and reduces widget rebuilds
-
-                _updateIndexMapIfNeeded(reportData.progressData);
+                if (_previousProgressData != reportData.progressData) {
+                  _updateChildIndexMap(reportData.progressData);
+                }
 
                 return ListView.builder(
                   itemCount: reportData.progressData.length,

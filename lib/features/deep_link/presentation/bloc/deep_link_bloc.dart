@@ -131,7 +131,8 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
           emit(DeepLinkSuccess(groupId: groupId, groupName: groupName));
         },
       );
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Error handling join: $e\n$s");
       emit(DeepLinkError(e.toString()));
     }
   }
