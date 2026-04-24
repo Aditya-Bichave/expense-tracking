@@ -57,7 +57,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _syncIfConnected();
 
       return Right(group);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -79,7 +80,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _syncIfConnected();
 
       return Right(group);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -99,7 +101,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       );
       await _syncIfConnected();
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -122,7 +125,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       );
       await _syncIfConnected();
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(CacheFailure(e.toString()));
     }
   }
@@ -202,10 +206,18 @@ class GroupsRepositoryImpl implements GroupsRepository {
         );
       }
 
-      await Future.wait(remoteGroups.map(_syncRemoteMembersForGroup));
+      // ⚡ Bolt Performance Optimization
+      // Problem: Unbounded concurrency in Future.wait can cause network I/O spikes/crashes
+      // Solution: Chunk the operations into batches of fixed size
+      const int batchSize = 10;
+      for (var i = 0; i < remoteGroups.length; i += batchSize) {
+        final batch = remoteGroups.skip(i).take(batchSize);
+        await Future.wait(batch.map(_syncRemoteMembersForGroup));
+      }
 
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -225,7 +237,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
         maxUses: maxUses,
       );
       return Right(url);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -237,7 +250,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
     try {
       final data = await _remoteDataSource.acceptInvite(token);
       return Right(data);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -252,7 +266,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _remoteDataSource.updateMemberRole(groupId, userId, role);
       await _syncRemoteMembersForGroupById(groupId);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -266,7 +281,8 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _remoteDataSource.removeMember(groupId, userId);
       await _syncRemoteMembersForGroupById(groupId);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(ServerFailure(e.toString()));
     }
   }

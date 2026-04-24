@@ -20,7 +20,7 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-class TransactionListView extends StatelessWidget {
+class TransactionListView extends StatefulWidget {
   final TransactionListState state;
   final SettingsState settings;
   final Map<String, String> accountNameMap;
@@ -47,27 +47,45 @@ class TransactionListView extends StatelessWidget {
   });
 
   @override
+  State<TransactionListView> createState() => _TransactionListViewState();
+}
+
+class _TransactionListViewState extends State<TransactionListView> {
+  Map<String, int> _childIndexMap = {};
+  List<TransactionEntity> _previousTransactions = [];
+
+  void _updateChildIndexMap(List<TransactionEntity> transactions) {
+    if (_previousTransactions == transactions) return;
+    _previousTransactions = transactions;
+    _childIndexMap = {
+      for (var i = 0; i < transactions.length; i++)
+        "${transactions[i].id}_dismissible": i,
+    };
+  }
+
+  @override
   Widget build(BuildContext context) {
+    _updateChildIndexMap(widget.state.transactions);
     final theme = Theme.of(context);
 
-    if (state.status == ListStatus.loading && state.transactions.isEmpty) {
+    if (widget.state.status == ListStatus.loading && widget.state.transactions.isEmpty) {
       return const Center(child: BridgeCircularProgressIndicator());
     }
-    if (state.status == ListStatus.error && state.transactions.isEmpty) {
+    if (widget.state.status == ListStatus.error && widget.state.transactions.isEmpty) {
       return Center(
         child: Padding(
           padding: context.space.allXl,
           child: Text(
-            "Error: ${state.errorMessage ?? 'Failed to load transactions'}",
+            "Error: ${widget.state.errorMessage ?? 'Failed to load transactions'}",
             style: BridgeTextStyle(color: theme.colorScheme.error),
             textAlign: TextAlign.center,
           ),
         ),
       );
     }
-    if (state.transactions.isEmpty &&
-        state.status != ListStatus.loading &&
-        state.status != ListStatus.reloading) {
+    if (widget.state.transactions.isEmpty &&
+        widget.state.status != ListStatus.loading &&
+        widget.state.status != ListStatus.reloading) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -81,7 +99,7 @@ class TransactionListView extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                state.filtersApplied
+                widget.state.filtersApplied
                     ? "No transactions match filters"
                     : "No transactions recorded yet",
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -90,7 +108,7 @@ class TransactionListView extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                state.filtersApplied
+                widget.state.filtersApplied
                     ? "Try adjusting or clearing the filters."
                     : "Tap the '+' button to add your first expense or income.",
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -99,7 +117,7 @@ class TransactionListView extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              if (!state
+              if (!widget.state
                   .filtersApplied) // Show add button only if no filters applied
                 ElevatedButton.icon(
                   key: const ValueKey('button_listView_addFirst'),
@@ -123,52 +141,48 @@ class TransactionListView extends StatelessWidget {
     // Problem: ListView.builder creates a standard scroll view which can be janky with many items
     // Solution: Add findChildIndexCallback for O(1) tracking using a precomputed map
     // Impact: Improves scrolling performance and reduces widget rebuilds for long transaction lists
-    final childIndexMap = {
-      for (var i = 0; i < state.transactions.length; i++)
-        "${state.transactions[i].id}_dismissible": i,
-    };
 
     return ListView.builder(
       padding: const EdgeInsets.only(
         top: 0,
         bottom: 80,
       ), // Ensure padding for FAB
-      itemCount: state.transactions.length,
+      itemCount: widget.state.transactions.length,
       findChildIndexCallback: (Key key) {
         if (key is ValueKey<String>) {
-          return childIndexMap[key.value];
+          return _childIndexMap[key.value];
         }
         return null;
       },
       itemBuilder: (ctx, index) {
-        final transaction = state.transactions[index];
-        final isSelected = state.selectedTransactionIds.contains(
+        final transaction = widget.state.transactions[index];
+        final isSelected = widget.state.selectedTransactionIds.contains(
           transaction.id,
         );
 
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
-        final accountName = accountNameMap[transaction.accountId] ?? 'Deleted';
+        final accountName = widget.accountNameMap[transaction.accountId] ?? 'Deleted';
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
             accountName: accountName,
-            currencySymbol: currencySymbol,
+            currencySymbol: widget.currencySymbol,
             onCardTap: (exp) {
               // Pass original Expense
-              if (state.isInBatchEditMode) {
+              if (widget.state.isInBatchEditMode) {
                 context.read<TransactionListBloc>().add(
                   SelectTransaction(exp.id),
                 );
               } else {
-                navigateToDetailOrEdit(
+                widget.navigateToDetailOrEdit(
                   context,
                   transaction,
                 ); // Pass the TransactionEntity
               }
             },
             onChangeCategoryRequest: (exp) =>
-                handleChangeCategoryRequest(context, transaction),
+                widget.handleChangeCategoryRequest(context, transaction),
             onUserCategorized: (exp, cat) {
               final matchData = TransactionMatchData(
                 description: exp.title,
@@ -189,22 +203,22 @@ class TransactionListView extends StatelessWidget {
           cardItem = IncomeCard(
             income: transaction.income!,
             accountName: accountName,
-            currencySymbol: currencySymbol,
+            currencySymbol: widget.currencySymbol,
             onCardTap: (inc) {
               // Pass original Income
-              if (state.isInBatchEditMode) {
+              if (widget.state.isInBatchEditMode) {
                 context.read<TransactionListBloc>().add(
                   SelectTransaction(inc.id),
                 );
               } else {
-                navigateToDetailOrEdit(
+                widget.navigateToDetailOrEdit(
                   context,
                   transaction,
                 ); // Pass the TransactionEntity
               }
             },
             onChangeCategoryRequest: (inc) =>
-                handleChangeCategoryRequest(context, transaction),
+                widget.handleChangeCategoryRequest(context, transaction),
             onUserCategorized: (inc, cat) {
               final matchData = TransactionMatchData(
                 description: inc.title,
@@ -223,7 +237,7 @@ class TransactionListView extends StatelessWidget {
         }
         // --- END USE ---
 
-        final animatedCard = enableAnimations
+        final animatedCard = widget.enableAnimations
             ? cardItem
                   .animate()
                   .fadeIn(delay: (20 * (index % 10)).ms) // Cap delay
@@ -247,7 +261,7 @@ class TransactionListView extends StatelessWidget {
             ),
           ),
           confirmDismiss: (_) async =>
-              await confirmDeletion(context, transaction),
+              await widget.confirmDeletion(context, transaction),
           onDismissed: (direction) {
             // BLoC event is dispatched by confirmDismiss callback now
             // context.read<TransactionListBloc>().add(DeleteTransaction(transaction));

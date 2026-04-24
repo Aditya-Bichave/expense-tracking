@@ -218,9 +218,9 @@ class AppRouter {
                   final Map<String, dynamic> queryParams =
                       state.uri.queryParameters;
                   final Map<String, dynamic>? extra =
-                      state.extra as Map<String, dynamic>?;
+                      state.extra is Map<String, dynamic> ? state.extra as Map<String, dynamic> : null;
                   Map<String, dynamic>? filtersFromExtra =
-                      extra?['filters'] as Map<String, dynamic>?;
+                      extra?['filters'] is Map<String, dynamic> ? extra!['filters'] as Map<String, dynamic> : null;
 
                   return NoTransitionPage(
                     child: TransactionListPage(
@@ -327,9 +327,9 @@ class AppRouter {
                         parentNavigatorKey: _rootNavigatorKey,
                         builder: (context, state) {
                           final Map<String, dynamic>? extra =
-                              state.extra as Map<String, dynamic>?;
+                              state.extra is Map<String, dynamic> ? state.extra as Map<String, dynamic> : null;
                           final CategoryType? initialType =
-                              extra?['initialType'] as CategoryType?;
+                              extra?['initialType'] is CategoryType ? extra!['initialType'] as CategoryType : null;
                           return AddEditCategoryScreen(
                             initialType: initialType,
                           );
