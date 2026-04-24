@@ -20,7 +20,7 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-class TransactionListView extends StatelessWidget {
+class TransactionListView extends StatefulWidget {
   final TransactionListState state;
   final SettingsState settings;
   final Map<String, String> accountNameMap;
@@ -47,8 +47,37 @@ class TransactionListView extends StatelessWidget {
   });
 
   @override
+  State<TransactionListView> createState() => _TransactionListViewState();
+}
+
+class _TransactionListViewState extends State<TransactionListView> {
+  late Map<String, int> _childIndexMap;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateChildIndexMap();
+  }
+
+  @override
+  void didUpdateWidget(TransactionListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.transactions != widget.state.transactions) {
+      _updateChildIndexMap();
+    }
+  }
+
+  void _updateChildIndexMap() {
+    _childIndexMap = {
+      for (var i = 0; i < widget.state.transactions.length; i++)
+        "${widget.state.transactions[i].id}_dismissible": i,
+    };
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final state = widget.state;
 
     if (state.status == ListStatus.loading && state.transactions.isEmpty) {
       return const Center(child: BridgeCircularProgressIndicator());
@@ -123,10 +152,6 @@ class TransactionListView extends StatelessWidget {
     // Problem: ListView.builder creates a standard scroll view which can be janky with many items
     // Solution: Add findChildIndexCallback for O(1) tracking using a precomputed map
     // Impact: Improves scrolling performance and reduces widget rebuilds for long transaction lists
-    final childIndexMap = {
-      for (var i = 0; i < state.transactions.length; i++)
-        "${state.transactions[i].id}_dismissible": i,
-    };
 
     return ListView.builder(
       padding: const EdgeInsets.only(
@@ -136,7 +161,7 @@ class TransactionListView extends StatelessWidget {
       itemCount: state.transactions.length,
       findChildIndexCallback: (Key key) {
         if (key is ValueKey<String>) {
-          return childIndexMap[key.value];
+          return _childIndexMap[key.value];
         }
         return null;
       },
@@ -148,12 +173,13 @@ class TransactionListView extends StatelessWidget {
 
         // --- USE ExpenseCard or IncomeCard based on type ---
         Widget cardItem;
-        final accountName = accountNameMap[transaction.accountId] ?? 'Deleted';
+        final accountName =
+            widget.accountNameMap[transaction.accountId] ?? 'Deleted';
         if (transaction.type == TransactionType.expense) {
           cardItem = ExpenseCard(
             expense: transaction.expense!,
             accountName: accountName,
-            currencySymbol: currencySymbol,
+            currencySymbol: widget.currencySymbol,
             onCardTap: (exp) {
               // Pass original Expense
               if (state.isInBatchEditMode) {
@@ -161,14 +187,14 @@ class TransactionListView extends StatelessWidget {
                   SelectTransaction(exp.id),
                 );
               } else {
-                navigateToDetailOrEdit(
+                widget.navigateToDetailOrEdit(
                   context,
                   transaction,
                 ); // Pass the TransactionEntity
               }
             },
             onChangeCategoryRequest: (exp) =>
-                handleChangeCategoryRequest(context, transaction),
+                widget.handleChangeCategoryRequest(context, transaction),
             onUserCategorized: (exp, cat) {
               final matchData = TransactionMatchData(
                 description: exp.title,
@@ -189,7 +215,7 @@ class TransactionListView extends StatelessWidget {
           cardItem = IncomeCard(
             income: transaction.income!,
             accountName: accountName,
-            currencySymbol: currencySymbol,
+            currencySymbol: widget.currencySymbol,
             onCardTap: (inc) {
               // Pass original Income
               if (state.isInBatchEditMode) {
@@ -197,14 +223,14 @@ class TransactionListView extends StatelessWidget {
                   SelectTransaction(inc.id),
                 );
               } else {
-                navigateToDetailOrEdit(
+                widget.navigateToDetailOrEdit(
                   context,
                   transaction,
                 ); // Pass the TransactionEntity
               }
             },
             onChangeCategoryRequest: (inc) =>
-                handleChangeCategoryRequest(context, transaction),
+                widget.handleChangeCategoryRequest(context, transaction),
             onUserCategorized: (inc, cat) {
               final matchData = TransactionMatchData(
                 description: inc.title,
@@ -223,7 +249,7 @@ class TransactionListView extends StatelessWidget {
         }
         // --- END USE ---
 
-        final animatedCard = enableAnimations
+        final animatedCard = widget.enableAnimations
             ? cardItem
                   .animate()
                   .fadeIn(delay: (20 * (index % 10)).ms) // Cap delay
@@ -247,7 +273,7 @@ class TransactionListView extends StatelessWidget {
             ),
           ),
           confirmDismiss: (_) async =>
-              await confirmDeletion(context, transaction),
+              await widget.confirmDeletion(context, transaction),
           onDismissed: (direction) {
             // BLoC event is dispatched by confirmDismiss callback now
             // context.read<TransactionListBloc>().add(DeleteTransaction(transaction));
