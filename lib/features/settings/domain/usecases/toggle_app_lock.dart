@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
@@ -25,9 +26,11 @@ class ToggleAppLockUseCase {
         }
       }
       return await repository.saveAppLockEnabled(enable);
-    } on PlatformException catch (e) {
+    } on PlatformException catch (e, s) {
+      log.severe('Exception in repository: $e\n$s');
       return Left(UnexpectedFailure(e.message ?? e.code));
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Exception in repository: $e\n$s');
       return Left(UnexpectedFailure(e.toString()));
     }
   }
