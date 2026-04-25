@@ -18,8 +18,9 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.signInWithOtp(phone: phone);
       return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      log.severe('Authentication failed\n$s');
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -28,8 +29,9 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDataSource.signInWithMagicLink(email: email);
       return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      log.severe('Authentication failed\n$s');
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -38,8 +40,9 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final response = await _remoteDataSource.signInAnonymously();
       return Right(response);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      log.severe('Authentication failed\n$s');
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -54,8 +57,9 @@ class AuthRepositoryImpl implements AuthRepository {
         token: token,
       );
       return Right(response);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      log.severe('Authentication failed\n$s');
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -68,7 +72,8 @@ class AuthRepositoryImpl implements AuthRepository {
         // Use DataManagementRepository to clear all Hive boxes safely
         final dataRepo = sl<DataManagementRepository>();
         await dataRepo.clearAllData();
-      } catch (_) {
+      } catch (_, s) {
+        log.severe('Error clearing local data\n$s');
         // Ignore errors during local data clearing to ensure logout proceeds
       }
 
@@ -80,8 +85,9 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       return const Right(null);
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      log.severe('Authentication failed\n$s');
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -89,8 +95,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Either<Failure, User?> getCurrentUser() {
     try {
       return Right(_remoteDataSource.getCurrentUser());
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
+    } catch (e, s) {
+      log.severe('Authentication failed\n$s');
+      return Left(CacheFailure('Authentication failed'));
     }
   }
 
