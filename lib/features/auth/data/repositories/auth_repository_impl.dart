@@ -19,7 +19,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _remoteDataSource.signInWithOtp(phone: phone);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -29,7 +29,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _remoteDataSource.signInWithMagicLink(email: email);
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -39,7 +39,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final response = await _remoteDataSource.signInAnonymously();
       return Right(response);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -55,7 +55,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
       return Right(response);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -81,7 +81,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return const Right(null);
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure('Authentication failed'));
     }
   }
 
@@ -90,7 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       return Right(_remoteDataSource.getCurrentUser());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure('Authentication failed'));
     }
   }
 

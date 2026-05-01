@@ -31,9 +31,9 @@ class GoalProgressPage extends StatefulWidget {
 
 class _GoalProgressPageState extends State<GoalProgressPage> {
   late Map<String, int> _childIndexMap;
-  List<dynamic> _previousProgressData = [];
+  List<GoalProgressData> _previousProgressData = [];
 
-  void _updateChildIndexMap(List<dynamic> progressData) {
+  void _updateChildIndexMap(List<GoalProgressData> progressData) {
     _childIndexMap = {
       for (var i = 0; i < progressData.length; i++) progressData[i].goal.id: i,
     };
