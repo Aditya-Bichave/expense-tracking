@@ -1,5 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/services/downloader_service.dart';
+import 'dart:typed_data';
+
 import 'package:expense_tracker/features/reports/domain/entities/report_data.dart';
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,10 @@ class MockDownloaderService extends Mock implements DownloaderService {}
 void main() {
   late CsvExportHelper helper;
   late MockDownloaderService mockDownloaderService;
+
+  setUpAll(() {
+    registerFallbackValue(Uint8List(0));
+  });
 
   setUp(() {
     mockDownloaderService = MockDownloaderService();
