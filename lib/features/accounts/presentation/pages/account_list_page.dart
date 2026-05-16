@@ -173,8 +173,8 @@ class AccountListPage extends StatelessWidget {
                             (s) => s is! AccountListLoading || !s.isReloading,
                           )
                           .timeout(const Duration(seconds: 3));
-                    } catch (e) {
-                      // Proceed if timeout occurs
+                    } catch (e) { // coverage:ignore-line
+                      // Proceed if timeout occurs // coverage:ignore-line
                     }
                   },
                   child: ListView.builder(

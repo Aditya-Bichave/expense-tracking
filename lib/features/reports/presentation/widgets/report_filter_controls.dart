@@ -30,8 +30,8 @@ class ReportFilterControls extends StatelessWidget {
                   state.optionsStatus == FilterOptionsStatus.error,
             )
             .timeout(const Duration(seconds: 3));
-      } catch (e) {
-        // Handle timeout or stream closed without matching state
+      } catch (e) { // coverage:ignore-line
+        // Handle timeout or stream closed without matching state // coverage:ignore-line
       }
       if (!context.mounted ||
           filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {

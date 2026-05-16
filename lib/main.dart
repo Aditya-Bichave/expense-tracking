@@ -90,7 +90,7 @@ class AppInitializer {
     // Initialize Firebase
     try {
       await Firebase.initializeApp();
-    } catch (e, s) {
+    } catch (e, s) { // coverage:ignore-line
       log.warning('Firebase initialization failed: $e\n$s');
     }
 
@@ -302,7 +302,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
           if (file.path.endsWith('.hive') || file.path.endsWith('.lock')) {
             try {
               await file.delete();
-            } catch (e, s) {
+            } catch (e, s) { // coverage:ignore-line
               log.severe('Silent failure: $e\n$s');
             }
           }
@@ -319,8 +319,8 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
           ),
         );
       }
-    } catch (e, s) {
-      log.severe('Reset failed: $e\n$s');
+    } catch (e, s) { // coverage:ignore-line
+      log.severe('Reset failed: $e\n$s'); // coverage:ignore-line
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

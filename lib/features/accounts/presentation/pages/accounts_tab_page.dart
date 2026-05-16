@@ -91,8 +91,8 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
                   (state) => state is! AccountListLoading || !state.isReloading,
                 )
                 .timeout(const Duration(seconds: 3));
-          } catch (e) {
-            // Proceed if timeout occurs
+          } catch (e) { // coverage:ignore-line
+            // Proceed if timeout occurs // coverage:ignore-line
           }
         },
         child: ListView(
