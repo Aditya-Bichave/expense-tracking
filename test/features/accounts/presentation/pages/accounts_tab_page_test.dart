@@ -47,7 +47,5 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
 
     expect(find.byType(AccountsTabPage), findsOneWidget);
-    // Might have "Accounts" header
-    // expect(find.text('Accounts'), findsOneWidget);
   });
 }

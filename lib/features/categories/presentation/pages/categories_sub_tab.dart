@@ -12,6 +12,80 @@ import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
+class _CategoryListView extends StatefulWidget {
+  final List<Category> categories;
+  final String title;
+  final Widget Function(BuildContext context, Category category) buildItem;
+
+  const _CategoryListView({
+    required this.categories,
+    required this.title,
+    required this.buildItem,
+  });
+
+  @override
+  State<_CategoryListView> createState() => _CategoryListViewState();
+}
+
+class _CategoryListViewState extends State<_CategoryListView> {
+  late List<Category> _sortedCategories;
+
+  @override
+  void initState() {
+    super.initState();
+    _sortCategories();
+  }
+
+  @override
+  void didUpdateWidget(_CategoryListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.categories != oldWidget.categories) {
+      _sortCategories();
+    }
+  }
+
+  void _sortCategories() {
+    final lowerCaseNames = {
+      for (var c in widget.categories) c.id: c.name.toLowerCase(),
+    };
+    _sortedCategories = List.from(widget.categories)
+      ..sort((a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final modeTheme = context.modeTheme;
+
+    if (_sortedCategories.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: context.space.allXl,
+          child: Text(
+            'No ${widget.title} categories defined.',
+            style: theme.textTheme.bodyMedium,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding:
+          modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
+          const EdgeInsets.only(top: 8.0, bottom: 90.0),
+      itemCount: _sortedCategories.length,
+      itemBuilder: (context, index) {
+        final category = _sortedCategories[index];
+        return widget
+            .buildItem(context, category)
+            .animate()
+            .fadeIn(delay: (30 * index).ms, duration: 250.ms)
+            .slideY(begin: 0.1, curve: Curves.easeOut);
+      },
+    );
+  }
+}
+
 class CategoriesSubTab extends StatelessWidget {
   const CategoriesSubTab({super.key});
 
@@ -46,48 +120,10 @@ class CategoriesSubTab extends StatelessWidget {
     List<Category> categories,
     String title,
   ) {
-    final theme = Theme.of(context);
-    final modeTheme = context.modeTheme; // Get themed padding
-
-    if (categories.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: context.space.allXl,
-          child: Text(
-            'No $title categories defined.',
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
-      );
-    }
-    // ⚡ Bolt Performance Optimization
-    // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
-    // Solution: Cache lowercased names outside the sort function
-    // Impact: Improves loading speed by reducing CPU cycles and garbage collection
-    final lowerCaseNames = {
-      for (var c in categories) c.id: c.name.toLowerCase(),
-    };
-
-    // Sort list before displaying
-    categories.sort(
-      (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
-    );
-    return ListView.builder(
-      // --- MODIFIED: Apply themed padding OR a default, including bottom padding for FAB ---
-      padding:
-          modeTheme?.pagePadding.copyWith(top: 8, bottom: 90) ??
-          const EdgeInsets.only(
-            top: 8.0,
-            bottom: 90.0,
-          ), // Increased bottom padding
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return _buildCategoryItem(context, category)
-            .animate()
-            .fadeIn(delay: (30 * index).ms, duration: 250.ms)
-            .slideY(begin: 0.1, curve: Curves.easeOut);
-      },
+    return _CategoryListView(
+      categories: categories,
+      title: title,
+      buildItem: (context, category) => _buildCategoryItem(context, category),
     );
   }
 

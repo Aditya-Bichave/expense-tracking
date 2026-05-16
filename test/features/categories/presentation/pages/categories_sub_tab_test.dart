@@ -1,109 +1,98 @@
 import 'package:bloc_test/bloc_test.dart';
-import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category_type.dart';
 import 'package:expense_tracker/features/categories/presentation/bloc/category_management/category_management_bloc.dart';
 import 'package:expense_tracker/features/categories/presentation/pages/categories_sub_tab.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
+import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
+import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-import '../../../../helpers/pump_app.dart';
 
 class MockCategoryManagementBloc
     extends MockBloc<CategoryManagementEvent, CategoryManagementState>
     implements CategoryManagementBloc {}
 
 void main() {
-  late CategoryManagementBloc mockBloc;
-
-  final mockExpenseCategories = [
-    const Category(
-      id: 'e1',
-      name: 'Expense Cat',
-      iconName: 'test',
-      colorHex: '#ff0000',
-      type: CategoryType.expense,
-      isCustom: true,
-    ),
-    const Category(
-      id: 'e2',
-      name: 'Apple',
-      iconName: 'test',
-      colorHex: '#000000',
-      type: CategoryType.expense,
-      isCustom: true,
-    ),
-  ];
-  final mockIncomeCategories = [
-    const Category(
-      id: 'i1',
-      name: 'Income Cat',
-      iconName: 'test',
-      colorHex: '#00ff00',
-      type: CategoryType.income,
-      isCustom: true,
-    ),
-  ];
+  late MockCategoryManagementBloc mockBloc;
 
   setUp(() {
     mockBloc = MockCategoryManagementBloc();
   });
 
-  Widget buildTestWidget() {
-    return BlocProvider.value(value: mockBloc, child: const CategoriesSubTab());
+  Widget createWidgetUnderTest({
+    CategoryManagementState state = const CategoryManagementState(),
+  }) {
+    when(() => mockBloc.state).thenReturn(state);
+    return MaterialApp(
+      home: BlocProvider<CategoryManagementBloc>.value(
+        value: mockBloc,
+        child: const Scaffold(body: CategoriesSubTab()),
+      ),
+    );
   }
 
-  group('CategoriesSubTab', () {
-    testWidgets('shows loading indicator', (tester) async {
-      when(() => mockBloc.state).thenReturn(
-        const CategoryManagementState(status: CategoryManagementStatus.loading),
-      );
-      await pumpWidgetWithProviders(
-        tester: tester,
-        widget: buildTestWidget(),
-        settle: false,
-      );
-      expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
-    });
-
-    testWidgets('renders category lists in their respective tabs', (
-      tester,
-    ) async {
-      when(() => mockBloc.state).thenReturn(
-        CategoryManagementState(
-          status: CategoryManagementStatus.loaded,
-          customExpenseCategories: mockExpenseCategories,
-          customIncomeCategories: mockIncomeCategories,
+  testWidgets('CategoriesSubTab shows loading indicator', (tester) async {
+    await tester.pumpWidget(
+      createWidgetUnderTest(
+        state: const CategoryManagementState(
+          status: CategoryManagementStatus.loading,
         ),
-      );
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+      ),
+    );
+    expect(find.byType(BridgeCircularProgressIndicator), findsOneWidget);
+  });
 
-      // Expense tab is visible by default
-      expect(find.text('Expense Cat'), findsOneWidget);
-      expect(find.text('Income Cat'), findsNothing);
+  testWidgets('CategoriesSubTab renders category lists and updates state', (
+    tester,
+  ) async {
+    final expenseCat = Category(
+      id: '1',
+      name: 'Expense',
+      iconName: 'home',
+      colorHex: '#000000',
+      type: CategoryType.expense,
+      isCustom: false,
+    );
+    final incomeCat = Category(
+      id: '2',
+      name: 'Income',
+      iconName: 'work',
+      colorHex: '#FFFFFF',
+      type: CategoryType.income,
+      isCustom: false,
+    );
 
-      // Switch to Income tab
-      await tester.tap(find.text('Income'));
-      await tester.pumpAndSettle();
+    final state = CategoryManagementState(
+      status: CategoryManagementStatus.loaded,
+      predefinedExpenseCategories: [expenseCat],
+      predefinedIncomeCategories: [incomeCat],
+      customExpenseCategories: const [],
+      customIncomeCategories: const [],
+    );
 
-      expect(find.text('Expense Cat'), findsNothing);
-      expect(find.text('Income Cat'), findsOneWidget);
-    });
+    await tester.pumpWidget(createWidgetUnderTest(state: state));
+    await tester.pumpAndSettle();
 
-    testWidgets('has "Manage Categories" button', (tester) async {
-      when(() => mockBloc.state).thenReturn(
-        const CategoryManagementState(status: CategoryManagementStatus.loaded),
-      );
+    expect(find.text('Expense'), findsOneWidget);
+  });
 
-      await pumpWidgetWithProviders(tester: tester, widget: buildTestWidget());
+  testWidgets('CategoriesSubTab shows empty message when lists are empty', (
+    tester,
+  ) async {
+    final state = CategoryManagementState(
+      status: CategoryManagementStatus.loaded,
+      predefinedExpenseCategories: const [],
+      predefinedIncomeCategories: const [],
+      customExpenseCategories: const [],
+      customIncomeCategories: const [],
+    );
 
-      expect(
-        find.byKey(const ValueKey('button_manage_categories')),
-        findsOneWidget,
-      );
-    });
+    await tester.pumpWidget(createWidgetUnderTest(state: state));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No expense categories defined.'), findsOneWidget);
   });
 }

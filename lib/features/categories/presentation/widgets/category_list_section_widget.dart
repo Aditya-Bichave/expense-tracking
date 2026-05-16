@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 
-class CategoryListSectionWidget extends StatelessWidget {
+class CategoryListSectionWidget extends StatefulWidget {
   final List<Category> categories;
   final String emptyMessage;
   final Function(Category) onEditCategory;
@@ -22,39 +22,63 @@ class CategoryListSectionWidget extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    if (categories.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: context.space.allXl,
-          child: Text(emptyMessage, style: theme.textTheme.titleMedium),
-        ),
-      );
+  State<CategoryListSectionWidget> createState() =>
+      _CategoryListSectionWidgetState();
+}
+
+class _CategoryListSectionWidgetState extends State<CategoryListSectionWidget> {
+  late List<Category> _sortedCategories;
+
+  @override
+  void initState() {
+    super.initState();
+    _sortCategories();
+  }
+
+  @override
+  void didUpdateWidget(CategoryListSectionWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.categories != oldWidget.categories) {
+      _sortCategories();
     }
+  }
+
+  void _sortCategories() {
     // ⚡ Bolt Performance Optimization
     // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during widget build
     // Solution: Cache lowercased names outside the sort function
     // Impact: Improves UI rendering speed by avoiding tight-loop allocations
     final lowerCaseNames = {
-      for (var c in categories) c.id: c.name.toLowerCase(),
+      for (var c in widget.categories) c.id: c.name.toLowerCase(),
     };
 
-    // Sort combined list for consistent display
-    categories.sort(
-      (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
-    );
+    // Copy to avoid mutating the original list
+    _sortedCategories = List.from(widget.categories)
+      ..sort((a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (_sortedCategories.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: context.space.allXl,
+          child: Text(widget.emptyMessage, style: theme.textTheme.titleMedium),
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8.0, bottom: 90.0), // Padding for FAB
-      itemCount: categories.length,
+      itemCount: _sortedCategories.length,
       itemBuilder: (context, index) {
-        final category = categories[index];
+        final category = _sortedCategories[index];
         return CategoryListItemWidget(
               category: category,
-              onEdit: () => onEditCategory(category),
-              onDelete: () => onDeleteCategory(category),
-              onPersonalize: () => onPersonalizeCategory(category),
+              onEdit: () => widget.onEditCategory(category),
+              onDelete: () => widget.onDeleteCategory(category),
+              onPersonalize: () => widget.onPersonalizeCategory(category),
             )
             .animate()
             .fadeIn(delay: (40 * index).ms, duration: 300.ms)
