@@ -48,7 +48,8 @@ class _LockScreenState extends State<LockScreen> {
     try {
       final canCheck = await auth.canCheckBiometrics;
       if (mounted) setState(() => _canCheckBiometrics = canCheck);
-    } catch (e, s) { // coverage:ignore-line
+    } catch (e, s) {
+      // coverage:ignore-line
       log.severe('Silent failure: $e\n$s');
     }
   }
@@ -71,8 +72,11 @@ class _LockScreenState extends State<LockScreen> {
       if (authenticated && mounted) {
         context.read<SessionCubit>().unlock();
       }
-    } catch (e, s) { // coverage:ignore-line
-      log.warning('Biometric authentication failed or was cancelled: $e\n$s'); // coverage:ignore-line
+    } catch (e, s) {
+      // coverage:ignore-line
+      log.warning(
+        'Biometric authentication failed or was cancelled: $e\n$s',
+      ); // coverage:ignore-line
       // Fallback to PIN
     }
   }

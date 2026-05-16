@@ -85,15 +85,9 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         onRefresh: () async {
           final bloc = context.read<AccountListBloc>();
           bloc.add(const LoadAccounts(forceReload: true));
-          try {
-            await bloc.stream
-                .firstWhere(
-                  (state) => state is! AccountListLoading || !state.isReloading,
-                )
-                .timeout(const Duration(seconds: 3));
-          } catch (e) { // coverage:ignore-line
-            // Proceed if timeout occurs // coverage:ignore-line
-          }
+          await bloc.stream.firstWhere(
+            (state) => state is! AccountListLoading || !state.isReloading,
+          );
         },
         child: ListView(
           padding:
