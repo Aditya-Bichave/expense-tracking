@@ -319,7 +319,8 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Reset failed: $e\n$s');
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

@@ -71,8 +71,9 @@ class _LockScreenState extends State<LockScreen> {
       if (authenticated && mounted) {
         context.read<SessionCubit>().unlock();
       }
-    } catch (e) {
-      // Fallback
+    } catch (e, s) {
+      log.warning('Biometric authentication failed or was cancelled: $e\n$s');
+      // Fallback to PIN
     }
   }
 
