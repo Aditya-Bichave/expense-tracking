@@ -81,7 +81,7 @@ void main() {
           endDate: any(named: 'endDate'),
           accountIds: any(named: 'accountIds'),
         ),
-      ).thenAnswer((_) async => Left(ServerFailure()));
+      ).thenAnswer((_) async => const Left(ServerFailure()));
 
       // act
       final result = await useCase(
@@ -94,7 +94,7 @@ void main() {
       );
 
       // assert
-      expect(result, Left(ServerFailure()));
+      expect(result, const Left(ServerFailure()));
       verify(
         () => mockReportRepository.getSpendingByCategory(
           startDate: tStartDate,

@@ -99,7 +99,7 @@ void main() {
           accountIds: any(named: 'accountIds'),
           compareToPrevious: any(named: 'compareToPrevious'),
         ),
-      ).thenAnswer((_) async => Left(ServerFailure()));
+      ).thenAnswer((_) async => const Left(ServerFailure()));
 
       // act
       final result = await useCase(
@@ -113,7 +113,7 @@ void main() {
       );
 
       // assert
-      expect(result, Left(ServerFailure()));
+      expect(result, const Left(ServerFailure()));
       verify(
         () => mockReportRepository.getBudgetPerformance(
           startDate: tStartDate,
