@@ -112,7 +112,7 @@ void main() {
       build: () {
         when(
           () => addExpense(any()),
-        ).thenAnswer((_) async => const Left(ServerFailure('fail')));
+        ).thenAnswer((_) async => Left(ServerFailure('fail')));
         return AddEditTransactionBloc(
           addExpenseUseCase: addExpense,
           updateExpenseUseCase: updateExpense,

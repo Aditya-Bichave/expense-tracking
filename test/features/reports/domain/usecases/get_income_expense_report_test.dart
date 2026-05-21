@@ -83,7 +83,7 @@ void main() {
           periodType: any(named: 'periodType'),
           accountIds: any(named: 'accountIds'),
         ),
-      ).thenAnswer((_) async => const Left(ServerFailure()));
+      ).thenAnswer((_) async => Left(ServerFailure()));
 
       // act
       final result = await useCase(
@@ -97,7 +97,7 @@ void main() {
       );
 
       // assert
-      expect(result, const Left(ServerFailure()));
+      expect(result, Left(ServerFailure()));
       verify(
         () => mockReportRepository.getIncomeVsExpense(
           startDate: tStartDate,

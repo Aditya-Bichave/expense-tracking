@@ -62,13 +62,13 @@ void main() {
           type: CategoryType.income,
           includeCustom: true,
         ),
-      ).thenAnswer((_) async => const Left(ServerFailure('Server Failure')));
+      ).thenAnswer((_) async => Left(ServerFailure('Server Failure')));
 
       // act
       final result = await useCase(NoParams());
 
       // assert
-      expect(result, const Left(ServerFailure('Server Failure')));
+      expect(result, Left(ServerFailure('Server Failure')));
       verify(
         () => mockRepository.getSpecificCategories(
           type: CategoryType.income,

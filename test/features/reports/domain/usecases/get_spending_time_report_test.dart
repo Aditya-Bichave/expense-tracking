@@ -91,7 +91,7 @@ void main() {
           accountIds: any(named: 'accountIds'),
           categoryIds: any(named: 'categoryIds'),
         ),
-      ).thenAnswer((_) async => const Left(ServerFailure()));
+      ).thenAnswer((_) async => Left(ServerFailure()));
 
       // act
       final result = await useCase(
@@ -106,7 +106,7 @@ void main() {
       );
 
       // assert
-      expect(result, const Left(ServerFailure()));
+      expect(result, Left(ServerFailure()));
       verify(
         () => mockReportRepository.getSpendingOverTime(
           startDate: tStartDate,
