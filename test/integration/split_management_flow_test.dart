@@ -130,7 +130,8 @@ void main() {
           ),
           GoRoute(
             path: '/add-expense',
-            builder: (context, state) => AppScaffold(body: const AddExpenseWizardPage()),
+            builder: (context, state) =>
+                AppScaffold(body: const AddExpenseWizardPage()),
           ),
         ],
       );
