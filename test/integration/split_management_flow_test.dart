@@ -15,6 +15,7 @@ import 'package:expense_tracker/features/groups/domain/entities/group_member.dar
 import 'package:expense_tracker/features/groups/domain/entities/group_type.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_role.dart';
 import 'package:expense_tracker/ui_kit/components/buttons/app_button.dart';
+import 'package:expense_tracker/ui_kit/components/foundations/app_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
@@ -129,7 +130,7 @@ void main() {
           ),
           GoRoute(
             path: '/add-expense',
-            builder: (context, state) => const AddExpenseWizardPage(),
+            builder: (context, state) => AppScaffold(body: const AddExpenseWizardPage()),
           ),
         ],
       );
