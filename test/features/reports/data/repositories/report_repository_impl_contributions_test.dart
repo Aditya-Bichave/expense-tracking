@@ -140,7 +140,7 @@ void main() {
     test('returns Failure on unexpected exception', () async {
       when(
         () => mockGoalContributionRepo.getContributionsForGoal(tGoalId),
-      ).thenThrow(Exception('test'));
+      ).thenAnswer((_) => Future.error(Exception('test')));
 
       final result = await repository.getRecentDailyContributions(
         tGoalId,

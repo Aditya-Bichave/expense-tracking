@@ -1,0 +1,12 @@
+{
+  "mainJsKb": 5864.99609375,
+  "gzipMainJsKb": 1663.7568359375,
+  "totalKb": 40509.736328125,
+  "budgets": {
+    "total_kb": 40960,
+    "main_js_kb": 6144,
+    "gzip_main_js_kb": 2048
+  },
+  "passed": true,
+  "messages": []
+}
