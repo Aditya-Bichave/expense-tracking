@@ -54,11 +54,11 @@ class _DashboardPageState extends State<DashboardPage> {
           .firstWhere(
             (state) => state is DashboardLoaded || state is DashboardError,
           )
-          .timeout(const Duration(seconds: 10));
-      log.info("[DashboardPage] Refresh stream finished or timed out.");
-    } catch (e) {
+          .timeout(const Duration(seconds: 3));
+      log.info("[DashboardPage] Refresh stream finished.");
+    } catch (e, s) {
       log.warning(
-        "[DashboardPage] Error or timeout waiting for refresh stream: $e",
+        "[DashboardPage] Error or timeout waiting for refresh stream: $e\n$s",
       );
     }
   }

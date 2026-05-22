@@ -53,9 +53,15 @@ class _GroupBalancesTabState extends State<GroupBalancesTab> {
 
           return RefreshIndicator(
             onRefresh: () async {
-              context.read<GroupBalancesBloc>().add(
-                RefreshBalances(widget.groupId),
-              );
+              final bloc = context.read<GroupBalancesBloc>();
+              bloc.add(RefreshBalances(widget.groupId));
+              try {
+                await bloc.stream
+                    .firstWhere((s) => s is! GroupBalancesLoading)
+                    .timeout(const Duration(seconds: 3));
+              } catch (_) {
+                // Prevent hanging if state update is missed
+              }
             },
             child: ListView(
               padding: const EdgeInsets.all(16.0),

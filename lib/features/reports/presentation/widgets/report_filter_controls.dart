@@ -22,11 +22,18 @@ class ReportFilterControls extends StatelessWidget {
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
-      await filterBloc.stream.firstWhere(
-        (state) =>
-            state.optionsStatus == FilterOptionsStatus.loaded ||
-            state.optionsStatus == FilterOptionsStatus.error,
-      );
+      try {
+        await filterBloc.stream
+            .firstWhere(
+              (state) =>
+                  state.optionsStatus == FilterOptionsStatus.loaded ||
+                  state.optionsStatus == FilterOptionsStatus.error,
+            )
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {
+        // Prevent hanging if stream closes or timeout occurs
+      }
+
       if (!context.mounted ||
           filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
         return; // Don't show sheet if loading failed or stream closed early

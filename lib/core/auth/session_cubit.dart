@@ -49,30 +49,35 @@ class SessionCubit extends Cubit<SessionState> {
   }
 
   Future<void> checkSession({bool background = false}) async {
-    if (E2EMode.enabled) {
-      await _loadLocalE2EProfile();
-      return;
+    try {
+      if (E2EMode.enabled) {
+        await _loadLocalE2EProfile();
+        return;
+      }
+
+      final userResult = _authRepository.getCurrentUser();
+      await userResult.fold((failure) async => emit(SessionUnauthenticated()), (
+        user,
+      ) async {
+        if (user == null) {
+          emit(SessionUnauthenticated());
+          return;
+        }
+
+        final isLockEnabled = await _secureStorageService.isBiometricEnabled();
+        if (state is SessionLocked) return;
+
+        if (isLockEnabled) {
+          emit(SessionLocked());
+          return;
+        }
+
+        await _loadProfile(user, background: background);
+      });
+    } catch (e, s) {
+      log.severe('Error during checkSession: $e\n$s');
+      if (!isClosed) emit(SessionUnauthenticated());
     }
-
-    final userResult = _authRepository.getCurrentUser();
-    await userResult.fold((failure) async => emit(SessionUnauthenticated()), (
-      user,
-    ) async {
-      if (user == null) {
-        emit(SessionUnauthenticated());
-        return;
-      }
-
-      final isLockEnabled = await _secureStorageService.isBiometricEnabled();
-      if (state is SessionLocked) return;
-
-      if (isLockEnabled) {
-        emit(SessionLocked());
-        return;
-      }
-
-      await _loadProfile(user, background: background);
-    });
   }
 
   Future<void> _loadProfile(User user, {bool background = false}) async {
