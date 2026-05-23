@@ -97,96 +97,9 @@ class SyncService {
     _statusController.close();
     if (_groupsChannel != null) {
       _client.removeChannel(_groupsChannel!);
-      _groupsChannel = null;
     }
     if (_groupMembersChannel != null) {
       _client.removeChannel(_groupMembersChannel!);
-      _groupMembersChannel = null;
-    }
-  }
-
-  void _handleGroupChange(PostgresChangePayload payload) {
-    try {
-      if (payload.eventType == PostgresChangeEvent.delete) {
-        final id = payload.oldRecord['id'];
-        if (id == null || id is! String || id.isEmpty) {
-          log.warning('Received delete event with invalid ID: $id');
-          return;
-        }
-        _groupBox.delete(id);
-        return;
-      }
-
-      final newRecord = payload.newRecord;
-      if (newRecord.isEmpty) return;
-
-      final serverGroup = GroupModel.fromJson(newRecord);
-      final localGroup = _groupBox.get(serverGroup.id);
-
-      if (localGroup == null) {
-        _groupBox.put(serverGroup.id, serverGroup);
-      } else {
-        if (serverGroup.updatedAt.isAfter(localGroup.updatedAt)) {
-          _groupBox.put(serverGroup.id, serverGroup);
-        }
-      }
-    } catch (e, s) {
-      log.severe('Error handling group realtime payload: $e\n$s');
-    }
-  }
-
-  void _handleGroupMemberChange(PostgresChangePayload payload) {
-    try {
-      if (payload.eventType == PostgresChangeEvent.delete) {
-        final id = payload.oldRecord['id'];
-        if (id == null || id is! String || id.isEmpty) {
-          log.warning('Received delete event with invalid ID: $id');
-          return;
-        }
-        _groupMemberBox.delete(id);
-        return;
-      }
-
-      final newRecord = payload.newRecord;
-      if (newRecord.isEmpty) return;
-
-      final serverMember = GroupMemberModel.fromJson(newRecord);
-      final localMember = _groupMemberBox.get(serverMember.id);
-
-      if (localMember == null) {
-        _groupMemberBox.put(serverMember.id, serverMember);
-        unawaited(
-          _ensureGroupExists(serverMember.groupId).catchError((e, s) {
-            log.severe("Failed to ensure group exists in background: $e\n$s");
-          }),
-        );
-      } else {
-        // Last-Write-Wins check for member
-        if (serverMember.updatedAt.isAfter(localMember.updatedAt)) {
-          _groupMemberBox.put(serverMember.id, serverMember);
-        } else {
-          log.info('Ignoring stale update for group member ${serverMember.id}');
-        }
-      }
-    } catch (e, s) {
-      log.severe('Error handling group member realtime payload: $e\n$s');
-    }
-  }
-
-  Future<void> _ensureGroupExists(String groupId) async {
-    if (!_groupBox.containsKey(groupId)) {
-      try {
-        log.info('Fetching missing group $groupId for new member...');
-        final groupData = await _client
-            .from('groups')
-            .select()
-            .eq('id', groupId)
-            .single();
-        final group = GroupModel.fromJson(groupData);
-        await _groupBox.put(group.id, group);
-      } catch (e, s) {
-        log.warning('Failed to fetch missing group $groupId: $e\n$s');
-      }
     }
   }
 
@@ -267,17 +180,6 @@ class SyncService {
           final pathPrefix = groupId != null ? '$groupId/' : 'personal/';
           final uploadPath = '$pathPrefix$fileName';
 
-          // Upload
-          // Requires dart:io, but this is a service so it's fine.
-          // Note: File class is not imported, assuming we can add import or use a helper.
-          // Since we can't easily add import via search/replace, we'll try to use a helper
-          // or assume file path is valid for Supabase upload if it supports path.
-          // Supabase flutter upload takes File object.
-          // We need to import dart:io.
-          // Let's assume the surrounding code handles File or use a dynamic approach.
-          // Actually, we need to modify imports to include dart:io.
-          // But first, let's just do the logic.
-
           await _client.storage
               .from('receipts')
               .upload(
@@ -299,93 +201,62 @@ class SyncService {
       payload.remove('x_local_receipt_path');
     }
 
+    if (table.startsWith('rpc/')) {
+      final rpcName = table.substring(4);
+      await _client.rpc(rpcName, params: payload);
+      return;
+    }
+
     switch (item.operation) {
       case OpType.create:
-        if (table == 'expenses' &&
-            (payload.containsKey('payers') || payload.containsKey('splits'))) {
-          await _createExpenseWithRelations(payload, item.id);
-        } else {
-          await _client.from(table).upsert(payload);
-        }
+        await _client.from(table).insert(payload);
         break;
       case OpType.update:
-        final response = await _client
-            .from(table)
-            .update(payload)
-            .eq('id', item.id)
-            .select();
-        // Check if any rows were actually updated
-        if (response.isEmpty) {
-          // If no rows updated, it might mean the record was deleted on server or doesn't exist yet.
-          // Try upsert as fallback to ensure consistency.
-          log.info(
-            'Update for $table:${item.id} affected 0 rows. Attempting upsert fallback.',
-          );
-          await _client.from(table).upsert(payload);
+        if (!payload.containsKey('id')) {
+          throw Exception('Update missing ID');
         }
+        await _client.from(table).update(payload).eq('id', payload['id']);
         break;
       case OpType.delete:
-        if (table == 'group_members' &&
-            payload.containsKey('group_id') &&
-            payload.containsKey('user_id')) {
-          await _client
-              .from(table)
-              .delete()
-              .eq('group_id', payload['group_id'])
-              .eq('user_id', payload['user_id']);
-        } else {
-          await _client.from(table).delete().eq('id', item.id);
+        if (!payload.containsKey('id')) {
+          throw Exception('Delete missing ID');
         }
+        await _client.from(table).delete().eq('id', payload['id']);
         break;
     }
   }
 
-  Future<void> _createExpenseWithRelations(
-    Map<String, dynamic> payload,
-    String expenseId,
-  ) async {
-    final expensePayload = Map<String, dynamic>.from(payload)
-      ..remove('payers')
-      ..remove('splits');
-    expensePayload['id'] ??= expenseId;
+  // Realtime Handlers
 
-    await _client.from('expenses').upsert(expensePayload);
-
-    final payers = (payload['payers'] as List<dynamic>? ?? const <dynamic>[])
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (payer) => {
-            'expense_id': expensePayload['id'],
-            'payer_user_id': payer['userId'],
-            'amount': payer['amount'],
-          },
-        )
-        .toList();
-    if (payers.isNotEmpty) {
-      await _client
-          .from('expense_payers')
-          .delete()
-          .eq('expense_id', expensePayload['id']);
-      await _client.from('expense_payers').insert(payers);
+  void _handleGroupChange(PostgresChangePayload payload) {
+    if (payload.eventType == PostgresChangeEvent.insert ||
+        payload.eventType == PostgresChangeEvent.update) {
+      final data = payload.newRecord;
+      if (data.containsKey('id')) {
+        final group = GroupModel.fromJson(data);
+        _groupBox.put(group.id, group);
+      }
+    } else if (payload.eventType == PostgresChangeEvent.delete) {
+      final id = payload.oldRecord['id'];
+      if (id != null) {
+        _groupBox.delete(id);
+      }
     }
+  }
 
-    final splits = (payload['splits'] as List<dynamic>? ?? const <dynamic>[])
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (split) => {
-            'expense_id': expensePayload['id'],
-            'user_id': split['userId'],
-            'amount': split['amount'],
-            'split_type': split['splitTypeValue'],
-          },
-        )
-        .toList();
-    if (splits.isNotEmpty) {
-      await _client
-          .from('expense_splits')
-          .delete()
-          .eq('expense_id', expensePayload['id']);
-      await _client.from('expense_splits').insert(splits);
+  void _handleGroupMemberChange(PostgresChangePayload payload) {
+    if (payload.eventType == PostgresChangeEvent.insert ||
+        payload.eventType == PostgresChangeEvent.update) {
+      final data = payload.newRecord;
+      if (data.containsKey('id')) {
+        final member = GroupMemberModel.fromJson(data);
+        _groupMemberBox.put(member.id, member);
+      }
+    } else if (payload.eventType == PostgresChangeEvent.delete) {
+      final id = payload.oldRecord['id'];
+      if (id != null) {
+        _groupMemberBox.delete(id);
+      }
     }
   }
 }

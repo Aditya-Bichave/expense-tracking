@@ -104,8 +104,9 @@ void main() {
         () => mockStorageFileApi.getPublicUrl(any()),
       ).thenReturn('https://supabase.co/receipt.jpg');
 
-      // NOTE: We intentionally DO NOT mock upsert here to avoid Mocktail Future type issues.
-      // It will throw a "no stub" exception when called, which we verify happens *after* upload.
+      when(
+        () => mockSupabaseClient.rpc(any(), params: any(named: 'params')),
+      ).thenThrow(Exception('RPC test break'));
 
       final service = SyncService(
         mockSupabaseClient,
@@ -118,13 +119,9 @@ void main() {
       // Act
       try {
         await service.processOutbox();
-      } catch (_) {
-        // Expected exception (MissingStubError or similar) because we didn't mock upsert
-        // We don't assert on the type to be flexible, but it ensures we reached the upsert call.
-      }
+      } catch (_) {}
 
       // Assert
-      // Verify upload was called - this confirms the receipt upload logic is executed before upsert
       verify(
         () => mockStorageFileApi.upload(
           any(that: contains('tx1.jpg')),
