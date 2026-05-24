@@ -24,6 +24,9 @@ class MockStorageFileApi extends Mock implements StorageFileApi {}
 
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder {}
+
 void main() {
   late MockSupabaseClient mockSupabaseClient;
   late MockOutboxRepository mockOutboxRepository;
@@ -33,6 +36,7 @@ void main() {
   late MockSupabaseStorageClient mockStorageClient;
   late MockStorageFileApi mockStorageFileApi;
   late MockSupabaseQueryBuilder mockQueryBuilder;
+  late MockPostgrestFilterBuilder mockFilterBuilder;
 
   setUpAll(() {
     registerFallbackValue(File(''));
@@ -57,13 +61,19 @@ void main() {
     mockStorageClient = MockSupabaseStorageClient();
     mockStorageFileApi = MockStorageFileApi();
     mockQueryBuilder = MockSupabaseQueryBuilder();
+    mockFilterBuilder = MockPostgrestFilterBuilder();
 
     // Use thenAnswer for methods returning Future-like objects (e.g. SupabaseQueryBuilder)
-    when(() => mockSupabaseClient.storage).thenReturn(mockStorageClient);
-    when(() => mockStorageClient.from(any())).thenReturn(mockStorageFileApi);
+    when(() => mockSupabaseClient.storage).thenAnswer((_) => mockStorageClient);
+    when(
+      () => mockStorageClient.from(any()),
+    ).thenAnswer((_) => mockStorageFileApi);
     when(
       () => mockSupabaseClient.from(any()),
     ).thenAnswer((_) => mockQueryBuilder);
+    when(
+      () => mockSupabaseClient.rpc(any(), params: any(named: 'params')),
+    ).thenAnswer((_) => mockFilterBuilder);
   });
 
   test(
@@ -102,7 +112,7 @@ void main() {
       ).thenAnswer((_) async => '');
       when(
         () => mockStorageFileApi.getPublicUrl(any()),
-      ).thenReturn('https://supabase.co/receipt.jpg');
+      ).thenAnswer((_) => 'https://supabase.co/receipt.jpg');
 
       // NOTE: We intentionally DO NOT mock upsert here to avoid Mocktail Future type issues.
       // It will throw a "no stub" exception when called, which we verify happens *after* upload.

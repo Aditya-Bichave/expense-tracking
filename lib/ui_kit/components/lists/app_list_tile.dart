@@ -27,27 +27,30 @@ class AppListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final kit = context.kit;
 
-    return ListTile(
-      title: DefaultTextStyle(
-        style: kit.typography.body.copyWith(fontWeight: FontWeight.w500),
-        child: title,
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        title: DefaultTextStyle(
+          style: kit.typography.body.copyWith(fontWeight: FontWeight.w500),
+          child: title,
+        ),
+        subtitle: subtitle != null
+            ? DefaultTextStyle(
+                style: kit.typography.caption.copyWith(
+                  color: kit.colors.textSecondary,
+                ),
+                child: subtitle!,
+              )
+            : null,
+        leading: leading,
+        trailing: trailing,
+        onTap: onTap,
+        dense: dense,
+        contentPadding: contentPadding ?? kit.spacing.hMd,
+        selected: selected,
+        selectedTileColor: kit.colors.primaryContainer.withOpacity(0.1),
+        shape: RoundedRectangleBorder(borderRadius: kit.radii.small),
       ),
-      subtitle: subtitle != null
-          ? DefaultTextStyle(
-              style: kit.typography.caption.copyWith(
-                color: kit.colors.textSecondary,
-              ),
-              child: subtitle!,
-            )
-          : null,
-      leading: leading,
-      trailing: trailing,
-      onTap: onTap,
-      dense: dense,
-      contentPadding: contentPadding ?? kit.spacing.hMd,
-      selected: selected,
-      selectedTileColor: kit.colors.primaryContainer.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: kit.radii.small),
     );
   }
 }
