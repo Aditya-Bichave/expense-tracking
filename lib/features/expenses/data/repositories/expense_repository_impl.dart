@@ -12,6 +12,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:collection/collection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/features/expenses/domain/utils/split_engine.dart';
+import 'package:expense_tracker/core/utils/logger.dart';
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseLocalDataSource localDataSource;
@@ -140,7 +141,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return const Right(null);
     } on CacheFailure catch (e) {
       return Left(e);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -161,7 +163,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         double total = models.fold(0.0, (sum, item) => sum + item.amount);
         return Right(total);
       });
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -209,7 +212,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Right(
         ExpenseSummary(totalExpenses: total, categoryBreakdown: sorted),
       );
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -247,7 +251,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       await localDataSource.updateExpense(updated);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -293,7 +298,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
       await Future.wait(futures);
       return Right(updatedCount);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe("Exception in repository: $e\n$s");
       return Left(UnexpectedFailure(e.toString()));
     }
   }
