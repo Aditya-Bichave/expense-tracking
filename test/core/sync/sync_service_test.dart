@@ -102,6 +102,9 @@ void main() {
       when(
         () => mockOutboxRepository.markAsSent(any()),
       ).thenAnswer((_) async {});
+      when(
+        () => mockOutboxRepository.markAsFailed(any(), any()),
+      ).thenAnswer((_) async {});
 
       when(
         () => mockStorageFileApi.upload(
