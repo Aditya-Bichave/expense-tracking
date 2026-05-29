@@ -137,6 +137,8 @@ void main() {
       when(
         () => mockConnectivity.checkConnectivity(),
       ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(() => mockLocalDataSource.getExpenses(any())).thenReturn([]);
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([]);
       when(
         () => mockRemoteDataSource.getExpenses(any()),
       ).thenAnswer((_) async => [tExpenseModel]);
@@ -146,9 +148,9 @@ void main() {
 
       final result = await repository.syncExpenses('g1');
 
-      // expect(result.isRight(), true);
-      // verify(() => mockRemoteDataSource.getExpenses('g1')).called(1);
-      // verify(() => mockLocalDataSource.saveExpenses([tExpenseModel])).called(1);
+      expect(result.isRight(), true);
+      verify(() => mockRemoteDataSource.getExpenses('g1')).called(1);
+      verify(() => mockLocalDataSource.saveExpenses([tExpenseModel])).called(1);
     });
 
     test('should do nothing when offline', () async {

@@ -393,6 +393,7 @@ class _TransactionListPageState extends State<TransactionListPage> {
                             (s) =>
                                 s.status != ListStatus.loading &&
                                 s.status != ListStatus.reloading,
+                            orElse: () => state,
                           )
                           .timeout(const Duration(seconds: 3));
                     } catch (_) {

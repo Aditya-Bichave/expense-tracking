@@ -53,6 +53,7 @@ class _DashboardPageState extends State<DashboardPage> {
       await _dashboardBloc.stream
           .firstWhere(
             (state) => state is DashboardLoaded || state is DashboardError,
+            orElse: () => _dashboardBloc.state,
           )
           .timeout(const Duration(seconds: 10));
       log.info("[DashboardPage] Refresh stream finished or timed out.");
