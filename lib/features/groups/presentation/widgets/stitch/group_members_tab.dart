@@ -179,7 +179,7 @@ class GroupMembersTab extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return SimpleDialog(
           backgroundColor: kit.colors.surface,
           title: Text('Select Role', style: kit.typography.headline),
@@ -226,6 +226,7 @@ class GroupMembersTab extends StatelessWidget {
     if (confirmed != true) {
       return;
     }
+    if (!context.mounted) return;
     context.read<GroupMembersBloc>().add(
       KickMember(groupId: groupId, userId: userId),
     );

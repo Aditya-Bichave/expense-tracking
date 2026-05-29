@@ -479,6 +479,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     if (confirmed != true) {
       return;
     }
+    if (!mounted) return;
 
     if (isSoleAdmin) {
       context.read<GroupMembersBloc>().add(
@@ -503,6 +504,7 @@ class _GroupDetailPageState extends State<GroupDetailPage>
     if (confirmed != true) {
       return;
     }
+    if (!mounted) return;
     context.read<GroupMembersBloc>().add(
       DeleteCurrentGroup(groupId: widget.groupId),
     );

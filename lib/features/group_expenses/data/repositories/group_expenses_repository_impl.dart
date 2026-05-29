@@ -149,9 +149,9 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
           .difference(outboxIds);
 
       if (staleIds.isNotEmpty) {
-        for (final id in staleIds) {
-          await _localDataSource.deleteExpense(id);
-        }
+        await Future.wait(
+          staleIds.map((id) => _localDataSource.deleteExpense(id)),
+        );
       }
 
       await _localDataSource.saveExpenses(remoteExpenses);

@@ -32,18 +32,8 @@ class CategoryListSectionWidget extends StatelessWidget {
         ),
       );
     }
-    // ⚡ Bolt Performance Optimization
-    // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during widget build
-    // Solution: Cache lowercased names outside the sort function
-    // Impact: Improves UI rendering speed by avoiding tight-loop allocations
-    final lowerCaseNames = {
-      for (var c in categories) c.id: c.name.toLowerCase(),
-    };
-
-    // Sort combined list for consistent display
-    categories.sort(
-      (a, b) => lowerCaseNames[a.id]!.compareTo(lowerCaseNames[b.id]!),
-    );
+    // Categories are already sorted by the bloc before being passed down.
+    // Redundant sort here was mutating the list and causing O(N log N) work every frame.
 
     return ListView.builder(
       padding: const EdgeInsets.only(top: 8.0, bottom: 90.0), // Padding for FAB
