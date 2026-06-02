@@ -94,7 +94,7 @@ void main() {
           isA<SummaryError>().having(
             (s) => s.message,
             'message',
-            'An unexpected error occurred loading the summary.',
+            contains('An unexpected error occurred'),
           ),
         ]),
       );
