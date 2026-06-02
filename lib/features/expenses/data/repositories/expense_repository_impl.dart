@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/core/error/failure.dart';
 import 'package:expense_tracker/features/analytics/domain/entities/expense_summary.dart';
@@ -140,7 +141,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return const Right(null);
     } on CacheFailure catch (e) {
       return Left(e);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error: $e\n$s');
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -161,7 +163,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         double total = models.fold(0.0, (sum, item) => sum + item.amount);
         return Right(total);
       });
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error: $e\n$s');
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -209,7 +212,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       return Right(
         ExpenseSummary(totalExpenses: total, categoryBreakdown: sorted),
       );
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error: $e\n$s');
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -247,7 +251,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       );
       await localDataSource.updateExpense(updated);
       return const Right(null);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error: $e\n$s');
       return Left(UnexpectedFailure(e.toString()));
     }
   }
@@ -293,7 +298,8 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
 
       await Future.wait(futures);
       return Right(updatedCount);
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Error: $e\n$s');
       return Left(UnexpectedFailure(e.toString()));
     }
   }

@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/income/data/repositories/income_repository_impl.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
