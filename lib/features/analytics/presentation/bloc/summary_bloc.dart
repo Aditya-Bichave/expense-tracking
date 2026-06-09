@@ -138,7 +138,7 @@ class SummaryBloc extends Bloc<SummaryEvent, SummaryState> {
       log.severe("[SummaryBloc] Unexpected error in _onLoadSummary: $e\n$s");
       emit(
         SummaryError(
-          "An unexpected error occurred loading summary: ${e.toString()}",
+          "An unexpected error occurred loading summary: $e",
         ),
       );
     }
