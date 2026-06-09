@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/dashboard/presentation/pages/dashboard_page.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/financial_garden_widget.dart';
@@ -56,9 +57,9 @@ class _DashboardPageState extends State<DashboardPage> {
           )
           .timeout(const Duration(seconds: 10));
       log.info("[DashboardPage] Refresh stream finished or timed out.");
-    } catch (e) {
+    } catch (e, s) {
       log.warning(
-        "[DashboardPage] Error or timeout waiting for refresh stream: $e",
+        "[DashboardPage] Error or timeout waiting for refresh stream: $e\n$s",
       );
     }
   }

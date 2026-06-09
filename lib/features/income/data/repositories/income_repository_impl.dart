@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/income/data/repositories/income_repository_impl.dart
 import 'package:dartz/dartz.dart';
 import 'package:expense_tracker/features/categories/domain/entities/categorization_status.dart';
@@ -52,7 +53,8 @@ class IncomeRepositoryImpl implements IncomeRepository {
         "[IncomeRepo] Add successful (ID: ${addedModel.id}). Hydrating category.",
       );
       return await _hydrateSingleModel(addedModel);
-    } on CacheFailure catch (e) {
+    } on CacheFailure catch (e, s) {
+      log.severe('Msg: $e\n$s');
       return Left(e);
     } catch (e, s) {
       log.severe("[IncomeRepo] Unexpected error adding income: $e\n$s");
