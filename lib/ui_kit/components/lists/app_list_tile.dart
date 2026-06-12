@@ -27,7 +27,9 @@ class AppListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final kit = context.kit;
 
-    return ListTile(
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
       title: DefaultTextStyle(
         style: kit.typography.body.copyWith(fontWeight: FontWeight.w500),
         child: title,
@@ -48,6 +50,6 @@ class AppListTile extends StatelessWidget {
       selected: selected,
       selectedTileColor: kit.colors.primaryContainer.withOpacity(0.1),
       shape: RoundedRectangleBorder(borderRadius: kit.radii.small),
-    );
+    ));
   }
 }
