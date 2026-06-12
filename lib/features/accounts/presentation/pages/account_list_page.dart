@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // ... other imports ...
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -167,9 +168,13 @@ class AccountListPage extends StatelessWidget {
                   onRefresh: () async {
                     final bloc = context.read<AccountListBloc>();
                     bloc.add(const LoadAccounts(forceReload: true));
-                    await bloc.stream.firstWhere(
-                      (s) => s is! AccountListLoading || !s.isReloading,
-                    );
+                    try {
+                      await bloc.stream.firstWhere(
+                        (s) => s is! AccountListLoading || !s.isReloading,
+                      ).timeout(const Duration(seconds: 3));
+                    } catch (e, s) {
+                      log.severe("Timeout waiting for accounts list: $e\n$s");
+                    }
                   },
                   child: ListView.builder(
                     padding:

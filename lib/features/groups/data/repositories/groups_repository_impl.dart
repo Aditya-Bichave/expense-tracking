@@ -325,10 +325,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
     if (connectivityResult.contains(ConnectivityResult.mobile) ||
         connectivityResult.contains(ConnectivityResult.wifi)) {
       unawaited(
-        _syncService.processOutbox().catchError((error, stackTrace) {
-          log.severe(
-            'Failed to process outbox in background: $error\n$stackTrace',
-          );
+        Future(() async {
+          try {
+            await _syncService.processOutbox();
+          } catch (error, stackTrace) {
+            log.severe(
+              'Failed to process outbox in background: $error\n$stackTrace',
+            );
+          }
         }),
       );
     }

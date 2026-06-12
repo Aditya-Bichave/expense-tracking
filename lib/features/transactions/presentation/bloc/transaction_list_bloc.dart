@@ -627,6 +627,7 @@ class TransactionListBloc
         })
         .catchError((e, s) {
           log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
+          if (!isClosed) emit(state);
         });
 
     // Update Transaction Categorization State

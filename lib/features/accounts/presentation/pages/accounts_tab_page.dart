@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/accounts/presentation/pages/accounts_tab_page.dart
 // ignore_for_file: deprecated_member_use
 
@@ -85,9 +86,13 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         onRefresh: () async {
           final bloc = context.read<AccountListBloc>();
           bloc.add(const LoadAccounts(forceReload: true));
-          await bloc.stream.firstWhere(
-            (state) => state is! AccountListLoading || !state.isReloading,
-          );
+          try {
+            await bloc.stream.firstWhere(
+              (state) => state is! AccountListLoading || !state.isReloading,
+            ).timeout(const Duration(seconds: 3));
+          } catch (e, s) {
+            log.severe("Timeout waiting for accounts list: $e\n$s");
+          }
         },
         child: ListView(
           padding:

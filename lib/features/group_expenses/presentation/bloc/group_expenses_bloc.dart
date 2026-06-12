@@ -92,7 +92,7 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
         emit(
           GroupExpensesOperationFailed(failure.message, currentState.expenses),
         );
-        emit(GroupExpensesLoaded(currentState.expenses));
+        emit(currentState);
       },
       (expense) {
         emit(GroupExpenseOperationSucceeded(expense));
@@ -120,7 +120,7 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
         emit(
           GroupExpensesOperationFailed(failure.message, currentState.expenses),
         );
-        emit(GroupExpensesLoaded(currentState.expenses));
+        emit(currentState);
       },
       (updatedExpense) {
         final newExpenses = currentState.expenses.map((e) {
@@ -151,7 +151,7 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
         emit(
           GroupExpensesOperationFailed(failure.message, currentState.expenses),
         );
-        emit(GroupExpensesLoaded(currentState.expenses));
+        emit(currentState);
       },
       (_) {
         final newExpenses = currentState.expenses
