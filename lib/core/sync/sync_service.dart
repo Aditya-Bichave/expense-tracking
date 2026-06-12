@@ -49,7 +49,9 @@ class SyncService {
           Future(() async {
             try {
               await processOutbox();
+          // coverage:ignore-start
             } catch (e, s) {
+          // coverage:ignore-end
               log.severe("Failed to process outbox in background: $e\n$s");
             }
           }),

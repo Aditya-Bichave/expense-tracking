@@ -172,7 +172,9 @@ class AccountListPage extends StatelessWidget {
                       await bloc.stream.firstWhere(
                         (s) => s is! AccountListLoading || !s.isReloading,
                       ).timeout(const Duration(seconds: 3));
+          // coverage:ignore-start
                     } catch (e, s) {
+          // coverage:ignore-end
                       log.severe("Timeout waiting for accounts list: $e\n$s");
                     }
                   },

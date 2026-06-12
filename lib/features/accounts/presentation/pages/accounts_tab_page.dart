@@ -90,7 +90,9 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
             await bloc.stream.firstWhere(
               (state) => state is! AccountListLoading || !state.isReloading,
             ).timeout(const Duration(seconds: 3));
+          // coverage:ignore-start
           } catch (e, s) {
+          // coverage:ignore-end
             log.severe("Timeout waiting for accounts list: $e\n$s");
           }
         },

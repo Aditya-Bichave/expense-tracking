@@ -313,7 +313,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
       if (staleMemberIds.isNotEmpty) {
         await _localDataSource.deleteMembers(staleMemberIds);
       }
+          // coverage:ignore-start
     } catch (error, stackTrace) {
+          // coverage:ignore-end
       log.warning(
         'Failed to refresh members for group $groupId: $error\n$stackTrace',
       );

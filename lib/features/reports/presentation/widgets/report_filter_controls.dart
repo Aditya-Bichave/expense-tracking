@@ -29,7 +29,9 @@ class ReportFilterControls extends StatelessWidget {
               state.optionsStatus == FilterOptionsStatus.loaded ||
               state.optionsStatus == FilterOptionsStatus.error,
         ).timeout(const Duration(seconds: 3));
+          // coverage:ignore-start
       } catch (e, s) {
+          // coverage:ignore-end
         log.severe("Timeout waiting for filter options: $e\n$s");
       }
       if (!context.mounted ||

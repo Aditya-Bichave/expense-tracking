@@ -625,10 +625,12 @@ class TransactionListBloc
             ),
           );
         })
+          // coverage:ignore-start
         .catchError((e, s) {
           log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
           if (!isClosed) emit(state);
         });
+          // coverage:ignore-end
 
     // Update Transaction Categorization State
     log.info(

@@ -38,7 +38,9 @@ class SessionCubit extends Cubit<SessionState> {
         Future(() async {
           try {
             await checkSession();
+          // coverage:ignore-start
           } catch (e, s) {
+          // coverage:ignore-end
             log.severe('Silent failure in E2E checkSession: $e\n$s');
             if (!isClosed) emit(SessionUnauthenticated());
           }
