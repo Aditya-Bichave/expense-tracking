@@ -1,3 +1,3 @@
-## 2024-05-24 - [Avoid `findChildIndexCallback` precomputation in `build()`]
-**Learning:** Do not precompute a full ID-to-index Map inside `build()` for `ListView.builder`'s `findChildIndexCallback`, as iterating all items on every render negates the O(V) lazy rendering benefit and causes a performance regression.
-**Action:** Instead, convert the widget to a `StatefulWidget` and cache the map in `initState` and `didUpdateWidget`.
+## 2024-11-20 - [Concurrent Bulk Deletion Optimization]
+**Learning:** Sequential `await` in loops (`for (final id in staleIds) { await deleteExpense(id); }`) blocks the Dart event loop unnecessarily and causes O(N) network/IO delay, severely slowing down syncing operations when there are many items to delete.
+**Action:** When a set of independent async operations (like bulk deletes) needs to happen, and the result of one doesn't affect the next, use `await Future.wait(items.map((id) => delete(id)))` to execute them concurrently. This reduces time from O(N) to roughly O(1) delay. Also ensure that unintended lockfile updates from implicit `pub get` runs aren't committed in small performance PRs.

@@ -149,9 +149,13 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
           .difference(outboxIds);
 
       if (staleIds.isNotEmpty) {
-        for (final id in staleIds) {
-          await _localDataSource.deleteExpense(id);
-        }
+        // ⚡ Bolt Performance Optimization
+        // Problem: Sequential await in a loop causes O(N) network/IO delay, slowing down synchronization
+        // Solution: Use Future.wait to delete stale expenses concurrently
+        // Impact: Reduces sync time from O(N) to roughly O(1) delay for bulk deletions
+        await Future.wait(
+          staleIds.map((id) => _localDataSource.deleteExpense(id)),
+        );
       }
 
       await _localDataSource.saveExpenses(remoteExpenses);
