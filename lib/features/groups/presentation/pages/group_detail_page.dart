@@ -6,6 +6,7 @@ import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/utils/app_dialogs.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
+import 'package:expense_tracker/features/group_expenses/domain/entities/group_expense.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/bloc/group_expenses_bloc.dart';
 import 'package:expense_tracker/features/group_expenses/presentation/pages/add_group_expense_page.dart';
 import 'package:expense_tracker/features/groups/domain/entities/group_entity.dart';
@@ -244,41 +245,11 @@ class _GroupDetailPageState extends State<GroupDetailPage>
                         style: kit.typography.body,
                       ),
                     )
-                  : ListView.builder(
-                      itemCount: state.expenses.length,
-                      itemBuilder: (context, index) {
-                        final expense = state.expenses[index];
-                        return AppListTile(
-                          key: ValueKey('tile_groupExpense_${expense.id}'),
-                          title: Text(expense.title),
-                          subtitle: Text('Paid by ${expense.createdBy}'),
-                          trailing: Text(
-                            '${expense.amount.toStringAsFixed(2)} ${group?.currency ?? expense.currency}',
-                            style: kit.typography.bodyStrong.copyWith(
-                              color: kit.colors.textPrimary,
-                            ),
-                          ),
-                          onTap: canEditExpenses
-                              ? () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => BlocProvider.value(
-                                        value: context
-                                            .read<GroupExpensesBloc>(),
-                                        child: AddGroupExpensePage(
-                                          groupId: widget.groupId,
-                                          currency: group?.currency ?? 'USD',
-                                          initialExpense: expense,
-                                        ),
-                                      ),
-                                    ),
-
-                                    //
-                                  );
-                                }
-                              : null,
-                        );
-                      },
+                  : _GroupExpensesList(
+                      expenses: state.expenses,
+                      group: group,
+                      canEditExpenses: canEditExpenses,
+                      groupId: widget.groupId,
                     ),
             ),
           ],
@@ -518,6 +489,97 @@ class _GroupDetailPageState extends State<GroupDetailPage>
       title: 'Group Info',
       content: 'Name: $groupName\nRole: ${role.toUpperCase()}',
       cancelLabel: 'Close',
+    );
+  }
+}
+
+class _GroupExpensesList extends StatefulWidget {
+  final List<GroupExpense> expenses;
+  final GroupEntity? group;
+  final bool canEditExpenses;
+  final String groupId;
+
+  const _GroupExpensesList({
+    required this.expenses,
+    required this.group,
+    required this.canEditExpenses,
+    required this.groupId,
+  });
+
+  @override
+  State<_GroupExpensesList> createState() => _GroupExpensesListState();
+}
+
+class _GroupExpensesListState extends State<_GroupExpensesList> {
+  late Map<String, int> _childIndexMap;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateChildIndexMap();
+  }
+
+  @override
+  void didUpdateWidget(_GroupExpensesList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expenses != widget.expenses) {
+      _updateChildIndexMap();
+    }
+  }
+
+  void _updateChildIndexMap() {
+    _childIndexMap = {
+      for (var i = 0; i < widget.expenses.length; i++)
+        'tile_groupExpense_${widget.expenses[i].id}': i,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final kit = context.kit;
+
+    // ⚡ Bolt Performance Optimization
+    // Problem: ListView.builder creates a standard scroll view which can be janky with many items
+    // Solution: Add findChildIndexCallback for O(1) tracking using a precomputed map
+    // Impact: Improves scrolling performance and reduces widget rebuilds for long group expense lists
+    return ListView.builder(
+      itemCount: widget.expenses.length,
+      findChildIndexCallback: (Key key) {
+        if (key is ValueKey<String>) {
+          return _childIndexMap[key.value];
+        }
+        return null;
+      },
+      itemBuilder: (context, index) {
+        final expense = widget.expenses[index];
+        return AppListTile(
+          key: ValueKey('tile_groupExpense_${expense.id}'),
+          title: Text(expense.title),
+          subtitle: Text('Paid by ${expense.createdBy}'),
+          trailing: Text(
+            '${expense.amount.toStringAsFixed(2)} ${widget.group?.currency ?? expense.currency}',
+            style: kit.typography.bodyStrong.copyWith(
+              color: kit.colors.textPrimary,
+            ),
+          ),
+          onTap: widget.canEditExpenses
+              ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => BlocProvider.value(
+                        value: context.read<GroupExpensesBloc>(),
+                        child: AddGroupExpensePage(
+                          groupId: widget.groupId,
+                          currency: widget.group?.currency ?? 'USD',
+                          initialExpense: expense,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+              : null,
+        );
+      },
     );
   }
 }

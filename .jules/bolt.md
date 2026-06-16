@@ -1,3 +1,3 @@
-## 2024-05-24 - [Avoid `findChildIndexCallback` precomputation in `build()`]
-**Learning:** Do not precompute a full ID-to-index Map inside `build()` for `ListView.builder`'s `findChildIndexCallback`, as iterating all items on every render negates the O(V) lazy rendering benefit and causes a performance regression.
-**Action:** Instead, convert the widget to a `StatefulWidget` and cache the map in `initState` and `didUpdateWidget`.
+## 2024-05-18 - [Flutter ListView O(1) Index Tracking]
+**Learning:** `ListView.builder` creates a standard scroll view that can become janky and perform O(N) linear searches during child widget state reconciliation (e.g., when changing order or mutating long lists).
+**Action:** When working with large data sets in `ListView.builder` where list items might change or reorder, encapsulate the list view inside a `StatefulWidget`, pre-calculate an ID-to-index map in `initState` and `didUpdateWidget`, and supply `findChildIndexCallback` returning the cached map index in O(1) time. This ensures efficient lookups without breaking the framework's lazy-loading semantics or mutating state directly in the `build` method.
