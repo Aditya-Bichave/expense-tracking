@@ -59,8 +59,8 @@ void main() {
         () => mockBox.put(any<dynamic>(), any<ExpenseModel>()),
       ).thenThrow(Exception('error'));
 
-      expect(
-        () async => await dataSource.addExpense(tModel1),
+      await expectLater(
+        () => dataSource.addExpense(tModel1),
         throwsA(isA<CacheFailure>()),
       );
     });
