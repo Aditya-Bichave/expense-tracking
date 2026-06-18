@@ -62,7 +62,7 @@ class _TransactionListViewState extends State<TransactionListView> {
   @override
   void didUpdateWidget(TransactionListView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.state.transactions != widget.state.transactions) {
+    if (!identical(oldWidget.state.transactions, widget.state.transactions)) {
       _updateChildIndexMap();
     }
   }
