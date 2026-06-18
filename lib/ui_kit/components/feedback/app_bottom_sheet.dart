@@ -61,7 +61,7 @@ class AppBottomSheet extends StatelessWidget {
             ),
             Divider(height: 1, color: kit.colors.borderSubtle),
           ],
-          Flexible(child: child),
+          Flexible(child: Material(type: MaterialType.transparency, child: child)),
         ],
       ),
     );
