@@ -50,10 +50,14 @@ class AddCustomCategoryUseCase
     }
     final allCategories = allCategoriesResult.getOrElse(() => []);
     final trimmedName = params.name.trim();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `trimmedName.toLowerCase()` was evaluated inside the loop, causing redundant O(N) string allocations.
+    // Solution: Pre-compute it outside the loop.
+    final lowerCaseTrimmedName = trimmedName.toLowerCase();
 
     final isDuplicate = allCategories.any(
       (cat) =>
-          cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
+          cat.name.trim().toLowerCase() == lowerCaseTrimmedName &&
           cat.type == params.type &&
           cat.parentCategoryId == params.parentCategoryId,
     );
