@@ -60,7 +60,7 @@ void main() {
       ).thenThrow(Exception('error'));
 
       expect(
-        () => dataSource.addExpense(tModel1),
+        () async => await dataSource.addExpense(tModel1),
         throwsA(isA<CacheFailure>()),
       );
     });
