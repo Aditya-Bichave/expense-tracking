@@ -51,7 +51,7 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
     Emitter<GroupBalancesState> emit,
   ) async {
     _currentGroupId = event.groupId;
-    emit(const GroupBalancesLoading());
+    if (!isClosed) emit(const GroupBalancesLoading());
     await _fetchData(emit, event.groupId);
   }
 
@@ -62,9 +62,9 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
     _currentGroupId = event.groupId;
     if (state is GroupBalancesLoaded) {
       final current = state as GroupBalancesLoaded;
-      emit(current.copyWith(isRefreshing: true));
+      if (!isClosed) emit(current.copyWith(isRefreshing: true));
     } else {
-      emit(const GroupBalancesLoading());
+      if (!isClosed) emit(const GroupBalancesLoading());
     }
     await _fetchData(emit, event.groupId);
   }
@@ -91,7 +91,7 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
       final data = response.data;
       if (data != null && data is Map<String, dynamic>) {
         final balances = GroupBalances.fromJson(data);
-        emit(GroupBalancesLoaded(balances));
+        if (!isClosed) emit(GroupBalancesLoaded(balances));
       } else {
         throw Exception('Invalid response format');
       }
@@ -134,7 +134,7 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
       ],
     );
 
-    emit(GroupBalancesLoaded(mockBalances));
+    if (!isClosed) emit(GroupBalancesLoaded(mockBalances));
   }
 
   void _onApplyOptimisticSettlement(
@@ -182,7 +182,7 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
         simplifiedDebts: newDebts,
       );
 
-      emit(GroupBalancesLoaded(newBalances));
+      if (!isClosed) emit(GroupBalancesLoaded(newBalances));
 
       if (_currentGroupId != null) {
         Future.delayed(const Duration(milliseconds: 500))

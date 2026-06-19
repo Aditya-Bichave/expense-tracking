@@ -169,7 +169,7 @@ class AccountListPage extends StatelessWidget {
                     bloc.add(const LoadAccounts(forceReload: true));
                     await bloc.stream.firstWhere(
                       (s) => s is! AccountListLoading || !s.isReloading,
-                    );
+                    ).timeout(const Duration(seconds: 3), onTimeout: () => bloc.state);
                   },
                   child: ListView.builder(
                     padding:

@@ -48,6 +48,7 @@ class SyncService {
         unawaited(
           processOutbox().catchError((e, s) {
             log.severe("Failed to process outbox in background: $e\n$s");
+            _safeAddStatus(SyncServiceStatus.error);
           }),
         );
       }

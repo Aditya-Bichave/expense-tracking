@@ -37,6 +37,7 @@ class SessionCubit extends Cubit<SessionState> {
       unawaited(
         checkSession().catchError((e, s) {
           log.severe('Silent failure in E2E checkSession: $e\n$s');
+          if (!isClosed) emit(SessionUnauthenticated());
         }),
       );
     }

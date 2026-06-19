@@ -137,7 +137,7 @@ class TransactionListBloc
       log.info(
         "[TransactionListBloc] Found transaction ${event.transactionId} in current list.",
       );
-      emit(state.copyWith(selectedTransaction: existing));
+      if (!isClosed) emit(state.copyWith(selectedTransaction: existing));
       return;
     }
 
@@ -164,7 +164,7 @@ class TransactionListBloc
 
     if (foundTransaction != null) {
       log.info("[TransactionListBloc] Found Expense.");
-      emit(state.copyWith(selectedTransaction: foundTransaction));
+      if (!isClosed) emit(state.copyWith(selectedTransaction: foundTransaction));
       return;
     }
 
@@ -189,14 +189,14 @@ class TransactionListBloc
 
     if (foundTransaction != null) {
       log.info("[TransactionListBloc] Found Income.");
-      emit(state.copyWith(selectedTransaction: foundTransaction));
+      if (!isClosed) emit(state.copyWith(selectedTransaction: foundTransaction));
       return;
     }
 
     log.warning(
       "[TransactionListBloc] Transaction ID ${event.transactionId} not found in repositories.",
     );
-    emit(state.copyWith(errorMessage: "Transaction not found"));
+    if (!isClosed) emit(state.copyWith(errorMessage: "Transaction not found"));
   }
 
   void _onClearSelectedTransaction(
@@ -204,7 +204,7 @@ class TransactionListBloc
     Emitter<TransactionListState> emit,
   ) {
     log.info("[TransactionListBloc] Clearing selected transaction.");
-    emit(state.copyWith(clearSelectedTransaction: true));
+    if (!isClosed) emit(state.copyWith(clearSelectedTransaction: true));
   }
   // --- End Reset Handler ---
 
@@ -442,7 +442,7 @@ class TransactionListBloc
     } else {
       newSelection.add(event.transactionId);
     }
-    emit(state.copyWith(selectedTransactionIds: newSelection));
+    if (!isClosed) emit(state.copyWith(selectedTransactionIds: newSelection));
   }
 
   Future<void> _onApplyBatchCategory(
@@ -561,7 +561,7 @@ class TransactionListBloc
     final updatedSelection = Set<String>.from(
       previousState.selectedTransactionIds,
     )..remove(txn.id);
-    emit(
+    if (!isClosed) emit(
       previousState.copyWith(
         transactions: optimisticList,
         selectedTransactionIds: updatedSelection,

@@ -82,7 +82,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
     result.fold((failure) => emit(AuthError(failure.message)), (response) {
       if (response.user != null) {
-        emit(AuthAuthenticated(response.user!));
+        if (!isClosed) emit(AuthAuthenticated(response.user!));
         if (kIsWeb || Platform.isAndroid || Platform.isIOS) {
           _notificationService.syncDeviceToken();
         }
