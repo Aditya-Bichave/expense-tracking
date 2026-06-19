@@ -60,7 +60,7 @@ void main() {
       ).thenAnswer((_) async => throw Exception('error'));
 
       expect(
-        () => dataSource.addExpense(tModel1),
+        () async => await dataSource.addExpense(tModel1),
         throwsA(isA<CacheFailure>()),
       );
     });
@@ -150,7 +150,7 @@ void main() {
       when(() => mockBox.containsKey(any<dynamic>())).thenReturn(false);
 
       expect(
-        () => dataSource.updateExpense(tModel1),
+        () async => await dataSource.updateExpense(tModel1),
         throwsA(isA<CacheFailure>()),
       );
     });
