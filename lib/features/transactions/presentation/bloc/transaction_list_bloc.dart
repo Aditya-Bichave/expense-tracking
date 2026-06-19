@@ -164,7 +164,8 @@ class TransactionListBloc
 
     if (foundTransaction != null) {
       log.info("[TransactionListBloc] Found Expense.");
-      if (!isClosed) emit(state.copyWith(selectedTransaction: foundTransaction));
+      if (!isClosed)
+        emit(state.copyWith(selectedTransaction: foundTransaction));
       return;
     }
 
@@ -189,7 +190,8 @@ class TransactionListBloc
 
     if (foundTransaction != null) {
       log.info("[TransactionListBloc] Found Income.");
-      if (!isClosed) emit(state.copyWith(selectedTransaction: foundTransaction));
+      if (!isClosed)
+        emit(state.copyWith(selectedTransaction: foundTransaction));
       return;
     }
 
@@ -561,14 +563,15 @@ class TransactionListBloc
     final updatedSelection = Set<String>.from(
       previousState.selectedTransactionIds,
     )..remove(txn.id);
-    if (!isClosed) emit(
-      previousState.copyWith(
-        transactions: optimisticList,
-        selectedTransactionIds: updatedSelection,
-        clearErrorMessage: true,
-        clearDeleteError: true,
-      ),
-    );
+    if (!isClosed)
+      emit(
+        previousState.copyWith(
+          transactions: optimisticList,
+          selectedTransactionIds: updatedSelection,
+          clearErrorMessage: true,
+          clearDeleteError: true,
+        ),
+      );
 
     final deleteResult = txn.type == TransactionType.expense
         ? await _deleteExpenseUseCase(DeleteExpenseParams(txn.id))

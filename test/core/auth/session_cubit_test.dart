@@ -95,14 +95,17 @@ void main() {
   }
 
   group('SessionCubit', () {
-    test('catches exception in unawaited checkSession and emits unauthenticated', () async {
-      // Simulate E2E mode by throwing from checkSession
-      // But we can't easily override E2EMode.enabled since it's a global constant/static
-      // We will just verify initial state is SessionUnauthenticated
-      // This is a placeholder test that won't crash
-      buildCubit();
-      expect(sessionCubit!.state, isA<SessionUnauthenticated>());
-    });
+    test(
+      'catches exception in unawaited checkSession and emits unauthenticated',
+      () async {
+        // Simulate E2E mode by throwing from checkSession
+        // But we can't easily override E2EMode.enabled since it's a global constant/static
+        // We will just verify initial state is SessionUnauthenticated
+        // This is a placeholder test that won't crash
+        buildCubit();
+        expect(sessionCubit!.state, isA<SessionUnauthenticated>());
+      },
+    );
 
     test('initial state is SessionUnauthenticated', () {
       buildCubit();

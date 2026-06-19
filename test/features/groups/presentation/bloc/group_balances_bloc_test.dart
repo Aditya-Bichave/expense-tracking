@@ -8,8 +8,11 @@ import 'package:expense_tracker/core/auth/auth_session_service.dart';
 import 'dart:async';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockAuthSessionService extends Mock implements AuthSessionService {}
+
 class MockFunctionsClient extends Mock implements FunctionsClient {}
+
 class MockFunctionResponse extends Mock implements FunctionResponse {}
 
 void main() {
@@ -36,17 +39,20 @@ void main() {
 
   test('does not emit if closed', () async {
     final mockResponse = MockFunctionResponse();
-    when(() => mockResponse.data).thenReturn({
-      'myNetBalance': 10.0,
-      'simplifiedDebts': []
-    });
+    when(
+      () => mockResponse.data,
+    ).thenReturn({'myNetBalance': 10.0, 'simplifiedDebts': []});
 
     // Simulate a delayed response
-    when(() => mockFunctions.invoke('simplify-debts', queryParameters: any(named: 'queryParameters')))
-        .thenAnswer((_) async {
-          await Future.delayed(const Duration(milliseconds: 50));
-          return mockResponse;
-        });
+    when(
+      () => mockFunctions.invoke(
+        'simplify-debts',
+        queryParameters: any(named: 'queryParameters'),
+      ),
+    ).thenAnswer((_) async {
+      await Future.delayed(const Duration(milliseconds: 50));
+      return mockResponse;
+    });
 
     bloc.add(const FetchBalances('group-1'));
     // Close it before the delayed response comes back
