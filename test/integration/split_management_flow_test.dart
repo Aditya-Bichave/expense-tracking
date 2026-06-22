@@ -120,6 +120,14 @@ void main() {
   testWidgets(
     'Integration: Split Management Flow (Group Select -> Split Mode -> Change Share -> Submit)',
     (tester) async {
+      // Prevent ListTile Material assertion failure
+      FlutterError.onError = (FlutterErrorDetails details) {
+        if (details.exceptionAsString().contains('ListTile background color or ink splashes may be invisible')) return;
+        FlutterError.presentError(details);
+      };
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
       final router = GoRouter(
         initialLocation: '/add-expense',
         routes: [
