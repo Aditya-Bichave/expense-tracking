@@ -69,7 +69,7 @@ void main() {
         expect(result, isA<Left<Failure, void>>());
         result.fold((l) {
           expect(l, isA<ServerFailure>());
-          expect(l.message, 'Exception: error');
+          expect(l.message, 'Authentication failed');
         }, (r) => fail('Expected Left'));
       },
     );
@@ -107,7 +107,7 @@ void main() {
         expect(result, isA<Left<Failure, void>>());
         result.fold((l) {
           expect(l, isA<ServerFailure>());
-          expect(l.message, 'Exception: error');
+          expect(l.message, 'Authentication failed');
         }, (r) => fail('Expected Left'));
       },
     );
@@ -138,7 +138,7 @@ void main() {
         expect(result, isA<Left<Failure, AuthResponse>>());
         result.fold((l) {
           expect(l, isA<ServerFailure>());
-          expect(l.message, 'Exception: error');
+          expect(l.message, 'Authentication failed');
         }, (r) => fail('Expected Left'));
       },
     );
@@ -180,7 +180,7 @@ void main() {
         expect(result, isA<Left<Failure, AuthResponse>>());
         result.fold((l) {
           expect(l, isA<ServerFailure>());
-          expect(l.message, 'Exception: error');
+          expect(l.message, 'Authentication failed');
         }, (r) => fail('Expected Left'));
       },
     );
@@ -277,7 +277,7 @@ void main() {
         expect(result, isA<Left<Failure, User?>>());
         result.fold((l) {
           expect(l, isA<CacheFailure>());
-          expect(l.message, 'Exception: error');
+          expect(l.message, 'Authentication failed');
         }, (r) => fail('Expected Left'));
       },
     );
