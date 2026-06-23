@@ -80,7 +80,14 @@ class GoalRepositoryImpl implements GoalRepository {
       );
       final contributions = await contributionDataSource
           .getContributionsForGoal(id);
-      final contributionIds = contributions.map((c) => c.id).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates an intermediate list of objects before filtering.
+      // Solution: Use a direct loop or generator to extract IDs in a single pass.
+      // Impact: Reduces object instantiation and GC pressure when deleting goals.
+      final contributionIds = <String>[];
+      for (final c in contributions) {
+        contributionIds.add(c.id);
+      }
       await contributionDataSource.deleteContributions(contributionIds);
       log.info(
         "[GoalRepo] Deleted ${contributions.length} associated contributions.",

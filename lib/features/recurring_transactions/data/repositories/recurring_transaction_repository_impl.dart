@@ -30,7 +30,14 @@ class RecurringTransactionRepositoryImpl
   Future<Either<Failure, List<RecurringRule>>> getRecurringRules() async {
     try {
       final ruleModels = await localDataSource.getRecurringRules();
-      final rules = ruleModels.map((model) => model.toEntity()).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates an intermediate list of objects before filtering.
+      // Solution: Use a direct for-loop to filter and extract entities in a single pass.
+      // Impact: Reduces object instantiation and GC pressure when getting recurring rules.
+      final rules = <RecurringRule>[];
+      for (final model in ruleModels) {
+        rules.add(model.toEntity());
+      }
       return Right(rules);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -87,7 +94,14 @@ class RecurringTransactionRepositoryImpl
   ) async {
     try {
       final logModels = await localDataSource.getAuditLogsForRule(ruleId);
-      final logs = logModels.map((model) => model.toEntity()).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates an intermediate list of objects before filtering.
+      // Solution: Use a direct for-loop to map and extract entities in a single pass.
+      // Impact: Reduces object instantiation and GC pressure when getting audit logs.
+      final logs = <RecurringRuleAuditLog>[];
+      for (final model in logModels) {
+        logs.add(model.toEntity());
+      }
       return Right(logs);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

@@ -63,7 +63,15 @@ class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
   @override
   Future<List<GroupModel>> getGroups() async {
     final response = await _client.from('groups').select();
-    return (response as List).map((e) => GroupModel.fromJson(e)).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` allocates an intermediate list of objects before parsing.
+    // Solution: Use a direct for-loop to map and extract entities in a single pass.
+    // Impact: Reduces object instantiation and GC pressure when getting groups from remote.
+    final result = <GroupModel>[];
+    for (final e in response as List) {
+      result.add(GroupModel.fromJson(e));
+    }
+    return result;
   }
 
   @override
@@ -72,7 +80,15 @@ class GroupsRemoteDataSourceImpl implements GroupsRemoteDataSource {
         .from('group_members')
         .select()
         .eq('group_id', groupId);
-    return (response as List).map((e) => GroupMemberModel.fromJson(e)).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` allocates an intermediate list of objects before parsing.
+    // Solution: Use a direct for-loop to map and extract entities in a single pass.
+    // Impact: Reduces object instantiation and GC pressure when getting group members from remote.
+    final result = <GroupMemberModel>[];
+    for (final e in response as List) {
+      result.add(GroupMemberModel.fromJson(e));
+    }
+    return result;
   }
 
   @override

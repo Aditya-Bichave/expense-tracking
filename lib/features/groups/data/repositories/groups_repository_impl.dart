@@ -158,7 +158,15 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
-      return Right(models.map((model) => model.toEntity()).toList());
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates an intermediate list of objects before filtering.
+      // Solution: Use a direct for-loop to filter and extract entities in a single pass.
+      // Impact: Reduces object instantiation and GC pressure when getting group members.
+      final entities = <GroupMember>[];
+      for (final model in models) {
+        entities.add(model.toEntity());
+      }
+      return Right(entities);
     } catch (e, s) {
       log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
@@ -185,11 +193,16 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroups(remoteGroups);
 
       final remoteGroupIds = remoteGroups.map((group) => group.id).toSet();
-      final staleGroupIds = _localDataSource
-          .getGroups()
-          .where((group) => !remoteGroupIds.contains(group.id))
-          .map((group) => group.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).map(...).toList()` iterates and allocates multiple intermediate lists.
+      // Solution: Use a direct for-loop to filter and extract IDs in a single pass.
+      // Impact: Reduces object instantiation and GC pressure during group sync.
+      final staleGroupIds = <String>[];
+      for (final group in _localDataSource.getGroups()) {
+        if (!remoteGroupIds.contains(group.id)) {
+          staleGroupIds.add(group.id);
+        }
+      }
       if (staleGroupIds.isNotEmpty) {
         await _localDataSource.deleteGroups(staleGroupIds);
         await Future.wait(
@@ -272,7 +285,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   List<GroupEntity> _mapAndSortGroups(List<GroupModel> models) {
-    final groups = models.map((model) => model.toEntity()).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` allocates an intermediate list of objects.
+    // Solution: Use a direct for-loop to map and collect in a single pass.
+    // Impact: Reduces object instantiation and GC pressure when getting groups.
+    final groups = <GroupEntity>[];
+    for (final model in models) {
+      groups.add(model.toEntity());
+    }
     groups.sort((left, right) => right.updatedAt.compareTo(left.updatedAt));
     return groups;
   }
@@ -305,11 +325,16 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroupMembers(remoteMembers);
 
       final remoteMemberIds = remoteMembers.map((member) => member.id).toSet();
-      final staleMemberIds = _localDataSource
-          .getGroupMembers(groupId)
-          .where((member) => !remoteMemberIds.contains(member.id))
-          .map((member) => member.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).map(...).toList()` iterates and allocates multiple intermediate lists.
+      // Solution: Use a direct for-loop to filter and extract IDs in a single pass.
+      // Impact: Reduces object instantiation and GC pressure during group member sync.
+      final staleMemberIds = <String>[];
+      for (final member in _localDataSource.getGroupMembers(groupId)) {
+        if (!remoteMemberIds.contains(member.id)) {
+          staleMemberIds.add(member.id);
+        }
+      }
       if (staleMemberIds.isNotEmpty) {
         await _localDataSource.deleteMembers(staleMemberIds);
       }

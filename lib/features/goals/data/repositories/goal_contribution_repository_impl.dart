@@ -155,7 +155,14 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       final models = await contributionDataSource.getContributionsForGoal(
         goalId,
       );
-      final entities = models.map((m) => m.toEntity()).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates an intermediate list of objects before filtering.
+      // Solution: Use a direct for-loop to filter and extract entities in a single pass.
+      // Impact: Reduces object instantiation and GC pressure when getting contributions.
+      final entities = <GoalContribution>[];
+      for (final m in models) {
+        entities.add(m.toEntity());
+      }
       // Sort by date descending
       entities.sort((a, b) => b.date.compareTo(a.date));
       log.fine(
@@ -177,7 +184,14 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
     log.fine("[ContributionRepo] Getting all goal contributions");
     try {
       final models = await contributionDataSource.getAllContributions();
-      final entities = models.map((m) => m.toEntity()).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates an intermediate list of objects before filtering.
+      // Solution: Use a direct for-loop to filter and extract entities in a single pass.
+      // Impact: Reduces object instantiation and GC pressure when getting contributions.
+      final entities = <GoalContribution>[];
+      for (final m in models) {
+        entities.add(m.toEntity());
+      }
       // Sort by date descending for consistency
       entities.sort((a, b) => b.date.compareTo(a.date));
       log.fine(

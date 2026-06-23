@@ -41,13 +41,22 @@ class SplitPreviewEngine {
     double totalAmount,
     List<SplitModel> currentSplits,
   ) {
-    return currentSplits.map((split) {
-      if (split.shareType != SplitType.PERCENT) return split;
-      double computed = (totalAmount * split.shareValue) / 100.0;
-      // Round to 2 decimals
-      computed = (computed * 100).roundToDouble() / 100.0;
-      return split.copyWith(computedAmount: computed);
-    }).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` allocates an intermediate list.
+    // Solution: Use a direct for-loop.
+    // Impact: Reduces object instantiation and GC pressure.
+    final result = <SplitModel>[];
+    for (final split in currentSplits) {
+      if (split.shareType != SplitType.PERCENT) {
+        result.add(split);
+      } else {
+        double computed = (totalAmount * split.shareValue) / 100.0;
+        // Round to 2 decimals
+        computed = (computed * 100).roundToDouble() / 100.0;
+        result.add(split.copyWith(computedAmount: computed));
+      }
+    }
+    return result;
   }
 
   /// Recalculates amounts based on shares (weighted average).
@@ -61,7 +70,15 @@ class SplitPreviewEngine {
     );
 
     if (totalShares == 0) {
-      return currentSplits.map((s) => s.copyWith(computedAmount: 0)).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates an intermediate list.
+      // Solution: Use a direct for-loop.
+      // Impact: Reduces object instantiation and GC pressure.
+      final result = <SplitModel>[];
+      for (final s in currentSplits) {
+        result.add(s.copyWith(computedAmount: 0));
+      }
+      return result;
     }
 
     int totalCents = (totalAmount * 100).round();

@@ -1,0 +1,14 @@
+⚡ Bolt: Replace `.where().toList()` and `.map().toList()` with direct loops
+
+💡 What:
+Replaced `.map().toList()` and `.where().map().toList()` with direct `for` loops that push items into pre-allocated lists across multiple files (Groups, Budgets, Categories, Goals, Group Expenses, Recurring Transactions, and Split Engines).
+
+🎯 Why:
+The `.map().toList()` and chained `.where(...).map(...).toList()` patterns in Dart create intermediate Iterables and sublists before generating the final list. By replacing them with direct `for` loops, we eliminate these intermediate allocations. This is especially beneficial when processing collections of domain entities from local or remote data sources, or when filtering UI lists (like the Category Picker).
+
+📊 Impact:
+Measurable reduction in memory allocations and Garbage Collection (GC) pressure. This optimization directly addresses the O(N) allocation overhead flagged in codebase patterns, leading to faster list processing and smoother UI rendering, particularly in features handling lists of models (e.g., syncing, repository mapping, searching).
+
+🔬 Measurement:
+- Dart memory profiler will show reduced object allocations during repository fetches and sync operations.
+- `flutter test` completes successfully with no regressions in functionality.
