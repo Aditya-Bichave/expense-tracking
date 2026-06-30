@@ -79,7 +79,7 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
         return;
       } catch (e, s) {
         log.severe("Failed to get Supabase session from URL: $e\n$s");
-        emit(DeepLinkError("Authentication failed: $e"));
+        if (!isClosed) emit(DeepLinkError("Authentication failed: $e"));
         return;
       }
     }
@@ -102,7 +102,7 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
   }
 
   Future<void> _handleJoin(String token, Emitter<DeepLinkState> emit) async {
-    emit(DeepLinkProcessing());
+    if (!isClosed) emit(DeepLinkProcessing());
 
     try {
       // 1. Check Auth
@@ -120,7 +120,9 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
       // 2. Call Edge Function
       final result = await _groupsRepository.acceptInvite(token);
       await result.fold(
-        (failure) async => emit(DeepLinkError(failure.message)),
+        (failure) async {
+          if (!isClosed) emit(DeepLinkError(failure.message));
+        },
         (data) async {
           final groupId = data['group_id'] as String;
           final groupName = data['group_name'] as String?;
@@ -128,12 +130,13 @@ class DeepLinkBloc extends Bloc<DeepLinkEvent, DeepLinkState> {
           // 3. Sync groups to ensure the new group is visible locally
           await _groupsRepository.syncGroups();
 
-          emit(DeepLinkSuccess(groupId: groupId, groupName: groupName));
+          if (!isClosed)
+            emit(DeepLinkSuccess(groupId: groupId, groupName: groupName));
         },
       );
     } catch (e, s) {
       log.severe("Error handling join: $e\n$s");
-      emit(DeepLinkError(e.toString()));
+      if (!isClosed) emit(DeepLinkError(e.toString()));
     }
   }
 

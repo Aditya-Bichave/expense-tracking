@@ -25,11 +25,15 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     FetchProfile event,
     Emitter<ProfileState> emit,
   ) async {
-    emit(ProfileLoading());
+    if (!isClosed) emit(ProfileLoading());
     final result = await _getProfileUseCase(forceRefresh: event.forceRefresh);
     result.fold(
-      (failure) => emit(ProfileError(failure.message)),
-      (profile) => emit(ProfileLoaded(profile)),
+      (failure) {
+        if (!isClosed) emit(ProfileError(failure.message));
+      },
+      (profile) {
+        if (!isClosed) emit(ProfileLoaded(profile));
+      },
     );
   }
 
@@ -37,11 +41,15 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     UpdateProfile event,
     Emitter<ProfileState> emit,
   ) async {
-    emit(ProfileLoading());
+    if (!isClosed) emit(ProfileLoading());
     final result = await _updateProfileUseCase(event.profile);
     result.fold(
-      (failure) => emit(ProfileError(failure.message)),
-      (_) => emit(ProfileLoaded(event.profile)),
+      (failure) {
+        if (!isClosed) emit(ProfileError(failure.message));
+      },
+      (_) {
+        if (!isClosed) emit(ProfileLoaded(event.profile));
+      },
     );
   }
 
@@ -54,26 +62,33 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       return;
     }
 
-    emit(ProfileLoading());
+    if (!isClosed) emit(ProfileLoading());
     final result = await _uploadAvatarUseCase(event.file);
-    await result.fold((failure) async => emit(ProfileError(failure.message)), (
-      url,
-    ) async {
-      final newProfile = UserProfile(
-        id: currentState.profile.id,
-        fullName: currentState.profile.fullName,
-        email: currentState.profile.email,
-        phone: currentState.profile.phone,
-        avatarUrl: url,
-        currency: currentState.profile.currency,
-        timezone: currentState.profile.timezone,
-      );
+    await result.fold(
+      (failure) async {
+        if (!isClosed) emit(ProfileError(failure.message));
+      },
+      (url) async {
+        final newProfile = UserProfile(
+          id: currentState.profile.id,
+          fullName: currentState.profile.fullName,
+          email: currentState.profile.email,
+          phone: currentState.profile.phone,
+          avatarUrl: url,
+          currency: currentState.profile.currency,
+          timezone: currentState.profile.timezone,
+        );
 
-      final updateResult = await _updateProfileUseCase(newProfile);
-      updateResult.fold(
-        (l) => emit(ProfileError(l.message)),
-        (_) => emit(ProfileLoaded(newProfile)),
-      );
-    });
+        final updateResult = await _updateProfileUseCase(newProfile);
+        updateResult.fold(
+          (l) {
+            if (!isClosed) emit(ProfileError(l.message));
+          },
+          (_) {
+            if (!isClosed) emit(ProfileLoaded(newProfile));
+          },
+        );
+      },
+    );
   }
 }

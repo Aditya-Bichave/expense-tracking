@@ -106,7 +106,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
     // Show loading state only if not already loaded or forced
     if (state is! DashboardLoaded || event.forceReload) {
-      emit(DashboardLoading(isReloading: state is DashboardLoaded));
+      if (!isClosed)
+        emit(DashboardLoading(isReloading: state is DashboardLoaded));
       log.info(
         "[DashboardBloc] Emitting DashboardLoading (isReloading: ${state is DashboardLoaded}).",
       );
@@ -133,11 +134,11 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         log.warning(
           "[DashboardBloc] Load failed: ${failure.message}. Emitting DashboardError.",
         );
-        emit(DashboardError(failure.toDisplayMessage()));
+        if (!isClosed) emit(DashboardError(failure.toDisplayMessage()));
       },
       (overview) {
         log.info("[DashboardBloc] Load successful. Emitting DashboardLoaded.");
-        emit(DashboardLoaded(overview));
+        if (!isClosed) emit(DashboardLoaded(overview));
       },
     );
   }
