@@ -192,6 +192,9 @@ class GroupBalancesBloc extends Bloc<GroupBalancesEvent, GroupBalancesState> {
               }
             })
             .catchError((e, s) {
+              if (!isClosed) {
+                emit(currentState);
+              }
               _log.severe('Error dispatching optimistic refresh: $e\n$s');
             });
       }

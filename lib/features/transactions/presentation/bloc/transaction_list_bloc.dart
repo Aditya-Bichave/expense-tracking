@@ -626,6 +626,9 @@ class TransactionListBloc
           );
         })
         .catchError((e, s) {
+          if (!isClosed) {
+            // emit(currentState) here if we had one, but we don't need to revert state for history saving error
+          }
           log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
         });
 
