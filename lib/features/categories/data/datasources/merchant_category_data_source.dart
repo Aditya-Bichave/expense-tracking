@@ -87,10 +87,10 @@ class AssetMerchantCategoryDataSource implements MerchantCategoryDataSource {
         );
       }
       return categoryId;
-    } catch (e) {
+    } catch (e, s) {
       // Errors during loading are handled in _loadDb, but catch potential future issues
       log.severe(
-        "Error looking up default category for '$merchantIdentifier': $e",
+        "Error looking up default category for '$merchantIdentifier': $e\n$s",
       );
       return null; // Return null on error
     }
