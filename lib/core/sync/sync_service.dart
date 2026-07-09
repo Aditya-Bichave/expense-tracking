@@ -52,7 +52,9 @@ class SyncService {
             }),
           );
         } catch (e, s) {
-          log.severe("Sync failure starting processOutbox in background: $e\n$s");
+          log.severe(
+            "Sync failure starting processOutbox in background: $e\n$s",
+          );
         }
       }
     });
@@ -166,7 +168,9 @@ class SyncService {
             }),
           );
         } catch (e, s) {
-          log.severe("Sync failure starting _ensureGroupExists in background: $e\n$s");
+          log.severe(
+            "Sync failure starting _ensureGroupExists in background: $e\n$s",
+          );
         }
       } else {
         // Last-Write-Wins check for member
