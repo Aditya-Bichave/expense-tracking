@@ -12,7 +12,6 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class BudgetsSubTab extends StatelessWidget {
   const BudgetsSubTab({super.key});
@@ -125,13 +124,9 @@ class BudgetsSubTab extends StatelessWidget {
               final bloc = context.read<BudgetListBloc>();
               bloc.add(const LoadBudgets(forceReload: true));
               // Wait until the loading state completes
-              try {
-                await bloc.stream.firstWhere(
-                  (s) => s.status != BudgetListStatus.loading,
-                ).timeout(const Duration(seconds: 3));
-              } catch (e, s) {
-                log.severe('Error waiting for budget list reload: $e\n$s');
-              }
+              await bloc.stream.firstWhere(
+                (s) => s.status != BudgetListStatus.loading,
+              );
             },
             child: content,
           );

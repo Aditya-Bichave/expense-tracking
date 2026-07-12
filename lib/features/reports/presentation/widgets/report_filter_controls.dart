@@ -13,7 +13,6 @@ import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_bridge/bridge_decoration.dart';
 import 'package:expense_tracker/ui_bridge/bridge_border_radius.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class ReportFilterControls extends StatelessWidget {
   const ReportFilterControls({super.key});
@@ -23,15 +22,11 @@ class ReportFilterControls extends StatelessWidget {
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
-      try {
-        await filterBloc.stream.firstWhere(
-          (state) =>
-              state.optionsStatus == FilterOptionsStatus.loaded ||
-              state.optionsStatus == FilterOptionsStatus.error,
-        ).timeout(const Duration(seconds: 3));
-      } catch (e, s) {
-        log.severe('Error waiting for filter options: $e\n$s');
-      }
+      await filterBloc.stream.firstWhere(
+        (state) =>
+            state.optionsStatus == FilterOptionsStatus.loaded ||
+            state.optionsStatus == FilterOptionsStatus.error,
+      );
       if (!context.mounted ||
           filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
         return; // Don't show sheet if loading failed or stream closed early

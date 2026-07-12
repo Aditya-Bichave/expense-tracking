@@ -34,15 +34,11 @@ class SessionCubit extends Cubit<SessionState> {
     });
 
     if (E2EMode.enabled) {
-      try {
-        unawaited(
-          checkSession().catchError((e, s) {
-            log.severe('Silent failure in E2E checkSession: $e\n$s');
-          }),
-        );
-      } catch (e, s) {
-        log.severe('Synchronous failure in E2E checkSession: $e\n$s');
-      }
+      unawaited(
+        checkSession().catchError((e, s) {
+          log.severe('Silent failure in E2E checkSession: $e\n$s');
+        }),
+      );
     }
   }
 

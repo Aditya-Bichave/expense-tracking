@@ -614,26 +614,20 @@ class TransactionListBloc
       transactionData: event.matchData,
       selectedCategory: event.selectedCategory,
     );
-    try {
-      unawaited(
-        _saveUserHistoryUseCase(historyParams)
-            .then((result) {
-              result.fold(
-                (failure) => log.warning(
-                  "[TransactionListBloc] Failed to save user history: ${failure.message}",
-                ),
-                (_) => log.info(
-                  "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}",
-                ),
-              );
-            })
-            .catchError((e, s) {
-              log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
-            }),
-      );
-    } catch (e, s) {
-      log.severe("[TransactionListBloc] Synchronous error saving user history: $e\n$s");
-    }
+    _saveUserHistoryUseCase(historyParams)
+        .then((result) {
+          result.fold(
+            (failure) => log.warning(
+              "[TransactionListBloc] Failed to save user history: ${failure.message}",
+            ),
+            (_) => log.info(
+              "[TransactionListBloc] User history saved successfully for rule based on txn ${event.transactionId}",
+            ),
+          );
+        })
+        .catchError((e, s) {
+          log.severe("[TransactionListBloc] Error saving user history: $e\n$s");
+        });
 
     // Update Transaction Categorization State
     log.info(

@@ -19,7 +19,6 @@ import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dar
 import 'package:expense_tracker/ui_bridge/bridge_scaffold.dart';
 import 'package:expense_tracker/ui_bridge/bridge_text_style.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class AccountListPage extends StatelessWidget {
   const AccountListPage({super.key});
@@ -168,13 +167,9 @@ class AccountListPage extends StatelessWidget {
                   onRefresh: () async {
                     final bloc = context.read<AccountListBloc>();
                     bloc.add(const LoadAccounts(forceReload: true));
-                    try {
-                      await bloc.stream.firstWhere(
-                        (s) => s is! AccountListLoading || !s.isReloading,
-                      ).timeout(const Duration(seconds: 3));
-                    } catch (e, s) {
-                      log.severe('Error waiting for account list reload: $e\n$s');
-                    }
+                    await bloc.stream.firstWhere(
+                      (s) => s is! AccountListLoading || !s.isReloading,
+                    );
                   },
                   child: ListView.builder(
                     padding:
