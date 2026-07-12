@@ -34,10 +34,12 @@ class AppBottomSheet extends StatelessWidget {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           // Handle bar
           Center(
             child: Container(
@@ -59,10 +61,11 @@ class AppBottomSheet extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ),
-            Divider(height: 1, color: kit.colors.borderSubtle),
+              Divider(height: 1, color: kit.colors.borderSubtle),
+            ],
+            Flexible(child: child),
           ],
-          Flexible(child: child),
-        ],
+        ),
       ),
     );
   }
