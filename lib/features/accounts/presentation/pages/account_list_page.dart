@@ -169,11 +169,15 @@ class AccountListPage extends StatelessWidget {
                     final bloc = context.read<AccountListBloc>();
                     bloc.add(const LoadAccounts(forceReload: true));
                     try {
-                      await bloc.stream.firstWhere(
-                        (s) => s is! AccountListLoading || !s.isReloading,
-                      ).timeout(const Duration(seconds: 3));
+                      await bloc.stream
+                          .firstWhere(
+                            (s) => s is! AccountListLoading || !s.isReloading,
+                          )
+                          .timeout(const Duration(seconds: 3));
                     } catch (e, s) {
-                      log.warning("Stream timeout in account_list_page.dart: $e\n$s");
+                      log.warning(
+                        "Stream timeout in account_list_page.dart: $e\n$s",
+                      );
                     }
                   },
                   child: ListView.builder(

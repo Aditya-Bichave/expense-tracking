@@ -397,7 +397,9 @@ class _TransactionListPageState extends State<TransactionListPage> {
                           )
                           .timeout(const Duration(seconds: 3));
                     } catch (e, s) {
-                      log.warning("Stream timeout in transaction_list_page.dart: $e\n$s");
+                      log.warning(
+                        "Stream timeout in transaction_list_page.dart: $e\n$s",
+                      );
                     }
                   },
                   child: AnimatedSwitcher(

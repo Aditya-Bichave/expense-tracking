@@ -24,11 +24,13 @@ class ReportFilterControls extends StatelessWidget {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
       try {
-        await filterBloc.stream.firstWhere(
-          (state) =>
-              state.optionsStatus == FilterOptionsStatus.loaded ||
-              state.optionsStatus == FilterOptionsStatus.error,
-        ).timeout(const Duration(seconds: 3));
+        await filterBloc.stream
+            .firstWhere(
+              (state) =>
+                  state.optionsStatus == FilterOptionsStatus.loaded ||
+                  state.optionsStatus == FilterOptionsStatus.error,
+            )
+            .timeout(const Duration(seconds: 3));
       } catch (e, s) {
         log.warning("Stream timeout in report_filter_controls.dart: $e\n$s");
       }

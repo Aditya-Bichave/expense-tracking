@@ -126,9 +126,9 @@ class BudgetsSubTab extends StatelessWidget {
               bloc.add(const LoadBudgets(forceReload: true));
               // Wait until the loading state completes
               try {
-                await bloc.stream.firstWhere(
-                  (s) => s.status != BudgetListStatus.loading,
-                ).timeout(const Duration(seconds: 3));
+                await bloc.stream
+                    .firstWhere((s) => s.status != BudgetListStatus.loading)
+                    .timeout(const Duration(seconds: 3));
               } catch (e, s) {
                 log.warning("Stream timeout in budgets_sub_tab.dart: $e\n$s");
               }

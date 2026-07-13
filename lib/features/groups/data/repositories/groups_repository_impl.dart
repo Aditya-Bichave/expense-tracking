@@ -333,7 +333,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
           }),
         );
       } catch (error, stackTrace) {
-        log.severe('Synchronous error processing outbox in background: $error\n$stackTrace');
+        log.severe(
+          'Synchronous error processing outbox in background: $error\n$stackTrace',
+        );
       }
     }
   }
