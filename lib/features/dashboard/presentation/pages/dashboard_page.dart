@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/dashboard/presentation/pages/dashboard_page.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/aether_themes/presentation/widgets/financial_garden_widget.dart';

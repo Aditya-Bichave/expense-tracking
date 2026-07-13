@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // lib/features/transactions/presentation/pages/transaction_list_page.dart
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
@@ -395,8 +396,8 @@ class _TransactionListPageState extends State<TransactionListPage> {
                                 s.status != ListStatus.reloading,
                           )
                           .timeout(const Duration(seconds: 3));
-                    } catch (_) {
-                      // Prevent hanging if state update is missed
+                    } catch (e, s) {
+                      log.warning("Stream timeout in transaction_list_page.dart: $e\n$s");
                     }
                   },
                   child: AnimatedSwitcher(
