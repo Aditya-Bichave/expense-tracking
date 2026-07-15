@@ -22,11 +22,17 @@ class ReportFilterControls extends StatelessWidget {
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
-      await filterBloc.stream.firstWhere(
-        (state) =>
-            state.optionsStatus == FilterOptionsStatus.loaded ||
-            state.optionsStatus == FilterOptionsStatus.error,
-      );
+      try {
+        await filterBloc.stream
+            .firstWhere(
+              (state) =>
+                  state.optionsStatus == FilterOptionsStatus.loaded ||
+                  state.optionsStatus == FilterOptionsStatus.error,
+            )
+            .timeout(const Duration(seconds: 3));
+      } catch (_) {
+        // Handle timeout or stream closure
+      }
       if (!context.mounted ||
           filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
         return; // Don't show sheet if loading failed or stream closed early
@@ -132,19 +138,23 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
     return BlocBuilder<ReportFilterBloc, ReportFilterState>(
       builder: (context, state) {
         // Prepare items based on LATEST state
-        final categoryItems = state.availableCategories
-            .where((c) => c.id != Category.uncategorized.id)
-            .map((c) => MultiSelectItem<String>(c.id, c.name))
-            .toList();
-        final accountItems = state.availableAccounts
-            .map((a) => MultiSelectItem<String>(a.id, a.name))
-            .toList();
-        final budgetItems = state.availableBudgets
-            .map((b) => MultiSelectItem<String>(b.id, b.name))
-            .toList();
-        final goalItems = state.availableGoals
-            .map((g) => MultiSelectItem<String>(g.id, g.name))
-            .toList();
+        final categoryItems = <MultiSelectItem<String>>[
+          for (final c in state.availableCategories)
+            if (c.id != Category.uncategorized.id)
+              MultiSelectItem<String>(c.id, c.name),
+        ];
+        final accountItems = <MultiSelectItem<String>>[
+          for (final a in state.availableAccounts)
+            MultiSelectItem<String>(a.id, a.name),
+        ];
+        final budgetItems = <MultiSelectItem<String>>[
+          for (final b in state.availableBudgets)
+            MultiSelectItem<String>(b.id, b.name),
+        ];
+        final goalItems = <MultiSelectItem<String>>[
+          for (final g in state.availableGoals)
+            MultiSelectItem<String>(g.id, g.name),
+        ];
 
         // Ensure local temp state reflects latest BLoC state if options just loaded
         if (state.optionsStatus == FilterOptionsStatus.loaded &&

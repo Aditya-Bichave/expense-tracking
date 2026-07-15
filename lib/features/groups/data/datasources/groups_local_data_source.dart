@@ -82,10 +82,10 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
 
   @override
   Future<void> deleteGroupMembers(String groupId) async {
-    final memberIds = _memberBox.values
-        .where((member) => member.groupId == groupId)
-        .map((member) => member.id)
-        .toList();
+    final memberIds = [
+      for (final member in _memberBox.values)
+        if (member.groupId == groupId) member.id,
+    ];
     if (memberIds.isEmpty) {
       return;
     }

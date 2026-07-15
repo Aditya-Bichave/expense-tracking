@@ -351,16 +351,16 @@ class SyncService {
 
     await _client.from('expenses').upsert(expensePayload);
 
-    final payers = (payload['payers'] as List<dynamic>? ?? const <dynamic>[])
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (payer) => {
+    final rawPayers = payload['payers'] as List<dynamic>? ?? const <dynamic>[];
+    final payers = <Map<String, dynamic>>[
+      for (final p in rawPayers)
+        if (p is Map<String, dynamic>)
+          {
             'expense_id': expensePayload['id'],
-            'payer_user_id': payer['userId'],
-            'amount': payer['amount'],
+            'payer_user_id': p['userId'],
+            'amount': p['amount'],
           },
-        )
-        .toList();
+    ];
     if (payers.isNotEmpty) {
       await _client
           .from('expense_payers')
@@ -369,17 +369,17 @@ class SyncService {
       await _client.from('expense_payers').insert(payers);
     }
 
-    final splits = (payload['splits'] as List<dynamic>? ?? const <dynamic>[])
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (split) => {
+    final rawSplits = payload['splits'] as List<dynamic>? ?? const <dynamic>[];
+    final splits = <Map<String, dynamic>>[
+      for (final s in rawSplits)
+        if (s is Map<String, dynamic>)
+          {
             'expense_id': expensePayload['id'],
-            'user_id': split['userId'],
-            'amount': split['amount'],
-            'split_type': split['splitTypeValue'],
+            'user_id': s['userId'],
+            'amount': s['amount'],
+            'split_type': s['splitTypeValue'],
           },
-        )
-        .toList();
+    ];
     if (splits.isNotEmpty) {
       await _client
           .from('expense_splits')
