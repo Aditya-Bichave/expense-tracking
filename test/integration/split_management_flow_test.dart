@@ -29,6 +29,7 @@ import '../helpers/mocks.dart';
 import '../helpers/mock_helpers.dart';
 import '../helpers/pump_app.dart';
 
+
 class MockImageCompressionService extends Mock
     implements ImageCompressionService {}
 
