@@ -150,7 +150,7 @@ void main() {
       when(() => mockBox.containsKey(any<dynamic>())).thenReturn(false);
 
       expect(
-        () => dataSource.updateExpense(tModel1),
+        () async => dataSource.updateExpense(tModel1),
         throwsA(isA<CacheFailure>()),
       );
     });
