@@ -254,16 +254,19 @@ class SplitScreen extends StatelessWidget {
             itemBuilder: (ctx, index) {
               final member = state.groupMembers[index];
               final isYou = member.userId == state.currentUserId;
-              return AppListTile(
-                leading: AppAvatar(
-                  initials: member.userId.substring(0, 1).toUpperCase(),
-                  size: 32,
+              return Material(
+                color: Colors.transparent,
+                child: AppListTile(
+                  leading: AppAvatar(
+                    initials: member.userId.substring(0, 1).toUpperCase(),
+                    size: 32,
+                  ),
+                  title: Text(isYou ? 'You' : member.userId),
+                  onTap: () {
+                    bloc.add(SinglePayerSelected(member.userId));
+                    Navigator.pop(ctx);
+                  },
                 ),
-                title: Text(isYou ? 'You' : member.userId),
-                onTap: () {
-                  bloc.add(SinglePayerSelected(member.userId));
-                  Navigator.pop(ctx);
-                },
               );
             },
           ),
