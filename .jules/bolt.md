@@ -1,3 +1,3 @@
-## 2024-05-24 - [Avoid `findChildIndexCallback` precomputation in `build()`]
-**Learning:** Do not precompute a full ID-to-index Map inside `build()` for `ListView.builder`'s `findChildIndexCallback`, as iterating all items on every render negates the O(V) lazy rendering benefit and causes a performance regression.
-**Action:** Instead, convert the widget to a `StatefulWidget` and cache the map in `initState` and `didUpdateWidget`.
+## 2024-05-18 - Replacing intermediate collections with list comprehensions
+**Learning:** Chained operations like `.map().toList()` and `.where().map().toList()` in Dart create unnecessary intermediate iterables, closure instances, and garbage collection pressure, especially when executed often.
+**Action:** When acting as Bolt, actively identify these chained patterns during performance audits and replace them with Dart list comprehensions (`[for (var x in list) x]`), which generate elements inline and are highly memory efficient. Ensure exact comment constraints are included in the initial patch to avoid code review violations.

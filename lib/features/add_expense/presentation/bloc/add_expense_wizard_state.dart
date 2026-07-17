@@ -123,8 +123,12 @@ class AddExpenseWizardState extends Equatable {
       'p_expense_date': expenseDate.toIso8601String(),
       'p_notes': notes,
       'p_receipt_url': receiptCloudUrl, // New Field
-      'p_payers': payers.map((e) => e.toJson()).toList(),
-      'p_splits': splits.map((e) => e.toJson()).toList(),
+      // ⚡ Bolt Performance Optimization
+      // Problem: .map().toList() creates intermediate collections
+      // Solution: Use list comprehensions [for (var x in list) x]
+      // Impact: Avoids unnecessary memory allocations and garbage collection
+      'p_payers': [for (var e in payers) e.toJson()],
+      'p_splits': [for (var e in splits) e.toJson()],
     };
   }
 

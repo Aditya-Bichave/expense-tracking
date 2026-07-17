@@ -26,10 +26,14 @@ class AllData {
   // Convert to JSON structure expected by backup
   Map<String, dynamic> toJson() => {
     // Use constants for keys
-    AppConstants.backupAccountsKey: accounts.map((a) => a.toJson()).toList(),
-    AppConstants.backupExpensesKey: expenses.map((e) => e.toJson()).toList(),
-    AppConstants.backupIncomesKey: incomes.map((i) => i.toJson()).toList(),
-    'categories': categories.map((c) => c.toJson()).toList(),
+    // ⚡ Bolt Performance Optimization
+    // Problem: .map().toList() creates intermediate collections
+    // Solution: Use list comprehensions [for (var x in list) x]
+    // Impact: Avoids unnecessary memory allocations and garbage collection
+    AppConstants.backupAccountsKey: [for (var a in accounts) a.toJson()],
+    AppConstants.backupExpensesKey: [for (var e in expenses) e.toJson()],
+    AppConstants.backupIncomesKey: [for (var i in incomes) i.toJson()],
+    'categories': [for (var c in categories) c.toJson()],
   };
 
   // Create from JSON structure during restore

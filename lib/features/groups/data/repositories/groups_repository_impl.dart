@@ -158,7 +158,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
-      return Right(models.map((model) => model.toEntity()).toList());
+      // ⚡ Bolt Performance Optimization
+      // Problem: .map().toList() creates intermediate collections
+      // Solution: Use list comprehensions [for (var x in list) x]
+      // Impact: Avoids unnecessary memory allocations and garbage collection
+      return Right([for (var model in models) model.toEntity()]);
     } catch (e, s) {
       log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
@@ -272,7 +276,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   List<GroupEntity> _mapAndSortGroups(List<GroupModel> models) {
-    final groups = models.map((model) => model.toEntity()).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: .map().toList() creates intermediate collections
+    // Solution: Use list comprehensions [for (var x in list) x]
+    // Impact: Avoids unnecessary memory allocations and garbage collection
+    final groups = [for (var model in models) model.toEntity()];
     groups.sort((left, right) => right.updatedAt.compareTo(left.updatedAt));
     return groups;
   }
@@ -305,11 +313,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroupMembers(remoteMembers);
 
       final remoteMemberIds = remoteMembers.map((member) => member.id).toSet();
-      final staleMemberIds = _localDataSource
-          .getGroupMembers(groupId)
-          .where((member) => !remoteMemberIds.contains(member.id))
-          .map((member) => member.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: .where().map().toList() creates intermediate collections
+      // Solution: Use list comprehensions [for (var x in list) if(cond) x]
+      // Impact: Avoids unnecessary memory allocations and garbage collection
+      final staleMemberIds = [
+        for (var member in _localDataSource.getGroupMembers(groupId))
+          if (!remoteMemberIds.contains(member.id)) member.id,
+      ];
       if (staleMemberIds.isNotEmpty) {
         await _localDataSource.deleteMembers(staleMemberIds);
       }
