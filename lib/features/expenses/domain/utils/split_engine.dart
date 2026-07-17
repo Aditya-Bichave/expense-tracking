@@ -91,7 +91,7 @@ class SplitEngine {
 
     if (diff != 0.0) {
       throw ValidationException(
-        'Payers total ($_round(sum)) does not match expense total ($roundedTotal)',
+        'Payers total (${_round(sum)}) does not match expense total ($roundedTotal)',
       );
     }
   }
@@ -138,7 +138,7 @@ class SplitEngine {
 
     if (_round(total - sum) != 0.0) {
       throw ValidationException(
-        'Exact splits sum ($_round(sum)) does not match total ($total)',
+        'Exact splits sum (${_round(sum)}) does not match total ($total)',
       );
     }
     return result;

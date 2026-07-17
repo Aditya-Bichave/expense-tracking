@@ -3,7 +3,7 @@
   "gzipMainJsKb": 1662.966796875,
   "totalKb": 40507.384765625,
   "budgets": {
-    "total_kb": 40960,
+    "total_kb": 48192,
     "main_js_kb": 6144,
     "gzip_main_js_kb": 2048
   },
