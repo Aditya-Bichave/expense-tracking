@@ -97,15 +97,18 @@ class _CategoryPickerDialogContentState
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () {
       final query = _searchController.text.toLowerCase();
-      setState(() {
-        // ⚡ Bolt Performance Optimization
-        // Problem: `category.name.toLowerCase()` allocates strings during the search loop
-        // Solution: Use the cached _lowerCaseNames map we already computed!
-        // Impact: Further reduces lag when searching categories
-        _filteredCategories = _allCategories
-            .where((category) => _lowerCaseNames[category.id]!.contains(query))
-            .toList();
-      });
+      if (mounted)
+        setState(() {
+          // ⚡ Bolt Performance Optimization
+          // Problem: `category.name.toLowerCase()` allocates strings during the search loop
+          // Solution: Use the cached _lowerCaseNames map we already computed!
+          // Impact: Further reduces lag when searching categories
+          _filteredCategories = _allCategories
+              .where(
+                (category) => _lowerCaseNames[category.id]!.contains(query),
+              )
+              .toList();
+        });
     });
   }
 
