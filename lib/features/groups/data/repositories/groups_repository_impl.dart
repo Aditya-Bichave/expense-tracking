@@ -185,11 +185,15 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroups(remoteGroups);
 
       final remoteGroupIds = remoteGroups.map((group) => group.id).toSet();
-      final staleGroupIds = _localDataSource
-          .getGroups()
-          .where((group) => !remoteGroupIds.contains(group.id))
-          .map((group) => group.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).map(...).toList()` iterates and allocates intermediate structures.
+      // Solution: Iterate once directly with list comprehension.
+      // Impact: Reduces GC pressure when processing stale groups.
+      final localGroups = _localDataSource.getGroups();
+      final staleGroupIds = [
+        for (final group in localGroups)
+          if (!remoteGroupIds.contains(group.id)) group.id,
+      ];
       if (staleGroupIds.isNotEmpty) {
         await _localDataSource.deleteGroups(staleGroupIds);
         await Future.wait(
@@ -305,11 +309,15 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroupMembers(remoteMembers);
 
       final remoteMemberIds = remoteMembers.map((member) => member.id).toSet();
-      final staleMemberIds = _localDataSource
-          .getGroupMembers(groupId)
-          .where((member) => !remoteMemberIds.contains(member.id))
-          .map((member) => member.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).map(...).toList()` iterates and allocates intermediate structures.
+      // Solution: Iterate once directly with list comprehension.
+      // Impact: Reduces GC pressure when processing stale group members.
+      final localMembers = _localDataSource.getGroupMembers(groupId);
+      final staleMemberIds = [
+        for (final member in localMembers)
+          if (!remoteMemberIds.contains(member.id)) member.id,
+      ];
       if (staleMemberIds.isNotEmpty) {
         await _localDataSource.deleteMembers(staleMemberIds);
       }

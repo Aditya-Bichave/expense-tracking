@@ -911,9 +911,14 @@ class ReportRepositoryImpl implements ReportRepository {
     List<Budget> relevantBudgets = allBudgets;
     if (budgetIds != null && budgetIds.isNotEmpty) {
       final budgetIdSet = budgetIds.toSet();
-      relevantBudgets = allBudgets
-          .where((b) => budgetIdSet.contains(b.id))
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).toList()` creates intermediate iterables.
+      // Solution: Use list comprehension.
+      // Impact: Reduces GC pressure when filtering budgets.
+      relevantBudgets = [
+        for (final b in allBudgets)
+          if (budgetIdSet.contains(b.id)) b,
+      ];
     }
 
     if (relevantBudgets.isEmpty) {
@@ -1059,9 +1064,14 @@ class ReportRepositoryImpl implements ReportRepository {
       List<Goal> relevantGoals = allActiveGoals;
       if (goalIds != null && goalIds.isNotEmpty) {
         final goalIdSet = goalIds.toSet();
-        relevantGoals = allActiveGoals
-            .where((g) => goalIdSet.contains(g.id))
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: `where(...).toList()` creates intermediate iterables.
+        // Solution: Use list comprehension.
+        // Impact: Reduces GC pressure when filtering goals.
+        relevantGoals = [
+          for (final g in allActiveGoals)
+            if (goalIdSet.contains(g.id)) g,
+        ];
       }
 
       if (relevantGoals.isEmpty) {

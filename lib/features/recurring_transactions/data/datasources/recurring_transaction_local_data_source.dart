@@ -63,8 +63,13 @@ class RecurringTransactionLocalDataSourceImpl
   Future<List<RecurringRuleAuditLogModel>> getAuditLogsForRule(
     String ruleId,
   ) async {
-    return recurringRuleAuditLogBox.values
-        .where((log) => log.ruleId == ruleId)
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
+    // Solution: Iterate once directly, skipping the intermediate list allocation.
+    // Impact: Reduces GC pressure when getting audit logs for a rule.
+    return [
+      for (final log in recurringRuleAuditLogBox.values)
+        if (log.ruleId == ruleId) log,
+    ];
   }
 }

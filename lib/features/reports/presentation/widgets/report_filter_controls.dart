@@ -132,19 +132,27 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
     return BlocBuilder<ReportFilterBloc, ReportFilterState>(
       builder: (context, state) {
         // Prepare items based on LATEST state
-        final categoryItems = state.availableCategories
-            .where((c) => c.id != Category.uncategorized.id)
-            .map((c) => MultiSelectItem<String>(c.id, c.name))
-            .toList();
-        final accountItems = state.availableAccounts
-            .map((a) => MultiSelectItem<String>(a.id, a.name))
-            .toList();
-        final budgetItems = state.availableBudgets
-            .map((b) => MultiSelectItem<String>(b.id, b.name))
-            .toList();
-        final goalItems = state.availableGoals
-            .map((g) => MultiSelectItem<String>(g.id, g.name))
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: Chained .where().map().toList() creates multiple intermediate collections and iterators.
+        // Solution: Replace with direct list comprehensions.
+        // Impact: Reduces GC pressure and memory allocations during render.
+        final categoryItems = [
+          for (final c in state.availableCategories)
+            if (c.id != Category.uncategorized.id)
+              MultiSelectItem<String>(c.id, c.name),
+        ];
+        final accountItems = [
+          for (final a in state.availableAccounts)
+            MultiSelectItem<String>(a.id, a.name),
+        ];
+        final budgetItems = [
+          for (final b in state.availableBudgets)
+            MultiSelectItem<String>(b.id, b.name),
+        ];
+        final goalItems = [
+          for (final g in state.availableGoals)
+            MultiSelectItem<String>(g.id, g.name),
+        ];
 
         // Ensure local temp state reflects latest BLoC state if options just loaded
         if (state.optionsStatus == FilterOptionsStatus.loaded &&

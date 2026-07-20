@@ -78,18 +78,26 @@ class CategoryManagementBloc
         );
       },
       (allCategories) {
-        final customExpense = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final customIncome = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.income)
-            .toList();
-        final predefinedExpense = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final predefinedIncome = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.income)
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: Chained .where().toList() creates multiple intermediate collections.
+        // Solution: Replace with direct list comprehensions.
+        // Impact: Reduces GC pressure and memory allocations during state update.
+        final customExpense = [
+          for (final c in allCategories)
+            if (c.isCustom && c.type == CategoryType.expense) c,
+        ];
+        final customIncome = [
+          for (final c in allCategories)
+            if (c.isCustom && c.type == CategoryType.income) c,
+        ];
+        final predefinedExpense = [
+          for (final c in allCategories)
+            if (!c.isCustom && c.type == CategoryType.expense) c,
+        ];
+        final predefinedIncome = [
+          for (final c in allCategories)
+            if (!c.isCustom && c.type == CategoryType.income) c,
+        ];
 
         // ⚡ Bolt Performance Optimization
         // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading

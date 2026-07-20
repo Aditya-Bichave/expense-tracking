@@ -47,10 +47,14 @@ class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
 
   @override
   Future<void> deleteExpensesForGroup(String groupId) async {
-    final expenseIds = _box.values
-        .where((expense) => expense.groupId == groupId)
-        .map((expense) => expense.id)
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).map(...).toList()` iterates and allocates intermediate structures.
+    // Solution: Iterate once directly with list comprehension.
+    // Impact: Reduces GC pressure when deleting expenses for a group.
+    final expenseIds = [
+      for (final expense in _box.values)
+        if (expense.groupId == groupId) expense.id,
+    ];
     if (expenseIds.isEmpty) {
       return;
     }
