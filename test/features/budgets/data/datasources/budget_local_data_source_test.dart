@@ -47,7 +47,7 @@ void main() {
 
     test('should throw CacheFailure when Hive access fails', () async {
       // Arrange
-      when(() => mockBox.values).thenAnswer((_) async => throw Exception());
+      when(() => mockBox.values).thenThrow(Exception());
 
       // Act & Assert
       expect(() async => await dataSource.getBudgets(), throwsA(isA<CacheFailure>()));
@@ -72,7 +72,7 @@ void main() {
       // Arrange
       when(
         () => mockBox.put(any(), any()),
-      ).thenAnswer((_) async => throw Exception());
+      ).thenThrow(Exception());
 
       // Act & Assert
       expect(
@@ -98,7 +98,7 @@ void main() {
       // Arrange
       when(
         () => mockBox.delete(any()),
-      ).thenAnswer((_) async => throw Exception());
+      ).thenThrow(Exception());
 
       // Act & Assert
       expect(() async => await dataSource.deleteBudget('1'), throwsA(isA<CacheFailure>()));

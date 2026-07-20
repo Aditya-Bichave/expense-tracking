@@ -45,7 +45,7 @@ void main() {
 
     test('should throw CacheFailure when Hive access fails', () async {
       // Arrange
-      when(() => mockBox.values).thenAnswer((_) async => throw Exception());
+      when(() => mockBox.values).thenThrow(Exception());
 
       // Act & Assert
       expect(
@@ -89,7 +89,7 @@ void main() {
 
     test('should throw CacheFailure when saving fails', () async {
       // Arrange
-      when(() => mockBox.put(any(), any())).thenAnswer((_) async => throw Exception());
+      when(() => mockBox.put(any(), any())).thenThrow(Exception());
 
       // Act & Assert
       expect(
@@ -141,7 +141,7 @@ void main() {
 
     test('should throw CacheFailure when deletion fails', () async {
       // Arrange
-      when(() => mockBox.delete(any())).thenAnswer((_) async => throw Exception());
+      when(() => mockBox.delete(any())).thenThrow(Exception());
 
       // Act & Assert
       expect(
