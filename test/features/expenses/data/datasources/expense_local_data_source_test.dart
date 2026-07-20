@@ -57,7 +57,7 @@ void main() {
     test('addExpense throws CacheFailure on exception', () async {
       when(
         () => mockBox.put(any<dynamic>(), any<ExpenseModel>()),
-      ).thenThrow(Exception('error'));
+      ).thenAnswer((_) async => throw Exception('error'));
 
       expect(
         () => dataSource.addExpense(tModel1),

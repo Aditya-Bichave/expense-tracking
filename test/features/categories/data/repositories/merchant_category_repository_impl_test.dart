@@ -40,7 +40,7 @@ void main() {
       // Arrange
       when(
         () => mockDataSource.getDefaultCategoryId(tMerchantId),
-      ).thenThrow(const CacheFailure('Failed'));
+      ).thenAnswer((_) async => throw const CacheFailure('Failed'));
 
       // Act
       final result = await repository.getDefaultCategoryId(tMerchantId);

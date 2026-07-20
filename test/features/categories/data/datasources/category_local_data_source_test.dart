@@ -45,11 +45,11 @@ void main() {
 
     test('should throw CacheFailure when Hive access fails', () async {
       // Arrange
-      when(() => mockBox.values).thenThrow(Exception());
+      when(() => mockBox.values).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
       expect(
-        () => dataSource.getCustomCategories(),
+        () async => await dataSource.getCustomCategories(),
         throwsA(isA<CacheFailure>()),
       );
     });
@@ -89,11 +89,11 @@ void main() {
 
     test('should throw CacheFailure when saving fails', () async {
       // Arrange
-      when(() => mockBox.put(any(), any())).thenThrow(Exception());
+      when(() => mockBox.put(any(), any())).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
       expect(
-        () => dataSource.saveCustomCategory(tCategoryModel),
+        () async => await dataSource.saveCustomCategory(tCategoryModel),
         throwsA(isA<CacheFailure>()),
       );
     });
@@ -120,7 +120,7 @@ void main() {
 
       // Act & Assert
       expect(
-        () => dataSource.updateCustomCategory(tCategoryModel),
+        () async => await dataSource.updateCustomCategory(tCategoryModel),
         throwsA(isA<CacheFailure>()),
       );
       verifyNever(() => mockBox.put(any(), any()));
@@ -141,11 +141,11 @@ void main() {
 
     test('should throw CacheFailure when deletion fails', () async {
       // Arrange
-      when(() => mockBox.delete(any())).thenThrow(Exception());
+      when(() => mockBox.delete(any())).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
       expect(
-        () => dataSource.deleteCustomCategory('1'),
+        () async => await dataSource.deleteCustomCategory('1'),
         throwsA(isA<CacheFailure>()),
       );
     });
