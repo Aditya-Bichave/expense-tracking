@@ -85,7 +85,9 @@ void main() {
   group('deleteBudget', () {
     test('should delete budget from Hive', () async {
       // Arrange
-      when(() => mockBox.delete(any<dynamic>())).thenAnswer((_) async => Future.value());
+      when(
+        () => mockBox.delete(any<dynamic>()),
+      ).thenAnswer((_) async => Future.value());
 
       // Act
       await dataSource.deleteBudget('1');
