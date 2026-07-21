@@ -92,9 +92,14 @@ class HiveContributionLocalDataSource
   ) async {
     // Optimize: Filter directly from values iterable to avoid creating intermediate list
     try {
-      final filtered = contributionBox.values
-          .where((c) => c.goalId == goalId)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).toList()` chains create intermediate iterables and closures, causing GC pressure
+      // Solution: Use direct Dart list comprehensions to allocate the list once and avoid intermediate wrappers.
+      // Impact: Reduces memory allocation overhead when filtering goal contributions.
+      final filtered = [
+        for (var c in contributionBox.values)
+          if (c.goalId == goalId) c,
+      ];
       log.fine(
         "[ContributionDS] Filtered ${filtered.length} contributions for Goal ID $goalId.",
       );

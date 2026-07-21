@@ -126,27 +126,27 @@ class _TransactionFilterDialogState extends State<TransactionFilterDialog> {
     final theme = Theme.of(context);
 
     // Prepare category dropdown items
+    // ⚡ Bolt Performance Optimization
+    // Problem: `...list.where().map()` creates intermediate iterables and closures on every render.
+    // Solution: Use a `for ... if` spread comprehension directly in the list declaration.
+    // Impact: Avoids unnecessary memory allocation during the build phase.
     final categoryDropdownItems = [
       const DropdownMenuItem<String>(
         value: null, // Represents "All Categories"
         child: Text('All Categories'),
       ),
-      ...widget.availableCategories
-          .where(
-            (cat) => cat.id != Category.uncategorized.id,
-          ) // Exclude uncategorized
-          .map((Category category) {
-            return DropdownMenuItem<String>(
-              value: category.id,
-              child: Row(
-                children: [
-                  Icon(Icons.circle, color: category.displayColor, size: 12),
-                  const SizedBox(width: 8),
-                  Text(category.name, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-            );
-          }),
+      for (final category in widget.availableCategories)
+        if (category.id != Category.uncategorized.id)
+          DropdownMenuItem<String>(
+            value: category.id,
+            child: Row(
+              children: [
+                Icon(Icons.circle, color: category.displayColor, size: 12),
+                const SizedBox(width: 8),
+                Text(category.name, overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ),
     ];
 
     return BridgeAlertDialog(

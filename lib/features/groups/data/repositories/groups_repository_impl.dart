@@ -185,11 +185,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroups(remoteGroups);
 
       final remoteGroupIds = remoteGroups.map((group) => group.id).toSet();
-      final staleGroupIds = _localDataSource
-          .getGroups()
-          .where((group) => !remoteGroupIds.contains(group.id))
-          .map((group) => group.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).map(...).toList()` chains create intermediate iterables and closures, causing GC pressure
+      // Solution: Use direct Dart list comprehensions to allocate the list once and avoid intermediate wrappers.
+      // Impact: Reduces memory allocation overhead when checking for stale groups.
+      final staleGroupIds = [
+        for (var group in _localDataSource.getGroups())
+          if (!remoteGroupIds.contains(group.id)) group.id,
+      ];
       if (staleGroupIds.isNotEmpty) {
         await _localDataSource.deleteGroups(staleGroupIds);
         await Future.wait(
@@ -305,11 +308,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroupMembers(remoteMembers);
 
       final remoteMemberIds = remoteMembers.map((member) => member.id).toSet();
-      final staleMemberIds = _localDataSource
-          .getGroupMembers(groupId)
-          .where((member) => !remoteMemberIds.contains(member.id))
-          .map((member) => member.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).map(...).toList()` chains create intermediate iterables and closures, causing GC pressure
+      // Solution: Use direct Dart list comprehensions to allocate the list once and avoid intermediate wrappers.
+      // Impact: Reduces memory allocation overhead when checking for stale group members.
+      final staleMemberIds = [
+        for (var member in _localDataSource.getGroupMembers(groupId))
+          if (!remoteMemberIds.contains(member.id)) member.id,
+      ];
       if (staleMemberIds.isNotEmpty) {
         await _localDataSource.deleteMembers(staleMemberIds);
       }

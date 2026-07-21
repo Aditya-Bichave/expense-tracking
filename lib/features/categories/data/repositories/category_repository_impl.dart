@@ -118,11 +118,16 @@ class CategoryRepositoryImpl implements CategoryRepository {
     final allResult = await getAllCategories(); // This uses the main cache
 
     return allResult.fold((failure) => Left(failure), (allCategories) {
-      final filtered = allCategories.where((cat) {
-        bool typeMatch = (type == null) || (cat.type == type);
-        bool customMatch = includeCustom || !cat.isCustom;
-        return typeMatch && customMatch;
-      }).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).toList()` chains create intermediate iterables and closures, causing GC pressure
+      // Solution: Use direct Dart list comprehensions to allocate the list once and avoid intermediate wrappers.
+      // Impact: Reduces memory allocation overhead when fetching specific categories.
+      final filtered = [
+        for (var cat in allCategories)
+          if (((type == null) || (cat.type == type)) &&
+              (includeCustom || !cat.isCustom))
+            cat,
+      ];
       log.fine(
         "[CategoryRepo] Filtered specific categories. Count: ${filtered.length}",
       );
@@ -141,11 +146,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
     // --- Use getAllCategories as the source of truth ---
     final allResult = await getAllCategories();
     return allResult.fold((failure) => Left(failure), (allCategories) {
-      final filtered = allCategories.where((cat) {
-        bool customMatch = cat.isCustom;
-        bool typeMatch = (type == null) || (cat.type == type);
-        return customMatch && typeMatch;
-      }).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `where(...).toList()` chains create intermediate iterables and closures, causing GC pressure
+      // Solution: Use direct Dart list comprehensions to allocate the list once and avoid intermediate wrappers.
+      // Impact: Reduces memory allocation overhead when fetching custom categories.
+      final filtered = [
+        for (var cat in allCategories)
+          if (cat.isCustom && ((type == null) || (cat.type == type))) cat,
+      ];
       log.fine(
         "[CategoryRepo] Filtered custom categories. Count: ${filtered.length}",
       );

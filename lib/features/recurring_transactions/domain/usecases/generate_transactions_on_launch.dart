@@ -39,39 +39,42 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
       recurringTransactionRepository.getRecurringRules(),
     ).wait;
 
-    return await categoriesResult.fold<Future<Either<Failure, void>>>(
-      (failure) async => Left(failure),
-      (categories) async {
-        final categoryMap = {for (var cat in categories) cat.id: cat};
+    return await categoriesResult.fold<
+      Future<Either<Failure, void>>
+    >((failure) async => Left(failure), (categories) async {
+      final categoryMap = {for (var cat in categories) cat.id: cat};
 
-        return await rulesResult.fold<Future<Either<Failure, void>>>(
-          (failure) async => Left(failure),
-          (rules) async {
-            final activeRules = rules
-                .where((rule) => rule.status == RuleStatus.active)
-                .toList();
+      return await rulesResult.fold<
+        Future<Either<Failure, void>>
+      >((failure) async => Left(failure), (rules) async {
+        // ⚡ Bolt Performance Optimization
+        // Problem: `where(...).toList()` chains create intermediate iterables and closures, causing GC pressure
+        // Solution: Use direct Dart list comprehensions to allocate the list once and avoid intermediate wrappers.
+        // Impact: Reduces memory allocation overhead when filtering active rules.
+        final activeRules = [
+          for (var rule in rules)
+            if (rule.status == RuleStatus.active) rule,
+        ];
 
-            for (var rule in activeRules) {
-              var currentRule = rule;
-              while (currentRule.nextOccurrenceDate.isBefore(today) ||
-                  currentRule.nextOccurrenceDate.isAtSameMomentAs(today)) {
-                final category = categoryMap[currentRule.categoryId];
-                final result = await _processRule(currentRule, category);
-                if (result.isLeft()) {
-                  return result.fold(
-                    (failure) => Left(failure),
-                    (_) => const Right(null), // Unreachable due to isLeft check
-                  );
-                }
-                currentRule = result.getOrElse(() => currentRule);
-                if (currentRule.status == RuleStatus.completed) break;
-              }
+        for (var rule in activeRules) {
+          var currentRule = rule;
+          while (currentRule.nextOccurrenceDate.isBefore(today) ||
+              currentRule.nextOccurrenceDate.isAtSameMomentAs(today)) {
+            final category = categoryMap[currentRule.categoryId];
+            final result = await _processRule(currentRule, category);
+            if (result.isLeft()) {
+              return result.fold(
+                (failure) => Left(failure),
+                (_) => const Right(null), // Unreachable due to isLeft check
+              );
             }
-            return const Right(null);
-          },
-        );
-      },
-    );
+            currentRule = result.getOrElse(() => currentRule);
+            if (currentRule.status == RuleStatus.completed) break;
+          }
+        }
+        return const Right(null);
+      });
+    });
   }
 
   Future<Either<Failure, RecurringRule>> _processRule(

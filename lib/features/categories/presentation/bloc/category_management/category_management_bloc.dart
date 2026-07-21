@@ -78,18 +78,30 @@ class CategoryManagementBloc
         );
       },
       (allCategories) {
-        final customExpense = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final customIncome = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.income)
-            .toList();
-        final predefinedExpense = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final predefinedIncome = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.income)
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: 4 separate `where(...).toList()` calls iterate the list 4 times (O(4N)).
+        // Solution: Single pass iteration to categorize all elements in O(N).
+        // Impact: Reduces CPU cycles and intermediate memory allocations when loading categories.
+        final customExpense = <Category>[];
+        final customIncome = <Category>[];
+        final predefinedExpense = <Category>[];
+        final predefinedIncome = <Category>[];
+
+        for (final c in allCategories) {
+          if (c.isCustom) {
+            if (c.type == CategoryType.expense) {
+              customExpense.add(c);
+            } else if (c.type == CategoryType.income) {
+              customIncome.add(c);
+            }
+          } else {
+            if (c.type == CategoryType.expense) {
+              predefinedExpense.add(c);
+            } else if (c.type == CategoryType.income) {
+              predefinedIncome.add(c);
+            }
+          }
+        }
 
         // ⚡ Bolt Performance Optimization
         // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading

@@ -132,19 +132,27 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
     return BlocBuilder<ReportFilterBloc, ReportFilterState>(
       builder: (context, state) {
         // Prepare items based on LATEST state
-        final categoryItems = state.availableCategories
-            .where((c) => c.id != Category.uncategorized.id)
-            .map((c) => MultiSelectItem<String>(c.id, c.name))
-            .toList();
-        final accountItems = state.availableAccounts
-            .map((a) => MultiSelectItem<String>(a.id, a.name))
-            .toList();
-        final budgetItems = state.availableBudgets
-            .map((b) => MultiSelectItem<String>(b.id, b.name))
-            .toList();
-        final goalItems = state.availableGoals
-            .map((g) => MultiSelectItem<String>(g.id, g.name))
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: `where(...).map(...).toList()` chains create intermediate iterables and closures, causing GC pressure
+        // Solution: Use direct Dart list comprehensions to allocate the list once and avoid intermediate wrappers.
+        // Impact: Reduces memory allocation overhead during build phase, especially important for large dropdown lists.
+        final categoryItems = [
+          for (var c in state.availableCategories)
+            if (c.id != Category.uncategorized.id)
+              MultiSelectItem<String>(c.id, c.name),
+        ];
+        final accountItems = [
+          for (var a in state.availableAccounts)
+            MultiSelectItem<String>(a.id, a.name),
+        ];
+        final budgetItems = [
+          for (var b in state.availableBudgets)
+            MultiSelectItem<String>(b.id, b.name),
+        ];
+        final goalItems = [
+          for (var g in state.availableGoals)
+            MultiSelectItem<String>(g.id, g.name),
+        ];
 
         // Ensure local temp state reflects latest BLoC state if options just loaded
         if (state.optionsStatus == FilterOptionsStatus.loaded &&
