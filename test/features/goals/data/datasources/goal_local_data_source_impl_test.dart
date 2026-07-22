@@ -52,7 +52,7 @@ void main() {
       when(() => mockBox.values).thenThrow(Exception());
 
       // Act & Assert
-      expect(() => dataSource.getGoals(), throwsA(isA<CacheFailure>()));
+      expect(() async => await dataSource.getGoals(), throwsA(isA<CacheFailure>()));
     });
   });
 
@@ -75,10 +75,7 @@ void main() {
       when(() => mockBox.put(any(), any())).thenThrow(Exception());
 
       // Act & Assert
-      expect(
-        () => dataSource.saveGoal(tGoalModel),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.saveGoal(tGoalModel), throwsA(isA<CacheFailure>()),);
     });
   });
 
@@ -99,7 +96,7 @@ void main() {
       when(() => mockBox.delete(any())).thenThrow(Exception());
 
       // Act & Assert
-      expect(() => dataSource.deleteGoal('1'), throwsA(isA<CacheFailure>()));
+      expect(() async => await dataSource.deleteGoal('1'), throwsA(isA<CacheFailure>()));
     });
   });
 }

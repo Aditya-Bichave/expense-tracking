@@ -54,10 +54,7 @@ void main() {
         ).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
-        expect(
-          () => dataSource.addAssetAccount(tAccount),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.addAssetAccount(tAccount), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -79,10 +76,7 @@ void main() {
         when(() => mockBox.values).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
-        expect(
-          () => dataSource.getAssetAccounts(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.getAssetAccounts(), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -106,10 +100,7 @@ void main() {
         ).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
-        expect(
-          () => dataSource.updateAssetAccount(tAccount),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.updateAssetAccount(tAccount), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -130,10 +121,7 @@ void main() {
         when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
-        expect(
-          () => dataSource.deleteAssetAccount(tAccount.id),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.deleteAssetAccount(tAccount.id), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -154,7 +142,7 @@ void main() {
         when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
 
         // Act & Assert
-        expect(() => dataSource.clearAll(), throwsA(isA<CacheFailure>()));
+        expect(() async => await dataSource.clearAll(), throwsA(isA<CacheFailure>()));
       });
     });
   });

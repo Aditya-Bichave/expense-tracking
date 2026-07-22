@@ -55,10 +55,7 @@ void main() {
           () => mockBox.put(any(), any()),
         ).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.saveContribution(tContribution),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.saveContribution(tContribution), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -75,10 +72,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.values).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.getAllContributions(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.getAllContributions(), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -103,10 +97,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.getContributionById(tContribution.id),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.getContributionById(tContribution.id), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -144,10 +135,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.deleteContribution(tContribution.id),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.deleteContribution(tContribution.id), throwsA(isA<CacheFailure>()),);
       });
     });
 
@@ -163,10 +151,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
 
-        expect(
-          () => dataSource.clearAllContributions(),
-          throwsA(isA<CacheFailure>()),
-        );
+        expect(() async => await dataSource.clearAllContributions(), throwsA(isA<CacheFailure>()),);
       });
     });
   });

@@ -50,10 +50,7 @@ void main() {
       when(() => mockBox.put(any(), any())).thenThrow(Exception('Hive Error'));
 
       // Act & Assert
-      expect(
-        () => dataSource.addIncome(tIncomeModel),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.addIncome(tIncomeModel), throwsA(isA<CacheFailure>()),);
     });
   });
 
@@ -74,7 +71,7 @@ void main() {
       when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
 
       // Act & Assert
-      expect(() => dataSource.deleteIncome('1'), throwsA(isA<CacheFailure>()));
+      expect(() async => await dataSource.deleteIncome('1'), throwsA(isA<CacheFailure>()));
     });
   });
 
@@ -107,7 +104,7 @@ void main() {
       when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
 
       // Act & Assert
-      expect(() => dataSource.getIncomeById('1'), throwsA(isA<CacheFailure>()));
+      expect(() async => await dataSource.getIncomeById('1'), throwsA(isA<CacheFailure>()));
     });
   });
 
@@ -131,10 +128,7 @@ void main() {
       when(() => mockBox.containsKey(any())).thenReturn(false);
 
       // Act & Assert
-      expect(
-        () => dataSource.updateIncome(tIncomeModel),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.updateIncome(tIncomeModel), throwsA(isA<CacheFailure>()),);
       verify(() => mockBox.containsKey(tIncomeModel.id)).called(1);
       verifyNever(() => mockBox.put(any(), any()));
     });

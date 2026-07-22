@@ -59,10 +59,7 @@ void main() {
         () => mockBox.put(any<dynamic>(), any<ExpenseModel>()),
       ).thenThrow(Exception('error'));
 
-      expect(
-        () => dataSource.addExpense(tModel1),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.addExpense(tModel1), throwsA(isA<CacheFailure>()),);
     });
 
     test('deleteExpense deletes from box', () async {
@@ -149,10 +146,7 @@ void main() {
     test('updateExpense throws CacheFailure if not exists', () async {
       when(() => mockBox.containsKey(any<dynamic>())).thenReturn(false);
 
-      expect(
-        () => dataSource.updateExpense(tModel1),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.updateExpense(tModel1), throwsA(isA<CacheFailure>()),);
     });
 
     test('clearAll clears the box', () async {

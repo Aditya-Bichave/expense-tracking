@@ -48,10 +48,7 @@ void main() {
       when(() => mockBox.values).thenThrow(Exception());
 
       // Act & Assert
-      expect(
-        () => dataSource.getCustomCategories(),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.getCustomCategories(), throwsA(isA<CacheFailure>()),);
     });
   });
 
@@ -92,10 +89,7 @@ void main() {
       when(() => mockBox.put(any(), any())).thenThrow(Exception());
 
       // Act & Assert
-      expect(
-        () => dataSource.saveCustomCategory(tCategoryModel),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.saveCustomCategory(tCategoryModel), throwsA(isA<CacheFailure>()),);
     });
   });
 
@@ -119,10 +113,7 @@ void main() {
       when(() => mockBox.containsKey(any())).thenReturn(false);
 
       // Act & Assert
-      expect(
-        () => dataSource.updateCustomCategory(tCategoryModel),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.updateCustomCategory(tCategoryModel), throwsA(isA<CacheFailure>()),);
       verifyNever(() => mockBox.put(any(), any()));
     });
   });
@@ -144,10 +135,7 @@ void main() {
       when(() => mockBox.delete(any())).thenThrow(Exception());
 
       // Act & Assert
-      expect(
-        () => dataSource.deleteCustomCategory('1'),
-        throwsA(isA<CacheFailure>()),
-      );
+      expect(() async => await dataSource.deleteCustomCategory('1'), throwsA(isA<CacheFailure>()),);
     });
   });
 }
