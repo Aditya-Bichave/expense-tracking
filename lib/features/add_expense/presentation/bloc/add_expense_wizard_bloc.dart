@@ -13,6 +13,7 @@ import 'package:expense_tracker/features/profile/data/models/profile_model.dart'
 import 'package:hive_ce/hive.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 import 'add_expense_wizard_event.dart';
 import 'add_expense_wizard_state.dart';
 
@@ -153,7 +154,7 @@ class AddExpenseWizardBloc
 
   void _setDefaultSplits(
     Emitter<AddExpenseWizardState> emit,
-    List<dynamic> members,
+    List<GroupMember> members,
   ) {
     final payer = PayerModel(
       userId: currentUserId,
