@@ -280,7 +280,7 @@ void main() {
       build: () {
         when(
           () => repository.createExpense(any()),
-        ).thenThrow(Exception('Failed to create'));
+        ).thenAnswer((_) async => throw Exception('Failed to create'));
         return bloc;
       },
       act: (bloc) => bloc

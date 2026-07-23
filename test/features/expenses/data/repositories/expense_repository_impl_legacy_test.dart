@@ -95,7 +95,7 @@ void main() {
         categoryId: any(named: 'categoryId'),
         accountId: any(named: 'accountId'),
       ),
-    ).thenThrow(const CacheFailure('cache error'));
+    ).thenAnswer((_) async => throw const CacheFailure('cache error'));
 
     final result = await repository.getExpenses();
 
