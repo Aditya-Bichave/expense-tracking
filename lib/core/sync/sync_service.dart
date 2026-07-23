@@ -351,16 +351,20 @@ class SyncService {
 
     await _client.from('expenses').upsert(expensePayload);
 
-    final payers = (payload['payers'] as List<dynamic>? ?? const <dynamic>[])
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (payer) => {
+    // ⚡ Bolt Performance Optimization
+    // Problem: .whereType().map().toList() creates intermediate iterables and allocates multiple collections
+    // Solution: Use a list comprehension with type-check to filter and map in a single pass
+    // Impact: Avoids unnecessary iterations and collection allocations when parsing expense payers
+    final rawPayers = payload['payers'] as List<dynamic>? ?? const <dynamic>[];
+    final payers = [
+      for (final payer in rawPayers)
+        if (payer is Map<String, dynamic>)
+          {
             'expense_id': expensePayload['id'],
             'payer_user_id': payer['userId'],
             'amount': payer['amount'],
           },
-        )
-        .toList();
+    ];
     if (payers.isNotEmpty) {
       await _client
           .from('expense_payers')
@@ -369,17 +373,21 @@ class SyncService {
       await _client.from('expense_payers').insert(payers);
     }
 
-    final splits = (payload['splits'] as List<dynamic>? ?? const <dynamic>[])
-        .whereType<Map<String, dynamic>>()
-        .map(
-          (split) => {
+    // ⚡ Bolt Performance Optimization
+    // Problem: .whereType().map().toList() creates intermediate iterables and allocates multiple collections
+    // Solution: Use a list comprehension with type-check to filter and map in a single pass
+    // Impact: Avoids unnecessary iterations and collection allocations when parsing expense splits
+    final rawSplits = payload['splits'] as List<dynamic>? ?? const <dynamic>[];
+    final splits = [
+      for (final split in rawSplits)
+        if (split is Map<String, dynamic>)
+          {
             'expense_id': expensePayload['id'],
             'user_id': split['userId'],
             'amount': split['amount'],
             'split_type': split['splitTypeValue'],
           },
-        )
-        .toList();
+    ];
     if (splits.isNotEmpty) {
       await _client
           .from('expense_splits')

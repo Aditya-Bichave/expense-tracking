@@ -69,10 +69,10 @@ class _CategoryPickerDialogContentState
       for (var c in widget.categories) c.id: c.name.toLowerCase(),
     };
 
-    _allCategories =
-        widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(
-          (a, b) => _lowerCaseNames[a.id]!.compareTo(_lowerCaseNames[b.id]!),
-        );
+    _allCategories = [
+      for (final c in widget.categories)
+        if (c.id != uncategorizedId) c,
+    ]..sort((a, b) => _lowerCaseNames[a.id]!.compareTo(_lowerCaseNames[b.id]!));
     // ⚡ Bolt Performance Optimization
     // Problem: List.from creates a full clone which is unnecessary when we just need a reference to the sorted list
     // Solution: Assign the reference directly. _filterCategories reassings _filteredCategories instead of mutating.
@@ -102,9 +102,14 @@ class _CategoryPickerDialogContentState
         // Problem: `category.name.toLowerCase()` allocates strings during the search loop
         // Solution: Use the cached _lowerCaseNames map we already computed!
         // Impact: Further reduces lag when searching categories
-        _filteredCategories = _allCategories
-            .where((category) => _lowerCaseNames[category.id]!.contains(query))
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: .where().toList() creates an intermediate iterable
+        // Solution: Use a direct list comprehension to filter and construct the list in one pass
+        // Impact: Avoids multiple passes and reduces memory allocation during search filtering
+        _filteredCategories = [
+          for (final category in _allCategories)
+            if (_lowerCaseNames[category.id]!.contains(query)) category,
+        ];
       });
     });
   }

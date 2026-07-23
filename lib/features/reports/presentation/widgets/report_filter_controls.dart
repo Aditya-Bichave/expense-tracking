@@ -132,10 +132,15 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
     return BlocBuilder<ReportFilterBloc, ReportFilterState>(
       builder: (context, state) {
         // Prepare items based on LATEST state
-        final categoryItems = state.availableCategories
-            .where((c) => c.id != Category.uncategorized.id)
-            .map((c) => MultiSelectItem<String>(c.id, c.name))
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: .where().map().toList() creates intermediate collections, increasing GC pressure
+        // Solution: Use a list comprehension to filter and map in a single pass
+        // Impact: Reduces object instantiation and GC pressure during report filter dialog build
+        final categoryItems = [
+          for (final c in state.availableCategories)
+            if (c.id != Category.uncategorized.id)
+              MultiSelectItem<String>(c.id, c.name),
+        ];
         final accountItems = state.availableAccounts
             .map((a) => MultiSelectItem<String>(a.id, a.name))
             .toList();

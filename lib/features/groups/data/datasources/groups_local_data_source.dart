@@ -82,10 +82,14 @@ class GroupsLocalDataSourceImpl implements GroupsLocalDataSource {
 
   @override
   Future<void> deleteGroupMembers(String groupId) async {
-    final memberIds = _memberBox.values
-        .where((member) => member.groupId == groupId)
-        .map((member) => member.id)
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: .where().map().toList() creates intermediate collections
+    // Solution: Use a direct list comprehension to filter and map in a single iteration
+    // Impact: Avoids multiple passes and reduces memory allocation during local data source delete operation
+    final memberIds = [
+      for (final member in _memberBox.values)
+        if (member.groupId == groupId) member.id,
+    ];
     if (memberIds.isEmpty) {
       return;
     }
