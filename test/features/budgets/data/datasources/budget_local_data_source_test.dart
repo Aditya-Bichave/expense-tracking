@@ -47,10 +47,13 @@ void main() {
 
     test('should throw CacheFailure when Hive access fails', () async {
       // Arrange
-      when(() => mockBox.values).thenThrow(Exception());
+      when(() => mockBox.values).thenAnswer((_) => throw Exception());
 
       // Act & Assert
-      expect(() => dataSource.getBudgets(), throwsA(isA<CacheFailure>()));
+      expect(
+        () async => await dataSource.getBudgets(),
+        throwsA(isA<CacheFailure>()),
+      );
     });
   });
 
@@ -76,7 +79,7 @@ void main() {
 
       // Act & Assert
       expect(
-        () => dataSource.saveBudget(tBudgetModel),
+        () async => await dataSource.saveBudget(tBudgetModel),
         throwsA(isA<CacheFailure>()),
       );
     });
@@ -101,7 +104,10 @@ void main() {
       ).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
-      expect(() => dataSource.deleteBudget('1'), throwsA(isA<CacheFailure>()));
+      expect(
+        () async => await dataSource.deleteBudget('1'),
+        throwsA(isA<CacheFailure>()),
+      );
     });
   });
 }

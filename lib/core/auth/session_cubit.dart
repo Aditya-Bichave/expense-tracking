@@ -26,9 +26,7 @@ class SessionCubit extends Cubit<SessionState> {
   Future<void> _init() async {
     _authSubscription = _authRepository.authStateChanges.listen((authState) {
       if (authState.event == AuthChangeEvent.signedOut) {
-        if (!isClosed) {
-          emit(SessionUnauthenticated());
-        }
+        if (!isClosed) emit(SessionUnauthenticated());
       } else if (authState.event == AuthChangeEvent.signedIn ||
           authState.event == AuthChangeEvent.initialSession) {
         checkSession();
@@ -61,33 +59,24 @@ class SessionCubit extends Cubit<SessionState> {
     }
 
     final userResult = _authRepository.getCurrentUser();
-    await userResult.fold(
-      (failure) async {
-        if (!isClosed) {
-          emit(SessionUnauthenticated());
-        }
-      },
-      (user) async {
-        if (user == null) {
-          if (!isClosed) {
-            emit(SessionUnauthenticated());
-          }
-          return;
-        }
+    await userResult.fold((failure) async => emit(SessionUnauthenticated()), (
+      user,
+    ) async {
+      if (user == null) {
+        if (!isClosed) emit(SessionUnauthenticated());
+        return;
+      }
 
-        final isLockEnabled = await _secureStorageService.isBiometricEnabled();
-        if (state is SessionLocked) return;
+      final isLockEnabled = await _secureStorageService.isBiometricEnabled();
+      if (state is SessionLocked) return;
 
-        if (isLockEnabled) {
-          if (!isClosed) {
-            emit(SessionLocked());
-          }
-          return;
-        }
+      if (isLockEnabled) {
+        if (!isClosed) if (!isClosed) emit(SessionLocked());
+        return;
+      }
 
-        await _loadProfile(user, background: background);
-      },
-    );
+      await _loadProfile(user, background: background);
+    });
   }
 
   Future<void> _loadProfile(User user, {bool background = false}) async {
@@ -110,22 +99,13 @@ class SessionCubit extends Cubit<SessionState> {
     final localResult = await _profileRepository.getProfile(
       forceRefresh: false,
     );
-    localResult.fold(
-      (failure) {
+    localResult.fold((failure) => emit(SessionUnauthenticated()), (profile) {
+      if (profile.fullName == null || (profile.fullName?.isEmpty ?? true)) {
         if (!isClosed) emit(SessionUnauthenticated());
-      },
-      (profile) {
-        if (profile.fullName == null || (profile.fullName?.isEmpty ?? true)) {
-          if (!isClosed) {
-            emit(SessionUnauthenticated());
-          }
-        } else {
-          if (!isClosed) {
-            emit(SessionAuthenticated(profile));
-          }
-        }
-      },
-    );
+      } else {
+        if (!isClosed) if (!isClosed) emit(SessionAuthenticated(profile));
+      }
+    });
   }
 
   Future<void> _fetchRemoteProfile(User user, {bool background = false}) async {
@@ -137,7 +117,8 @@ class SessionCubit extends Cubit<SessionState> {
 
     remoteResult.fold(
       (failure) {
-        if (!background && !isClosed) emit(SessionNeedsProfileSetup(user));
+        if (!background && !isClosed)
+          if (!isClosed) emit(SessionNeedsProfileSetup(user));
       },
       (profile) {
         if (!isClosed) _validateAndEmit(user, profile);
@@ -147,40 +128,27 @@ class SessionCubit extends Cubit<SessionState> {
 
   void _validateAndEmit(User user, UserProfile profile) {
     if (profile.fullName == null || (profile.fullName?.isEmpty ?? true)) {
-      if (!isClosed) {
-        emit(SessionNeedsProfileSetup(user));
-      }
+      if (!isClosed) emit(SessionNeedsProfileSetup(user));
     } else {
-      if (!isClosed) {
-        emit(SessionAuthenticated(profile));
-      }
+      if (!isClosed) emit(SessionAuthenticated(profile));
     }
   }
 
   Future<void> unlock() async {
     final userResult = _authRepository.getCurrentUser();
-    await userResult.fold(
-      (l) async {
-        if (!isClosed) {
-          emit(SessionUnauthenticated());
-        }
-      },
-      (user) async {
-        if (user != null) {
-          await _loadProfile(user);
-        } else {
-          if (!isClosed) {
-            emit(SessionUnauthenticated());
-          }
-        }
-      },
-    );
+    await userResult.fold((l) async => emit(SessionUnauthenticated()), (
+      user,
+    ) async {
+      if (user != null) {
+        await _loadProfile(user);
+      } else {
+        if (!isClosed) emit(SessionUnauthenticated());
+      }
+    });
   }
 
   void lock() {
-    if (!isClosed) {
-      emit(SessionLocked());
-    }
+    if (!isClosed) emit(SessionLocked());
   }
 
   void profileSetupCompleted() {
