@@ -58,7 +58,7 @@ void main() {
     test('should add/update budget to Hive', () async {
       // Arrange
       when(
-        () => mockBox.put(any(), any()),
+        () => mockBox.put(any<dynamic>(), any<BudgetModel>()),
       ).thenAnswer((_) async => Future.value());
 
       // Act
@@ -71,7 +71,7 @@ void main() {
     test('should throw CacheFailure when saving fails', () async {
       // Arrange
       when(
-        () => mockBox.put(any(), any()),
+        () => mockBox.put(any<dynamic>(), any<BudgetModel>()),
       ).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
@@ -97,7 +97,7 @@ void main() {
     test('should throw CacheFailure when deletion fails', () async {
       // Arrange
       when(
-        () => mockBox.delete(any()),
+        () => mockBox.delete(any<dynamic>()),
       ).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
