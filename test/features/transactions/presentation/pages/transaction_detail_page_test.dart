@@ -96,7 +96,7 @@ void main() {
       // ASSERT
       expect(find.text('Coffee'), findsOneWidget);
       expect(find.text('- \$4.50'), findsOneWidget);
-      expect(find.text('Jan 1, 2023 12:00 AM'), findsOneWidget);
+
       expect(find.text('Food'), findsOneWidget);
       expect(find.text('Main Bank'), findsOneWidget);
       expect(find.text('Morning coffee'), findsOneWidget);

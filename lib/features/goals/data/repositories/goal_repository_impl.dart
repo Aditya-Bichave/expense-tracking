@@ -80,7 +80,7 @@ class GoalRepositoryImpl implements GoalRepository {
       );
       final contributions = await contributionDataSource
           .getContributionsForGoal(id);
-      final contributionIds = contributions.map((c) => c.id).toList();
+      final contributionIds = [for (var c in contributions) c.id];
       await contributionDataSource.deleteContributions(contributionIds);
       log.info(
         "[GoalRepo] Deleted ${contributions.length} associated contributions.",

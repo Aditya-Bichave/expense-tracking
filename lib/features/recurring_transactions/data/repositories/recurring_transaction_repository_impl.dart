@@ -30,7 +30,7 @@ class RecurringTransactionRepositoryImpl
   Future<Either<Failure, List<RecurringRule>>> getRecurringRules() async {
     try {
       final ruleModels = await localDataSource.getRecurringRules();
-      final rules = ruleModels.map((model) => model.toEntity()).toList();
+      final rules = [for (var model in ruleModels) model.toEntity()];
       return Right(rules);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -87,7 +87,7 @@ class RecurringTransactionRepositoryImpl
   ) async {
     try {
       final logModels = await localDataSource.getAuditLogsForRule(ruleId);
-      final logs = logModels.map((model) => model.toEntity()).toList();
+      final logs = [for (var model in logModels) model.toEntity()];
       return Right(logs);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

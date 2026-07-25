@@ -158,7 +158,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
-      return Right(models.map((model) => model.toEntity()).toList());
+      return Right([for (var model in models) model.toEntity()]);
     } catch (e, s) {
       log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
@@ -272,7 +272,7 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   List<GroupEntity> _mapAndSortGroups(List<GroupModel> models) {
-    final groups = models.map((model) => model.toEntity()).toList();
+    final groups = [for (var model in models) model.toEntity()];
     groups.sort((left, right) => right.updatedAt.compareTo(left.updatedAt));
     return groups;
   }
@@ -324,13 +324,19 @@ class GroupsRepositoryImpl implements GroupsRepository {
     final connectivityResult = await _connectivity.checkConnectivity();
     if (connectivityResult.contains(ConnectivityResult.mobile) ||
         connectivityResult.contains(ConnectivityResult.wifi)) {
-      unawaited(
-        _syncService.processOutbox().catchError((error, stackTrace) {
-          log.severe(
-            'Failed to process outbox in background: $error\n$stackTrace',
-          );
-        }),
-      );
+      try {
+        unawaited(
+          _syncService.processOutbox().catchError((error, stackTrace) {
+            log.severe(
+              'Failed to process outbox in background: $error\n$stackTrace',
+            );
+          }),
+        );
+      } catch (error, stackTrace) {
+        log.severe(
+          'Failed to process outbox synchronously: $error\n$stackTrace',
+        );
+      }
     }
   }
 }

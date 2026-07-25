@@ -155,7 +155,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       final models = await contributionDataSource.getContributionsForGoal(
         goalId,
       );
-      final entities = models.map((m) => m.toEntity()).toList();
+      final entities = [for (var m in models) m.toEntity()];
       // Sort by date descending
       entities.sort((a, b) => b.date.compareTo(a.date));
       log.fine(
@@ -177,7 +177,7 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
     log.fine("[ContributionRepo] Getting all goal contributions");
     try {
       final models = await contributionDataSource.getAllContributions();
-      final entities = models.map((m) => m.toEntity()).toList();
+      final entities = [for (var m in models) m.toEntity()];
       // Sort by date descending for consistency
       entities.sort((a, b) => b.date.compareTo(a.date));
       log.fine(

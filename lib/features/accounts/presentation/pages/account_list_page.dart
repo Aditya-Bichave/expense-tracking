@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/utils/logger.dart';
 // ... other imports ...
 import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
