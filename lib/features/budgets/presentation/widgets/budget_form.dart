@@ -137,16 +137,16 @@ class _BudgetFormState extends State<BudgetForm> {
 
   void _showCategoryMultiSelect(BuildContext context) {
     final theme = Theme.of(context);
-    final expenseCategories = widget.availableCategories
-        .where(
-          (cat) =>
-              cat.type == CategoryType.expense &&
-              cat.id != Category.uncategorized.id,
-        )
-        .toList();
-    final items = expenseCategories
-        .map((category) => MultiSelectItem<String>(category.id, category.name))
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: Chaining `.where().toList()` followed by `.map().toList()` allocates two intermediate lists and runs two passes over the data.
+    // Solution: Use a single list comprehension `[for ... if ...]` to iterate once directly into the final list.
+    // Impact: Reduces object allocations during UI rebuilds, improving frame performance.
+    final items = [
+      for (final category in widget.availableCategories)
+        if (category.type == CategoryType.expense &&
+            category.id != Category.uncategorized.id)
+          MultiSelectItem<String>(category.id, category.name),
+    ];
     // ⚡ Bolt Performance Optimization
     // Problem: .any() inside .where() creates an O(N*M) time complexity loop during dialog opening
     // Solution: Precompute a Set of valid item values for O(1) lookups

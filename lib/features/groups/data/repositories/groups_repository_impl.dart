@@ -158,7 +158,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
   ) async {
     try {
       final models = _localDataSource.getGroupMembers(groupId);
-      return Right(models.map((model) => model.toEntity()).toList());
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` allocates closures and intermediate iterables.
+      // Solution: Use a list comprehension `[for ...]` to directly instantiate the entity list.
+      // Impact: Avoids unnecessary allocation.
+      return Right([for (final model in models) model.toEntity()]);
     } catch (e, s) {
       log.severe("Exception in repository: $e\n$s");
       if (e is Failure) {
@@ -272,7 +276,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   List<GroupEntity> _mapAndSortGroups(List<GroupModel> models) {
-    final groups = models.map((model) => model.toEntity()).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` allocates closures and intermediate iterables.
+    // Solution: Use a list comprehension `[for ...]` to directly instantiate the entity list.
+    // Impact: Avoids unnecessary allocation.
+    final groups = [for (final model in models) model.toEntity()];
     groups.sort((left, right) => right.updatedAt.compareTo(left.updatedAt));
     return groups;
   }
