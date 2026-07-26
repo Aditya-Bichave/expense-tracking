@@ -79,6 +79,7 @@ class _BudgetFormState extends State<BudgetForm> {
     final availableCategoryIds = widget.availableCategories
         .map((c) => c.id)
         .toSet();
+    final availableCategoryIdsSet = availableCategoryIds.toSet();
     _selectedCategoryIds =
         initial?.categoryIds
             ?.where((id) => availableCategoryIds.contains(id))
