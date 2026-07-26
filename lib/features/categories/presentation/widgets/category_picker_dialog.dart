@@ -207,7 +207,9 @@ class _CategoryPickerDialogContentState
                       final iconData =
                           availableIcons[category.iconName] ??
                           Icons.category_outlined;
-                      return BridgeListTile(
+                      return Material(
+                        color: Colors.transparent,
+                        child: BridgeListTile(
                         leading: CircleAvatar(
                           backgroundColor: category.displayColor.withOpacity(
                             0.15,
@@ -225,6 +227,7 @@ class _CategoryPickerDialogContentState
                           );
                           Navigator.of(context).pop(category);
                         },
+                      ),
                       );
                     },
                   ),

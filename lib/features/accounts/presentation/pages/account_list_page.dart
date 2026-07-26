@@ -8,6 +8,7 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_card.dart';
 import 'package:expense_tracker/main.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:expense_tracker/core/assets/app_assets.dart';
@@ -167,9 +168,13 @@ class AccountListPage extends StatelessWidget {
                   onRefresh: () async {
                     final bloc = context.read<AccountListBloc>();
                     bloc.add(const LoadAccounts(forceReload: true));
+                    try {
                     await bloc.stream.firstWhere(
                       (s) => s is! AccountListLoading || !s.isReloading,
-                    );
+                    ).timeout(const Duration(seconds: 3));
+                    } on TimeoutException { // Catch only timeout to let real errors surface
+                      // Fall through
+                    }
                   },
                   child: ListView.builder(
                     padding:

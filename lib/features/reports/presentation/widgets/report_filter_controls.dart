@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:expense_tracker/features/reports/presentation/bloc/report_filter/report_filter_bloc.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart'; // Added
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multi_select_flutter/multi_select_flutter.dart';
 import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
@@ -22,11 +23,15 @@ class ReportFilterControls extends StatelessWidget {
     if (filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
       filterBloc.add(const LoadFilterOptions(forceReload: true));
       // Consider showing a loading indicator briefly or disabling button until loaded
+      try {
       await filterBloc.stream.firstWhere(
         (state) =>
             state.optionsStatus == FilterOptionsStatus.loaded ||
             state.optionsStatus == FilterOptionsStatus.error,
-      );
+      ).timeout(const Duration(seconds: 3));
+    } on TimeoutException { // Catch only timeout to let real errors surface
+      // Fall through to error state handling
+    }
       if (!context.mounted ||
           filterBloc.state.optionsStatus != FilterOptionsStatus.loaded) {
         return; // Don't show sheet if loading failed or stream closed early

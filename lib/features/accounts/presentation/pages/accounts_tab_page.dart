@@ -10,6 +10,7 @@ import 'package:expense_tracker/features/accounts/presentation/bloc/account_list
 import 'package:expense_tracker/features/accounts/presentation/widgets/account_card.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/main.dart';
@@ -85,9 +86,13 @@ class _AccountsTabPageState extends State<AccountsTabPage> {
         onRefresh: () async {
           final bloc = context.read<AccountListBloc>();
           bloc.add(const LoadAccounts(forceReload: true));
-          await bloc.stream.firstWhere(
+          try {
+            await bloc.stream.firstWhere(
             (state) => state is! AccountListLoading || !state.isReloading,
-          );
+          ).timeout(const Duration(seconds: 3));
+          } on TimeoutException { // Catch only timeout to let real errors surface
+            // Fall through
+          }
         },
         child: ListView(
           padding:

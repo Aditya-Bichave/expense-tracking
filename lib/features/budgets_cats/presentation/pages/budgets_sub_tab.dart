@@ -4,6 +4,7 @@ import 'package:expense_tracker/ui_kit/theme/app_mode_theme.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
 import 'package:expense_tracker/features/budgets/presentation/widgets/budget_card.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -124,9 +125,13 @@ class BudgetsSubTab extends StatelessWidget {
               final bloc = context.read<BudgetListBloc>();
               bloc.add(const LoadBudgets(forceReload: true));
               // Wait until the loading state completes
+              try {
               await bloc.stream.firstWhere(
                 (s) => s.status != BudgetListStatus.loading,
-              );
+              ).timeout(const Duration(seconds: 3));
+              } on TimeoutException { // Catch only timeout to let real errors surface
+                // Fall through
+              }
             },
             child: content,
           );
