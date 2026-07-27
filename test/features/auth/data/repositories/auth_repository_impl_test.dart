@@ -217,10 +217,10 @@ void main() {
         ).thenAnswer((_) async => Future<void>.value());
         when(
           () => mockDataManagement.clearAllData(),
-        ).thenThrow(Exception('Data clearing failed'));
+        ).thenAnswer((_) async => throw Exception('Data clearing failed'));
         when(
           () => mockSecureStorage.clearAll(),
-        ).thenThrow(Exception('Storage clearing failed'));
+        ).thenAnswer((_) async => throw Exception('Storage clearing failed'));
 
         final result = await repository.signOut();
 
