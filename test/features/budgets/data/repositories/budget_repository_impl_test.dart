@@ -83,7 +83,7 @@ void main() {
       when(() => mockLocalDataSource.getBudgets()).thenAnswer((_) async => []);
       when(
         () => mockLocalDataSource.saveBudget(any()),
-      ).thenAnswer((_) async => throw Exception('Error'));
+      ).thenThrow(Exception('Error'));
 
       final result = await repository.addBudget(tBudget);
 
