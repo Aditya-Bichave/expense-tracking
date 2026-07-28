@@ -56,9 +56,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
     emit(ProfileLoading());
     final result = await _uploadAvatarUseCase(event.file);
-    await result.fold((failure) async => emit(ProfileError(failure.message)), (
-      url,
-    ) async {
+    await result.fold(
+      (failure) async {
+        if (!isClosed) emit(ProfileError(failure.message));
+      },
+      (url) async {
       final newProfile = UserProfile(
         id: currentState.profile.id,
         fullName: currentState.profile.fullName,
@@ -71,8 +73,12 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
       final updateResult = await _updateProfileUseCase(newProfile);
       updateResult.fold(
-        (l) => emit(ProfileError(l.message)),
-        (_) => emit(ProfileLoaded(newProfile)),
+        (l) {
+          if (!isClosed) emit(ProfileError(l.message));
+        },
+        (_) {
+          if (!isClosed) emit(ProfileLoaded(newProfile));
+        },
       );
     });
   }

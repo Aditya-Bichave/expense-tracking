@@ -34,11 +34,15 @@ class SessionCubit extends Cubit<SessionState> {
     });
 
     if (E2EMode.enabled) {
-      unawaited(
-        checkSession().catchError((e, s) {
-          log.severe('Silent failure in E2E checkSession: $e\n$s');
-        }),
-      );
+      try {
+        unawaited(
+          checkSession().catchError((e, s) {
+            log.severe('Silent failure in E2E checkSession: $e\n$s');
+          }),
+        );
+      } catch (e, s) {
+        log.severe('Sync error in checkSession: $e\n$s');
+      }
     }
   }
 
@@ -55,13 +59,15 @@ class SessionCubit extends Cubit<SessionState> {
     }
 
     final userResult = _authRepository.getCurrentUser();
-    await userResult.fold((failure) async => emit(SessionUnauthenticated()), (
-      user,
-    ) async {
-      if (user == null) {
-        emit(SessionUnauthenticated());
-        return;
-      }
+    await userResult.fold(
+      (failure) async {
+        if (!isClosed) emit(SessionUnauthenticated());
+      },
+      (user) async {
+        if (user == null) {
+          if (!isClosed) emit(SessionUnauthenticated());
+          return;
+        }
 
       final isLockEnabled = await _secureStorageService.isBiometricEnabled();
       if (state is SessionLocked) return;
@@ -131,15 +137,18 @@ class SessionCubit extends Cubit<SessionState> {
 
   Future<void> unlock() async {
     final userResult = _authRepository.getCurrentUser();
-    await userResult.fold((l) async => emit(SessionUnauthenticated()), (
-      user,
-    ) async {
-      if (user != null) {
-        await _loadProfile(user);
-      } else {
-        emit(SessionUnauthenticated());
+    await userResult.fold(
+      (l) async {
+        if (!isClosed) emit(SessionUnauthenticated());
+      },
+      (user) async {
+        if (user != null) {
+          await _loadProfile(user);
+        } else {
+          if (!isClosed) emit(SessionUnauthenticated());
+        }
       }
-    });
+    );
   }
 
   void lock() {
