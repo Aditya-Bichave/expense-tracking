@@ -337,7 +337,7 @@ void main() {
       ).thenAnswer((_) async => [tContributionModel]);
       when(
         () => mockGoalDataSource.saveGoal(any()),
-      ).thenThrow(Exception('Update error'));
+      ).thenAnswer((_) async => throw Exception('Update error'));
 
       final result = await repository.auditGoalTotals();
       expect(result.isRight(), isTrue);
@@ -346,7 +346,7 @@ void main() {
     test('should return Left on overall exception', () async {
       when(
         () => mockGoalDataSource.getGoals(),
-      ).thenThrow(Exception('Overall error'));
+      ).thenAnswer((_) async => throw Exception('Overall error'));
       final result = await repository.auditGoalTotals();
       expect(result.isLeft(), isTrue);
     });
