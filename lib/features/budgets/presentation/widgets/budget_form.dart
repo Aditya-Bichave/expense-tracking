@@ -188,7 +188,7 @@ class _BudgetFormState extends State<BudgetForm> {
           ),
           searchable: true,
           onConfirm: (values) {
-            final newSelection = values.map((e) => e.toString()).toList();
+            final newSelection = [for (var e in values) e.toString()];
             setState(() {
               _selectedCategoryIds = newSelection;
               if (_selectedCategoryIds.isNotEmpty) {

@@ -25,7 +25,7 @@ class SplitEngine {
 
     // Check if total is zero
     if (total == 0.0) {
-      return splits.map((s) => s.copyWith(computedAmount: 0.0)).toList();
+      return [for (var s in splits) s.copyWith(computedAmount: 0.0)];
     }
 
     // Detect strategy from first split

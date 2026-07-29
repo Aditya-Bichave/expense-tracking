@@ -118,7 +118,7 @@ class _NumpadScreenState extends State<NumpadScreen> {
   Widget _row(BuildContext context, List<String> keys) {
     return Expanded(
       child: Row(
-        children: keys.map((k) => Expanded(child: _key(context, k))).toList(),
+        children: [for (var k in keys) Expanded(child: _key(context, k))],
       ),
     );
   }

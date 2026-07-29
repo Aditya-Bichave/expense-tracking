@@ -133,8 +133,8 @@ class GroupExpenseModel extends HiveObject {
       occurredAt: occurredAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
-      payers: payers.map((e) => e.toEntity()).toList(),
-      splits: splits.map((e) => e.toEntity()).toList(),
+      payers: [for (var e in payers) e.toEntity()],
+      splits: [for (var e in splits) e.toEntity()],
       categoryId: categoryId,
     );
   }

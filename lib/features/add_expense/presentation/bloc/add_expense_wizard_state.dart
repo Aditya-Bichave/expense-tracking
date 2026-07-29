@@ -123,8 +123,8 @@ class AddExpenseWizardState extends Equatable {
       'p_expense_date': expenseDate.toIso8601String(),
       'p_notes': notes,
       'p_receipt_url': receiptCloudUrl, // New Field
-      'p_payers': payers.map((e) => e.toJson()).toList(),
-      'p_splits': splits.map((e) => e.toJson()).toList(),
+      'p_payers': [for (var e in payers) e.toJson()],
+      'p_splits': [for (var e in splits) e.toJson()],
     };
   }
 

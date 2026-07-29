@@ -61,7 +61,7 @@ class SplitPreviewEngine {
     );
 
     if (totalShares == 0) {
-      return currentSplits.map((s) => s.copyWith(computedAmount: 0)).toList();
+      return [for (var s in currentSplits) s.copyWith(computedAmount: 0)];
     }
 
     int totalCents = (totalAmount * 100).round();

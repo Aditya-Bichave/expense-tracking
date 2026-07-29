@@ -119,7 +119,7 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
   ) async {
     try {
       final models = _localDataSource.getExpenses(groupId);
-      return Right(models.map((e) => e.toEntity()).toList());
+      return Right([for (var e in models) e.toEntity()]);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
