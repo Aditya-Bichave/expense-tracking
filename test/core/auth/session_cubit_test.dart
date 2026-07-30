@@ -205,5 +205,34 @@ void main() {
       act: (cubit) => cubit.lock(),
       expect: () => [SessionLocked()],
     );
-  });
+      test('checkSession does not emit states if the Cubit is closed', () async {
+      when(() => authRepository.getCurrentUser()).thenReturn(Right(user));
+      when(
+        () => profileRepository.getProfile(forceRefresh: false),
+      ).thenAnswer((_) async => Left(ServerFailure('test error')));
+      when(
+        () => profileRepository.getProfile(forceRefresh: true),
+      ).thenAnswer((_) async {
+        await Future.delayed(const Duration(milliseconds: 50));
+        return Right(profile);
+      });
+      when(
+        () => secureStorageService.isBiometricEnabled(),
+      ).thenAnswer((_) async => false);
+
+      final cubit = SessionCubit(
+        authRepository,
+        profileRepository,
+        secureStorageService,
+      );
+
+      // Act
+      final checkFuture = cubit.checkSession();
+      await cubit.close();
+      await checkFuture;
+
+      // Expect that it does not crash with StateError
+      expect(cubit.isClosed, isTrue);
+    });
+});
 }
