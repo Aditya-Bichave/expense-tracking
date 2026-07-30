@@ -76,14 +76,15 @@ class _BudgetFormState extends State<BudgetForm> {
     // Problem: .any() inside .where() creates an O(N*M) time complexity loop
     // Solution: Precompute a Set of available category IDs for O(1) lookups
     // Impact: Faster form initialization, eliminating a potential UI bottleneck
-    final availableCategoryIds = widget.availableCategories
-        .map((c) => c.id)
-        .toSet();
-    _selectedCategoryIds =
-        initial?.categoryIds
-            ?.where((id) => availableCategoryIds.contains(id))
-            .toList() ??
-        [];
+    final availableCategoryIds = {
+      for (final c in widget.availableCategories) c.id,
+    };
+    _selectedCategoryIds = initial?.categoryIds != null
+        ? [
+            for (final id in initial!.categoryIds!)
+              if (availableCategoryIds.contains(id)) id,
+          ]
+        : [];
     log.info(
       "[BudgetForm] initState. Type: $_selectedType, Period: $_selectedPeriod, Initial Categories: ${_selectedCategoryIds.length}",
     );
@@ -151,10 +152,11 @@ class _BudgetFormState extends State<BudgetForm> {
     // Problem: .any() inside .where() creates an O(N*M) time complexity loop during dialog opening
     // Solution: Precompute a Set of valid item values for O(1) lookups
     // Impact: Prevents UI jank when opening the MultiSelect dialog with many categories
-    final validItemValues = items.map((i) => i.value).toSet();
-    final validInitialValue = _selectedCategoryIds
-        .where((id) => validItemValues.contains(id))
-        .toList();
+    final validItemValues = {for (final i in items) i.value};
+    final validInitialValue = [
+      for (final id in _selectedCategoryIds)
+        if (validItemValues.contains(id)) id,
+    ];
 
     bridgeShowModalBottomSheet(
       isScrollControlled: true,
