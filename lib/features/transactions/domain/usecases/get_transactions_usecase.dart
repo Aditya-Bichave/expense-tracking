@@ -218,12 +218,14 @@ class GetTransactionsUseCase
       List<TransactionEntity> filteredList = combinedList;
       if (params.searchTerm != null && params.searchTerm!.isNotEmpty) {
         final searchTermLower = getLower(params.searchTerm!);
-        filteredList = combinedList.where((txn) {
-          return getLower(txn.title).contains(searchTermLower) ||
-              (txn.category != null &&
-                  getLower(txn.category!.name).contains(searchTermLower)) ||
-              txn.amount.toStringAsFixed(2).contains(searchTermLower);
-        }).toList();
+        filteredList = [
+          for (final txn in combinedList)
+            if (getLower(txn.title).contains(searchTermLower) ||
+                (txn.category != null &&
+                    getLower(txn.category!.name).contains(searchTermLower)) ||
+                txn.amount.toStringAsFixed(2).contains(searchTermLower))
+              txn,
+        ];
         log.info(
           "[GetTransactionsUseCase] Filtered by search '${params.searchTerm}': ${filteredList.length} items remaining.",
         );

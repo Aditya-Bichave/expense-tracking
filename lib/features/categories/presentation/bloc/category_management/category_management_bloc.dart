@@ -78,18 +78,26 @@ class CategoryManagementBloc
         );
       },
       (allCategories) {
-        final customExpense = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final customIncome = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.income)
-            .toList();
-        final predefinedExpense = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final predefinedIncome = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.income)
-            .toList();
+        final customExpense = <Category>[];
+        final customIncome = <Category>[];
+        final predefinedExpense = <Category>[];
+        final predefinedIncome = <Category>[];
+
+        for (final c in allCategories) {
+          if (c.isCustom) {
+            if (c.type == CategoryType.expense) {
+              customExpense.add(c);
+            } else if (c.type == CategoryType.income) {
+              customIncome.add(c);
+            }
+          } else {
+            if (c.type == CategoryType.expense) {
+              predefinedExpense.add(c);
+            } else if (c.type == CategoryType.income) {
+              predefinedIncome.add(c);
+            }
+          }
+        }
 
         // ⚡ Bolt Performance Optimization
         // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
