@@ -101,7 +101,7 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.get(any())).thenAnswer((_) async => throw Exception('Hive Error'));
+        when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
 
         expect(
           () => dataSource.getContributionById(tContribution.id),

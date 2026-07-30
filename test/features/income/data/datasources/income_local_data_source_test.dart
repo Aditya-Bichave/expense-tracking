@@ -104,7 +104,7 @@ void main() {
 
     test('should throw CacheFailure when retrieval fails', () async {
       // Arrange
-      when(() => mockBox.get(any())).thenAnswer((_) async => throw Exception('Hive Error'));
+      when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
 
       // Act & Assert
       expect(() => dataSource.getIncomeById('1'), throwsA(isA<CacheFailure>()));
