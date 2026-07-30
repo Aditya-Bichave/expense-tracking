@@ -51,7 +51,7 @@ void main() {
         // Arrange
         when(
           () => mockBox.put(any(), any()),
-        ).thenThrow(Exception('Hive Error'));
+        ).thenAnswer((_) async => throw Exception('Hive Error'));
 
         // Act & Assert
         expect(
@@ -103,7 +103,7 @@ void main() {
         // Arrange
         when(
           () => mockBox.put(any(), any()),
-        ).thenThrow(Exception('Hive Error'));
+        ).thenAnswer((_) async => throw Exception('Hive Error'));
 
         // Act & Assert
         expect(
@@ -127,7 +127,7 @@ void main() {
 
       test('should throw CacheFailure when delete fails', () async {
         // Arrange
-        when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
+        when(() => mockBox.delete(any())).thenAnswer((_) async => throw Exception('Hive Error'));
 
         // Act & Assert
         expect(
@@ -151,7 +151,7 @@ void main() {
 
       test('should throw CacheFailure when clear fails', () async {
         // Arrange
-        when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
+        when(() => mockBox.clear()).thenAnswer((_) async => throw Exception('Hive Error'));
 
         // Act & Assert
         expect(() => dataSource.clearAll(), throwsA(isA<CacheFailure>()));

@@ -82,7 +82,7 @@ void main() {
     // Arrange
     when(
       () => mockDataSource.getRecurringRules(),
-    ).thenThrow(const CacheFailure('Failed'));
+    ).thenAnswer((_) async => throw const CacheFailure('Failed'));
 
     // Act
     final result = await repository.getRecurringRules();

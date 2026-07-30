@@ -126,7 +126,7 @@ void main() {
       build: () {
         when(
           () => mockSettingsRepository.getThemeMode(),
-        ).thenThrow(Exception('Unexpected'));
+        ).thenAnswer((_) async => throw Exception('Unexpected'));
         return bloc;
       },
       act: (bloc) => bloc.add(const LoadSettings()),

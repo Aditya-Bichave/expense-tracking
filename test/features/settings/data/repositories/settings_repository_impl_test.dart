@@ -34,7 +34,7 @@ void main() {
     });
 
     test('getThemeMode returns Left(SettingsFailure) on error', () async {
-      when(() => mockDataSource.getThemeMode()).thenThrow(Exception('Error'));
+      when(() => mockDataSource.getThemeMode()).thenAnswer((_) async => throw Exception('Error'));
       final result = await repository.getThemeMode();
       expect(result.isLeft(), true);
       result.fold(
@@ -55,7 +55,7 @@ void main() {
     test('saveThemeMode returns Left(SettingsFailure) on error', () async {
       when(
         () => mockDataSource.saveThemeMode(any()),
-      ).thenThrow(Exception('Error'));
+      ).thenAnswer((_) async => throw Exception('Error'));
       final result = await repository.saveThemeMode(ThemeMode.light);
       expect(result.isLeft(), true);
     });
@@ -129,7 +129,7 @@ void main() {
     test('getCurrencySymbol defaults if country code fetch fails', () async {
       when(
         () => mockDataSource.getSelectedCountryCode(),
-      ).thenThrow(Exception('Error'));
+      ).thenAnswer((_) async => throw Exception('Error'));
       // The repo catches this exception in getSelectedCountryCode, returning Left.
       // Wait, repository.getSelectedCountryCode returns Either.
       // But getCurrencySymbol calls getSelectedCountryCode (the repo method).

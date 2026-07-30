@@ -57,7 +57,7 @@ void main() {
       build: () {
         when(
           () => mockFunctions.invoke('send-nudge', body: any(named: 'body')),
-        ).thenThrow(FunctionException(status: 429));
+        ).thenAnswer((_) async => throw FunctionException(status: 429));
         return bloc;
       },
       act: (bloc) => bloc.add(const SendNudge(groupId: 'group1', debt: debt)),
@@ -76,7 +76,7 @@ void main() {
       build: () {
         when(
           () => mockFunctions.invoke('send-nudge', body: any(named: 'body')),
-        ).thenThrow(FunctionException(status: 404));
+        ).thenAnswer((_) async => throw FunctionException(status: 404));
         return bloc;
       },
       act: (bloc) => bloc.add(const SendNudge(groupId: 'group1', debt: debt)),
@@ -95,7 +95,7 @@ void main() {
       build: () {
         when(
           () => mockFunctions.invoke('send-nudge', body: any(named: 'body')),
-        ).thenThrow(Exception('Unknown error'));
+        ).thenAnswer((_) async => throw Exception('Unknown error'));
         return bloc;
       },
       act: (bloc) => bloc.add(const SendNudge(groupId: 'group1', debt: debt)),

@@ -104,7 +104,7 @@ void main() {
     });
 
     test('LoadSummary handles exceptions gracefully', () async {
-      when(() => mockUseCase(any())).thenThrow(Exception('crash'));
+      when(() => mockUseCase(any())).thenAnswer((_) async => throw Exception('crash'));
 
       final future = expectLater(
         bloc.stream,

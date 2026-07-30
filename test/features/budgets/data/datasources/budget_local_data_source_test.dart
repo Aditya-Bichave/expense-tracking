@@ -47,7 +47,7 @@ void main() {
 
     test('should throw CacheFailure when Hive access fails', () async {
       // Arrange
-      when(() => mockBox.values).thenThrow(Exception());
+      when(() => mockBox.values).thenThrow(Exception()); // getter
 
       // Act & Assert
       expect(() => dataSource.getBudgets(), throwsA(isA<CacheFailure>()));

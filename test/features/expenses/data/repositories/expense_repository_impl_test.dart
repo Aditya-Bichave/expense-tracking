@@ -139,7 +139,7 @@ void main() {
           'create_expense_transaction',
           params: any(named: 'params'),
         ),
-      ).thenThrow(const PostgrestException(message: 'RPC Error'));
+      ).thenAnswer((_) async => throw const PostgrestException(message: 'RPC Error'));
 
       // Act
       final result = await repository.createExpenseTransaction(tExpense);

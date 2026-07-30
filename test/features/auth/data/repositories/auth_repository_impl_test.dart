@@ -62,7 +62,7 @@ void main() {
       () async {
         when(
           () => mockRemoteDataSource.signInWithOtp(phone: any(named: 'phone')),
-        ).thenThrow(Exception('error'));
+        ).thenAnswer((_) async => throw Exception('error'));
 
         final result = await repository.signInWithOtp(tPhone);
 
@@ -100,7 +100,7 @@ void main() {
           () => mockRemoteDataSource.signInWithMagicLink(
             email: any(named: 'email'),
           ),
-        ).thenThrow(Exception('error'));
+        ).thenAnswer((_) async => throw Exception('error'));
 
         final result = await repository.signInWithMagicLink(tEmail);
 
@@ -131,7 +131,7 @@ void main() {
       () async {
         when(
           () => mockRemoteDataSource.signInAnonymously(),
-        ).thenThrow(Exception('error'));
+        ).thenAnswer((_) async => throw Exception('error'));
 
         final result = await repository.signInAnonymously();
 
@@ -173,7 +173,7 @@ void main() {
             phone: any(named: 'phone'),
             token: any(named: 'token'),
           ),
-        ).thenThrow(Exception('error'));
+        ).thenAnswer((_) async => throw Exception('error'));
 
         final result = await repository.verifyOtp(phone: tPhone, token: tToken);
 
@@ -217,10 +217,10 @@ void main() {
         ).thenAnswer((_) async => Future<void>.value());
         when(
           () => mockDataManagement.clearAllData(),
-        ).thenThrow(Exception('Data clearing failed'));
+        ).thenAnswer((_) async => throw Exception('Data clearing failed'));
         when(
           () => mockSecureStorage.clearAll(),
-        ).thenThrow(Exception('Storage clearing failed'));
+        ).thenAnswer((_) async => throw Exception('Storage clearing failed'));
 
         final result = await repository.signOut();
 
@@ -236,7 +236,7 @@ void main() {
       () async {
         when(
           () => mockRemoteDataSource.signOut(),
-        ).thenThrow(Exception('error'));
+        ).thenAnswer((_) async => throw Exception('error'));
 
         final result = await repository.signOut();
 
@@ -270,7 +270,7 @@ void main() {
       () {
         when(
           () => mockRemoteDataSource.getCurrentUser(),
-        ).thenThrow(Exception('error'));
+        ).thenAnswer((_) async => throw Exception('error'));
 
         final result = repository.getCurrentUser();
 

@@ -102,7 +102,7 @@ void main() {
             'simplify-debts',
             queryParameters: any(named: 'queryParameters'),
           ),
-        ).thenThrow(Exception('Not deployed'));
+        ).thenAnswer((_) async => throw Exception('Not deployed'));
         return bloc;
       },
       act: (bloc) => bloc.add(const FetchBalances(groupId)),
@@ -124,7 +124,7 @@ void main() {
             'simplify-debts',
             queryParameters: any(named: 'queryParameters'),
           ),
-        ).thenThrow(Exception('Not deployed'));
+        ).thenAnswer((_) async => throw Exception('Not deployed'));
         return bloc;
       },
       seed: () => const GroupBalancesLoaded(

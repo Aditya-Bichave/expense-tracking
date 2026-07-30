@@ -53,7 +53,7 @@ void main() {
       test('should throw CacheFailure on error', () async {
         when(
           () => mockBox.put(any(), any()),
-        ).thenThrow(Exception('Hive Error'));
+        ).thenAnswer((_) async => throw Exception('Hive Error'));
 
         expect(
           () => dataSource.saveContribution(tContribution),
@@ -101,7 +101,7 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.get(any())).thenThrow(Exception('Hive Error'));
+        when(() => mockBox.get(any())).thenAnswer((_) async => throw Exception('Hive Error'));
 
         expect(
           () => dataSource.getContributionById(tContribution.id),
@@ -142,7 +142,7 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.delete(any())).thenThrow(Exception('Hive Error'));
+        when(() => mockBox.delete(any())).thenAnswer((_) async => throw Exception('Hive Error'));
 
         expect(
           () => dataSource.deleteContribution(tContribution.id),
@@ -161,7 +161,7 @@ void main() {
       });
 
       test('should throw CacheFailure on error', () async {
-        when(() => mockBox.clear()).thenThrow(Exception('Hive Error'));
+        when(() => mockBox.clear()).thenAnswer((_) async => throw Exception('Hive Error'));
 
         expect(
           () => dataSource.clearAllContributions(),

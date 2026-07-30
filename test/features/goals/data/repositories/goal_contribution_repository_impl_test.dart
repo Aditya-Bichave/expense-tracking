@@ -201,7 +201,7 @@ void main() {
         // Setup g1 to fail
         when(
           () => mockContributionDataSource.getContributionsForGoal('g1'),
-        ).thenThrow(Exception('Simulated error'));
+        ).thenAnswer((_) async => throw Exception('Simulated error'));
 
         // Setup g2 to succeed
         when(
@@ -245,7 +245,7 @@ void main() {
     test('should return CacheFailure when getting goals throws', () async {
       when(
         () => mockGoalDataSource.getGoals(),
-      ).thenThrow(Exception('Failed to get goals'));
+      ).thenAnswer((_) async => throw Exception('Failed to get goals'));
 
       final result = await repository.auditGoalTotals();
 
@@ -337,7 +337,7 @@ void main() {
       ).thenAnswer((_) async => [tContributionModel]);
       when(
         () => mockGoalDataSource.saveGoal(any()),
-      ).thenThrow(Exception('Update error'));
+      ).thenAnswer((_) async => throw Exception('Update error'));
 
       final result = await repository.auditGoalTotals();
       expect(result.isRight(), isTrue);
@@ -346,7 +346,7 @@ void main() {
     test('should return Left on overall exception', () async {
       when(
         () => mockGoalDataSource.getGoals(),
-      ).thenThrow(Exception('Overall error'));
+      ).thenAnswer((_) async => throw Exception('Overall error'));
       final result = await repository.auditGoalTotals();
       expect(result.isLeft(), isTrue);
     });

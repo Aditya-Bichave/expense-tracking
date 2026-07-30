@@ -162,7 +162,7 @@ void main() {
     test('deleteDeviceToken catches exceptions', () async {
       when(
         () => mockFirebaseMessaging.deleteToken(),
-      ).thenThrow(Exception('test exception'));
+      ).thenAnswer((_) async => throw Exception('test exception'));
       // should not throw
       await notificationService.deleteDeviceToken();
     });
@@ -170,7 +170,7 @@ void main() {
     test('syncDeviceToken catches exceptions', () async {
       when(
         () => mockFirebaseMessaging.requestPermission(),
-      ).thenThrow(Exception('test exception'));
+      ).thenAnswer((_) async => throw Exception('test exception'));
       // should not throw
       await notificationService.syncDeviceToken();
       debugDefaultTargetPlatformOverride = null;
@@ -268,7 +268,7 @@ void main() {
       ).thenAnswer((_) async => 'token');
       when(
         () => mockQueryBuilder.upsert(any()),
-      ).thenThrow(Exception('upsert error'));
+      ).thenAnswer((_) async => throw Exception('upsert error'));
 
       await notificationService.syncDeviceToken();
       debugDefaultTargetPlatformOverride = null;
