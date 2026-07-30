@@ -101,7 +101,10 @@ void main() {
       ).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
-      expect(() async => dataSource.deleteBudget('1'), throwsA(isA<CacheFailure>()));
+      expect(
+        () async => dataSource.deleteBudget('1'),
+        throwsA(isA<CacheFailure>()),
+      );
     });
   });
 }
