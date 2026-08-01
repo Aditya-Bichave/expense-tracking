@@ -116,9 +116,13 @@ class RecordSettlementBloc
       emit(state.copyWith(status: FormStatus.success));
     } catch (e, s) {
       _log.severe('Failed to record settlement: $e\n$s');
-      emit(
-        state.copyWith(status: FormStatus.failure, errorMessage: e.toString()),
-      );
+      if (!isClosed)
+        emit(
+          state.copyWith(
+            status: FormStatus.failure,
+            errorMessage: e.toString(),
+          ),
+        );
     }
   }
 }

@@ -48,15 +48,20 @@ class GroupExpensesBloc extends Bloc<GroupExpensesEvent, GroupExpensesState> {
     final remoteResult = await _repository.syncExpenses(event.groupId);
     await remoteResult.fold(
       (failure) async {
-        emit(GroupExpensesLoaded(localExpenses, syncError: failure.message));
+        if (!isClosed)
+          emit(GroupExpensesLoaded(localExpenses, syncError: failure.message));
       },
       (_) async {
         final syncedResult = await _repository.getExpenses(event.groupId);
         syncedResult.fold(
-          (failure) => emit(GroupExpensesError(failure.message)),
+          (failure) {
+            if (!isClosed) emit(GroupExpensesError(failure.message));
+          },
           (syncedExpenses) {
-            emit(GroupExpensesLoaded(syncedExpenses));
-            _processPendingMutations();
+            if (!isClosed) {
+              emit(GroupExpensesLoaded(syncedExpenses));
+              _processPendingMutations();
+            }
           },
         );
       },

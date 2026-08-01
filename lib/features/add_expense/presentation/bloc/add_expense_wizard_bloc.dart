@@ -448,9 +448,10 @@ class AddExpenseWizardBloc
       emit(finalState.copyWith(status: FormStatus.success));
     } catch (e) {
       log.severe("Submit failed: $e");
-      emit(
-        state.copyWith(status: FormStatus.error, errorMessage: e.toString()),
-      );
+      if (!isClosed)
+        emit(
+          state.copyWith(status: FormStatus.error, errorMessage: e.toString()),
+        );
     }
   }
 }
