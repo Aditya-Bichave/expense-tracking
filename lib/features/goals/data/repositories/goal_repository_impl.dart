@@ -120,16 +120,14 @@ class GoalRepositoryImpl implements GoalRepository {
     try {
       final models = await localDataSource.getGoals();
       // ⚡ Bolt Performance Optimization
-      // Problem: .map().where() creates instances for all items before filtering
-      // Solution: Filter the models first by checking statusIndex, then map only the needed ones
-      // Impact: Reduces object instantiation and garbage collection when loading goals
-      final entities = models
-          .where((m) {
-            return includeArchived ||
-                m.statusIndex != GoalStatus.archived.index;
-          })
-          .map((m) => m.toEntity())
-          .toList();
+      // Problem: Chaining `.where(...).map(...).toList()` allocates multiple intermediate Iterables, increasing GC pressure.
+      // Solution: Replaced with a single list comprehension, filtering and mapping in one pass.
+      // Impact: Reduces garbage collection overhead when loading goals.
+      final entities = [
+        for (final m in models)
+          if (includeArchived || m.statusIndex != GoalStatus.archived.index)
+            m.toEntity(),
+      ];
 
       // Sort by Percentage Complete (Descending), then by Creation Date Descending
       entities.sort((a, b) {

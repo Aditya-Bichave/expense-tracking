@@ -65,18 +65,19 @@ class TimeSeriesLineChart extends StatelessWidget {
         .toList();
 
     // Create spots for previous period if showing comparison
+    // ⚡ Bolt Performance Optimization
+    // Problem: Chaining `.where(...).map(...).toList()` allocates multiple intermediate Iterables, increasing GC pressure during builds.
+    // Solution: Replaced with a single list comprehension.
+    // Impact: Reduces garbage collection pauses and speeds up chart widget builds.
     final List<FlSpot> previousSpots = (showComparison)
-        ? data
-              .where(
-                (p) => p.amount.previousValue != null,
-              ) // Filter out points without previous data
-              .map(
-                (point) => FlSpot(
+        ? [
+            for (final point in data)
+              if (point.amount.previousValue != null)
+                FlSpot(
                   point.date.millisecondsSinceEpoch.toDouble(),
                   point.amount.previousValue!,
                 ),
-              )
-              .toList()
+          ]
         : [];
 
     return LineChart(
