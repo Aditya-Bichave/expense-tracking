@@ -47,9 +47,14 @@ class GenerateTransactionsOnLaunch implements UseCase<void, NoParams> {
         return await rulesResult.fold<Future<Either<Failure, void>>>(
           (failure) async => Left(failure),
           (rules) async {
-            final activeRules = rules
-                .where((rule) => rule.status == RuleStatus.active)
-                .toList();
+            // ⚡ Bolt Performance Optimization
+            // Problem: `.where().toList()` creates an intermediate iterable.
+            // Solution: Use a list comprehension.
+            // Impact: Reduces GC overhead on app launch.
+            final activeRules = [
+              for (final rule in rules)
+                if (rule.status == RuleStatus.active) rule,
+            ];
 
             for (var rule in activeRules) {
               var currentRule = rule;

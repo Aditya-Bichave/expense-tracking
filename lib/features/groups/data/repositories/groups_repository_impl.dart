@@ -185,14 +185,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroups(remoteGroups);
 
       final remoteGroupIds = remoteGroups.map((group) => group.id).toSet();
-      // ⚡ Bolt Performance Optimization
-      // Problem: Chaining `.where(...).map(...).toList()` allocates multiple intermediate Iterables, increasing GC pressure.
-      // Solution: Replaced with a single list comprehension.
-      // Impact: Reduces garbage collection overhead during group synchronization.
-      final staleGroupIds = [
-        for (final group in _localDataSource.getGroups())
-          if (!remoteGroupIds.contains(group.id)) group.id,
-      ];
+      final staleGroupIds = _localDataSource
+          .getGroups()
+          .where((group) => !remoteGroupIds.contains(group.id))
+          .map((group) => group.id)
+          .toList();
       if (staleGroupIds.isNotEmpty) {
         await _localDataSource.deleteGroups(staleGroupIds);
         await Future.wait(
@@ -308,14 +305,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroupMembers(remoteMembers);
 
       final remoteMemberIds = remoteMembers.map((member) => member.id).toSet();
-      // ⚡ Bolt Performance Optimization
-      // Problem: Chaining `.where(...).map(...).toList()` allocates multiple intermediate Iterables, increasing GC pressure.
-      // Solution: Replaced with a single list comprehension.
-      // Impact: Reduces garbage collection overhead during member synchronization.
-      final staleMemberIds = [
-        for (final member in _localDataSource.getGroupMembers(groupId))
-          if (!remoteMemberIds.contains(member.id)) member.id,
-      ];
+      final staleMemberIds = _localDataSource
+          .getGroupMembers(groupId)
+          .where((member) => !remoteMemberIds.contains(member.id))
+          .map((member) => member.id)
+          .toList();
       if (staleMemberIds.isNotEmpty) {
         await _localDataSource.deleteMembers(staleMemberIds);
       }

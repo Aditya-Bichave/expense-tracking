@@ -370,7 +370,11 @@ class AddExpenseWizardBloc
     PayerChanged event,
     Emitter<AddExpenseWizardState> emit,
   ) {
-    List<PayerModel> currentPayers = List.from(state.payers);
+    // ⚡ Bolt Performance Optimization
+    // Problem: `List.from()` iterates dynamically, resolving types at runtime.
+    // Solution: Use list spread `[...list]` for static type resolution.
+    // Impact: Marginally faster list cloning in bloc event handler.
+    List<PayerModel> currentPayers = [...state.payers];
     final index = currentPayers.indexWhere((p) => p.userId == event.userId);
     if (index >= 0) {
       currentPayers[index] = PayerModel(

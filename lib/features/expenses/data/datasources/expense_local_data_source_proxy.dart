@@ -64,27 +64,26 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
           ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59)
           : null;
 
-      return expenses.where((expense) {
-        if (startDateOnly != null) {
-          final expDateOnly = DateTime(
-            expense.date.year,
-            expense.date.month,
-            expense.date.day,
-          );
-          if (expDateOnly.isBefore(startDateOnly)) return false;
-        }
-        if (endDateInclusive != null) {
-          if (expense.date.isAfter(endDateInclusive)) return false;
-        }
-        if (accountIdSet != null && !accountIdSet.contains(expense.accountId)) {
-          return false;
-        }
-        if (categoryIdSet != null &&
-            !categoryIdSet.contains(expense.categoryId)) {
-          return false;
-        }
-        return true;
-      }).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.where().toList()` creates an intermediate iterable.
+      // Solution: Use a list comprehension.
+      // Impact: Reduces garbage collection pressure when filtering large expense lists.
+      return [
+        for (final expense in expenses)
+          if ((startDateOnly == null ||
+                  !DateTime(
+                    expense.date.year,
+                    expense.date.month,
+                    expense.date.day,
+                  ).isBefore(startDateOnly)) &&
+              (endDateInclusive == null ||
+                  !expense.date.isAfter(endDateInclusive)) &&
+              (accountIdSet == null ||
+                  accountIdSet.contains(expense.accountId)) &&
+              (categoryIdSet == null ||
+                  categoryIdSet.contains(expense.categoryId)))
+            expense,
+      ];
     } else {
       // Return live data from Hive
       return hiveDataSource.getExpenses(

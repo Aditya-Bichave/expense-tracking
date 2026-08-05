@@ -11,10 +11,16 @@ class OutboxRepository {
   }
 
   List<SyncMutationModel> getPendingItems() {
-    return _box.values.where((item) {
-      return item.status == SyncStatus.pending ||
-          item.status == SyncStatus.failed;
-    }).toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.where().toList()` creates an intermediate iterable.
+    // Solution: Use a list comprehension to build the list directly.
+    // Impact: Reduces garbage collection overhead.
+    return [
+      for (final item in _box.values)
+        if (item.status == SyncStatus.pending ||
+            item.status == SyncStatus.failed)
+          item,
+    ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
   }
 
   Future<void> markAsSent(SyncMutationModel item) async {

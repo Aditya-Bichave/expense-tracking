@@ -229,10 +229,13 @@ class SyncService {
         _safeAddStatus(SyncServiceStatus.error);
       } else {
         // Double check if anything remains pending
-        if (_outboxRepository
-            .getPendingItems()
-            .where((i) => i.status == SyncStatus.pending)
-            .isEmpty) {
+        // ⚡ Bolt Performance Optimization
+        // Problem: `.where().isEmpty` allocates an intermediate WhereIterable object.
+        // Solution: Use `.any()` and negate it to avoid intermediate allocations.
+        // Impact: Faster check with no intermediate memory allocations.
+        if (!_outboxRepository.getPendingItems().any(
+          (i) => i.status == SyncStatus.pending,
+        )) {
           _safeAddStatus(SyncServiceStatus.synced);
         }
       }

@@ -92,9 +92,14 @@ class HiveContributionLocalDataSource
   ) async {
     // Optimize: Filter directly from values iterable to avoid creating intermediate list
     try {
-      final filtered = contributionBox.values
-          .where((c) => c.goalId == goalId)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.where().toList()` creates an intermediate iterable.
+      // Solution: Use a list comprehension.
+      // Impact: Reduces GC overhead during Hive box filtering.
+      final filtered = [
+        for (final c in contributionBox.values)
+          if (c.goalId == goalId) c,
+      ];
       log.fine(
         "[ContributionDS] Filtered ${filtered.length} contributions for Goal ID $goalId.",
       );

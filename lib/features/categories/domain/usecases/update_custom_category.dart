@@ -58,11 +58,16 @@ class UpdateCustomCategoryUseCase
     }
     final allCategories = allCategoriesResult.getOrElse(() => []);
     final trimmedName = category.name.trim();
+    // ⚡ Bolt Performance Optimization
+    // Problem: .toLowerCase() is called inside an O(N) iteration, creating redundant string allocations.
+    // Solution: Precompute the lowercase string outside the loop.
+    // Impact: Reduces GC pressure and speeds up category validation.
+    final lowerCaseTrimmedName = trimmedName.toLowerCase();
 
     final isDuplicate = allCategories.any(
       (cat) =>
           cat.id != category.id && // Exclude the category itself
-          cat.name.trim().toLowerCase() == trimmedName.toLowerCase() &&
+          cat.name.trim().toLowerCase() == lowerCaseTrimmedName &&
           cat.type == category.type &&
           cat.parentCategoryId == category.parentCategoryId,
     );
