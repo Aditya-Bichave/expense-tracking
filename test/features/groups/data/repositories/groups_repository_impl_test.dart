@@ -127,7 +127,7 @@ void main() {
     test('returns CacheFailure when a local write fails', () async {
       when(
         () => mockLocalDataSource.saveGroup(any()),
-      ).thenThrow(Exception('disk exploded'));
+      ).thenAnswer((_) async => throw Exception('disk exploded'));
 
       final result = await repository.createGroup(tGroup);
 

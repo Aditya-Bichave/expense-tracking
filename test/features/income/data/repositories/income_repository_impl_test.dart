@@ -98,7 +98,7 @@ void main() {
         // Arrange
         when(
           () => mockLocalDataSource.addIncome(any()),
-        ).thenThrow(const CacheFailure('Hive Error'));
+        ).thenAnswer((_) async => throw const CacheFailure('Hive Error'));
 
         // Act
         final result = await repository.addIncome(tIncome);
@@ -128,7 +128,7 @@ void main() {
       // Arrange
       when(
         () => mockLocalDataSource.deleteIncome(any()),
-      ).thenThrow(const CacheFailure('Delete Error'));
+      ).thenAnswer((_) async => throw const CacheFailure('Delete Error'));
 
       // Act
       final result = await repository.deleteIncome('1');
@@ -179,7 +179,7 @@ void main() {
           categoryId: any(named: 'categoryId'),
           accountId: any(named: 'accountId'),
         ),
-      ).thenThrow(const CacheFailure('Fetch Error'));
+      ).thenAnswer((_) async => throw const CacheFailure('Fetch Error'));
 
       // Act
       final result = await repository.getIncomes();
@@ -213,7 +213,7 @@ void main() {
       // Arrange
       when(
         () => mockLocalDataSource.updateIncome(any()),
-      ).thenThrow(const CacheFailure('Update Error'));
+      ).thenAnswer((_) async => throw const CacheFailure('Update Error'));
 
       // Act
       final result = await repository.updateIncome(tIncome);
