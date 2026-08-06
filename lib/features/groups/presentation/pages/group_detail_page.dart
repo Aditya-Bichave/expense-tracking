@@ -373,9 +373,16 @@ class _GroupDetailPageState extends State<GroupDetailPage>
   ) {
     final kit = context.kit;
     final isAdmin = currentMember?.role == GroupRole.admin;
-    final adminCount = members
-        .where((member) => member.role == GroupRole.admin)
-        .length;
+    // ⚡ Bolt: [Performance Improvement]
+    // 💡 What: Replaced `.where().length` with a standard for loop counter.
+    // 🎯 Why: `.where()` creates an intermediate iterable just to count items, wasting allocations.
+    // 📊 Impact: Prevents O(N) intermediate iterable allocation during dialog rendering.
+    int adminCount = 0;
+    for (final member in members) {
+      if (member.role == GroupRole.admin) {
+        adminCount++;
+      }
+    }
     final isSoleAdmin = isAdmin && adminCount == 1;
 
     bridgeShowModalBottomSheet(

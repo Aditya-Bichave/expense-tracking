@@ -78,18 +78,31 @@ class CategoryManagementBloc
         );
       },
       (allCategories) {
-        final customExpense = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final customIncome = allCategories
-            .where((c) => c.isCustom && c.type == CategoryType.income)
-            .toList();
-        final predefinedExpense = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.expense)
-            .toList();
-        final predefinedIncome = allCategories
-            .where((c) => !c.isCustom && c.type == CategoryType.income)
-            .toList();
+        // ⚡ Bolt: [Performance Improvement]
+        // 💡 What: Replaced multiple `.where(...).toList()` chains with a single loop.
+        // 🎯 Why: Previously, filtering lists created four intermediate iterables and iterated over `allCategories` four times.
+        // 📊 Impact: Reduces iteration from O(4N) to O(N) and prevents multiple intermediate list allocations, reducing GC pressure.
+        // 🔬 Measurement: Observe memory footprint and loading time when retrieving categories.
+        final customExpense = <Category>[];
+        final customIncome = <Category>[];
+        final predefinedExpense = <Category>[];
+        final predefinedIncome = <Category>[];
+
+        for (final c in allCategories) {
+          if (c.isCustom) {
+            if (c.type == CategoryType.expense) {
+              customExpense.add(c);
+            } else if (c.type == CategoryType.income) {
+              customIncome.add(c);
+            }
+          } else {
+            if (c.type == CategoryType.expense) {
+              predefinedExpense.add(c);
+            } else if (c.type == CategoryType.income) {
+              predefinedIncome.add(c);
+            }
+          }
+        }
 
         // ⚡ Bolt Performance Optimization
         // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading

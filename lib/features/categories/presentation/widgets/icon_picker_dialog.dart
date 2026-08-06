@@ -125,13 +125,14 @@ class _IconPickerDialogContentState extends State<IconPickerDialogContent> {
         if (query.isEmpty) {
           _filteredIcons = availableIcons.entries.toList();
         } else {
-          // ⚡ Bolt Performance Optimization
-          // Problem: `entry.key.toLowerCase()` is computed inside the loop repeatedly.
-          // Solution: Pre-lowercase keys since they're already lowercase in our map!
-          // Impact: Speeds up icon search by avoiding string allocations.
-          _filteredIcons = availableIcons.entries.where((entry) {
-            return entry.key.contains(query);
-          }).toList();
+          // ⚡ Bolt: [Performance Improvement]
+          // 💡 What: Replaced `.where().toList()` with list comprehension.
+          // 🎯 Why: `.where()` creates intermediate iterable which causes unnecessary GC overhead during filtering.
+          // 📊 Impact: Prevents O(N) allocation of intermediate iterable when searching icons.
+          _filteredIcons = [
+            for (final entry in availableIcons.entries)
+              if (entry.key.contains(query)) entry,
+          ];
         }
         // Optional: Sort filtered results alphabetically by key
         _filteredIcons.sort((a, b) => a.key.compareTo(b.key));

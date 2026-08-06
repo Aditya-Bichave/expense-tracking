@@ -69,10 +69,17 @@ class _CategoryPickerDialogContentState
       for (var c in widget.categories) c.id: c.name.toLowerCase(),
     };
 
-    _allCategories =
-        widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(
-          (a, b) => _lowerCaseNames[a.id]!.compareTo(_lowerCaseNames[b.id]!),
-        );
+    // ⚡ Bolt: [Performance Improvement]
+    // 💡 What: Replaced `.where().toList()..sort()` with a collection loop and direct sort.
+    // 🎯 Why: Chaining creates an intermediate iterable.
+    // 📊 Impact: Prevents O(N) allocation for a temporary iterable when opening the category picker dialog.
+    _allCategories = [
+      for (final c in widget.categories)
+        if (c.id != uncategorizedId) c,
+    ];
+    _allCategories.sort(
+      (a, b) => _lowerCaseNames[a.id]!.compareTo(_lowerCaseNames[b.id]!),
+    );
     // ⚡ Bolt Performance Optimization
     // Problem: List.from creates a full clone which is unnecessary when we just need a reference to the sorted list
     // Solution: Assign the reference directly. _filterCategories reassings _filteredCategories instead of mutating.

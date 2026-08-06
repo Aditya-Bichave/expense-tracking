@@ -1,3 +1,3 @@
-## 2024-05-24 - [Avoid `findChildIndexCallback` precomputation in `build()`]
-**Learning:** Do not precompute a full ID-to-index Map inside `build()` for `ListView.builder`'s `findChildIndexCallback`, as iterating all items on every render negates the O(V) lazy rendering benefit and causes a performance regression.
-**Action:** Instead, convert the widget to a `StatefulWidget` and cache the map in `initState` and `didUpdateWidget`.
+## 2025-02-12 - Collection Filtering GC Optimization
+**Learning:** Chaining functional collection methods like `.where().toList()..sort()` or `.where().map().toList()` in Dart creates intermediate iterable objects (like `WhereIterable` and `MappedIterable`) that are quickly discarded. In a UI framework like Flutter, allocating and discarding these objects during the build phase or frequent state updates increases Garbage Collection (GC) pressure, which can cause UI jank (dropped frames).
+**Action:** Replace these chains with collection `for...if` spread comprehensions (e.g., `[for (final item in list) if (condition) item]`) or direct single-pass loops. This prevents intermediate object allocation and keeps operations strictly O(N) in both time and space.

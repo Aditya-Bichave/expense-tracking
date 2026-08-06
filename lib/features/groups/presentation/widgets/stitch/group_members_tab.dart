@@ -15,6 +15,7 @@ import 'package:expense_tracker/ui_kit/components/loading/app_loading_indicator.
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/features/groups/domain/entities/group_member.dart';
 
 class GroupMembersTab extends StatelessWidget {
   final String groupId;
@@ -77,9 +78,17 @@ class GroupMembersTab extends StatelessWidget {
         }
 
         final currentUser = authState.user;
-        final currentMember = state.members
-            .where((member) => member.userId == currentUser.id)
-            .firstOrNull;
+        // ⚡ Bolt: [Performance Improvement]
+        // 💡 What: Replaced `.where().firstOrNull` chain with a single collection loop.
+        // 🎯 Why: Chaining creates intermediate iterables on every render pass.
+        // 📊 Impact: Prevents O(N) intermediate allocations, reducing GC pressure during widget build.
+        GroupMember? currentMember;
+        for (final member in state.members) {
+          if (member.userId == currentUser.id) {
+            currentMember = member;
+            break;
+          }
+        }
         final isAdmin = currentMember?.role == GroupRole.admin;
 
         return Column(

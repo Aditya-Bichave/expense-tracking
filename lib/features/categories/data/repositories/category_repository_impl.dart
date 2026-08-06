@@ -118,11 +118,16 @@ class CategoryRepositoryImpl implements CategoryRepository {
     final allResult = await getAllCategories(); // This uses the main cache
 
     return allResult.fold((failure) => Left(failure), (allCategories) {
-      final filtered = allCategories.where((cat) {
-        bool typeMatch = (type == null) || (cat.type == type);
-        bool customMatch = includeCustom || !cat.isCustom;
-        return typeMatch && customMatch;
-      }).toList();
+      // ⚡ Bolt: [Performance Improvement]
+      // 💡 What: Replaced `.where().toList()` with list comprehension.
+      // 🎯 Why: `.where()` creates intermediate iterable causing GC pressure.
+      // 📊 Impact: Prevents O(N) allocation of intermediate iterable.
+      final filtered = [
+        for (final cat in allCategories)
+          if ((type == null || cat.type == type) &&
+              (includeCustom || !cat.isCustom))
+            cat,
+      ];
       log.fine(
         "[CategoryRepo] Filtered specific categories. Count: ${filtered.length}",
       );
@@ -141,11 +146,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
     // --- Use getAllCategories as the source of truth ---
     final allResult = await getAllCategories();
     return allResult.fold((failure) => Left(failure), (allCategories) {
-      final filtered = allCategories.where((cat) {
-        bool customMatch = cat.isCustom;
-        bool typeMatch = (type == null) || (cat.type == type);
-        return customMatch && typeMatch;
-      }).toList();
+      // ⚡ Bolt: [Performance Improvement]
+      // 💡 What: Replaced `.where().toList()` with list comprehension.
+      // 🎯 Why: `.where()` creates intermediate iterable causing GC pressure.
+      // 📊 Impact: Prevents O(N) allocation of intermediate iterable.
+      final filtered = [
+        for (final cat in allCategories)
+          if (cat.isCustom && (type == null || cat.type == type)) cat,
+      ];
       log.fine(
         "[CategoryRepo] Filtered custom categories. Count: ${filtered.length}",
       );
