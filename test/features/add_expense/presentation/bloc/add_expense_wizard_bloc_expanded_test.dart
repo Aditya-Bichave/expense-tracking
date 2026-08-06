@@ -102,6 +102,7 @@ void main() {
   );
 
   setUpAll(() {
+    // Removed AddExpenseWizardState fallback since FakeAddExpenseWizardState is registered
     registerFallbackValue(FakeAddExpenseWizardState());
     registerFallbackValue(const FileOptions());
     registerFallbackValue(File(''));
@@ -279,7 +280,7 @@ void main() {
       'SubmitExpense fails with repository error',
       build: () {
         when(
-          () => repository.createExpense(any()),
+          () => repository.createExpense(any<AddExpenseWizardState>()),
         ).thenAnswer((_) async => throw Exception('Failed to create'));
         return bloc;
       },
