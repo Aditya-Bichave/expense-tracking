@@ -14,10 +14,16 @@ class MockBudgetLocalDataSource extends Mock implements BudgetLocalDataSource {}
 
 class MockExpenseRepository extends Mock implements ExpenseRepository {}
 
+class FakeBudgetModel extends Fake implements BudgetModel {}
+
 void main() {
   late BudgetRepositoryImpl repository;
   late MockBudgetLocalDataSource mockLocalDataSource;
   late MockExpenseRepository mockExpenseRepository;
+
+  setUpAll(() {
+    registerFallbackValue(FakeBudgetModel());
+  });
 
   setUp(() {
     mockLocalDataSource = MockBudgetLocalDataSource();
@@ -64,7 +70,7 @@ void main() {
       'should call localDataSource.saveBudget and return Right(Budget)',
       () async {
         when(
-          () => mockLocalDataSource.saveBudget(any()),
+          () => mockLocalDataSource.saveBudget(any<BudgetModel>()),
         ).thenAnswer((_) async {});
 
         // Stub getBudgets for overlap check
@@ -75,14 +81,16 @@ void main() {
         final result = await repository.addBudget(tBudget);
 
         expect(result, isA<Right<Failure, Budget>>());
-        verify(() => mockLocalDataSource.saveBudget(any())).called(1);
+        verify(
+          () => mockLocalDataSource.saveBudget(any<BudgetModel>()),
+        ).called(1);
       },
     );
 
     test('should return Left(CacheFailure) when save fails', () async {
       when(() => mockLocalDataSource.getBudgets()).thenAnswer((_) async => []);
       when(
-        () => mockLocalDataSource.saveBudget(any()),
+        () => mockLocalDataSource.saveBudget(any<BudgetModel>()),
       ).thenAnswer((_) async => throw Exception('Error'));
 
       final result = await repository.addBudget(tBudget);

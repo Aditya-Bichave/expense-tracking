@@ -50,7 +50,10 @@ void main() {
       when(() => mockBox.values).thenThrow(Exception());
 
       // Act & Assert
-      expect(() async => await dataSource.getBudgets(), throwsA(isA<CacheFailure>()));
+      expect(
+        () async => await dataSource.getBudgets(),
+        throwsA(isA<CacheFailure>()),
+      );
     });
   });
 
@@ -101,7 +104,10 @@ void main() {
       ).thenAnswer((_) async => throw Exception());
 
       // Act & Assert
-      expect(() async => await dataSource.deleteBudget('1'), throwsA(isA<CacheFailure>()));
+      expect(
+        () async => await dataSource.deleteBudget('1'),
+        throwsA(isA<CacheFailure>()),
+      );
     });
   });
 }
