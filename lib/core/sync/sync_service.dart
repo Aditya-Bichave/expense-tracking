@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'dart:async';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
 import 'package:expense_tracker/core/sync/outbox_repository.dart';
 import 'package:expense_tracker/features/groups/data/models/group_model.dart';
 import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
 import 'package:hive_ce/hive.dart';
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -156,9 +156,13 @@ class SyncService {
       if (localMember == null) {
         _groupMemberBox.put(serverMember.id, serverMember);
         unawaited(
-          _ensureGroupExists(serverMember.groupId).catchError((e, s) {
-            log.severe("Failed to ensure group exists in background: $e\n$s");
-          }),
+          () async {
+            try {
+              await _ensureGroupExists(serverMember.groupId);
+            } catch (e, s) {
+              log.severe("Failed to ensure group exists in background: $e\n$s");
+            }
+          }(),
         );
       } else {
         // Last-Write-Wins check for member
