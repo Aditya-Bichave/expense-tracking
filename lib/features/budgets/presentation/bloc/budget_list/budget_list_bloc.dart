@@ -161,6 +161,12 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
               for (final budget in budgets) {
                 final (periodStart, periodEnd) = budget.getCurrentPeriodDates();
 
+                // ⚡ Bolt Performance Optimization
+                // Problem: .contains() on a List inside a for loop creates an O(N*M) time complexity trap
+                // Solution: Precompute a Set of category IDs for O(1) lookups outside the loop
+                // Impact: Reduces complexity to O(N+M), significantly speeding up budget list calculation
+                final categoryIdSet = budget.categoryIds?.toSet();
+
                 // Filter in memory
                 double spent = 0;
                 for (final expense in allExpenses) {
@@ -179,11 +185,9 @@ class BudgetListBloc extends Bloc<BudgetListEvent, BudgetListState> {
                   if (budget.type == BudgetType.overall) {
                     categoryMatch = true;
                   } else if (budget.type == BudgetType.categorySpecific &&
-                      budget.categoryIds != null &&
-                      budget.categoryIds!.isNotEmpty) {
-                    categoryMatch = budget.categoryIds!.contains(
-                      expense.categoryId,
-                    );
+                      categoryIdSet != null &&
+                      categoryIdSet.isNotEmpty) {
+                    categoryMatch = categoryIdSet.contains(expense.categoryId);
                   }
 
                   if (categoryMatch) {

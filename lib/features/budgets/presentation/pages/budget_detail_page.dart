@@ -135,10 +135,16 @@ class _BudgetDetailPageState extends State<BudgetDetailPage> {
         );
       },
       (transactions) {
+        // ⚡ Bolt Performance Optimization
+        // Problem: .contains() on a List inside a .where() loop creates an O(N*M) time complexity trap
+        // Solution: Precompute a Set of category IDs for O(1) lookups
+        // Impact: Reduces time complexity to O(N+M), speeding up transaction filtering for large budgets
+        final categoryIdSet = budget.categoryIds?.toSet();
+
         foundTransactions = transactions.where((txn) {
           if (budget.type == BudgetType.categorySpecific &&
-              budget.categoryIds != null &&
-              !budget.categoryIds!.contains(txn.category?.id)) {
+              categoryIdSet != null &&
+              !categoryIdSet.contains(txn.category?.id)) {
             return false;
           }
           return true;
