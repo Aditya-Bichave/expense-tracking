@@ -132,10 +132,11 @@ class _ReportFilterSheetContentState extends State<ReportFilterSheetContent> {
     return BlocBuilder<ReportFilterBloc, ReportFilterState>(
       builder: (context, state) {
         // Prepare items based on LATEST state
-        final categoryItems = state.availableCategories
-            .where((c) => c.id != Category.uncategorized.id)
-            .map((c) => MultiSelectItem<String>(c.id, c.name))
-            .toList();
+        final categoryItems = [
+          for (var c in state.availableCategories)
+            if (c.id != Category.uncategorized.id)
+              MultiSelectItem<String>(c.id, c.name),
+        ];
         final accountItems = state.availableAccounts
             .map((a) => MultiSelectItem<String>(a.id, a.name))
             .toList();

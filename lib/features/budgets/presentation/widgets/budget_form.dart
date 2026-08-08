@@ -137,13 +137,12 @@ class _BudgetFormState extends State<BudgetForm> {
 
   void _showCategoryMultiSelect(BuildContext context) {
     final theme = Theme.of(context);
-    final expenseCategories = widget.availableCategories
-        .where(
-          (cat) =>
-              cat.type == CategoryType.expense &&
-              cat.id != Category.uncategorized.id,
-        )
-        .toList();
+    final expenseCategories = [
+      for (var cat in widget.availableCategories)
+        if (cat.type == CategoryType.expense &&
+            cat.id != Category.uncategorized.id)
+          cat,
+    ];
     final items = expenseCategories
         .map((category) => MultiSelectItem<String>(category.id, category.name))
         .toList();
@@ -152,9 +151,10 @@ class _BudgetFormState extends State<BudgetForm> {
     // Solution: Precompute a Set of valid item values for O(1) lookups
     // Impact: Prevents UI jank when opening the MultiSelect dialog with many categories
     final validItemValues = items.map((i) => i.value).toSet();
-    final validInitialValue = _selectedCategoryIds
-        .where((id) => validItemValues.contains(id))
-        .toList();
+    final validInitialValue = [
+      for (var id in _selectedCategoryIds)
+        if (validItemValues.contains(id)) id,
+    ];
 
     bridgeShowModalBottomSheet(
       isScrollControlled: true,

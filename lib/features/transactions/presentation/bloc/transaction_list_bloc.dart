@@ -309,9 +309,10 @@ class TransactionListBloc
         // Impact: Reduces complexity to O(N+M), preventing UI freezes on large datasets
         final transactionIds = transactions.map((t) => t.id).toSet();
         final validSelection = state.isInBatchEditMode
-            ? state.selectedTransactionIds
-                  .where((id) => transactionIds.contains(id))
-                  .toSet()
+            ? {
+                for (var id in state.selectedTransactionIds)
+                  if (transactionIds.contains(id)) id,
+              }
             : <String>{};
 
         emit(
@@ -555,9 +556,10 @@ class TransactionListBloc
 
     final previousState = state;
 
-    final optimisticList = previousState.transactions
-        .where((t) => t.id != txn.id)
-        .toList();
+    final optimisticList = [
+      for (var t in previousState.transactions)
+        if (t.id != txn.id) t,
+    ];
     final updatedSelection = Set<String>.from(
       previousState.selectedTransactionIds,
     )..remove(txn.id);
