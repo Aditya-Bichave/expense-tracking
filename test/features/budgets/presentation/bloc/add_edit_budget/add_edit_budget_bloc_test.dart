@@ -192,7 +192,7 @@ void main() {
         when(() => mockUuid.v4()).thenReturn('new-id');
         when(
           () => mockAddBudgetUseCase(any()),
-        ).thenAnswer((_) async => const Left(CacheFailure('Save failed')));
+        ).thenAnswer((_) async => const Left(ServerFailure('Save failed')));
         return AddEditBudgetBloc(
           addBudgetUseCase: mockAddBudgetUseCase,
           updateBudgetUseCase: mockUpdateBudgetUseCase,
