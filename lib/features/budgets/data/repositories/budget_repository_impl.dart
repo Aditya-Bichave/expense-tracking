@@ -163,7 +163,11 @@ class BudgetRepositoryImpl implements BudgetRepository {
     log.fine("[BudgetRepo] Getting all budgets.");
     try {
       final models = await localDataSource.getBudgets();
-      final entities = models.map((m) => m.toEntity()).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: .map().toList() creates an intermediate iterable.
+      // Solution: Direct list comprehension reduces object allocation.
+      // Impact: Reduces GC pressure when fetching budgets.
+      final entities = [for (var m in models) m.toEntity()];
 
       // ⚡ Bolt Performance Optimization
       // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading

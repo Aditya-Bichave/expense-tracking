@@ -92,9 +92,14 @@ class AssetDistributionPieChartState extends State<AssetDistributionPieChart> {
     // --- End Quantum Mode Handling ---
 
     // Filter out accounts with zero or negative balance for the chart itself
-    final positiveBalances = Map.fromEntries(
-      widget.accountBalances.entries.where((entry) => entry.value > 0),
-    );
+    // ⚡ Bolt Performance Optimization
+    // Problem: .entries.where() allocates intermediate iterables and Map.fromEntries adds overhead.
+    // Solution: Map comprehension directly filters and populates the map.
+    // Impact: Improves chart rendering speed by avoiding temporary allocations.
+    final positiveBalances = {
+      for (var entry in widget.accountBalances.entries)
+        if (entry.value > 0) entry.key: entry.value,
+    };
 
     log.info(
       "[PieChart] Filtered positive balances: ${positiveBalances.length} accounts.",

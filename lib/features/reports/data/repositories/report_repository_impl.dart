@@ -557,16 +557,17 @@ class ReportRepositoryImpl implements ReportRepository {
       );
     }
 
-    final List<TimeSeriesDataPoint> reportData = aggregatedData.entries
-        .map(
-          (entry) => TimeSeriesDataPoint(
-            date: entry.key,
-            amount: ComparisonValue(
-              currentValue: entry.value,
-            ), // Only current value here
-          ),
-        )
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: .map().toList() creates an intermediate iterable object for each element mapped.
+    // Solution: Direct list comprehension eliminates the temporary iterable map object.
+    // Impact: Slightly faster processing, less GC load.
+    final List<TimeSeriesDataPoint> reportData = [
+      for (var entry in aggregatedData.entries)
+        TimeSeriesDataPoint(
+          date: entry.key,
+          amount: ComparisonValue(currentValue: entry.value),
+        ),
+    ];
 
     reportData.sort((a, b) => a.date.compareTo(b.date));
 
@@ -740,17 +741,18 @@ class ReportRepositoryImpl implements ReportRepository {
           : (income: current.income, expense: current.expense + amount);
     }
 
-    final List<IncomeExpensePeriodData> reportData = aggregatedData.entries
-        .map(
-          (entry) => IncomeExpensePeriodData(
-            periodStart: entry.key,
-            totalIncome: ComparisonValue(
-              currentValue: entry.value.income,
-            ), // Only current
-            totalExpense: ComparisonValue(currentValue: entry.value.expense),
-          ), // Only current
-        )
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: .map().toList() creates an intermediate iterable object for each element mapped.
+    // Solution: Direct list comprehension eliminates the temporary iterable map object.
+    // Impact: Slightly faster processing, less GC load.
+    final List<IncomeExpensePeriodData> reportData = [
+      for (var entry in aggregatedData.entries)
+        IncomeExpensePeriodData(
+          periodStart: entry.key,
+          totalIncome: ComparisonValue(currentValue: entry.value.income),
+          totalExpense: ComparisonValue(currentValue: entry.value.expense),
+        ),
+    ];
 
     reportData.sort((a, b) => a.periodStart.compareTo(b.periodStart));
     log.fine(
@@ -911,9 +913,14 @@ class ReportRepositoryImpl implements ReportRepository {
     List<Budget> relevantBudgets = allBudgets;
     if (budgetIds != null && budgetIds.isNotEmpty) {
       final budgetIdSet = budgetIds.toSet();
-      relevantBudgets = allBudgets
-          .where((b) => budgetIdSet.contains(b.id))
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: .where().toList() allocates an intermediate iterable.
+      // Solution: Use a direct list comprehension.
+      // Impact: Reduces GC pressure during budget performance report generation.
+      relevantBudgets = [
+        for (var b in allBudgets)
+          if (budgetIdSet.contains(b.id)) b,
+      ];
     }
 
     if (relevantBudgets.isEmpty) {
@@ -1059,9 +1066,14 @@ class ReportRepositoryImpl implements ReportRepository {
       List<Goal> relevantGoals = allActiveGoals;
       if (goalIds != null && goalIds.isNotEmpty) {
         final goalIdSet = goalIds.toSet();
-        relevantGoals = allActiveGoals
-            .where((g) => goalIdSet.contains(g.id))
-            .toList();
+        // ⚡ Bolt Performance Optimization
+        // Problem: .where().toList() allocates an intermediate iterable.
+        // Solution: Use a direct list comprehension.
+        // Impact: Reduces GC pressure during report generation.
+        relevantGoals = [
+          for (var g in allActiveGoals)
+            if (goalIdSet.contains(g.id)) g,
+        ];
       }
 
       if (relevantGoals.isEmpty) {
