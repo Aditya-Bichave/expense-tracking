@@ -108,7 +108,8 @@ All four must pass, and you must show the output of each:
 | Analysis | `flutter analyze` | no errors; no new warnings |
 | Format | `dart format --set-exit-if-changed .` | clean |
 | Suite | `flutter test` | 0 failures, 0 new skips |
-| Coverage | `./ci/check_coverage.sh` or the awk one-liner | >= target |
+| Diff coverage | `./ci/check_coverage.sh` | >= 80% on changed lines |
+| Total coverage | the awk one-liner in `COVERAGE_PLAYBOOK.md` §1 | >= target |
 
 Plus a flake check: run the suite a second time with
 `--test-randomize-ordering-seed=random`. Order-dependent tests are the most

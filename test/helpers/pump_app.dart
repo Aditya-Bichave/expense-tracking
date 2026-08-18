@@ -9,10 +9,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-// InheritedGoRouter is not part of go_router's public surface, but it is the
-// only way to make `GoRouter.of(context)` resolve to a mock inside a test.
-// ignore: implementation_imports
-import 'package:go_router/src/misc/inherited_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'mock_helpers.dart';
 
@@ -60,6 +56,13 @@ Future<void> pumpWidgetWithProviders({
   ThemeData? darkTheme,
 }) async {
   // 1. Determine router configuration
+  assert(
+    navigatorOverride == null || router == null,
+    'navigatorOverride only wraps the default route. When you pass your own '
+    'router, build the InheritedGoRouter inside that router builder '
+    'instead, or the override silently does nothing.',
+  );
+
   Widget rootChild(Widget child) => navigatorOverride == null
       ? child
       : InheritedGoRouter(goRouter: navigatorOverride, child: child);

@@ -9,6 +9,7 @@ import 'package:expense_tracker/features/transactions/presentation/bloc/transact
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/core/utils/date_formatter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:mocktail/mocktail.dart';
@@ -96,7 +97,13 @@ void main() {
       // ASSERT
       expect(find.text('Coffee'), findsOneWidget);
       expect(find.text('- \$4.50'), findsOneWidget);
-      expect(find.text('Jan 1, 2023 12:00 AM'), findsOneWidget);
+      // Assert through the same formatter the page uses. Hard-coding the
+      // rendered string breaks on ICU updates, which changed the space
+      // before AM/PM to U+202F in newer intl.
+      expect(
+        find.text(DateFormatter.formatDateTime(mockTransaction.date)),
+        findsOneWidget,
+      );
       expect(find.text('Food'), findsOneWidget);
       expect(find.text('Main Bank'), findsOneWidget);
       expect(find.text('Morning coffee'), findsOneWidget);

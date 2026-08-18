@@ -151,6 +151,24 @@ void main() {
       expect(await service.getDemoExpenses(), hasLength(originalCount + 1));
     });
 
+    test(
+      'removing from the cache leaves the shared DemoData list intact',
+      () async {
+        service.enterDemoMode();
+        final originalIds = DemoData.sampleExpenses.map((e) => e.id).toList();
+
+        await service.deleteDemoExpense(originalIds.first);
+
+        // The service holds its own list; deleting through it must not reach
+        // back into the shared fixture other tests also read.
+        expect(DemoData.sampleExpenses.map((e) => e.id), originalIds);
+        expect(
+          (await service.getDemoExpenses()).map((e) => e.id),
+          isNot(contains(originalIds.first)),
+        );
+      },
+    );
+
     test('exiting demo mode clears every cache', () async {
       service.enterDemoMode();
       await service.addDemoRecurringAuditLog(auditLog('l1', 'r1'));
@@ -193,8 +211,8 @@ void main() {
     });
 
     test('update of a missing expense throws', () async {
-      expect(
-        () => service.updateDemoExpense(expense('missing')),
+      await expectLater(
+        service.updateDemoExpense(expense('missing')),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -235,8 +253,8 @@ void main() {
     });
 
     test('update of a missing income throws', () async {
-      expect(
-        () => service.updateDemoIncome(incomeModel('missing')),
+      await expectLater(
+        service.updateDemoIncome(incomeModel('missing')),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -275,8 +293,8 @@ void main() {
     });
 
     test('update of a missing account throws', () async {
-      expect(
-        () => service.updateDemoAccount(accountModel('missing')),
+      await expectLater(
+        service.updateDemoAccount(accountModel('missing')),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),

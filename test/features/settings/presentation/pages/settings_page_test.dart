@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/features/accounts/presentation/bloc/account_list/account_list_bloc.dart';
@@ -339,7 +340,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Could not launch https://example.com/help'),
+        find.text('Could not launch ${ExternalUrls.help}'),
         findsOneWidget,
       );
     });

@@ -312,8 +312,7 @@ void main() {
         await pumpPage(tester);
         await enterTitleAndAmount(tester, 'Dinner', '100');
 
-        await tester.tap(find.byType(AppButton));
-        await tester.pump();
+        await tapSubmit(tester);
 
         final captured =
             verify(() => expensesBloc.add(captureAny())).captured.single
@@ -421,16 +420,18 @@ void main() {
       verifyNever(() => expensesBloc.add(any()));
     });
 
-    testWidgets('clearing a payer amount removes it from the payer map', (
+    testWidgets('a zero payer amount is dropped from the payer map', (
       tester,
     ) async {
       await pumpPage(tester);
       await enterTitleAndAmount(tester, 'Dinner', '100');
 
-      final payerField = find.widgetWithText(TextField, '0.00').first;
+      // Rows are title, amount, then one payer field per member; index 2 is
+      // the first payer. Set it, then zero it back out.
+      final payerField = find.byType(TextField).at(2);
       await tester.enterText(payerField, '100');
       await tester.pump();
-      await tester.enterText(find.byType(TextField).at(2), '0');
+      await tester.enterText(payerField, '0');
       await tester.pump();
 
       await tapSubmit(tester);

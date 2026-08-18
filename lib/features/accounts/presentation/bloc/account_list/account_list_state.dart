@@ -19,10 +19,22 @@ class AccountListLoading extends AccountListState
     implements BaseListLoadingState {
   @override
   final bool isReloading;
-  const AccountListLoading({this.isReloading = false});
+
+  /// Rows already on screen when this reload started.
+  ///
+  /// The list page keeps showing these while the refresh is in flight so the
+  /// list does not blank out mid-pull. It cannot read them back off the bloc:
+  /// by the time the builder runs, the bloc's current state *is* this loading
+  /// state, so there is no earlier state left to consult.
+  final List<AssetAccount> previousItems;
+
+  const AccountListLoading({
+    this.isReloading = false,
+    this.previousItems = const [],
+  });
 
   @override
-  List<Object> get props => [isReloading];
+  List<Object> get props => [isReloading, previousItems];
 }
 
 // Extend BaseListState<AssetAccount>

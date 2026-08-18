@@ -11,6 +11,8 @@ import 'package:expense_tracker/features/income/domain/repositories/income_repos
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/either_matchers.dart';
+
 class MockAssetAccountLocalDataSource extends Mock
     implements AssetAccountLocalDataSource {}
 
@@ -19,12 +21,6 @@ class MockIncomeRepository extends Mock implements IncomeRepository {}
 class MockExpenseRepository extends Mock implements ExpenseRepository {}
 
 class _FakeAssetAccountModel extends Fake implements AssetAccountModel {}
-
-T rightOf<T>(Either<Failure, T> either) =>
-    either.fold((l) => fail('expected a success, got $l'), (r) => r);
-
-Failure leftOf<T>(Either<Failure, T> either) =>
-    either.fold((l) => l, (r) => fail('expected a failure, got $r'));
 
 void main() {
   late MockAssetAccountLocalDataSource dataSource;
@@ -401,6 +397,14 @@ void main() {
       // The N+1 guard: exactly one income and one expense fetch for N accounts.
       verify(
         () => incomeRepository.getIncomes(
+          startDate: any(named: 'startDate'),
+          endDate: any(named: 'endDate'),
+          categoryId: any(named: 'categoryId'),
+          accountId: any(named: 'accountId'),
+        ),
+      ).called(1);
+      verify(
+        () => expenseRepository.getExpenses(
           startDate: any(named: 'startDate'),
           endDate: any(named: 'endDate'),
           categoryId: any(named: 'categoryId'),

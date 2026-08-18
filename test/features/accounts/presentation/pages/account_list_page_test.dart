@@ -170,7 +170,10 @@ void main() {
         mockBloc,
         Stream<AccountListState>.fromIterable([
           const AccountListLoaded(accounts: mockAccounts),
-          const AccountListLoading(isReloading: true),
+          const AccountListLoading(
+            isReloading: true,
+            previousItems: mockAccounts,
+          ),
         ]),
         initialState: const AccountListLoaded(accounts: mockAccounts),
       );
@@ -178,6 +181,8 @@ void main() {
 
       // Reloading must not collapse into the spinner or the empty state.
       expect(find.text('No accounts yet!'), findsNothing);
+      expect(find.byType(AccountCard), findsNWidgets(2));
+      expect(find.byType(BridgeCircularProgressIndicator), findsNothing);
     });
   });
 

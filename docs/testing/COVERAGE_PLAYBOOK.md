@@ -7,7 +7,7 @@ Read this before touching `lcov.info` by hand.
 
 Total line coverage over `coverage/lcov.info`:
 
-```
+```text
 coverage% = sum(LH) / sum(LF) * 100
 ```
 
@@ -54,16 +54,19 @@ you intend to cover a large majority of it.
 
 ## 3. Targets
 
-```
+```text
 REQUIRED_LINES = ceil((TARGET_PCT - CURRENT_PCT) / 100 * TOTAL_LINES)
 ```
 
 This is exact only while `TOTAL_LINES` is constant. If your batch introduces
 previously-unimported files, recompute against the new denominator:
 
+```text
+needed_hits = max(0, ceil(TARGET_PCT/100 * (TOTAL_LINES + new_LF) - COVERED_LINES))
 ```
-needed_hits = (TARGET_PCT/100 * (TOTAL_LINES + new_LF)) - COVERED_LINES
-```
+
+Covered lines are integral, so round up; a negative result means the target is
+already met and should clamp to zero.
 
 Budget with a **1.3x buffer**. Projection error on widget-heavy files routinely
 runs 40%+ because early-return guards and error branches are easy to miss.
@@ -129,7 +132,9 @@ directly.
 - **Partial runs produce partial lcov.** `flutter test path/to/one_test.dart
   --coverage` overwrites `lcov.info` with only that file's reach. Never compare a
   scoped run against a full-suite baseline.
-- **Concurrency affects nothing but wall time** — but very high `--concurrency`
-  on Windows can cause flaky timeouts in widget tests. 8 is the safe setting here.
+- **Concurrency is not just a speed dial.** It changes scheduling and memory
+  pressure, so it can surface shared-state coupling between test files as well
+  as flaky timeouts in widget tests — the latter especially on Windows at high
+  values. 8 is the safe setting here.
 - **`~` in the test output is skipped tests, not passes.** A rising skip count is
   a regression even when the run is green.

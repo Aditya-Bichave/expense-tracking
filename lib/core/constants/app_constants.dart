@@ -21,3 +21,13 @@ abstract class AppConstants {
   static const String backupExpensesKey = 'expenses';
   static const String backupIncomesKey = 'incomes';
 }
+
+/// External destinations opened from the settings screen.
+///
+/// Kept in one place so the page, the legal section and their tests all agree
+/// on the exact URL rather than repeating string literals.
+abstract class ExternalUrls {
+  static const String help = 'https://example.com/help';
+  static const String privacy = 'https://example.com/privacy';
+  static const String terms = 'https://example.com/terms';
+}

@@ -153,12 +153,14 @@ is why they are worth writing.
 Shape:
 
 - Build a `GoRouter` with only the routes the flow needs.
-- Use **real** blocs over **mocked** repositories. Mocking the bloc defeats the
-  purpose; mocking the repository keeps it deterministic.
+- Use **real** blocs over **mocked collaborators** — the use case where the
+  feature has one, otherwise the repository. Mocking the bloc defeats the
+  purpose; mocking its collaborator keeps the flow deterministic.
 - Drive with `tester.tap` / `enterText` / `pumpAndSettle`, and assert on what the
   user would see at each step.
-- Assert the terminal side effect via `verify()` on the repository — that the
-  flow actually persisted something is the point.
+- Assert the terminal side effect via `verify()` on that same collaborator,
+  capturing its arguments — that the flow actually carried the user's input all
+  the way through is the point.
 
 See `test/integration/groups_flow_test.dart` for the established pattern and
 `E2E_FLOW_INVENTORY.md` for what still needs one.

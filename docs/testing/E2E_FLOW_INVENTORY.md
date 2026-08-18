@@ -121,7 +121,7 @@ Flow test conventions are in [TEST_AUTHORING_SPEC](TEST_AUTHORING_SPEC.md) §7.
 
 ---
 
-## Coverage added in the 2026-08-19 pass
+## Coverage added in the initial flow-test pass
 
 Three Dart flow tests were added, each driving real blocs over mocked
 repositories and asserting the terminal side effect:

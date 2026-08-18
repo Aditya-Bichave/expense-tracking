@@ -93,7 +93,15 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
     );
 
     if (state is! AccountListLoaded || event.forceReload) {
-      emit(AccountListLoading(isReloading: state is AccountListLoaded));
+      final current = state;
+      emit(
+        AccountListLoading(
+          isReloading: current is AccountListLoaded,
+          previousItems: current is AccountListLoaded
+              ? current.items
+              : const [],
+        ),
+      );
       log.info(
         "[AccountListBloc] Emitting AccountListLoading (isReloading: ${state is AccountListLoaded}).",
       );

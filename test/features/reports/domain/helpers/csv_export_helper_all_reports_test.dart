@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:expense_tracker/core/services/downloader_service.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
@@ -24,10 +21,6 @@ void main() {
   late MockDownloaderService downloader;
 
   const currency = r'$';
-
-  setUpAll(() {
-    registerFallbackValue(Uint8List(0));
-  });
 
   setUp(() {
     downloader = MockDownloaderService();
@@ -479,41 +472,6 @@ void main() {
 
     test('no movement renders as +0.0%', () async {
       expect(await changeCellFor(current: 100, previous: 100), '+0.0%');
-    });
-  });
-
-  group('saveCsvFile on web', () {
-    testWidgets('delegates to the downloader with UTF-8 encoded bytes', (
-      tester,
-    ) async {
-      when(
-        () => downloader.downloadFile(
-          bytes: any(named: 'bytes'),
-          downloadName: any(named: 'downloadName'),
-          mimeType: any(named: 'mimeType'),
-        ),
-      ).thenAnswer((_) async {});
-
-      // saveCsvFile branches on kIsWeb, which is const false under the VM, so
-      // drive the web path through the downloader contract directly.
-      const csv = 'a,b\r\n1,2';
-      await downloader.downloadFile(
-        bytes: Uint8List.fromList(utf8.encode(csv)),
-        downloadName: 'report.csv',
-        mimeType: 'text/csv;charset=utf-8;',
-      );
-
-      final captured = verify(
-        () => downloader.downloadFile(
-          bytes: captureAny(named: 'bytes'),
-          downloadName: captureAny(named: 'downloadName'),
-          mimeType: captureAny(named: 'mimeType'),
-        ),
-      ).captured;
-
-      expect(utf8.decode(captured[0] as Uint8List), csv);
-      expect(captured[1], 'report.csv');
-      expect(captured[2], 'text/csv;charset=utf-8;');
     });
   });
 

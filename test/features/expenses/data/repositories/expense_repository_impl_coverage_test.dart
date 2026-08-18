@@ -10,6 +10,8 @@ import 'package:expense_tracker/features/expenses/data/repositories/expense_repo
 import 'package:expense_tracker/features/expenses/domain/entities/expense.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+
+import '../../../../helpers/either_matchers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MockExpenseLocalDataSource extends Mock
@@ -20,14 +22,6 @@ class MockCategoryRepository extends Mock implements CategoryRepository {}
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
 class _FakeExpenseModel extends Fake implements ExpenseModel {}
-
-/// Unwraps the success side, failing the test with the failure if it is a Left.
-T rightOf<T>(Either<Failure, T> either) =>
-    either.fold((l) => fail('expected a success, got $l'), (r) => r);
-
-/// Unwraps the failure side, failing the test with the value if it is a Right.
-Failure leftOf<T>(Either<Failure, T> either) =>
-    either.fold((l) => l, (r) => fail('expected a failure, got $r'));
 
 void main() {
   late MockExpenseLocalDataSource dataSource;
@@ -304,7 +298,7 @@ void main() {
         ),
       ).thenAnswer((_) async => []);
 
-      await repository.getTotalExpensesForAccount('');
+      expect(rightOf(await repository.getTotalExpensesForAccount('')), 0.0);
 
       verify(
         () => dataSource.getExpenses(

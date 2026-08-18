@@ -15,6 +15,7 @@ import 'package:expense_tracker/ui_bridge/bridge_elevated_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../../../helpers/pump_app.dart';
@@ -307,7 +308,12 @@ void main() {
 
       await pumpPage(tester);
 
-      expect(find.text('6/1/2025'), findsOneWidget);
+      // The page formats with DateFormat.yMd(); asserting the literal en_US
+      // form would break under a different default locale.
+      expect(
+        find.text(DateFormat.yMd().format(DateTime(2025, 6, 1))),
+        findsOneWidget,
+      );
     });
 
     testWidgets(

@@ -11,17 +11,13 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import '../../../../helpers/either_matchers.dart';
+
 class MockIncomeLocalDataSource extends Mock implements IncomeLocalDataSource {}
 
 class MockCategoryRepository extends Mock implements CategoryRepository {}
 
 class _FakeIncomeModel extends Fake implements IncomeModel {}
-
-T rightOf<T>(Either<Failure, T> either) =>
-    either.fold((l) => fail('expected a success, got $l'), (r) => r);
-
-Failure leftOf<T>(Either<Failure, T> either) =>
-    either.fold((l) => l, (r) => fail('expected a failure, got $r'));
 
 void main() {
   late MockIncomeLocalDataSource dataSource;
@@ -195,7 +191,11 @@ void main() {
 
       expect(
         leftOf(await repository.getTotalIncomeForAccount('a1')),
-        isA<Failure>(),
+        isA<CacheFailure>().having(
+          (f) => f.message,
+          'message',
+          'income box closed',
+        ),
       );
     });
   });
@@ -350,8 +350,8 @@ void main() {
       ).thenThrow(Exception('io'));
 
       expect(
-        await repository.reassignIncomesCategory('old', 'new'),
-        isA<Either<Failure, int>>().having((e) => e.isLeft(), 'isLeft', isTrue),
+        leftOf(await repository.reassignIncomesCategory('old', 'new')),
+        isA<CacheFailure>().having((f) => f.message, 'message', contains('io')),
       );
     });
   });

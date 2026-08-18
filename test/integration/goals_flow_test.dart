@@ -187,13 +187,25 @@ void main() {
     bool expectReload = true,
   }) async {
     await tester.runAsync(() async {
-      final settled = expectReload
-          ? goalListBloc.stream.firstWhere(
-              (s) => s.status != GoalListStatus.loading,
-            )
-          : Future<GoalListState>.value(goalListBloc.state);
-      dataChanges.add(event);
-      await settled;
+      if (expectReload) {
+        final settled = goalListBloc.stream.firstWhere(
+          (s) => s.status != GoalListStatus.loading,
+        );
+        dataChanges.add(event);
+        await settled;
+      } else {
+        // For the negative case there is no state to wait on, so give the
+        // stream subscription a real chance to deliver and the bloc a chance
+        // to react. Without this the assertion could pass simply because the
+        // event had not been dispatched yet.
+        dataChanges.add(event);
+        await goalListBloc.stream
+            .firstWhere((s) => s.status == GoalListStatus.loading)
+            .timeout(
+              const Duration(milliseconds: 200),
+              onTimeout: () => goalListBloc.state,
+            );
+      }
     });
     await tester.pumpAndSettle();
   }
