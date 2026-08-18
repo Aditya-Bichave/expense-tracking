@@ -29,7 +29,7 @@ dependencies:
   go_router: ^12.1.1 # For navigation, updated for test harness
 
   # Utilities
-  intl: 0.20.2 # For date formatting
+  intl: ">=0.20.2 <0.21.0" # For date formatting; must stay compatible with flutter_localizations
   uuid: ^4.1.0 # For generating unique IDs
   dartz: ^0.10.1
   url_launcher: ^6.3.1
