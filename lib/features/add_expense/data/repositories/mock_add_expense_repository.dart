@@ -7,7 +7,7 @@ class MockAddExpenseRepository implements AddExpenseRepository {
   Future<void> createExpense(AddExpenseWizardState state) async {
     final payload = state.toApiPayload();
     log.info('---------------- MOCK CREATE EXPENSE ----------------');
-    log.info('Payload: ');
+    log.info('Payload: $payload');
     log.info('-----------------------------------------------------');
     await Future.delayed(const Duration(milliseconds: 500));
   }

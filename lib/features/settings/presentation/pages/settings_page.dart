@@ -52,7 +52,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final Uri url = Uri.parse(urlString);
     if (!await launchUrl(url)) {
       if (context.mounted) {
-        AppToast.show(context, 'Could not launch ', type: AppToastType.error);
+        AppToast.show(
+          context,
+          'Could not launch $urlString',
+          type: AppToastType.error,
+        );
       }
     }
   }
@@ -70,7 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
             if (state.status == SettingsStatus.error && errorMsg != null) {
               AppToast.show(
                 context,
-                "Settings Error: ",
+                "Settings Error: $errorMsg",
                 type: AppToastType.error,
               );
               context.read<SettingsBloc>().add(const ClearSettingsMessage());
@@ -80,7 +84,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 pkgErrorMsg != null) {
               AppToast.show(
                 context,
-                "Version Info Error: ",
+                "Version Info Error: $pkgErrorMsg",
                 type: AppToastType.error,
               );
             }
