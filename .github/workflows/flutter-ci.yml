@@ -355,7 +355,7 @@ jobs:
         env:
           APP_BASE_URL: http://localhost:8080
           BUILD_DIR: build/web
-        run: ./run_e2e.sh --skip-build
+        run: ./run_e2e.sh --skip-build --skip-deps
 
       - name: Upload E2E Artifacts
         if: always()
