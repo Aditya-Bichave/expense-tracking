@@ -85,5 +85,110 @@ void main() {
 
       verify(() => mockBloc.add(any(that: isA<AddCategory>()))).called(1);
     });
+
+    testWidgets('parent tile reads "None" until a parent is picked', (
+      tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(const CategoryManagementState());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider.value(
+            value: mockBloc,
+            child: const AddEditCategoryScreen(),
+          ),
+        ),
+      );
+
+      expect(find.text('Parent Category'), findsOneWidget);
+      expect(find.text('None (Top Level)'), findsOneWidget);
+    });
+
+    testWidgets('picker offers same-type top-level categories and stores the '
+        'choice by name', (tester) async {
+      when(() => mockBloc.state).thenReturn(
+        const CategoryManagementState(
+          status: CategoryManagementStatus.loaded,
+          customExpenseCategories: [
+            Category(
+              id: 'p1',
+              name: 'Groceries',
+              iconName: 'cart',
+              colorHex: '#FF0000',
+              type: CategoryType.expense,
+              isCustom: true,
+            ),
+            // Already nested, so it cannot itself be a parent.
+            Category(
+              id: 'c1',
+              name: 'Fruit',
+              iconName: 'cart',
+              colorHex: '#FF0000',
+              type: CategoryType.expense,
+              isCustom: true,
+              parentCategoryId: 'p1',
+            ),
+          ],
+          customIncomeCategories: [
+            // Wrong type, so it must not be offered.
+            Category(
+              id: 'i1',
+              name: 'Salary',
+              iconName: 'cash',
+              colorHex: '#00FF00',
+              type: CategoryType.income,
+              isCustom: true,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider.value(
+            value: mockBloc,
+            child: const AddEditCategoryScreen(),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Parent Category'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Groceries'), findsOneWidget);
+      expect(find.text('Fruit'), findsNothing);
+      expect(find.text('Salary'), findsNothing);
+
+      await tester.tap(find.text('Groceries'));
+      await tester.pumpAndSettle();
+
+      // The tile shows the parent's name, not its id.
+      expect(find.text('Groceries'), findsOneWidget);
+      expect(find.text('None (Top Level)'), findsNothing);
+      expect(find.text('p1'), findsNothing);
+    });
+
+    testWidgets('picker explains itself when there are no eligible parents', (
+      tester,
+    ) async {
+      when(() => mockBloc.state).thenReturn(const CategoryManagementState());
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: BlocProvider.value(
+            value: mockBloc,
+            child: const AddEditCategoryScreen(),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Parent Category'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('No other top-level categories'),
+        findsOneWidget,
+      );
+    });
   });
 }

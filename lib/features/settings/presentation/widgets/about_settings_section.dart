@@ -1,3 +1,5 @@
+import 'package:go_router/go_router.dart';
+import 'package:expense_tracker/core/constants/route_names.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter/material.dart';
@@ -46,11 +48,7 @@ class AboutSettingsSection extends StatelessWidget {
                   ? kit.colors.textMuted
                   : kit.colors.textSecondary,
             ),
-            onTap: isLoading
-                ? null
-                : () {
-                    /* TODO: Navigate to a dedicated About screen if needed */
-                  },
+            onTap: isLoading ? null : () => context.pushNamed(RouteNames.about),
           ),
           AppListTile(
             leading: Icon(Icons.logout_rounded, color: kit.colors.textPrimary),

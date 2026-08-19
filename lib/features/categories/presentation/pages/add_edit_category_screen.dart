@@ -174,11 +174,56 @@ class _CategoryFormState extends State<CategoryForm> {
     }
   }
 
-  void _showParentPicker() {
-    log.warning("[CategoryForm] Parent Category Picker not implemented yet.");
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Sub-category selection coming soon!")),
+  /// Categories eligible as a parent for the one being edited.
+  ///
+  /// Restricted to top-level categories of the same type. Allowing a
+  /// subcategory to be a parent would permit arbitrary nesting, and with it
+  /// cycles (A parent of B, B parent of A) that nothing downstream is written to
+  /// survive. One level is what the UI shows and what the pickers assume.
+  List<Category> _eligibleParents(CategoryManagementState state) {
+    final sameType = _selectedType == CategoryType.expense
+        ? state.allExpenseCategories
+        : state.allIncomeCategories;
+    final editingId = widget.initialCategory?.id;
+
+    return sameType
+        .where((c) => c.parentCategoryId == null && c.id != editingId)
+        .toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+  }
+
+  Category? _parentById(String? id) {
+    if (id == null) return null;
+    final state = context.read<CategoryManagementBloc>().state;
+    final all = [...state.allExpenseCategories, ...state.allIncomeCategories];
+    for (final c in all) {
+      if (c.id == id) return c;
+    }
+    return null;
+  }
+
+  Future<void> _showParentPicker() async {
+    final state = context.read<CategoryManagementBloc>().state;
+    final candidates = _eligibleParents(state);
+
+    final selectedId = await showModalBottomSheet<String?>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => _ParentCategorySheet(
+        candidates: candidates,
+        selectedId: _selectedParentId,
+      ),
     );
+
+    // Dismissing the sheet yields null, which must not be confused with picking
+    // "None" -- that returns a sentinel, so clearing the parent stays explicit.
+    if (selectedId == null || !mounted) return;
+    setState(() {
+      _selectedParentId = selectedId == _ParentCategorySheet.noneSentinel
+          ? null
+          : selectedId;
+    });
   }
 
   // Removed _getPrefixIcon
@@ -253,7 +298,11 @@ class _CategoryFormState extends State<CategoryForm> {
               Icons.account_tree_outlined,
             ), // Use public helper
             title: const Text("Parent Category"),
-            subtitle: Text(_selectedParentId ?? "None (Top Level)"),
+            // Show the parent's name; the raw id is meaningless to the user, and
+            // a dangling id reads as "None" rather than as a uuid.
+            subtitle: Text(
+              _parentById(_selectedParentId)?.name ?? "None (Top Level)",
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: _showParentPicker,
             shape: RoundedRectangleBorder(
@@ -287,6 +336,77 @@ class _CategoryFormState extends State<CategoryForm> {
               textStyle: theme.textTheme.titleMedium,
             ),
             onPressed: _submitForm,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bottom sheet listing the categories that may act as a parent.
+///
+/// Returns the chosen category's id, [noneSentinel] to clear the parent, or null
+/// if dismissed.
+class _ParentCategorySheet extends StatelessWidget {
+  const _ParentCategorySheet({
+    required this.candidates,
+    required this.selectedId,
+  });
+
+  /// Distinguishes "the user chose None" from "the user dismissed the sheet",
+  /// both of which would otherwise arrive as null.
+  static const String noneSentinel = '__none__';
+
+  final List<Category> candidates;
+  final String? selectedId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            child: Text(
+              'Parent Category',
+              style: theme.textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const Divider(height: 1),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                RadioListTile<String>(
+                  value: noneSentinel,
+                  groupValue: selectedId ?? noneSentinel,
+                  title: const Text('None (Top Level)'),
+                  onChanged: (v) => Navigator.of(context).pop(v),
+                ),
+                if (candidates.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'No other top-level categories of this type yet. Create '
+                      'one first to nest this category under it.',
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else
+                  for (final category in candidates)
+                    RadioListTile<String>(
+                      value: category.id,
+                      groupValue: selectedId ?? noneSentinel,
+                      title: Text(category.name),
+                      onChanged: (v) => Navigator.of(context).pop(v),
+                    ),
+              ],
+            ),
           ),
         ],
       ),

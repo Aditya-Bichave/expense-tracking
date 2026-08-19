@@ -39,6 +39,7 @@ import 'package:expense_tracker/features/reports/presentation/pages/spending_by_
 import 'package:expense_tracker/features/reports/presentation/pages/spending_over_time_page.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/pages/settings_page.dart';
+import 'package:expense_tracker/features/settings/presentation/pages/about_page.dart';
 import 'package:expense_tracker/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/add_edit_transaction_page.dart';
 import 'package:expense_tracker/features/transactions/presentation/pages/transaction_detail_page.dart';
@@ -448,6 +449,14 @@ class AppRouter {
                 name: RouteNames.settings,
                 pageBuilder: (context, state) =>
                     const NoTransitionPage(child: SettingsPage()),
+                routes: [
+                  GoRoute(
+                    path: RouteNames.about,
+                    name: RouteNames.about,
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const AboutPage(),
+                  ),
+                ],
               ),
             ],
           ),
