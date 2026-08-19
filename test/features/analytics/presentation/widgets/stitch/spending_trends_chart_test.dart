@@ -74,4 +74,33 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.text(r'$0.00'), findsOneWidget);
   });
+
+  testWidgets('repaints when the data changes and not when it is identical', (
+    tester,
+  ) async {
+    // Drives the painter's shouldRepaint/amount-comparison path: same values must
+    // not trigger a repaint, different values must.
+    await tester.pumpWidget(host(SpendingTrendsChart(points: week([10, 20]))));
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(host(SpendingTrendsChart(points: week([10, 20]))));
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(host(SpendingTrendsChart(points: week([10, 99]))));
+    expect(tester.takeException(), isNull);
+
+    // A different number of points exercises the length short-circuit.
+    await tester.pumpWidget(host(SpendingTrendsChart(points: week([10]))));
+    expect(tester.takeException(), isNull);
+    expect(find.text(r'$10.00'), findsOneWidget);
+  });
+
+  testWidgets('a single point renders without dividing by zero', (
+    tester,
+  ) async {
+    await tester.pumpWidget(host(SpendingTrendsChart(points: week([42]))));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text(r'$42.00'), findsOneWidget);
+  });
 }

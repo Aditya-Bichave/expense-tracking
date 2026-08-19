@@ -21,10 +21,26 @@ import 'package:path_provider/path_provider.dart';
 /// [theme] exists so tests can inject a plain [ThemeData] and avoid runtime
 /// font fetching.
 class InitializationErrorApp extends StatefulWidget {
-  const InitializationErrorApp({super.key, required this.error, this.theme});
+  const InitializationErrorApp({
+    super.key,
+    required this.error,
+    this.theme,
+    this.documentsDirectory,
+  });
 
   final Object error;
   final ThemeData? theme;
+
+  /// Resolves the directory whose `.hive`/`.lock` files the reset deletes.
+  /// Defaults to [getApplicationDocumentsDirectory].
+  ///
+  /// Injectable because the default is genuinely destructive and cannot be
+  /// neutralised from a test: on Windows and Linux `path_provider` is
+  /// implemented against the platform APIs directly, not the
+  /// `plugins.flutter.io/path_provider` method channel, so mocking that channel
+  /// does nothing and the reset would enumerate the developer's real Documents
+  /// folder.
+  final Future<Directory> Function()? documentsDirectory;
 
   @override
   State<InitializationErrorApp> createState() => _InitializationErrorAppState();
@@ -32,6 +48,12 @@ class InitializationErrorApp extends StatefulWidget {
 
 class _InitializationErrorAppState extends State<InitializationErrorApp> {
   bool _isResetting = false;
+
+  /// Owns the messenger so [_showMessage] does not depend on where the calling
+  /// context sits. This State's own context is *above* the MaterialApp built
+  /// below, so `ScaffoldMessenger.of(context)` from here finds no ancestor and
+  /// throws -- which would turn the reset button into a crash.
+  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
   /// Clears the encryption key and the on-disk Hive files so the next launch
   /// starts from a clean slate. Destroys all local data — offered because the
@@ -53,7 +75,9 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
   }
 
   Future<void> _deleteLocalDatabaseFiles() async {
-    final dir = await getApplicationDocumentsDirectory();
+    final resolve =
+        widget.documentsDirectory ?? getApplicationDocumentsDirectory;
+    final dir = await resolve();
     final entries = await dir.list().toList();
     await Future.wait(entries.map(_deleteIfDatabaseFile));
   }
@@ -72,7 +96,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
 
   void _showMessage(String message, {Duration? duration}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    _messengerKey.currentState?.showSnackBar(
       SnackBar(
         content: Text(message),
         duration: duration ?? const Duration(seconds: 4),
@@ -92,6 +116,7 @@ class _InitializationErrorAppState extends State<InitializationErrorApp> {
         : null;
 
     return MaterialApp(
+      scaffoldMessengerKey: _messengerKey,
       theme: widget.theme ?? fallback!.light,
       darkTheme: widget.theme ?? fallback!.dark,
       themeMode: SettingsState.defaultThemeMode,
