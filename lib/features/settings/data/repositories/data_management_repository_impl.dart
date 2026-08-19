@@ -136,7 +136,7 @@ class DataManagementRepositoryImpl implements DataManagementRepository {
           "[DataMgmtRepo] Failed to clear data before restore. Aborting.",
         );
         // Propagate the clearing failure
-        return clearResult.fold(
+        return await clearResult.fold(
           (failure) => Left(failure),
           (_) => const Left(CacheFailure("Unknown error during clear.")),
         );

@@ -35,7 +35,7 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
       final dataEither = await dataManagementRepository.getAllDataForBackup();
       if (dataEither.isLeft()) {
         log.warning("[BackupUseCase] Failed to retrieve data for backup.");
-        return dataEither.fold(
+        return await dataEither.fold(
           (failure) => Left(failure),
           (_) => const Left(BackupFailure("Failed to retrieve data.")),
         );

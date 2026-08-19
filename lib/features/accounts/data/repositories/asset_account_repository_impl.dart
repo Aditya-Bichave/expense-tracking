@@ -44,7 +44,7 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
         "[AssetAccountRepo] Balance calculation result isLeft: ${balanceResult.isLeft()}.",
       );
 
-      return balanceResult.fold(
+      return await balanceResult.fold(
         (failure) {
           log.warning(
             "[AssetAccountRepo] Balance calculation failed during add for '${account.name}': ${failure.message}.",
@@ -95,7 +95,7 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
         "[AssetAccountRepo] Balance calculation result isLeft: ${balanceResult.isLeft()}.",
       );
 
-      return balanceResult.fold(
+      return await balanceResult.fold(
         (failure) {
           log.warning(
             "[AssetAccountRepo] Balance calculation failed during update for '${account.name}': ${failure.message}.",
@@ -205,13 +205,13 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
       final expenseResult = await expensesFuture;
 
       if (incomeResult.isLeft()) {
-        return incomeResult.fold(
+        return await incomeResult.fold(
           (l) => Left(l),
           (_) => const Left(CacheFailure('Failed to fetch incomes')),
         );
       }
       if (expenseResult.isLeft()) {
-        return expenseResult.fold(
+        return await expenseResult.fold(
           (l) => Left(l),
           (_) => const Left(CacheFailure('Failed to fetch expenses')),
         );
@@ -290,7 +290,7 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
         log.warning(
           "[$runtimeType] Returning Left due to income fetch failure for $accountId.",
         );
-        return totalIncomeEither.fold(
+        return await totalIncomeEither.fold(
           (failure) =>
               Left<Failure, double>(failure), // Extract and return Left
           (_) => const Left(
@@ -324,7 +324,7 @@ class AssetAccountRepositoryImpl implements AssetAccountRepository {
         log.warning(
           "[$runtimeType] Returning Left due to expense fetch failure for $accountId.",
         );
-        return totalExpensesEither.fold(
+        return await totalExpensesEither.fold(
           (failure) =>
               Left<Failure, double>(failure), // Extract and return Left
           (_) => const Left(

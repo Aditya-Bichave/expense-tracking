@@ -123,7 +123,7 @@ class CategorizeTransactionUseCase
       final keywordsEither = await _loadKeywords();
       if (keywordsEither.isLeft()) {
         // Propagate failure if keywords couldn't load
-        return keywordsEither.fold(
+        return await keywordsEither.fold(
           (l) => Left(l),
           (_) => const Left(UnexpectedFailure("Keyword loading failed")),
         );

@@ -44,7 +44,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
             "[BudgetRepo] Could not perform overlap check due to error fetching existing budgets.",
           );
           // Decide: proceed or fail? Failing is safer.
-          return budgetsResult.fold(
+          return await budgetsResult.fold(
             (failure) => Left(failure), // Propagate fetch error
             (_) =>
                 const Left(CacheFailure("Failed to verify budget overlaps.")),
@@ -83,7 +83,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
         // No category filter here yet, apply below
       );
 
-      return expenseResult.fold(
+      return await expenseResult.fold(
         (failure) {
           log.warning(
             "[BudgetRepo] Failed to get expenses for calculation: ${failure.message}",
@@ -218,7 +218,7 @@ class BudgetRepositoryImpl implements BudgetRepository {
           log.warning(
             "[BudgetRepo] Could not perform overlap check during update.",
           );
-          return budgetsResult.fold(
+          return await budgetsResult.fold(
             (failure) => Left(failure), // Propagate fetch error
             (_) =>
                 const Left(CacheFailure("Failed to verify budget overlaps.")),

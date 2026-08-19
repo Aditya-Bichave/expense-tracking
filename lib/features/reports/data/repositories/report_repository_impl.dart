@@ -1050,7 +1050,7 @@ class ReportRepositoryImpl implements ReportRepository {
           results[1] as Either<Failure, List<GoalContribution>>;
 
       if (goalsResult.isLeft())
-        return goalsResult.fold(
+        return await goalsResult.fold(
           (l) => Left(l),
           (_) => const Left(CacheFailure("Failed")),
         );
@@ -1070,7 +1070,7 @@ class ReportRepositoryImpl implements ReportRepository {
       }
 
       if (contribResult.isLeft()) {
-        return contribResult.fold(
+        return await contribResult.fold(
           (l) => Left(l),
           (_) => const Left(CacheFailure("Failed to fetch contributions")),
         );
@@ -1199,7 +1199,7 @@ class ReportRepositoryImpl implements ReportRepository {
         TransactionType.expense,
       ); // Explicitly expense
 
-      return result.fold((l) => Left(l), (reportData) {
+      return await result.fold((l) => Left(l), (reportData) {
         // Fill missing days with 0
         final Map<DateTime, double> dataMap = {
           for (var p in reportData.spendingData) p.date: p.currentAmount,
@@ -1251,7 +1251,7 @@ class ReportRepositoryImpl implements ReportRepository {
       final contribResult = await goalContributionRepository
           .getContributionsForGoal(goalId);
       if (contribResult.isLeft()) {
-        return contribResult.fold(
+        return await contribResult.fold(
           (l) => Left(l),
           (_) => const Left(CacheFailure("Failed")),
         );

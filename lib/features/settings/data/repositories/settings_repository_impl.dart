@@ -147,7 +147,7 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<Either<Failure, String>> getCurrencySymbol() async {
     try {
       final codeEither = await getSelectedCountryCode();
-      return codeEither.fold(
+      return await codeEither.fold(
         (failure) {
           log.warning(
             "[SettingsRepo] Failed to get country code for currency derivation: ${failure.message}. Defaulting.",

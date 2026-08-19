@@ -162,7 +162,7 @@ class RestoreDataUseCase implements UseCase<void, RestoreParams> {
       log.info("[RestoreUseCase] Calling repository.restoreData...");
       final restoreResult = await dataManagementRepository.restoreData(allData);
 
-      return restoreResult.fold(
+      return await restoreResult.fold(
         (failure) {
           log.severe(
             "[RestoreUseCase] Repository restore failed: ${failure.message}",

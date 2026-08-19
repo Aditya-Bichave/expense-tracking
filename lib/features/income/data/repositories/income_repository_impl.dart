@@ -178,7 +178,7 @@ class IncomeRepositoryImpl implements IncomeRepository {
         endDate: endDate,
       );
 
-      return allModelsResult.fold(
+      return await allModelsResult.fold(
         (failure) {
           log.warning(
             "[IncomeRepo] Failed to get models while calculating total for account '$accountId': ${failure.message}",
