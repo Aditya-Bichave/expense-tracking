@@ -52,36 +52,29 @@ Without this, Vercel's Git integration would deploy on every push *as well as*
 this workflow. Those deploys would also fail, because they would try to build a
 Flutter project on a runtime that has no Flutter SDK. Deploys come from CI only.
 
-## `server/public` is no longer in version control
+## The built bundle is not in version control
 
-It is generated output (`flutter build web`), ignored via `.gitignore`. To serve
-the site locally with `server/server.js`:
+`flutter build web` output is generated, not source. It is built in CI and handed
+straight to Vercel; nothing is committed back. To look at a production-style build
+locally:
 
 ```bash
 flutter build web --release
-mkdir -p server/public && cp -r build/web/. server/public/
-cd server && npm install && npm start
+cd build/web && python -m http.server 8080
 ```
 
-### If you still deploy via Render
+Note that a plain static file server will 404 on a hard refresh of a deep link,
+because client-side routes have no file behind them. Vercel handles this via the
+SPA fallback in `.vercel/output/config.json`; locally, prefer `flutter run -d chrome`.
 
-This guide previously described a Render Web Service with **Root Directory**
-`server`, **Build Command** `npm install`, **Start Command** `node server.js`.
-That setup worked only because `server/public` was committed — Render cloned the
-repository and served the checked-in bundle.
+## Self-hosting with Docker
 
-That no longer holds. If Render is still in use, pick one:
+`Dockerfile` builds the web app and serves it with nginx, using `nginx.conf` for
+SPA routing and caching. It depends on no committed build output:
 
-- **Retire it** and serve from Vercel only (what this document now assumes).
-- **Give Render the bundle.** Add a step to `deploy_web.yml` that publishes
-  `build/web` somewhere Render can fetch at boot, and have `server.js` download it
-  on start.
-- **Use the Docker path instead.** The repository's `Dockerfile` already builds
-  Flutter web and serves it with nginx, and does not depend on any committed
-  output. Deploy that image rather than the Node server.
+```bash
+docker build -t expense-tracker-web --build-arg API_BASE_URL=<url> .
+docker run -p 8080:80 expense-tracker-web
+```
 
-## Client logs
-
-`server/server.js` exposes a `/log` endpoint that forwards client logs to the
-host's stdout, tagged `[CLIENT_LOG]`. This only applies when serving through the
-Node server, not through Vercel.
+This is the supported path for hosting the app anywhere other than Vercel.

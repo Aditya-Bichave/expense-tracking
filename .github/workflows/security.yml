@@ -51,7 +51,7 @@ jobs:
         run: |
           set -euo pipefail
           status=0
-          for lock in ci/smoke/package-lock.json ci/e2e/package-lock.json server/package-lock.json; do
+          for lock in ci/smoke/package-lock.json ci/e2e/package-lock.json; do
             if [[ -f "$lock" ]]; then
               echo "--- $lock ---"
               osv-scanner scan source --lockfile="$lock" || status=$?

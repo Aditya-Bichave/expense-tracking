@@ -25,14 +25,14 @@ Notes on the syntax:
   (`expense-tracking`), not with `server/`.
 - `**` matches whole directory paths.
 
-The repository side is already handled: `.gitattributes` marks `server/public/**`
-as `linguist-generated` and `-diff`, so GitHub keeps it out of language stats and
-collapses it in pull requests instead of rendering a 6 MB diff.
+The bundle is no longer in the repository at all: `server/` was removed along with
+the Render deployment it existed for, and the web bundle is now built in CI and
+deployed prebuilt (see `.github/workflows/deploy_web.yml`).
 
-Note that `server/public/` is no longer committed - the web bundle is built in
-CI and deployed prebuilt (see `.github/workflows/deploy_web.yml`). The
-`.gitattributes` entry and this exclusion are kept so that historical revisions,
-which still contain the bundle, do not skew the analysis.
+The exclusion is still worth setting, because CodeScene analyses **git history**,
+not just the current tree. Every revision up to that removal still contains
+`server/public/main.dart.js`, so without the pattern its 204k generated lines keep
+contributing churn and complexity to the analysis.
 
 ## PR refactoring agent (not enabled)
 
