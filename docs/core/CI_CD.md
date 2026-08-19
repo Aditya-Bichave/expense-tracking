@@ -6,7 +6,7 @@ GitHub Actions. Four workflows:
 | --- | --- | --- |
 | Flutter CI (Strict) | `.github/workflows/flutter-ci.yml` | PRs to `main`, pushes to `main` |
 | Security Audit | `.github/workflows/security.yml` | PRs, pushes to `main`, weekly |
-| Supabase CI | `.github/workflows/supabase.yml` | changes under `supabase/**` |
+| Supabase CI | `.github/workflows/supabase.yml` | PRs to `main`, pushes to `main` |
 | Deploy Web | `.github/workflows/deploy_web.yml` | after CI passes on `main` |
 
 ## Shared setup
@@ -19,6 +19,22 @@ reviewed diff instead of arriving with whatever Flutter shipped that week.
 
 All third-party actions are pinned to commit SHAs, with the tag in a trailing
 comment. A mutable tag is a supply-chain hole.
+
+## Why no `paths:` filters
+
+GitHub evaluates `paths` / `paths-ignore` against only the **first 300 files** of a
+diff. A pull request larger than that matches nothing, and the workflow does not
+run at all — silently, with no skipped-job marker to notice.
+
+That is not hypothetical here: the PR removing the committed `server/public`
+bundle changed 568 files, so every gate in this pipeline was skipped and the PR
+showed no Actions checks whatsoever. A filter that disables CI on the largest
+changes is worse than no filter, so the triggers are unfiltered.
+
+The cost is that docs-only pull requests still run the full pipeline. The fix is
+to skip at the **job** level using a changed-files check that is not capped at
+300 files (a `git diff` step, or `dorny/paths-filter`); both workflows carry a
+`TODO` to that effect.
 
 ## Flutter CI jobs
 

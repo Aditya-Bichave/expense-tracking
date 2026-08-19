@@ -1,16 +1,22 @@
 name: Supabase CI
 
+# NOTE: no `paths:` filter, for the same reason as flutter-ci.yml -- GitHub
+# evaluates path filters against only the first 300 files of a diff, so a large
+# pull request matches nothing and the workflow silently does not run. Here that
+# would mean migration validation being skipped on exactly the changes most
+# likely to need it.
+#
+# The cost is that this runs on every pull request, including ones that touch no
+# SQL at all. Accepted for now.
+#
+# TODO: gate the heavy jobs on a job-level changed-files check (git diff or
+# dorny/paths-filter, neither capped at 300 files) instead of re-adding a trigger
+# filter.
 on:
   push:
     branches: [main]
-    paths:
-      - "supabase/**"
-      - ".github/workflows/supabase.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "supabase/**"
-      - ".github/workflows/supabase.yml"
 
 concurrency:
   group: supabase-${{ github.ref }}

@@ -1,39 +1,21 @@
 name: Flutter CI (Strict)
 
+# NOTE: deliberately no `paths:` filter.
+#
+# GitHub evaluates path filters against only the first 300 files of a diff. A
+# pull request larger than that matches nothing and the workflow never runs at
+# all -- which is exactly what happened to the PR that removed the committed
+# `server/public` bundle: 568 changed files, so every quality gate was silently
+# skipped. A filter that turns CI off on the largest changes is worse than no
+# filter, so this workflow now runs on every pull request and every push to main.
+#
+# TODO: restore path-based skipping at the *job* level (e.g. dorny/paths-filter,
+# or a git-diff step, neither of which is subject to the 300-file cap) so
+# docs-only changes can skip the expensive jobs without risking a silent skip.
 on:
   pull_request:
-    paths:
-      - "lib/**"
-      - "test/**"
-      - "pubspec.yaml"
-      - "pubspec.lock"
-      - "analysis_options.yaml"
-      - ".github/workflows/**"
-      - ".github/actions/**"
-      - "web/**"
-      - "ci/**"
-      - "ios/**"
-      - "android/**"
-      - "Dockerfile"
-      - "nginx.conf"
-      - "README_CI.md"
   push:
     branches: [main]
-    paths:
-      - "lib/**"
-      - "test/**"
-      - "pubspec.yaml"
-      - "pubspec.lock"
-      - "analysis_options.yaml"
-      - ".github/workflows/**"
-      - ".github/actions/**"
-      - "web/**"
-      - "ci/**"
-      - "ios/**"
-      - "android/**"
-      - "Dockerfile"
-      - "nginx.conf"
-      - "README_CI.md"
 
 concurrency:
   group: ci-${{ github.ref }}
