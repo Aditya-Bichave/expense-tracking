@@ -53,12 +53,15 @@ jobs:
     # then this job reports the failure loudly rather than blocking every
     # unrelated pull request.
     #
-    # This is NOT the "gate that cannot fail" pattern removed from this workflow:
-    # the step still runs, still fails, and still prints exactly what broke. Only
-    # the branch protection consequence is deferred.
+    # The deferral is applied to the apply *step*, not to this job. At job level
+    # it would mark the whole run green and skip every step after the failure, so
+    # the defect would vanish behind a passing check -- the very thing this
+    # workflow was rewritten to stop doing. At step level the failure is captured,
+    # the reporting step below still runs, and the run summary says plainly that
+    # the migrations are broken.
     #
-    # TODO: reconcile the profiles schema, then delete this continue-on-error.
-    continue-on-error: true
+    # TODO: reconcile the profiles schema, then delete the step's
+    # continue-on-error and this comment.
 
     # A real Postgres to apply the migrations against. The previous version of
     # this job ran `ls supabase/migrations/` and echoed "SQL Linting would run
@@ -178,6 +181,8 @@ jobs:
       # Applied in filename order, which is the order Supabase itself uses. This
       # catches migrations that only work when run out of sequence.
       - name: Apply migrations in order
+        id: apply
+        continue-on-error: true # see the note on this job
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -189,20 +194,46 @@ jobs:
           echo "All migrations applied cleanly."
 
       # Re-applying must not error. Migrations that are not idempotent are a
-      # frequent cause of half-applied production deploys.
+      # frequent cause of half-applied production deploys. Pointless to attempt if
+      # the first pass did not finish.
       - name: Re-apply to check idempotency
-        continue-on-error: true
         id: idempotency
+        if: steps.apply.outcome == 'success'
+        continue-on-error: true
         run: |
           set -euo pipefail
           for file in $(find supabase/migrations -name '*.sql' | sort); do
             psql -v ON_ERROR_STOP=1 -f "$file" > /dev/null
           done
 
-      - name: Report idempotency result
+      # Always runs, and writes to the run summary, so a deferred failure is
+      # something you see rather than something you would have to go digging for.
+      - name: Report migration results
+        if: always()
         run: |
+          if [[ "${{ steps.apply.outcome }}" == "failure" ]]; then
+            {
+              echo "### ⚠️ Migrations do not apply to a fresh database"
+              echo
+              echo "This is a **known, pre-existing defect**, not a regression from this PR."
+              echo "\`supabase/migrations\` cannot provision an empty Postgres:"
+              echo "\`initial_schema\` creates \`profiles\` with a \`user_id\` primary key, then"
+              echo "\`foundation_pack\`'s \`create table if not exists\` silently no-ops and its RLS"
+              echo "policies reference a \`id\` column that does not exist."
+              echo
+              echo "Consequence: no staging, disaster-recovery or local database can be built"
+              echo "from this repository. See \`docs/core/KNOWN_PITFALLS.md\`."
+              echo
+              echo "This check is deliberately non-blocking until the schema is reconciled."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Supabase migrations cannot provision a fresh database::Pre-existing profiles schema conflict; see the job summary and docs/core/KNOWN_PITFALLS.md"
+            exit 0
+          fi
+
+          echo "Migrations applied cleanly to an empty database." >> "$GITHUB_STEP_SUMMARY"
+
           if [[ "${{ steps.idempotency.outcome }}" == "failure" ]]; then
-            echo "::warning::Migrations are not idempotent -- re-applying them errors. This is tolerated, but it means a partially-applied deploy cannot simply be re-run."
+            echo "::warning::Migrations are not idempotent -- re-applying them errors. Tolerated, but it means a partially-applied deploy cannot simply be re-run."
           else
             echo "Migrations re-applied cleanly."
           fi
