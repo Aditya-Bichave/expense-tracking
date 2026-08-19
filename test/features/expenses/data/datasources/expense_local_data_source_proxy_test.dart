@@ -178,9 +178,11 @@ void main() {
             accountId: 'a1',
             categoryId: 'c1',
           ),
+          // Late in the day on purpose: this only survives an end-date
+          // filter that widens the bound to the end of that day.
           expense(
             id: 'feb-a2',
-            date: DateTime(2024, 2, 10),
+            date: DateTime(2024, 2, 10, 23, 59),
             accountId: 'a2',
             categoryId: 'c2',
           ),
@@ -242,6 +244,11 @@ void main() {
     });
 
     test('a comma-separated category list matches any of them', () async {
+      // Two ids, so a proxy that never splits on the comma fails here.
+      expect(await idsFor(categoryId: 'c1,c2'), ['jan-a1', 'feb-a2', 'mar-a1']);
+    });
+
+    test('a single category id filters to that category', () async {
       expect(await idsFor(categoryId: 'c2'), ['feb-a2', 'mar-a1']);
     });
 
