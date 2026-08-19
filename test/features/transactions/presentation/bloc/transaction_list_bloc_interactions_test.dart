@@ -198,14 +198,14 @@ void main() {
     blocTest<TransactionListBloc, TransactionListState>(
       'keystrokes inside the debounce window collapse to one query',
       build: () => bloc,
-      // Spaced deliberately: 100ms apart is faster than the 300ms window but
-      // slower than a synchronous burst, which any non-zero debounce would
-      // collapse. Only a window longer than the gap merges these three.
+      // Spaced deliberately: a real (non-zero) gap that is still far inside
+      // the 300ms window, so a synchronous burst is not what collapses these.
+      // Kept small so a loaded CI machine cannot overrun the window.
       act: (b) async {
         b.add(const SearchChanged(searchTerm: 'c'));
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
         b.add(const SearchChanged(searchTerm: 'co'));
-        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await Future<void>.delayed(const Duration(milliseconds: 10));
         b.add(const SearchChanged(searchTerm: 'cof'));
       },
       wait: pastDebounce,

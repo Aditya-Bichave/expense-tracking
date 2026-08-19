@@ -84,11 +84,12 @@ void main() {
     test('every declared field is actually written', () {
       // Guards the common generator drift: a field added to the model but
       // never emitted by write(), which reads back as null forever.
+      final declared = declaredFieldCount(adapter, full());
       final indices = writtenFieldIndices(adapter, full());
 
-      expect(indices, hasLength(declaredFieldCount(adapter, full())));
+      expect(indices, hasLength(declared));
       expect(indices.toSet(), hasLength(indices.length));
-      expect(indices, containsAll(List.generate(16, (i) => i)));
+      expect(indices, containsAll(List.generate(declared, (i) => i)));
     });
 
     test('adapters compare by type and id', () {

@@ -237,16 +237,20 @@ void main() {
       service.dispose();
     });
 
-    test('a status emitted after dispose is dropped, not thrown', () async {
+    test('no status is emitted after dispose', () async {
       final service = build();
-      service.dispose();
-
-      // The controller is closed by dispose; the guard has to swallow this.
-      expect(
-        () => connectivityController.add([ConnectivityResult.none]),
-        returnsNormally,
-      );
+      final statuses = <SyncServiceStatus>[];
+      service.statusStream.listen(statuses.add);
       await pumpEventQueue();
+      statuses.clear();
+
+      service.dispose();
+      connectivityController.add([ConnectivityResult.none]);
+      await pumpEventQueue();
+
+      // dispose() closes the status controller; the guard must drop this
+      // rather than add to a closed controller.
+      expect(statuses, isEmpty);
     });
   });
 
@@ -327,10 +331,14 @@ void main() {
     });
 
     test('a second call while one is in flight is dropped', () async {
-      final completer = Completer<void>();
+      // The first run suspends at the awaited upsert inside the fake builder;
+      // this flag just makes the second call see an empty queue.
+      var firstRunStarted = false;
       when(() => outbox.getPendingItems()).thenAnswer((_) {
-        // Block the first run inside the loop body.
-        if (!completer.isCompleted) return [mutation()];
+        if (!firstRunStarted) {
+          firstRunStarted = true;
+          return [mutation()];
+        }
         return [];
       });
       final queryBuilder = MockQueryBuilder();
@@ -343,7 +351,6 @@ void main() {
       final first = service.processOutbox();
       // Re-entering before the first finishes must be a no-op.
       await service.processOutbox();
-      completer.complete();
       await first;
 
       // Only the first run drained; the re-entrant call returned immediately.

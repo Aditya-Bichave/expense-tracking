@@ -119,35 +119,6 @@ void main() {
     });
   });
 
-  test('should clear all data', () async {
-    // Arrange
-    when(() => mockAccountBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockExpenseBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockIncomeBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockCategoryBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockUserHistoryBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockBudgetBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockGoalBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockContributionBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockRecurringRuleBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockRecurringRuleAuditLogBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockOutboxBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockGroupBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockGroupMemberBox.clear()).thenAnswer((_) async => 0);
-    when(() => mockGroupExpenseBox.clear()).thenAnswer((_) async => 0);
-
-    // Act
-    final result = await repository.clearAllData();
-
-    // Assert
-    expect(result, const Right(null));
-    verify(() => mockAccountBox.clear()).called(1);
-    verify(() => mockExpenseBox.clear()).called(1);
-    verify(() => mockIncomeBox.clear()).called(1);
-    verify(() => mockCategoryBox.clear()).called(1);
-    // ... verify others if needed, but one call verifies the method works roughly
-  });
-
   /// Every clear must be stubbed: the repository fires all fourteen through a
   /// single Future.wait, so one unstubbed box fails the whole call.
   List<MockBox<dynamic>> allBoxes() => [
@@ -271,6 +242,35 @@ void main() {
           contains('Failed to restore data'),
         ),
       );
+    });
+
+    test('a restore wipes the ten collections a backup cannot carry', () async {
+      stubClears();
+      stubPutAlls();
+
+      await repository.restoreData(sampleData());
+
+      // Documents a real data-loss gap rather than hiding it: clearAllData
+      // empties all fourteen boxes, but AllData only carries accounts,
+      // expenses, incomes and categories — so budgets, goals, contributions,
+      // recurring rules, audit logs, the outbox and every group box are
+      // cleared and never repopulated. Restoring a backup destroys them.
+      // If the backup format is ever widened, this test must be updated.
+      for (final box in [
+        mockBudgetBox,
+        mockGoalBox,
+        mockContributionBox,
+        mockRecurringRuleBox,
+        mockRecurringRuleAuditLogBox,
+        mockOutboxBox,
+        mockGroupBox,
+        mockGroupMemberBox,
+        mockGroupExpenseBox,
+        mockUserHistoryBox,
+      ]) {
+        verify(box.clear).called(1);
+        verifyNever(() => box.putAll(any()));
+      }
     });
 
     test('an empty backup still clears the existing data', () async {

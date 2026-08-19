@@ -39,10 +39,12 @@ void main() {
     });
 
     test('every declared field is actually written', () {
+      final declared = declaredFieldCount(adapter, settlement());
       final indices = writtenFieldIndices(adapter, settlement());
 
-      expect(indices, hasLength(declaredFieldCount(adapter, settlement())));
-      expect(indices, containsAll(List.generate(7, (i) => i)));
+      expect(indices, hasLength(declared));
+      expect(indices.toSet(), hasLength(indices.length));
+      expect(indices, containsAll(List.generate(declared, (i) => i)));
     });
 
     test('the payer and payee do not swap', () {

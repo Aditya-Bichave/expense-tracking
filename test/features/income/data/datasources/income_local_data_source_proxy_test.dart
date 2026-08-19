@@ -232,7 +232,11 @@ void main() {
     });
 
     test('a start date is inclusive of the whole day', () async {
-      expect(await idsFor(startDate: DateTime(2024, 3, 10)), ['mar-a1']);
+      // Later in the day than the fixture's midnight timestamp: only a proxy
+      // that truncates the start bound to the start of that day keeps this row.
+      expect(await idsFor(startDate: DateTime(2024, 3, 10, 18, 30)), [
+        'mar-a1',
+      ]);
     });
 
     test('a single account id filters to that account', () async {
