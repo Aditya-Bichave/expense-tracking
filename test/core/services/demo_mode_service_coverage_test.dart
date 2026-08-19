@@ -151,6 +151,22 @@ void main() {
       expect(await service.getDemoExpenses(), hasLength(originalCount + 1));
     });
 
+    test('the cache shares element instances with DemoData', () async {
+      // enterDemoMode uses List.from, which copies the list but not the models
+      // inside it. Pinning that down matters: callers must treat demo models as
+      // read-only, because mutating one would reach the shared fixture that
+      // every other test reads.
+      service.enterDemoMode();
+
+      final cached = await service.getDemoExpenses();
+
+      expect(
+        identical(cached.first, DemoData.sampleExpenses.first),
+        isTrue,
+        reason: 'demo models are shared by reference, not deep-copied',
+      );
+    });
+
     test(
       'removing from the cache leaves the shared DemoData list intact',
       () async {

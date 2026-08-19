@@ -34,35 +34,44 @@ class AppBottomSheet extends StatelessWidget {
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Handle bar
-          Center(
-            child: Container(
-              margin: kit.spacing.vSm,
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: kit.colors.borderSubtle,
-                borderRadius: kit.radii.circular,
+      // The sheet paints its own background (the modal route is transparent),
+      // so without a Material of its own any ListTile inside would render its
+      // ink splash and selected-tile colour on the nearest Material ancestor —
+      // which sits *behind* this decoration and is therefore invisible.
+      // MaterialType.transparency supplies that ink surface without painting
+      // over the background above.
+      child: Material(
+        type: MaterialType.transparency,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                margin: kit.spacing.vSm,
+                width: 32,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: kit.colors.borderSubtle,
+                  borderRadius: kit.radii.circular,
+                ),
               ),
             ),
-          ),
-          if (title != null) ...[
-            Padding(
-              padding: kit.spacing.hMd.copyWith(bottom: kit.spacing.sm),
-              child: Text(
-                title!,
-                style: kit.typography.title,
-                textAlign: TextAlign.center,
+            if (title != null) ...[
+              Padding(
+                padding: kit.spacing.hMd.copyWith(bottom: kit.spacing.sm),
+                child: Text(
+                  title!,
+                  style: kit.typography.title,
+                  textAlign: TextAlign.center,
+                ),
               ),
-            ),
-            Divider(height: 1, color: kit.colors.borderSubtle),
+              Divider(height: 1, color: kit.colors.borderSubtle),
+            ],
+            Flexible(child: child),
           ],
-          Flexible(child: child),
-        ],
+        ),
       ),
     );
   }

@@ -94,16 +94,30 @@ class AccountListBloc extends Bloc<AccountListEvent, AccountListState> {
 
     if (state is! AccountListLoaded || event.forceReload) {
       final current = state;
+      // Carry the visible rows into the loading state. Handlers run
+      // concurrently, so a second LoadAccounts can arrive while the first is
+      // still in flight; at that point the current state is already
+      // AccountListLoading and re-deriving the snapshot from it would yield an
+      // empty list, blanking the page mid-refresh.
+      final List<AssetAccount> snapshot;
+      final bool isReloading;
+      switch (current) {
+        case AccountListLoaded():
+          snapshot = current.items;
+          isReloading = true;
+        case AccountListLoading():
+          snapshot = current.previousItems;
+          isReloading = current.isReloading;
+        default:
+          snapshot = const [];
+          isReloading = false;
+      }
+
       emit(
-        AccountListLoading(
-          isReloading: current is AccountListLoaded,
-          previousItems: current is AccountListLoaded
-              ? current.items
-              : const [],
-        ),
+        AccountListLoading(isReloading: isReloading, previousItems: snapshot),
       );
       log.info(
-        "[AccountListBloc] Emitting AccountListLoading (isReloading: ${state is AccountListLoaded}).",
+        "[AccountListBloc] Emitting AccountListLoading (isReloading: $isReloading, kept ${snapshot.length} rows).",
       );
     } else {
       log.info(

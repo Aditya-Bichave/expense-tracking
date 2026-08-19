@@ -101,7 +101,7 @@ by more, stop and report the blocker with evidence rather than padding.
 
 ### Definition of done
 
-All four must pass, and you must show the output of each:
+All five must pass, and you must show the output of each:
 
 | Gate | Command | Criterion |
 | :--- | :--- | :--- |
@@ -126,7 +126,7 @@ Five sections, factual, no narration of process:
    the section a reviewer reads first; it is the part of the run that is not
    reproducible by anyone else.
 4. **Flows covered** — E2E inventory delta.
-5. **Gates** — the four command outputs.
+5. **Gates** — the five gate-command outputs, plus the flake-check run.
 
 ### Hard rules
 
