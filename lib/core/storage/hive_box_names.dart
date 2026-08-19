@@ -5,9 +5,11 @@
 /// migrate anything — it points the app at a *different* box and silently
 /// orphans the user's data. Treat every string below as a storage contract.
 ///
-/// Note: [HiveConstants] in `core/constants/hive_constants.dart` declares a
-/// second, divergent set of names that no shipped code path has ever used. Do
-/// not "unify" the two without a real migration; see the storage backlog.
+/// A second, divergent set of names once lived in `HiveConstants`
+/// (`core/constants/hive_constants.dart`), differing here for 14 of 15 boxes.
+/// No shipped code path ever used it, so it was deleted rather than unified --
+/// unifying without a data migration would have orphaned every existing install.
+/// `hive_box_names_test.dart` pins these strings so the drift cannot recur.
 abstract final class HiveBoxNames {
   static const String expenses = 'expenses';
   static const String accounts = 'accounts';
