@@ -256,18 +256,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-playwright-
 
-      # `playwright install --with-deps` shells out to apt-get, which can stall on
-      # the runner's package lock and quietly consume the entire job budget: the
-      # job then reports as "cancelled" at its timeout with no indication of where
-      # it stopped. Splitting the steps and giving each its own timeout turns that
-      # stall into a diagnosable step failure, and DEBIAN_FRONTEND stops apt
-      # waiting on a prompt that nothing can answer.
+      # `playwright install --with-deps` shells out to apt-get, which regularly
+      # cannot reach azure.archive.ubuntu.com from these runners:
+      #
+      #   Ign:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+      #   ...retries, then a slow https://archive.ubuntu.com fallback
+      #
+      # apt spends minutes on that and the job used to die at its own
+      # timeout-minutes, reporting "cancelled" with no clue which step hung.
+      #
+      # Split into three bounded steps so a stall names itself. The system-deps
+      # step is best-effort: it provisions the runner rather than asserting
+      # anything about this repository, and ubuntu-latest already ships most of
+      # what headless Chromium needs. If a library really is missing, the browser
+      # launch in the test step fails and says which one -- a better signal than
+      # an apt mirror outage failing the build.
       - name: Install Node Deps
         working-directory: ci/smoke
         timeout-minutes: 4
         run: npm ci
 
       - name: Install Playwright System Deps
+        continue-on-error: true # apt mirror flakiness must not fail the build
         timeout-minutes: 4
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -329,6 +339,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright System Deps
+        continue-on-error: true # apt mirror flakiness must not fail the build
         timeout-minutes: 4
         env:
           DEBIAN_FRONTEND: noninteractive
