@@ -146,6 +146,7 @@ void main() {
 
       await pumpPage(tester);
 
+      expect(find.text('No budgets found for this period.'), findsOneWidget);
       expect(find.byType(BudgetPerformanceBarChart), findsNothing);
       expect(find.byType(DataTable), findsNothing);
     });

@@ -22,6 +22,17 @@ class MockDeleteAssetAccountUseCase extends Mock
 /// `AccountListPage` renders `AccountListLoading.previousItems` during a
 /// refresh so the list does not blank out. Anything that loses that snapshot
 /// makes the accounts disappear mid-pull, which is what these tests guard.
+/// Yields to the event loop until [condition] holds, bounded so a broken
+/// expectation fails the test rather than hanging it.
+Future<void> _until(bool Function() condition, {int maxTurns = 100}) async {
+  for (var i = 0; i < maxTurns && !condition(); i++) {
+    await Future<void>.delayed(Duration.zero);
+  }
+  if (!condition()) {
+    throw StateError('condition never became true after $maxTurns turns');
+  }
+}
+
 void main() {
   late MockGetAssetAccountsUseCase getAccounts;
   late MockDeleteAssetAccountUseCase deleteAccount;
@@ -101,21 +112,24 @@ void main() {
       // observes AccountListLoading rather than AccountListLoaded, so deriving
       // the snapshot from "is it loaded?" alone would drop the rows and the
       // page would flash a full-screen spinner instead of holding the list.
-      final gate = Completer<void>();
-      when(() => getAccounts(any())).thenAnswer((_) async {
-        await gate.future;
-        return const Right([bank, cash]);
-      });
+      when(
+        () => getAccounts(any()),
+      ).thenAnswer((_) async => const Right([bank, cash]));
       final bloc = buildBloc();
       addTearDown(bloc.close);
 
       // Prime a loaded state.
-      gate.complete();
       bloc.add(const LoadAccounts());
       await bloc.stream.firstWhere((s) => s is AccountListLoaded);
 
+      // Now make the use case hang so both reloads are genuinely in flight at
+      // once. Counting handler entries is what proves the overlap happened —
+      // the bloc suppresses a second identical loading state, so counting
+      // emissions would not.
       final slowGate = Completer<void>();
+      var inFlight = 0;
       when(() => getAccounts(any())).thenAnswer((_) async {
+        inFlight++;
         await slowGate.future;
         return const Right([bank, cash]);
       });
@@ -126,12 +140,17 @@ void main() {
           .cast<AccountListLoading>()
           .listen(observed.add);
 
-      // Two overlapping refreshes, the second landing while the first is still
-      // awaiting the use case.
       bloc.add(const LoadAccounts(forceReload: true));
-      await Future<void>.delayed(Duration.zero);
       bloc.add(const LoadAccounts(forceReload: true));
-      await Future<void>.delayed(Duration.zero);
+      await _until(() => inFlight >= 2);
+
+      // While both are in flight the visible state must still hold the rows.
+      expect(
+        bloc.state,
+        isA<AccountListLoading>()
+            .having((s) => s.previousItems, 'previousItems', [bank, cash])
+            .having((s) => s.isReloading, 'isReloading', isTrue),
+      );
 
       slowGate.complete();
       await bloc.stream.firstWhere((s) => s is AccountListLoaded);
@@ -159,17 +178,12 @@ void main() {
     },
     seed: () => const AccountListLoaded(accounts: [bank]),
     act: (bloc) => bloc.add(const ResetState()),
-    verify: (bloc) {
-      // After a reset the bloc reloads from scratch; nothing from the old
-      // session should be carried into the fresh loading state.
-      final states = <AccountListState>[];
-      states.add(bloc.state);
-      expect(
-        states.whereType<AccountListLoading>().every(
-          (s) => s.previousItems.isEmpty,
-        ),
-        isTrue,
-      );
-    },
+    // A reset wipes the session, so the reload that follows must start from an
+    // empty snapshot rather than carrying the old rows forward.
+    expect: () => const [
+      AccountListInitial(),
+      AccountListLoading(isReloading: false, previousItems: []),
+      AccountListLoaded(accounts: [bank]),
+    ],
   );
 }

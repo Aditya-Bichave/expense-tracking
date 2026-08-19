@@ -149,13 +149,16 @@ void main() {
     });
 
     test('a failure fetching peers aborts the add', () async {
-      when(() => dataSource.getBudgets()).thenThrow(const CacheFailure('io'));
+      when(() => dataSource.getBudgets()).thenThrow(Exception('io'));
 
       final result = await repository.addBudget(
         budget(type: BudgetType.categorySpecific, categoryIds: ['c-food']),
       );
 
-      expect(result.isLeft(), isTrue);
+      // Pin the mapping, not just the Left. The overlap check propagates the
+      // failure raised by the peer fetch rather than re-wrapping it as an
+      // "add" failure, so the caller sees why the read failed.
+      expect(leftOf(result).message, contains('Failed to load budgets'));
       verifyNever(() => dataSource.saveBudget(any()));
     });
 

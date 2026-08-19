@@ -395,7 +395,7 @@ void main() {
     test('an archived goal below target stays archived', () async {
       when(
         () => dataSource.getGoalById('g1'),
-      ).thenAnswer((_) async => model(saved: 100));
+      ).thenAnswer((_) async => model(saved: 100, status: GoalStatus.archived));
       when(() => dataSource.saveGoal(any())).thenAnswer((_) async {});
 
       await repository.updateGoal(
