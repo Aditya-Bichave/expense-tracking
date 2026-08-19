@@ -54,9 +54,6 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Format Check (Fail Fast)
-        run: dart format . --output=none --set-exit-if-changed
-
       - name: Cache Pub Dependencies
         uses: actions/cache@v4
         with:
@@ -64,8 +61,16 @@ jobs:
           key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: ${{ runner.os }}-pub-
 
+      # Must run before the format check: `dart format` reads the language
+      # version from .dart_tool/package_config.json, which `pub get` writes.
+      # Without it the formatter falls back to the SDK's newest language
+      # version and reformats the whole repo, failing the check for reasons
+      # unrelated to the diff.
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Format Check
+        run: dart format . --output=none --set-exit-if-changed
 
       - name: Run Static Analysis
         run: flutter analyze

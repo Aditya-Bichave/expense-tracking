@@ -157,10 +157,11 @@ void main() {
       await sub.cancel();
 
       expect(observed, isNotEmpty);
+      const expectedRows = [bank, cash];
       for (final loading in observed) {
         expect(
           loading.previousItems,
-          [bank, cash],
+          expectedRows,
           reason: 'every reload state must keep the visible rows',
         );
         expect(loading.isReloading, isTrue);
