@@ -120,6 +120,30 @@ jobs:
             id uuid PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
             email text
           );
+
+          -- Supabase's storage extension owns these. Migrations insert the
+          -- avatars bucket and attach RLS policies to storage.objects, so the
+          -- columns they touch (buckets.id/name/public, objects.bucket_id/owner)
+          -- have to exist with compatible types -- `owner` is compared against
+          -- auth.uid(), so it must be uuid.
+          CREATE TABLE IF NOT EXISTS storage.buckets (
+            id text PRIMARY KEY,
+            name text NOT NULL,
+            owner uuid,
+            public boolean DEFAULT false,
+            created_at timestamptz DEFAULT now(),
+            updated_at timestamptz DEFAULT now()
+          );
+
+          CREATE TABLE IF NOT EXISTS storage.objects (
+            id uuid PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+            bucket_id text REFERENCES storage.buckets (id),
+            name text,
+            owner uuid,
+            metadata jsonb,
+            created_at timestamptz DEFAULT now(),
+            updated_at timestamptz DEFAULT now()
+          );
           SQL
 
       # Applied in filename order, which is the order Supabase itself uses. This
