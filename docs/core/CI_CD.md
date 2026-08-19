@@ -88,6 +88,12 @@ migrations warns rather than fails.
 A separate job checks that every migration is named
 `<14-digit-timestamp>_<name>.sql`, since Supabase derives apply order from it.
 
+The apply job is currently `continue-on-error`. It found a real defect on its first
+run — the migrations contradict each other about `public.profiles` and cannot
+provision a fresh database — and reconciling that needs the production schema. It
+still runs and still reports the failure; only the blocking consequence is
+deferred. See `KNOWN_PITFALLS.md`.
+
 `supabase db lint` is deliberately absent: it needs a running local Supabase
 stack, and wrapping it in `|| true` to survive without one would recreate the
 placeholder this workflow replaced.
