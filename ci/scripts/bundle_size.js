@@ -7,6 +7,36 @@ const MAIN_JS = path.join(BUILD_DIR, 'main.dart.js');
 const REPORT_FILE = 'bundle-size-report.json';
 const BUDGET_FILE = 'ci/budgets.json';
 
+// Everything under canvaskit/ is renderer payload shipped by the Flutter SDK,
+// not application code. It holds several mutually-exclusive variants — a
+// browser downloads exactly one of canvaskit.wasm, chromium/, skwasm.wasm or
+// skwasm_heavy.wasm — plus *.symbols debug maps that are never fetched at all.
+// Summing them overstates what a user actually downloads by roughly 4x, and
+// makes `total_kb` move whenever the SDK is upgraded rather than when our code
+// grows. `total_kb` still covers the whole directory (it bounds what we ship
+// and what a CDN stores), but `app_payload_kb` is the metric that tracks us.
+const SDK_RENDERER_DIR = 'canvaskit';
+const DEBUG_SYMBOL_EXT = '.symbols';
+
+function walk(dir, onFile) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const filePath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      walk(filePath, onFile);
+    } else {
+      onFile(filePath, fs.statSync(filePath).size);
+    }
+  }
+}
+
+function isSdkRenderer(relPath) {
+  return relPath.split(path.sep)[0] === SDK_RENDERER_DIR;
+}
+
+function isDebugSymbols(relPath) {
+  return relPath.endsWith(DEBUG_SYMBOL_EXT);
+}
+
 async function run() {
   if (!fs.existsSync(BUDGET_FILE)) {
     console.error(`Budget file not found: ${BUDGET_FILE}`);
@@ -20,62 +50,78 @@ async function run() {
     process.exit(1);
   }
 
-  const mainJsStat = fs.statSync(MAIN_JS);
-  const mainJsSizeKb = mainJsStat.size / 1024;
+  const mainJsSizeKb = fs.statSync(MAIN_JS).size / 1024;
+  const gzipSizeKb = zlib.gzipSync(fs.readFileSync(MAIN_JS)).length / 1024;
 
-  const mainJsContent = fs.readFileSync(MAIN_JS);
-  const gzipped = zlib.gzipSync(mainJsContent);
-  const gzipSizeKb = gzipped.length / 1024;
-
-  // Calculate total size of build/web
   let totalSize = 0;
-  function traverse(dir) {
-    const files = fs.readdirSync(dir);
-    for (const file of files) {
-      const filePath = path.join(dir, file);
-      const stat = fs.statSync(filePath);
-      if (stat.isDirectory()) {
-        traverse(filePath);
-      } else {
-        totalSize += stat.size;
-      }
+  let rendererSize = 0;
+  let symbolsSize = 0;
+
+  walk(BUILD_DIR, (filePath, size) => {
+    const relPath = path.relative(BUILD_DIR, filePath);
+    totalSize += size;
+    if (isDebugSymbols(relPath)) {
+      symbolsSize += size;
+    } else if (isSdkRenderer(relPath)) {
+      rendererSize += size;
     }
-  }
-  traverse(BUILD_DIR);
+  });
+
   const totalSizeKb = totalSize / 1024;
+  const rendererKb = rendererSize / 1024;
+  const symbolsKb = symbolsSize / 1024;
+  // What our own code and assets contribute, independent of the SDK renderer.
+  const appPayloadKb = totalSizeKb - rendererKb - symbolsKb;
 
   const report = {
     mainJsKb: mainJsSizeKb,
     gzipMainJsKb: gzipSizeKb,
     totalKb: totalSizeKb,
+    appPayloadKb,
+    sdkRendererKb: rendererKb,
+    debugSymbolsKb: symbolsKb,
     budgets,
     passed: true,
-    messages: []
+    messages: [],
   };
 
+  const fmt = (n) => n.toFixed(2);
   console.log(`Bundle Size Report:`);
-  console.log(`  Main JS: ${mainJsSizeKb.toFixed(2)} KB (Budget: ${budgets.main_js_kb} KB)`);
-  console.log(`  Gzip Main JS: ${gzipSizeKb.toFixed(2)} KB (Budget: ${budgets.gzip_main_js_kb} KB)`);
-  console.log(`  Total Web: ${totalSizeKb.toFixed(2)} KB (Budget: ${budgets.total_kb} KB)`);
+  console.log(
+    `  Main JS:      ${fmt(mainJsSizeKb)} KB (Budget: ${budgets.main_js_kb} KB)`
+  );
+  console.log(
+    `  Gzip Main JS: ${fmt(gzipSizeKb)} KB (Budget: ${budgets.gzip_main_js_kb} KB)`
+  );
+  console.log(
+    `  App payload:  ${fmt(appPayloadKb)} KB (Budget: ${budgets.app_payload_kb} KB)  <- our code + assets`
+  );
+  console.log(
+    `  Total Web:    ${fmt(totalSizeKb)} KB (Budget: ${budgets.total_kb} KB)`
+  );
+  console.log(`    of which SDK renderer (canvaskit/): ${fmt(rendererKb)} KB`);
+  console.log(`    of which debug symbols (*.symbols): ${fmt(symbolsKb)} KB`);
 
-  if (mainJsSizeKb > budgets.main_js_kb) {
-    report.passed = false;
-    report.messages.push(`Main JS size exceeded budget! (${mainJsSizeKb.toFixed(2)} > ${budgets.main_js_kb})`);
-  }
-  if (gzipSizeKb > budgets.gzip_main_js_kb) {
-    report.passed = false;
-    report.messages.push(`Gzip Main JS size exceeded budget! (${gzipSizeKb.toFixed(2)} > ${budgets.gzip_main_js_kb})`);
-  }
-  if (totalSizeKb > budgets.total_kb) {
-    report.passed = false;
-    report.messages.push(`Total size exceeded budget! (${totalSizeKb.toFixed(2)} > ${budgets.total_kb})`);
-  }
+  const check = (actual, budget, label) => {
+    if (budget === undefined) return;
+    if (actual > budget) {
+      report.passed = false;
+      report.messages.push(
+        `${label} exceeded budget! (${fmt(actual)} > ${budget})`
+      );
+    }
+  };
+
+  check(mainJsSizeKb, budgets.main_js_kb, 'Main JS size');
+  check(gzipSizeKb, budgets.gzip_main_js_kb, 'Gzip Main JS size');
+  check(appPayloadKb, budgets.app_payload_kb, 'App payload size');
+  check(totalSizeKb, budgets.total_kb, 'Total size');
 
   fs.writeFileSync(REPORT_FILE, JSON.stringify(report, null, 2));
 
   if (!report.passed) {
     console.error('❌ Bundle size check failed.');
-    report.messages.forEach(m => console.error(m));
+    report.messages.forEach((m) => console.error(m));
     process.exit(1);
   } else {
     console.log('✅ Bundle size check passed.');

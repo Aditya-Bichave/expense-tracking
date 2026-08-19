@@ -35,6 +35,14 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Pinned deliberately. On `channel: stable` alone, CI silently follows whatever
+# Flutter ships that week — a 3.35 -> 3.47 jump previously broke dependency
+# solving, reformatted the repo, introduced a new lint and grew the web bundle
+# past its budget, all without a single change in this repository. Bump this
+# line to upgrade, so the churn lands in a reviewed diff.
+env:
+  FLUTTER_VERSION: "3.47.0"
+
 permissions:
   contents: read
   pull-requests: write # Required for posting comments
@@ -51,6 +59,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
@@ -116,6 +125,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
@@ -143,10 +153,15 @@ jobs:
           diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80 > coverage/diff-coverage.txt
           cat coverage/diff-coverage.txt
 
-      - name: Enforce Total Coverage (50%)
+      # pipefail is required: without it the pipe to `tee` masks awk's exit
+      # code and this gate can never fail, whatever the threshold says.
+      # Floor sits just under current coverage so it ratchets against
+      # regressions rather than rubber-stamping them.
+      - name: Enforce Total Coverage (75%)
         if: always()
         run: |
-          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<50) { print "Coverage below 50%!"; exit 1 } }' coverage/lcov.info | tee coverage/total-coverage.txt
+          set -o pipefail
+          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<75) { print "Coverage below 75%!"; exit 1 } }' coverage/lcov.info | tee coverage/total-coverage.txt
           cat coverage/total-coverage.txt
 
       - name: Upload Coverage Artifact
@@ -168,6 +183,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
@@ -187,11 +203,15 @@ jobs:
       - name: Check Bundle Size
         run: node ci/scripts/bundle_size.js
 
+      # bundle_size.js writes the report to the repo root, not next to itself.
+      # always() so the report is still available when the check fails — that
+      # is precisely when someone needs to read it.
       - name: Upload Bundle Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: bundle-size
-          path: ci/scripts/bundle-size-report.json
+          path: bundle-size-report.json
           retention-days: 1
 
       - name: Upload Web Artifact
