@@ -252,15 +252,32 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('ci/smoke/package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('ci/smoke/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
-      - name: Install Playwright Deps
+      # `playwright install --with-deps` shells out to apt-get, which can stall on
+      # the runner's package lock and quietly consume the entire job budget: the
+      # job then reports as "cancelled" at its timeout with no indication of where
+      # it stopped. Splitting the steps and giving each its own timeout turns that
+      # stall into a diagnosable step failure, and DEBIAN_FRONTEND stops apt
+      # waiting on a prompt that nothing can answer.
+      - name: Install Node Deps
         working-directory: ci/smoke
-        run: |
-          npm ci
-          npx playwright install chromium --with-deps
+        timeout-minutes: 4
+        run: npm ci
+
+      - name: Install Playwright System Deps
+        timeout-minutes: 4
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        working-directory: ci/smoke
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright Browser
+        timeout-minutes: 4
+        working-directory: ci/smoke
+        run: npx playwright install chromium
 
       - name: Run Smoke Tests
         working-directory: ci/smoke
@@ -301,15 +318,27 @@ jobs:
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-e2e-${{ hashFiles('ci/e2e/package.json') }}
+          key: ${{ runner.os }}-playwright-e2e-${{ hashFiles('ci/e2e/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-e2e-
 
-      - name: Install E2E Dependencies
+      # Split for the same reason as the smoke job above.
+      - name: Install Node Deps
         working-directory: ci/e2e
-        run: |
-          npm ci
-          npx playwright install chromium --with-deps
+        timeout-minutes: 4
+        run: npm ci
+
+      - name: Install Playwright System Deps
+        timeout-minutes: 4
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        working-directory: ci/e2e
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright Browser
+        timeout-minutes: 4
+        working-directory: ci/e2e
+        run: npx playwright install chromium
 
       - name: Run E2E Tests
         env:
