@@ -104,8 +104,14 @@ jobs:
             exit 1
           fi
 
+      # Via the hardened installer: a plain `apt-get update` here stalled on the
+      # runner's unreachable Azure mirror and took the job's whole 15 minute
+      # budget with it, reporting as "cancelled" mid-step.
       - name: Install psql client
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+        timeout-minutes: 6
+        run: |
+          chmod +x ci/scripts/apt_install.sh
+          ./ci/scripts/apt_install.sh postgresql-client
 
       # Supabase migrations assume roles and extensions that its platform
       # provides. Creating them up front is what lets a plain Postgres accept the

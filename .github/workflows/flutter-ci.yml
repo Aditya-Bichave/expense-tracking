@@ -154,7 +154,10 @@ jobs:
           merge-multiple: true
 
       - name: Install lcov
-        run: sudo apt-get update && sudo apt-get install -y lcov
+        timeout-minutes: 6
+        run: |
+          chmod +x ci/scripts/apt_install.sh
+          ./ci/scripts/apt_install.sh lcov
 
       - name: Merge Shard Coverage
         run: |
@@ -265,24 +268,17 @@ jobs:
       # apt spends minutes on that and the job used to die at its own
       # timeout-minutes, reporting "cancelled" with no clue which step hung.
       #
-      # Split into three bounded steps so a stall names itself. The system-deps
-      # step is best-effort: it provisions the runner rather than asserting
-      # anything about this repository, and ubuntu-latest already ships most of
-      # what headless Chromium needs. If a library really is missing, the browser
-      # launch in the test step fails and says which one -- a better signal than
-      # an apt mirror outage failing the build.
+      # There is no system-deps step here any more, and that is evidence-based
+      # rather than hopeful: on the run that first went green, `install-deps`
+      # timed out after 4 minutes having installed nothing, and the E2E suite
+      # still passed in 53 seconds. ubuntu-latest already carries the libraries
+      # headless Chromium needs, so the step only ever bought a 4 minute stall.
+      # Should a library genuinely go missing, the browser launch fails in the
+      # test step and names it.
       - name: Install Node Deps
         working-directory: ci/smoke
         timeout-minutes: 4
         run: npm ci
-
-      - name: Install Playwright System Deps
-        continue-on-error: true # apt mirror flakiness must not fail the build
-        timeout-minutes: 4
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        working-directory: ci/smoke
-        run: npx playwright install-deps chromium
 
       - name: Install Playwright Browser
         timeout-minutes: 4
@@ -337,14 +333,6 @@ jobs:
         working-directory: ci/e2e
         timeout-minutes: 4
         run: npm ci
-
-      - name: Install Playwright System Deps
-        continue-on-error: true # apt mirror flakiness must not fail the build
-        timeout-minutes: 4
-        env:
-          DEBIAN_FRONTEND: noninteractive
-        working-directory: ci/e2e
-        run: npx playwright install-deps chromium
 
       - name: Install Playwright Browser
         timeout-minutes: 4
