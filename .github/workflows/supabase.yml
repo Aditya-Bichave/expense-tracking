@@ -2,28 +2,175 @@ name: Supabase CI
 
 on:
   push:
+    branches: [main]
     paths:
-      - 'supabase/**'
+      - "supabase/**"
+      - ".github/workflows/supabase.yml"
   pull_request:
+    branches: [main]
     paths:
-      - 'supabase/**'
+      - "supabase/**"
+      - ".github/workflows/supabase.yml"
+
+concurrency:
+  group: supabase-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   validate:
+    name: 🗄️ Validate Migrations
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # A real Postgres to apply the migrations against. The previous version of
+    # this job ran `ls supabase/migrations/` and echoed "SQL Linting would run
+    # here", so a migration with a syntax error, a bad column reference or a
+    # broken ordering dependency passed CI and only failed on deploy.
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - name: Check Migration Files Structure
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Require a migrations directory
         run: |
-          if [ -d "supabase/migrations" ]; then
-            echo "Migrations folder found."
-            ls -la supabase/migrations/
-          else
-            echo "Migrations folder missing!"
-            false
+          if [[ ! -d supabase/migrations ]]; then
+            echo "::error::supabase/migrations is missing."
+            exit 1
           fi
-      - name: Lint SQL (Placeholder)
-        run: echo "SQL Linting would run here."
+          count=$(find supabase/migrations -name '*.sql' | wc -l)
+          echo "Found $count migration(s)."
+          if [[ "$count" -eq 0 ]]; then
+            echo "::error::No .sql migrations found."
+            exit 1
+          fi
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      # Supabase migrations assume roles and extensions that its platform
+      # provides. Creating them up front is what lets a plain Postgres accept the
+      # files unmodified; without it every migration referencing `auth.uid()` or
+      # the `anon` role fails for reasons unrelated to the change under review.
+      - name: Seed Supabase-provided roles and schemas
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+              CREATE ROLE anon NOLOGIN NOINHERIT;
+            END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+              CREATE ROLE authenticated NOLOGIN NOINHERIT;
+            END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN
+              CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+            END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'supabase_admin') THEN
+              CREATE ROLE supabase_admin NOLOGIN NOINHERIT;
+            END IF;
+          END
+          $$;
+
+          CREATE SCHEMA IF NOT EXISTS auth;
+          CREATE SCHEMA IF NOT EXISTS storage;
+          CREATE SCHEMA IF NOT EXISTS extensions;
+
+          CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
+          CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
+          -- Minimal stand-ins for the auth helpers migrations call into.
+          CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
+            LANGUAGE sql STABLE AS $$ SELECT NULL::uuid $$;
+          CREATE OR REPLACE FUNCTION auth.role() RETURNS text
+            LANGUAGE sql STABLE AS $$ SELECT NULL::text $$;
+          CREATE OR REPLACE FUNCTION auth.email() RETURNS text
+            LANGUAGE sql STABLE AS $$ SELECT NULL::text $$;
+
+          -- auth.users is referenced by foreign keys in application tables.
+          CREATE TABLE IF NOT EXISTS auth.users (
+            id uuid PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+            email text
+          );
+          SQL
+
+      # Applied in filename order, which is the order Supabase itself uses. This
+      # catches migrations that only work when run out of sequence.
+      - name: Apply migrations in order
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for file in $(find supabase/migrations -name '*.sql' | sort); do
+            echo "::group::$file"
+            psql -v ON_ERROR_STOP=1 -f "$file"
+            echo "::endgroup::"
+          done
+          echo "All migrations applied cleanly."
+
+      # Re-applying must not error. Migrations that are not idempotent are a
+      # frequent cause of half-applied production deploys.
+      - name: Re-apply to check idempotency
+        continue-on-error: true
+        id: idempotency
+        run: |
+          set -euo pipefail
+          for file in $(find supabase/migrations -name '*.sql' | sort); do
+            psql -v ON_ERROR_STOP=1 -f "$file" > /dev/null
+          done
+
+      - name: Report idempotency result
+        run: |
+          if [[ "${{ steps.idempotency.outcome }}" == "failure" ]]; then
+            echo "::warning::Migrations are not idempotent -- re-applying them errors. This is tolerated, but it means a partially-applied deploy cannot simply be re-run."
+          else
+            echo "Migrations re-applied cleanly."
+          fi
+
+  naming:
+    name: 🧹 Migration Naming
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # `supabase db lint` is deliberately not run here. It needs a running local
+      # Supabase stack, and wrapping it in `|| true` to survive without one would
+      # rebuild the very placeholder this workflow replaced: a step that reports
+      # success no matter what it finds. The apply-to-Postgres job above is what
+      # actually validates the SQL.
+      - name: Check migration file naming
+        run: |
+          set -euo pipefail
+          status=0
+          for file in $(find supabase/migrations -name '*.sql' | sort); do
+            base=$(basename "$file")
+            # Supabase orders migrations by a leading 14-digit UTC timestamp.
+            # A file that does not match sorts unpredictably against the rest.
+            if [[ ! "$base" =~ ^[0-9]{14}_.+\.sql$ ]]; then
+              echo "::error file=$file::'$base' does not match <14-digit-timestamp>_<name>.sql, so its apply order is not well defined."
+              status=1
+            fi
+          done
+          exit $status

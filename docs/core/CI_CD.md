@@ -1,56 +1,98 @@
 # CI/CD Pipeline
 
-The project uses GitHub Actions for Continuous Integration and Deployment.
-Pipeline: `.github/workflows/flutter-ci.yml`.
+GitHub Actions. Four workflows:
 
-## Overview
-1.  **Triggers**:
-    *   Push to `main`.
-    *   Pull Request to `main`.
-    *   Manual Dispatch (Optional).
+| Workflow | File | Runs on |
+| --- | --- | --- |
+| Flutter CI (Strict) | `.github/workflows/flutter-ci.yml` | PRs to `main`, pushes to `main` |
+| Security Audit | `.github/workflows/security.yml` | PRs, pushes to `main`, weekly |
+| Supabase CI | `.github/workflows/supabase.yml` | changes under `supabase/**` |
+| Deploy Web | `.github/workflows/deploy_web.yml` | after CI passes on `main` |
 
-2.  **Jobs**:
-    *   **Static Checks**:
-        *   `dart format --output=none --set-exit-if-changed .` (Fails if formatting is needed).
-        *   `flutter analyze` (Fails on lints).
-        *   Policy Checks: No `print()` statements, no `TODO` without ID.
-    *   **Build & Test**:
-        *   Build Runners (`build_runner build`).
-        *   Unit Tests (`flutter test`).
-        *   Widget Tests (`flutter test`).
-        *   Code Coverage Check (Diff >= 80%, Total >= 35%).
-    *   **Web Build**:
-        *   `flutter build web --release`.
-        *   Bundle Size Check (see `ci/budgets.json`).
-    *   **Smoke Tests**:
-        *   Deploys Web Build locally.
-        *   Runs Playwright Smoke Tests (Node.js).
+## Shared setup
 
-## Local Usage
-To verify changes before pushing:
+The Flutter SDK version is pinned in **one** place:
+`.github/actions/setup-flutter/action.yml`. Every job uses that composite action,
+which installs the SDK, restores the pub cache and runs `flutter pub get`. Bump
+the version there to upgrade the toolchain, so the resulting churn lands in a
+reviewed diff instead of arriving with whatever Flutter shipped that week.
 
-### 1. Formatting & Analysis
+All third-party actions are pinned to commit SHAs, with the tag in a trailing
+comment. A mutable tag is a supply-chain hole.
+
+## Flutter CI jobs
+
+**`static-checks`**
+- `dart format . --output=none --set-exit-if-changed`
+- `flutter analyze`
+- `ci/policy/check_new_code.sh` — no `print()`, no unlabelled `TODO`
+- `ci/policy/check_codegen.sh` — generated files updated alongside their sources
+- `ci/policy/check_lockfile.sh` — `pubspec.yaml` never changes without `pubspec.lock`
+- `dependency-review-action`, failing on high severity
+
+**`unit-tests`** — sharded 4 ways (`--total-shards` / `--shard-index`), each shard
+writing its own `coverage/lcov-N.info`. `fail-fast: false`, so one broken shard
+does not hide the state of the others.
+
+**`coverage`** — merges the shard files and enforces the gates:
+- `ci/scripts/merge_coverage.sh` merges with `lcov -a`. Concatenating lcov files
+  would double-count lines covered by more than one shard.
+- `ci/scripts/check_coverage_floor.sh` enforces `ci/coverage-floor.txt`. Below the
+  floor fails. More than 1 point above it warns, asking you to raise the floor —
+  that ratchet is what stops coverage sagging against a fixed threshold forever.
+- `diff-cover` requires **80%** coverage on changed lines (PRs only).
+
+**`web-build`** — `flutter build web --release`, then the bundle-size budget in
+`ci/budgets.json`.
+
+**`web-smoke`** / **`web-e2e`** — Playwright against the built bundle.
+
+**`pr-report`** — posts a single updating summary comment. It reads
+`artifacts/coverage/lcov.info` and `artifacts/coverage/diff-coverage.txt`, so the
+`coverage` job's artifact name and layout are load-bearing.
+
+## Security Audit
+
+`osv-scanner` against `pubspec.lock` and the Node lockfiles under `ci/`, failing
+the job on any known vulnerability.
+
+This job previously ran `dart pub outdated --transitive`, which reports newer
+versions, knows nothing about CVEs, and exits 0 whatever it finds — a green check
+that asserted nothing. That report still runs, but only on the weekly schedule and
+explicitly as information rather than a gate.
+
+## Supabase CI
+
+Starts a real Postgres service, seeds the roles, schemas and `auth` helper
+functions that the Supabase platform normally provides, then applies every
+migration in filename order. This catches SQL errors, bad references and ordering
+dependencies. Re-applying is attempted afterwards and a non-idempotent set of
+migrations warns rather than fails.
+
+A separate job checks that every migration is named
+`<14-digit-timestamp>_<name>.sql`, since Supabase derives apply order from it.
+
+`supabase db lint` is deliberately absent: it needs a running local Supabase
+stack, and wrapping it in `|| true` to survive without one would recreate the
+placeholder this workflow replaced.
+
+## Local usage
+
+`scripts/verify.sh` runs the same gates as `static-checks` and the test jobs, in
+the same order:
+
 ```bash
-dart format .
-flutter analyze
+./scripts/verify.sh                # format, analyze, lockfile, tests, coverage
+./scripts/verify.sh --no-coverage  # skip the slower coverage gates
 ```
 
-### 2. Testing & Coverage
-To check if your changes meet the 80% diff coverage requirement:
-```bash
-./ci/check_coverage.sh
-```
-*Note: Requires `pip install diff-cover`.*
+Thresholds live in `ci/coverage-floor.txt` and in `scripts/verify.sh`; they must
+match `flutter-ci.yml`.
 
-### 3. Policy Checks
-```bash
-./ci/policy/check_new_code.sh main
-```
+For the web build, smoke and E2E jobs:
 
-### 4. Web Build & Smoke Test
 ```bash
 flutter build web --release
-cd ci/smoke
-npm install
-npm run smoke
+cd ci/smoke && npm install && npm run smoke
+./run_e2e.sh
 ```

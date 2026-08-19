@@ -2,33 +2,74 @@ name: Security Audit
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   schedule:
-    - cron: '0 0 * * 0' # Run weekly on Sundays
+    - cron: "0 0 * * 0" # Weekly, Sundays
 
-# Keep in step with FLUTTER_VERSION in flutter-ci.yml — an unpinned `stable`
-# lets the toolchain move under CI without any change in this repository.
-env:
-  FLUTTER_VERSION: "3.47.0"
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   vulnerability-scan:
+    name: 🔐 Dependency Vulnerabilities
     runs-on: ubuntu-latest
-
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
-          cache: true
+      # This job used to run `dart pub outdated --transitive`, which lists
+      # packages that have newer versions. That is not a vulnerability scan: it
+      # knows nothing about CVEs, and `pub outdated` exits 0 whatever it finds,
+      # so the job was a green check that asserted nothing.
+      #
+      # osv-scanner queries the OSV database, understands pubspec.lock natively,
+      # and exits non-zero when it finds a known vulnerability.
+      - name: Install osv-scanner
+        env:
+          OSV_VERSION: v2.5.1
+        run: |
+          set -euo pipefail
+          curl -sSfL \
+            "https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner_linux_amd64" \
+            -o /tmp/osv-scanner
+          chmod +x /tmp/osv-scanner
+          sudo mv /tmp/osv-scanner /usr/local/bin/osv-scanner
+          osv-scanner --version
 
-      - name: Install Dependencies
-        run: flutter pub get
+      - name: Scan pubspec.lock
+        run: osv-scanner scan source --lockfile=pubspec.lock
 
-      - name: Check for Vulnerable Dependencies
-        run: dart pub outdated --transitive
+      # The Node lockfiles for the smoke and E2E harnesses run in CI with repo
+      # credentials in scope, so they are worth scanning too.
+      - name: Scan CI harness lockfiles
+        run: |
+          set -euo pipefail
+          status=0
+          for lock in ci/smoke/package-lock.json ci/e2e/package-lock.json server/package-lock.json; do
+            if [[ -f "$lock" ]]; then
+              echo "--- $lock ---"
+              osv-scanner scan source --lockfile="$lock" || status=$?
+            fi
+          done
+          exit $status
+
+  outdated-report:
+    name: 📅 Outdated Dependencies (informational)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Only on the weekly run. It is a report to read, not a gate, so it has no
+    # business blocking pull requests.
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: ./.github/actions/setup-flutter
+
+      - name: Report Outdated Dependencies
+        run: dart pub outdated --transitive || true
