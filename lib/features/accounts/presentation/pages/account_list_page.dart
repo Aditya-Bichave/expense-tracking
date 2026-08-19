@@ -151,11 +151,9 @@ class AccountListPage extends StatelessWidget {
                 accounts =
                     state.items; // Access items directly from loaded state
               } else if (state is AccountListLoading && state.isReloading) {
-                // Try to get previous state data if available
-                final previousState = context.read<AccountListBloc>().state;
-                if (previousState is AccountListLoaded) {
-                  accounts = previousState.items;
-                }
+                // The reloading state carries the rows it replaced; reading the
+                // bloc here would just return this same loading state.
+                accounts = state.previousItems;
               }
 
               if (accounts.isEmpty &&

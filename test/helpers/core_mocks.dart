@@ -1,7 +1,5 @@
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:flutter/material.dart';
-// ignore: implementation_imports
-import 'package:go_router/src/router.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_ce/hive.dart';

@@ -57,3 +57,6 @@ ci/smoke/routes.json
 !.env.example
 !*.env.example
 test_pid.txt
+
+# Bundle size report written at the repo root by ci/scripts/bundle_size.js
+bundle-size-report.json

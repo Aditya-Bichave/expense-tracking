@@ -157,7 +157,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         startDate: startDate,
         endDate: endDate,
       );
-      return allModelsResult.fold((failure) => Left(failure), (models) {
+      return await allModelsResult.fold((failure) => Left(failure), (models) {
         double total = models.fold(0.0, (sum, item) => sum + item.amount);
         return Right(total);
       });
@@ -177,7 +177,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         endDate: endDate,
       );
       if (modelsResult.isLeft()) {
-        return modelsResult.fold(
+        return await modelsResult.fold(
           (l) => Left(l),
           (_) => const Left(CacheFailure()),
         );

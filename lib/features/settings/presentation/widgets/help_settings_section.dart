@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,7 +42,7 @@ class HelpSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled
                 ? null
-                : () => launchUrlCallback(context, 'https://example.com/help'),
+                : () => launchUrlCallback(context, ExternalUrls.help),
           ),
           Builder(
             builder: (context) {

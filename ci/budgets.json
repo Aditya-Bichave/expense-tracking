@@ -1,5 +1,6 @@
 {
-  "total_kb": 40960,
+  "total_kb": 49152,
+  "app_payload_kb": 13312,
   "main_js_kb": 6144,
   "gzip_main_js_kb": 2048
 }

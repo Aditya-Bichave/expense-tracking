@@ -45,11 +45,28 @@ Future<void> pumpWidgetWithProviders({
       const [], // For other feature-specific Blocs
   GetIt? getIt, // Pass a pre-configured service locator if needed
   GoRouter? router, // Optional router configuration
+  // Injects [navigatorOverride] as the router returned by `GoRouter.of(context)`
+  // inside the widget under test. Passing a mock router via [router] is not
+  // enough: `MaterialApp.router` builds its own `InheritedGoRouter` from the
+  // delegate, so `GoRouter.of(context)` would resolve to that real router and
+  // `verify()` on the mock would never match. Use this to assert navigation.
+  GoRouter? navigatorOverride,
   bool settle = true,
   ThemeData? theme,
   ThemeData? darkTheme,
 }) async {
   // 1. Determine router configuration
+  assert(
+    navigatorOverride == null || router == null,
+    'navigatorOverride only wraps the default route. When you pass your own '
+    'router, build the InheritedGoRouter inside that router builder '
+    'instead, or the override silently does nothing.',
+  );
+
+  Widget rootChild(Widget child) => navigatorOverride == null
+      ? child
+      : InheritedGoRouter(goRouter: navigatorOverride, child: child);
+
   final routerConfig =
       router ??
       GoRouter(
@@ -58,7 +75,7 @@ Future<void> pumpWidgetWithProviders({
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => Scaffold(body: widget),
+            builder: (context, state) => Scaffold(body: rootChild(widget)),
           ),
         ],
       );

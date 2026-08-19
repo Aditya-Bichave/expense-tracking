@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,8 +40,7 @@ class LegalSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled
                 ? null
-                : () =>
-                      launchUrlCallback(context, 'https://example.com/privacy'),
+                : () => launchUrlCallback(context, ExternalUrls.privacy),
           ),
           AppListTile(
             leading: Icon(Icons.gavel_outlined, color: kit.colors.textPrimary),
@@ -52,7 +52,7 @@ class LegalSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled
                 ? null
-                : () => launchUrlCallback(context, 'https://example.com/terms'),
+                : () => launchUrlCallback(context, ExternalUrls.terms),
           ),
           AppListTile(
             leading: Icon(
