@@ -60,3 +60,6 @@ test_pid.txt
 
 # Bundle size report written at the repo root by ci/scripts/bundle_size.js
 bundle-size-report.json
+
+# Vercel CLI working directory (build output + pulled project settings)
+.vercel/

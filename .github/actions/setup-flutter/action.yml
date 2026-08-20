@@ -1,0 +1,50 @@
+name: Setup Flutter
+description: >-
+  Installs the pinned Flutter SDK, restores the pub cache and resolves
+  dependencies. This is the single source of truth for the Flutter version.
+
+inputs:
+  flutter-version:
+    description: >-
+      Flutter SDK version. Leave unset in normal use -- the default below is the
+      pinned version every workflow shares.
+
+      Pinned deliberately. On `channel: stable` alone, CI silently follows
+      whatever Flutter ships that week: a 3.35 -> 3.47 jump previously broke
+      dependency solving, reformatted the repo, introduced a new lint and grew
+      the web bundle past its budget, all without a single change in this
+      repository. Bump this line to upgrade, so the churn lands in a reviewed
+      diff.
+    required: false
+    default: "3.47.0"
+  cache-key-suffix:
+    description: >-
+      Appended to the pub cache key. Set it when a job needs a cache separate
+      from the default one.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+      with:
+        flutter-version: ${{ inputs.flutter-version }}
+        channel: stable
+        cache: true
+
+    - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: ~/.pub-cache
+        key: ${{ runner.os }}-pub${{ inputs.cache-key-suffix }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pub${{ inputs.cache-key-suffix }}-
+          ${{ runner.os }}-pub-
+
+    # Every downstream step assumes this has run: `dart format` reads the
+    # language version from .dart_tool/package_config.json, which only `pub get`
+    # writes. Without it the formatter falls back to the SDK's newest language
+    # version and reformats the whole repo.
+    - name: Install dependencies
+      shell: bash
+      run: flutter pub get

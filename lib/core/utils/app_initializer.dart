@@ -1,156 +1,92 @@
-import 'package:expense_tracker/core/constants/hive_constants.dart';
-import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/core/network/supabase_client_provider.dart';
+import 'package:expense_tracker/core/services/secure_storage_service.dart';
+import 'package:expense_tracker/core/storage/app_hive_boxes.dart';
+import 'package:expense_tracker/core/storage/hive_adapters.dart';
+import 'package:expense_tracker/core/utils/bloc_observer.dart';
+import 'package:expense_tracker/core/utils/e2e_bootstrap.dart';
+import 'package:expense_tracker/core/utils/e2e_mode.dart';
 import 'package:expense_tracker/core/utils/logger.dart';
-import 'package:expense_tracker/features/accounts/data/models/asset_account_model.dart';
-import 'package:expense_tracker/features/budgets/data/models/budget_model.dart';
-import 'package:expense_tracker/features/categories/data/models/category_model.dart';
-import 'package:expense_tracker/features/categories/data/models/user_history_rule_model.dart';
-import 'package:expense_tracker/features/expenses/data/models/expense_model.dart';
-import 'package:expense_tracker/features/goals/data/models/goal_contribution_model.dart';
-import 'package:expense_tracker/features/goals/data/models/goal_model.dart';
-import 'package:expense_tracker/features/group_expenses/data/models/group_expense_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_member_model.dart';
-import 'package:expense_tracker/features/groups/data/models/group_model.dart';
-import 'package:expense_tracker/features/income/data/models/income_model.dart';
-import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
-import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_audit_log_model.dart';
-import 'package:expense_tracker/features/recurring_transactions/data/models/recurring_rule_model.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+/// Brings up everything the widget tree assumes already exists.
+///
+/// The steps are ordered and each one depends on the ones before it, so they
+/// read top-to-bottom in [init] rather than being hidden behind indirection.
 class AppInitializer {
-  static void _registerAdapter<T>(TypeAdapter<T> adapter) {
-    if (!Hive.isAdapterRegistered(adapter.typeId)) {
-      Hive.registerAdapter(adapter);
+  const AppInitializer._();
+
+  /// Runs the full startup sequence. Throws if any required step fails; the
+  /// caller is expected to show [InitializationErrorApp] in that case.
+  static Future<void> init() async {
+    Bloc.observer = SimpleBlocObserver();
+
+    await _initFirebase();
+    await Hive.initFlutter();
+
+    // Supabase must be up before the service locator, which resolves clients
+    // from it while registering dependencies.
+    await SupabaseClientProvider.initialize();
+
+    final secureStorageService = SecureStorageService();
+    final encryptionKey = await secureStorageService.getHiveKey();
+    final boxes = await initHiveBoxes(encryptionKey);
+    final prefs = await SharedPreferences.getInstance();
+
+    await _registerDependencies(
+      prefs: prefs,
+      secureStorageService: secureStorageService,
+      boxes: boxes,
+    );
+
+    if (E2EMode.enabled) {
+      await E2EBootstrap.seedLocalState();
     }
   }
 
-  static Future<
-    ({
-      Box<ProfileModel> profileBox,
-      Box<ExpenseModel> expenseBox,
-      Box<AssetAccountModel> accountBox,
-      Box<IncomeModel> incomeBox,
-      Box<CategoryModel> categoryBox,
-      Box<UserHistoryRuleModel> userHistoryBox,
-      Box<BudgetModel> budgetBox,
-      Box<GoalModel> goalBox,
-      Box<GoalContributionModel> contributionBox,
-      Box<RecurringRuleModel> recurringRuleBox,
-      Box<RecurringRuleAuditLogModel> recurringRuleAuditLogBox,
-      Box<SyncMutationModel> outboxBox,
-      Box<GroupModel> groupBox,
-      Box<GroupMemberModel> groupMemberBox,
-      Box<GroupExpenseModel> groupExpenseBox,
-    })
-  >
-  initHiveBoxes(List<int> encryptionKey) async {
-    log.info("Registering Hive Adapters...");
-    _registerAdapter(ProfileModelAdapter());
-    _registerAdapter(ExpenseModelAdapter());
-    _registerAdapter(AssetAccountModelAdapter());
-    _registerAdapter(IncomeModelAdapter());
-    _registerAdapter(CategoryModelAdapter());
-    _registerAdapter(UserHistoryRuleModelAdapter());
-    _registerAdapter(BudgetModelAdapter());
-    _registerAdapter(GoalModelAdapter());
-    _registerAdapter(GoalContributionModelAdapter());
-    _registerAdapter(RecurringRuleModelAdapter());
-    _registerAdapter(RecurringRuleAuditLogModelAdapter());
+  /// Firebase is used for optional telemetry only, so a failure here is logged
+  /// and swallowed rather than blocking startup.
+  static Future<void> _initFirebase() async {
+    try {
+      await Firebase.initializeApp();
+    } catch (e, s) {
+      log.warning('Firebase initialization failed: $e\n$s');
+    }
+  }
 
-    _registerAdapter(SyncMutationModelAdapter());
-    _registerAdapter(SyncStatusAdapter());
-    _registerAdapter(OpTypeAdapter());
+  /// Registers every Hive adapter, then opens all boxes encrypted.
+  static Future<AppHiveBoxes> initHiveBoxes(List<int> encryptionKey) async {
+    log.info('Registering Hive adapters...');
+    HiveAdapters.registerAll();
+    return AppHiveBoxes.open(encryptionKey);
+  }
 
-    _registerAdapter(GroupModelAdapter());
-    _registerAdapter(GroupMemberModelAdapter());
-    _registerAdapter(GroupExpenseModelAdapter());
-    _registerAdapter(ExpensePayerModelAdapter());
-    _registerAdapter(ExpenseSplitModelAdapter());
-
-    log.info("Opening Hive boxes in parallel...");
-    // Initiate all openBox calls concurrently
-    final profileBoxFuture = Hive.openBox<ProfileModel>(
-      HiveConstants.profileBoxName,
-      encryptionCipher: HiveAesCipher(encryptionKey),
-    );
-    final expenseBoxFuture = Hive.openBox<ExpenseModel>(
-      HiveConstants.expenseBoxName,
-    );
-    final accountBoxFuture = Hive.openBox<AssetAccountModel>(
-      HiveConstants.accountBoxName,
-    );
-    final incomeBoxFuture = Hive.openBox<IncomeModel>(
-      HiveConstants.incomeBoxName,
-    );
-    final categoryBoxFuture = Hive.openBox<CategoryModel>(
-      HiveConstants.categoryBoxName,
-    );
-    final userHistoryBoxFuture = Hive.openBox<UserHistoryRuleModel>(
-      HiveConstants.userHistoryRuleBoxName,
-    );
-    final budgetBoxFuture = Hive.openBox<BudgetModel>(
-      HiveConstants.budgetBoxName,
-    );
-    final goalBoxFuture = Hive.openBox<GoalModel>(HiveConstants.goalBoxName);
-    final contributionBoxFuture = Hive.openBox<GoalContributionModel>(
-      HiveConstants.goalContributionBoxName,
-    );
-    final recurringRuleBoxFuture = Hive.openBox<RecurringRuleModel>(
-      HiveConstants.recurringRuleBoxName,
-    );
-    final recurringRuleAuditLogBoxFuture =
-        Hive.openBox<RecurringRuleAuditLogModel>(
-          HiveConstants.recurringRuleAuditLogBoxName,
-        );
-
-    final outboxBoxFuture = Hive.openBox<SyncMutationModel>(
-      HiveConstants.outboxBoxName,
-    );
-    final groupBoxFuture = Hive.openBox<GroupModel>(HiveConstants.groupBoxName);
-    final groupMemberBoxFuture = Hive.openBox<GroupMemberModel>(
-      HiveConstants.groupMemberBoxName,
-    );
-    final groupExpenseBoxFuture = Hive.openBox<GroupExpenseModel>(
-      HiveConstants.groupExpenseBoxName,
-    );
-
-    // Wait for all to complete
-    final results = await Future.wait([
-      profileBoxFuture,
-      expenseBoxFuture,
-      accountBoxFuture,
-      incomeBoxFuture,
-      categoryBoxFuture,
-      userHistoryBoxFuture,
-      budgetBoxFuture,
-      goalBoxFuture,
-      contributionBoxFuture,
-      recurringRuleBoxFuture,
-      recurringRuleAuditLogBoxFuture,
-      outboxBoxFuture,
-      groupBoxFuture,
-      groupMemberBoxFuture,
-      groupExpenseBoxFuture,
-    ]);
-
-    log.info("All Hive boxes opened successfully.");
-
-    return (
-      profileBox: results[0] as Box<ProfileModel>,
-      expenseBox: results[1] as Box<ExpenseModel>,
-      accountBox: results[2] as Box<AssetAccountModel>,
-      incomeBox: results[3] as Box<IncomeModel>,
-      categoryBox: results[4] as Box<CategoryModel>,
-      userHistoryBox: results[5] as Box<UserHistoryRuleModel>,
-      budgetBox: results[6] as Box<BudgetModel>,
-      goalBox: results[7] as Box<GoalModel>,
-      contributionBox: results[8] as Box<GoalContributionModel>,
-      recurringRuleBox: results[9] as Box<RecurringRuleModel>,
-      recurringRuleAuditLogBox: results[10] as Box<RecurringRuleAuditLogModel>,
-      outboxBox: results[11] as Box<SyncMutationModel>,
-      groupBox: results[12] as Box<GroupModel>,
-      groupMemberBox: results[13] as Box<GroupMemberModel>,
-      groupExpenseBox: results[14] as Box<GroupExpenseModel>,
+  static Future<void> _registerDependencies({
+    required SharedPreferences prefs,
+    required SecureStorageService secureStorageService,
+    required AppHiveBoxes boxes,
+  }) {
+    return initLocator(
+      prefs: prefs,
+      secureStorageService: secureStorageService,
+      expenseBox: boxes.expenseBox,
+      accountBox: boxes.accountBox,
+      incomeBox: boxes.incomeBox,
+      categoryBox: boxes.categoryBox,
+      userHistoryBox: boxes.userHistoryBox,
+      budgetBox: boxes.budgetBox,
+      goalBox: boxes.goalBox,
+      contributionBox: boxes.contributionBox,
+      recurringRuleBox: boxes.recurringRuleBox,
+      recurringRuleAuditLogBox: boxes.recurringRuleAuditLogBox,
+      outboxBox: boxes.outboxBox,
+      groupBox: boxes.groupBox,
+      groupMemberBox: boxes.groupMemberBox,
+      groupExpenseBox: boxes.groupExpenseBox,
+      profileBox: boxes.profileBox,
     );
   }
 }

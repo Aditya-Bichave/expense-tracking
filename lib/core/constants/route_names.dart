@@ -32,6 +32,7 @@ abstract class RouteNames {
   static const String accountDetail = 'account_detail';
   static const String addLiabilityAccount = 'add_liability_account';
   static const String settingsExport = 'settings_export';
+  static const String about = 'about';
   static const String reportSpendingCategory = 'spending_category';
   static const String reportSpendingTime = 'spending_time';
   static const String reportIncomeExpense = 'income_expense';

@@ -1,29 +1,272 @@
 name: Supabase CI
 
+# NOTE: no `paths:` filter, for the same reason as flutter-ci.yml -- GitHub
+# evaluates path filters against only the first 300 files of a diff, so a large
+# pull request matches nothing and the workflow silently does not run. Here that
+# would mean migration validation being skipped on exactly the changes most
+# likely to need it.
+#
+# The cost is that this runs on every pull request, including ones that touch no
+# SQL at all. Accepted for now.
+#
+# TODO: gate the heavy jobs on a job-level changed-files check (git diff or
+# dorny/paths-filter, neither capped at 300 files) instead of re-adding a trigger
+# filter.
 on:
   push:
-    paths:
-      - 'supabase/**'
+    branches: [main]
   pull_request:
-    paths:
-      - 'supabase/**'
+    branches: [main]
+
+concurrency:
+  group: supabase-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   validate:
+    name: 🗄️ Validate Migrations
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Non-blocking, temporarily, for a specific and documented reason.
+    #
+    # This job works: it applies the migrations to a real Postgres and it found a
+    # genuine pre-existing defect on its first run. A fresh database cannot be
+    # provisioned from supabase/migrations at all, because the migrations
+    # contradict each other about `public.profiles`:
+    #
+    #   20240320000001_initial_schema  CREATE TABLE profiles (user_id PK, display_name, ...)
+    #   20240523000000_foundation_pack create table IF NOT EXISTS profiles (id PK, full_name, ...)
+    #
+    # The second is a silent no-op because the table already exists, so its RLS
+    # policies then reference a column (`id`) that the table does not have, and
+    # the apply aborts. Downstream migrations disagree too: viral_loop references
+    # profiles(user_id) while nudge_engine and group_net_balances reference
+    # profiles(id). Dart's ProfileModel matches the `id` shape, so production is
+    # evidently NOT the result of applying these files in order.
+    #
+    # Reconciling that needs the real production schema and probably a squashed
+    # baseline migration; it is not something to guess at against live data. Until
+    # then this job reports the failure loudly rather than blocking every
+    # unrelated pull request.
+    #
+    # The deferral is applied to the apply *step*, not to this job. At job level
+    # it would mark the whole run green and skip every step after the failure, so
+    # the defect would vanish behind a passing check -- the very thing this
+    # workflow was rewritten to stop doing. At step level the failure is captured,
+    # the reporting step below still runs, and the run summary says plainly that
+    # the migrations are broken.
+    #
+    # TODO: reconcile the profiles schema, then delete the step's
+    # continue-on-error and this comment.
+
+    # A real Postgres to apply the migrations against. The previous version of
+    # this job ran `ls supabase/migrations/` and echoed "SQL Linting would run
+    # here", so a migration with a syntax error, a bad column reference or a
+    # broken ordering dependency passed CI and only failed on deploy.
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - name: Check Migration Files Structure
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Require a migrations directory
         run: |
-          if [ -d "supabase/migrations" ]; then
-            echo "Migrations folder found."
-            ls -la supabase/migrations/
-          else
-            echo "Migrations folder missing!"
-            false
+          if [[ ! -d supabase/migrations ]]; then
+            echo "::error::supabase/migrations is missing."
+            exit 1
           fi
-      - name: Lint SQL (Placeholder)
-        run: echo "SQL Linting would run here."
+          count=$(find supabase/migrations -name '*.sql' | wc -l)
+          echo "Found $count migration(s)."
+          if [[ "$count" -eq 0 ]]; then
+            echo "::error::No .sql migrations found."
+            exit 1
+          fi
+
+      # Via the hardened installer: a plain `apt-get update` here stalled on the
+      # runner's unreachable Azure mirror and took the job's whole 15 minute
+      # budget with it, reporting as "cancelled" mid-step.
+      - name: Install psql client
+        timeout-minutes: 6
+        run: |
+          chmod +x ci/scripts/apt_install.sh
+          ./ci/scripts/apt_install.sh postgresql-client
+
+      # Supabase migrations assume roles and extensions that its platform
+      # provides. Creating them up front is what lets a plain Postgres accept the
+      # files unmodified; without it every migration referencing `auth.uid()` or
+      # the `anon` role fails for reasons unrelated to the change under review.
+      - name: Seed Supabase-provided roles and schemas
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'anon') THEN
+              CREATE ROLE anon NOLOGIN NOINHERIT;
+            END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'authenticated') THEN
+              CREATE ROLE authenticated NOLOGIN NOINHERIT;
+            END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'service_role') THEN
+              CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+            END IF;
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'supabase_admin') THEN
+              CREATE ROLE supabase_admin NOLOGIN NOINHERIT;
+            END IF;
+          END
+          $$;
+
+          CREATE SCHEMA IF NOT EXISTS auth;
+          CREATE SCHEMA IF NOT EXISTS storage;
+          CREATE SCHEMA IF NOT EXISTS extensions;
+
+          CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA extensions;
+          CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
+
+          -- Minimal stand-ins for the auth helpers migrations call into.
+          CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
+            LANGUAGE sql STABLE AS $$ SELECT NULL::uuid $$;
+          CREATE OR REPLACE FUNCTION auth.role() RETURNS text
+            LANGUAGE sql STABLE AS $$ SELECT NULL::text $$;
+          CREATE OR REPLACE FUNCTION auth.email() RETURNS text
+            LANGUAGE sql STABLE AS $$ SELECT NULL::text $$;
+
+          -- auth.users is referenced by foreign keys in application tables.
+          CREATE TABLE IF NOT EXISTS auth.users (
+            id uuid PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+            email text
+          );
+
+          -- Supabase's storage extension owns these. Migrations insert the
+          -- avatars bucket and attach RLS policies to storage.objects, so the
+          -- columns they touch (buckets.id/name/public, objects.bucket_id/owner)
+          -- have to exist with compatible types -- `owner` is compared against
+          -- auth.uid(), so it must be uuid.
+          CREATE TABLE IF NOT EXISTS storage.buckets (
+            id text PRIMARY KEY,
+            name text NOT NULL,
+            owner uuid,
+            public boolean DEFAULT false,
+            created_at timestamptz DEFAULT now(),
+            updated_at timestamptz DEFAULT now()
+          );
+
+          CREATE TABLE IF NOT EXISTS storage.objects (
+            id uuid PRIMARY KEY DEFAULT extensions.gen_random_uuid(),
+            bucket_id text REFERENCES storage.buckets (id),
+            name text,
+            owner uuid,
+            metadata jsonb,
+            created_at timestamptz DEFAULT now(),
+            updated_at timestamptz DEFAULT now()
+          );
+          SQL
+
+      # Applied in filename order, which is the order Supabase itself uses. This
+      # catches migrations that only work when run out of sequence.
+      - name: Apply migrations in order
+        id: apply
+        continue-on-error: true # see the note on this job
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          for file in $(find supabase/migrations -name '*.sql' | sort); do
+            echo "::group::$file"
+            psql -v ON_ERROR_STOP=1 -f "$file"
+            echo "::endgroup::"
+          done
+          echo "All migrations applied cleanly."
+
+      # Re-applying must not error. Migrations that are not idempotent are a
+      # frequent cause of half-applied production deploys. Pointless to attempt if
+      # the first pass did not finish.
+      - name: Re-apply to check idempotency
+        id: idempotency
+        if: steps.apply.outcome == 'success'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          for file in $(find supabase/migrations -name '*.sql' | sort); do
+            psql -v ON_ERROR_STOP=1 -f "$file" > /dev/null
+          done
+
+      # Always runs, and writes to the run summary, so a deferred failure is
+      # something you see rather than something you would have to go digging for.
+      - name: Report migration results
+        if: always()
+        run: |
+          if [[ "${{ steps.apply.outcome }}" == "failure" ]]; then
+            {
+              echo "### ⚠️ Migrations do not apply to a fresh database"
+              echo
+              echo "This is a **known, pre-existing defect**, not a regression from this PR."
+              echo "\`supabase/migrations\` cannot provision an empty Postgres:"
+              echo "\`initial_schema\` creates \`profiles\` with a \`user_id\` primary key, then"
+              echo "\`foundation_pack\`'s \`create table if not exists\` silently no-ops and its RLS"
+              echo "policies reference a \`id\` column that does not exist."
+              echo
+              echo "Consequence: no staging, disaster-recovery or local database can be built"
+              echo "from this repository. See \`docs/core/KNOWN_PITFALLS.md\`."
+              echo
+              echo "This check is deliberately non-blocking until the schema is reconciled."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning title=Supabase migrations cannot provision a fresh database::Pre-existing profiles schema conflict; see the job summary and docs/core/KNOWN_PITFALLS.md"
+            exit 0
+          fi
+
+          echo "Migrations applied cleanly to an empty database." >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "${{ steps.idempotency.outcome }}" == "failure" ]]; then
+            echo "::warning::Migrations are not idempotent -- re-applying them errors. Tolerated, but it means a partially-applied deploy cannot simply be re-run."
+          else
+            echo "Migrations re-applied cleanly."
+          fi
+
+  naming:
+    name: 🧹 Migration Naming
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # `supabase db lint` is deliberately not run here. It needs a running local
+      # Supabase stack, and wrapping it in `|| true` to survive without one would
+      # rebuild the very placeholder this workflow replaced: a step that reports
+      # success no matter what it finds. The apply-to-Postgres job above is what
+      # actually validates the SQL.
+      - name: Check migration file naming
+        run: |
+          set -euo pipefail
+          status=0
+          for file in $(find supabase/migrations -name '*.sql' | sort); do
+            base=$(basename "$file")
+            # Supabase orders migrations by a leading 14-digit UTC timestamp.
+            # A file that does not match sorts unpredictably against the rest.
+            if [[ ! "$base" =~ ^[0-9]{14}_.+\.sql$ ]]; then
+              echo "::error file=$file::'$base' does not match <14-digit-timestamp>_<name>.sql, so its apply order is not well defined."
+              status=1
+            fi
+          done
+          exit $status

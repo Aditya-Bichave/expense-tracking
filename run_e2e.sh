@@ -1,7 +1,7 @@
 #!/bin/bash
 # =============================================================================
 # run_e2e.sh - Unified E2E test runner for FinancialOS
-# Usage: ./run_e2e.sh [--skip-build] [--headed] [--ui] [spec-file]
+# Usage: ./run_e2e.sh [--skip-build] [--skip-deps] [--headed] [--ui] [spec-file]
 # =============================================================================
 
 set -e
@@ -12,11 +12,16 @@ APP_ROOT="${SCRIPT_DIR}"
 BUILD_DIR="${BUILD_DIR:-build/web}"
 
 SKIP_BUILD=0
+# CI installs the browser and its system libraries itself, so it passes
+# --skip-deps (or sets E2E_SKIP_DEPS=1). Left on by default for local runs, where
+# installing on demand is the convenience the script exists for.
+SKIP_DEPS="${E2E_SKIP_DEPS:-0}"
 EXTRA_ARGS=()
 
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
         --skip-build) SKIP_BUILD=1 ;;
+        --skip-deps) SKIP_DEPS=1 ;;
         --headed|--ui) EXTRA_ARGS+=("$1") ;;
         *) EXTRA_ARGS+=("$1") ;;
     esac
@@ -53,7 +58,15 @@ echo "============================================================"
 echo " Step 2/3: Checking Playwright Chromium..."
 echo "============================================================"
 cd "$E2E_DIR"
-npx playwright install chromium --with-deps
+if [ "$SKIP_DEPS" -eq 1 ]; then
+    # `--with-deps` shells out to apt-get. On GitHub runners the Azure Ubuntu
+    # mirror is frequently unreachable, and apt then retries for 15+ minutes and
+    # takes the whole job's timeout with it -- which looked like the E2E suite
+    # hanging, when the suite itself runs in about 45 seconds.
+    echo "[SKIP] Skipping Playwright install (--skip-deps); assuming it is present"
+else
+    npx playwright install chromium --with-deps
+fi
 echo "[OK] Playwright ready."
 
 echo ""

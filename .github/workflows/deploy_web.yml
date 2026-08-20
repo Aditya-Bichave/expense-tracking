@@ -1,35 +1,55 @@
-name: Build + Commit Flutter Web
+name: Deploy Web
 
+# Deploys the built Flutter web app to Vercel as a prebuilt artifact.
+#
+# Two things changed from the previous version of this workflow, which built on
+# every push to main and committed the output back into the repository:
+#
+#  1. Nothing is committed. The bundle is built here and handed straight to
+#     Vercel, so `server/public/` is no longer a 6 MB generated directory living
+#     in version control (and no longer skewing CodeScene's analysis).
+#
+#  2. It only runs after CI has passed. The old workflow triggered on `push` and
+#     committed with `[skip ci]`, so a commit that broke every test still
+#     deployed, and the deploy commit itself was never tested.
+#
+# Requires three repository secrets: VERCEL_TOKEN, VERCEL_ORG_ID and
+# VERCEL_PROJECT_ID. See docs/core/DEPLOYMENT.md, including the one-time Vercel
+# dashboard change needed to stop the Git integration double-deploying.
 on:
-  push:
-    branches: [ "main" ]
-    paths-ignore:
-      - "server/public/**"
+  workflow_run:
+    workflows: ["Flutter CI (Strict)"]
+    types: [completed]
+    branches: [main]
+  # Manual re-deploy, for rolling forward without a new commit.
+  workflow_dispatch:
 
-# Keep in step with FLUTTER_VERSION in flutter-ci.yml — an unpinned `stable`
-# lets the toolchain move under CI without any change in this repository.
-env:
-  FLUTTER_VERSION: "3.47.0"
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  deploy:
+    name: 🚀 Build & Deploy to Vercel
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
+    timeout-minutes: 20
+    # `workflow_run` fires on completion whatever the outcome, so the conclusion
+    # has to be checked explicitly: this is the CI gate.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0
+          # For workflow_run, check out the exact commit CI validated rather
+          # than whatever main points at now.
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: ./.github/actions/setup-flutter
 
       - name: Build web
         env:
@@ -40,21 +60,43 @@ jobs:
             --dart-define=SUPABASE_URL="$SUPABASE_URL" \
             --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
 
-      - name: Copy to server/public
+      # Vercel's Build Output API. Laying this out by hand means Vercel runs no
+      # build of its own -- it has no Flutter toolchain, which is why the output
+      # used to be committed in the first place.
+      - name: Assemble Vercel build output
         run: |
-          rm -rf server/public
-          mkdir -p server/public
-          cp -r build/web/* server/public/
+          set -euo pipefail
+          mkdir -p .vercel/output/static
+          cp -r build/web/. .vercel/output/static/
 
-      - name: Commit built site
+          # `handle: filesystem` serves real files first; anything left over
+          # falls through to index.html, which is what a client-routed SPA needs
+          # for deep links to work on a hard refresh.
+          cat > .vercel/output/config.json <<'JSON'
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/(.*)", "dest": "/index.html" }
+            ]
+          }
+          JSON
+
+          echo "Static files: $(find .vercel/output/static -type f | wc -l)"
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@48.2.0
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add server/public
-
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: update built web [skip ci]"
-            git push
-          fi
+          set -euo pipefail
+          url=$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN" | tail -1)
+          echo "Deployed to $url"
+          echo "### 🚀 Deployed" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${{ github.event.workflow_run.head_sha || github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- URL: $url" >> "$GITHUB_STEP_SUMMARY"

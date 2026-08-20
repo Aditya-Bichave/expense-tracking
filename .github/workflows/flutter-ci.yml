@@ -1,82 +1,55 @@
 name: Flutter CI (Strict)
 
+# NOTE: deliberately no `paths:` filter.
+#
+# GitHub evaluates path filters against only the first 300 files of a diff. A
+# pull request larger than that matches nothing and the workflow never runs at
+# all -- which is exactly what happened to the PR that removed the committed
+# `server/public` bundle: 568 changed files, so every quality gate was silently
+# skipped. A filter that turns CI off on the largest changes is worse than no
+# filter, so this workflow now runs on every pull request and every push to main.
+#
+# TODO: restore path-based skipping at the *job* level (e.g. dorny/paths-filter,
+# or a git-diff step, neither of which is subject to the 300-file cap) so
+# docs-only changes can skip the expensive jobs without risking a silent skip.
 on:
   pull_request:
-    paths:
-      - "lib/**"
-      - "test/**"
-      - "pubspec.yaml"
-      - "analysis_options.yaml"
-      - ".github/workflows/**"
-      - "web/**"
-      - "ci/**"
-      - "ios/**"
-      - "android/**"
-      - "Dockerfile"
-      - "nginx.conf"
-      - "README_CI.md"
   push:
     branches: [main]
-    paths:
-      - "lib/**"
-      - "test/**"
-      - "pubspec.yaml"
-      - "analysis_options.yaml"
-      - ".github/workflows/**"
-      - "web/**"
-      - "ci/**"
-      - "ios/**"
-      - "android/**"
-      - "Dockerfile"
-      - "nginx.conf"
-      - "README_CI.md"
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# Pinned deliberately. On `channel: stable` alone, CI silently follows whatever
-# Flutter ships that week — a 3.35 -> 3.47 jump previously broke dependency
-# solving, reformatted the repo, introduced a new lint and grew the web bundle
-# past its budget, all without a single change in this repository. Bump this
-# line to upgrade, so the churn lands in a reviewed diff.
-env:
-  FLUTTER_VERSION: "3.47.0"
-
+# The Flutter version is pinned once, in .github/actions/setup-flutter. It is
+# deliberately not an `env` here: duplicating it per workflow meant three copies
+# kept in sync by a comment asking humans to do a machine's job.
 permissions:
   contents: read
-  pull-requests: write # Required for posting comments
+
+# Number of parallel test shards. Coverage from each is merged by the `coverage`
+# job -- see ci/scripts/merge_coverage.sh for why a plain concatenation is wrong.
+#
+# This must equal the length of the `unit-tests` matrix below. GitHub does not
+# allow `env` inside a matrix definition, so the indices are listed literally
+# there; change both together or shards will be silently skipped or duplicated.
+env:
+  TEST_SHARDS: 4
 
 jobs:
   static-checks:
     name: 🛡️ Static Checks & Policy
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # dependency-review posts its findings
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: ${{ runner.os }}-pub-
-
-      # Must run before the format check: `dart format` reads the language
-      # version from .dart_tool/package_config.json, which `pub get` writes.
-      # Without it the formatter falls back to the SDK's newest language
-      # version and reformats the whole repo, failing the check for reasons
-      # unrelated to the diff.
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: ./.github/actions/setup-flutter
 
       - name: Format Check
         run: dart format . --output=none --set-exit-if-changed
@@ -90,7 +63,7 @@ jobs:
           flutter --version > metadata/flutter-version.txt
 
       - name: Upload Metadata
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: metadata
           path: metadata/
@@ -108,65 +81,115 @@ jobs:
           chmod +x ci/policy/check_codegen.sh
           ./ci/policy/check_codegen.sh ${{ github.base_ref }}
 
+      # This script existed in ci/policy but nothing ever invoked it, which is
+      # how an unrelated pubspec.lock downgrade slipped through unnoticed. It
+      # compares against the base ref, so like the checks above it only means
+      # anything on a pull request.
+      - name: Lockfile Policy Check
+        if: github.event_name == 'pull_request'
+        run: |
+          chmod +x ci/policy/check_lockfile.sh
+          ./ci/policy/check_lockfile.sh ${{ github.base_ref }}
+
       - name: Dependency Review
         if: github.event_name == 'pull_request'
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           fail-on-severity: high
 
   unit-tests:
-    name: 🧪 Unit Tests & Coverage
+    name: 🧪 Tests (shard ${{ matrix.shard }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      # Without this, one failing shard cancels the others and the PR report
+      # cannot tell "one shard broke" from "the suite is broken".
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: ${{ runner.os }}-pub-
-
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: ./.github/actions/setup-flutter
 
       - name: Run Tests (including Goldens)
-        run: flutter test --coverage --test-randomize-ordering-seed=random --concurrency 4
+        run: |
+          flutter test --coverage \
+            --coverage-path "coverage/lcov-${{ matrix.shard }}.info" \
+            --total-shards ${{ env.TEST_SHARDS }} \
+            --shard-index ${{ matrix.shard }} \
+            --test-randomize-ordering-seed=random \
+            --concurrency 4
+
+      - name: Upload Shard Coverage
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage-shard-${{ matrix.shard }}
+          path: coverage/lcov-${{ matrix.shard }}.info
+          retention-days: 1
+          if-no-files-found: warn
+
+  coverage:
+    name: 📊 Coverage Gates
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    # `always()` so coverage is still reported when a shard fails; the shard
+    # failure is what fails the build, and the numbers are most wanted precisely
+    # when something broke.
+    if: always()
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Shard Coverage
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: coverage-shard-*
+          path: shard-coverage
+          merge-multiple: true
+
+      - name: Install lcov
+        timeout-minutes: 6
+        run: |
+          chmod +x ci/scripts/apt_install.sh
+          ./ci/scripts/apt_install.sh lcov
+
+      - name: Merge Shard Coverage
+        run: |
+          chmod +x ci/scripts/merge_coverage.sh
+          ./ci/scripts/merge_coverage.sh shard-coverage coverage/lcov.info
+
+      # Ratchets against ci/coverage-floor.txt rather than a threshold buried in
+      # this file, so raising or lowering the bar is a reviewable diff.
+      - name: Enforce Total Coverage Floor
+        run: |
+          chmod +x ci/scripts/check_coverage_floor.sh
+          ./ci/scripts/check_coverage_floor.sh coverage/lcov.info ci/coverage-floor.txt \
+            | tee coverage/total-coverage.txt
 
       - name: Install diff-cover
-        if: always() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         run: pip install diff-cover
 
       - name: Check Diff Coverage (80%)
-        if: always() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         run: |
           git fetch origin ${{ github.base_ref }} || true
-          diff-cover coverage/lcov.info --compare-branch=origin/${{ github.base_ref }} --fail-under=80 > coverage/diff-coverage.txt
+          diff-cover coverage/lcov.info \
+            --compare-branch=origin/${{ github.base_ref }} \
+            --fail-under=80 > coverage/diff-coverage.txt
           cat coverage/diff-coverage.txt
 
-      # pipefail is required: without it the pipe to `tee` masks awk's exit
-      # code and this gate can never fail, whatever the threshold says.
-      # Floor sits just under current coverage so it ratchets against
-      # regressions rather than rubber-stamping them.
-      - name: Enforce Total Coverage (75%)
-        if: always()
-        run: |
-          set -o pipefail
-          awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{ pct=(lf?100*lh/lf:0); printf("Coverage: %.2f%%\n", pct); if (pct<75) { print "Coverage below 75%!"; exit 1 } }' coverage/lcov.info | tee coverage/total-coverage.txt
-          cat coverage/total-coverage.txt
-
+      # Name and layout must stay `coverage/{lcov.info,diff-coverage.txt}`:
+      # ci/scripts/generate_pr_comment.js reads exactly those paths.
       - name: Upload Coverage Artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: coverage
           path: |
@@ -179,23 +202,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub Dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: ${{ runner.os }}-pub-
-
-      - name: Install dependencies
-        run: flutter pub get
+      - uses: ./.github/actions/setup-flutter
 
       - name: Build Web
         run: flutter build web --release --pwa-strategy=none --dart-define=E2E_MODE=true
@@ -204,18 +213,18 @@ jobs:
         run: node ci/scripts/bundle_size.js
 
       # bundle_size.js writes the report to the repo root, not next to itself.
-      # always() so the report is still available when the check fails — that
+      # always() so the report is still available when the check fails -- that
       # is precisely when someone needs to read it.
       - name: Upload Bundle Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: bundle-size
           path: bundle-size-report.json
           retention-days: 1
 
       - name: Upload Web Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: web-build
           path: build/web
@@ -227,34 +236,54 @@ jobs:
     needs: web-build
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Download Web Build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: web-build
           path: build/web
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: ci/smoke/package.json
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('ci/smoke/package.json') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('ci/smoke/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
 
-      - name: Install Playwright Deps
+      # `playwright install --with-deps` shells out to apt-get, which regularly
+      # cannot reach azure.archive.ubuntu.com from these runners:
+      #
+      #   Ign:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+      #   ...retries, then a slow https://archive.ubuntu.com fallback
+      #
+      # apt spends minutes on that and the job used to die at its own
+      # timeout-minutes, reporting "cancelled" with no clue which step hung.
+      #
+      # There is no system-deps step here any more, and that is evidence-based
+      # rather than hopeful: on the run that first went green, `install-deps`
+      # timed out after 4 minutes having installed nothing, and the E2E suite
+      # still passed in 53 seconds. ubuntu-latest already carries the libraries
+      # headless Chromium needs, so the step only ever bought a 4 minute stall.
+      # Should a library genuinely go missing, the browser launch fails in the
+      # test step and names it.
+      - name: Install Node Deps
         working-directory: ci/smoke
-        run: |
-          npm ci
-          npx playwright install chromium --with-deps
+        timeout-minutes: 4
+        run: npm ci
+
+      - name: Install Playwright Browser
+        timeout-minutes: 4
+        working-directory: ci/smoke
+        run: npx playwright install chromium
 
       - name: Run Smoke Tests
         working-directory: ci/smoke
@@ -262,7 +291,7 @@ jobs:
 
       - name: Upload Smoke Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: smoke-test
           path: |
@@ -276,44 +305,49 @@ jobs:
     needs: web-build
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Download Web Build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: web-build
           path: build/web
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
           cache: "npm"
           cache-dependency-path: ci/e2e/package.json
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-e2e-${{ hashFiles('ci/e2e/package.json') }}
+          key: ${{ runner.os }}-playwright-e2e-${{ hashFiles('ci/e2e/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-e2e-
 
-      - name: Install E2E Dependencies
+      # Split for the same reason as the smoke job above.
+      - name: Install Node Deps
         working-directory: ci/e2e
-        run: |
-          npm ci
-          npx playwright install chromium --with-deps
+        timeout-minutes: 4
+        run: npm ci
+
+      - name: Install Playwright Browser
+        timeout-minutes: 4
+        working-directory: ci/e2e
+        run: npx playwright install chromium
 
       - name: Run E2E Tests
         env:
           APP_BASE_URL: http://localhost:8080
           BUILD_DIR: build/web
-        run: ./run_e2e.sh --skip-build
+        run: ./run_e2e.sh --skip-build --skip-deps
 
       - name: Upload E2E Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: e2e-results
           path: |
@@ -325,19 +359,22 @@ jobs:
     name: 📝 PR Report
     runs-on: ubuntu-latest
     if: always() && github.event_name == 'pull_request'
-    needs: [static-checks, unit-tests, web-build, web-smoke, web-e2e]
+    needs: [static-checks, unit-tests, coverage, web-build, web-smoke, web-e2e]
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Download All Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
 
       - name: Fetch Base Branch for Git Analysis
-        if: github.event_name == 'pull_request'
         run: git fetch origin ${{ github.base_ref }}
 
       - name: Generate Comment Body
@@ -353,7 +390,7 @@ jobs:
           node ci/scripts/generate_pr_comment.js > pr_comment.md
 
       - name: Post/Update Comment
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const fs = require('fs');
