@@ -25,9 +25,12 @@ void main() {
       when(
         () => mockAccountListBloc.state,
       ).thenReturn(const AccountListLoaded(accounts: []));
-      when(
-        () => mockAccountListBloc.stream,
-      ).thenAnswer((_) => Stream.value(const AccountListLoaded(accounts: [])));
+      when(() => mockAccountListBloc.stream).thenAnswer(
+        (_) => Stream.fromIterable([
+          const AccountListLoading(isReloading: true, previousItems: []),
+          const AccountListLoaded(accounts: []),
+        ]),
+      );
 
       await pumpWidgetWithProviders(
         tester: tester,
@@ -36,6 +39,32 @@ void main() {
       );
 
       await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+      await tester.pumpAndSettle();
+
+      verify(
+        () => mockAccountListBloc.add(const LoadAccounts(forceReload: true)),
+      ).called(1);
+    },
+  );
+
+  testWidgets(
+    'AccountsTabPage pull to refresh handles TimeoutException gracefully',
+    (tester) async {
+      when(
+        () => mockAccountListBloc.state,
+      ).thenReturn(const AccountListLoaded(accounts: []));
+      when(
+        () => mockAccountListBloc.stream,
+      ).thenAnswer((_) => const Stream.empty());
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        accountListBloc: mockAccountListBloc,
+        widget: const AccountsTabPage(),
+      );
+
+      await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+      await tester.pump(const Duration(seconds: 6));
       await tester.pumpAndSettle();
 
       verify(
