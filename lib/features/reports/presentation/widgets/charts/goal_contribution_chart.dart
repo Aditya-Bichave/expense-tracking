@@ -29,11 +29,18 @@ class GoalContributionChart extends StatelessWidget {
       ..sort((a, b) => a.date.compareTo(b.date));
 
     double cumulativeAmount = 0;
-    final List<FlSpot> spots = sortedContributions.map((c) {
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` chaining creates an intermediate iterable.
+    // Solution: Iterate using a standard loop to append to the list.
+    // Impact: Reduces garbage collection pressure when building chart data points.
+    final List<FlSpot> spots = [];
+    for (var c in sortedContributions) {
       cumulativeAmount += c.amount;
       // Use milliseconds since epoch for x-axis to handle dates correctly
-      return FlSpot(c.date.millisecondsSinceEpoch.toDouble(), cumulativeAmount);
-    }).toList();
+      spots.add(
+        FlSpot(c.date.millisecondsSinceEpoch.toDouble(), cumulativeAmount),
+      );
+    }
 
     if (spots.isEmpty) {
       return const Center(child: Text("No contribution data to chart"));

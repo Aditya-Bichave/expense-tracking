@@ -55,28 +55,32 @@ class TimeSeriesLineChart extends StatelessWidget {
     if (maxY <= 0) maxY = 10; // Ensure some height if all values are 0
 
     // Create spots for current period
-    final List<FlSpot> currentSpots = data
-        .map(
-          (point) => FlSpot(
-            point.date.millisecondsSinceEpoch.toDouble(),
-            point.currentAmount, // Use getter
-          ),
-        )
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` chaining creates an intermediate iterable.
+    // Solution: Iterate using a list comprehension.
+    // Impact: Reduces garbage collection pressure when building chart data points.
+    final List<FlSpot> currentSpots = [
+      for (var point in data)
+        FlSpot(
+          point.date.millisecondsSinceEpoch.toDouble(),
+          point.currentAmount, // Use getter
+        ),
+    ];
 
     // Create spots for previous period if showing comparison
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.where().map().toList()` chains create intermediate iterables and allocate unnecessary closures.
+    // Solution: Use a direct collection `[for ... if ...]` comprehension.
+    // Impact: Reduces garbage collection pressure during frequent chart re-renders.
     final List<FlSpot> previousSpots = (showComparison)
-        ? data
-              .where(
-                (p) => p.amount.previousValue != null,
-              ) // Filter out points without previous data
-              .map(
-                (point) => FlSpot(
-                  point.date.millisecondsSinceEpoch.toDouble(),
-                  point.amount.previousValue!,
+        ? [
+            for (var p in data)
+              if (p.amount.previousValue != null)
+                FlSpot(
+                  p.date.millisecondsSinceEpoch.toDouble(),
+                  p.amount.previousValue!,
                 ),
-              )
-              .toList()
+          ]
         : [];
 
     return LineChart(

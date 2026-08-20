@@ -28,12 +28,18 @@ class GoalSummaryWidget extends StatelessWidget {
 
   List<FlSpot> _getSparklineSpots(List<TimeSeriesDataPoint> data) {
     if (data.isEmpty) return [const FlSpot(0, 0)];
-    return data.asMap().entries.map((entry) {
-      final index = entry.key.toDouble();
-      final num currentVal = entry.value.currentAmount;
+    // ⚡ Bolt Performance Optimization
+    // Problem: `asMap().entries.map(...).toList()` chains create intermediate Iterables and MapEntries.
+    // Solution: Use a direct collection `[for ...]` comprehension with an index counter.
+    // Impact: Reduces garbage collection pressure when building charts.
+    final List<FlSpot> spots = [];
+    for (var i = 0; i < data.length; i++) {
+      final index = i.toDouble();
+      final num currentVal = data[i].currentAmount;
       final double amount = currentVal.toDouble().clamp(0.0, double.maxFinite);
-      return FlSpot(index, amount);
-    }).toList();
+      spots.add(FlSpot(index, amount));
+    }
+    return spots;
   }
 
   @override
