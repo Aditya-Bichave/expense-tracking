@@ -27,11 +27,11 @@ echo "Comparing against origin/main..."
 git fetch origin main || true
 
 # Run diff-cover
-# Fails if coverage on changed lines is < 80%
-if diff-cover coverage/lcov.info --compare-branch=origin/main --fail-under=80; then
-    echo -e "${GREEN}✅ Diff Coverage passed! (>= 80%)${NC}"
+# Fails if coverage on changed lines is < 90%
+if diff-cover coverage/lcov.info --compare-branch=origin/main --fail-under=90; then
+    echo -e "${GREEN}✅ Diff Coverage passed! (>= 90%)${NC}"
 else
-    echo -e "${RED}❌ Diff Coverage failed! (< 80%)${NC}"
+    echo -e "${RED}❌ Diff Coverage failed! (< 90%)${NC}"
     echo "Please add tests for your changes."
     exit 1
 fi
