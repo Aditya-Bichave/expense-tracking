@@ -82,10 +82,12 @@ class SpendingTrendsChart extends StatelessWidget {
             SizedBox(
               height: 150,
               width: double.infinity,
-              child: CustomPaint(
-                painter: _TrendPainter(
-                  color: primaryColor,
-                  amounts: [for (final p in points) p.amount],
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: _TrendPainter(
+                    color: primaryColor,
+                    amounts: [for (final p in points) p.amount],
+                  ),
                 ),
               ),
             ),

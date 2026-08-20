@@ -47,10 +47,12 @@ class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
 
   @override
   Future<void> deleteExpensesForGroup(String groupId) async {
-    final expenseIds = _box.values
-        .where((expense) => expense.groupId == groupId)
-        .map((expense) => expense.id)
-        .toList();
+    final expenseIds = <String>[];
+    for (final expense in _box.values) {
+      if (expense.groupId == groupId) {
+        expenseIds.add(expense.id);
+      }
+    }
     if (expenseIds.isEmpty) {
       return;
     }
