@@ -8,10 +8,12 @@ Expense Tracker uses a comprehensive security model protecting data at rest, in 
 *   **Session Management**:
     *   Tokens stored in `flutter_secure_storage` (Android: EncryptedSharedPreferences, iOS: Keychain).
     *   Auto-refresh via Supabase SDK.
-*   **Sign-In**:
-    *   Email/Password.
-    *   OAuth (Google/Apple).
-    *   Anonymous (Deep Links).
+    *   **Web Storage & XSS Threat Model**: On Web platform, full Supabase session JWT tokens are stored in browser `localStorage`.
+        *   *Risk*: `localStorage` is accessible by any JavaScript running in the same origin. An XSS vulnerability could allow an attacker to read the token and perform account takeover.
+        *   *Mitigation & Blast Radius Reduction*:
+            1. Sessions are explicitly cleared from `localStorage` immediately on user logout (`removePersistedSession`).
+            2. Console logging of session existence or tokens in web storage adapter (`WebLocalStorage`) is strictly removed.
+            3. Strict Content Security Policy (CSP) and sanitization of user-supplied content are enforced on the frontend.
 
 ## 2. Authorization (RLS)
 Supabase Row Level Security (RLS) policies enforce access control at the database level.
