@@ -185,11 +185,14 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroups(remoteGroups);
 
       final remoteGroupIds = remoteGroups.map((group) => group.id).toSet();
-      final staleGroupIds = _localDataSource
-          .getGroups()
-          .where((group) => !remoteGroupIds.contains(group.id))
-          .map((group) => group.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.where().map().toList()` chains create intermediate iterables and closures.
+      // Solution: Use a direct collection `[for ... if ...]` comprehension.
+      // Impact: Reduces garbage collection pressure when synchronizing groups.
+      final staleGroupIds = [
+        for (var group in _localDataSource.getGroups())
+          if (!remoteGroupIds.contains(group.id)) group.id,
+      ];
       if (staleGroupIds.isNotEmpty) {
         await _localDataSource.deleteGroups(staleGroupIds);
         await Future.wait(

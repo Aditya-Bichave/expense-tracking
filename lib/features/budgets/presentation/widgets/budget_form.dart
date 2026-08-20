@@ -79,11 +79,16 @@ class _BudgetFormState extends State<BudgetForm> {
     final availableCategoryIds = widget.availableCategories
         .map((c) => c.id)
         .toSet();
-    _selectedCategoryIds =
-        initial?.categoryIds
-            ?.where((id) => availableCategoryIds.contains(id))
-            .toList() ??
-        [];
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.where().toList()` creates an intermediate iterable.
+    // Solution: Use a direct collection `[for ... if ...]` comprehension.
+    // Impact: Reduces garbage collection pressure when initializing budget form.
+    _selectedCategoryIds = initial?.categoryIds != null
+        ? [
+            for (var id in initial!.categoryIds!)
+              if (availableCategoryIds.contains(id)) id,
+          ]
+        : [];
     log.info(
       "[BudgetForm] initState. Type: $_selectedType, Period: $_selectedPeriod, Initial Categories: ${_selectedCategoryIds.length}",
     );
@@ -137,24 +142,29 @@ class _BudgetFormState extends State<BudgetForm> {
 
   void _showCategoryMultiSelect(BuildContext context) {
     final theme = Theme.of(context);
-    final expenseCategories = widget.availableCategories
-        .where(
-          (cat) =>
-              cat.type == CategoryType.expense &&
-              cat.id != Category.uncategorized.id,
-        )
-        .toList();
-    final items = expenseCategories
-        .map((category) => MultiSelectItem<String>(category.id, category.name))
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.where().toList()` and `.map().toList()` chains create intermediate iterables.
+    // Solution: Use a single collection `[for ... if ...]` comprehension.
+    // Impact: Reduces garbage collection pressure when opening category multi-select.
+    final items = [
+      for (var cat in widget.availableCategories)
+        if (cat.type == CategoryType.expense &&
+            cat.id != Category.uncategorized.id)
+          MultiSelectItem<String>(cat.id, cat.name),
+    ];
     // ⚡ Bolt Performance Optimization
     // Problem: .any() inside .where() creates an O(N*M) time complexity loop during dialog opening
     // Solution: Precompute a Set of valid item values for O(1) lookups
     // Impact: Prevents UI jank when opening the MultiSelect dialog with many categories
     final validItemValues = items.map((i) => i.value).toSet();
-    final validInitialValue = _selectedCategoryIds
-        .where((id) => validItemValues.contains(id))
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.where().toList()` creates an intermediate iterable.
+    // Solution: Use a direct collection `[for ... if ...]` comprehension.
+    // Impact: Reduces garbage collection pressure when initializing budget form selection.
+    final validInitialValue = [
+      for (var id in _selectedCategoryIds)
+        if (validItemValues.contains(id)) id,
+    ];
 
     bridgeShowModalBottomSheet(
       isScrollControlled: true,
