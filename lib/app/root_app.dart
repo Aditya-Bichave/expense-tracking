@@ -68,30 +68,37 @@ class _RootAppState extends State<RootApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsBloc>().state;
-    final themes = AppTheme.buildTheme(
-      settings.uiMode,
-      settings.paletteIdentifier,
-    );
+    return BlocBuilder<SettingsBloc, SettingsState>(
+      buildWhen: (previous, current) =>
+          previous.themeMode != current.themeMode ||
+          previous.uiMode != current.uiMode ||
+          previous.paletteIdentifier != current.paletteIdentifier,
+      builder: (context, settings) {
+        final themes = AppTheme.buildTheme(
+          settings.uiMode,
+          settings.paletteIdentifier,
+        );
 
-    return MaterialApp.router(
-      title: AppConstants.appName,
-      theme: themes.light,
-      darkTheme: themes.dark,
-      themeMode: settings.themeMode,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      debugShowCheckedModeBanner: false,
-      routerConfig: AppRouter.router,
-      builder: (context, child) {
-        _scheduleE2EReadySignal();
-        if (child == null) {
-          log.severe('Error: child route is null.');
-          return const Scaffold(
-            body: Center(child: Text('Error: Route failed to build.')),
-          );
-        }
-        return _DeepLinkListener(child: child);
+        return MaterialApp.router(
+          title: AppConstants.appName,
+          theme: themes.light,
+          darkTheme: themes.dark,
+          themeMode: settings.themeMode,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          debugShowCheckedModeBanner: false,
+          routerConfig: AppRouter.router,
+          builder: (context, child) {
+            _scheduleE2EReadySignal();
+            if (child == null) {
+              log.severe('Error: child route is null.');
+              return const Scaffold(
+                body: Center(child: Text('Error: Route failed to build.')),
+              );
+            }
+            return _DeepLinkListener(child: child);
+          },
+        );
       },
     );
   }

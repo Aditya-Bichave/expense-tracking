@@ -290,9 +290,11 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   Future<void> _cleanupGroupLocally(String groupId) async {
-    await _localDataSource.deleteGroup(groupId);
-    await _localDataSource.deleteGroupMembers(groupId);
-    await _groupExpensesLocalDataSource.deleteExpensesForGroup(groupId);
+    await Future.wait([
+      _localDataSource.deleteGroup(groupId),
+      _localDataSource.deleteGroupMembers(groupId),
+      _groupExpensesLocalDataSource.deleteExpensesForGroup(groupId),
+    ]);
   }
 
   Future<void> _syncRemoteMembersForGroup(GroupModel group) {
