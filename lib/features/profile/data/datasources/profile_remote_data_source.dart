@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/features/profile/data/models/profile_model.dart';
 import 'package:expense_tracker/core/network/supabase_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

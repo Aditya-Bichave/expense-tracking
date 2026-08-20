@@ -74,6 +74,7 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       final picked = await _picker.pickImage(source: ImageSource.gallery);
       if (picked != null && mounted) {
         setState(() => _avatarFile = File(picked.path));
+        if (!context.mounted) return;
         context.read<ProfileBloc>().add(UploadAvatar(_avatarFile!));
       }
     } catch (e) {

@@ -4,14 +4,13 @@ import 'package:expense_tracker/features/budgets/domain/entities/budget.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_enums.dart';
 import 'package:expense_tracker/features/budgets/domain/entities/budget_status.dart';
 import 'package:expense_tracker/features/budgets/presentation/bloc/budget_list/budget_list_bloc.dart';
-import 'package:expense_tracker/features/budgets/presentation/pages/budgets_sub_tab.dart';
+import 'package:expense_tracker/features/budgets_cats/presentation/pages/budgets_sub_tab.dart';
 import 'package:expense_tracker/features/budgets/presentation/widgets/budget_card.dart';
 import 'package:expense_tracker/ui_bridge/bridge_circular_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../helpers/pump_app.dart';
 
@@ -71,7 +70,7 @@ void main() {
       ).thenAnswer((_) async => {});
       await pumpWidgetWithProviders(
         tester: tester,
-        router: mockGoRouter,
+        navigatorOverride: mockGoRouter,
         widget: buildTestWidget(),
       );
 
@@ -80,7 +79,7 @@ void main() {
         find.byKey(const ValueKey('button_budgetList_addFirst')),
       );
       verify(() => mockGoRouter.pushNamed(RouteNames.addBudget)).called(1);
-    }, skip: true);
+    });
 
     testWidgets('shows error message', (tester) async {
       when(() => mockBloc.state).thenReturn(
@@ -113,12 +112,12 @@ void main() {
       ).thenAnswer((_) async => {});
       await pumpWidgetWithProviders(
         tester: tester,
-        router: mockGoRouter,
+        navigatorOverride: mockGoRouter,
         widget: buildTestWidget(),
       );
 
       await tester.tap(find.byKey(const ValueKey('fab_budgetList_add')));
       verify(() => mockGoRouter.pushNamed(RouteNames.addBudget)).called(1);
-    }, skip: true);
+    });
   });
 }

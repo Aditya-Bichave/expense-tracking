@@ -132,7 +132,7 @@ void main() {
 
       await pumpWidgetWithProviders(
         tester: tester,
-        router: mockGoRouter,
+        navigatorOverride: mockGoRouter,
         widget: buildTestWidget(),
       );
       await tester.pumpAndSettle();
@@ -148,7 +148,7 @@ void main() {
           extra: mockBudget,
         ),
       ).called(1);
-    }, skip: true);
+    });
 
     testWidgets('tapping Delete button shows dialog and dispatches event', (
       tester,
