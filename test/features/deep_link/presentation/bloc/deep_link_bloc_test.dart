@@ -148,7 +148,7 @@ void main() {
     );
 
     blocTest<DeepLinkBloc, DeepLinkState>(
-      'emits DeepLinkError when invite acceptance fails',
+      'emits DeepLinkError when invite token is malformed',
       build: () {
         final mockUser = MockUser();
         when(() => mockUser.isAnonymous).thenReturn(false);
@@ -156,7 +156,36 @@ void main() {
           () => mockAuthRepository.getCurrentUser(),
         ).thenReturn(Right(mockUser));
         when(
-          () => mockGroupsRepository.acceptInvite('bad-token'),
+          () => mockGroupsRepository.acceptInvite('malformed!token#'),
+        ).thenAnswer(
+          (_) async => const Left(ServerFailure('Invalid or expired invite')),
+        );
+        return DeepLinkBloc(
+          mockAppLinks,
+          mockGroupsRepository,
+          mockAuthRepository,
+        );
+      },
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('malformed!token#')),
+      expect: () => [
+        isA<DeepLinkProcessing>(),
+        const DeepLinkError('Invalid or expired invite'),
+      ],
+      verify: (_) {
+        verifyNever(() => mockGroupsRepository.syncGroups());
+      },
+    );
+
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'emits DeepLinkError when invite token is expired',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Right(mockUser));
+        when(
+          () => mockGroupsRepository.acceptInvite('expired-token'),
         ).thenAnswer((_) async => const Left(ServerFailure('Invite expired')));
         return DeepLinkBloc(
           mockAppLinks,
@@ -164,10 +193,39 @@ void main() {
           mockAuthRepository,
         );
       },
-      act: (bloc) => bloc.add(const DeepLinkManualEntry('bad-token')),
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('expired-token')),
       expect: () => [
         isA<DeepLinkProcessing>(),
         const DeepLinkError('Invite expired'),
+      ],
+      verify: (_) {
+        verifyNever(() => mockGroupsRepository.syncGroups());
+      },
+    );
+
+    blocTest<DeepLinkBloc, DeepLinkState>(
+      'emits DeepLinkError when invite usage limit is reached (already used)',
+      build: () {
+        final mockUser = MockUser();
+        when(() => mockUser.isAnonymous).thenReturn(false);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenReturn(Right(mockUser));
+        when(
+          () => mockGroupsRepository.acceptInvite('limit-reached-token'),
+        ).thenAnswer(
+          (_) async => const Left(ServerFailure('Invite limit reached')),
+        );
+        return DeepLinkBloc(
+          mockAppLinks,
+          mockGroupsRepository,
+          mockAuthRepository,
+        );
+      },
+      act: (bloc) => bloc.add(const DeepLinkManualEntry('limit-reached-token')),
+      expect: () => [
+        isA<DeepLinkProcessing>(),
+        const DeepLinkError('Invite limit reached'),
       ],
       verify: (_) {
         verifyNever(() => mockGroupsRepository.syncGroups());
