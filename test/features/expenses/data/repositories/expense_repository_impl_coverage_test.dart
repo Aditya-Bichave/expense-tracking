@@ -239,18 +239,29 @@ void main() {
   });
 
   group('deleteExpense', () {
-    test('returns success when the data source deletes', () async {
-      when(() => dataSource.deleteExpense('1')).thenAnswer((_) async {});
+    test('returns success when soft delete updates the data source', () async {
+      when(
+        () => dataSource.getExpenseById('1'),
+      ).thenAnswer((_) async => model(id: '1'));
+      when(
+        () => dataSource.updateExpense(any()),
+      ).thenAnswer((i) async => i.positionalArguments.first as ExpenseModel);
 
       final result = await repository.deleteExpense('1');
 
       expect(result.isRight(), isTrue);
-      verify(() => dataSource.deleteExpense('1')).called(1);
+      final updated =
+          verify(() => dataSource.updateExpense(captureAny())).captured.single
+              as ExpenseModel;
+      expect(updated.deletedAt, isNotNull);
     });
 
     test('propagates a CacheFailure', () async {
       when(
-        () => dataSource.deleteExpense('1'),
+        () => dataSource.getExpenseById('1'),
+      ).thenAnswer((_) async => model(id: '1'));
+      when(
+        () => dataSource.updateExpense(any()),
       ).thenThrow(const CacheFailure('busy'));
 
       final result = await repository.deleteExpense('1');
@@ -262,7 +273,10 @@ void main() {
     });
 
     test('wraps other errors as UnexpectedFailure', () async {
-      when(() => dataSource.deleteExpense('1')).thenThrow(StateError('x'));
+      when(
+        () => dataSource.getExpenseById('1'),
+      ).thenAnswer((_) async => model(id: '1'));
+      when(() => dataSource.updateExpense(any())).thenThrow(StateError('x'));
 
       final result = await repository.deleteExpense('1');
 
