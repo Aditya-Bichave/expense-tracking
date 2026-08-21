@@ -39,4 +39,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ReportFilterControls), findsOneWidget);
   });
+
+  testWidgets('showFilterSheet loads options and opens sheet when loaded', (
+    tester,
+  ) async {
+    when(() => mockBloc.stream).thenAnswer(
+      (_) => Stream.fromIterable([
+        ReportFilterState.initial().copyWith(
+          optionsStatus: FilterOptionsStatus.loaded,
+        ),
+      ]),
+    );
+    when(() => mockBloc.state).thenReturn(
+      ReportFilterState.initial().copyWith(
+        optionsStatus: FilterOptionsStatus.loaded,
+      ),
+    );
+
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(ReportFilterControls));
+    ReportFilterControls.showFilterSheet(context);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Filter Report Data'), findsOneWidget);
+  });
 }
