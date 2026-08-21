@@ -35,13 +35,14 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       notes: fields[13] as String?,
       receiptUrl: fields[14] as String?,
       clientGeneratedId: fields[15] as String?,
+      deletedAt: fields[16] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ExpenseModel obj) {
     writer
-      ..writeByte(16)
+      ..writeByte(17)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -73,7 +74,9 @@ class ExpenseModelAdapter extends TypeAdapter<ExpenseModel> {
       ..writeByte(14)
       ..write(obj.receiptUrl)
       ..writeByte(15)
-      ..write(obj.clientGeneratedId);
+      ..write(obj.clientGeneratedId)
+      ..writeByte(16)
+      ..write(obj.deletedAt);
   }
 
   @override
@@ -112,6 +115,9 @@ ExpenseModel _$ExpenseModelFromJson(Map<String, dynamic> json) => ExpenseModel(
   notes: json['notes'] as String?,
   receiptUrl: json['receiptUrl'] as String?,
   clientGeneratedId: json['clientGeneratedId'] as String?,
+  deletedAt: json['deletedAt'] == null
+      ? null
+      : DateTime.parse(json['deletedAt'] as String),
 );
 
 Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
@@ -134,4 +140,5 @@ Map<String, dynamic> _$ExpenseModelToJson(ExpenseModel instance) =>
       'notes': ?instance.notes,
       'receiptUrl': ?instance.receiptUrl,
       'clientGeneratedId': ?instance.clientGeneratedId,
+      'deletedAt': ?instance.deletedAt?.toIso8601String(),
     };

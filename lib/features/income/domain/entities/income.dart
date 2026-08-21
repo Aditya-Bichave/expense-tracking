@@ -17,6 +17,7 @@ class Income extends Equatable {
   final String? merchantId; // ADDED
 
   final bool isRecurring;
+  final DateTime? deletedAt;
 
   const Income({
     required this.id,
@@ -31,6 +32,7 @@ class Income extends Equatable {
     this.confidenceScore, // ADDED
     this.merchantId, // ADDED
     this.isRecurring = false,
+    this.deletedAt,
   });
 
   // Optional: CopyWith method for easier updates
@@ -50,6 +52,8 @@ class Income extends Equatable {
     String? merchantId,
     ValueGetter<String?>? merchantIdOrNull, // Allow setting to null
     bool? isRecurring,
+    DateTime? deletedAt,
+    ValueGetter<DateTime?>? deletedAtOrNull,
   }) {
     return Income(
       id: id ?? this.id,
@@ -69,6 +73,9 @@ class Income extends Equatable {
           ? merchantIdOrNull()
           : (merchantId ?? this.merchantId),
       isRecurring: isRecurring ?? this.isRecurring,
+      deletedAt: deletedAtOrNull != null
+          ? deletedAtOrNull()
+          : (deletedAt ?? this.deletedAt),
     );
   }
 
@@ -85,5 +92,6 @@ class Income extends Equatable {
     confidenceScore, // Added
     merchantId, // Added
     isRecurring,
+    deletedAt,
   ];
 }

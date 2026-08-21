@@ -29,6 +29,8 @@ class Expense extends Equatable {
   final String? receiptUrl;
   final String? clientGeneratedId;
 
+  final DateTime? deletedAt;
+
   const Expense({
     required this.id,
     required this.title,
@@ -50,6 +52,7 @@ class Expense extends Equatable {
     this.splits = const [],
     this.receiptUrl,
     this.clientGeneratedId,
+    this.deletedAt,
   });
 
   Expense copyWith({
@@ -80,6 +83,8 @@ class Expense extends Equatable {
     ValueGetter<String?>? receiptUrlOrNull,
     String? clientGeneratedId,
     ValueGetter<String?>? clientGeneratedIdOrNull,
+    DateTime? deletedAt,
+    ValueGetter<DateTime?>? deletedAtOrNull,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -114,6 +119,9 @@ class Expense extends Equatable {
       clientGeneratedId: clientGeneratedIdOrNull != null
           ? clientGeneratedIdOrNull()
           : (clientGeneratedId ?? this.clientGeneratedId),
+      deletedAt: deletedAtOrNull != null
+          ? deletedAtOrNull()
+          : (deletedAt ?? this.deletedAt),
     );
   }
 
@@ -137,5 +145,6 @@ class Expense extends Equatable {
     splits,
     receiptUrl,
     clientGeneratedId,
+    deletedAt,
   ];
 }

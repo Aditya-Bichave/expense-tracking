@@ -5,6 +5,7 @@ import 'package:expense_tracker/features/settings/data/datasources/settings_loca
 import 'package:expense_tracker/features/settings/data/repositories/settings_repository_impl.dart';
 import 'package:expense_tracker/features/settings/domain/repositories/settings_repository.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:expense_tracker/features/settings/presentation/bloc/trash_bin/trash_bin_bloc.dart';
 import 'package:expense_tracker/features/settings/domain/usecases/toggle_app_lock.dart';
 import 'package:local_auth/local_auth.dart';
 
@@ -31,6 +32,10 @@ class SettingsDependencies {
         demoModeService: sl<DemoModeService>(), // Provide the dependency
         toggleAppLockUseCase: sl<ToggleAppLockUseCase>(),
       ),
+    );
+
+    sl.registerFactory<TrashBinBloc>(
+      () => TrashBinBloc(expenseRepository: sl(), incomeRepository: sl()),
     );
   }
 }

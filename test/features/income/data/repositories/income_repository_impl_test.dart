@@ -110,24 +110,36 @@ void main() {
   });
 
   group('deleteIncome', () {
-    test('should return void when delete is successful', () async {
+    test('should return void when soft delete is successful', () async {
       // Arrange
       when(
-        () => mockLocalDataSource.deleteIncome(any()),
-      ).thenAnswer((_) async => Future.value());
+        () => mockLocalDataSource.getIncomeById('1'),
+      ).thenAnswer((_) async => tIncomeModel);
+      when(
+        () => mockLocalDataSource.updateIncome(any()),
+      ).thenAnswer((_) async => tIncomeModel);
 
       // Act
       final result = await repository.deleteIncome('1');
 
       // Assert
-      verify(() => mockLocalDataSource.deleteIncome('1')).called(1);
+      verify(() => mockLocalDataSource.getIncomeById('1')).called(1);
+      final updated =
+          verify(
+                () => mockLocalDataSource.updateIncome(captureAny()),
+              ).captured.single
+              as IncomeModel;
+      expect(updated.deletedAt, isNotNull);
       expect(result, const Right(null));
     });
 
     test('should return CacheFailure when delete fails', () async {
       // Arrange
       when(
-        () => mockLocalDataSource.deleteIncome(any()),
+        () => mockLocalDataSource.getIncomeById('1'),
+      ).thenAnswer((_) async => tIncomeModel);
+      when(
+        () => mockLocalDataSource.updateIncome(any()),
       ).thenThrow(const CacheFailure('Delete Error'));
 
       // Act

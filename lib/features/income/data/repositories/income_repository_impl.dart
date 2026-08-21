@@ -9,15 +9,22 @@ import 'package:expense_tracker/features/income/domain/entities/income.dart';
 import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/features/categories/domain/repositories/category_repository.dart';
 import 'package:expense_tracker/features/categories/domain/entities/category.dart'; // For Uncategorized
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:uuid/uuid.dart';
 
 class IncomeRepositoryImpl implements IncomeRepository {
   final IncomeLocalDataSource localDataSource;
   final CategoryRepository categoryRepository;
+  final OutboxRepository? outboxRepository;
+  final Uuid _uuid;
 
   IncomeRepositoryImpl({
     required this.localDataSource,
     required this.categoryRepository,
-  });
+    this.outboxRepository,
+    Uuid? uuid,
+  }) : _uuid = uuid ?? const Uuid();
 
   // Helper specifically for hydrating a single model after add/update
   Future<Either<Failure, Income>> _hydrateSingleModel(IncomeModel model) async {
@@ -141,24 +148,154 @@ class IncomeRepositoryImpl implements IncomeRepository {
 
   @override
   Future<Either<Failure, void>> deleteIncome(String id) async {
-    log.info("[IncomeRepo] Deleting income (ID: $id).");
+    log.info("[IncomeRepo] Soft deleting income (ID: $id).");
     try {
-      await localDataSource.deleteIncome(id);
-      log.info("[IncomeRepo] Delete successful for ID: $id.");
+      final existingModel = await localDataSource.getIncomeById(id);
+      if (existingModel == null) {
+        return const Left(CacheFailure("Income not found."));
+      }
+      final now = DateTime.now();
+      final updatedModel = IncomeModel(
+        id: existingModel.id,
+        title: existingModel.title,
+        amount: existingModel.amount,
+        date: existingModel.date,
+        accountId: existingModel.accountId,
+        notes: existingModel.notes,
+        categoryId: existingModel.categoryId,
+        categorizationStatusValue: existingModel.categorizationStatusValue,
+        confidenceScoreValue: existingModel.confidenceScoreValue,
+        isRecurring: existingModel.isRecurring,
+        merchantId: existingModel.merchantId,
+        deletedAt: now,
+      );
+      await localDataSource.updateIncome(updatedModel);
+
+      if (outboxRepository != null) {
+        await outboxRepository!.add(
+          SyncMutationModel(
+            id: _uuid.v4(),
+            table: 'incomes',
+            operation: OpType.update,
+            payload: {'id': id, 'deleted_at': now.toIso8601String()},
+            createdAt: now,
+          ),
+        );
+      }
+      log.info("[IncomeRepo] Soft delete successful for ID: $id.");
       return const Right(null);
     } on CacheFailure catch (e, s) {
       log.severe("Exception in repository: $e\n$s");
       log.warning(
-        "[IncomeRepo] CacheFailure deleting income ID $id: ${e.message}",
+        "[IncomeRepo] CacheFailure soft deleting income ID $id: ${e.message}",
       );
       return Left(e);
     } catch (e, s) {
       log.severe(
-        "[IncomeRepo] Unexpected error deleting income ID $id: $e\n$s",
+        "[IncomeRepo] Unexpected error soft deleting income ID $id: $e\n$s",
       );
       return Left(
         UnexpectedFailure('Unexpected error deleting income: ${e.toString()}'),
       );
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> restoreIncome(String id) async {
+    log.info("[IncomeRepo] Restoring income (ID: $id).");
+    try {
+      final existingModel = await localDataSource.getIncomeById(id);
+      if (existingModel == null) {
+        return const Left(CacheFailure("Income not found."));
+      }
+      final updatedModel = IncomeModel(
+        id: existingModel.id,
+        title: existingModel.title,
+        amount: existingModel.amount,
+        date: existingModel.date,
+        accountId: existingModel.accountId,
+        notes: existingModel.notes,
+        categoryId: existingModel.categoryId,
+        categorizationStatusValue: existingModel.categorizationStatusValue,
+        confidenceScoreValue: existingModel.confidenceScoreValue,
+        isRecurring: existingModel.isRecurring,
+        merchantId: existingModel.merchantId,
+        deletedAt: null,
+      );
+      await localDataSource.updateIncome(updatedModel);
+
+      if (outboxRepository != null) {
+        final now = DateTime.now();
+        await outboxRepository!.add(
+          SyncMutationModel(
+            id: _uuid.v4(),
+            table: 'incomes',
+            operation: OpType.update,
+            payload: {'id': id, 'deleted_at': null},
+            createdAt: now,
+          ),
+        );
+      }
+      return const Right(null);
+    } on CacheFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> purgeIncome(String id) async {
+    log.info("[IncomeRepo] Purging income (ID: $id).");
+    try {
+      await localDataSource.deleteIncome(id);
+
+      if (outboxRepository != null) {
+        final now = DateTime.now();
+        await outboxRepository!.add(
+          SyncMutationModel(
+            id: _uuid.v4(),
+            table: 'incomes',
+            operation: OpType.delete,
+            payload: {'id': id},
+            createdAt: now,
+          ),
+        );
+      }
+      return const Right(null);
+    } on CacheFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<IncomeModel>>> listDeletedIncomes() async {
+    try {
+      final allRaw = await localDataSource.getAllRawIncomes();
+      final deleted = allRaw.where((i) => i.deletedAt != null).toList();
+      deleted.sort((a, b) => b.deletedAt!.compareTo(a.deletedAt!));
+      return Right(deleted);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> purgeExpiredIncomes(DateTime now) async {
+    try {
+      final allRaw = await localDataSource.getAllRawIncomes();
+      final expiryThreshold = now.subtract(const Duration(days: 30));
+      for (final income in allRaw) {
+        if (income.deletedAt != null &&
+            income.deletedAt!.isBefore(expiryThreshold)) {
+          await purgeIncome(income.id);
+        }
+      }
+      return const Right(null);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
     }
   }
 

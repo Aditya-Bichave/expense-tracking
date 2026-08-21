@@ -11,6 +11,7 @@ abstract class IncomeLocalDataSource {
     String? accountId,
   });
   Future<IncomeModel?> getIncomeById(String id); // ADDED: Return nullable
+  Future<List<IncomeModel>> getAllRawIncomes();
   Future<IncomeModel> addIncome(IncomeModel income);
   Future<IncomeModel> updateIncome(IncomeModel income);
   Future<void> deleteIncome(String id);
@@ -31,6 +32,16 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
     } catch (e, s) {
       log.severe("Failed to add income '${income.title}' to cache: $e\n$s");
       throw CacheFailure('Failed to add income: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<IncomeModel>> getAllRawIncomes() async {
+    try {
+      return incomeBox.values.toList();
+    } catch (e, s) {
+      log.severe("Failed to get raw incomes from cache: $e\n$s");
+      throw CacheFailure('Failed to get raw incomes: ${e.toString()}');
     }
   }
 
@@ -71,6 +82,7 @@ class HiveIncomeLocalDataSource implements IncomeLocalDataSource {
           : null;
 
       for (final income in incomeBox.values) {
+        if (income.deletedAt != null) continue;
         if (startDateOnly != null) {
           // Compare directly: income.date >= startDate (normalized to midnight)
           if (income.date.isBefore(startDateOnly)) continue;

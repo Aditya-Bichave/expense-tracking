@@ -20,6 +20,11 @@ abstract class ExpenseRepository {
   Future<Either<Failure, Expense>> updateExpense(Expense expense);
 
   Future<Either<Failure, void>> deleteExpense(String id);
+  Future<Either<Failure, void>> restoreExpense(String id);
+  Future<Either<Failure, void>> purgeExpense(String id);
+  Future<Either<Failure, List<ExpenseModel>>> listDeletedExpenses();
+  Future<Either<Failure, void>> purgeExpiredExpenses(DateTime now);
+
   Future<Either<Failure, double>> getTotalExpensesForAccount(
     String accountId, {
     DateTime? startDate,
