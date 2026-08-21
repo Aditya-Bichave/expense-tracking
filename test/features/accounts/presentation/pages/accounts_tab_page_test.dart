@@ -50,4 +50,43 @@ void main() {
     // Might have "Accounts" header
     // expect(find.text('Accounts'), findsOneWidget);
   });
+
+  testWidgets('toggling Liabilities shows coming soon snackbar', (
+    tester,
+  ) async {
+    when(
+      () => mockAccountListBloc.state,
+    ).thenReturn(const AccountListLoaded(accounts: []));
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Liabilities'));
+    await tester.pump();
+
+    expect(
+      find.text('Liability account features are under development.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('pull to refresh handles state stream timeout safely', (
+    tester,
+  ) async {
+    when(
+      () => mockAccountListBloc.stream,
+    ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockAccountListBloc.state,
+    ).thenReturn(const AccountListLoaded(accounts: []));
+
+    await tester.pumpWidget(createWidgetUnderTest());
+    await tester.pumpAndSettle();
+
+    await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+    await tester.pump(); // Start refresh gesture
+    await tester.pump(const Duration(seconds: 6)); // Advance past 5s timeout
+
+    expect(find.byType(AccountsTabPage), findsOneWidget);
+  });
 }

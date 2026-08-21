@@ -2,17 +2,12 @@
 import 'dart:html' as html;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/core/network/supabase_config.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 
 class WebLocalStorage extends LocalStorage {
   final String _key = SupabaseConfig.supabasePersistSessionKey;
 
   @override
-  Future<void> initialize() async {
-    log.info('WebLocalStorage initialized. Key: $_key');
-    final session = html.window.localStorage[_key];
-    log.info('Initial session found: ${session != null}');
-  }
+  Future<void> initialize() async {}
 
   @override
   Future<bool> hasAccessToken() async {

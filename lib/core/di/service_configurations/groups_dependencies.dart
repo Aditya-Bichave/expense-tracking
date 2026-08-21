@@ -20,6 +20,7 @@ import 'package:expense_tracker/features/groups/presentation/bloc/group_balances
 import 'package:expense_tracker/features/groups/presentation/bloc/group_balances/nudge_bloc.dart';
 import 'package:expense_tracker/features/group_expenses/data/datasources/group_expenses_local_data_source.dart';
 import 'package:expense_tracker/core/services/image_compression_service.dart';
+import 'package:expense_tracker/features/settlements/presentation/bloc/record_settlement_bloc.dart';
 import 'package:hive_ce/hive.dart';
 
 class GroupsDependencies {
@@ -85,7 +86,15 @@ class GroupsDependencies {
       sl.registerLazySingleton(() => ImageCompressionService());
     }
 
-    // Note: RecordSettlementBloc requires dynamic parameters at runtime (like initialAmount),
-    // so it should be instantiated at the point of use rather than via GetIt unless we use a factory with params.
+    if (!sl.isRegistered<RecordSettlementBloc>()) {
+      sl.registerFactoryParam<RecordSettlementBloc, double, void>(
+        (initialAmount, _) => RecordSettlementBloc(
+          supabase: SupabaseClientProvider.client,
+          authSessionService: sl(),
+          imageCompressionService: sl(),
+          initialAmount: initialAmount,
+        ),
+      );
+    }
   }
 }
