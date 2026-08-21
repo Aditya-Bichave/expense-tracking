@@ -1,3 +1,4 @@
+import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'dart:io';
 import 'dart:async';
 import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
@@ -217,8 +218,8 @@ class SyncService {
         try {
           await _processItem(item);
           await _outboxRepository.markAsSent(item);
-        } catch (e) {
-          log.warning('Failed to sync item ${item.id}: $e');
+        } catch (e, s) {
+          log.warning('Failed to sync item ${item.id}: $e\n$s');
           await _outboxRepository.markAsFailed(item, e.toString());
           hadError = true;
         }
@@ -236,7 +237,8 @@ class SyncService {
           _safeAddStatus(SyncServiceStatus.synced);
         }
       }
-    } catch (e) {
+    } catch (e, s) {
+      log.severe('Outbox process error: $e\n$s');
       _safeAddStatus(SyncServiceStatus.error);
     } finally {
       _isSyncing = false;

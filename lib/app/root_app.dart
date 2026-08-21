@@ -1,3 +1,5 @@
+import 'package:expense_tracker/core/services/clock.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/auth/session_cubit.dart';
 import 'package:expense_tracker/core/constants/app_constants.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
@@ -19,7 +21,8 @@ const _sessionRevalidateAfter = Duration(seconds: 60);
 /// from [SettingsBloc], session re-validation on resume, and deep-link
 /// navigation.
 class RootApp extends StatefulWidget {
-  const RootApp({super.key});
+  final Clock? clock;
+  const RootApp({super.key, this.clock});
 
   @override
   State<RootApp> createState() => _RootAppState();
@@ -45,7 +48,10 @@ class _RootAppState extends State<RootApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.paused:
-        _pausedAt = DateTime.now();
+        _pausedAt =
+            (widget.clock ??
+                    (sl.isRegistered<Clock>() ? sl<Clock>() : SystemClock()))
+                .now();
       case AppLifecycleState.resumed:
         _revalidateSessionIfStale();
       default:
@@ -60,7 +66,11 @@ class _RootAppState extends State<RootApp> with WidgetsBindingObserver {
     _pausedAt = null;
     if (pausedAt == null) return;
 
-    final backgrounded = DateTime.now().difference(pausedAt);
+    final now =
+        (widget.clock ??
+                (sl.isRegistered<Clock>() ? sl<Clock>() : SystemClock()))
+            .now();
+    final backgrounded = now.difference(pausedAt);
     if (backgrounded >= _sessionRevalidateAfter) {
       context.read<SessionCubit>().checkSession();
     }

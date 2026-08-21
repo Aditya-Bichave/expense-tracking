@@ -58,7 +58,6 @@ void main() {
     mockStorageFileApi = MockStorageFileApi();
     mockQueryBuilder = MockSupabaseQueryBuilder();
 
-    // Use thenAnswer for methods returning Future-like objects (e.g. SupabaseQueryBuilder)
     when(() => mockSupabaseClient.storage).thenReturn(mockStorageClient);
     when(() => mockStorageClient.from(any())).thenReturn(mockStorageFileApi);
     when(
@@ -69,7 +68,6 @@ void main() {
   test(
     'SyncService processes pending items with receipt upload (verifies upload call)',
     () async {
-      // Arrange
       when(
         () => mockConnectivity.checkConnectivity(),
       ).thenAnswer((_) async => [ConnectivityResult.wifi]);
@@ -104,8 +102,51 @@ void main() {
         () => mockStorageFileApi.getPublicUrl(any()),
       ).thenReturn('https://supabase.co/receipt.jpg');
 
-      // NOTE: We intentionally DO NOT mock upsert here to avoid Mocktail Future type issues.
-      // It will throw a "no stub" exception when called, which we verify happens *after* upload.
+      final service = SyncService(
+        mockSupabaseClient,
+        mockOutboxRepository,
+        mockConnectivity,
+        mockGroupBox,
+        mockGroupMemberBox,
+      );
+
+      try {
+        await service.processOutbox();
+      } catch (_) {}
+
+      verify(
+        () => mockStorageFileApi.upload(
+          any(that: contains('tx1.jpg')),
+          any(),
+          fileOptions: any(named: 'fileOptions'),
+        ),
+      ).called(1);
+    },
+  );
+
+  test(
+    'SyncService handles permanent failure by marking dead-letter state',
+    () async {
+      when(
+        () => mockConnectivity.checkConnectivity(),
+      ).thenAnswer((_) async => [ConnectivityResult.wifi]);
+      when(
+        () => mockConnectivity.onConnectivityChanged,
+      ).thenAnswer((_) => const Stream.empty());
+
+      final item = SyncMutationModel(
+        id: 'tx_failed',
+        table: 'expenses',
+        operation: OpType.create,
+        payload: {'amount': 100},
+        createdAt: DateTime.now(),
+        retryCount: 5,
+      );
+
+      when(() => mockOutboxRepository.getPendingItems()).thenReturn([item]);
+      when(
+        () => mockOutboxRepository.markAsFailed(any(), any()),
+      ).thenAnswer((_) async {});
 
       final service = SyncService(
         mockSupabaseClient,
@@ -115,22 +156,10 @@ void main() {
         mockGroupMemberBox,
       );
 
-      // Act
-      try {
-        await service.processOutbox();
-      } catch (_) {
-        // Expected exception (MissingStubError or similar) because we didn't mock upsert
-        // We don't assert on the type to be flexible, but it ensures we reached the upsert call.
-      }
+      await service.processOutbox();
 
-      // Assert
-      // Verify upload was called - this confirms the receipt upload logic is executed before upsert
       verify(
-        () => mockStorageFileApi.upload(
-          any(that: contains('tx1.jpg')),
-          any(),
-          fileOptions: any(named: 'fileOptions'),
-        ),
+        () => mockOutboxRepository.markAsFailed(item, 'Max retries exceeded.'),
       ).called(1);
     },
   );

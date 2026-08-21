@@ -73,6 +73,7 @@ class BudgetsSubTab extends StatelessWidget {
                     const SizedBox(height: 24),
                     // --- FIX: Button navigates to addBudget ---
                     ElevatedButton.icon(
+                      key: const ValueKey('button_budgetList_addFirst'),
                       icon: const Icon(Icons.add),
                       label: const Text('Add First Budget'),
                       onPressed: () => context.pushNamed(RouteNames.addBudget),
@@ -134,6 +135,7 @@ class BudgetsSubTab extends StatelessWidget {
       ),
       // --- FIX: Add FAB to BudgetsSubTab ---
       floatingActionButton: FloatingActionButton(
+        key: const ValueKey('fab_budgetList_add'),
         heroTag: 'add_budget_fab',
         tooltip: 'Add Budget',
         onPressed: () => context.pushNamed(RouteNames.addBudget), // Unique tag

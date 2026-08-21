@@ -1,6 +1,7 @@
 // lib/core/constants/app_constants.dart
 
 abstract class AppConstants {
+  static const Duration networkTimeout = Duration(seconds: 15);
   static const String appName = "Financial OS"; // Centralized app name
 
   // Default values moved from SettingsState (can be used across app)

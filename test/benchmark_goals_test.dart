@@ -173,37 +173,33 @@ class BenchmarkGoalContributionRepository {
 }
 
 void main() {
-  test(
-    'Benchmark Sequential vs Concurrent auditGoalTotals',
-    skip: true,
-    () async {
-      final repo = BenchmarkGoalContributionRepository(
-        contributionDataSource: MockGoalContributionLocalDataSource(),
-        goalDataSource: MockGoalLocalDataSource(50), // 50 goals
-      );
+  test('Benchmark Sequential vs Concurrent auditGoalTotals', () async {
+    final repo = BenchmarkGoalContributionRepository(
+      contributionDataSource: MockGoalContributionLocalDataSource(),
+      goalDataSource: MockGoalLocalDataSource(50), // 50 goals
+    );
 
-      // Warmup
-      await repo.auditGoalTotalsSequential();
-      await repo.auditGoalTotalsConcurrent();
+    // Warmup
+    await repo.auditGoalTotalsSequential();
+    await repo.auditGoalTotalsConcurrent();
 
-      // Benchmark sequential
-      final startSeq = DateTime.now();
-      await repo.auditGoalTotalsSequential();
-      final endSeq = DateTime.now();
-      final seqTime = endSeq.difference(startSeq).inMilliseconds;
+    // Benchmark sequential
+    final startSeq = DateTime.now();
+    await repo.auditGoalTotalsSequential();
+    final endSeq = DateTime.now();
+    final seqTime = endSeq.difference(startSeq).inMilliseconds;
 
-      // Benchmark concurrent
-      final startConc = DateTime.now();
-      await repo.auditGoalTotalsConcurrent();
-      final endConc = DateTime.now();
-      final concTime = endConc.difference(startConc).inMilliseconds;
+    // Benchmark concurrent
+    final startConc = DateTime.now();
+    await repo.auditGoalTotalsConcurrent();
+    final endConc = DateTime.now();
+    final concTime = endConc.difference(startConc).inMilliseconds;
 
-      print('--- BENCHMARK RESULTS ---');
-      print('Sequential: $seqTime ms');
-      print('Concurrent: $concTime ms');
-      print(
-        'Improvement: ${((seqTime - concTime) / seqTime * 100).toStringAsFixed(2)}% faster',
-      );
-    },
-  );
+    print('--- BENCHMARK RESULTS ---');
+    print('Sequential: $seqTime ms');
+    print('Concurrent: $concTime ms');
+    print(
+      'Improvement: ${((seqTime - concTime) / seqTime * 100).toStringAsFixed(2)}% faster',
+    );
+  });
 }

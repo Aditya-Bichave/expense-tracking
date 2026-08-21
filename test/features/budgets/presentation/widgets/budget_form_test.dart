@@ -145,9 +145,9 @@ void main() {
       );
 
       // Change type to category specific
-      await tester.tap(find.text('Overall Spending'));
+      await tester.tap(find.text('Overall Monthly'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Category-Specific').last);
+      await tester.tap(find.text('Category Specific').last);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const ValueKey('button_submit')));
@@ -166,6 +166,6 @@ void main() {
           any(),
         ),
       );
-    }, skip: true);
+    });
   });
 }
