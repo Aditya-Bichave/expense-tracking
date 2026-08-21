@@ -11,6 +11,7 @@ abstract class ExpenseLocalDataSource {
     String? accountId,
   });
   Future<ExpenseModel?> getExpenseById(String id); // ADDED: Return nullable
+  Future<List<ExpenseModel>> getAllRawExpenses();
   Future<ExpenseModel> addExpense(ExpenseModel expense);
   Future<ExpenseModel> updateExpense(ExpenseModel expense);
   Future<void> deleteExpense(String id);
@@ -31,6 +32,16 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
     } catch (e, s) {
       log.severe("Failed to add expense '${expense.title}' to cache: $e\n$s");
       throw CacheFailure('Failed to add expense: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<ExpenseModel>> getAllRawExpenses() async {
+    try {
+      return expenseBox.values.toList();
+    } catch (e, s) {
+      log.severe("Failed to get raw expenses from cache: $e\n$s");
+      throw CacheFailure('Failed to get raw expenses: ${e.toString()}');
     }
   }
 
@@ -71,6 +82,7 @@ class HiveExpenseLocalDataSource implements ExpenseLocalDataSource {
           : null;
 
       for (final expense in expenseBox.values) {
+        if (expense.deletedAt != null) continue;
         if (startDateOnly != null) {
           // Compare directly: expense.date >= startDate (normalized to midnight)
           if (expense.date.isBefore(startDateOnly)) continue;

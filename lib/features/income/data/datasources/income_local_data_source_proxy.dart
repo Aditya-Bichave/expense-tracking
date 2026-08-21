@@ -61,6 +61,7 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
           : null;
 
       return incomes.where((income) {
+        if (income.deletedAt != null) return false;
         if (startDateOnly != null) {
           final incDateOnly = DateTime(
             income.date.year,
@@ -88,6 +89,16 @@ class DemoAwareIncomeDataSource implements IncomeLocalDataSource {
         categoryId: categoryId,
         accountId: accountId,
       );
+    }
+  }
+
+  @override
+  Future<List<IncomeModel>> getAllRawIncomes() async {
+    if (demoModeService.isDemoActive) {
+      log.fine("[DemoAwareIncomeDS] Getting raw demo incomes.");
+      return demoModeService.getDemoIncomes();
+    } else {
+      return hiveDataSource.getAllRawIncomes();
     }
   }
 

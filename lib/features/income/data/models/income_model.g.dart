@@ -30,13 +30,14 @@ class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
       confidenceScoreValue: (fields[8] as num?)?.toDouble(),
       isRecurring: fields[9] == null ? false : fields[9] as bool,
       merchantId: fields[10] as String?,
+      deletedAt: fields[11] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, IncomeModel obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(12)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -58,7 +59,9 @@ class IncomeModelAdapter extends TypeAdapter<IncomeModel> {
       ..writeByte(9)
       ..write(obj.isRecurring)
       ..writeByte(10)
-      ..write(obj.merchantId);
+      ..write(obj.merchantId)
+      ..writeByte(11)
+      ..write(obj.deletedAt);
   }
 
   @override
@@ -92,6 +95,9 @@ IncomeModel _$IncomeModelFromJson(Map<String, dynamic> json) => IncomeModel(
   confidenceScoreValue: (json['confidenceScoreValue'] as num?)?.toDouble(),
   isRecurring: json['isRecurring'] as bool? ?? false,
   merchantId: json['merchantId'] as String?,
+  deletedAt: json['deletedAt'] == null
+      ? null
+      : DateTime.parse(json['deletedAt'] as String),
 );
 
 Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
@@ -109,4 +115,5 @@ Map<String, dynamic> _$IncomeModelToJson(IncomeModel instance) =>
       'confidenceScoreValue': ?instance.confidenceScoreValue,
       'isRecurring': instance.isRecurring,
       'merchantId': ?instance.merchantId,
+      'deletedAt': ?instance.deletedAt?.toIso8601String(),
     };

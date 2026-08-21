@@ -1,5 +1,7 @@
 import 'package:expense_tracker/core/di/service_locator.dart';
 import 'package:expense_tracker/core/network/supabase_client_provider.dart';
+import 'package:expense_tracker/features/expenses/domain/repositories/expense_repository.dart';
+import 'package:expense_tracker/features/income/domain/repositories/income_repository.dart';
 import 'package:expense_tracker/core/services/secure_storage_service.dart';
 import 'package:expense_tracker/core/storage/app_hive_boxes.dart';
 import 'package:expense_tracker/core/storage/hive_adapters.dart';
@@ -44,6 +46,22 @@ class AppInitializer {
 
     if (E2EMode.enabled) {
       await E2EBootstrap.seedLocalState();
+    }
+
+    await _purgeExpiredTrash();
+  }
+
+  static Future<void> _purgeExpiredTrash() async {
+    try {
+      final now = DateTime.now();
+      if (sl.isRegistered<ExpenseRepository>()) {
+        await sl<ExpenseRepository>().purgeExpiredExpenses(now);
+      }
+      if (sl.isRegistered<IncomeRepository>()) {
+        await sl<IncomeRepository>().purgeExpiredIncomes(now);
+      }
+    } catch (e, s) {
+      log.warning('Failed to purge expired trash: $e\n$s');
     }
   }
 

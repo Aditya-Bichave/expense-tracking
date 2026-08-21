@@ -12,17 +12,24 @@ import 'package:expense_tracker/features/categories/domain/entities/category.dar
 import 'package:collection/collection.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:expense_tracker/features/expenses/domain/utils/split_engine.dart';
+import 'package:expense_tracker/core/sync/outbox_repository.dart';
+import 'package:expense_tracker/core/sync/models/sync_mutation_model.dart';
+import 'package:uuid/uuid.dart';
 
 class ExpenseRepositoryImpl implements ExpenseRepository {
   final ExpenseLocalDataSource localDataSource;
   final CategoryRepository categoryRepository;
   final SupabaseClient supabaseClient;
+  final OutboxRepository? outboxRepository;
+  final Uuid _uuid;
 
   ExpenseRepositoryImpl({
     required this.localDataSource,
     required this.categoryRepository,
     required this.supabaseClient,
-  });
+    this.outboxRepository,
+    Uuid? uuid,
+  }) : _uuid = uuid ?? const Uuid();
 
   Future<Either<Failure, Expense>> _hydrateSingleModel(
     ExpenseModel model,
@@ -136,10 +143,152 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   @override
   Future<Either<Failure, void>> deleteExpense(String id) async {
     try {
-      await localDataSource.deleteExpense(id);
+      final existing = await localDataSource.getExpenseById(id);
+      if (existing == null) {
+        return const Left(CacheFailure("Expense not found"));
+      }
+      final now = DateTime.now();
+      final updatedModel = ExpenseModel(
+        id: existing.id,
+        title: existing.title,
+        amount: existing.amount,
+        date: existing.date,
+        accountId: existing.accountId,
+        categoryId: existing.categoryId,
+        categorizationStatusValue: existing.categorizationStatusValue,
+        confidenceScoreValue: existing.confidenceScoreValue,
+        isRecurring: existing.isRecurring,
+        merchantId: existing.merchantId,
+        groupId: existing.groupId,
+        createdBy: existing.createdBy,
+        currency: existing.currency,
+        notes: existing.notes,
+        payers: existing.payers,
+        splits: existing.splits,
+        receiptUrl: existing.receiptUrl,
+        clientGeneratedId: existing.clientGeneratedId,
+        deletedAt: now,
+      );
+      await localDataSource.updateExpense(updatedModel);
+
+      if (outboxRepository != null) {
+        await outboxRepository!.add(
+          SyncMutationModel(
+            id: _uuid.v4(),
+            table: 'expenses',
+            operation: OpType.update,
+            payload: {'id': id, 'deleted_at': now.toIso8601String()},
+            createdAt: now,
+          ),
+        );
+      }
       return const Right(null);
     } on CacheFailure catch (e) {
       return Left(e);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> restoreExpense(String id) async {
+    try {
+      final existing = await localDataSource.getExpenseById(id);
+      if (existing == null) {
+        return const Left(CacheFailure("Expense not found"));
+      }
+      final updatedModel = ExpenseModel(
+        id: existing.id,
+        title: existing.title,
+        amount: existing.amount,
+        date: existing.date,
+        accountId: existing.accountId,
+        categoryId: existing.categoryId,
+        categorizationStatusValue: existing.categorizationStatusValue,
+        confidenceScoreValue: existing.confidenceScoreValue,
+        isRecurring: existing.isRecurring,
+        merchantId: existing.merchantId,
+        groupId: existing.groupId,
+        createdBy: existing.createdBy,
+        currency: existing.currency,
+        notes: existing.notes,
+        payers: existing.payers,
+        splits: existing.splits,
+        receiptUrl: existing.receiptUrl,
+        clientGeneratedId: existing.clientGeneratedId,
+        deletedAt: null,
+      );
+      await localDataSource.updateExpense(updatedModel);
+
+      if (outboxRepository != null) {
+        final now = DateTime.now();
+        await outboxRepository!.add(
+          SyncMutationModel(
+            id: _uuid.v4(),
+            table: 'expenses',
+            operation: OpType.update,
+            payload: {'id': id, 'deleted_at': null},
+            createdAt: now,
+          ),
+        );
+      }
+      return const Right(null);
+    } on CacheFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> purgeExpense(String id) async {
+    try {
+      await localDataSource.deleteExpense(id);
+
+      if (outboxRepository != null) {
+        final now = DateTime.now();
+        await outboxRepository!.add(
+          SyncMutationModel(
+            id: _uuid.v4(),
+            table: 'expenses',
+            operation: OpType.delete,
+            payload: {'id': id},
+            createdAt: now,
+          ),
+        );
+      }
+      return const Right(null);
+    } on CacheFailure catch (e) {
+      return Left(e);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ExpenseModel>>> listDeletedExpenses() async {
+    try {
+      final allRaw = await localDataSource.getAllRawExpenses();
+      final deleted = allRaw.where((e) => e.deletedAt != null).toList();
+      deleted.sort((a, b) => b.deletedAt!.compareTo(a.deletedAt!));
+      return Right(deleted);
+    } catch (e) {
+      return Left(UnexpectedFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> purgeExpiredExpenses(DateTime now) async {
+    try {
+      final allRaw = await localDataSource.getAllRawExpenses();
+      final expiryThreshold = now.subtract(const Duration(days: 30));
+      for (final expense in allRaw) {
+        if (expense.deletedAt != null &&
+            expense.deletedAt!.isBefore(expiryThreshold)) {
+          await purgeExpense(expense.id);
+        }
+      }
+      return const Right(null);
     } catch (e) {
       return Left(UnexpectedFailure(e.toString()));
     }

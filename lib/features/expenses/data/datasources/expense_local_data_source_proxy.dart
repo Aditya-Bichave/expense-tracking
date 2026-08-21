@@ -65,6 +65,7 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
           : null;
 
       return expenses.where((expense) {
+        if (expense.deletedAt != null) return false;
         if (startDateOnly != null) {
           final expDateOnly = DateTime(
             expense.date.year,
@@ -93,6 +94,16 @@ class DemoAwareExpenseDataSource implements ExpenseLocalDataSource {
         categoryId: categoryId,
         accountId: accountId,
       );
+    }
+  }
+
+  @override
+  Future<List<ExpenseModel>> getAllRawExpenses() async {
+    if (demoModeService.isDemoActive) {
+      log.fine("[DemoAwareExpenseDS] Getting raw demo expenses.");
+      return demoModeService.getDemoExpenses();
+    } else {
+      return hiveDataSource.getAllRawExpenses();
     }
   }
 

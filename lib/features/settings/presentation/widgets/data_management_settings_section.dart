@@ -119,7 +119,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             subtitle: Text(
               isInDemoMode
                   ? 'Disabled in Demo Mode'
-                  : 'View recently deleted items (Coming Soon)',
+                  : 'View recently deleted items',
             ),
             trailing: Icon(
               Icons.chevron_right,
@@ -129,9 +129,7 @@ class DataManagementSettingsSection extends StatelessWidget {
             ),
             onTap: !isEnabled
                 ? null
-                : () {
-                    // TODO: Navigate to Trash Bin Screen
-                  },
+                : () => context.pushNamed(RouteNames.trashBin),
           ),
         ],
       ),

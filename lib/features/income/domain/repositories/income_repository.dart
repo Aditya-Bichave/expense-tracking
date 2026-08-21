@@ -23,6 +23,11 @@ abstract class IncomeRepository {
   Future<Either<Failure, Income>> updateIncome(Income income);
 
   Future<Either<Failure, void>> deleteIncome(String id);
+  Future<Either<Failure, void>> restoreIncome(String id);
+  Future<Either<Failure, void>> purgeIncome(String id);
+  Future<Either<Failure, List<IncomeModel>>> listDeletedIncomes();
+  Future<Either<Failure, void>> purgeExpiredIncomes(DateTime now);
+
   Future<Either<Failure, double>> getTotalIncomeForAccount(
     String accountId, {
     DateTime? startDate,
