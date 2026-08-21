@@ -89,6 +89,13 @@ class BackupDataUseCase implements UseCase<String?, BackupParams> {
             "[BackupUseCase] Web download initiated for '$backupFilename'.",
           );
           return const Right('Download started');
+        } on UnimplementedError catch (e, s) {
+          log.warning(
+            "[BackupUseCase] Export not supported on platform: $e\n$s",
+          );
+          return const Left(
+            BackupFailure("Export is not supported on this platform"),
+          );
         } catch (e, s) {
           log.severe("[BackupUseCase] Error during web download: $e\n$s");
           return Left(

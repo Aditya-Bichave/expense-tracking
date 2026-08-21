@@ -45,12 +45,28 @@ class CsvExportHelper {
     required String csvData,
     required String fileName,
   }) async {
-    if (kIsWeb) {
-      await _saveCsvWeb(csvData, fileName);
-    } else {
-      await _saveCsvMobileDesktop(context, csvData, fileName);
+    try {
+      if (kIsWeb) {
+        await _saveCsvWeb(csvData, fileName);
+      } else {
+        await _saveCsvMobileDesktop(context, csvData, fileName);
+      }
+    } on UnimplementedError catch (e, s) {
+      log.warning("[CsvExportHelper] UnimplementedError saving CSV: $e\n$s");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Export is not supported on this platform"),
+          ),
+        );
+      }
+      throw const ExportFailure("Export is not supported on this platform");
     }
   }
+
+  @visibleForTesting
+  Future<void> saveCsvWeb(String csvData, String fileName) =>
+      _saveCsvWeb(csvData, fileName);
 
   Future<void> _saveCsvWeb(String csvData, String fileName) async {
     try {
@@ -61,6 +77,9 @@ class CsvExportHelper {
         mimeType: 'text/csv;charset=utf-8;',
       );
       log.info("[CsvExportHelper] Web CSV download initiated for '$fileName'.");
+    } on UnimplementedError catch (e, s) {
+      log.warning("[CsvExportHelper] Export not supported on platform: $e\n$s");
+      throw const ExportFailure("Export is not supported on this platform");
     } catch (e, s) {
       log.severe("[CsvExportHelper] Error saving CSV on Web: $e\n$s");
       throw ExportFailure("Web Download Error: $e");

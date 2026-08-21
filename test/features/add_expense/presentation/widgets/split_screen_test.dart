@@ -163,4 +163,42 @@ void main() {
       () => mockBloc.add(const SplitValueChanged('user1', 50.0)),
     ).called(1);
   });
+
+  testWidgets(
+    'SplitScreen renders correctly when member is absent from groupMembers',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      when(() => mockBloc.state).thenReturn(
+        AddExpenseWizardState(
+          amountTotal: 100.0,
+          currency: '\$',
+          expenseDate: DateTime.now(),
+          transactionId: 'test-tx-id',
+          currentUserId: 'user1',
+          groupMembers:
+              [], // Empty group members - payer and split user absent!
+          payers: [PayerModel(userId: 'absent_payer', amountPaid: 100.0)],
+          splits: [
+            SplitModel(
+              userId: 'absent_user',
+              shareType: SplitType.EQUAL,
+              shareValue: 100.0,
+              computedAmount: 100.0,
+            ),
+          ],
+        ),
+      );
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Split Expense'), findsOneWidget);
+      expect(find.text('Paid by absent_payer'), findsOneWidget);
+      expect(find.text('absent_user'), findsOneWidget);
+    },
+  );
 }

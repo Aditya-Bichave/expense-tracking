@@ -28,6 +28,7 @@ void main() {
 
   setUpAll(() {
     TestWidgetsFlutterBinding.ensureInitialized();
+    registerFallbackValue(Uint8List(0));
 
     // Mock PackageInfo channel
     const MethodChannel(
@@ -142,4 +143,41 @@ void main() {
       expect(failure.message, contains('Backup cancelled'));
     }, (_) => fail('Should be Left'));
   });
+
+  test(
+    'handles UnimplementedError from downloaderService in BackupDataUseCase',
+    () async {
+      final allData = AllData(
+        accounts: <AssetAccountModel>[],
+        expenses: <ExpenseModel>[],
+        incomes: <IncomeModel>[],
+        categories: <CategoryModel>[],
+      );
+      when(
+        () => mockDataManagementRepository.getAllDataForBackup(),
+      ).thenAnswer((_) async => Right(allData));
+
+      when(
+        () => mockDownloaderService.downloadFile(
+          bytes: any(named: 'bytes'),
+          downloadName: any(named: 'downloadName'),
+          mimeType: any(named: 'mimeType'),
+        ),
+      ).thenAnswer((_) async => throw UnimplementedError('Not supported'));
+
+      // Note: kIsWeb is false in Flutter tests, so it calls filePickerService.
+      // If we test filePickerService throwing UnimplementedError:
+      when(
+        () => mockFilePickerService.saveFile(
+          dialogTitle: any(named: 'dialogTitle'),
+          fileName: any(named: 'fileName'),
+          allowedExtensions: any(named: 'allowedExtensions'),
+        ),
+      ).thenAnswer((_) async => throw UnimplementedError('Not supported'));
+
+      final result = await useCase(const BackupParams('password'));
+
+      expect(result.isLeft(), isTrue);
+    },
+  );
 }

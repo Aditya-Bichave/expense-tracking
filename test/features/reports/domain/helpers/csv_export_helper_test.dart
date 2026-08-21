@@ -4,6 +4,7 @@ import 'package:expense_tracker/features/reports/domain/entities/report_data.dar
 import 'package:expense_tracker/features/reports/domain/helpers/csv_export_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:typed_data';
 import 'package:mocktail/mocktail.dart';
 
 class MockDownloaderService extends Mock implements DownloaderService {}
@@ -11,6 +12,10 @@ class MockDownloaderService extends Mock implements DownloaderService {}
 void main() {
   late CsvExportHelper helper;
   late MockDownloaderService mockDownloaderService;
+
+  setUpAll(() {
+    registerFallbackValue(Uint8List(0));
+  });
 
   setUp(() {
     mockDownloaderService = MockDownloaderService();
@@ -101,5 +106,28 @@ void main() {
         }, (failure) => fail('Should be Left(String)'));
       },
     );
+
+    test('saveCsvWeb handles UnimplementedError gracefully', () async {
+      when(
+        () => mockDownloaderService.downloadFile(
+          bytes: any(named: 'bytes'),
+          downloadName: any(named: 'downloadName'),
+          mimeType: any(named: 'mimeType'),
+        ),
+      ).thenAnswer(
+        (_) async => throw UnimplementedError('File download not supported'),
+      );
+
+      expect(
+        () async => helper.saveCsvWeb('col1,col2\n1,2', 'test.csv'),
+        throwsA(
+          isA<ExportFailure>().having(
+            (e) => e.message,
+            'message',
+            contains('Export is not supported on this platform'),
+          ),
+        ),
+      );
+    });
   });
 }

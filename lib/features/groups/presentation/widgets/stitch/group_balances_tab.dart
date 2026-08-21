@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:expense_tracker/core/di/service_locator.dart';
+import 'package:expense_tracker/features/settlements/presentation/bloc/record_settlement_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/groups/domain/entities/simplified_debt.dart';
@@ -194,8 +196,14 @@ class _GroupBalancesTabState extends State<GroupBalancesTab> {
     showDialog(
       context: context,
       builder: (dialogContext) {
-        return BlocProvider.value(
-          value: context.read<GroupBalancesBloc>(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: context.read<GroupBalancesBloc>()),
+            if (sl.isRegistered<RecordSettlementBloc>())
+              BlocProvider(
+                create: (_) => sl<RecordSettlementBloc>(param1: debt.amount),
+              ),
+          ],
           child: SettlementDialog(
             receiverName: debt.toUserName,
             receiverUpiId: debt.toUserUpi,

@@ -1,8 +1,16 @@
+import 'package:bloc_test/bloc_test.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_state.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:expense_tracker/features/settings/presentation/widgets/about_settings_section.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import '../../../../helpers/pump_app.dart';
+
+class MockAuthBloc extends MockBloc<AuthEvent, AuthState> implements AuthBloc {}
 
 void main() {
   testWidgets('AboutSettingsSection renders correctly', (
@@ -37,4 +45,44 @@ void main() {
     expect(find.text('1.2.3'), findsOneWidget);
     expect(find.text('Logout'), findsOneWidget);
   });
+
+  testWidgets(
+    'tapping Logout shows confirmation dialog and dispatches AuthLogoutRequested',
+    (WidgetTester tester) async {
+      final mockAuthBloc = MockAuthBloc();
+      when(() => mockAuthBloc.state).thenReturn(AuthUnauthenticated());
+
+      await pumpWidgetWithProviders(
+        tester: tester,
+        blocProviders: [BlocProvider<AuthBloc>.value(value: mockAuthBloc)],
+        settingsState: const SettingsState(appVersion: '1.2.3'),
+        widget: const Scaffold(
+          body: AboutSettingsSection(
+            state: SettingsState(appVersion: '1.2.3'),
+            isLoading: false,
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Logout'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'Are you sure you want to logout? This will clear your local session.',
+        ),
+        findsOneWidget,
+      );
+
+      // Tap confirm button in dialog
+      await tester.tap(
+        find
+            .descendant(of: find.byType(Dialog), matching: find.text('Logout'))
+            .last,
+      );
+      await tester.pumpAndSettle();
+
+      verify(() => mockAuthBloc.add(AuthLogoutRequested())).called(1);
+    },
+  );
 }

@@ -1,13 +1,14 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expense_tracker/core/constants/route_names.dart';
+import 'package:expense_tracker/core/utils/app_dialogs.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:expense_tracker/features/auth/presentation/bloc/auth_event.dart';
 import 'package:expense_tracker/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:expense_tracker/core/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:expense_tracker/ui_kit/theme/app_theme_ext.dart';
 import 'package:expense_tracker/ui_kit/components/foundations/app_section.dart';
 import 'package:expense_tracker/ui_kit/components/lists/app_list_tile.dart';
-import 'package:expense_tracker/ui_kit/components/feedback/app_toast.dart';
-import 'package:expense_tracker/ui_bridge/bridge_list_tile.dart';
 
 class AboutSettingsSection extends StatelessWidget {
   final SettingsState state;
@@ -62,13 +63,17 @@ class AboutSettingsSection extends StatelessWidget {
             ),
             onTap: isLoading || isInDemoMode
                 ? null
-                : () {
-                    log.warning("Logout functionality not implemented.");
-                    AppToast.show(
+                : () async {
+                    final confirmed = await AppDialogs.showConfirmation(
                       context,
-                      "Logout (Not Implemented)",
-                      type: AppToastType.info,
+                      title: 'Logout',
+                      content:
+                          'Are you sure you want to logout? This will clear your local session.',
+                      confirmText: 'Logout',
                     );
+                    if (confirmed == true && context.mounted) {
+                      context.read<AuthBloc>().add(AuthLogoutRequested());
+                    }
                   },
           ),
         ],

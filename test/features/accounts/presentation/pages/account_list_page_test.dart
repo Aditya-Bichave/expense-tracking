@@ -163,6 +163,22 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('pull to refresh stream times out safely without crashing', (
+      tester,
+    ) async {
+      when(() => mockBloc.stream).thenAnswer((_) => const Stream.empty());
+      when(
+        () => mockBloc.state,
+      ).thenReturn(const AccountListLoaded(accounts: mockAccounts));
+      await pumpPage(tester);
+
+      await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 6));
+
+      expect(find.byType(AccountCard), findsNWidgets(2));
+    });
+
     testWidgets('a reload keeps the previously loaded cards on screen', (
       tester,
     ) async {
