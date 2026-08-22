@@ -69,10 +69,14 @@ class _CategoryPickerDialogContentState
       for (var c in widget.categories) c.id: c.name.toLowerCase(),
     };
 
-    _allCategories =
-        widget.categories.where((c) => c.id != uncategorizedId).toList()..sort(
-          (a, b) => _lowerCaseNames[a.id]!.compareTo(_lowerCaseNames[b.id]!),
-        );
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the entire list and allocates memory for a sublist.
+    // Solution: Iterate once using a list comprehension to skip the intermediate allocation.
+    // Impact: Reduces garbage collection overhead when filtering uncategorized out.
+    _allCategories = [
+      for (var c in widget.categories)
+        if (c.id != uncategorizedId) c,
+    ]..sort((a, b) => _lowerCaseNames[a.id]!.compareTo(_lowerCaseNames[b.id]!));
     // ⚡ Bolt Performance Optimization
     // Problem: List.from creates a full clone which is unnecessary when we just need a reference to the sorted list
     // Solution: Assign the reference directly. _filterCategories reassings _filteredCategories instead of mutating.
