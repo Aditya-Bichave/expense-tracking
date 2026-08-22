@@ -163,16 +163,13 @@ class DemoModeService {
     String goalId,
   ) async {
     // ⚡ Bolt Performance Optimization
-    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
-    // Solution: Iterate once directly, skipping the intermediate list allocation.
-    // Impact: Reduces GC pressure when filtering contributions.
-    final result = <GoalContributionModel>[];
-    for (final c in _demoContributions) {
-      if (c.goalId == goalId) {
-        result.add(c);
-      }
-    }
-    return result;
+    // Problem: `where(...).toList()` iterates the entire list and allocates memory for a sublist before converting to List.
+    // Solution: Iterate once using a list comprehension to skip the intermediate allocation.
+    // Impact: Reduces garbage collection overhead when filtering contributions.
+    return [
+      for (final c in _demoContributions)
+        if (c.goalId == goalId) c,
+    ];
   }
 
   Future<List<GoalContributionModel>> getAllDemoContributions() async =>
@@ -225,15 +222,12 @@ class DemoModeService {
     String ruleId,
   ) async {
     // ⚡ Bolt Performance Optimization
-    // Problem: `where(...).toList()` iterates the entire list and creates a sublist.
-    // Solution: Iterate once directly, skipping the intermediate list allocation.
-    // Impact: Reduces GC pressure when filtering audit logs.
-    final result = <RecurringRuleAuditLogModel>[];
-    for (final l in _demoAuditLogs) {
-      if (l.ruleId == ruleId) {
-        result.add(l);
-      }
-    }
-    return result;
+    // Problem: `where(...).toList()` iterates the entire list and allocates memory for a sublist before converting to List.
+    // Solution: Iterate once using a list comprehension to skip the intermediate allocation.
+    // Impact: Reduces garbage collection overhead when filtering audit logs.
+    return [
+      for (final l in _demoAuditLogs)
+        if (l.ruleId == ruleId) l,
+    ];
   }
 }

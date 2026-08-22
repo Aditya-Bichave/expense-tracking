@@ -11,10 +11,16 @@ class OutboxRepository {
   }
 
   List<SyncMutationModel> getPendingItems() {
-    return _box.values.where((item) {
-      return item.status == SyncStatus.pending ||
-          item.status == SyncStatus.failed;
-    }).toList()..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the entire list and creates an intermediate iterable.
+    // Solution: Use a direct Dart list comprehension to filter and convert to a list in a single pass.
+    // Impact: Reduces garbage collection pressure and memory allocations when getting pending items.
+    return [
+      for (final item in _box.values)
+        if (item.status == SyncStatus.pending ||
+            item.status == SyncStatus.failed)
+          item,
+    ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
   }
 
   Future<void> markAsSent(SyncMutationModel item) async {

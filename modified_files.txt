@@ -1,0 +1,9 @@
+lib/core/services/demo_mode_service.dart
+lib/core/sync/outbox_repository.dart
+lib/core/sync/sync_service.dart
+lib/features/categories/presentation/widgets/category_picker_dialog.dart
+lib/features/expenses/data/datasources/expense_local_data_source_proxy.dart
+lib/features/goals/data/repositories/goal_repository_impl.dart
+lib/features/group_expenses/data/datasources/group_expenses_local_data_source.dart
+lib/features/groups/data/datasources/groups_local_data_source.dart
+lib/features/groups/data/repositories/groups_repository_impl.dart

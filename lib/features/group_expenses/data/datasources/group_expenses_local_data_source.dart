@@ -47,10 +47,14 @@ class GroupExpensesLocalDataSourceImpl implements GroupExpensesLocalDataSource {
 
   @override
   Future<void> deleteExpensesForGroup(String groupId) async {
-    final expenseIds = _box.values
-        .where((expense) => expense.groupId == groupId)
-        .map((expense) => expense.id)
-        .toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.where(...).map(...).toList()` chains create multiple intermediate iterables and closures, causing O(N) memory allocations and GC pressure.
+    // Solution: Use a direct Dart list comprehension to filter and map in a single pass.
+    // Impact: Reduces garbage collection pressure and memory allocations during deletion.
+    final expenseIds = [
+      for (final expense in _box.values)
+        if (expense.groupId == groupId) expense.id,
+    ];
     if (expenseIds.isEmpty) {
       return;
     }

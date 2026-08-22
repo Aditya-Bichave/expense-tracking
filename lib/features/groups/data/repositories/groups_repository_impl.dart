@@ -185,11 +185,15 @@ class GroupsRepositoryImpl implements GroupsRepository {
       await _localDataSource.saveGroups(remoteGroups);
 
       final remoteGroupIds = remoteGroups.map((group) => group.id).toSet();
-      final staleGroupIds = _localDataSource
-          .getGroups()
-          .where((group) => !remoteGroupIds.contains(group.id))
-          .map((group) => group.id)
-          .toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.where(...).map(...).toList()` chains create multiple intermediate iterables and closures, causing O(N) memory allocations and GC pressure.
+      // Solution: Use a direct Dart list comprehension to filter and map in a single pass.
+      // Impact: Reduces garbage collection pressure and memory allocations during sync.
+      final localGroups = _localDataSource.getGroups();
+      final staleGroupIds = [
+        for (final group in localGroups)
+          if (!remoteGroupIds.contains(group.id)) group.id,
+      ];
       if (staleGroupIds.isNotEmpty) {
         await _localDataSource.deleteGroups(staleGroupIds);
         await Future.wait(
