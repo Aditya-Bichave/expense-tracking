@@ -155,7 +155,11 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       final models = await contributionDataSource.getContributionsForGoal(
         goalId,
       );
-      final entities = models.map((m) => m.toEntity()).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` creates an intermediate iterable.
+      // Solution: Use a list comprehension to map items directly.
+      // Impact: Reduces GC pressure by avoiding intermediate object allocation.
+      final entities = [for (final m in models) m.toEntity()];
       // Sort by date descending
       entities.sort((a, b) => b.date.compareTo(a.date));
       log.fine(
@@ -177,7 +181,11 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
     log.fine("[ContributionRepo] Getting all goal contributions");
     try {
       final models = await contributionDataSource.getAllContributions();
-      final entities = models.map((m) => m.toEntity()).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` creates an intermediate iterable.
+      // Solution: Use a list comprehension to map items directly.
+      // Impact: Reduces GC pressure by avoiding intermediate object allocation.
+      final entities = [for (final m in models) m.toEntity()];
       // Sort by date descending for consistency
       entities.sort((a, b) => b.date.compareTo(a.date));
       log.fine(
@@ -231,16 +239,17 @@ class GoalContributionRepositoryImpl implements GoalContributionRepository {
       const int batchSize = 10;
       for (int i = 0; i < goals.length; i += batchSize) {
         final batch = goals.skip(i).take(batchSize);
-        await Future.wait(
-          batch.map((goal) async {
-            final result = await _updateGoalTotalSavedCache(goal.id);
-            if (result.isLeft()) {
-              log.warning(
-                "[ContributionRepo] Failed to sync total saved cache for goal ${goal.id}",
-              );
-            }
-          }),
-        );
+        await Future.wait([
+          for (final goal in batch)
+            () async {
+              final result = await _updateGoalTotalSavedCache(goal.id);
+              if (result.isLeft()) {
+                log.warning(
+                  "[ContributionRepo] Failed to sync total saved cache for goal ${goal.id}",
+                );
+              }
+            }(),
+        ]);
       }
       return const Right(null);
     } catch (e, s) {

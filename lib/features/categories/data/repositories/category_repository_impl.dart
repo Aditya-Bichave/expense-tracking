@@ -36,7 +36,11 @@ class CategoryRepositoryImpl implements CategoryRepository {
   // --- End ---
 
   List<Category> _processAndSort(List<CategoryModel> models) {
-    final entities = models.map((model) => model.toEntity()).toList();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `.map().toList()` creates an intermediate iterable.
+    // Solution: Use a list comprehension to map items directly.
+    // Impact: Reduces GC pressure by avoiding intermediate object allocation.
+    final entities = [for (final model in models) model.toEntity()];
 
     // ⚡ Bolt Performance Optimization
     // Problem: a.name.toLowerCase() inside .sort() allocates O(N log N) strings during list loading
