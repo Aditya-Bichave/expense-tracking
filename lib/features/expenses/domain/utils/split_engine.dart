@@ -25,7 +25,11 @@ class SplitEngine {
 
     // Check if total is zero
     if (total == 0.0) {
-      return splits.map((s) => s.copyWith(computedAmount: 0.0)).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` creates an intermediate iterable.
+      // Solution: Use a list comprehension to map items directly.
+      // Impact: Reduces GC pressure by avoiding intermediate object allocation.
+      return [for (final s in splits) s.copyWith(computedAmount: 0.0)];
     }
 
     // Detect strategy from first split

@@ -119,7 +119,11 @@ class GroupExpensesRepositoryImpl implements GroupExpensesRepository {
   ) async {
     try {
       final models = _localDataSource.getExpenses(groupId);
-      return Right(models.map((e) => e.toEntity()).toList());
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` creates an intermediate iterable.
+      // Solution: Use a list comprehension to map items directly.
+      // Impact: Reduces GC pressure by avoiding intermediate object allocation.
+      return Right([for (final e in models) e.toEntity()]);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

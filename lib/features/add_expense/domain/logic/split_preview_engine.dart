@@ -61,7 +61,11 @@ class SplitPreviewEngine {
     );
 
     if (totalShares == 0) {
-      return currentSplits.map((s) => s.copyWith(computedAmount: 0)).toList();
+      // ⚡ Bolt Performance Optimization
+      // Problem: `.map().toList()` creates an intermediate iterable.
+      // Solution: Use a list comprehension to map items directly.
+      // Impact: Reduces GC pressure by avoiding intermediate object allocation.
+      return [for (final s in currentSplits) s.copyWith(computedAmount: 0)];
     }
 
     int totalCents = (totalAmount * 100).round();
