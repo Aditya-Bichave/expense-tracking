@@ -79,11 +79,16 @@ class _BudgetFormState extends State<BudgetForm> {
     final availableCategoryIds = widget.availableCategories
         .map((c) => c.id)
         .toSet();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` iterates the collection to create a new list when intersection is faster.
+    // Solution: Cast to set, intersect, and convert back to list.
+    // Impact: Avoids unnecessary iterations.
     _selectedCategoryIds =
         initial?.categoryIds
-            ?.where((id) => availableCategoryIds.contains(id))
+            ?.toSet()
+            .intersection(availableCategoryIds)
             .toList() ??
-        [];
+        <String>[];
     log.info(
       "[BudgetForm] initState. Type: $_selectedType, Period: $_selectedPeriod, Initial Categories: ${_selectedCategoryIds.length}",
     );
@@ -152,8 +157,13 @@ class _BudgetFormState extends State<BudgetForm> {
     // Solution: Precompute a Set of valid item values for O(1) lookups
     // Impact: Prevents UI jank when opening the MultiSelect dialog with many categories
     final validItemValues = items.map((i) => i.value).toSet();
+    // ⚡ Bolt Performance Optimization
+    // Problem: `where(...).toList()` on sets is slower than direct intersection.
+    // Solution: Convert to Set, intersect, and cast to List.
+    // Impact: Direct intersection is implemented natively and is faster for larger sets.
     final validInitialValue = _selectedCategoryIds
-        .where((id) => validItemValues.contains(id))
+        .toSet()
+        .intersection(validItemValues)
         .toList();
 
     bridgeShowModalBottomSheet(
