@@ -308,10 +308,12 @@ class TransactionListBloc
         // Solution: Precompute a Set of transaction IDs for O(1) lookups
         // Impact: Reduces complexity to O(N+M), preventing UI freezes on large datasets
         final transactionIds = transactions.map((t) => t.id).toSet();
+        // ⚡ Bolt Performance Optimization
+        // Problem: `where(...).toSet()` iterates the collection to create a new Set.
+        // Solution: Use `.intersection(transactionIds)` directly on the Set.
+        // Impact: O(min(N, M)) set intersection is significantly faster and allocates less memory.
         final validSelection = state.isInBatchEditMode
-            ? state.selectedTransactionIds
-                  .where((id) => transactionIds.contains(id))
-                  .toSet()
+            ? state.selectedTransactionIds.intersection(transactionIds)
             : <String>{};
 
         emit(
